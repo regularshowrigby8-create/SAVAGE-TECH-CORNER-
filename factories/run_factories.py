@@ -69,15 +69,31 @@ def run_factory_pipeline(input_source: str = "shell") -> dict[str, object]:
         "verdict": "SHIP",
     }
 
-    # Step 3: Feed to Factory 3 Android Tools
-    print("[STAGE 3] Factory 3: Refining with Android Tools (manifest, assets, permissions)...")
+    # Step 3: Feed to Factory 3 Android Tools via Middleman Broker
+    print("[STAGE 3] Factory 3: Running Android Tools suite via Middleman Broker...")
     sys.path.insert(0, str(FACTORY_3_DIR / "tools"))
+    from middleman_broker import MiddlemanBroker
     from android_tools import Factory3Refiner
+
+    broker = MiddlemanBroker(inbox_dir=FACTORY_2_DIR / "debug" / "inbox")
+    broker_result = broker.audit_target(target_app_dir)
+    print(f"[STAGE 3] Middleman Broker audit status: {broker_result['status']}")
+
+    if not broker_result.get("clean"):
+        print("[STAGE 3] Middleman sent ErrorPacket back to Factory 2 AI Agents. Triggering agent remediation...")
+        remediation_proposals = debugger.process_inbox(model_name="Qwen2.5-Coder-32B")
+        verifier.process_proposals(auto_implement=True)
+        # Re-audit target
+        broker_result = broker.audit_target(target_app_dir)
+        print(f"[STAGE 3] Post-remediation audit status: {broker_result['status']}")
 
     refiner = Factory3Refiner()
     f3_result = refiner.process_and_certify(target_app_dir)
     print(f"[STAGE 3] Factory 3 certification status: {f3_result['status']}")
-    pipeline_log["stages"]["factory_3_android_tools"] = f3_result
+    pipeline_log["stages"]["factory_3_android_tools"] = {
+        "broker_audit": broker_result,
+        "certification": f3_result,
+    }
 
     # Step 4: Final verification and delivery to final-product folder
     print("[STAGE 4] Passing certified code to Final Product release folder...")

@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-10T15:28:30.857712+00:00",
+  "timestamp": "2026-10-10T15:41:34.154758+00:00",
   "input_source": "shell",
   "stages": {
     "factory_1_intake": "SUCCESS",
@@ -9,22 +9,48 @@
       "verdict": "SHIP"
     },
     "factory_3_android_tools": {
-      "factory": "factory-3",
-      "target": "/home/user/SAVAGE-TECH-CORNER-/factories/factory-2/app/src",
-      "manifest_audit": {
-        "passed": true,
+      "broker_audit": {
+        "target": "/home/user/SAVAGE-TECH-CORNER-/factories/factory-2/app/src",
+        "clean": true,
+        "total_findings": 0,
         "findings": [],
-        "warnings": [],
-        "flagged_permissions": []
+        "apk_metrics": {
+          "tool": "APKAnalyzer",
+          "passed": true,
+          "total_bytes": 17399,
+          "file_count": 9,
+          "dex_budget_ok": true,
+          "findings": []
+        },
+        "experimental_diagnostics": {
+          "tool": "UnverifiedExperimentalTools:SpeculativeBridgeAnalysis",
+          "verified": false,
+          "status": "EXPERIMENTAL_PASS",
+          "bridge_hotspots": [
+            "/home/user/SAVAGE-TECH-CORNER-/factories/factory-2/app/src/browser_shell.py"
+          ],
+          "recommendation": "Maintain strict JNI/WebView type-marshaling checks on all identified hotspots."
+        },
+        "status": "PASSED_FACTORY_3_CERTIFICATION"
       },
-      "resource_refinement": {
-        "passed": true,
-        "total_files_scanned": 9,
-        "missing_assets": [],
-        "compression_ready": true
-      },
-      "certified_for_final_product": true,
-      "status": "CERTIFIED"
+      "certification": {
+        "factory": "factory-3",
+        "target": "/home/user/SAVAGE-TECH-CORNER-/factories/factory-2/app/src",
+        "manifest_audit": {
+          "passed": true,
+          "findings": [],
+          "warnings": [],
+          "flagged_permissions": []
+        },
+        "resource_refinement": {
+          "passed": true,
+          "total_files_scanned": 9,
+          "missing_assets": [],
+          "compression_ready": true
+        },
+        "certified_for_final_product": true,
+        "status": "CERTIFIED"
+      }
     }
   }
 }

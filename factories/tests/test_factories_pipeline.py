@@ -37,7 +37,7 @@ class TestMultiFactoryAndModels(unittest.TestCase):
         log = run_factory_pipeline(input_source="shell")
         self.assertEqual(log["stages"]["factory_1_intake"], "SUCCESS")
         self.assertEqual(log["stages"]["factory_2_agents"]["verdict"], "SHIP")
-        self.assertEqual(log["stages"]["factory_3_android_tools"]["status"], "CERTIFIED")
+        self.assertEqual(log["stages"]["factory_3_android_tools"]["certification"]["status"], "CERTIFIED")
         final_product_dir = FACTORIES_DIR / "final-product"
         self.assertTrue((final_product_dir / "browser_shell.py").exists())
         self.assertTrue((final_product_dir / "RELEASE_MANIFEST.json").exists())

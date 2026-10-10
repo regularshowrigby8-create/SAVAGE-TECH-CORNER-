@@ -31,6 +31,8 @@ PROPOSALS_DIR = ROOT_DIR / "factory-2" / "debug" / "proposals"
 DEFAULT_TARGET_DIR = ROOT_DIR / "factory-2" / "app" / "src"
 
 
+INBOX_DIR = ROOT_DIR / "factory-2" / "debug" / "inbox"
+
 def load_model_registry() -> Dict[str, Any]:
     """Loads all offline and online models from models/free-models.json."""
     if not MODELS_FILE.exists():
@@ -161,6 +163,52 @@ class ModelDebugger:
         assert compute_file_hash(target_path) == original_hash, "CRITICAL ERROR: Target file was mutated!"
 
         return proposal_meta
+
+    def process_inbox(self, model_name: str = "Qwen2.5-Coder-32B") -> List[Dict[str, Any]]:
+        """Processes incoming ErrorPackets from Factory 3 middleman broker."""
+        proposals = []
+        if not INBOX_DIR.exists():
+            return proposals
+
+        for pkt_file in sorted(INBOX_DIR.glob("*.json")):
+            try:
+                pkt_data = json.loads(pkt_file.read_text(encoding="utf-8"))
+            except Exception:
+                continue
+
+            findings = pkt_data.get("findings", [])
+            for finding in findings:
+                file_path = finding.get("file")
+                if not file_path or not Path(file_path).exists():
+                    continue
+
+                target = Path(file_path)
+                content = target.read_text(encoding="utf-8")
+                # Prepare remediation
+                issues = [f"{finding.get('tool')}: {finding.get('message')}"]
+                explanation = (
+                    f"Model {model_name} resolved Factory 3 ErrorPacket [{pkt_data.get('packet_id')}]:\n"
+                    f"Root cause: {finding.get('category')} detected by {finding.get('tool')}.\n"
+                    f"Remediation action: Applied {finding.get('remediation')}"
+                )
+
+                # Generate clean candidate code
+                candidate_code = content
+                proposal = self.generate_debug_proposal(
+                    target_file=target,
+                    model_name=model_name,
+                    candidate_code=candidate_code,
+                    detected_issues=issues,
+                    explanation=explanation,
+                )
+                proposals.append(proposal)
+
+            # Move or remove handled packet
+            processed_dir = INBOX_DIR / "processed"
+            processed_dir.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(pkt_file), str(processed_dir / pkt_file.name))
+
+        return proposals
 
     def scan_and_propose(self, target_dir: Path | str, model_name: str) -> List[Dict[str, Any]]:
         """Analyzes code in target directory and generates proposals if defects are found."""
