@@ -9,12 +9,12 @@ def find_dead_code(directory="."):
     results = []
     for root, dirs, files in os.walk(directory):
         # Skip .git and node_modules
-        dirs[:] = [d for d in dirs if d not in ['.git', 'node_modules', '__pycache__', '.claude', 'factory-2/agents', 'factory-2/criticism', '.github', '.factory', 'docs', 'multi-agents', 'factories', 'shared', 'factory/template', 'workspace/scripts', 'workspace/linear', 'workspace/notion', 'workspace/gmail']]
+        dirs[:] = [d for d in dirs if d not in ['.git', 'node_modules', '__pycache__', '.claude', 'factory-2/agents', 'factory-2/criticism', '.github', '.factory', 'docs', 'factories', 'shared', 'factory/template', 'workspace/scripts', 'workspace/linear', 'workspace/notion', 'workspace/gmail']]
         for fname in files:
             if fname.endswith('.py') or fname.endswith('.sh') or fname.endswith('.md'):
                 fpath = os.path.join(root, fname)
                 # Skip meta scripts describing scanning behavior
-                skip_paths = ['factory-2/agents/', 'factory-2/criticism/', '.claude/scripts/', '.factory/scripts/', 'docs/factory/', 'multi-agents/', 'factories/']
+                skip_paths = ['factory-2/agents/', 'factory-2/criticism/', '.claude/scripts/', '.factory/scripts/', 'docs/factory/', 'factories/']
                 if any(s in fpath for s in skip_paths):
                     pass  # skip meta scripts
                 else:
