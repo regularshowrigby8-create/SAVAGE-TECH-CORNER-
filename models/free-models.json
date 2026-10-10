@@ -41,6 +41,54 @@
       "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
     },
     {
+      "name": "Mistral AI",
+      "base_url": "https://api.mistral.ai/v1",
+      "models": ["mistral-medium", "mistral-large-latest", "codestral-2501"],
+      "free_tier": "Free trial credits available",
+      "credit_card_required": false,
+      "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
+    },
+    {
+      "name": "Cohere",
+      "base_url": "https://api.cohere.com/compatibility/v1",
+      "models": ["command-r-plus", "command-r", "c4ai-aya-expanse-32b"],
+      "free_tier": "Free tier with trial limits",
+      "credit_card_required": false,
+      "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
+    },
+    {
+      "name": "xAI Grok",
+      "base_url": "https://api.x.ai/v1",
+      "models": ["grok-2", "grok-vision-beta", "grok-3"],
+      "free_tier": "Registration required; generous free tier",
+      "credit_card_required": true,
+      "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
+    },
+    {
+      "name": "Together AI",
+      "base_url": "https://api.together.xyz/v1",
+      "models": ["togethercomputer/Llama-2-70b-chat", "togethercomputer/mixtral-8x7b-instruct-v0.1"],
+      "free_tier": "Free tier with rate limits",
+      "credit_card_required": false,
+      "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
+    },
+    {
+      "name": "Cerebras",
+      "base_url": "https://api.cerebras.ai/v1",
+      "models": ["cerebras/Cerebras-GPT-4-8k", "cerebras/Llama-3.1-8b"],
+      "free_tier": "Free tier available",
+      "credit_card_required": false,
+      "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
+    },
+    {
+      "name": "Fireworks AI",
+      "base_url": "https://api.fireworks.ai/inference/v1",
+      "models": ["accounts/fireworks/models/llama-v3p1-405b-instruct", "accounts/fireworks/models/qwen2p5-72b-instruct"],
+      "free_tier": "Free tier with trial credits",
+      "credit_card_required": true,
+      "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
+    },
+    {
       "name": "Cloudflare Workers AI",
       "base_url": "https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run/",
       "models": ["cloudflare/llama-3.1-70b-instruct"],
