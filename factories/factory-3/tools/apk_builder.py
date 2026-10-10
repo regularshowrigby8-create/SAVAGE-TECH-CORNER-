@@ -73,7 +73,7 @@ def build_minimal_dex() -> bytes:
 
 
 def create_signed_apk(output_apk_path: Path) -> Path:
-    """Assembles and signs the SoulBrowser APK."""
+    """Assembles and signs the Savage Browser APK."""
     output_apk_path.parent.mkdir(parents=True, exist_ok=True)
 
     manifest_xml = (SHELL_DIR / "android_project" / "AndroidManifest.xml").read_bytes()
@@ -89,7 +89,7 @@ def create_signed_apk(output_apk_path: Path) -> Path:
     apk_entries = {
         "AndroidManifest.xml": manifest_xml,
         "classes.dex": dex_bytes,
-        "assets/index.html": b"<!DOCTYPE html><html><head><title>Soul Browser</title></head><body><h1>Soul Browser Shell</h1></body></html>",
+        "assets/index.html": b"<!DOCTYPE html><html><head><title>Savage Browser</title></head><body><h1>Savage Browser</h1></body></html>",
         "res/drawable/ic_launcher.png": b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15c4\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82",
     }
 
@@ -124,10 +124,10 @@ def create_signed_apk(output_apk_path: Path) -> Path:
 
 
 def main() -> None:
-    dest = FINAL_PRODUCT_DIR / "SoulBrowser-debug.apk"
+    dest = FINAL_PRODUCT_DIR / "SavageBrowser-debug.apk"
     apk_path = create_signed_apk(dest)
     size_kb = apk_path.stat().st_size / 1024
-    print(f"[APK-BUILDER] Successfully built Soul Browser APK: {apk_path} ({size_kb:.2f} KB)")
+    print(f"[APK-BUILDER] Successfully built Savage Browser APK: {apk_path} ({size_kb:.2f} KB)")
 
 
 if __name__ == "__main__":

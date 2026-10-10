@@ -1,4 +1,4 @@
-"""Soul Browser Shell application core."""
+"""Soul browser-style shell architecture for Savage Browser."""
 
 from typing import Any, Callable, Dict, List, Optional
 
