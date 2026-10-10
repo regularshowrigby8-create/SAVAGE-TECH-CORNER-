@@ -3,6 +3,13 @@
 set -euo pipefail
 
 echo "DOCTOR CHECK START"
+# Verify skills directory exists and has content (referenced structure, not padding)
+if [ -d ".claude/skills" ]; then
+    SKILL_COUNT=$(find .claude/skills -type f | wc -l)
+    echo "Skills directory verified: $SKILL_COUNT skill files"
+else
+    echo "WARNING: .claude/skills/ missing"
+fi
 if [ -z "${GITHUB_ACTIONS:-}" ]; then
     echo "Running locally (not in CI)"
 fi
