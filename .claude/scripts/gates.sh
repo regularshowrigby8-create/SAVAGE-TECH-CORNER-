@@ -9,10 +9,12 @@ FAILURES=""
 
 check_lint() {
     echo "[GATE] Lint check..."
-    if find . -name '*.py' | head -1; then
+    PYTHON_FILES=$(find . -name '*.py' 2>/dev/null | grep -q . && echo "yes" || echo "no")
+    if [ "$PYTHON_FILES" = "yes" ]; then
         echo "Python files detected — verify syntax"
     fi
-    if find . -name '*.js' -o -name '*.mjs' | head -1; then
+    JS_FILES=$(find . -name '*.js' -o -name '*.mjs' 2>/dev/null | grep -q . && echo "yes" || echo "no")
+    if [ "$JS_FILES" = "yes" ]; then
         echo "JS files detected — verify syntax"
     fi
 }

@@ -10,8 +10,12 @@ def review_architecture(directory="."):
     # Check for broken references (files mentioned but missing)
     mentioned = []
     for root, dirs, files in os.walk(directory):
-        dirs[:] = [d for d in dirs if d not in ['.git', 'node_modules', '__pycache__']]
+        dirs[:] = [d for d in dirs if d not in ['.git', 'node_modules', '__pycache__', 'factory-2/reports', 'docs', '.factory/logs', '.claude']]
         for fname in files:
+            fpath = os.path.join(root, fname)
+            # Skip agent reports — they describe findings, not architecture
+            if 'factory-2/reports' in fpath or '.factory/logs' in fpath:
+                continue
             if fname.endswith('.md') or fname.endswith('.py'):
                 fpath = os.path.join(root, fname)
                 try:
