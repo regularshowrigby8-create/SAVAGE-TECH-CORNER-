@@ -41,7 +41,9 @@ def adversarial_review(directory="."):
             with open(model_path, 'r') as f:
                 data = json.load(f)
             providers = [p['name'] for p in data.get('providers', [])]
+            offline = data.get('offline_coding_models', [])
             notes.append(f"Real free LLM providers configured ({len(providers)}): {', '.join(providers)}")
+            notes.append(f"Offline coding-capable models configured ({len(offline)}): {', '.join([m['name'] for m in offline])}")
         except Exception:
             notes.append("Free model config exists but has parse errors")
     else:

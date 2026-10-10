@@ -54,6 +54,68 @@
     "agent_security": "Can reference real API endpoints for scanning patterns",
     "agent_correctness": "Can use real model IDs for verification tasks"
   },
+  "offline_coding_models": [
+    {
+      "name": "Qwen3-Coder-Next",
+      "params_active": "3B active (80B total MoE)",
+      "min_ram_vram": "8GB",
+      "ollama_command": "ollama run qwen3-coder-next",
+      "license": "Apache 2.0",
+      "best_for": "Coding agents, local dev — best efficiency",
+      "benchmark": "61.7% SWE-bench (Qwen3.8-27B dense reference)",
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+    },
+    {
+      "name": "DeepSeek-R1-Distill-14B",
+      "params": "14B dense",
+      "min_ram_vram": "16GB",
+      "ollama_command": "ollama run deepseek-r1:14b",
+      "license": "MIT",
+      "best_for": "Reasoning, debugging, chain-of-thought",
+      "benchmark": "On par with OpenAI o1 reasoning",
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+    },
+    {
+      "name": "Qwen2.5-Coder-32B",
+      "params": "32B dense",
+      "min_ram_vram": "24GB+",
+      "ollama_command": "ollama run qwen2.5-coder:32b",
+      "license": "Apache 2.0",
+      "best_for": "Python specialist, code completion",
+      "benchmark": "Top dense Python coding model (local)",
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+    },
+    {
+      "name": "Devstral-Small-24B",
+      "params": "24B dense",
+      "min_ram_vram": "16-24GB",
+      "ollama_command": "ollama run devstral",
+      "license": "MIT",
+      "best_for": "Agentic coding, multi-file edits (Cline/Aider compatible)",
+      "benchmark": "80% multi-file edit accuracy",
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+    },
+    {
+      "name": "DeepSeek-Coder-V2-16B",
+      "params": "16B MoE",
+      "min_ram_vram": "16GB",
+      "ollama_command": "ollama run deepseek-coder-v2:16b",
+      "license": "MIT",
+      "best_for": "Budget-friendly, good balance",
+      "benchmark": "Strong HumanEval / SWE-bench for size",
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+    },
+    {
+      "name": "CodeGemma-7B",
+      "params": "7B dense",
+      "min_ram_vram": "8GB",
+      "ollama_command": "ollama run codegemma:7b",
+      "license": "Apache 2.0",
+      "best_for": "Lightweight, learning projects",
+      "benchmark": "Good for basic code tasks",
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+    }
+  ],
   "references": {
     "morphe_ai_apk": "https://github.com/krishnaparmar3412-cyber/morphe-ai",
     "free_llm_apis": "https://github.com/open-free-llm-api/awesome-freellm-apis",
