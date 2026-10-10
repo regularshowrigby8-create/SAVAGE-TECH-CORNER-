@@ -24,3 +24,4 @@ Every work item flows through these stages:
 - Each agent finds: dead code, incomplete code, dead buttons, missing tests.
 - Manager role: accepts or rejects feedback; never discounts automatically.
 - All findings go to Linear + Notion database.
+- **No padding** — No identical copies of files with only a number changed. Every directory must be referenced by code or CI.

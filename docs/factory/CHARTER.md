@@ -10,6 +10,7 @@ This charter applies to EVERYTHING in this repository, across ALL branches.
 4. **Every PR must pass the Factory Gate** — `gates.sh` runs before merge.
 5. **One job per factory** — Factory 2 runs exactly ONE GitHub Actions job at a time.
 6. **Feedback is mandatory** — All agent feedback must be documented, accepted or rejected in writing.
+7. **No padding** — No identical copies of the same file with only a number changed. No directories that aren't referenced by code or executed by CI. Every file must have a real purpose and be reachable from the pipeline or repo structure.
 
 ## Branch Rules
 
