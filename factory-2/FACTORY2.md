@@ -13,7 +13,7 @@ Only ONE GitHub Actions job runs at any time (`.github/workflows/factory-2-debug
 | `agent-critic` | Adversarial review | Critic model |
 
 ## Manager Role
-The manager (`manager/guidance.py`) guides agents and accepts/rejects feedback. Never discounts automatically.
+The manager (`factory-2/manager/guidance.py`) guides agents and accepts/rejects feedback. Never discounts automatically.
 
 ## Rules
 - Every agent writes to `factory-2/reports/`.

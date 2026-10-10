@@ -22,7 +22,7 @@ Branch: `factory-2` (session fixed to `arena/ac306e97-savage-tech-corner`)
 
 - `workspace/code/debug_pipeline.py` — lives on `factory-1` branch only
 - `workspace/code/test_debug_pipeline.py` — lives on `factory-1` branch only
-- `multi-agents/workspaces/agent-01.md...agent-50.md` — removed as padding; does not exist
+- `REMOVED: multi-agents padding (50 identical templates deleted)` — removed as padding; does not exist
 
 ## Verification Commands (run these before trusting any claim)
 

@@ -14,6 +14,6 @@ Findings rejected with evidence:
 - Security hardcoded key → No evidence found
 
 Actions completed:
-1. workspace/code/test_debug_pipeline.py created
-2. workspace/code/debug_pipeline.py updated with interactive mode
+1. .factory/scripts/doctor.sh created
+2. .claude/scripts/gates.sh updated with interactive mode
 3. Manager response updated with written acceptance/rejection

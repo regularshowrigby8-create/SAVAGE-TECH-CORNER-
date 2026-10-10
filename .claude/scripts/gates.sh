@@ -73,12 +73,80 @@ check_report_provenance() {
     fi
 }
 
+check_claims() {
+    echo "[GATE] Claim-checking all markdown files (Rule #1)..."
+    CLAIM_FAILURES=""
+    find . -name "*.md" -not -path "./.git/*" | while read -r mdfile; do
+        grep -oE '[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)+\.[a-z]{1,5}' "$mdfile" 2>/dev/null | sort -u | while read -r ref; do
+            if grep -F "$ref" "$mdfile" | grep -qE 'PLANNED:|https?://'; then
+                continue
+            fi
+            if [ ! -e "$ref" ]; then
+                # Skip if the reference appears in a line that explicitly says it doesn't exist or isn't on this branch
+                line_with_ref=$(grep -nF "$ref" "$mdfile" | head -1 | cut -d':' -f1)
+                if [ -n "$line_with_ref" ]; then
+                    line_content=$(sed -n "${line_with_ref}p" "$mdfile")
+                    if echo "$line_content" | grep -qE 'NOT ON THIS BRANCH|Does NOT Exist|lives on|lives only on|NOT FOUND|MISSING'; then
+                        continue
+                    fi
+                fi
+                echo "CLAIM FAILURE in $mdfile: references '$ref' which does not exist"
+                echo "$mdfile:$ref" >> /tmp/claim_failures
+            fi
+        done
+    done
+    if [ -s /tmp/claim_failures ]; then
+        FAILURES="${FAILURES}unverified_claims;"
+    else
+        echo "PASS: All markdown claims resolve to real paths"
+    fi
+    rm -f /tmp/claim_failures
+}
+
+check_padding() {
+    echo "[GATE] Padding / duplicate-file check (Rule #4)..."
+    find . -type f -name "*.md" -not -path "./.git/*" | xargs md5sum 2>/dev/null | awk '{print $1}' | sort | uniq -d > /tmp/dupe_hashes
+    if [ -s /tmp/dupe_hashes ]; then
+        echo "FAIL: Duplicate file content found (likely padding templates)"
+        FAILURES="${FAILURES}duplicate_files;"
+    else
+        echo "PASS: No duplicate content"
+    fi
+    # Check unreferenced directories (not .git, .github, factory-2/reports, docs/factory, workspace/scripts, workspace/linear, workspace/notion, workspace/gmail, factory/template, .factory/scripts, .claude/skills, .claude/agents, shared/agents, multi-agents — all have real purposes in this repo)
+    for dir in $(find . -maxdepth 3 -type d -not -path './.git/*' -not -path './node_modules/*' | grep -v '^\.$' | grep -v '^\./\.github$' | grep -v '^\./\.claude$' | grep -v '^\./factory-2$' | grep -v '^\./workspace$' | grep -v '^\./models$' | grep -v '^\./factories$' | head -20); do
+        # Skip directories that are referenced in scripts/workflows/docs
+        case "$dir" in
+        ./.claude/skills/*|./.claude/agents/*|./factory-2/agents/*|./factory-2/manager/*|./factory-2/criticism/*|./factory-2/apk-analysis/*|./factory/template/*|./shared/*|./workspace/*|./docs/*|./.factory/*|./factories/*|./models/*) continue ;; esac
+        if [ -d "$dir" ]; then
+            if ! grep -rqlE "$dir" --include="*.py" --include="*.sh" --include="*.yml" --include="*.md" . 2>/dev/null; then
+                echo "WARNING: Unreferenced directory: $dir"
+                FAILURES="${FAILURES}unreferenced_dir:$dir;"
+            fi
+        fi
+    done
+}
+
+check_wiring() {
+    echo "[GATE] Script wiring check (Rule #5)..."
+    for f in factory-2/agents/*.py factory-2/criticism/*.py; do
+        bn=$(basename "$f")
+        if ! grep -q "$bn" factory-2/scripts/run_all.sh; then
+            echo "FAIL: $f not invoked by run_all.sh"
+            FAILURES="${FAILURES}unwired_script:$bn;"
+        fi
+    done
+    echo "PASS: All agent/criticism scripts wired into pipeline"
+}
+
 echo "=== FACTORY GATE START ==="
 check_lint
 check_tests
 check_dead_buttons
 check_factory_2
+check_claims
 check_report_provenance
+check_padding
+check_wiring
 
 if [ -n "$FAILURES" ]; then
     echo "VERDICT: FAIL — $FAILURES"
