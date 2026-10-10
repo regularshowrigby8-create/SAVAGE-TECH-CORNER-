@@ -6,12 +6,18 @@ import tempfile
 import unittest
 from pathlib import Path
 
-ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+if (ROOT_DIR / "factories").exists():
+    pass
+elif (ROOT_DIR.parent / "factories").exists():
+    ROOT_DIR = ROOT_DIR.parent
+
 TOOLS_DIR = Path(__file__).resolve().parent.parent / "tools"
 
 import sys
 sys.path.insert(0, str(TOOLS_DIR))
 sys.path.insert(0, str(ROOT_DIR / "factory-2" / "scripts"))
+sys.path.insert(0, str(ROOT_DIR / "factories" / "factory-2" / "scripts"))
 
 from debugging_toolkit import (
     Abi16KbPageSizeChecker,
