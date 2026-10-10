@@ -90,6 +90,13 @@ def run_factory_pipeline(input_source: str = "shell") -> dict[str, object]:
     refiner = Factory3Refiner()
     f3_result = refiner.process_and_certify(target_app_dir)
     print(f"[STAGE 3] Factory 3 certification status: {f3_result['status']}")
+
+    # Build and Package Android APK
+    print("[STAGE 3] Factory 3: Building and signing Soul Browser Android APK...")
+    from apk_builder import create_signed_apk
+    apk_output = FINAL_PRODUCT_DIR / "SoulBrowser-debug.apk"
+    create_signed_apk(apk_output)
+    print(f"[STAGE 3] Soul Browser APK successfully assembled: {apk_output.name} ({apk_output.stat().st_size / 1024:.2f} KB)")
     pipeline_log["stages"]["factory_3_android_tools"] = {
         "broker_audit": broker_result,
         "certification": f3_result,
