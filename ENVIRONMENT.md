@@ -1,42 +1,36 @@
 # FULL ENVIRONMENT DOCUMENTATION
 
-## Branches
-- `main` — Rules, contracts, gates
-- `arena/ac306e97-savage-tech-corner` — Development work
-- `factory-1` — My personal code space
-- `factory-2` — Debug environment (single job)
+Branch: `factory-2` (session fixed to `arena/ac306e97-savage-tech-corner`)
 
-## Key Files
+## What Exists (verified by ls/cat)
 
-| File | Branch | Purpose |
-|---|---|---|
-| docs/factory/CHARTER.md | main | Global rules |
-| docs/factory/CONTRACT.md | main | Queue protocol |
-| .claude/scripts/gates.sh | main | Quality gate |
-| .github/workflows/factory-2-debug.yml | main | ONE job only |
-| workspace/code/debug_pipeline.py | factory-1 | My code |
-| workspace/notion/notion_setup.py | factory-1 | Notion integration |
-| workspace/linear/linear_sync.py | factory-1 | Linear integration |
-| workspace/gmail/update_template.html | factory-1 | Gmail template |
-| factory-2/agents/agent_*.py | factory-2 | AI debug agents |
-| factory-2/manager/guidance.py | factory-2 | Manager |
-| factory-2/criticism/*.py | factory-2 | Criticism checks |
-| factory-2/scripts/run_all.sh | factory-2 | Single job runner |
+- `docs/factory/CHARTER.md` — global rules
+- `docs/factory/CONTRACT.md` — queue protocol
+- `.claude/scripts/gates.sh` — gate with provenance check (Rule #1)
+- `.claude/agents/` — critic and verifier agents
+- `.claude/skills/` — triage, spec, implement, verify, monitor skills
+- `.factory/scripts/doctor.sh` — verifies `.claude/skills/` and remote
+- `.github/workflows/factory-2-debug.yml` — single job that runs `run_all.sh`
+- `factory-2/agents/agent_*.py` — 5 real agents (scanning logic, not stubs)
+- `factory-2/manager/guidance.py` — reads real reports, writes evidence-based responses
+- `factory-2/criticism/dead_code_check.py`, `incomplete_check.py`, `dead_buttons_check.py`
+- `factory-2/apk-analysis/apk_scanner.py` — APK/bytecode patterns (morphe-ai reference)
+- `models/free-models.json` — 12 online + 6 offline coding-capable models (real URLs, benchmarks, licenses)
+- `NO_PADDING.md` — enforcement file
 
-## Connected Apps Used
-- Notion: Database setup (`notion_setup.py`)
-- Linear: Issue sync (`linear_sync.py`)
-- Google Docs: Template (`update_template.html` — could be expanded)
-- Gmail: Update template (`update_template.html`)
+## What Does NOT Exist on This Branch
 
-## What the User Asked For
-- Clean repo maintained (no root moved/deleted)
-- Main rules added
-- Factory 1 and Factory 2 branches created
-- Factory 2 runs ONE GitHub job (`.github/workflows/factory-2-debug.yml`)
-- AI agents act as debug agents (`factory-2/agents/`)
-- Manager guides them (`factory-2/manager/guidance.py`)
-- Criticism checks find dead code (`factory-2/criticism/dead_code_check.py`), incomplete code (`incomplete_check.py`), dead buttons (`dead_buttons_check.py`)
-- Manager accepts/rejects feedback — does not discount (`MANAGER_GUIDE.md`)
-- Full zip link provided (generated below)
-- Criticism of environment added (reports created, manager response written)
+- `workspace/code/debug_pipeline.py` — lives on `factory-1` branch only
+- `workspace/code/test_debug_pipeline.py` — lives on `factory-1` branch only
+- `multi-agents/workspaces/agent-01.md...agent-50.md` — removed as padding; does not exist
+
+## Verification Commands (run these before trusting any claim)
+
+```bash
+bash .claude/scripts/gates.sh        # Must return VERDICT: PASS
+bash factory-2/scripts/run_all.sh   # Must return exit 0
+python3 factory-2/agents/agent_critic.py  # Must reference real files
+ls -l models/free-models.json factory-2/apk-analysis/apk_scanner.py
+```
+
+All claims in this file must be verifiable by running the commands above or by running `ls`/`cat` on the named path.

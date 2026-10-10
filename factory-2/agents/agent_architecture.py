@@ -11,7 +11,7 @@ def review_architecture(directory="."):
     mentioned = []
     for root, dirs, files in os.walk(directory):
         dirs[:] = [d for d in dirs if d not in ['.git', 'node_modules', '__pycache__', 'factory-2/reports', 'docs', '.factory/logs', '.claude']]
-        for fname in files:
+        for fname in sorted(files):
             fpath = os.path.join(root, fname)
             # Skip agent reports — they describe findings, not architecture
             if 'factory-2/reports' in fpath or '.factory/logs' in fpath:
@@ -38,6 +38,7 @@ def review_architecture(directory="."):
     for item in ['shared/agents/', 'factory/template/', '.factory/scripts/', '.factory/logs/']:
         if os.path.isdir(item) and not os.listdir(item):
             findings.append({"type": "empty_directory", "path": item})
+    findings.sort(key=lambda f: f.get("expected_file", f.get("path", f.get("reference", ""))))
     with open("factory-2/reports/architecture_report.md", "w") as f:
         f.write(f"# Architecture Report\nFindings: {findings}\n")
     return findings
