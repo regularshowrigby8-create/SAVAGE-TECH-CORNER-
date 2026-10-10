@@ -1,0 +1,38 @@
+{
+  "providers": [
+    {
+      "name": "Groq",
+      "base_url": "https://api.groq.com/openai/v1",
+      "models": ["llama-3.3-70b-versatile", "mixtral-8x7b-32768"],
+      "free_tier": "30 RPM, 14400 RPD",
+      "credit_card_required": false,
+      "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
+    },
+    {
+      "name": "OpenRouter",
+      "base_url": "https://openrouter.ai/api",
+      "models": ["anthropic/claude-3.5-sonnet", "google/gemini-pro"],
+      "free_tier": "Requires $10 top-up (one-time), generous limits",
+      "credit_card_required": true,
+      "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
+    },
+    {
+      "name": "NVIDIA NIM",
+      "base_url": "https://integrate.api.nvidia.com/v1",
+      "models": ["nvidia/llama-3.1-nemotron-70b-instruct"],
+      "free_tier": "Free tier available",
+      "credit_card_required": false,
+      "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
+    }
+  ],
+  "usage_in_factory": {
+    "agent_critic": "Can call free Groq endpoint for adversarial reasoning",
+    "agent_security": "Can reference real API endpoints for scanning patterns",
+    "agent_correctness": "Can use real model IDs for verification tasks"
+  },
+  "references": {
+    "morphe_ai_apk": "https://github.com/krishnaparmar3412-cyber/morphe-ai",
+    "free_llm_apis": "https://github.com/open-free-llm-api/awesome-freellm-apis",
+    "router_config": "https://github.com/decolua/9router"
+  }
+}
