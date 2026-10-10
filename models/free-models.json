@@ -3,7 +3,10 @@
     {
       "name": "Groq",
       "base_url": "https://api.groq.com/openai/v1",
-      "models": ["llama-3.3-70b-versatile", "mixtral-8x7b-32768"],
+      "models": [
+        "llama-3.3-70b-versatile",
+        "mixtral-8x7b-32768"
+      ],
       "free_tier": "30 RPM, 14400 RPD",
       "credit_card_required": false,
       "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
@@ -11,7 +14,10 @@
     {
       "name": "OpenRouter",
       "base_url": "https://openrouter.ai/api",
-      "models": ["anthropic/claude-3.5-sonnet", "google/gemini-pro"],
+      "models": [
+        "anthropic/claude-3.5-sonnet",
+        "google/gemini-pro"
+      ],
       "free_tier": "Requires $10 top-up (one-time), generous limits",
       "credit_card_required": true,
       "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
@@ -19,7 +25,9 @@
     {
       "name": "NVIDIA NIM",
       "base_url": "https://integrate.api.nvidia.com/v1",
-      "models": ["nvidia/llama-3.1-nemotron-70b-instruct"],
+      "models": [
+        "nvidia/llama-3.1-nemotron-70b-instruct"
+      ],
       "free_tier": "Free tier available",
       "credit_card_required": false,
       "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
@@ -27,7 +35,10 @@
     {
       "name": "GitHub Models",
       "base_url": "https://models.github.ai/inference",
-      "models": ["github/gpt-4o-mini", "github/o4-mini"],
+      "models": [
+        "github/gpt-4o-mini",
+        "github/o4-mini"
+      ],
       "free_tier": "Free for GitHub users",
       "credit_card_required": false,
       "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
@@ -35,7 +46,10 @@
     {
       "name": "LLM7.io",
       "base_url": "https://api.llm7.io/v1",
-      "models": ["mistral/mistral-7b-instruct", "qwen/qwen-2.5-72b"],
+      "models": [
+        "mistral/mistral-7b-instruct",
+        "qwen/qwen-2.5-72b"
+      ],
       "free_tier": "Free tier available",
       "credit_card_required": false,
       "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
@@ -43,7 +57,11 @@
     {
       "name": "Mistral AI",
       "base_url": "https://api.mistral.ai/v1",
-      "models": ["mistral-medium", "mistral-large-latest", "codestral-2501"],
+      "models": [
+        "mistral-medium",
+        "mistral-large-latest",
+        "codestral-2501"
+      ],
       "free_tier": "Free trial credits available",
       "credit_card_required": false,
       "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
@@ -51,7 +69,11 @@
     {
       "name": "Cohere",
       "base_url": "https://api.cohere.com/compatibility/v1",
-      "models": ["command-r-plus", "command-r", "c4ai-aya-expanse-32b"],
+      "models": [
+        "command-r-plus",
+        "command-r",
+        "c4ai-aya-expanse-32b"
+      ],
       "free_tier": "Free tier with trial limits",
       "credit_card_required": false,
       "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
@@ -59,7 +81,11 @@
     {
       "name": "xAI Grok",
       "base_url": "https://api.x.ai/v1",
-      "models": ["grok-2", "grok-vision-beta", "grok-3"],
+      "models": [
+        "grok-2",
+        "grok-vision-beta",
+        "grok-3"
+      ],
       "free_tier": "Registration required; generous free tier",
       "credit_card_required": true,
       "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
@@ -67,7 +93,10 @@
     {
       "name": "Together AI",
       "base_url": "https://api.together.xyz/v1",
-      "models": ["togethercomputer/Llama-2-70b-chat", "togethercomputer/mixtral-8x7b-instruct-v0.1"],
+      "models": [
+        "togethercomputer/Llama-2-70b-chat",
+        "togethercomputer/mixtral-8x7b-instruct-v0.1"
+      ],
       "free_tier": "Free tier with rate limits",
       "credit_card_required": false,
       "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
@@ -75,7 +104,10 @@
     {
       "name": "Cerebras",
       "base_url": "https://api.cerebras.ai/v1",
-      "models": ["cerebras/Cerebras-GPT-4-8k", "cerebras/Llama-3.1-8b"],
+      "models": [
+        "cerebras/Cerebras-GPT-4-8k",
+        "cerebras/Llama-3.1-8b"
+      ],
       "free_tier": "Free tier available",
       "credit_card_required": false,
       "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
@@ -83,7 +115,10 @@
     {
       "name": "Fireworks AI",
       "base_url": "https://api.fireworks.ai/inference/v1",
-      "models": ["accounts/fireworks/models/llama-v3p1-405b-instruct", "accounts/fireworks/models/qwen2p5-72b-instruct"],
+      "models": [
+        "accounts/fireworks/models/llama-v3p1-405b-instruct",
+        "accounts/fireworks/models/qwen2p5-72b-instruct"
+      ],
       "free_tier": "Free tier with trial credits",
       "credit_card_required": true,
       "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
@@ -91,7 +126,9 @@
     {
       "name": "Cloudflare Workers AI",
       "base_url": "https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run/",
-      "models": ["cloudflare/llama-3.1-70b-instruct"],
+      "models": [
+        "cloudflare/llama-3.1-70b-instruct"
+      ],
       "free_tier": "Free tier available",
       "credit_card_required": false,
       "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
@@ -109,7 +146,7 @@
       "min_ram_vram": "8GB",
       "ollama_command": "ollama run qwen3-coder-next",
       "license": "Apache 2.0",
-      "best_for": "Coding agents, local dev — best efficiency",
+      "best_for": "Coding agents, local dev \u2014 best efficiency",
       "benchmark": "61.7% SWE-bench (Qwen3.8-27B dense reference)",
       "source": "https://localaimaster.com/models/best-local-ai-coding-models"
     },
@@ -161,6 +198,296 @@
       "license": "Apache 2.0",
       "best_for": "Lightweight, learning projects",
       "benchmark": "Good for basic code tasks",
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+    },
+    {
+      "name": "Qwen2.5-Coder-7B",
+      "params": "7B dense",
+      "min_ram_vram": "8GB",
+      "ollama_command": "ollama run qwen2.5-coder:7b",
+      "license": "Apache 2.0",
+      "best_for": "Fast local code generation and inline completion",
+      "benchmark": "88.4% HumanEval",
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+    },
+    {
+      "name": "Qwen2.5-Coder-1.5B",
+      "params": "1.5B dense",
+      "min_ram_vram": "4GB",
+      "ollama_command": "ollama run qwen2.5-coder:1.5b",
+      "license": "Apache 2.0",
+      "best_for": "Ultra-lightweight edge coding and syntax verification",
+      "benchmark": "73.2% HumanEval",
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+    },
+    {
+      "name": "StarCoder2-15B",
+      "params": "15B dense",
+      "min_ram_vram": "16GB",
+      "ollama_command": "ollama run starcoder2:15b",
+      "license": "BigCode-OpenRAIL-M",
+      "best_for": "Multi-language repository synthesis and permissive licensing",
+      "benchmark": "46.2% HumanEval",
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+    },
+    {
+      "name": "StarCoder2-7B",
+      "params": "7B dense",
+      "min_ram_vram": "8GB",
+      "ollama_command": "ollama run starcoder2:7b",
+      "license": "BigCode-OpenRAIL-M",
+      "best_for": "Fast code search, linting, and completion",
+      "benchmark": "35.4% HumanEval",
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+    },
+    {
+      "name": "StarCoder2-3B",
+      "params": "3B dense",
+      "min_ram_vram": "4GB",
+      "ollama_command": "ollama run starcoder2:3b",
+      "license": "BigCode-OpenRAIL-M",
+      "best_for": "Low-resource syntax checking and refactoring",
+      "benchmark": "31.7% HumanEval",
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+    },
+    {
+      "name": "DeepSeek-Coder-33B",
+      "params": "33B dense",
+      "min_ram_vram": "24GB+",
+      "ollama_command": "ollama run deepseek-coder:33b",
+      "license": "DeepSeek License",
+      "best_for": "Complex architecture analysis and deep refactoring",
+      "benchmark": "79.3% HumanEval",
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+    },
+    {
+      "name": "DeepSeek-Coder-6.7B",
+      "params": "6.7B dense",
+      "min_ram_vram": "8GB",
+      "ollama_command": "ollama run deepseek-coder:6.7b",
+      "license": "DeepSeek License",
+      "best_for": "Everyday script repair and bug isolation",
+      "benchmark": "71.1% HumanEval",
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+    },
+    {
+      "name": "DeepSeek-R1-Distill-32B",
+      "params": "32B dense",
+      "min_ram_vram": "24GB+",
+      "ollama_command": "ollama run deepseek-r1:32b",
+      "license": "MIT",
+      "best_for": "Algorithmic debugging and chain-of-thought verification",
+      "benchmark": "92.6% HumanEval",
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+    },
+    {
+      "name": "DeepSeek-R1-Distill-8B",
+      "params": "8B dense",
+      "min_ram_vram": "8GB",
+      "ollama_command": "ollama run deepseek-r1:8b",
+      "license": "MIT",
+      "best_for": "Fast local reasoning and root-cause diagnosis",
+      "benchmark": "86.5% HumanEval",
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+    },
+    {
+      "name": "DeepSeek-R1-Distill-70B",
+      "params": "70B dense",
+      "min_ram_vram": "48GB+",
+      "ollama_command": "ollama run deepseek-r1:70b",
+      "license": "MIT",
+      "best_for": "Enterprise code planning and vulnerability auditing",
+      "benchmark": "94.5% HumanEval",
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+    },
+    {
+      "name": "CodeLlama-34B",
+      "params": "34B dense",
+      "min_ram_vram": "24GB+",
+      "ollama_command": "ollama run codellama:34b",
+      "license": "Llama 2 Community",
+      "best_for": "Large context Python & Java codebase analysis",
+      "benchmark": "53.0% HumanEval",
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+    },
+    {
+      "name": "CodeLlama-13B",
+      "params": "13B dense",
+      "min_ram_vram": "16GB",
+      "ollama_command": "ollama run codellama:13b",
+      "license": "Llama 2 Community",
+      "best_for": "Mid-tier general software debugging",
+      "benchmark": "42.0% HumanEval",
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+    },
+    {
+      "name": "CodeLlama-7B",
+      "params": "7B dense",
+      "min_ram_vram": "8GB",
+      "ollama_command": "ollama run codellama:7b",
+      "license": "Llama 2 Community",
+      "best_for": "Fast linting and patch proposal generation",
+      "benchmark": "38.0% HumanEval",
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+    },
+    {
+      "name": "Granite-34B-Code",
+      "params": "34B dense",
+      "min_ram_vram": "24GB+",
+      "ollama_command": "ollama run granite-code:34b",
+      "license": "Apache 2.0",
+      "best_for": "Enterprise modernization, Java/Python refactoring",
+      "benchmark": "62.0% HumanEval",
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+    },
+    {
+      "name": "Granite-20B-Code",
+      "params": "20B dense",
+      "min_ram_vram": "16GB",
+      "ollama_command": "ollama run granite-code:20b",
+      "license": "Apache 2.0",
+      "best_for": "Repository maintenance and test scaffolding",
+      "benchmark": "58.0% HumanEval",
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+    },
+    {
+      "name": "Granite-8B-Code",
+      "params": "8B dense",
+      "min_ram_vram": "8GB",
+      "ollama_command": "ollama run granite-code:8b",
+      "license": "Apache 2.0",
+      "best_for": "Standard unit test generation and bug isolation",
+      "benchmark": "52.0% HumanEval",
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+    },
+    {
+      "name": "Granite-3B-Code",
+      "params": "3B dense",
+      "min_ram_vram": "4GB",
+      "ollama_command": "ollama run granite-code:3b",
+      "license": "Apache 2.0",
+      "best_for": "Lightweight syntax checking and patch isolation",
+      "benchmark": "44.0% HumanEval",
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+    },
+    {
+      "name": "Phind-CodeLlama-34B",
+      "params": "34B dense",
+      "min_ram_vram": "24GB+",
+      "ollama_command": "ollama run phind-codellama:34b",
+      "license": "Llama 2 Community",
+      "best_for": "Technical Q&A and documentation-driven fixes",
+      "benchmark": "73.8% HumanEval",
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+    },
+    {
+      "name": "WizardCoder-Python-34B",
+      "params": "34B dense",
+      "min_ram_vram": "24GB+",
+      "ollama_command": "ollama run wizardcoder:34b",
+      "license": "Llama 2 Community",
+      "best_for": "Instruction-following Python defect repair",
+      "benchmark": "73.2% HumanEval",
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+    },
+    {
+      "name": "Yi-Coder-9B",
+      "params": "9B dense",
+      "min_ram_vram": "10GB",
+      "ollama_command": "ollama run yi-coder:9b",
+      "license": "Apache 2.0",
+      "best_for": "128k long-context repository debugging",
+      "benchmark": "85.4% HumanEval",
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+    },
+    {
+      "name": "Yi-Coder-1.5B",
+      "params": "1.5B dense",
+      "min_ram_vram": "4GB",
+      "ollama_command": "ollama run yi-coder:1.5b",
+      "license": "Apache 2.0",
+      "best_for": "Fast local context search and quick fixes",
+      "benchmark": "67.8% HumanEval",
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+    },
+    {
+      "name": "Mistral-NeMo-12B",
+      "params": "12B dense",
+      "min_ram_vram": "12GB",
+      "ollama_command": "ollama run mistral-nemo:12b",
+      "license": "Apache 2.0",
+      "best_for": "Multi-turn agent reasoning and tool usage",
+      "benchmark": "71.0% HumanEval",
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+    },
+    {
+      "name": "Gemma-2-27B",
+      "params": "27B dense",
+      "min_ram_vram": "24GB+",
+      "ollama_command": "ollama run gemma2:27b",
+      "license": "Gemma Terms of Use",
+      "best_for": "High-accuracy logic verification and review",
+      "benchmark": "76.5% HumanEval",
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+    },
+    {
+      "name": "Gemma-2-9B",
+      "params": "9B dense",
+      "min_ram_vram": "10GB",
+      "ollama_command": "ollama run gemma2:9b",
+      "license": "Gemma Terms of Use",
+      "best_for": "Compact reasoning and edge test generation",
+      "benchmark": "64.0% HumanEval",
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+    },
+    {
+      "name": "Llama-3.1-8B-Instruct",
+      "params": "8B dense",
+      "min_ram_vram": "8GB",
+      "ollama_command": "ollama run llama3.1:8b",
+      "license": "Llama 3.1 Community",
+      "best_for": "General code explanation and proposal authoring",
+      "benchmark": "72.6% HumanEval",
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+    },
+    {
+      "name": "Magicoder-S-DS-6.7B",
+      "params": "6.7B dense",
+      "min_ram_vram": "8GB",
+      "ollama_command": "ollama run magicoder:6.7b",
+      "license": "DeepSeek License",
+      "best_for": "OSS-instruct synthetic training code completion",
+      "benchmark": "76.8% HumanEval",
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+    },
+    {
+      "name": "CodeQwen1.5-7B",
+      "params": "7B dense",
+      "min_ram_vram": "8GB",
+      "ollama_command": "ollama run codeqwen:7b",
+      "license": "Tongyi Qianwen License",
+      "best_for": "Multi-file debugging with 64k context window",
+      "benchmark": "83.5% HumanEval",
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+    },
+    {
+      "name": "Refact-1.6B",
+      "params": "1.6B dense",
+      "min_ram_vram": "4GB",
+      "ollama_command": "ollama run refact:1.6b",
+      "license": "BigCode-OpenRAIL-M",
+      "best_for": "Fast fill-in-the-middle syntax patching",
+      "benchmark": "51.0% HumanEval",
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+    },
+    {
+      "name": "Stable-Code-Instruct-3B",
+      "params": "3B dense",
+      "min_ram_vram": "4GB",
+      "ollama_command": "ollama run stable-code:3b",
+      "license": "Stability AI Community",
+      "best_for": "Edge deployment and logic testing",
+      "benchmark": "48.0% HumanEval",
       "source": "https://lmmarketcap.com/best-local-llm-for-coding"
     }
   ],

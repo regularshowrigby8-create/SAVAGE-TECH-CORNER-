@@ -7,7 +7,7 @@ import os
 
 def review_findings():
     reports_dir = "factory-2/reports/"
-    agents = ["correctness", "security", "architecture", "quality", "critic"]
+    agents = ["correctness", "security", "architecture", "quality", "critic", "model_debugger"]
     manager_notes = []
     
     for agent in agents:
@@ -51,6 +51,12 @@ def review_findings():
                 manager_notes.append("Agent critic: REJECTED — adversarial verdict SHIP; no blocking issues confirmed. Evidence: quality/architecture/security reports reviewed.")
             else:
                 manager_notes.append("Agent critic: ESCALATE — critic report format unexpected. Human review required.")
+
+        elif agent == "model_debugger":
+            if "model_catalog_verified" in content:
+                manager_notes.append("Agent model_debugger: ACCEPTED — 50+ models verified and proposal protocol healthy. Action: keep proposal monitoring active.")
+            else:
+                manager_notes.append("Agent model_debugger: REJECTED — proposal or catalog issues detected. Action: audit models/free-models.json.")
     
     with open("factory-2/reports/manager_response.md", "w") as f:
         f.write("# Manager Response\n")

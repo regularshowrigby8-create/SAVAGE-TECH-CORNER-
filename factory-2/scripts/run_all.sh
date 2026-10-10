@@ -10,6 +10,7 @@ python3 factory-2/agents/agent_correctness.py || check_status=1
 python3 factory-2/agents/agent_security.py || check_status=1
 python3 factory-2/agents/agent_architecture.py || check_status=1
 python3 factory-2/agents/agent_quality.py || check_status=1
+python3 factory-2/agents/agent_model_debugger.py || check_status=1
 python3 factory-2/agents/agent_critic.py || critic_status=1
 
 echo "=== AGENTS COMPLETE ==="
