@@ -151,7 +151,15 @@
       "license": "Apache 2.0",
       "best_for": "Coding agents, local dev \u2014 best efficiency",
       "benchmark": "61.7% SWE-bench (Qwen3.8-27B dense reference)",
-      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "medium",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "DeepSeek-R1-Distill-14B",
@@ -161,7 +169,15 @@
       "license": "MIT",
       "best_for": "Reasoning, debugging, chain-of-thought",
       "benchmark": "On par with OpenAI o1 reasoning",
-      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "medium",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "Qwen2.5-Coder-32B",
@@ -171,7 +187,15 @@
       "license": "Apache 2.0",
       "best_for": "Python specialist, code completion",
       "benchmark": "Top dense Python coding model (local)",
-      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "medium",
+      "fallback_priority": 2,
+      "status": "production_ready"
     },
     {
       "name": "Devstral-Small-24B",
@@ -181,7 +205,15 @@
       "license": "MIT",
       "best_for": "Agentic coding, multi-file edits (Cline/Aider compatible)",
       "benchmark": "80% multi-file edit accuracy",
-      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "medium",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "DeepSeek-Coder-V2-16B",
@@ -191,7 +223,15 @@
       "license": "MIT",
       "best_for": "Budget-friendly, good balance",
       "benchmark": "Strong HumanEval / SWE-bench for size",
-      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "medium",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "CodeGemma-7B",
@@ -201,7 +241,15 @@
       "license": "Apache 2.0",
       "best_for": "Lightweight, learning projects",
       "benchmark": "Good for basic code tasks",
-      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "low",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "Qwen2.5-Coder-7B",
@@ -211,7 +259,15 @@
       "license": "Apache 2.0",
       "best_for": "Fast local code generation and inline completion",
       "benchmark": "88.4% HumanEval",
-      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "low",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "Qwen2.5-Coder-1.5B",
@@ -221,7 +277,15 @@
       "license": "Apache 2.0",
       "best_for": "Ultra-lightweight edge coding and syntax verification",
       "benchmark": "73.2% HumanEval",
-      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "low",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "StarCoder2-15B",
@@ -231,7 +295,15 @@
       "license": "BigCode-OpenRAIL-M",
       "best_for": "Multi-language repository synthesis and permissive licensing",
       "benchmark": "46.2% HumanEval",
-      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "medium",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "StarCoder2-7B",
@@ -241,7 +313,15 @@
       "license": "BigCode-OpenRAIL-M",
       "best_for": "Fast code search, linting, and completion",
       "benchmark": "35.4% HumanEval",
-      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "low",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "StarCoder2-3B",
@@ -251,7 +331,15 @@
       "license": "BigCode-OpenRAIL-M",
       "best_for": "Low-resource syntax checking and refactoring",
       "benchmark": "31.7% HumanEval",
-      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "low",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "DeepSeek-Coder-33B",
@@ -261,7 +349,15 @@
       "license": "DeepSeek License",
       "best_for": "Complex architecture analysis and deep refactoring",
       "benchmark": "79.3% HumanEval",
-      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "low",
+      "fallback_priority": 2,
+      "status": "production_ready"
     },
     {
       "name": "DeepSeek-Coder-6.7B",
@@ -271,7 +367,15 @@
       "license": "DeepSeek License",
       "best_for": "Everyday script repair and bug isolation",
       "benchmark": "71.1% HumanEval",
-      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "low",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "DeepSeek-R1-Distill-32B",
@@ -281,7 +385,15 @@
       "license": "MIT",
       "best_for": "Algorithmic debugging and chain-of-thought verification",
       "benchmark": "92.6% HumanEval",
-      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "medium",
+      "fallback_priority": 2,
+      "status": "production_ready"
     },
     {
       "name": "DeepSeek-R1-Distill-8B",
@@ -291,7 +403,15 @@
       "license": "MIT",
       "best_for": "Fast local reasoning and root-cause diagnosis",
       "benchmark": "86.5% HumanEval",
-      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "medium",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "DeepSeek-R1-Distill-70B",
@@ -301,7 +421,15 @@
       "license": "MIT",
       "best_for": "Enterprise code planning and vulnerability auditing",
       "benchmark": "94.5% HumanEval",
-      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "medium",
+      "fallback_priority": 1,
+      "status": "production_ready"
     },
     {
       "name": "CodeLlama-34B",
@@ -311,7 +439,15 @@
       "license": "Llama 2 Community",
       "best_for": "Large context Python & Java codebase analysis",
       "benchmark": "53.0% HumanEval",
-      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "medium",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "CodeLlama-13B",
@@ -321,7 +457,15 @@
       "license": "Llama 2 Community",
       "best_for": "Mid-tier general software debugging",
       "benchmark": "42.0% HumanEval",
-      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "low",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "CodeLlama-7B",
@@ -331,7 +475,15 @@
       "license": "Llama 2 Community",
       "best_for": "Fast linting and patch proposal generation",
       "benchmark": "38.0% HumanEval",
-      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "low",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "Granite-34B-Code",
@@ -341,7 +493,15 @@
       "license": "Apache 2.0",
       "best_for": "Enterprise modernization, Java/Python refactoring",
       "benchmark": "62.0% HumanEval",
-      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "medium",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "Granite-20B-Code",
@@ -351,7 +511,15 @@
       "license": "Apache 2.0",
       "best_for": "Repository maintenance and test scaffolding",
       "benchmark": "58.0% HumanEval",
-      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "medium",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "Granite-8B-Code",
@@ -361,7 +529,15 @@
       "license": "Apache 2.0",
       "best_for": "Standard unit test generation and bug isolation",
       "benchmark": "52.0% HumanEval",
-      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "medium",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "Granite-3B-Code",
@@ -371,7 +547,15 @@
       "license": "Apache 2.0",
       "best_for": "Lightweight syntax checking and patch isolation",
       "benchmark": "44.0% HumanEval",
-      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "low",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "Phind-CodeLlama-34B",
@@ -381,7 +565,15 @@
       "license": "Llama 2 Community",
       "best_for": "Technical Q&A and documentation-driven fixes",
       "benchmark": "73.8% HumanEval",
-      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "medium",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "WizardCoder-Python-34B",
@@ -391,7 +583,15 @@
       "license": "Llama 2 Community",
       "best_for": "Instruction-following Python defect repair",
       "benchmark": "73.2% HumanEval",
-      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "medium",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "Yi-Coder-9B",
@@ -401,7 +601,15 @@
       "license": "Apache 2.0",
       "best_for": "128k long-context repository debugging",
       "benchmark": "85.4% HumanEval",
-      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "medium",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "Yi-Coder-1.5B",
@@ -411,7 +619,15 @@
       "license": "Apache 2.0",
       "best_for": "Fast local context search and quick fixes",
       "benchmark": "67.8% HumanEval",
-      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "low",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "Mistral-NeMo-12B",
@@ -421,7 +637,15 @@
       "license": "Apache 2.0",
       "best_for": "Multi-turn agent reasoning and tool usage",
       "benchmark": "71.0% HumanEval",
-      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "medium",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "Gemma-2-27B",
@@ -431,7 +655,15 @@
       "license": "Gemma Terms of Use",
       "best_for": "High-accuracy logic verification and review",
       "benchmark": "76.5% HumanEval",
-      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "low",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "Gemma-2-9B",
@@ -441,7 +673,15 @@
       "license": "Gemma Terms of Use",
       "best_for": "Compact reasoning and edge test generation",
       "benchmark": "64.0% HumanEval",
-      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "medium",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "Llama-3.1-8B-Instruct",
@@ -451,7 +691,15 @@
       "license": "Llama 3.1 Community",
       "best_for": "General code explanation and proposal authoring",
       "benchmark": "72.6% HumanEval",
-      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "medium",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "Magicoder-S-DS-6.7B",
@@ -461,7 +709,15 @@
       "license": "DeepSeek License",
       "best_for": "OSS-instruct synthetic training code completion",
       "benchmark": "76.8% HumanEval",
-      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "low",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "CodeQwen1.5-7B",
@@ -471,7 +727,15 @@
       "license": "Tongyi Qianwen License",
       "best_for": "Multi-file debugging with 64k context window",
       "benchmark": "83.5% HumanEval",
-      "source": "https://localaimaster.com/models/best-local-ai-coding-models"
+      "source": "https://localaimaster.com/models/best-local-ai-coding-models",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "low",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "Refact-1.6B",
@@ -481,7 +745,15 @@
       "license": "BigCode-OpenRAIL-M",
       "best_for": "Fast fill-in-the-middle syntax patching",
       "benchmark": "51.0% HumanEval",
-      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "medium",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "Stable-Code-Instruct-3B",
@@ -491,7 +763,15 @@
       "license": "Stability AI Community",
       "best_for": "Edge deployment and logic testing",
       "benchmark": "48.0% HumanEval",
-      "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+      "source": "https://lmmarketcap.com/best-local-llm-for-coding",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "low",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "Qwen2.5-Coder-14B-Instruct",
@@ -501,7 +781,15 @@
       "license": "Apache 2.0",
       "best_for": "Balanced local coding & multi-file refactoring",
       "benchmark": "84.5% HumanEval",
-      "source": "https://github.com/QwenLM/Qwen2.5-Coder"
+      "source": "https://github.com/QwenLM/Qwen2.5-Coder",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "medium",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "DeepSeek-Coder-V2-Lite-Instruct",
@@ -511,7 +799,15 @@
       "license": "MIT",
       "best_for": "Low VRAM multi-language coding",
       "benchmark": "81.1% HumanEval",
-      "source": "https://github.com/deepseek-ai/DeepSeek-Coder-V2"
+      "source": "https://github.com/deepseek-ai/DeepSeek-Coder-V2",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "medium",
+      "fallback_priority": 3,
+      "status": "production_ready"
     },
     {
       "name": "SmallThinker-3B-Preview",
@@ -521,7 +817,15 @@
       "license": "Apache 2.0",
       "best_for": "Ultra-fast local reasoning & syntax diagnosis",
       "benchmark": "Reasoning benchmark comparable to 8B models",
-      "source": "https://github.com/smallthinker-ai/SmallThinker"
+      "source": "https://github.com/smallthinker-ai/SmallThinker",
+      "capabilities": [
+        "code",
+        "reasoning"
+      ],
+      "requires_api_key": false,
+      "latency_class": "low",
+      "fallback_priority": 3,
+      "status": "production_ready"
     }
   ],
   "references": {
