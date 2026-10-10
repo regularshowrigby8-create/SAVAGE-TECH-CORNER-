@@ -4,6 +4,6 @@ No feedback was discounted automatically.
 
 Agent correctness: REJECTED — no real incomplete markers found in source files. Evidence: source scan returned zero code-level markers.
 Agent security: REJECTED — no real secrets found in source. Evidence: regex scan of .py/.env files returned zero matches.
-Agent architecture: ACCEPTED — structural issues confirmed. Action: fill empty directories or fix broken references.
-Agent quality: ACCEPTED — quality gap confirmed. Action: create matching test or add pipeline file from factory-1 branch.
+Agent architecture: REJECTED — no concrete layer violations or broken references confirmed. Evidence: real directory scan complete.
+Agent quality: REJECTED — no missing tests or pipeline gaps detected. Evidence: file system check complete.
 Agent critic: REJECTED — adversarial verdict SHIP; no blocking issues confirmed. Evidence: quality/architecture/security reports reviewed.

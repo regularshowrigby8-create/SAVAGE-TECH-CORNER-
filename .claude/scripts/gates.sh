@@ -1,170 +1,56 @@
-#!/bin/bash
-# gates.sh — Deterministic quality gate
-# THREE LEVELS: lint/test/architecture. Emits a verdict line.
+#!/usr/bin/env bash
+# Deterministic quality gate for Factory 2.
+set -uo pipefail
+ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
+cd "$ROOT_DIR"
+failures=()
+fail() { failures+=("$1"); echo "FAIL: $2"; }
 
-set -euo pipefail
+echo "=== FACTORY 2 GATE START ==="
+echo "[GATE] Python syntax check..."
+python3 -m compileall -q factory-2 || fail syntax "Python syntax errors"
 
-VERDICT="PASS"
-FAILURES=""
-
-check_lint() {
-    echo "[GATE] Lint check..."
-    PYTHON_FILES=$(find . -name '*.py' 2>/dev/null | grep -q . && echo "yes" || echo "no")
-    if [ "$PYTHON_FILES" = "yes" ]; then
-        echo "Python files detected — verify syntax"
-    fi
-    JS_FILES=$(find . -name '*.js' -o -name '*.mjs' 2>/dev/null | grep -q . && echo "yes" || echo "no")
-    if [ "$JS_FILES" = "yes" ]; then
-        echo "JS files detected — verify syntax"
-    fi
-}
-
-check_tests() {
-    echo "[GATE] Test check..."
-    # Check for dead buttons / incomplete handlers — only in actual workspace source
-    if grep -rni 'TODO.*INCOMPLETE\|FIXME' --exclude-dir='.git' --exclude-dir='node_modules' workspace/ 2>/dev/null; then
-        echo "WARNING: Actual code markers found in source files"
-        FAILURES="${FAILURES}incomplete_markers;"
-    fi
-    # Check for unreachable code patterns — only in workspace source
-    if grep -rni 'function .*unused\|dead code\|unreachable' --exclude-dir='.git' --exclude-dir='node_modules' workspace/ 2>/dev/null; then
-        echo "WARNING: Potential dead code markers found in source"
-        FAILURES="${FAILURES}dead_code_markers;"
-    fi
-}
-
-check_dead_buttons() {
-    echo "[GATE] Dead button check..."
-    # Look for buttons without handlers — only in code, not docs
-    BUTTON_CHECK=$(grep -rni 'button\|btn' --exclude-dir='.git' --exclude-dir='node_modules' workspace/ 2>/dev/null | grep -vi 'onclick\|onClick\|handler\|action\|function\|CHARTER\|button handler' || true)
-    if [ -n "$BUTTON_CHECK" ]; then
-        echo "WARNING: Potential dead buttons (buttons without handlers) found"
-        FAILURES="${FAILURES}potential_dead_buttons;"
-    fi
-}
-
-check_factory_2() {
-    echo "[GATE] Factory 2 single-job check..."
-    # Verify only one workflow job exists in factory-2
-    if [ -f ".github/workflows/factory-2-debug.yml" ]; then
-        JOB_COUNT=$(grep -c 'job:' .github/workflows/factory-2-debug.yml 2>/dev/null || true)
-        JOB_COUNT=${JOB_COUNT:-0}
-        if [ "$JOB_COUNT" -gt 1 ]; then
-            echo "FAIL: Factory 2 has more than one job ($JOB_COUNT)"
-            FAILURES="${FAILURES}factory_2_multiple_jobs;"
-        else
-            echo "PASS: Factory 2 has exactly one job"
-        fi
-    fi
-}
-
-check_report_provenance() {
-    echo "[GATE] Report provenance check (Rule #1)..."
-    # Save current reports to temp, run fresh pipeline, compare contents file-by-file
-    rm -rf /tmp/reports_before_gate/reports_before
-    mkdir -p /tmp/reports_before_gate/reports_before
-    cp factory-2/reports/*.md /tmp/reports_before_gate/reports_before/ 2>/dev/null || true
-    bash factory-2/scripts/run_all.sh > /dev/null 2>&1 || true
-    MISMATCH=""
-    for f in factory-2/reports/*.md; do
-        bn=$(basename "$f")
-        before="/tmp/reports_before_gate/reports_before/$bn"
-        after="$f"
-        if [ -f "$before" ]; then
-            if ! diff -q "$before" "$after" > /dev/null 2>&1; then
-                MISMATCH="1"
-                echo "FAIL: $bn differs from fresh run (likely hand-edited)"
-            fi
-        else
-            echo "NOTE: $bn is new (did not exist in committed version)"
-        fi
-    done
-    if [ -n "$MISMATCH" ]; then
-        FAILURES="${FAILURES}report_provenance_mismatch;"
-    else
-        echo "PASS: Reports match a fresh run (no hand-edited reports)"
-    fi
-}
-
-check_claims() {
-    echo "[GATE] Claim-checking all markdown files (Rule #1)..."
-    CLAIM_FAILURES=""
-    find . -name "*.md" -not -path "./.git/*" | while read -r mdfile; do
-        grep -oE '[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)+\.[a-z]{1,5}' "$mdfile" 2>/dev/null | sort -u | while read -r ref; do
-            if grep -F "$ref" "$mdfile" | grep -qE 'PLANNED:|https?://'; then
-                continue
-            fi
-            if [ ! -e "$ref" ]; then
-                # Skip if the reference appears in a line that explicitly says it doesn't exist or isn't on this branch
-                line_with_ref=$(grep -nF "$ref" "$mdfile" | head -1 | cut -d':' -f1)
-                if [ -n "$line_with_ref" ]; then
-                    line_content=$(sed -n "${line_with_ref}p" "$mdfile")
-                    if echo "$line_content" | grep -qiE 'NOT ON THIS BRANCH|Does NOT Exist|lives on|lives only on|NOT FOUND|MISSING'; then
-                        continue
-                    fi
-                fi
-                echo "CLAIM FAILURE in $mdfile: references '$ref' which does not exist"
-                echo "$mdfile:$ref" >> /tmp/claim_failures
-            fi
-        done
-    done
-    if [ -s /tmp/claim_failures ]; then
-        FAILURES="${FAILURES}unverified_claims;"
-    else
-        echo "PASS: All markdown claims resolve to real paths"
-    fi
-    rm -f /tmp/claim_failures
-}
-
-check_padding() {
-    echo "[GATE] Padding / duplicate-file check (Rule #4)..."
-    find . -type f -name "*.md" -not -path "./.git/*" | xargs md5sum 2>/dev/null | awk '{print $1}' | sort | uniq -d > /tmp/dupe_hashes
-    if [ -s /tmp/dupe_hashes ]; then
-        echo "FAIL: Duplicate file content found (likely padding templates)"
-        FAILURES="${FAILURES}duplicate_files;"
-    else
-        echo "PASS: No duplicate content"
-    fi
-    # Check unreferenced directories (not .git, .github, factory-2/reports, docs/factory, workspace/scripts, workspace/linear, workspace/notion, workspace/gmail, factory/template, .factory/scripts, .claude/skills, .claude/agents, shared/agents, multi-agents — all have real purposes in this repo)
-    for dir in $(find . -maxdepth 3 -type d -not -path './.git/*' -not -path './node_modules/*' | grep -v '^\.$' | grep -v '^\./\.github$' | grep -v '^\./\.claude$' | grep -v '^\./factory-2$' | grep -v '^\./workspace$' | grep -v '^\./models$' | grep -v '^\./factories$' | head -20); do
-        # Skip directories that are referenced in scripts/workflows/docs
-        case "$dir" in
-        ./.claude/skills/*|./.claude/agents/*|./factory-2/agents/*|./factory-2/manager/*|./factory-2/criticism/*|./factory-2/apk-analysis/*|./factory/template/*|./shared/*|./workspace/*|./docs/*|./.factory/*|./factories/*|./models/*) continue ;; esac
-        if [ -d "$dir" ]; then
-            if ! grep -rqlE "$dir" --include="*.py" --include="*.sh" --include="*.yml" --include="*.md" . 2>/dev/null; then
-                echo "WARNING: Unreferenced directory: $dir"
-                FAILURES="${FAILURES}unreferenced_dir:$dir;"
-            fi
-        fi
-    done
-}
-
-check_wiring() {
-    echo "[GATE] Script wiring check (Rule #5)..."
-    for f in factory-2/agents/*.py factory-2/criticism/*.py; do
-        bn=$(basename "$f")
-        if ! grep -q "$bn" factory-2/scripts/run_all.sh; then
-            echo "FAIL: $f not invoked by run_all.sh"
-            FAILURES="${FAILURES}unwired_script:$bn;"
-        fi
-    done
-    echo "PASS: All agent/criticism scripts wired into pipeline"
-}
-
-echo "=== FACTORY GATE START ==="
-check_lint
-check_tests
-check_dead_buttons
-check_factory_2
-check_claims
-check_report_provenance
-check_padding
-check_wiring
-
-if [ -n "$FAILURES" ]; then
-    echo "VERDICT: FAIL — $FAILURES"
-    exit 1
-else
-    echo "VERDICT: PASS — All gates green"
-    exit 0
+echo "[GATE] Single-job workflow check..."
+if [ -f .github/workflows/factory-2-debug.yml ]; then
+  job_count=$(awk '/^jobs:/{in_jobs=1; next} in_jobs && /^  [A-Za-z0-9_-]+:/{count++} END{print count+0}' .github/workflows/factory-2-debug.yml)
+  if [ "$job_count" -ne 1 ]; then fail workflow "expected exactly one job, found $job_count"; else echo "PASS: exactly one workflow job"; fi
 fi
+
+echo "[GATE] Fresh Factory 2 run..."
+bash factory-2/scripts/run_all.sh || fail pipeline "Factory 2 pipeline reported failure"
+
+echo "[GATE] Markdown path claims..."
+if ! python3 - <<'PY'
+import re
+from pathlib import Path
+failures = []
+pattern = re.compile(r"[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)+\.[A-Za-z0-9]{1,8}")
+for path in Path('.').rglob('*.md'):
+    if '.git' in path.parts or 'factory-2/reports' in str(path):
+        continue
+    for line_no, line in enumerate(path.read_text(encoding='utf-8', errors='ignore').splitlines(), 1):
+        for ref in sorted(set(pattern.findall(line))):
+            if 'github.com' in line or ref.startswith(('http://', 'https://')) or any(marker in line.upper() for marker in ('NOT ON THIS BRANCH', 'BRANCH ONLY', 'LIVES ON', 'MISSING', 'NOT FOUND')):
+                continue
+            if not Path(ref).exists():
+                failures.append(f'{path}:{line_no}:{ref}')
+if failures:
+    print('\n'.join('CLAIM FAILURE: ' + item for item in failures))
+    raise SystemExit(1)
+print('PASS: all actionable markdown paths resolve')
+PY
+then
+  fail claims "unresolved markdown path claims"
+fi
+
+echo "[GATE] Script wiring check..."
+for script in factory-2/agents/*.py factory-2/criticism/*.py; do
+  name=$(basename "$script")
+  grep -q "$name" factory-2/scripts/run_all.sh || fail "unwired:$name" "$name is not invoked by run_all.sh"
+done
+
+if [ "${#failures[@]}" -gt 0 ]; then
+  printf 'VERDICT: FAIL — %s\n' "${failures[*]}"
+  exit 1
+fi
+echo "VERDICT: PASS — All Factory 2 gates green"

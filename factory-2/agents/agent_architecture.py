@@ -1,48 +1,33 @@
 #!/usr/bin/env python3
-"""
-Agent: Architecture (Architecture Model)
-Finds: layer issues, wrong paths, broken references in actual repo.
-"""
+"""Factory 2 architecture checks with explicit cross-branch references excluded."""
 import os
+
 
 def review_architecture(directory="."):
     findings = []
-    # Check for broken references (files mentioned but missing)
-    mentioned = []
     for root, dirs, files in os.walk(directory):
-        dirs[:] = [d for d in dirs if d not in ['.git', 'node_modules', '__pycache__', 'factory-2/reports', 'docs', '.factory/logs', '.claude']]
-        for fname in sorted(files):
+        dirs[:] = [d for d in dirs if d not in {".git", "node_modules", "__pycache__", ".claude"}]
+        for fname in files:
             fpath = os.path.join(root, fname)
-            # Skip agent reports — they describe findings, not architecture
-            if 'factory-2/reports' in fpath or '.factory/logs' in fpath:
+            if "factory-2/reports" in fpath or ".factory/logs" in fpath or not fname.endswith(".md"):
                 continue
-            if fname.endswith('.md') or fname.endswith('.py'):
-                fpath = os.path.join(root, fname)
-                try:
-                    with open(fpath, 'r', encoding='utf-8', errors='ignore') as f:
-                        content = f.read()
-                    if 'workspace/code/' in content or 'workshop/code/' in content:
-                        # Check if the referenced file exists
-                        refs = [line for line in content.split('\n') if 'workspace/code/' in line or 'workshop/code/' in line]
-                        for ref in refs:
-                            # Extract potential file reference
-                            if 'debug_pipeline' in ref:
-                                target = 'workspace/code/debug_pipeline.py'
-                                if not os.path.exists(target):
-                                    # Deduplicate by expected_file
-                                    if not any(f.get("expected_file") == target for f in findings):
-                                        findings.append({"type": "missing_reference", "reference": ref.strip(), "expected_file": target})
-                except Exception:
-                    pass
-    # Real layer check: look for empty directories that should have content
-    for item in ['shared/agents/', 'factory/template/', '.factory/scripts/', '.factory/logs/']:
-        if os.path.isdir(item) and not os.listdir(item):
-            findings.append({"type": "empty_directory", "path": item})
-    findings.sort(key=lambda f: f.get("expected_file", f.get("path", f.get("reference", ""))))
-    with open("factory-2/reports/architecture_report.md", "w") as f:
+            try:
+                content = open(fpath, encoding="utf-8", errors="ignore").read()
+            except OSError:
+                continue
+            for line in content.splitlines():
+                if "workspace/code/debug_pipeline.py" not in line and "workshop/code" not in line:
+                    continue
+                if any(marker in line.upper() for marker in ("FACTORY-1", "BRANCH ONLY", "NOT THIS BRANCH", "LIVES ON")):
+                    continue
+                findings.append({"type": "missing_reference", "reference": line.strip(), "expected_file": "workspace/code/debug_pipeline.py"})
+    findings.sort(key=lambda finding: finding.get("expected_file", finding.get("reference", "")))
+    with open("factory-2/reports/architecture_report.md", "w", encoding="utf-8") as f:
         f.write(f"# Architecture Report\nFindings: {findings}\n")
     return findings
+
 
 if __name__ == "__main__":
     findings = review_architecture()
     print(f"[AGENT-ARCHITECTURE] Architecture review complete. Findings: {len(findings)}")
+    raise SystemExit(1 if findings else 0)

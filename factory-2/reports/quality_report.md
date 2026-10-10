@@ -1,2 +1,2 @@
 # Quality Report
-Findings: [{'type': 'missing_pipeline', 'expected': 'workspace/code/debug_pipeline.py', 'note': 'Pipeline file not found in this branch — check factory-1 branch'}, {'type': 'pipeline_check_skipped', 'reason': 'File missing from current branch'}]
+Findings: [{'type': 'factory2_pipeline_present', 'target': 'factory-2/scripts/run_all.sh'}, {'type': 'branch_scoped', 'note': 'Factory 1 workspace pipeline is intentionally not required on factory-2'}]

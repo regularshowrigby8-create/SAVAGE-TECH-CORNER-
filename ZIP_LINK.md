@@ -1,14 +1,10 @@
-# FULL ZIP LINK
+# Factory setup archive
 
-File: `/https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/raw/factory-2/factories/factory-setup.zip`
-Size: ~24KB (will grow with code)
+Download: `https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/raw/factory-2/factories/factory-setup.zip`
 
-Access: Download from the workspace at `/https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/raw/factory-2/factories/factory-setup.zip` or open via the workspace viewer.
+The archive is generated from the repaired `factory-1` and `factory-2` branch worktrees and contains two top-level directories:
 
-This zip contains:
-- Main branch rules (CHARTER.md, CONTRACT.md, gates.sh)
-- Factory 1 (workspace, code, tests, Notion, Linear, Gmail, Docs)
-- Factory 2 (5 AI agents, manager, criticism checks, reports, single job workflow)
-- All branches included in the git repo
+- `factory-1/`: scanner implementation, behavioral tests, and Factory 1 gate.
+- `factory-2/`: agent pipeline, fail-closed critic, single-job workflow, gate, reports, and packaging sources.
 
-Note: Since this is a sandbox, the zip is stored locally at the path above. You can access it via the workspace file viewer.
+It intentionally excludes Git metadata and nested ZIP archives. Verify the archive locally with `unzip -t factories/factory-setup.zip`.
