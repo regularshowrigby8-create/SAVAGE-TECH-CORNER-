@@ -29,7 +29,9 @@ def review_architecture(directory="."):
                             if 'debug_pipeline' in ref:
                                 target = 'workspace/code/debug_pipeline.py'
                                 if not os.path.exists(target):
-                                    findings.append({"type": "missing_reference", "reference": ref.strip(), "expected_file": target})
+                                    # Deduplicate by expected_file
+                                    if not any(f.get("expected_file") == target for f in findings):
+                                        findings.append({"type": "missing_reference", "reference": ref.strip(), "expected_file": target})
                 except Exception:
                     pass
     # Real layer check: look for empty directories that should have content
