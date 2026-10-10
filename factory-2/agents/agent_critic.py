@@ -33,6 +33,22 @@ def adversarial_review(directory="."):
         if "missing_reference" in content:
             notes.append("Architecture: broken references found")
     
+    # Check real model configurations exist
+    model_path = "models/free-models.json"
+    if os.path.exists(model_path):
+        notes.append("Real free LLM models configured (Groq, OpenRouter, NVIDIA NIM)")
+    else:
+        notes.append("Free model config missing — requires setup")
+        verdict = "FIX-FIRST"
+    
+    # Check APK analysis module exists and references morphe-ai
+    apk_path = "factory-2/apk-analysis/apk_scanner.py"
+    if os.path.exists(apk_path):
+        notes.append("APK analysis module present — references morphe-ai bytecode patterns")
+    else:
+        notes.append("APK analysis missing — requires module")
+        verdict = "FIX-FIRST"
+    
     # Check manager response — must exist and contain real decisions
     manager_path = os.path.join(reports_dir, "manager_response.md")
     if not os.path.exists(manager_path):
