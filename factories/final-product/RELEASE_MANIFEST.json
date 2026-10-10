@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-10T15:49:03.827546+00:00",
+  "timestamp": "2026-10-10T16:02:52.875368+00:00",
   "input_source": "shell",
   "stages": {
     "factory_1_intake": "SUCCESS",
@@ -31,6 +31,8 @@
           ],
           "recommendation": "Maintain strict JNI/WebView type-marshaling checks on all identified hotspots."
         },
+        "retry_count": 0,
+        "max_retries": 3,
         "status": "PASSED_FACTORY_3_CERTIFICATION"
       },
       "certification": {

@@ -37,7 +37,10 @@
       "base_url": "https://models.github.ai/inference",
       "models": [
         "github/gpt-4o-mini",
-        "github/o4-mini"
+        "github/o4-mini",
+        "Llama-3.3-70B-Instruct",
+        "Phi-3.5-mini-instruct",
+        "Codestral-2501"
       ],
       "free_tier": "Free for GitHub users",
       "credit_card_required": false,
@@ -489,11 +492,42 @@
       "best_for": "Edge deployment and logic testing",
       "benchmark": "48.0% HumanEval",
       "source": "https://lmmarketcap.com/best-local-llm-for-coding"
+    },
+    {
+      "name": "Qwen2.5-Coder-14B-Instruct",
+      "params": "14B dense",
+      "min_ram_vram": "16GB",
+      "ollama_command": "ollama run qwen2.5-coder:14b",
+      "license": "Apache 2.0",
+      "best_for": "Balanced local coding & multi-file refactoring",
+      "benchmark": "84.5% HumanEval",
+      "source": "https://github.com/QwenLM/Qwen2.5-Coder"
+    },
+    {
+      "name": "DeepSeek-Coder-V2-Lite-Instruct",
+      "params": "16B MoE (2.4B active)",
+      "min_ram_vram": "12GB",
+      "ollama_command": "ollama run deepseek-coder-v2:16b",
+      "license": "MIT",
+      "best_for": "Low VRAM multi-language coding",
+      "benchmark": "81.1% HumanEval",
+      "source": "https://github.com/deepseek-ai/DeepSeek-Coder-V2"
+    },
+    {
+      "name": "SmallThinker-3B-Preview",
+      "params": "3B dense",
+      "min_ram_vram": "4GB",
+      "ollama_command": "ollama run smallthinker:3b",
+      "license": "Apache 2.0",
+      "best_for": "Ultra-fast local reasoning & syntax diagnosis",
+      "benchmark": "Reasoning benchmark comparable to 8B models",
+      "source": "https://github.com/smallthinker-ai/SmallThinker"
     }
   ],
   "references": {
     "morphe_ai_apk": "https://github.com/krishnaparmar3412-cyber/morphe-ai",
     "free_llm_apis": "https://github.com/open-free-llm-api/awesome-freellm-apis",
     "router_config": "https://github.com/decolua/9router"
-  }
+  },
+  "last_model_scan": "2026-10-10T16:02:30.447485+00:00"
 }

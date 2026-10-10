@@ -56,8 +56,8 @@ class MiddlemanBroker:
         self.interaction_validator = InteractionAssertionValidator()
         self.experimental_tools = UnverifiedExperimentalTools()
 
-    def audit_target(self, target_dir: Path | str) -> Dict[str, Any]:
-        """Runs the entire suite of verified and unverified Android debugging tools."""
+    def audit_target(self, target_dir: Path | str, retry_count: int = 0, max_retries: int = 3) -> Dict[str, Any]:
+        """Runs the entire suite of verified and unverified Android debugging tools with loop guardrails."""
         target_path = Path(target_dir).resolve()
         findings: List[Dict[str, Any]] = []
 
@@ -81,33 +81,40 @@ class MiddlemanBroker:
 
         has_blocking = any(f.get("severity") in {"CRITICAL", "ERROR"} for f in findings)
 
-        report = {
+        report: Dict[str, Any] = {
             "target": str(target_path),
             "clean": not has_blocking,
             "total_findings": len(findings),
             "findings": findings,
             "apk_metrics": apk_res,
             "experimental_diagnostics": exp_res,
+            "retry_count": retry_count,
+            "max_retries": max_retries,
         }
 
-        # If issues exist, package ErrorPacket and send straight to Factory 2 AI agents!
+        # Guardrail: Check retry ceiling
         if has_blocking:
-            packet = self.dispatch_error_packet(target_path, findings)
-            report["error_packet"] = packet
-            report["status"] = "RETURNED_TO_AGENTS_FOR_REMEDATION"
+            if retry_count >= max_retries:
+                report["status"] = "ESCALATED_HUMAN_INTERVENTION_REQUIRED"
+                report["guardrail_triggered"] = True
+                print(f"[MIDDLEMAN-GUARDRAIL] Maximum retries ({max_retries}) reached for '{target_path.name}'. Escalating to human review.")
+            else:
+                packet = self.dispatch_error_packet(target_path, findings, retry_count=retry_count)
+                report["error_packet"] = packet
+                report["status"] = "RETURNED_TO_AGENTS_FOR_REMEDATION"
         else:
             report["status"] = "PASSED_FACTORY_3_CERTIFICATION"
 
         return report
 
-    def dispatch_error_packet(self, target_path: Path, findings: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def dispatch_error_packet(self, target_path: Path, findings: List[Dict[str, Any]], retry_count: int = 0) -> Dict[str, Any]:
         """Creates a structured ErrorPacket and delivers it to Factory 2 AI agents' inbox."""
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         packet_id = f"ERR_PKT_{timestamp}_{target_path.stem}"
 
         # Generate model insight context
         insight_lines = [
-            f"=== FACTORY 3 DEBUGGING REPORT: {packet_id} ===",
+            f"=== FACTORY 3 DEBUGGING REPORT: {packet_id} (Attempt {retry_count + 1}) ===",
             f"Target Codebase: {target_path}",
             f"Total issues identified by Android tools: {len(findings)}",
             "",
@@ -127,6 +134,7 @@ class MiddlemanBroker:
             "target_dir": str(target_path),
             "findings_count": len(findings),
             "findings": findings,
+            "retry_count": retry_count,
             "agent_instruction": (
                 "Please review the attached diagnostic context. Formulate a non-mutating debug proposal "
                 "in factory-2/debug/proposals/ resolving these Android tool issues without modifying files directly."
