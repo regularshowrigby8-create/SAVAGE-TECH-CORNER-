@@ -1,4 +1,3 @@
 # Dead Button Criticism
 Findings:
-No interactive UI elements in .claude/scripts/gates.sh — PASS (CLI only)
-If building apps: every button must have a handler registered
+NOT FOUND ON FACTORY-2 BRANCH: workspace/code/debug_pipeline.py — pipeline missing from this branch, so interactive button verification skipped. Gate script (.claude/scripts/gates.sh) verifies button handlers in workspace source.
