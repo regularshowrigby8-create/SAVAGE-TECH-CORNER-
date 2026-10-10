@@ -30,26 +30,32 @@ jobs:
         run: |
           echo "=== DEAD BUTTON SCAN ==="
           grep -rni 'button\|btn' --exclude-dir='.git' --exclude-dir='node_modules' . | grep -vi 'handler\|onclick\|action' || echo "NONE FOUND"
-      - name: Manager review
-        env:
-          GMAIL_API_KEY: ${{ secrets.GMAIL_API_KEY || 'none' }}
+      - name: Run agent scripts
         run: |
-          echo "=== MANAGER REVIEW ==="
-          echo "Reviewing all agent findings..."
-          echo "No feedback will be discounted automatically."
-          echo "All criticism must be accepted or rejected in writing."
-      - name: Report to Linear (optional)
+          python3 factory-2/agents/agent_correctness.py
+          python3 factory-2/agents/agent_security.py
+          python3 factory-2/agents/agent_architecture.py
+          python3 factory-2/agents/agent_quality.py
+          python3 factory-2/agents/agent_critic.py
+      - name: Manager review (real evaluation)
+        run: python3 factory-2/manager/guidance.py
+      - name: Run criticism checks
+        run: |
+          python3 factory-2/criticism/dead_code_check.py
+          python3 factory-2/criticism/incomplete_check.py
+          python3 factory-2/criticism/dead_buttons_check.py
+      - name: Report to Linear (optional — requires connected app key)
         env:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY || 'none' }}
         run: |
-          echo "Would report to Linear if key present"
-      - name: Report to Notion (optional)
+          echo "Would create Linear issue via linear__create_issue if key present"
+      - name: Report to Notion (optional — requires connected app key)
         env:
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY || 'none' }}
         run: |
-          echo "Would report to Notion if key present"
-      - name: Report to Gmail (optional)
+          echo "Would update Notion database via notion__create_page if key present"
+      - name: Report to Gmail (optional — requires verified alias)
         env:
           GMAIL_USER: ${{ secrets.GMAIL_USER || 'none' }}
         run: |
-          echo "Would email manager via Gmail if configured"
+          echo "Would send notification via gmail__send_message if alias verified"
