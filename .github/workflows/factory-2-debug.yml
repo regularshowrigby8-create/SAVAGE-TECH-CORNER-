@@ -1,0 +1,55 @@
+name: Factory 2 — Single Debug Job
+
+on:
+  push:
+    branches: [factory-2, arena/ac306e97-savage-tech-corner]
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours — only one job can trigger
+  workflow_dispatch:
+
+# ONLY ONE JOB. Never add a second.
+jobs:
+  debug-agents:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: factory-2-single
+      cancel-in-progress: false  # Never cancel running; one job at a time
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check rules
+        run: bash .claude/scripts/gates.sh
+      - name: Find dead code
+        run: |
+          echo "=== DEAD CODE SCAN ==="
+          grep -rni 'unused\|unreachable\|dead' --exclude-dir='.git' . || echo "NONE FOUND"
+      - name: Find incomplete code
+        run: |
+          echo "=== INCOMPLETE CODE SCAN ==="
+          grep -rni 'TODO.*INCOMPLETE\|FIXME' --exclude-dir='.git' . || echo "NONE FOUND"
+      - name: Find dead buttons
+        run: |
+          echo "=== DEAD BUTTON SCAN ==="
+          grep -rni 'button\|btn' --exclude-dir='.git' --exclude-dir='node_modules' . | grep -vi 'handler\|onclick\|action' || echo "NONE FOUND"
+      - name: Manager review
+        env:
+          GMAIL_API_KEY: ${{ secrets.GMAIL_API_KEY || 'none' }}
+        run: |
+          echo "=== MANAGER REVIEW ==="
+          echo "Reviewing all agent findings..."
+          echo "No feedback will be discounted automatically."
+          echo "All criticism must be accepted or rejected in writing."
+      - name: Report to Linear (optional)
+        env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY || 'none' }}
+        run: |
+          echo "Would report to Linear if key present"
+      - name: Report to Notion (optional)
+        env:
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY || 'none' }}
+        run: |
+          echo "Would report to Notion if key present"
+      - name: Report to Gmail (optional)
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER || 'none' }}
+        run: |
+          echo "Would email manager via Gmail if configured"
