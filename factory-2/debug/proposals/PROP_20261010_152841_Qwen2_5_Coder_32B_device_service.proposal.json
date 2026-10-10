@@ -1,0 +1,23 @@
+{
+  "proposal_id": "PROP_20261010_152841_Qwen2_5_Coder_32B_device_service",
+  "created_at": "2026-10-10T15:28:41.575128+00:00",
+  "model": {
+    "name": "Qwen2.5-Coder-32B",
+    "type": "offline",
+    "spec": "ollama run qwen2.5-coder:32b",
+    "benchmark": "Top dense Python coding model (local)"
+  },
+  "target_file": "/home/user/SAVAGE-TECH-CORNER-/factory-2/app/src/device_service.py",
+  "original_hash": "0529b6da5ac90e5bd8882eeed3b600d17d6714c15f78e59304fa39b4f2872334",
+  "candidate_file": "/home/user/SAVAGE-TECH-CORNER-/factory-2/debug/proposals/PROP_20261010_152841_Qwen2_5_Coder_32B_device_service.candidate.py",
+  "detected_issues": [
+    "routine_inspection"
+  ],
+  "explanation": "Model verified code and confirmed no regressions.",
+  "diff": "",
+  "status": "IMPLEMENTED",
+  "verifier_verdict": "APPROVED",
+  "verifier_notes": "All validation gates passed (AST syntax clean, hash matched, security clean)",
+  "implemented_at": "2026-10-10T15:28:41.576095+00:00",
+  "verifier": "MainAgent (Lead Factory Verifier)"
+}

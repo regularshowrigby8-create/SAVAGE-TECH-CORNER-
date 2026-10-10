@@ -22,7 +22,10 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 
-ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+_curr = Path(__file__).resolve()
+ROOT_DIR = _curr.parent.parent.parent
+if not (ROOT_DIR / "models" / "free-models.json").exists() and (ROOT_DIR.parent / "models" / "free-models.json").exists():
+    ROOT_DIR = ROOT_DIR.parent
 MODELS_FILE = ROOT_DIR / "models" / "free-models.json"
 PROPOSALS_DIR = ROOT_DIR / "factory-2" / "debug" / "proposals"
 DEFAULT_TARGET_DIR = ROOT_DIR / "factory-2" / "app" / "src"
