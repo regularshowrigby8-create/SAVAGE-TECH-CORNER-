@@ -23,6 +23,30 @@
       "free_tier": "Free tier available",
       "credit_card_required": false,
       "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
+    },
+    {
+      "name": "GitHub Models",
+      "base_url": "https://models.github.ai/inference",
+      "models": ["github/gpt-4o-mini", "github/o4-mini"],
+      "free_tier": "Free for GitHub users",
+      "credit_card_required": false,
+      "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
+    },
+    {
+      "name": "LLM7.io",
+      "base_url": "https://api.llm7.io/v1",
+      "models": ["mistral/mistral-7b-instruct", "qwen/qwen-2.5-72b"],
+      "free_tier": "Free tier available",
+      "credit_card_required": false,
+      "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
+    },
+    {
+      "name": "Cloudflare Workers AI",
+      "base_url": "https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run/",
+      "models": ["cloudflare/llama-3.1-70b-instruct"],
+      "free_tier": "Free tier available",
+      "credit_card_required": false,
+      "source": "https://github.com/open-free-llm-api/awesome-freellm-apis"
     }
   ],
   "usage_in_factory": {

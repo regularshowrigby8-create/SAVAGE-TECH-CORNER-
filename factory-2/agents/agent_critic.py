@@ -33,10 +33,17 @@ def adversarial_review(directory="."):
         if "missing_reference" in content:
             notes.append("Architecture: broken references found")
     
-    # Check real model configurations exist
+    # Check real model configurations exist with expanded providers
     model_path = "models/free-models.json"
     if os.path.exists(model_path):
-        notes.append("Real free LLM models configured (Groq, OpenRouter, NVIDIA NIM)")
+        import json
+        try:
+            with open(model_path, 'r') as f:
+                data = json.load(f)
+            providers = [p['name'] for p in data.get('providers', [])]
+            notes.append(f"Real free LLM providers configured ({len(providers)}): {', '.join(providers)}")
+        except Exception:
+            notes.append("Free model config exists but has parse errors")
     else:
         notes.append("Free model config missing — requires setup")
         verdict = "FIX-FIRST"
