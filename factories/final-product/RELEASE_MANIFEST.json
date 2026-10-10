@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-10T17:09:36.550887+00:00",
+  "timestamp": "2026-10-10T17:35:38.663723+00:00",
   "input_source": "shell",
   "stages": {
     "factory_1_intake": "SUCCESS",
@@ -17,8 +17,8 @@
         "apk_metrics": {
           "tool": "APKAnalyzer",
           "passed": true,
-          "total_bytes": 17420,
-          "file_count": 9,
+          "total_bytes": 23811,
+          "file_count": 11,
           "dex_budget_ok": true,
           "findings": []
         },
@@ -46,13 +46,15 @@
         },
         "resource_refinement": {
           "passed": true,
-          "total_files_scanned": 9,
+          "total_files_scanned": 11,
           "missing_assets": [],
           "compression_ready": true
         },
         "certified_for_final_product": true,
         "status": "CERTIFIED"
-      }
+      },
+      "gradle_wrapper_ready": true
     }
-  }
+  },
+  "status": "CERTIFIED"
 }

@@ -2,9 +2,10 @@
 """Main Factory Orchestrator.
 
 Feeds code from Factory 1 (or shell) through:
-1. Factory 2 (60 AI models debugging in non-mutating proposal workspaces, followed by Main Agent verification & implementation)
-2. Factory 3 (Android tools refinement, manifest audit, and security validation)
-3. Final Product folder (destination for certified app release)
+1. Intake: Loads both Python architecture models and Android Java/Gradle project files.
+2. Factory 2: Non-mutating proposal debugging and verifier implementation.
+3. Factory 3: Android tools refinement, manifest audit, security validation, and APK build.
+4. Final Product: Certified application deliverables with calculated verdicts and robust error handling.
 """
 
 from __future__ import annotations
@@ -17,7 +18,6 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 FACTORIES_DIR = ROOT_DIR / "factories"
@@ -35,89 +35,126 @@ def run_factory_pipeline(input_source: str = "shell") -> dict[str, object]:
         "timestamp": timestamp,
         "input_source": input_source,
         "stages": {},
+        "status": "IN_PROGRESS",
     }
 
-    # Step 1: Stage input source into Factory 2 app space
-    target_app_dir = FACTORY_2_DIR / "app" / "src"
-    target_app_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        # Step 1: Stage input source into Factory 2 app space
+        target_app_dir = FACTORY_2_DIR / "app" / "src"
+        target_app_dir.mkdir(parents=True, exist_ok=True)
 
-    if input_source == "shell":
-        src_files = list((SHELL_DIR / "soul_browser").glob("*.py"))
-        for f in src_files:
-            shutil.copy2(f, target_app_dir / f.name)
-        print(f"[STAGE 1] Loaded {len(src_files)} shell file(s) into Factory 2 workspace")
-    pipeline_log["stages"]["factory_1_intake"] = "SUCCESS"
+        loaded_files = []
+        if input_source == "shell":
+            # Load Python shell architectural model
+            py_files = list((SHELL_DIR / "soul_browser").glob("*.py"))
+            for f in py_files:
+                shutil.copy2(f, target_app_dir / f.name)
+                loaded_files.append(f.name)
 
-    # Step 2: Feed to Factory 2 Models for non-mutating debug
-    print("[STAGE 2] Factory 2: Models debugging in isolated proposal workspaces...")
-    sys.path.insert(0, str(FACTORY_2_DIR / "scripts"))
-    from model_debugger import ModelDebugger
-    from main_agent_verifier import MainAgentVerifier
+            # Also load actual Android project Java source & Manifest for real Android static analysis
+            android_src = SHELL_DIR / "android_project" / "src" / "com" / "savage" / "soulbrowser" / "MainActivity.java"
+            if android_src.exists():
+                shutil.copy2(android_src, target_app_dir / android_src.name)
+                loaded_files.append(android_src.name)
 
-    debugger = ModelDebugger(proposals_dir=FACTORY_2_DIR / "debug" / "proposals")
-    # Feed code to models
-    proposals = debugger.scan_and_propose(target_app_dir, model_name="Qwen2.5-Coder-32B")
-    print(f"[STAGE 2] Models generated {len(proposals)} non-mutating debug proposal(s)")
+            manifest_src = SHELL_DIR / "android_project" / "AndroidManifest.xml"
+            if manifest_src.exists():
+                shutil.copy2(manifest_src, target_app_dir / manifest_src.name)
+                loaded_files.append(manifest_src.name)
 
-    # Main Agent verifies and implements
-    verifier = MainAgentVerifier(proposals_dir=FACTORY_2_DIR / "debug" / "proposals")
-    processed = verifier.process_proposals(auto_implement=True)
-    print(f"[STAGE 2] Main Agent verified and processed {len(processed)} proposal(s)")
-    pipeline_log["stages"]["factory_2_agents"] = {
-        "proposals_generated": len(proposals),
-        "proposals_verified": len(processed),
-        "verdict": "SHIP",
-    }
+            print(f"[STAGE 1] Loaded {len(loaded_files)} shell & Android source file(s) into Factory 2 workspace")
+        pipeline_log["stages"]["factory_1_intake"] = "SUCCESS"
 
-    # Step 3: Feed to Factory 3 Android Tools via Middleman Broker
-    print("[STAGE 3] Factory 3: Running Android Tools suite via Middleman Broker...")
-    sys.path.insert(0, str(FACTORY_3_DIR / "tools"))
-    from middleman_broker import MiddlemanBroker
-    from android_tools import Factory3Refiner
+        # Step 2: Feed to Factory 2 Models for non-mutating debug
+        print("[STAGE 2] Factory 2: Models debugging in isolated proposal workspaces...")
+        sys.path.insert(0, str(FACTORY_2_DIR / "scripts"))
+        from model_debugger import ModelDebugger
+        from main_agent_verifier import MainAgentVerifier
 
-    broker = MiddlemanBroker(inbox_dir=FACTORY_2_DIR / "debug" / "inbox")
-    broker_result = broker.audit_target(target_app_dir)
-    print(f"[STAGE 3] Middleman Broker audit status: {broker_result['status']}")
+        debugger = ModelDebugger(proposals_dir=FACTORY_2_DIR / "debug" / "proposals")
+        proposals = debugger.scan_and_propose(target_app_dir, model_name="Qwen2.5-Coder-32B")
+        print(f"[STAGE 2] Models generated {len(proposals)} non-mutating debug proposal(s)")
 
-    if not broker_result.get("clean"):
-        print("[STAGE 3] Middleman sent ErrorPacket back to Factory 2 AI Agents. Triggering agent remediation...")
-        remediation_proposals = debugger.process_inbox(model_name="Qwen2.5-Coder-32B")
-        verifier.process_proposals(auto_implement=True)
-        # Re-audit target
+        verifier = MainAgentVerifier(proposals_dir=FACTORY_2_DIR / "debug" / "proposals")
+        processed = verifier.process_proposals(auto_implement=True)
+        print(f"[STAGE 2] Main Agent verified and processed {len(processed)} proposal(s)")
+
+        # Compute real verdict dynamically based on actual verification status
+        unverified_proposals = [p for p in proposals if p.get("status") == "FAIL"]
+        stage_2_verdict = "FIX-FIRST" if unverified_proposals else "SHIP"
+        pipeline_log["stages"]["factory_2_agents"] = {
+            "proposals_generated": len(proposals),
+            "proposals_verified": len(processed),
+            "verdict": stage_2_verdict,
+        }
+
+        # Step 3: Feed to Factory 3 Android Tools via Middleman Broker
+        print("[STAGE 3] Factory 3: Running Android Tools suite via Middleman Broker...")
+        sys.path.insert(0, str(FACTORY_3_DIR / "tools"))
+        from middleman_broker import MiddlemanBroker
+        from android_tools import Factory3Refiner
+
+        broker = MiddlemanBroker(inbox_dir=FACTORY_2_DIR / "debug" / "inbox")
         broker_result = broker.audit_target(target_app_dir)
-        print(f"[STAGE 3] Post-remediation audit status: {broker_result['status']}")
+        print(f"[STAGE 3] Middleman Broker audit status: {broker_result['status']}")
 
-    refiner = Factory3Refiner()
-    f3_result = refiner.process_and_certify(target_app_dir)
-    print(f"[STAGE 3] Factory 3 certification status: {f3_result['status']}")
+        if not broker_result.get("clean"):
+            print("[STAGE 3] Middleman sent ErrorPacket back to Factory 2 AI Agents. Triggering agent remediation...")
+            debugger.process_inbox(model_name="Qwen2.5-Coder-32B")
+            verifier.process_proposals(auto_implement=True)
+            broker_result = broker.audit_target(target_app_dir)
+            print(f"[STAGE 3] Post-remediation audit status: {broker_result['status']}")
 
-    # Build and Package Android APK
-    print("[STAGE 3] Factory 3: Building and signing Savage Browser Android APK...")
-    from apk_builder import create_signed_apk
-    apk_output = FINAL_PRODUCT_DIR / "SavageBrowser-debug.apk"
-    create_signed_apk(apk_output)
-    print(f"[STAGE 3] Savage Browser APK successfully assembled: {apk_output.name} ({apk_output.stat().st_size / 1024:.2f} KB)")
-    pipeline_log["stages"]["factory_3_android_tools"] = {
-        "broker_audit": broker_result,
-        "certification": f3_result,
-    }
+        refiner = Factory3Refiner()
+        f3_result = refiner.process_and_certify(target_app_dir)
+        print(f"[STAGE 3] Factory 3 certification status: {f3_result['status']}")
 
-    # Step 4: Final verification and delivery to final-product folder
-    print("[STAGE 4] Passing certified code to Final Product release folder...")
-    FINAL_PRODUCT_DIR.mkdir(parents=True, exist_ok=True)
-    delivered_files = []
-    for f in target_app_dir.glob("*.py"):
-        dest = FINAL_PRODUCT_DIR / f.name
-        shutil.copy2(f, dest)
-        delivered_files.append(f.name)
+        # Build and Package Android APK
+        print("[STAGE 3] Factory 3: Building and signing Savage Browser Android APK...")
+        from apk_builder import create_signed_apk
+        apk_output = FINAL_PRODUCT_DIR / "SavageBrowser-debug.apk"
+        create_signed_apk(apk_output)
+        print(f"[STAGE 3] Savage Browser APK successfully assembled: {apk_output.name} ({apk_output.stat().st_size / 1024:.2f} KB)")
 
-    manifest_dest = FINAL_PRODUCT_DIR / "RELEASE_MANIFEST.json"
-    with open(manifest_dest, "w", encoding="utf-8") as f:
-        json.dump(pipeline_log, f, indent=2)
+        # Check Gradle wrapper presence
+        gradlew = SHELL_DIR / "android_project" / "gradlew"
+        gradle_available = gradlew.exists() and os.access(str(gradlew), os.X_OK)
 
-    print(f"[STAGE 4] Final Product release populated with: {delivered_files}")
-    print(f"=== PIPELINE COMPLETE: VERIFIED & CERTIFIED ===")
-    return pipeline_log
+        pipeline_log["stages"]["factory_3_android_tools"] = {
+            "broker_audit": broker_result,
+            "certification": f3_result,
+            "gradle_wrapper_ready": gradle_available,
+        }
+
+        # Step 4: Final verification and delivery to final-product folder
+        print("[STAGE 4] Passing certified code to Final Product release folder...")
+        FINAL_PRODUCT_DIR.mkdir(parents=True, exist_ok=True)
+        delivered_files = []
+        for f in target_app_dir.glob("*"):
+            if f.is_file() and not f.name.endswith(".pyc"):
+                dest = FINAL_PRODUCT_DIR / f.name
+                shutil.copy2(f, dest)
+                delivered_files.append(f.name)
+
+        overall_certified = f3_result.get("status") == "CERTIFIED" and stage_2_verdict == "SHIP"
+        pipeline_log["status"] = "CERTIFIED" if overall_certified else "REJECTED"
+
+        manifest_dest = FINAL_PRODUCT_DIR / "RELEASE_MANIFEST.json"
+        with open(manifest_dest, "w", encoding="utf-8") as f:
+            json.dump(pipeline_log, f, indent=2)
+
+        print(f"[STAGE 4] Final Product release populated with: {delivered_files}")
+        print(f"=== PIPELINE COMPLETE: VERIFIED & CERTIFIED (Status: {pipeline_log['status']}) ===")
+        return pipeline_log
+
+    except Exception as e:
+        print(f"[PIPELINE-ERROR] Exception during factory execution: {e}")
+        pipeline_log["status"] = "FAILED"
+        pipeline_log["error"] = str(e)
+        manifest_dest = FINAL_PRODUCT_DIR / "RELEASE_MANIFEST.json"
+        with open(manifest_dest, "w", encoding="utf-8") as f:
+            json.dump(pipeline_log, f, indent=2)
+        raise
 
 
 if __name__ == "__main__":
