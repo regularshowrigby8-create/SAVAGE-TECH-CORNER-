@@ -7,8 +7,7 @@
     </base-config>
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">savage-tech-corner.io</domain>
-        <pin-set expiration="2027-01-01">
-            <!-- Strict Certificate Pinning Baseline -->
-        </pin-set>
+        <!-- No certificate pins are configured. Add a <pin-set> with real SPKI SHA-256 pins once the
+             production certificate for savage-tech-corner.io exists. -->
     </domain-config>
 </network-security-config>

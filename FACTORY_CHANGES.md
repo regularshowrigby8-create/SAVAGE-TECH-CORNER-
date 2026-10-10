@@ -11,3 +11,8 @@
 - Merged factory-1 and factory-2 worktrees into unified multi-factory architecture.
 - Retained Factory 1 workspace, deterministic scanners, and behavioral tests.
 - Retained Factory 2 agent pipeline, manager guidance, and model debugging system.
+
+## Repository Audit Fixes (2026-10-11)
+- `.gitignore`: Now ignores `.env`, keystores, Gradle and build output (`.env.example` stays tracked).
+- `README.md` and `docs/ARCHITECTURE.md`: Corrected the `shell/android_project/` maturity label from "Working / Release-Ready" to "Prototype / Not yet buildable", and noted that the pipeline APK is a structural stub.
+- Direct verification: `python3 test_entire_system.py` and `bash .claude/scripts/gates.sh` pass.

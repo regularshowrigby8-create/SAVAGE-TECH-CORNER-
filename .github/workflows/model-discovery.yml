@@ -5,6 +5,9 @@ on:
     - cron: '0 3 * * 1'  # Every Monday at 03:00 UTC
   workflow_dispatch:      # Allows manual trigger
 
+permissions:
+  contents: read
+
 jobs:
   scan-models:
     runs-on: ubuntu-latest

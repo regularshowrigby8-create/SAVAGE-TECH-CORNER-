@@ -1,3 +1,17 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Secrets and local configuration (copy .env.example to .env locally)
+.env
+.env.*
+!.env.example
+*.keystore
+*.jks
+
+# Android / Gradle build output
+.gradle/
+build/
+local.properties
+*.iml
+.idea/

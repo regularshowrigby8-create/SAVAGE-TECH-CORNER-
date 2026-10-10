@@ -6,3 +6,8 @@
 - `.github/workflows/model-discovery.yml`: Scheduled weekly scanner querying GitHub and open model hubs for free, no-key coding models.
 - `factories/run_factories.py`: Multi-factory pipeline orchestrator automating intake, model debugging, Android refinement, and release packaging.
 - Direct verification: Validated single-job workflow structure and executed end-to-end pipeline test cleanly.
+
+## Directly Verified Changes (2026-10-11)
+
+- `.github/workflows/model-discovery.yml`: Added `permissions: contents: read` so the scheduled job runs with a least-privilege token.
+- Direct verification: workflow YAML parses cleanly; `bash .claude/scripts/gates.sh` passes.

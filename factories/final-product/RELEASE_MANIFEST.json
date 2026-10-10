@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-10T17:50:08.289696+00:00",
+  "timestamp": "2026-10-10T23:44:29.678393+00:00",
   "input_source": "shell",
   "stages": {
     "factory_1_intake": "SUCCESS",
@@ -10,15 +10,15 @@
     },
     "factory_3_android_tools": {
       "broker_audit": {
-        "target": "/home/user/SAVAGE-TECH-CORNER-/factories/factory-2/app/src",
+        "target": "/home/claude/savage-tech-corner-/factories/factory-2/app/src",
         "clean": true,
         "total_findings": 0,
         "findings": [],
         "apk_metrics": {
           "tool": "APKAnalyzer",
           "passed": true,
-          "total_bytes": 23811,
-          "file_count": 11,
+          "total_bytes": 15036,
+          "file_count": 7,
           "dex_budget_ok": true,
           "findings": []
         },
@@ -27,7 +27,7 @@
           "verified": false,
           "status": "EXPERIMENTAL_PASS",
           "bridge_hotspots": [
-            "/home/user/SAVAGE-TECH-CORNER-/factories/factory-2/app/src/browser_shell.py"
+            "/home/claude/savage-tech-corner-/factories/factory-2/app/src/browser_shell.py"
           ],
           "recommendation": "Maintain strict JNI/WebView type-marshaling checks on all identified hotspots."
         },
@@ -37,7 +37,7 @@
       },
       "certification": {
         "factory": "factory-3",
-        "target": "/home/user/SAVAGE-TECH-CORNER-/factories/factory-2/app/src",
+        "target": "/home/claude/savage-tech-corner-/factories/factory-2/app/src",
         "manifest_audit": {
           "passed": true,
           "findings": [],
@@ -46,7 +46,7 @@
         },
         "resource_refinement": {
           "passed": true,
-          "total_files_scanned": 11,
+          "total_files_scanned": 7,
           "missing_assets": [],
           "compression_ready": true
         },

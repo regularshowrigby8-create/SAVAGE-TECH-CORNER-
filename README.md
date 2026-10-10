@@ -23,13 +23,13 @@
 
 | Directory | Maturity Status | Description |
 |---|---|---|
-| **`shell/android_project/`** | **Working / Release-Ready** | Production Android app with Gradle build chain (`settings.gradle.kts`, `build.gradle.kts`, `gradlew`), security-hardened `MainActivity.java`, and network security config. |
+| **`shell/android_project/`** | **Prototype / Not yet buildable** | Hardened `MainActivity.java`, manifest and network security config. The Gradle files do not yet match the source layout (sources are not under `app/src/main/`, no wrapper jar, no ProGuard rules), so `./gradlew assembleDebug` cannot succeed yet. |
 | **`shell/soul_browser/`** | **Tested Prototype** | Python architectural model of browser shell and bridge with 100% test coverage. |
 | **`frontend/`** | **Architectural Prototype** | 8 modular prototype specifications (UI composition, tabs, storage, search providers). |
 | **`backend/`** | **Architectural Prototype** | 8 cloud backend prototype services (API gateway, search orchestration, sync, AI engine). |
 | **`factories/`** | **Working / Tested** | Multi-agent autonomous verification factory (`factory-1`, `factory-2`, `factory-3`). |
 | **`docs/`** | **Authoritative Specification** | Architecture specification, Charter invariants, and security guidelines. |
-| **`artifacts/`** | **Generated Deliverables** | CI-generated APKs, release manifests, and audit reports (`artifacts/debug/`, `artifacts/manifests/`). |
+| **`artifacts/`** | **Generated Deliverables** | CI-generated release manifests and audit reports (`artifacts/debug/`, `artifacts/manifests/`). The pipeline's `SavageBrowser-debug.apk` is a ~2 KB structural stub, not an installable build. |
 
 ---
 
