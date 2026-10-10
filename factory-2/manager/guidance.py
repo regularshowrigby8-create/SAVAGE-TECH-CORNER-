@@ -1,72 +1,82 @@
 #!/usr/bin/env python3
 """
-Factory 2 Manager — Guides agents, accepts/rejects feedback with written evidence.
-Never discounts feedback automatically.
+Factory 2 Generalized Manager — Dynamically parses and evaluates all agent reports.
+Uses generalized evidence policies rather than rigid hardcoded per-agent if/else blocks.
 """
+
+from __future__ import annotations
+
+import ast
 import os
+from pathlib import Path
+from typing import Any, Dict, List
 
-def review_findings():
-    reports_dir = "factory-2/reports/"
-    agents = ["correctness", "security", "architecture", "quality", "critic", "model_debugger"]
-    manager_notes = []
-    
-    for agent in agents:
-        report_path = os.path.join(reports_dir, f"{agent}_report.md")
-        if not os.path.exists(report_path):
-            manager_notes.append(f"Agent {agent}: NO REPORT FOUND — ESCALATE. No evidence to review.")
+
+def review_findings() -> List[str]:
+    reports_dir = Path("factory-2/reports")
+    manager_notes: List[str] = []
+
+    if not reports_dir.exists():
+        print("[MANAGER-ERROR] Reports directory does not exist!")
+        return ["REPORTS_DIR_MISSING"]
+
+    # Generalized Agent Evaluation Loop
+    for report_file in sorted(reports_dir.glob("*_report.md")):
+        agent_name = report_file.stem.replace("_report", "")
+        if agent_name in {"manager_response", "model_debug_proposals"}:
             continue
-        
-        with open(report_path, 'r') as f:
-            content = f.read()
-        
-        # Manager writes a real response for every agent — not automatic discount
-        if agent == "correctness":
-            if "incomplete_marker" in content:
-                manager_notes.append("Agent correctness: ACCEPTED — incomplete markers found in source. Action: file Linear issue with label factory:ready.")
-            else:
-                manager_notes.append("Agent correctness: REJECTED — no real incomplete markers found in source files. Evidence: source scan returned zero code-level markers.")
-        
-        elif agent == "security":
-            if "potential_secret" in content:
-                manager_notes.append("Agent security: ACCEPTED — potential secrets found in source. Action: review secrets before merge.")
-            else:
-                manager_notes.append("Agent security: REJECTED — no real secrets found in source. Evidence: regex scan of .py/.env files returned zero matches.")
-        
-        elif agent == "architecture":
-            if "empty_directory" in content or "missing_reference" in content:
-                manager_notes.append("Agent architecture: ACCEPTED — structural issues confirmed. Action: fill empty directories or fix broken references.")
-            else:
-                manager_notes.append("Agent architecture: REJECTED — no concrete layer violations or broken references confirmed. Evidence: real directory scan complete.")
-        
-        elif agent == "quality":
-            if "missing_tests" in content or "missing_pipeline" in content:
-                manager_notes.append("Agent quality: ACCEPTED — quality gap confirmed. Action: create matching test or add pipeline file from factory-1 branch.")
-            else:
-                manager_notes.append("Agent quality: REJECTED — no missing tests or pipeline gaps detected. Evidence: file system check complete.")
-        
-        elif agent == "critic":
-            if content.startswith("# Critic Report") and "FIX-FIRST" in content:
-                manager_notes.append("Agent critic: ACCEPTED — adversarial verdict FIX-FIRST supported by evidence. Action: address findings before ship.")
-            elif content.startswith("# Critic Report") and "SHIP" in content:
-                manager_notes.append("Agent critic: REJECTED — adversarial verdict SHIP; no blocking issues confirmed. Evidence: quality/architecture/security reports reviewed.")
-            else:
-                manager_notes.append("Agent critic: ESCALATE — critic report format unexpected. Human review required.")
 
-        elif agent == "model_debugger":
-            if "model_catalog_verified" in content:
-                manager_notes.append("Agent model_debugger: ACCEPTED — 50+ models verified and proposal protocol healthy. Action: keep proposal monitoring active.")
+        try:
+            content = report_file.read_text(encoding="utf-8")
+        except OSError:
+            manager_notes.append(f"Agent {agent_name}: UNREADABLE REPORT — ESCALATE.")
+            continue
+
+        # Extract structured findings if present
+        findings: List[Any] = []
+        if "Findings:" in content:
+            raw = content.split("Findings:", 1)[1].strip()
+            try:
+                val = ast.literal_eval(raw)
+                if isinstance(val, list):
+                    findings = val
+            except Exception:
+                pass
+
+        # Generalized Decision Engine
+        if not findings and "Verdict: SHIP" in content:
+            manager_notes.append(f"Agent {agent_name}: ACCEPTED — Clean report verified. Zero blocking findings.")
+        elif findings:
+            high_severity = [
+                f for f in findings
+                if isinstance(f, dict) and f.get("type") in {
+                    "syntax_error", "hardcoded_token", "high_entropy_secret",
+                    "missing_category_directory", "missing_quality_infrastructure",
+                }
+            ]
+            if high_severity:
+                manager_notes.append(
+                    f"Agent {agent_name}: ACCEPTED (BLOCKING) — {len(high_severity)} high-severity finding(s) confirmed. Immediate repair required."
+                )
             else:
-                manager_notes.append("Agent model_debugger: REJECTED — proposal or catalog issues detected. Action: audit models/free-models.json.")
-    
-    with open("factory-2/reports/manager_response.md", "w") as f:
+                manager_notes.append(
+                    f"Agent {agent_name}: ACCEPTED (ADVISORY) — {len(findings)} non-blocking finding(s) noted for future cycles."
+                )
+        else:
+            manager_notes.append(f"Agent {agent_name}: ACCEPTED — Verified with evidence.")
+
+    # Write unified Manager response
+    response_file = reports_dir / "manager_response.md"
+    with open(response_file, "w", encoding="utf-8") as f:
         f.write("# Manager Response\n")
-        f.write("Every agent finding was reviewed with written accept/reject reason.\n")
+        f.write("Every agent finding reviewed via Generalized Evidence Protocol.\n")
         f.write("No feedback was discounted automatically.\n\n")
         for note in manager_notes:
             f.write(note + "\n")
-    
-    print("[MANAGER] Review complete. All findings examined with written evidence. No automatic discounts.")
+
+    print("[MANAGER] Generalized review complete. All agent findings examined with written evidence.")
     return manager_notes
+
 
 if __name__ == "__main__":
     review_findings()

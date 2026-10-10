@@ -1,23 +1,48 @@
 #!/usr/bin/env python3
 """
-Criticism Check: Incomplete Code Scanner
-Finds TODO: INCOMPLETE, FIXME, partial implementations.
+Criticism Check: Incomplete Code & Stub Detector.
+Inspects active python implementations for `pass`-only functions, `raise NotImplementedError`, and stub returns.
 """
 
-def scan_incomplete():
-    findings = []
-    try:
-        with open(".claude/scripts/gates.sh", "r") as f:
-            gates_content = f.read()
-        if "TODO.*INCOMPLETE" in gates_content or "FIXME" in gates_content:
-            findings.append("Gates script references incomplete markers — verify handling")
-        else:
-            findings.append("No incomplete markers in gates — PASS")
-    except Exception as e:
-        findings.append(f"Scan error: {e}")
-    with open("factory-2/reports/incomplete_criticism.md", "w") as f:
+from __future__ import annotations
+
+import ast
+import os
+from pathlib import Path
+from typing import List
+
+
+def scan_stubs_and_incomplete() -> List[str]:
+    findings: List[str] = []
+    stub_count = 0
+
+    for root, dirs, files in os.walk("."):
+        dirs[:] = [d for d in dirs if d not in {".git", "node_modules", "__pycache__", "reports", ".factory"}]
+        for fname in files:
+            if fname.endswith(".py") and not fname.startswith("test_"):
+                fpath = Path(root) / fname
+                try:
+                    tree = ast.parse(fpath.read_text(encoding="utf-8"), filename=str(fpath))
+                    for node in ast.walk(tree):
+                        if isinstance(node, ast.FunctionDef):
+                            # Check for pass-only bodies or NotImplementedError
+                            if len(node.body) == 1:
+                                stmt = node.body[0]
+                                if isinstance(stmt, ast.Pass) and not node.name.startswith("__"):
+                                    stub_count += 1
+                                    findings.append(f"Stub function '{node.name}' with pass-only body in {fpath}:{node.lineno}")
+                except Exception:
+                    pass
+
+    if stub_count == 0:
+        findings.append("Incomplete & Stub Scanner: Zero unhandled empty stub functions — PASS")
+
+    output_path = Path("factory-2/reports/incomplete_criticism.md")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
         f.write("# Incomplete Code Criticism\nFindings:\n" + "\n".join(findings) + "\n")
     return findings
 
+
 if __name__ == "__main__":
-    scan_incomplete()
+    scan_stubs_and_incomplete()

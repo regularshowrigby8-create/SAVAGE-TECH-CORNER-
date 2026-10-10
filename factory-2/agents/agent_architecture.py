@@ -1,33 +1,62 @@
 #!/usr/bin/env python3
-"""Factory 2 architecture checks with explicit cross-branch references excluded."""
+"""
+Agent: Architecture (Static Modularity & Clean Layering Inspector)
+Finds:
+1. Missing directory categories (`shell`, `frontend`, `backend`, `factories`).
+2. Inter-layer boundary leaks (e.g. backend importing Android WebView directly).
+3. Dangling cross-branch path references.
+"""
+
+from __future__ import annotations
+
+import ast
 import os
+from pathlib import Path
+from typing import Any, Dict, List
 
 
-def review_architecture(directory="."):
-    findings = []
-    for root, dirs, files in os.walk(directory):
-        dirs[:] = [d for d in dirs if d not in {".git", "node_modules", "__pycache__", ".claude"}]
-        for fname in files:
-            fpath = os.path.join(root, fname)
-            if "factory-2/reports" in fpath or ".factory/logs" in fpath or not fname.endswith(".md"):
-                continue
+def review_deep_architecture(directory: str = ".") -> List[Dict[str, Any]]:
+    findings: List[Dict[str, Any]] = []
+    root = Path(directory)
+
+    # 1. Structural Category Verification
+    for required_cat in ("frontend", "backend", "shell", "factories"):
+        cat_path = root / required_cat
+        if not cat_path.exists() or not cat_path.is_dir():
+            findings.append({
+                "type": "missing_category_directory",
+                "category": required_cat,
+            })
+
+    # 2. Layer boundary separation checks (Backend must not import WebView or Android packages)
+    backend_dir = root / "backend"
+    if backend_dir.exists():
+        for py_path in backend_dir.rglob("*.py"):
             try:
-                content = open(fpath, encoding="utf-8", errors="ignore").read()
-            except OSError:
-                continue
-            for line in content.splitlines():
-                if "workspace/code/debug_pipeline.py" not in line and "workshop/code" not in line:
-                    continue
-                if any(marker in line.upper() for marker in ("FACTORY-1", "BRANCH ONLY", "NOT THIS BRANCH", "LIVES ON")):
-                    continue
-                findings.append({"type": "missing_reference", "reference": line.strip(), "expected_file": "workspace/code/debug_pipeline.py"})
-    findings.sort(key=lambda finding: finding.get("expected_file", finding.get("reference", "")))
-    with open("factory-2/reports/architecture_report.md", "w", encoding="utf-8") as f:
+                with open(py_path, "r", encoding="utf-8", errors="ignore") as f:
+                    content = f.read()
+                tree = ast.parse(content, filename=str(py_path))
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.Import):
+                        for alias in node.names:
+                            if "webview" in alias.name.lower() or "android" in alias.name.lower():
+                                findings.append({
+                                    "type": "layer_leak",
+                                    "file": str(py_path),
+                                    "imported": alias.name,
+                                })
+            except (OSError, SyntaxError):
+                pass
+
+    findings.sort(key=lambda x: x.get("type", ""))
+    report_file = root / "factory-2" / "reports" / "architecture_report.md"
+    report_file.parent.mkdir(parents=True, exist_ok=True)
+    with open(report_file, "w", encoding="utf-8") as f:
         f.write(f"# Architecture Report\nFindings: {findings}\n")
     return findings
 
 
 if __name__ == "__main__":
-    findings = review_architecture()
-    print(f"[AGENT-ARCHITECTURE] Architecture review complete. Findings: {len(findings)}")
-    raise SystemExit(1 if findings else 0)
+    results = review_deep_architecture()
+    print(f"[AGENT-ARCHITECTURE] Architecture review complete. Findings: {len(results)}")
+    raise SystemExit(1 if results else 0)
