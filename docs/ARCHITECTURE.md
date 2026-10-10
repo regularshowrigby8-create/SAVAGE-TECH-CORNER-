@@ -17,7 +17,7 @@ Every module across the repository is categorized by a strict maturity classific
 
 | Directory | Role | Maturity Status |
 |---|---|---|
-| `shell/android_project/` | Production native Android application (Gradle, Java, ResXML, Manifest) | **Working / Release-Ready** |
+| `shell/android_project/` | Native Android application sources (Java, ResXML, Manifest); Gradle layout still to be fixed | **Prototype / Not yet buildable** |
 | `shell/soul_browser/` | Python architectural model of browser shell and bridge | **Tested Prototype** |
 | `frontend/` | Browser frontend modules (UI, tabs, storage, engine) | **Architectural Prototype** |
 | `backend/` | Cloud backend services (Gateway, search orchestration, AI sync) | **Architectural Prototype** |
