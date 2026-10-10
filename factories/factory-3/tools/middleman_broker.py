@@ -28,6 +28,7 @@ try:
         StrictModeDetector,
         UnverifiedExperimentalTools,
     )
+    from stitched_code_auditor import StitchedCodeAuditor
 except ImportError:
     from .android_tools import AndroidManifestAuditor, AndroidResourceRefiner
     from .debugging_toolkit import (
@@ -38,6 +39,7 @@ except ImportError:
         StrictModeDetector,
         UnverifiedExperimentalTools,
     )
+    from .stitched_code_auditor import StitchedCodeAuditor
 
 
 class MiddlemanBroker:
@@ -55,6 +57,7 @@ class MiddlemanBroker:
         self.abi_checker = Abi16KbPageSizeChecker()
         self.interaction_validator = InteractionAssertionValidator()
         self.experimental_tools = UnverifiedExperimentalTools()
+        self.stitched_auditor = StitchedCodeAuditor()
 
     def audit_target(self, target_dir: Path | str, retry_count: int = 0, max_retries: int = 3) -> Dict[str, Any]:
         """Runs the entire suite of verified and unverified Android debugging tools with loop guardrails."""
@@ -78,6 +81,10 @@ class MiddlemanBroker:
 
         # 5. Experimental unverified tools
         exp_res = self.experimental_tools.speculative_bytecode_analysis(target_path)
+
+        # 6. Stitched Codebase & Multi-Language boundary audit
+        stitched_res = self.stitched_auditor.audit_codebase(target_path)
+        findings.extend(stitched_res.get("violations", []))
 
         has_blocking = any(f.get("severity") in {"CRITICAL", "ERROR"} for f in findings)
 
