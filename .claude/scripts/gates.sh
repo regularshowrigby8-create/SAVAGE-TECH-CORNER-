@@ -1,69 +1,37 @@
-#!/bin/bash
-# gates.sh — Deterministic quality gate
-# THREE LEVELS: lint/test/architecture. Emits a verdict line.
-
+#!/usr/bin/env bash
+# Deterministic quality gate for Factory 1.
 set -euo pipefail
 
-VERDICT="PASS"
-FAILURES=""
+ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
+cd "$ROOT_DIR"
 
-check_lint() {
-    echo "[GATE] Lint check..."
-    if find . -name '*.py' | head -1; then
-        echo "Python files detected — verify syntax"
-    fi
-    if find . -name '*.js' -o -name '*.mjs' | head -1; then
-        echo "JS files detected — verify syntax"
-    fi
-}
+failures=()
+fail() { failures+=("$1"); echo "FAIL: $2"; }
 
-check_tests() {
-    echo "[GATE] Test check..."
-    # Check for dead buttons / incomplete handlers
-    if grep -rni 'TODO.*INCOMPLETE\|FIXME\|dead\|incomplete' --exclude-dir='.git' --exclude-dir='node_modules' . 2>/dev/null; then
-        echo "WARNING: Incomplete markers found"
-        FAILURES="${FAILURES}incomplete_markers;"
-    fi
-    # Check for unreachable code patterns
-    if grep -rni 'function.*unused\|dead code\|unreachable' --exclude-dir='.git' . 2>/dev/null; then
-        echo "WARNING: Potential dead code markers found"
-        FAILURES="${FAILURES}dead_code_markers;"
-    fi
-}
-
-check_dead_buttons() {
-    echo "[GATE] Dead button check..."
-    # Look for buttons without handlers
-    if grep -rni 'button\|btn' --exclude-dir='.git' --exclude-dir='node_modules' . 2>/dev/null | grep -vi 'onclick\|onClick\|handler\|action\|function' | head -n 5; then
-        echo "WARNING: Potential dead buttons (buttons without handlers) found"
-        FAILURES="${FAILURES}potential_dead_buttons;"
-    fi
-}
-
-check_factory_2() {
-    echo "[GATE] Factory 2 single-job check..."
-    # Verify only one workflow job exists in factory-2
-    if [ -f ".github/workflows/factory-2-debug.yml" ]; then
-        JOB_COUNT=$(grep -c 'job:' .github/workflows/factory-2-debug.yml || echo "0")
-        if [ "$JOB_COUNT" -gt 1 ]; then
-            echo "FAIL: Factory 2 has more than one job ($JOB_COUNT)"
-            FAILURES="${FAILURES}factory_2_multiple_jobs;"
-        else
-            echo "PASS: Factory 2 has exactly one job"
-        fi
-    fi
-}
-
-echo "=== FACTORY GATE START ==="
-check_lint
-check_tests
-check_dead_buttons
-check_factory_2
-
-if [ -n "$FAILURES" ]; then
-    echo "VERDICT: FAIL — $FAILURES"
-    exit 1
-else
-    echo "VERDICT: PASS — All gates green"
-    exit 0
+echo "=== FACTORY 1 GATE START ==="
+echo "[GATE] Python syntax check..."
+python3 -m compileall -q workspace/code || fail syntax "Python syntax errors"
+echo "[GATE] Behavioral tests..."
+python3 -m unittest discover -s workspace/code -p 'test*.py' || fail tests "Factory 1 tests failed"
+echo "[GATE] Source scanners..."
+if ! python3 - <<'PY'
+from workspace.code.debug_pipeline import run_debug_pipeline
+result = run_debug_pipeline("workspace/code")
+print(result)
+raise SystemExit(0 if result["passed"] else 1)
+PY
+then
+  fail scanners "Factory 1 source scanners reported findings"
 fi
+
+echo "[GATE] Workflow job count..."
+if [ -f .github/workflows/factory-2-debug.yml ]; then
+  job_count=$(awk '/^jobs:/{in_jobs=1; next} in_jobs && /^  [A-Za-z0-9_-]+:/{count++} END{print count+0}' .github/workflows/factory-2-debug.yml)
+  if [ "$job_count" -ne 1 ]; then fail workflow "expected exactly one workflow job, found $job_count"; else echo "PASS: exactly one workflow job"; fi
+fi
+
+if [ "${#failures[@]}" -gt 0 ]; then
+  printf 'VERDICT: FAIL — %s\n' "${failures[*]}"
+  exit 1
+fi
+echo "VERDICT: PASS — All Factory 1 gates green"
