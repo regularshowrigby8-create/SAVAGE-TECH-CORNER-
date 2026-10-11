@@ -36,16 +36,25 @@ jobs:
       - name: Grant Execute Permission to Gradlew
         run: chmod +x shell/android_project/gradlew
 
-      - name: Debug Gradle Environment and Tasks
+      - name: Assemble Debug APK with Diagnostic Output
         run: |
           cd shell/android_project
-          ./gradlew --version
-          ./gradlew tasks --all
-
-      - name: Assemble Debug APK
-        run: |
-          cd shell/android_project
-          ./gradlew assembleDebug --stacktrace --no-daemon
+          ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee /tmp/assemble.log || true
+          if [ ! -f /tmp/assemble.log ]; then
+            echo "No log created" >&2
+            exit 1
+          fi
+          echo "=== ASSEMBLE LOG HEAD ==="
+          head -n 40 /tmp/assemble.log
+          echo "=== ASSEMBLE LOG TAIL ==="
+          tail -n 80 /tmp/assemble.log
+          # Check if build actually succeeded
+          if grep -q "BUILD SUCCESSFUL" /tmp/assemble.log; then
+            echo "Build succeeded!"
+          else
+            echo "Build failed!" >&2
+            exit 1
+          fi
 
       - name: Locate Output APK
         id: apk_locator
