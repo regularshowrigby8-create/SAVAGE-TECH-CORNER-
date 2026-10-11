@@ -72,11 +72,64 @@ def build_minimal_dex() -> bytes:
     return bytes(full_dex)
 
 
+def build_axml_manifest(package_name: str = "com.savage.soulbrowser") -> bytes:
+    """Encodes a genuine Android Binary XML (AXML) chunk stream with 0x00080003 magic header."""
+    CHUNK_AXML_FILE = 0x00080003
+    CHUNK_STRING_POOL = 0x001C0001
+
+    strings = [
+        "manifest",
+        "package",
+        "versionCode",
+        "versionName",
+        "application",
+        "activity",
+        "name",
+        package_name,
+        "1.0.0-savage",
+        "com.savage.soulbrowser.MainActivity",
+        "http://schemas.android.com/apk/res/android",
+        "android",
+    ]
+
+    str_offsets = []
+    str_bytes = bytearray()
+    for s in strings:
+        str_offsets.append(len(str_bytes))
+        s_encoded = s.encode("utf-16le")
+        str_bytes += struct.pack("<H", len(s)) + s_encoded + b"\x00\x00"
+
+    while len(str_bytes) % 4 != 0:
+        str_bytes += b"\x00"
+
+    string_pool_header_size = 28
+    string_offsets_len = len(str_offsets) * 4
+    string_data_offset = string_pool_header_size + string_offsets_len
+    string_pool_size = string_data_offset + len(str_bytes)
+
+    pool_header = struct.pack(
+        "<IIIIII",
+        CHUNK_STRING_POOL,
+        string_pool_size,
+        len(strings),
+        0,
+        0,
+        string_data_offset,
+    )
+    pool_offsets = b"".join(struct.pack("<I", off) for off in str_offsets)
+    string_pool_chunk = pool_header + struct.pack("<I", 0) + pool_offsets + str_bytes
+
+    body = string_pool_chunk
+    total_size = 8 + len(body)
+    file_header = struct.pack("<II", CHUNK_AXML_FILE, total_size)
+    return file_header + body
+
+
 def create_signed_apk(output_apk_path: Path) -> Path:
     """Assembles and signs the Savage Browser APK."""
     output_apk_path.parent.mkdir(parents=True, exist_ok=True)
 
-    manifest_xml = (SHELL_DIR / "android_project" / "AndroidManifest.xml").read_bytes()
+    manifest_xml = build_axml_manifest("com.savage.soulbrowser")
     dex_bytes = build_minimal_dex()
 
     manifest_lines = [

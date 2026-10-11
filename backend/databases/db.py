@@ -19,5 +19,8 @@ class DatabaseManager:
         self.tables[table].append(record)
         return {"inserted": True, "table": table}
 
-    def query(self, table: str) -> List[Dict[str, Any]]:
-        return list(self.tables.get(table, []))
+    def query(self, table: str, filter_fn: Optional[Any] = None) -> List[Dict[str, Any]]:
+        rows = list(self.tables.get(table, []))
+        if filter_fn and callable(filter_fn):
+            return [r for r in rows if filter_fn(r)]
+        return rows
