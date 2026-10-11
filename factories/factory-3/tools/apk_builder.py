@@ -10,9 +10,14 @@ Assembles and verifies Android Package (APK) artifacts for Savage Browser:
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import os
 import shutil
+import subprocess
 import sys
+import tempfile
+import zipfile
 from pathlib import Path
 
 _curr = Path(__file__).resolve()
@@ -26,21 +31,93 @@ FINAL_PRODUCT_DIR = ROOT_DIR / "factories" / "final-product"
 SHELL_DIR = ROOT_DIR / "shell"
 
 
+def sign_apk_with_pkcs7(input_apk_path: Path, output_apk_path: Path) -> Path:
+    """Signs APK with standards-compliant Android v1 PKCS#7 signature block."""
+    entries = {}
+    with zipfile.ZipFile(input_apk_path, "r") as zf:
+        for name in zf.namelist():
+            if not name.startswith("META-INF/"):
+                entries[name] = zf.read(name)
+
+    manifest_lines = ["Manifest-Version: 1.0", "Created-By: 1.0 (Android)"]
+    file_digests = {}
+    for name in sorted(entries.keys()):
+        digest = base64.b64encode(hashlib.sha256(entries[name]).digest()).decode("ascii")
+        file_digests[name] = digest
+        manifest_lines.append("")
+        manifest_lines.append(f"Name: {name}")
+        manifest_lines.append(f"SHA-256-Digest: {digest}")
+
+    manifest_bytes = ("\r\n".join(manifest_lines) + "\r\n").encode("utf-8")
+    sf_manifest_digest = base64.b64encode(hashlib.sha256(manifest_bytes).digest()).decode("ascii")
+    sf_lines = [
+        "Signature-Version: 1.0",
+        "Created-By: 1.0 (Android)",
+        f"SHA-256-Digest-Manifest: {sf_manifest_digest}",
+    ]
+    for name in sorted(entries.keys()):
+        sec = f"\r\nName: {name}\r\nSHA-256-Digest: {file_digests[name]}\r\n".encode("utf-8")
+        sec_digest = base64.b64encode(hashlib.sha256(sec).digest()).decode("ascii")
+        sf_lines.append("")
+        sf_lines.append(f"Name: {name}")
+        sf_lines.append(f"SHA-256-Digest: {sec_digest}")
+
+    sf_bytes = ("\r\n".join(sf_lines) + "\r\n").encode("utf-8")
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        t = Path(tmpdir)
+        key_file = t / "key.pem"
+        cert_file = t / "cert.pem"
+        sf_file = t / "CERT.SF"
+        rsa_file = t / "CERT.RSA"
+
+        sf_file.write_bytes(sf_bytes)
+
+        subprocess.run(
+            [
+                "openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes",
+                "-keyout", str(key_file), "-out", str(cert_file),
+                "-days", "10000", "-subj", "/CN=SavageBrowser/O=SavageTech/C=US",
+            ],
+            check=True,
+            capture_output=True,
+        )
+
+        subprocess.run(
+            [
+                "openssl", "smime", "-sign", "-in", str(sf_file), "-out", str(rsa_file),
+                "-outform", "DER", "-inkey", str(key_file), "-signer", str(cert_file),
+                "-nodetach", "-md", "sha256",
+            ],
+            check=True,
+            capture_output=True,
+        )
+
+        rsa_bytes = rsa_file.read_bytes()
+
+    output_apk_path.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(output_apk_path, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("META-INF/MANIFEST.MF", manifest_bytes)
+        zf.writestr("META-INF/CERT.SF", sf_bytes)
+        zf.writestr("META-INF/CERT.RSA", rsa_bytes)
+        for name in sorted(entries.keys()):
+            zf.writestr(name, entries[name])
+
+    return output_apk_path
+
+
 def create_signed_apk(output_apk_path: Path) -> Path:
     """Delivers verified authentic Android browser APK deliverable."""
     output_apk_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # 1. First priority: Check authentic verified browser APK in shell/final-product
     shell_apk = ROOT_DIR / "shell" / "final-product" / "SavageBrowser-debug.apk"
     if shell_apk.exists() and shell_apk.stat().st_size > 50000:
         shutil.copy2(shell_apk, output_apk_path)
         return output_apk_path
 
-    # 2. Check if output_apk_path already exists and is a valid production package
     if output_apk_path.exists() and output_apk_path.stat().st_size > 50000:
         return output_apk_path
 
-    # 3. Check artifacts directory
     artifact_apk = ROOT_DIR / "artifacts" / "debug" / "SavageBrowser-debug.apk"
     if artifact_apk.exists() and artifact_apk.stat().st_size > 50000:
         shutil.copy2(artifact_apk, output_apk_path)
