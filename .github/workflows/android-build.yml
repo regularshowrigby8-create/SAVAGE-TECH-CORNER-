@@ -45,6 +45,8 @@ jobs:
         run: |
           cd shell/android_project
           ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee /tmp/gradle_output.txt
+          echo "=== Built Output Directory Content ==="
+          ls -la app/build/outputs/apk/debug/
 
       - name: Upload Gradle Build Logs on Failure
         if: failure()
@@ -53,8 +55,6 @@ jobs:
           name: gradle-assemble-debug-log
           path: /tmp/gradle_output.txt
           if-no-files-found: ignore
-          echo "=== Built Output Directory Content ==="
-          ls -la app/build/outputs/apk/debug/
 
       - name: Locate Output APK
         id: apk_locator
