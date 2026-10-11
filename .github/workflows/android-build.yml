@@ -62,17 +62,25 @@ jobs:
             echo "ERROR: Could not find compiled APK" >&2
             exit 1
           fi
-          
+
+          # Derive asset name from the project version, not a hardcoded constant
+          VERSION_NAME=$(grep -oE 'versionName = "[^"]+"' shell/android_project/app/build.gradle.kts | head -n 1 | cut -d'"' -f2)
+          if [ -z "$VERSION_NAME" ]; then
+            echo "ERROR: could not read versionName from app/build.gradle.kts" >&2
+            exit 1
+          fi
+
           TARGET_DIR="shell/android_project/app/build/outputs/apk/debug"
-          NAMED_APK="$TARGET_DIR/SavageBrowser-v2.0.4.apk"
+          NAMED_APK="$TARGET_DIR/SavageBrowser-v${VERSION_NAME}.apk"
           cp "$SRC_APK" "$NAMED_APK"
-          
+
           # Inspect contents of the compiled APK to verify bytecode and manifest
           echo "=== APK CONTENTS INSPECTION ==="
           unzip -l "$NAMED_APK" | head -n 35
-          
+
           echo "Found freshly built authentic APK: $NAMED_APK"
           echo "apk_path=$NAMED_APK" >> $GITHUB_OUTPUT
+          echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
 
       - name: Run Production APK through Android VM Verifier & Diagnostics
         run: |
@@ -105,6 +113,35 @@ jobs:
           git add "assets/SavageBrowser-v2.0.0.apk" "shell/final-product/SavageBrowser-debug.apk" "artifacts/debug/SavageBrowser-debug.apk"
           git commit -m "ci: sync verified Gradle-built APK into assets [skip ci]"
           git push
+
+      - name: Create Release Tag
+        id: release_tag
+        if: success() && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
+        env:
+          BRANCH_NAME: ${{ github.ref_name }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          VERSION="${{ steps.apk_locator.outputs.version_name }}"
+          TAG="v${VERSION}-build.${GITHUB_RUN_NUMBER}"
+          # Tag the branch tip, which now includes any APK sync commit produced above
+          git fetch origin "$BRANCH_NAME"
+          git tag -a "$TAG" "$(git rev-parse "origin/$BRANCH_NAME")" -m "Savage Browser v${VERSION} — CI build ${GITHUB_RUN_NUMBER}"
+          git push origin "$TAG"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub Release (Auto Per-Build)
+        if: success() && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_tag.outputs.tag }}
+          name: Savage Browser ${{ steps.release_tag.outputs.tag }}
+          files: ${{ steps.apk_locator.outputs.apk_path }}
+          generate_release_notes: true
+          prerelease: ${{ github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main' }}
+          make_latest: ${{ github.ref == 'refs/heads/main' && 'true' || 'false' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish GitHub Release (Version Tags)
         if: startsWith(github.ref, 'refs/tags/v')
