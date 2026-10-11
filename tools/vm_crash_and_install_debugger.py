@@ -145,10 +145,26 @@ class AndroidVMDiagnosticSession:
                                         f"Stored asset '{info.filename}' is misaligned (offset {data_offset} not 4-byte aligned)"
                                     )
 
-                # 3. Signature presence
+                # 3. Signature presence (v1 JAR signature or v2/v3 signing block)
                 has_v1 = any(n.startswith("META-INF/") and (n.endswith(".RSA") or n.endswith(".DSA") or n.endswith(".EC")) for n in namelist)
-                if not has_v1 and self.config["enforce_signature"]:
-                    self._record_install_error("INSTALL_PARSE_FAILED_NO_CERTIFICATES", "No v1 APK signature found in META-INF")
+                
+                # Check for Android v2/v3 signature block in APK footer
+                has_v2_v3 = False
+                try:
+                    with open(self.apk_path, "rb") as f:
+                        f.seek(0, os.SEEK_END)
+                        size = f.tell()
+                        # Search last 4KB for APK Signing Block magic: "APK Sig Block 42"
+                        scan_size = min(4096, size)
+                        f.seek(size - scan_size)
+                        tail = f.read(scan_size)
+                        if b"APK Sig Block 42" in tail:
+                            has_v2_v3 = True
+                except Exception:
+                    pass
+
+                if not has_v1 and not has_v2_v3 and self.config["enforce_signature"]:
+                    self._record_install_error("INSTALL_PARSE_FAILED_NO_CERTIFICATES", "No v1, v2, or v3 APK signature found")
 
                 # 4. Manifest SDK and Package sanity
                 if APKClass is not None:
