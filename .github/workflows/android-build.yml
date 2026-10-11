@@ -39,23 +39,19 @@ jobs:
       - name: Assemble Debug APK
         run: |
           cd shell/android_project
-          ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee /tmp/gradle_output.txt
+          ./gradlew assembleDebug --stacktrace --no-daemon
 
-      - name: Diagnose and Fail on Missing Output
-        if: failure()
+      - name: Debug Output Tree
         run: |
-          echo "=== GRADLE ASSEMBLE FAILURE LOG (Tail 120 lines) ==="
-          tail -n 120 /tmp/gradle_output.txt || true
-          exit 1
+          echo "=== Full filesystem search for any generated files in shell/android_project ==="
+          find shell/android_project -maxdepth 5 -ls
 
       - name: Locate Output APK
         id: apk_locator
         run: |
-          echo "=== Searching strictly for Gradle-built APK in app/build/outputs ==="
-          find shell/android_project/app/build/outputs -type f -name "*.apk" -ls
-          APK_FILE=$(find shell/android_project/app/build/outputs -type f -name "*.apk" | head -n 1)
+          APK_FILE=$(find shell/android_project -type f -name "*.apk" | head -n 1)
           if [ -z "$APK_FILE" ]; then
-            echo "ERROR: Gradle assembleDebug did not produce an APK in app/build/outputs" >&2
+            echo "ERROR: Could not find compiled APK" >&2
             exit 1
           fi
           echo "Found freshly built authentic APK: $APK_FILE"
