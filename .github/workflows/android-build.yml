@@ -44,12 +44,15 @@ jobs:
       - name: Assemble Debug APK
         run: |
           cd shell/android_project
-          ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee /tmp/gradle_output.txt || {
-            STATUS=$?
-            echo "::error::Gradle assembleDebug exited with code $STATUS"
-            echo "::error::$(grep -m 1 -E '(FAILURE:|FAILED|error:|Exception:)' /tmp/gradle_output.txt || echo 'Unknown Gradle failure')"
-            exit $STATUS
-          }
+          ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee /tmp/gradle_output.txt
+
+      - name: Upload Gradle Build Logs on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-assemble-debug-log
+          path: /tmp/gradle_output.txt
+          if-no-files-found: ignore
           echo "=== Built Output Directory Content ==="
           ls -la app/build/outputs/apk/debug/
 
