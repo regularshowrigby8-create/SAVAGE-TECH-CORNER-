@@ -31,9 +31,10 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Savage Browser Main Android Activity.
+ * Savage Browser Main Android Activity (v2.0.4 Modern UI).
  * Hardened WebView implementation with:
  * - Inflates layout from activity_main.xml (Glass Omnibox + Bottom Navigation Dock)
+ * - Safe null-check view binding preventing startup NullPointerExceptions
  * - Strict HTTPS domain whitelist and HTTP scheme rejection
  * - Fail-closed SSL error handler (no silent SSL bypassing)
  * - Dynamic electric progress bar tracking web page loading
@@ -66,36 +67,44 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        // Bind layout views
-        webView = findViewById(R.id.main_webview);
-        progressBar = findViewById(R.id.page_progress_bar);
-        editOmnibox = findViewById(R.id.edit_omnibox);
-        imgSecurityBadge = findViewById(R.id.img_security_badge);
-        btnActionRefresh = findViewById(R.id.btn_action_refresh);
-        btnNavBack = findViewById(R.id.btn_nav_back);
-        btnNavForward = findViewById(R.id.btn_nav_forward);
-        btnNavHome = findViewById(R.id.btn_nav_home);
-        btnNavTabs = findViewById(R.id.btn_nav_tabs);
-        btnNavMenu = findViewById(R.id.btn_nav_menu);
-        btnActionAi = findViewById(R.id.btn_action_ai);
-
-        if (webView == null) {
-            Log.e(TAG, "main_webview not found in layout, instantiating programmatically");
-            webView = new WebView(this);
+        
+        try {
+            setContentView(R.layout.activity_main);
+            webView = findViewById(R.id.main_webview);
+            progressBar = findViewById(R.id.page_progress_bar);
+            editOmnibox = findViewById(R.id.edit_omnibox);
+            imgSecurityBadge = findViewById(R.id.img_security_badge);
+            btnActionRefresh = findViewById(R.id.btn_action_refresh);
+            btnNavBack = findViewById(R.id.btn_nav_back);
+            btnNavForward = findViewById(R.id.btn_nav_forward);
+            btnNavHome = findViewById(R.id.btn_nav_home);
+            btnNavTabs = findViewById(R.id.btn_nav_tabs);
+            btnNavMenu = findViewById(R.id.btn_nav_menu);
+            btnActionAi = findViewById(R.id.btn_action_ai);
+        } catch (Throwable t) {
+            Log.e(TAG, "Layout inflation failed: " + t.getMessage(), t);
         }
 
-        WebSettings settings = webView.getSettings();
-        // Restrict JavaScript and enable security invariants
-        settings.setJavaScriptEnabled(true);
-        settings.setDomStorageEnabled(true);
-        settings.setAllowFileAccess(false);
-        settings.setAllowContentAccess(false);
-        settings.setAllowFileAccessFromFileURLs(false);
-        settings.setAllowUniversalAccessFromFileURLs(false);
-        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        settings.setUserAgentString("SavageBrowser/2.0 (Linux; Android 14; Mobile; SecurityHardened)");
+        // Fallback programmatic webview container if XML layout fails
+        if (webView == null) {
+            Log.w(TAG, "Falling back to safe programmatic WebView container");
+            webView = new WebView(this);
+            setContentView(webView);
+        }
+
+        try {
+            WebSettings settings = webView.getSettings();
+            settings.setJavaScriptEnabled(true);
+            settings.setDomStorageEnabled(true);
+            settings.setAllowFileAccess(false);
+            settings.setAllowContentAccess(false);
+            settings.setAllowFileAccessFromFileURLs(false);
+            settings.setAllowUniversalAccessFromFileURLs(false);
+            settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
+            settings.setUserAgentString("SavageBrowser/2.0.4 (Linux; Android 14; Mobile; SecurityHardened)");
+        } catch (Throwable t) {
+            Log.e(TAG, "WebSettings configuration error: " + t.getMessage(), t);
+        }
 
         webView.setWebViewClient(new HardenedWebViewClient());
         webView.setWebChromeClient(new WebChromeClient() {
@@ -158,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
         }
         if (btnNavMenu != null) {
             btnNavMenu.setOnClickListener(v -> {
-                Toast.makeText(MainActivity.this, "Savage Browser v2.0.3 (Hardened)", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Savage Browser v2.0.4 (Hardened)", Toast.LENGTH_SHORT).show();
             });
         }
         if (btnActionAi != null) {
@@ -304,7 +313,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.w(TAG, "Unauthorized bridge call from origin: " + currentUrl);
                 return "ACCESS_DENIED";
             }
-            return "2.0.3-savage-hardened";
+            return "2.0.4-savage-hardened";
         }
 
         @JavascriptInterface
@@ -334,7 +343,6 @@ public class MainActivity extends AppCompatActivity {
         public static boolean isPrivilegedOrigin(String url) {
             if (url == null) return false;
             try {
-                // If android.net.Uri is not mocked in host JVM unit test, fall back to java.net.URI
                 String scheme = null;
                 String host = null;
                 try {

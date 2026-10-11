@@ -9,5 +9,7 @@
         <item name="colorOnSecondary">#FFFFFF</item>
         <item name="android:statusBarColor">#090D16</item>
         <item name="android:navigationBarColor">#090D16</item>
+        <item name="android:windowBackground">#090D16</item>
+        <item name="selectableItemBackgroundBorderless">?android:attr/selectableItemBackground</item>
     </style>
 </resources>

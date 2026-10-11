@@ -14,6 +14,7 @@ python3 factory-2/agents/agent_model_debugger.py || check_status=1
 python3 factory-2/agents/agent_critic.py || critic_status=1
 
 echo "=== AGENTS COMPLETE ==="
+python3 tools/generate_ai_activity_script.py || true
 python3 factory-2/manager/guidance.py || check_status=1
 echo "=== MANAGER REVIEW COMPLETE ==="
 python3 factory-2/criticism/dead_code_check.py || check_status=1
