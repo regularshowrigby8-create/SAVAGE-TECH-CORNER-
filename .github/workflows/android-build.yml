@@ -36,25 +36,22 @@ jobs:
       - name: Grant Execute Permission to Gradlew
         run: chmod +x shell/android_project/gradlew
 
-      - name: Assemble Debug APK
+      - name: Assemble Debug APK with Detailed Logs
         run: |
           cd shell/android_project
-          ./gradlew :app:assembleDebug --stacktrace --no-daemon
-
-      - name: Inspect Build Outputs
-        run: |
-          echo "=== Full file tree of shell/android_project/app/build ==="
-          find shell/android_project/app/build -ls || true
+          ./gradlew :app:assembleDebug --stacktrace --no-daemon 2>&1 | tee /tmp/gradle_run.log || {
+            echo "::error::Gradle assembleDebug failed!"
+            echo "==================== FULL GRADLE FAILURE LOG (Tail 150 lines) ===================="
+            tail -n 150 /tmp/gradle_run.log
+            exit 1
+          }
 
       - name: Locate Output APK
         id: apk_locator
         run: |
-          APK_FILE=$(find shell/android_project/app/build -type f -name "*.apk" | head -n 1)
-          if [ -z "$APK_FILE" ]; then
-            echo "Searching whole repository for any generated .apk..."
-            find . -name "*.apk" -ls
-            APK_FILE=$(find . -name "*.apk" -not -path "*/assets/*" | head -n 1)
-          fi
+          echo "=== Locating built APK ==="
+          find shell/android_project/app/build/outputs -type f -name "*.apk" -ls
+          APK_FILE=$(find shell/android_project/app/build/outputs -type f -name "*.apk" | head -n 1)
           if [ -z "$APK_FILE" ]; then
             echo "ERROR: Could not find compiled APK" >&2
             exit 1
