@@ -40,14 +40,8 @@ jobs:
         run: |
           cd shell/android_project
           ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee /tmp/assemble.log || true
-          if [ ! -f /tmp/assemble.log ]; then
-            echo "No log created" >&2
-            exit 1
-          fi
-          echo "=== ASSEMBLE LOG HEAD ==="
-          head -n 40 /tmp/assemble.log
-          echo "=== ASSEMBLE LOG TAIL ==="
-          tail -n 80 /tmp/assemble.log
+          ERR_MSG=$(grep -E "(FAILED|Exception|error:|cause:)" /tmp/assemble.log | head -n 10 | tr '\n' ' ' || echo "Unknown error")
+          echo "::error::$ERR_MSG"
           # Check if build actually succeeded
           if grep -q "BUILD SUCCESSFUL" /tmp/assemble.log; then
             echo "Build succeeded!"
