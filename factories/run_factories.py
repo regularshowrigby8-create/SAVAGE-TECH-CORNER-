@@ -55,24 +55,28 @@ def run_factory_pipeline(input_source: str = "shell") -> dict[str, object]:
                 loaded_files.append(f.name)
 
             # Also load actual Android project Java source & Manifest for real Android static analysis
-            android_src = SHELL_DIR / "android_project" / "src" / "com" / "savage" / "soulbrowser" / "MainActivity.java"
+            android_src = SHELL_DIR / "android_project" / "app" / "src" / "main" / "java" / "com" / "savage" / "soulbrowser" / "MainActivity.java"
+            if not android_src.exists():
+                android_src = SHELL_DIR / "android_project" / "src" / "com" / "savage" / "soulbrowser" / "MainActivity.java"
             if android_src.exists():
                 shutil.copy2(android_src, target_app_dir / android_src.name)
                 loaded_files.append(android_src.name)
 
-            manifest_src = SHELL_DIR / "android_project" / "AndroidManifest.xml"
+            manifest_src = SHELL_DIR / "android_project" / "app" / "src" / "main" / "AndroidManifest.xml"
+            if not manifest_src.exists():
+                manifest_src = SHELL_DIR / "android_project" / "AndroidManifest.xml"
             if manifest_src.exists():
                 shutil.copy2(manifest_src, target_app_dir / manifest_src.name)
                 loaded_files.append(manifest_src.name)
 
             print(f"[STAGE 1] Loaded {len(loaded_files)} shell & Android source file(s) into Factory 2 workspace")
-        elif input_source == "factory-1":
-            f1_code_dir = FACTORY_1_DIR / "workspace" / "code"
-            if f1_code_dir.exists():
-                for f in f1_code_dir.glob("*.py"):
+        elif input_source == "workspace":
+            code_dir = ROOT_DIR / "workspace" / "code"
+            if code_dir.exists():
+                for f in code_dir.glob("*.py"):
                     shutil.copy2(f, target_app_dir / f.name)
                     loaded_files.append(f.name)
-            print(f"[STAGE 1] Loaded {len(loaded_files)} Factory 1 source file(s) into Factory 2 workspace")
+            print(f"[STAGE 1] Loaded {len(loaded_files)} Workspace source file(s) into Factory 2 workspace")
         pipeline_log["stages"]["factory_1_intake"] = "SUCCESS"
 
         # Step 2: Feed to Factory 2 Models for non-mutating debug

@@ -55,11 +55,11 @@ class FullSystemAudit(unittest.TestCase):
         print("[AUDIT] Soul Browser Shell: PASS")
 
     def test_03_factory_1_scanners(self) -> None:
-        sys.path.insert(0, str(ROOT_DIR / "factories" / "factory-1"))
-        from workspace.code.debug_pipeline import run_debug_pipeline
-        res = run_debug_pipeline(ROOT_DIR / "factories" / "factory-1" / "workspace" / "code")
+        sys.path.insert(0, str(ROOT_DIR / "workspace" / "code"))
+        from debug_pipeline import run_debug_pipeline
+        res = run_debug_pipeline(ROOT_DIR / "workspace" / "code")
         self.assertTrue(res["passed"])
-        print("[AUDIT] Factory 1 Scanners: PASS")
+        print("[AUDIT] Workspace Scanners: PASS")
 
     def test_04_factory_2_run_all(self) -> None:
         cmd = ["bash", "factory-2/scripts/run_all.sh"]
@@ -88,7 +88,7 @@ class FullSystemAudit(unittest.TestCase):
         self.assertTrue(zip_path.exists())
         with zipfile.ZipFile(zip_path, "r") as zf:
             names = zf.namelist()
-            for prefix in ["factory-1/", "factory-2/", "factory-3/", "final-product/"]:
+            for prefix in ["factory-2/", "factory-3/", "final-product/"]:
                 self.assertTrue(any(n.startswith(prefix) for n in names), f"Missing {prefix} in zip")
         print("[AUDIT] Canonical Zip Archive: PASS")
 

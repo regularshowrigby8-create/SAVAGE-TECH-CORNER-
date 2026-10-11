@@ -86,6 +86,23 @@ class MainAgentVerifier:
         if not candidate_path.exists():
             return False, f"Candidate file '{candidate_path}' missing"
 
+        # Check 1.5: Critical Agent Protection Invariant
+        # The autonomous judge/agent scripts must NEVER be self-modified by model proposals.
+        # Capability downgrades or judge tampering is forbidden.
+        IMMUTABLE_CORE_COMPONENTS = {
+            "agent_security.py",
+            "agent_architecture.py",
+            "agent_correctness.py",
+            "agent_critic.py",
+            "agent_quality.py",
+            "main_agent_verifier.py",
+            "model_debugger.py",
+            "gates.sh",
+            "anti_deception_auditor.py",
+        }
+        if target_path.name in IMMUTABLE_CORE_COMPONENTS or "agents" in target_path.parts:
+            return False, f"Architectural invariant violation: Cannot auto-modify core verification judge '{target_path.name}'"
+
         # Check 2: Target file hash verification (prevent drift)
         current_hash = compute_file_hash(target_path)
         if current_hash != meta.get("original_hash"):
