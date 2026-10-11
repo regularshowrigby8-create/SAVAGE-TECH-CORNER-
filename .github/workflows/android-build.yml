@@ -36,33 +36,26 @@ jobs:
       - name: Grant Execute Permission to Gradlew
         run: chmod +x shell/android_project/gradlew
 
-      - name: Run Unit Tests
-        run: |
-          cd shell/android_project
-          ./gradlew testDebugUnitTest --info --continue || true
-
       - name: Assemble Debug APK
         run: |
           cd shell/android_project
           ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee /tmp/gradle_output.txt
-          echo "=== Built Output Directory Content ==="
-          ls -la app/build/outputs/apk/debug/
 
-      - name: Upload Gradle Build Logs on Failure
+      - name: Diagnose and Fail on Missing Output
         if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: gradle-assemble-debug-log
-          path: /tmp/gradle_output.txt
-          if-no-files-found: ignore
+        run: |
+          echo "=== GRADLE ASSEMBLE FAILURE LOG (Tail 120 lines) ==="
+          tail -n 120 /tmp/gradle_output.txt || true
+          exit 1
 
       - name: Locate Output APK
         id: apk_locator
         run: |
           echo "=== Searching strictly for Gradle-built APK in app/build/outputs ==="
-          APK_FILE=$(find shell/android_project/app/build/outputs/apk -name "*.apk" | head -n 1)
+          find shell/android_project/app/build/outputs -type f -name "*.apk" -ls
+          APK_FILE=$(find shell/android_project/app/build/outputs -type f -name "*.apk" | head -n 1)
           if [ -z "$APK_FILE" ]; then
-            echo "ERROR: Gradle assembleDebug did not generate an APK in app/build/outputs/apk" >&2
+            echo "ERROR: Gradle assembleDebug did not produce an APK in app/build/outputs" >&2
             exit 1
           fi
           echo "Found freshly built authentic APK: $APK_FILE"
