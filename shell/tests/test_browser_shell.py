@@ -71,5 +71,24 @@ class TestSoulBrowserShell(unittest.TestCase):
         self.assertFalse(self.shell.ai_drawer_open)
 
 
+    def test_missing_coverage_lines(self) -> None:
+        from shell.soul_browser.browser_shell import WebViewBridge, WebViewHolder
+        bridge = WebViewBridge()
+        with self.assertRaises(ValueError):
+            bridge.register_interface("invalid", "not_callable")  # type: ignore
+
+        with self.assertRaises(KeyError):
+            bridge.invoke("nonexistent")
+
+        holder = WebViewHolder()
+        with self.assertRaises(ValueError):
+            holder.load_url("ftp://invalid.scheme.com")
+
+        dl = holder.trigger_download("https://example.com/file.zip", "application/zip")
+        self.assertEqual(dl["status"], "queued")
+        self.assertEqual(dl["url"], "https://example.com/file.zip")
+        self.assertEqual(dl["mime_type"], "application/zip")
+        self.assertIn(dl, holder.downloads)
+
 if __name__ == "__main__":
     unittest.main()

@@ -78,10 +78,18 @@ def audit_binary_assets(repo_root: Path) -> List[str]:
 def audit_source_code_authenticity(repo_root: Path) -> List[str]:
     violations: List[str] = []
     
-    # Walk Python and config files
-    for path in repo_root.rglob("*.py"):
+    # Universal text scan across all project files (.java, .kt, .kts, .xml, .sh, .py, .md, .json, .yml, .gradle)
+    SCANNED_EXTENSIONS = {
+        ".py", ".java", ".kt", ".kts", ".xml", ".sh", ".json", ".yml", ".yaml", ".gradle"
+    }
+
+    for path in repo_root.rglob("*"):
+        if not path.is_file():
+            continue
+        if path.suffix.lower() not in SCANNED_EXTENSIONS:
+            continue
         rel = path.relative_to(repo_root).as_posix()
-        if ".git" in rel or "node_modules" in rel or ".cache" in rel:
+        if any(ignored in rel for ignored in (".git", "node_modules", ".cache", "build/", ".gradle/")):
             continue
         if rel in ALLOWED_FORBIDDEN_TOKEN_FILES:
             continue

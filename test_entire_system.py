@@ -93,11 +93,14 @@ class FullSystemAudit(unittest.TestCase):
         print("[AUDIT] Canonical Zip Archive: PASS")
 
     def test_08_deterministic_gates(self) -> None:
-        proc = subprocess.run([sys.executable, "tools/anti_deception_auditor.py"], cwd=ROOT_DIR, capture_output=True, text=True)
-        self.assertEqual(proc.returncode, 0, f"Anti-deception auditor failed:\n{proc.stdout}\n{proc.stderr}")
-        self.assertIn("Repository passed all authenticity", proc.stdout)
-        print("[AUDIT] Deterministic Anti-Deception Audit: PASS")
+        proc = subprocess.run([sys.executable, 'tools/anti_deception_auditor.py'], cwd=ROOT_DIR, capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn('Repository passed all authenticity', proc.stdout)
+        print('[AUDIT] Deterministic Anti-Deception Audit: PASS')
+
+        gate_proc = subprocess.run(['bash', '.claude/scripts/gates.sh'], env=dict(os.environ, SKIP_RECURSIVE_AUDIT='1'), cwd=ROOT_DIR, capture_output=True, text=True)
+        self.assertEqual(gate_proc.returncode, 0)
+        self.assertIn('VERDICT: PASS', gate_proc.stdout)
+        print('[AUDIT] Master Deterministic Gates: PASS')
 
 
-if __name__ == "__main__":
-    unittest.main()

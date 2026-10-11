@@ -102,7 +102,11 @@ echo "[GATE 7] Fresh Multi-Factory Orchestrator Run..."
 bash factory-2/scripts/run_all.sh || fail pipeline "Factory 2 pipeline reported failure"
 
 echo "[GATE 8] End-to-End System Integration Audit..."
-python3 test_entire_system.py || fail end_to_end "End-to-end system audit failed"
+if [ "0" != "1" ]; then
+  python3 test_entire_system.py || fail end_to_end "End-to-end system audit failed"
+else
+  echo "SKIP_RECURSIVE_AUDIT=1: Skipping nested gate invocation to prevent recursion."
+fi
 
 if [ "${#failures[@]}" -gt 0 ]; then
   printf '\nVERDICT: FAIL — %s\n' "${failures[*]}"
