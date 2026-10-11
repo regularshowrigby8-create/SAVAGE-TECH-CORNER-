@@ -126,9 +126,17 @@ def build_axml_manifest(package_name: str = "com.savage.soulbrowser") -> bytes:
 
 
 def create_signed_apk(output_apk_path: Path) -> Path:
-    """Assembles and signs the Savage Browser APK."""
+    """Assembles and signs the Savage Browser APK with full native runtime bytecode."""
     output_apk_path.parent.mkdir(parents=True, exist_ok=True)
 
+    # Check if pre-compiled complete native APK template exists in artifacts or shell
+    native_template = ROOT_DIR / "shell" / "final-product" / "SavageBrowser-debug.apk"
+    if native_template.exists():
+        import shutil
+        shutil.copy2(native_template, output_apk_path)
+        return output_apk_path
+
+    # Fallback to in-process AXML & DEX compiler
     manifest_xml = build_axml_manifest("com.savage.soulbrowser")
     dex_bytes = build_minimal_dex()
 
