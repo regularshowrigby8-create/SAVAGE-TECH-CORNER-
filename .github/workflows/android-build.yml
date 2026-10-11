@@ -36,27 +36,22 @@ jobs:
       - name: Grant Execute Permission to Gradlew
         run: chmod +x shell/android_project/gradlew
 
-      - name: Assemble Debug APK with Diagnostic Output
+      - name: Debug Gradle Environment and Tasks
         run: |
           cd shell/android_project
-          ./gradlew :app:assembleDebug --stacktrace --no-daemon
-          echo "=== App build directory listing ==="
-          ls -la app/build/ || true
-          ls -la app/build/outputs/ || true
-          ls -la app/build/outputs/apk/ || true
-          find app/build/ -name "*.apk" -ls || true
+          ./gradlew --version
+          ./gradlew tasks --all
+
+      - name: Assemble Debug APK
+        run: |
+          cd shell/android_project
+          ./gradlew assembleDebug --stacktrace --no-daemon
 
       - name: Locate Output APK
         id: apk_locator
         run: |
-          echo "=== Locating built APK ==="
-          find shell/android_project -type f -name "*.apk" -ls
-          APK_FILE=$(find shell/android_project -type f -name "*.apk" | head -n 1)
-          if [ -z "$APK_FILE" ]; then
-            echo "Searching entire runner workspace for any .apk..."
-            find . -type f -name "*.apk" -ls
-            APK_FILE=$(find . -type f -name "*.apk" | head -n 1)
-          fi
+          find shell/android_project/app/build/outputs/apk/debug/ -type f -name "*.apk" -ls
+          APK_FILE=$(find shell/android_project/app/build/outputs/apk/debug/ -type f -name "*.apk" | head -n 1)
           if [ -z "$APK_FILE" ]; then
             echo "ERROR: Could not find compiled APK" >&2
             exit 1
