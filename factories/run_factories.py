@@ -119,20 +119,29 @@ def run_factory_pipeline(input_source: str = "shell") -> dict[str, object]:
         f3_result = refiner.process_and_certify(target_app_dir)
         print(f"[STAGE 3] Factory 3 certification status: {f3_result['status']}")
 
-        # Stage 3 Audit Gate: Fail closed if broker flagged critical findings
-        broker_clean = broker_result.get("clean", False)
-        f3_certified = f3_result.get("status") == "CERTIFIED" and broker_clean
-
-        if not f3_certified:
-            print(f"[STAGE 3-BLOCK] Android refinement failed certification: broker clean={broker_clean}, cert={f3_result.get('status')}")
-            f3_result["status"] = "REJECTED"
-
         # Build and Package Android APK
         print("[STAGE 3] Factory 3: Building and signing Savage Browser Android APK...")
         from apk_builder import create_signed_apk
         apk_output = FINAL_PRODUCT_DIR / "SavageBrowser-debug.apk"
         create_signed_apk(apk_output)
         print(f"[STAGE 3] Savage Browser APK successfully assembled: {apk_output.name} ({apk_output.stat().st_size / 1024:.2f} KB)")
+
+        # Stage 3 Audit Gate: Fail closed if broker flagged critical findings
+        broker_clean = broker_result.get("clean", False)
+        f3_certified = f3_result.get("status") == "CERTIFIED" and broker_clean
+
+        # Production Browser App Rules Enforcement Gate
+        from browser_app_rules import verify_browser_app_rules
+        app_rules = verify_browser_app_rules(apk_output)
+        print(f"[STAGE 3] Browser App Invariant Rules verification: {'PASS' if app_rules['passed'] else 'FAIL'}")
+
+        if not app_rules["passed"]:
+            print(f"[STAGE 3-BLOCK] Bogus/Mock APK rejected by Browser App Rules: {app_rules['violations']}")
+            f3_certified = False
+
+        if not f3_certified:
+            print(f"[STAGE 3-BLOCK] Android refinement failed certification: broker clean={broker_clean}, cert={f3_result.get('status')}")
+            f3_result["status"] = "REJECTED"
 
         # Check Gradle wrapper presence
         gradlew = SHELL_DIR / "android_project" / "gradlew"
