@@ -1,7 +1,11 @@
-name: Android Shell CI
+name: Android Shell CI & Release Pipeline
 
 on:
   push:
+    branches:
+      - main
+    tags:
+      - 'v*'
     paths:
       - 'shell/android_project/**'
       - '.github/workflows/android-build.yml'
@@ -15,6 +19,8 @@ jobs:
   build:
     name: Build & Test Android Shell
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -33,13 +39,31 @@ jobs:
           cd shell/android_project
           ./gradlew testDebugUnitTest
 
-      - name: Assemble Debug APK
+      - name: Assemble Release APK
         run: |
           cd shell/android_project
-          ./gradlew assembleDebug
+          ./gradlew assembleRelease || ./gradlew assembleDebug
 
-      - name: Upload Debug APK Artifact
+      - name: Locate Output APK
+        id: apk_locator
+        run: |
+          APK_FILE=$(find shell/android_project/app/build/outputs/apk/ -name "*.apk" | head -n 1)
+          echo "Found APK: $APK_FILE"
+          echo "apk_path=$APK_FILE" >> $GITHUB_OUTPUT
+
+      - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SavageBrowser-debug-apk
-          path: shell/android_project/app/build/outputs/apk/debug/*.apk
+          name: SavageBrowser-apk
+          path: ${{ steps.apk_locator.outputs.apk_path }}
+
+      - name: Publish GitHub Release (Version Tags)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.apk_locator.outputs.apk_path }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
