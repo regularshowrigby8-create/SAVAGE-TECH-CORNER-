@@ -46,13 +46,21 @@ jobs:
         run: |
           echo "=== Locating compiled APK in build outputs ==="
           find shell/android_project/app/build/outputs/apk/debug/ -type f -name "*.apk" -ls
-          APK_FILE=$(find shell/android_project/app/build/outputs/apk/debug/ -type f -name "*.apk" | head -n 1)
-          if [ -z "$APK_FILE" ]; then
+          SRC_APK=$(find shell/android_project/app/build/outputs/apk/debug/ -type f -name "*.apk" | head -n 1)
+          if [ -z "$SRC_APK" ]; then
             echo "ERROR: Could not find compiled APK" >&2
             exit 1
           fi
-          echo "Found freshly built authentic APK: $APK_FILE"
-          echo "apk_path=$APK_FILE" >> $GITHUB_OUTPUT
+          
+          # Copy to standard named deliverable SavageBrowser-debug.apk
+          TARGET_DIR="shell/android_project/app/build/outputs/apk/debug"
+          NAMED_APK="$TARGET_DIR/SavageBrowser-debug.apk"
+          if [ "$SRC_APK" != "$NAMED_APK" ]; then
+            cp "$SRC_APK" "$NAMED_APK"
+          fi
+          
+          echo "Found freshly built authentic APK: $NAMED_APK"
+          echo "apk_path=$NAMED_APK" >> $GITHUB_OUTPUT
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
