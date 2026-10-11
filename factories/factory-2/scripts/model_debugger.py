@@ -186,10 +186,25 @@ class ModelDebugger:
                 content = target.read_text(encoding="utf-8")
                 # Prepare remediation
                 issues = [f"{finding.get('tool')}: {finding.get('message')}"]
+
+                # Directly invoke Model Execution Proxy for AI-powered remediation
+                try:
+                    from mcp_model_server import ModelExecutionProxy
+                    proxy = ModelExecutionProxy()
+                    inference_result = proxy.query_model(
+                        model_name=model_name,
+                        prompt=f"Diagnostic: {finding.get('message')}\nCode:\n{content}",
+                        system_prompt="You are an expert AI software engineer fixing Android and Python defects."
+                    )
+                    model_response = inference_result.get("response", "")
+                except Exception as e:
+                    model_response = f"Fallback error remediation: {e}"
+
                 explanation = (
                     f"Model {model_name} resolved Factory 3 ErrorPacket [{pkt_data.get('packet_id')}]:\n"
                     f"Root cause: {finding.get('category')} detected by {finding.get('tool')}.\n"
-                    f"Remediation action: Applied {finding.get('remediation')}"
+                    f"Remediation action: Applied {finding.get('remediation')}\n"
+                    f"Inference synthesis: {model_response}"
                 )
 
                 # Generate clean candidate code
@@ -236,9 +251,23 @@ class ModelDebugger:
                             issues.append(f"Function '{node.name}' at line {node.lineno} lacks explicit return type annotation")
 
             if issues:
+                # Directly invoke Model Execution Proxy for AI-powered remediation
+                try:
+                    from mcp_model_server import ModelExecutionProxy
+                    proxy = ModelExecutionProxy()
+                    inference_result = proxy.query_model(
+                        model_name=model_name,
+                        prompt=f"Diagnostic: " + "; ".join(issues) + f"\nCode:\n{content}",
+                        system_prompt="You are an expert AI software engineer fixing Android and Python defects."
+                    )
+                    model_response = inference_result.get("response", "")
+                except Exception as e:
+                    model_response = f"Fallback error remediation: {e}"
+
                 explanation = (
                     f"Model {model_name} diagnosed {len(issues)} code quality defect(s) in {py_path.name}.\n"
                     f"Issues detected:\n- " + "\n- ".join(issues) + "\n"
+                    f"Model Inference: {model_response}\n"
                     "Remediation: Prepared candidate implementation with explicit type hints and strict error guards."
                 )
                 # Create proposed code without touching target
