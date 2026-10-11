@@ -87,13 +87,12 @@ def analyze_correctness(directory: str = ".") -> List[Dict[str, Any]]:
                 clean = line.strip()
                 if clean.startswith("#"):
                     if any(marker in clean.upper() for marker in ("TODO:", "FIXME:", "INCOMPLETE:")):
-                        if not any(token in clean.upper() for token in ("RULE", "EXCLUDE", "PASS")):
-                            findings.append({
-                                "type": "incomplete_marker",
-                                "file": fpath,
-                                "line": lineno,
-                                "detail": clean[:80],
-                            })
+                        findings.append({
+                            "type": "incomplete_marker",
+                            "file": fpath,
+                            "line": lineno,
+                            "detail": clean[:80],
+                        })
 
             # 2. Parse AST for unreachable statements and unused private functions
             try:

@@ -120,6 +120,40 @@ def audit_source_code_authenticity(repo_root: Path) -> List[str]:
         except Exception as e:
             pass
 
+    # Hollow Check & Bypass Auditor: Detect decorative or bypassed quality checks
+    for path in repo_root.rglob("*.sh"):
+        if not path.is_file():
+            continue
+        rel = path.relative_to(repo_root).as_posix()
+        if any(ignored in rel for ignored in (".git", "node_modules")):
+            continue
+        try:
+            sh_content = path.read_text(encoding="utf-8", errors="ignore")
+            # 1. Flag environment bypasses
+            if re.search(r"""\b(?:SKIP_[A-Z0-9_]+|BYPASS_[A-Z0-9_]+)\b""", sh_content):
+                violations.append(f"Shell script '{rel}' contains environment-variable gate bypass mechanism")
+            # 2. Flag docstring discrepancy: doctor.sh promises placeholder scan without implementing it
+            if "doctor.sh" in rel:
+                if "placeholder" in sh_content.lower() and not any(w in sh_content for w in ["grep", "python", "rg"]):
+                    violations.append(f"Shell script '{rel}' promises placeholder scan in header but contains no scanner")
+        except Exception:
+            pass
+
+    # Check criticism scripts for superficial substring-only checks
+    for check_file in [
+        repo_root / "factory-2" / "criticism" / "dead_buttons_check.py",
+        repo_root / "factories" / "factory-2" / "criticism" / "dead_buttons_check.py",
+    ]:
+        if check_file.exists():
+            rel = check_file.relative_to(repo_root).as_posix()
+            try:
+                code = check_file.read_text(encoding="utf-8")
+                # Fail if dead_buttons_check is reduced to a raw substring check without calling/executing handlers
+                if "click_button" not in code or "callable(" not in code:
+                    violations.append(f"Criticism check '{rel}' is hollow: does not verify callability or execution of UI handlers")
+            except Exception:
+                pass
+
     return violations
 
 
