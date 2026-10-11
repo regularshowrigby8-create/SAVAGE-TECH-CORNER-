@@ -1,5 +1,5 @@
 coverage>=7.6.0
-androguard>=3.4.0a1
+androguard>=4.1.4
 cryptography>=43.0.0
 pyopenssl>=24.2.1
 jsonschema>=4.23.0
