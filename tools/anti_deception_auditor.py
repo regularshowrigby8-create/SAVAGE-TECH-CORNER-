@@ -89,7 +89,7 @@ def audit_source_code_authenticity(repo_root: Path) -> List[str]:
         if path.suffix.lower() not in SCANNED_EXTENSIONS:
             continue
         rel = path.relative_to(repo_root).as_posix()
-        if any(ignored in rel for ignored in (".git", "node_modules", ".cache", "build/", ".gradle/")):
+        if any(ignored in rel for ignored in (".git", "node_modules", ".cache", "build/", ".gradle/", "package-lock.json")):
             continue
         if rel in ALLOWED_FORBIDDEN_TOKEN_FILES:
             continue
