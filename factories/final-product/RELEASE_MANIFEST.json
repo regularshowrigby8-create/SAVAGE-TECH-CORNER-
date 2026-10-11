@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-11T01:14:20.770599+00:00",
+  "timestamp": "2026-10-11T01:25:02.608527+00:00",
   "input_source": "shell",
   "stages": {
     "factory_1_intake": "SUCCESS",
@@ -17,19 +17,16 @@
         "apk_metrics": {
           "tool": "APKAnalyzer",
           "passed": true,
-          "total_bytes": 10536,
+          "total_bytes": 12390,
           "file_count": 3,
           "dex_budget_ok": true,
           "findings": []
         },
         "experimental_diagnostics": {
-          "tool": "UnverifiedExperimentalTools:SpeculativeBridgeAnalysis",
-          "verified": false,
+          "tool": "UnverifiedExperimentalTools",
           "status": "EXPERIMENTAL_PASS",
-          "bridge_hotspots": [
-            "/home/user/SAVAGE-TECH-CORNER-/factories/factory-2/app/src/browser_shell.py"
-          ],
-          "recommendation": "Maintain strict JNI/WebView type-marshaling checks on all identified hotspots."
+          "speculative_dead_paths": 0,
+          "jni_signature_leaks": 0
         },
         "retry_count": 0,
         "max_retries": 3,

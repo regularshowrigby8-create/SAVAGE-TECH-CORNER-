@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Factory 2 Generalized Manager — Dynamically parses and evaluates all agent reports.
-Uses generalized evidence policies rather than rigid hardcoded per-agent if/else blocks.
+Uses generalized evidence policies with fail-closed rejection for blocking security and syntax defects.
 """
 
 from __future__ import annotations
@@ -20,6 +20,8 @@ def review_findings() -> List[str]:
         print("[MANAGER-ERROR] Reports directory does not exist!")
         return ["REPORTS_DIR_MISSING"]
 
+    has_fatal_blocker = False
+
     # Generalized Agent Evaluation Loop
     for report_file in sorted(reports_dir.glob("*_report.md")):
         agent_name = report_file.stem.replace("_report", "")
@@ -30,6 +32,7 @@ def review_findings() -> List[str]:
             content = report_file.read_text(encoding="utf-8")
         except OSError:
             manager_notes.append(f"Agent {agent_name}: UNREADABLE REPORT — ESCALATE.")
+            has_fatal_blocker = True
             continue
 
         # Extract structured findings if present
@@ -43,6 +46,10 @@ def review_findings() -> List[str]:
             except Exception:
                 pass
 
+        # Check for explicit critic rejection
+        if "Verdict: FAIL" in content or "BLOCKING" in content and "Zero blocking" not in content:
+            has_fatal_blocker = True
+
         # Generalized Decision Engine
         if not findings and "Verdict: SHIP" in content:
             manager_notes.append(f"Agent {agent_name}: ACCEPTED — Clean report verified. Zero blocking findings.")
@@ -51,12 +58,14 @@ def review_findings() -> List[str]:
                 f for f in findings
                 if isinstance(f, dict) and f.get("type") in {
                     "syntax_error", "hardcoded_token", "high_entropy_secret",
+                    "insecure_cleartext_traffic", "insecure_ssl_bypass",
                     "missing_category_directory", "missing_quality_infrastructure",
                 }
             ]
             if high_severity:
+                has_fatal_blocker = True
                 manager_notes.append(
-                    f"Agent {agent_name}: ACCEPTED (BLOCKING) — {len(high_severity)} high-severity finding(s) confirmed. Immediate repair required."
+                    f"Agent {agent_name}: REJECTED (BLOCKING) — {len(high_severity)} high-severity finding(s) confirmed. Immediate repair required."
                 )
             else:
                 manager_notes.append(
@@ -66,15 +75,16 @@ def review_findings() -> List[str]:
             manager_notes.append(f"Agent {agent_name}: ACCEPTED — Verified with evidence.")
 
     # Write unified Manager response
+    verdict = "REJECTED" if has_fatal_blocker else "ACCEPTED"
     response_file = reports_dir / "manager_response.md"
     with open(response_file, "w", encoding="utf-8") as f:
-        f.write("# Manager Response\n")
+        f.write(f"# Manager Response\nVerdict: {verdict}\n\n")
         f.write("Every agent finding reviewed via Generalized Evidence Protocol.\n")
-        f.write("No feedback was discounted automatically.\n\n")
+        f.write("Fail-closed policy rejects build if blocking vulnerabilities or unverified claims exist.\n\n")
         for note in manager_notes:
             f.write(note + "\n")
 
-    print("[MANAGER] Generalized review complete. All agent findings examined with written evidence.")
+    print(f"[MANAGER] Generalized review complete. Verdict: {verdict}. All agent findings examined.")
     return manager_notes
 
 

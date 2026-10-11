@@ -3,6 +3,7 @@
 Inspects code with Factory 3 Android debugging tools.
 If defects or warnings are detected, it bundles them into an ErrorPacket
 with rich diagnostic context and sends it straight back to Factory 2 AI agents.
+Tracks retry state within the packet payload to enforce hard escalation limits.
 """
 
 from __future__ import annotations
@@ -106,60 +107,35 @@ class MiddlemanBroker:
                 report["guardrail_triggered"] = True
                 print(f"[MIDDLEMAN-GUARDRAIL] Maximum retries ({max_retries}) reached for '{target_path.name}'. Escalating to human review.")
             else:
-                packet = self.dispatch_error_packet(target_path, findings, retry_count=retry_count)
+                next_retry = retry_count + 1
+                packet = self.dispatch_error_packet(target_path, findings, retry_count=next_retry)
                 report["error_packet"] = packet
                 report["status"] = "RETURNED_TO_AGENTS_FOR_REMEDATION"
+                report["next_retry_count"] = next_retry
         else:
             report["status"] = "PASSED_FACTORY_3_CERTIFICATION"
 
         return report
 
-    def dispatch_error_packet(self, target_path: Path, findings: List[Dict[str, Any]], retry_count: int = 0) -> Dict[str, Any]:
-        """Creates a structured ErrorPacket and delivers it to Factory 2 AI agents' inbox."""
+    def dispatch_error_packet(self, target_path: Path, findings: List[Dict[str, Any]], retry_count: int = 1) -> Dict[str, Any]:
+        """Creates a structured ErrorPacket and delivers it to Factory 2 AI agents' inbox with incremented retry count."""
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         packet_id = f"ERR_PKT_{timestamp}_{target_path.stem}"
-
-        # Generate model insight context
-        insight_lines = [
-            f"=== FACTORY 3 DEBUGGING REPORT: {packet_id} (Attempt {retry_count + 1}) ===",
-            f"Target Codebase: {target_path}",
-            f"Total issues identified by Android tools: {len(findings)}",
-            "",
-            "Diagnostic Findings:",
-        ]
-        for idx, f in enumerate(findings, 1):
-            insight_lines.append(
-                f"{idx}. [{f.get('tool')}] {f.get('category')} ({f.get('severity')}) at {f.get('file')}:{f.get('line')}\n"
-                f"   Message: {f.get('message')}\n"
-                f"   Context snippet: {f.get('context')}\n"
-                f"   Remediation advice: {f.get('remediation')}"
-            )
-
         packet: Dict[str, Any] = {
             "packet_id": packet_id,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "target_dir": str(target_path),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "origin": "Factory-3.MiddlemanBroker",
+            "target": str(target_path),
+            "retry_count": retry_count,
             "findings_count": len(findings),
             "findings": findings,
-            "retry_count": retry_count,
-            "agent_instruction": (
-                "Please review the attached diagnostic context. Formulate a non-mutating debug proposal "
-                "in factory-2/debug/proposals/ resolving these Android tool issues without modifying files directly."
-            ),
-            "model_insight_prompt": "\n".join(insight_lines),
+            "model_insight_prompt": f"Defects detected in {target_path.name}: " + "; ".join(f.get("message", "") for f in findings),
+            "remediation_request": "Factory 2 agents please analyze findings, generate non-mutating proposals, and submit to verifier.",
         }
 
-        # Save to Factory 2 AI Agents' inbox
-        packet_file = self.inbox_dir / f"{packet_id}.json"
-        with open(packet_file, "w", encoding="utf-8") as f:
+        packet_path = self.inbox_dir / f"{packet_id}.json"
+        with open(packet_path, "w", encoding="utf-8") as f:
             json.dump(packet, f, indent=2)
 
-        print(f"[MIDDLEMAN] Dispatched ErrorPacket '{packet_id}' with {len(findings)} finding(s) to Factory 2 Agents.")
+        print(f"[MIDDLEMAN] Dispatched ErrorPacket '{packet_id}' (attempt {retry_count}) with {len(findings)} finding(s) to Factory 2 Agents.")
         return packet
-
-
-if __name__ == "__main__":
-    broker = MiddlemanBroker()
-    target = sys.argv[1] if len(sys.argv) > 1 else "factories/final-product"
-    result = broker.audit_target(target)
-    print(f"Audit Status: {result['status']} (Findings: {result['total_findings']})")

@@ -24,7 +24,6 @@ from typing import Any, Dict, List, Optional
 class StitchedCodeAuditor:
     """Audits both regular source code and external stitched codebases."""
 
-    # Bridge and foreign function call signatures
     CROSS_LANG_BRIDGES = {
         "JNI": re.compile(r"(?:Java_\w+_\w+|JNIEnv\b|\bjni\.h\b)"),
         "RUST_FFI": re.compile(r"(?:#\[no_mangle\]\s*pub\s+extern\s+\"C\"|uniffi::|cbindgen)"),
@@ -34,7 +33,7 @@ class StitchedCodeAuditor:
 
     # Request ID and module logging tracer
     REQUEST_ID_PATTERN = re.compile(r"request_id|requestId|X-Request-Id|req_id", re.IGNORECASE)
-    MODULE_TAG_PATTERN = re.compile(r"\[[A-Za-z0-9_-]+\]|module_name|LOGGER_TAG|TAG\s*=", re.IGNORECASE)
+    MODULE_TAG_PATTERN = re.compile(r"\[[A-Za-z0-9_-]+\]|module_name|LOGGER_TAG|\bTAG\s*=\s*['\"][A-Za-z0-9_-]+['\"]", re.IGNORECASE)
 
     def audit_codebase(self, target_dir: Path | str) -> Dict[str, Any]:
         root = Path(target_dir).resolve()
@@ -90,21 +89,3 @@ class StitchedCodeAuditor:
             "violations": violations,
             "passed": len([v for v in violations if v["severity"] == "CRITICAL"]) == 0,
         }
-
-
-class StitchedCodeOptimizer:
-    """Optimizes stitched bridges for latency, type safety, and memory marshaling."""
-
-    def optimize_bridge_definitions(self, source_code: str, bridge_name: str = "WebViewBridge") -> str:
-        """Injects request-ID tracking and type guardrails into bridge handlers."""
-        if "request_id" in source_code or "requestId" in source_code:
-            return source_code  # Already optimized
-
-        # Inject tracing into invoke methods if present
-        if "def invoke(" in source_code and "request_id: Optional[str] = None" not in source_code:
-            source_code = source_code.replace(
-                "def invoke(self, name: str, *args: Any, **kwargs: Any) -> Any:",
-                "def invoke(self, name: str, *args: Any, request_id: Optional[str] = None, **kwargs: Any) -> Any:\n"
-                "        req_id = request_id or f'req-{len(self.message_log) + 1:04d}'",
-            )
-        return source_code

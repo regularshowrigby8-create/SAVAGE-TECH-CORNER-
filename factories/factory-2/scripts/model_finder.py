@@ -1,8 +1,8 @@
 """Continuous Model Finder for Factory 2.
 
-Scans GitHub repositories, awesome-lists, and model registries for:
+Scans local catalogs and community models:
 - Free LLMs and coding models
-- Zero personal API key requirements (local Ollama weights, GitHub Models free inference, free-tier reverse proxies)
+- Zero personal API key requirements (local Ollama weights, GitHub Models free inference)
 - Discovers, categorizes, and appends new models to models/free-models.json with benchmarks, licenses, and specs.
 """
 
@@ -18,7 +18,7 @@ import urllib.request
 import urllib.error
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 _curr = Path(__file__).resolve()
 ROOT_DIR = _curr.parent.parent.parent if _curr.parent.name == "scripts" and _curr.parent.parent.name in {"factory-2", "factories"} else _curr.parent.parent
@@ -113,7 +113,7 @@ DISCOVERED_GITHUB_MODELS = [
 
 
 class ModelFinder:
-    """Continuously monitors GitHub and online resources for free coding LLMs."""
+    """Monitors GitHub community repositories and catalogs for free coding LLMs."""
 
     def __init__(self, catalog_path: Optional[Path] = None) -> None:
         self.catalog_path = catalog_path or MODELS_FILE
@@ -127,6 +127,27 @@ class ModelFinder:
     def save_catalog(self, data: Dict[str, Any]) -> None:
         with open(self.catalog_path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
+
+    def fetch_curated_sources(self) -> List[Dict[str, Any]]:
+        """Attempts HTTP retrieval of remote model lists from curated sources."""
+        discovered: List[Dict[str, Any]] = []
+        for src in CURATED_SOURCES:
+            try:
+                req = urllib.request.Request(src["url"], headers={"User-Agent": "Savage-Model-Finder/1.0"})
+                with urllib.request.urlopen(req, timeout=3) as resp:
+                    if resp.status == 200:
+                        content = resp.read().decode("utf-8", errors="ignore")
+                        # Basic pattern discovery from markdown tables
+                        for match in re.finditer(r"\[([A-Za-z0-9_.-]+)\]\((https://[^\)]+)\)", content):
+                            discovered.append({
+                                "name": match.group(1),
+                                "source": match.group(2),
+                                "type": "online",
+                            })
+            except Exception:
+                # Expected when running offline or without outbound access to specific raw URL
+                pass
+        return discovered
 
     def scan_for_models(self) -> List[Dict[str, Any]]:
         """Scans sources and returns newly discovered free models meeting the No-API/Coding criteria."""
@@ -200,24 +221,22 @@ class ModelFinder:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Model Finder for Free Coding LLMs")
-    parser.add_argument("--once", action="store_true", help="Run scan once and exit")
-    parser.add_argument("--continuous", action="store_true", help="Run scan periodically")
-    parser.add_argument("--interval", type=int, default=3600, help="Interval in seconds for continuous mode")
+    parser = argparse.ArgumentParser(description="Model Finder for Factory 2")
+    parser.add_argument("--scan", action="store_true", help="Scan for new models and print findings")
+    parser.add_argument("--integrate", action="store_true", help="Integrate new findings into catalog")
     args = parser.parse_args()
 
     finder = ModelFinder()
-    print("[MODEL-FINDER] Scanning for free, no-API coding models...")
-    new_models = finder.scan_for_models()
-    added = finder.integrate_discoveries(new_models)
-    print(f"[MODEL-FINDER] Scan complete. Found {len(new_models)} candidate(s), integrated {added} into catalog.")
+    discoveries = finder.scan_for_models()
 
-    if args.continuous:
-        print(f"[MODEL-FINDER] Continuous mode active. Sleeping for {args.interval}s...")
-        while True:
-            time.sleep(args.interval)
-            candidates = finder.scan_for_models()
-            finder.integrate_discoveries(candidates)
+    if args.scan:
+        print(f"Discovered {len(discoveries)} candidate models.")
+        for d in discoveries:
+            print(f"- [{d['type']}] {d['name']} ({d.get('benchmark', 'N/A')})")
+
+    if args.integrate:
+        count = finder.integrate_discoveries(discoveries)
+        print(f"Integrated {count} new model(s) into catalog.")
 
 
 if __name__ == "__main__":
