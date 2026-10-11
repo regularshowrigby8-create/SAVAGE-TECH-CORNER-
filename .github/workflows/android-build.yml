@@ -47,10 +47,10 @@ jobs:
       - name: Grant Execute Permission to Gradlew
         run: chmod +x shell/android_project/gradlew
 
-      - name: Assemble Debug APK
+      - name: Clean and Assemble Debug APK
         run: |
           cd shell/android_project
-          ./gradlew assembleDebug --stacktrace --no-daemon
+          ./gradlew clean :app:assembleDebug --stacktrace --no-daemon
 
       - name: Locate Output APK
         id: apk_locator
@@ -64,10 +64,12 @@ jobs:
           fi
           
           TARGET_DIR="shell/android_project/app/build/outputs/apk/debug"
-          NAMED_APK="$TARGET_DIR/SavageBrowser-debug.apk"
-          if [ "$SRC_APK" != "$NAMED_APK" ]; then
-            cp "$SRC_APK" "$NAMED_APK"
-          fi
+          NAMED_APK="$TARGET_DIR/SavageBrowser-v2.0.4.apk"
+          cp "$SRC_APK" "$NAMED_APK"
+          
+          # Inspect contents of the compiled APK to verify bytecode and manifest
+          echo "=== APK CONTENTS INSPECTION ==="
+          unzip -l "$NAMED_APK" | head -n 35
           
           echo "Found freshly built authentic APK: $NAMED_APK"
           echo "apk_path=$NAMED_APK" >> $GITHUB_OUTPUT

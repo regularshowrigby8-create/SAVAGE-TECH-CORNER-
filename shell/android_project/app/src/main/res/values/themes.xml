@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.SavageBrowser" parent="Theme.MaterialComponents.Light.NoActionBar">
+    <style name="Theme.SavageBrowser" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">#6366F1</item>
         <item name="colorPrimaryVariant">#4F46E5</item>
         <item name="colorOnPrimary">#FFFFFF</item>
@@ -10,6 +10,5 @@
         <item name="android:statusBarColor">#090D16</item>
         <item name="android:navigationBarColor">#090D16</item>
         <item name="android:windowBackground">#090D16</item>
-        <item name="selectableItemBackgroundBorderless">?android:attr/selectableItemBackground</item>
     </style>
 </resources>

@@ -16,8 +16,6 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,8 +30,8 @@ import java.util.regex.Pattern;
 
 /**
  * Savage Browser Main Android Activity (v2.0.4 Modern UI).
- * Hardened WebView implementation with:
- * - Inflates layout from activity_main.xml (Glass Omnibox + Bottom Navigation Dock)
+ * Hardened native Android browser implementation with:
+ * - Ultra-robust, universal layout inflation (zero OEM-dependent drawable crashes)
  * - Safe null-check view binding preventing startup NullPointerExceptions
  * - Strict HTTPS domain whitelist and HTTP scheme rejection
  * - Fail-closed SSL error handler (no silent SSL bypassing)
@@ -48,14 +46,13 @@ public class MainActivity extends AppCompatActivity {
     private WebView webView;
     private ProgressBar progressBar;
     private EditText editOmnibox;
-    private ImageView imgSecurityBadge;
-    private ImageButton btnActionRefresh;
-    private ImageButton btnNavBack;
-    private ImageButton btnNavForward;
-    private ImageButton btnNavHome;
-    private ImageButton btnNavTabs;
-    private ImageButton btnNavMenu;
-    private ImageButton btnActionAi;
+    private View btnActionRefresh;
+    private View btnNavBack;
+    private View btnNavForward;
+    private View btnNavHome;
+    private View btnNavTabs;
+    private View btnNavMenu;
+    private View btnActionAi;
 
     // Strict allowed domains for browser navigation & bridge interaction
     public static final Set<String> ALLOWED_HOSTS = new HashSet<>(Arrays.asList(
@@ -73,7 +70,6 @@ public class MainActivity extends AppCompatActivity {
             webView = findViewById(R.id.main_webview);
             progressBar = findViewById(R.id.page_progress_bar);
             editOmnibox = findViewById(R.id.edit_omnibox);
-            imgSecurityBadge = findViewById(R.id.img_security_badge);
             btnActionRefresh = findViewById(R.id.btn_action_refresh);
             btnNavBack = findViewById(R.id.btn_nav_back);
             btnNavForward = findViewById(R.id.btn_nav_forward);
@@ -167,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
         }
         if (btnNavMenu != null) {
             btnNavMenu.setOnClickListener(v -> {
-                Toast.makeText(MainActivity.this, "Savage Browser v2.0.4 (Hardened)", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Savage Browser v2.0.4 (Hardened Modern UI)", Toast.LENGTH_SHORT).show();
             });
         }
         if (btnActionAi != null) {
@@ -268,13 +264,11 @@ public class MainActivity extends AppCompatActivity {
         }
 
         public static boolean shouldBlockScheme(String scheme) {
-            // Fail-closed on cleartext HTTP & custom non-HTTPS protocols: Only secure HTTPS is permitted
             return !"https".equalsIgnoreCase(scheme);
         }
 
         @Override
         public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-            // Fail-closed: Never proceed on SSL error
             Log.e(TAG, "Fatal SSL Error encountered: " + error.toString());
             if (view != null && view.getContext() != null) {
                 Toast.makeText(view.getContext(), "SSL Security Error: Connection Terminated", Toast.LENGTH_LONG).show();
@@ -328,7 +322,6 @@ public class MainActivity extends AppCompatActivity {
                 Log.w(TAG, "Invalid or oversized feedback payload rejected");
                 return;
             }
-            // Whitelist-validate allowing international Unicode scripts without character stripping
             String trimmed = msg.trim();
             if (!SAFE_FEEDBACK_PATTERN.matcher(trimmed).matches()) {
                 Log.w(TAG, "Feedback rejected due to illegal characters or pattern violation");
@@ -350,7 +343,6 @@ public class MainActivity extends AppCompatActivity {
                     scheme = uri.getScheme();
                     host = uri.getHost();
                 } catch (Exception uriEx) {
-                    // Fallback to java.net.URI
                 }
 
                 if (scheme == null || host == null) {
