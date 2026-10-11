@@ -24,6 +24,24 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 APP_PACKAGE = "com.savage.soulbrowser"
 
 
+def _has_v2_signing_block(apk_path) -> bool:
+    """Detect an APK Signing Block (v2/v3) by parsing EOCD -> CD offset -> block magic.
+
+    The block sits immediately BEFORE the ZIP Central Directory, so a naive tail scan
+    of EOF can miss it on APKs with a large central directory."""
+    try:
+        data = apk_path.read_bytes()
+        eocd = data.rfind(b"PK\x05\x06")
+        if eocd == -1:
+            return False
+        cd_offset = struct.unpack_from("<I", data, eocd + 16)[0]
+        if cd_offset < 24 or cd_offset > len(data):
+            return False
+        return data[cd_offset - 16 : cd_offset] == b"APK Sig Block 42"
+    except Exception:
+        return False
+
+
 # --- BEGIN shared stdlib DEX integrity block (keep in sync across APK tooling) ---
 def _read_uleb128(buf: bytes, off: int) -> "tuple[int, int]":
     val = 0
@@ -69,11 +87,13 @@ def verify_dex_structure(dex: bytes) -> "list[str]":
                 _, p = _read_uleb128(dex, s_off)
                 end = dex.index(b"\x00", p, min(p + 255, len(dex)))
                 s = dex[p:end]
-                if s[:1] == b"L" and s[-1:] == b";" and b"/" in s:
+                if s[:1] == b"L" and s[-1:] == b";":
                     sane += 1
             except Exception:
                 continue
-        if class_defs_size == 0 or sane < max(4, class_defs_size * 2 // 3):
+        # Strict invariant: in a valid DEX EVERY class definition must resolve to a
+        # valid descriptor (small multi-dex shards legitimately contain 1-3 classes).
+        if class_defs_size == 0 or sane < class_defs_size:
             errors.append(
                 f"classes.dex class-def table unresolvable ({sane}/{class_defs_size} sane descriptors): "
                 "type/string tables are corrupt; ART will throw VerifyError/ClassNotFoundException"
@@ -140,14 +160,13 @@ def _verify_with_stdlib(apk_path: Path) -> "list[str]":
         pkg_utf16 = APP_PACKAGE.encode("utf-16-le")
         if pkg_utf16 not in axml and APP_PACKAGE.encode() not in axml:
             errors.append(f"Package identity mismatch: {APP_PACKAGE} not found in manifest string pool")
-        if "classes.dex" in names:
-            errors.extend(verify_dex_structure(zf.read("classes.dex")))
-    raw = apk_path.read_bytes()
-    has_v1_sig = any(n.startswith("META-INF/") and n.endswith((".RSA", ".DSA", ".EC")) for n in names)
-    if not has_v1_sig:
-        errors.append("APK is not signed (no v1 signature block)")
-    if b"APK Sig Block 42" not in raw[-65536:]:
-        errors.append("APK lacks Android Signature Scheme v2/v3 signing block")
+        dex_names = sorted(n for n in names if n.startswith("classes") and n.endswith(".dex"))
+        for dex_name in dex_names:
+            for err in verify_dex_structure(zf.read(dex_name)):
+                errors.append(f"{dex_name}: {err}")
+    has_v1_sig = any(n.startswith("META-INF/") and n.upper().endswith((".RSA", ".DSA", ".EC")) for n in names)
+    if not has_v1_sig and not _has_v2_signing_block(apk_path):
+        errors.append("APK is not signed (no v1 META-INF/*.RSA block, no v2/v3 signing block)")
     return errors
 
 

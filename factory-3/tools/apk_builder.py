@@ -80,11 +80,13 @@ def verify_dex_structure(dex: bytes) -> "list[str]":
                 _, p = _read_uleb128(dex, s_off)
                 end = dex.index(b"\x00", p, min(p + 255, len(dex)))
                 s = dex[p:end]
-                if s[:1] == b"L" and s[-1:] == b";" and b"/" in s:
+                if s[:1] == b"L" and s[-1:] == b";":
                     sane += 1
             except Exception:
                 continue
-        if class_defs_size == 0 or sane < max(4, class_defs_size * 2 // 3):
+        # Strict invariant: in a valid DEX EVERY class definition must resolve to a
+        # valid descriptor (small multi-dex shards legitimately contain 1-3 classes).
+        if class_defs_size == 0 or sane < class_defs_size:
             errors.append(
                 f"classes.dex class-def table unresolvable ({sane}/{class_defs_size} sane descriptors): "
                 "type/string tables are corrupt; ART will throw VerifyError/ClassNotFoundException"

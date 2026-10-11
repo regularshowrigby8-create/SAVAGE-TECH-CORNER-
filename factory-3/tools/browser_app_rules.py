@@ -17,6 +17,25 @@ from typing import Any, Dict, List
 ROOT_DIR = Path(__file__).resolve().parent.parent
 
 
+def _has_v2_signing_block(apk_path) -> bool:
+    """Detect an APK Signing Block (v2/v3) by parsing EOCD -> CD offset -> block magic.
+
+    The block sits immediately BEFORE the ZIP Central Directory, so a naive tail scan
+    of EOF can miss it on APKs with a large central directory."""
+    import struct as _struct
+    try:
+        data = apk_path.read_bytes() if hasattr(apk_path, "read_bytes") else open(apk_path, "rb").read()
+        eocd = data.rfind(b"PK\x05\x06")
+        if eocd == -1:
+            return False
+        cd_offset = _struct.unpack_from("<I", data, eocd + 16)[0]
+        if cd_offset < 24 or cd_offset > len(data):
+            return False
+        return data[cd_offset - 16:cd_offset] == b"APK Sig Block 42"
+    except Exception:
+        return False
+
+
 def verify_browser_app_rules(apk_path: Path) -> Dict[str, Any]:
     """Strictly audits that the packaged APK is the authentic Savage Browser product."""
     violations: List[str] = []
@@ -44,8 +63,11 @@ def verify_browser_app_rules(apk_path: Path) -> Dict[str, Any]:
             if "resources.arsc" not in namelist:
                 violations.append("Violation: Missing compiled resources.arsc table")
 
-            # Rule 4: Must contain valid cryptographic signature block
-            has_sig = any(name.startswith("META-INF/") and name.endswith((".RSA", ".DSA", ".EC")) for name in namelist)
+            # Rule 4: Must contain a valid cryptographic signature — v1 (META-INF/*.RSA)
+            # OR scheme v2/v3 (APK Signing Block at the Central Directory boundary).
+            # AGP-produced v2-only signed APKs are legitimately signed and must not
+            # be rejected for lacking a v1 jar-signature file.
+            has_sig = any(name.startswith("META-INF/") and name.endswith((".RSA", ".DSA", ".EC")) for name in namelist) or _has_v2_signing_block(apk_path)
             if not has_sig:
                 violations.append("Violation: Missing cryptographic signature block (META-INF/*.RSA)")
 

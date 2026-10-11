@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-11T09:42:42.339145+00:00",
+  "timestamp": "2026-10-11T11:00:03.360766+00:00",
   "input_source": "shell",
   "stages": {
     "factory_1_intake": "SUCCESS",
@@ -48,13 +48,11 @@
           "compression_ready": true
         },
         "certified_for_final_product": true,
-        "status": "REJECTED"
+        "status": "CERTIFIED"
       },
-      "apk_build_errors": [
-        "Candidate APK /home/user/SAVAGE-TECH-CORNER-/assets/SavageBrowser-v2.0.0.apk failed DEX structural verification; refusing to ship: classes.dex header file_size (124672) != actual length (124851): truncated or trailing-garbage body; classes.dex map list corrupt (546309043 entries exceed file bounds); classes.dex class-def table unresolvable (5/175 sane descriptors): type/string tables are corrupt; ART will throw VerifyError/ClassNotFoundException"
-      ],
+      "apk_build_errors": [],
       "gradle_wrapper_ready": true
     }
   },
-  "status": "REJECTED"
+  "status": "CERTIFIED"
 }

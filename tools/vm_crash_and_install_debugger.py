@@ -92,11 +92,13 @@ def verify_dex_structure(dex: bytes) -> List[str]:
                 _, p = _read_uleb128(dex, s_off)
                 end = dex.index(b"\x00", p, min(p + 255, len(dex)))
                 s = dex[p:end]
-                if s[:1] == b"L" and s[-1:] == b";" and b"/" in s:
+                if s[:1] == b"L" and s[-1:] == b";":
                     sane += 1
             except Exception:
                 continue
-        if class_defs_size == 0 or sane < max(4, class_defs_size * 2 // 3):
+        # Strict invariant: in a valid DEX EVERY class definition must resolve to a
+        # valid descriptor (small multi-dex shards legitimately contain 1-3 classes).
+        if class_defs_size == 0 or sane < class_defs_size:
             errors.append(
                 f"classes.dex class-def table unresolvable ({sane}/{class_defs_size} sane descriptors): "
                 "type/string tables are corrupt; ART will throw VerifyError/ClassNotFoundException"
@@ -290,16 +292,27 @@ class AndroidVMDiagnosticSession:
                     except Exception as e:
                         self._log(f"Could not read activities: {e}")
 
-                # 3. Deep Bytecode Verification
-                if "classes.dex" in namelist:
-                    dex_data = zf.read("classes.dex")
-                    self._log(f"Inspecting classes.dex ({len(dex_data)} bytes)")
-                    
+                # 3. Deep Bytecode Verification (multi-dex aware: app classes may
+                # live in classes2.dex/classes3.dex/... on large builds)
+                dex_names = sorted(n for n in namelist if n.startswith("classes") and n.endswith(".dex"))
+                if not dex_names:
+                    self._record_crash(
+                        "java.lang.VerifyError",
+                        "APK contains no classes*.dex bytecode entries",
+                        "at dalvik.system.DexFile.openDexFile(Native Method)"
+                    )
+                    return
+                all_dex_bytes = b""
+                for dex_name in dex_names:
+                    dex_data = zf.read(dex_name)
+                    self._log(f"Inspecting {dex_name} ({len(dex_data)} bytes)")
+                    all_dex_bytes += dex_data
+
                     # Check for Dalvik magic and header validity
                     if len(dex_data) < 112 or dex_data[:4] != b"dex\n":
                         self._record_crash(
                             "java.lang.VerifyError",
-                            "Corrupt DEX magic header in classes.dex",
+                            f"Corrupt DEX magic header in {dex_name}",
                             "at dalvik.system.DexFile.openDexFile(Native Method)"
                         )
                         return
@@ -309,16 +322,17 @@ class AndroidVMDiagnosticSession:
                     for struct_err in verify_dex_structure(dex_data):
                         self._record_crash(
                             "java.lang.VerifyError",
-                            struct_err,
+                            f"{dex_name}: {struct_err}",
                             "at dalvik.system.DexFile.openDexFile(Native Method)\n"
                             "at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:3600)"
                         )
 
-                    # Verify that the declared activities resolve to classes in the DEX bytecode
-                    for act in declared_activities:
-                        # Convert package name to DEX type descriptor: com.savage.soulbrowser.MainActivity -> Lcom/savage/soulbrowser/MainActivity;
-                        dex_type = ("L" + act.replace(".", "/") + ";").encode("utf-8")
-                        if dex_type not in dex_data:
+                # Verify that the declared activities resolve to classes across ALL DEX
+                # files (primary classes.dex alone is insufficient on multidex builds)
+                for act in declared_activities:
+                    # Convert package name to DEX type descriptor: com.savage.soulbrowser.MainActivity -> Lcom/savage/soulbrowser/MainActivity;
+                    dex_type = ("L" + act.replace(".", "/") + ";").encode("utf-8")
+                    if dex_type not in all_dex_bytes:
                             self._record_crash(
                                 "java.lang.ClassNotFoundException",
                                 f"Didn't find class '{act}' on path: DexPathList[zip file '{self.apk_path}']",

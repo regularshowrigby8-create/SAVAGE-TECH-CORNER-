@@ -39,6 +39,25 @@ except ImportError:
         APK = None
 
 
+def _has_v2_signing_block(apk_path) -> bool:
+    """Detect an APK Signing Block (v2/v3) by parsing EOCD -> CD offset -> block magic.
+
+    The block sits immediately BEFORE the ZIP Central Directory, so a naive tail scan
+    of EOF can miss it on APKs with a large central directory."""
+    try:
+        with open(apk_path, "rb") as f:
+            data = f.read()
+        eocd = data.rfind(b"PK\x05\x06")
+        if eocd == -1:
+            return False
+        cd_offset = struct.unpack_from("<I", data, eocd + 16)[0]
+        if cd_offset < 24 or cd_offset > len(data):
+            return False
+        return data[cd_offset - 16 : cd_offset] == b"APK Sig Block 42"
+    except Exception:
+        return False
+
+
 # --- BEGIN shared stdlib DEX integrity block (keep in sync across APK tooling) ---
 def _read_uleb128(buf: bytes, off: int) -> "tuple[int, int]":
     val = 0
@@ -90,11 +109,13 @@ def verify_dex_structure(dex: bytes) -> "list[str]":
                 _, p = _read_uleb128(dex, s_off)
                 end = dex.index(b"\x00", p, min(p + 255, len(dex)))
                 s = dex[p:end]
-                if s[:1] == b"L" and s[-1:] == b";" and b"/" in s:
+                if s[:1] == b"L" and s[-1:] == b";":
                     sane += 1
             except Exception:
                 continue
-        if class_defs_size == 0 or sane < max(4, class_defs_size * 2 // 3):
+        # Strict invariant: in a valid DEX EVERY class definition must resolve to a
+        # valid descriptor (small multi-dex shards legitimately contain 1-3 classes).
+        if class_defs_size == 0 or sane < class_defs_size:
             errors.append(
                 f"classes.dex class-def table unresolvable ({sane}/{class_defs_size} sane descriptors): "
                 "type/string tables are corrupt; ART will throw VerifyError/ClassNotFoundException"
@@ -156,9 +177,18 @@ class StrippedAndroidVM:
                     infos = zf.infolist()
                     self.audit_results["metrics"]["file_count"] = len(infos)
                     names = [i.filename for i in infos]
-                    for required in ["AndroidManifest.xml", "classes.dex", "resources.arsc", "META-INF/CERT.RSA"]:
+                    for required in ["AndroidManifest.xml", "classes.dex", "resources.arsc"]:
                         if required not in names:
                             self.audit_results["errors"].append(f"Missing essential Android asset: {required}")
+
+                    # Signature presence: v1 (META-INF/*.RSA/.DSA/.EC) OR v2/v3 signing block.
+                    # A v2-only signed debug build (standard apksigner/AGP behavior) is valid —
+                    # requiring CERT.RSA would reject correctly signed APKs.
+                    has_v1_sig = any(n.startswith("META-INF/") and n.upper().endswith((".RSA", ".DSA", ".EC")) for n in names)
+                    if not has_v1_sig and not _has_v2_signing_block(self.apk_path):
+                        self.audit_results["errors"].append(
+                            "Missing APK signature: no v1 META-INF/*.RSA block and no v2/v3 signing block"
+                        )
 
                     # Check stored (uncompressed) entries for 4-byte alignment
                     for info in infos:
@@ -178,11 +208,23 @@ class StrippedAndroidVM:
             self.audit_results["errors"].append(f"Corrupt APK archive: {e}")
 
     def _verify_pkcs7_signature_scheme(self) -> None:
-        """Verifies that the APK has a valid DER PKCS#7 signature and matching hashes."""
+        """Verifies that the APK has a valid v1 DER PKCS#7 signature, or a v2/v3 scheme block.
+
+        v2-only signed APKs (standard for AGP debug builds) carry no META-INF/*.RSA file;
+        their signature lives in the APK Signing Block before the Central Directory.
+        """
         try:
             with zipfile.ZipFile(self.apk_path, "r") as zf:
                 if "META-INF/CERT.RSA" not in zf.namelist():
-                    self.audit_results["errors"].append("Missing META-INF/CERT.RSA signature block")
+                    if _has_v2_signing_block(self.apk_path):
+                        self.audit_results["metrics"]["signature_scheme"] = "v2/v3 (no v1 PKCS#7 block)"
+                        self.audit_results["warnings"].append(
+                            "APK uses scheme v2/v3 signing only (valid for minSdk >= 24 Gradle builds)"
+                        )
+                    else:
+                        self.audit_results["errors"].append(
+                            "Missing signature: no META-INF/CERT.RSA and no APK Sig Block 42"
+                        )
                     return
 
                 rsa_data = zf.read("META-INF/CERT.RSA")
@@ -245,27 +287,37 @@ class StrippedAndroidVM:
                 self.audit_results["errors"].append(f"Manifest inspection error: {e}")
 
     def _verify_dex_bytecode_and_runtime(self) -> None:
-        """Ensures classes.dex is valid Dalvik bytecode with loadable class definitions
-        for every manifest-declared activity (prevents launcher ClassNotFoundException)."""
+        """Ensures every classes*.dex is valid Dalvik bytecode and required activities
+        resolve somewhere in the dex set (multidex-safe: app classes may live in
+        classes2.dex/classes3.dex/...). Prevents launcher ClassNotFoundException."""
         try:
             with zipfile.ZipFile(self.apk_path, "r") as zf:
-                dex = zf.read("classes.dex")
-                if len(dex) < 1000 or dex[:4] != b"dex\n":
-                    self.audit_results["errors"].append("Corrupt or invalid Dalvik classes.dex header")
+                dex_names = sorted(n for n in zf.namelist() if n.startswith("classes") and n.endswith(".dex"))
+                if not dex_names:
+                    self.audit_results["errors"].append("APK contains no classes*.dex entries")
                     return
-                self.audit_results["metrics"]["dex_size_bytes"] = len(dex)
-
-                # Structural integrity: header/map/class-def tables must be parseable by ART.
-                for err in verify_dex_structure(dex):
-                    self.audit_results["errors"].append(err)
+                all_dex = b""
+                total_dex = 0
+                for dex_name in dex_names:
+                    dex = zf.read(dex_name)
+                    total_dex += len(dex)
+                    all_dex += dex
+                    if dex[:4] != b"dex\n":
+                        self.audit_results["errors"].append(f"Corrupt or invalid Dalvik header in {dex_name}")
+                        continue
+                    # Structural integrity: header/map/class-def tables must be parseable by ART.
+                    for err in verify_dex_structure(dex):
+                        self.audit_results["errors"].append(f"{dex_name}: {err}")
+                self.audit_results["metrics"]["dex_size_bytes"] = total_dex
+                self.audit_results["metrics"]["dex_file_count"] = len(dex_names)
 
                 # Activity linkage: required launcher activities must resolve to loadable
-                # classes in this primary DEX (REQUIRED_MANIFEST_ACTIVITIES contract).
+                # classes across the full dex set (REQUIRED_MANIFEST_ACTIVITIES contract).
                 for activity in self.REQUIRED_MANIFEST_ACTIVITIES:
                     descriptor = ("L" + activity.replace(".", "/") + ";").encode("utf-8")
-                    if descriptor not in dex:
+                    if descriptor not in all_dex:
                         self.audit_results["errors"].append(
-                            f"Required activity '{activity}' has no class in classes.dex: "
+                            f"Required activity '{activity}' has no class in any classes*.dex: "
                             "launch would crash with ClassNotFoundException"
                         )
         except Exception as e:
