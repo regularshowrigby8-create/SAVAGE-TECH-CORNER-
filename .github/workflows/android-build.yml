@@ -45,9 +45,10 @@ jobs:
         run: |
           cd shell/android_project
           ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee /tmp/gradle_output.txt || true
-          echo "=================== GRADLE LOG SUMMARY ==================="
-          tail -n 60 /tmp/gradle_output.txt
-          echo "=========================================================="
+          FAIL_LINE=$(grep -E "(FAILURE:|FAILED|error:)" /tmp/gradle_output.txt | head -n 1)
+          if [ -n "$FAIL_LINE" ]; then
+            echo "::error::$FAIL_LINE"
+          fi
           APK_FILE=$(find app/build/outputs/apk -name "*.apk" 2>/dev/null | head -n 1)
           if [ -z "$APK_FILE" ]; then
             echo "::error::Gradle assembleDebug did not produce an APK!"
