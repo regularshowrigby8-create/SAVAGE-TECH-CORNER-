@@ -44,7 +44,12 @@ jobs:
       - name: Assemble Debug APK
         run: |
           cd shell/android_project
-          ./gradlew assembleDebug --stacktrace --no-daemon
+          ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee /tmp/gradle_output.txt || {
+            STATUS=$?
+            echo "::error::Gradle assembleDebug exited with code $STATUS"
+            echo "::error::$(grep -m 1 -E '(FAILURE:|FAILED|error:|Exception:)' /tmp/gradle_output.txt || echo 'Unknown Gradle failure')"
+            exit $STATUS
+          }
           echo "=== Built Output Directory Content ==="
           ls -la app/build/outputs/apk/debug/
 
