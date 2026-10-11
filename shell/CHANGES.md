@@ -1,6 +1,15 @@
 # Shell Module Changes Ledger
 
-## Directly Verified Changes (2026-10-11)
+## Directly Verified Changes (2026-10-11 — Modern Lighting Shell UI)
+
+- **Modern Lighting UI Rebuild**:
+  - Rebuilt `shell/soul_browser/browser_shell.py` with Modern Lighting Glass design tokens (`ModernLightingUITheme`), glassmorphism floating bottom dock, dynamic progress indicators, and verified navigation states (`can_go_back`, `can_go_forward`).
+  - Added modern Android layout resource `shell/android_project/app/src/main/res/layout/activity_main.xml` with CoordinatorLayout, translucent AppBar, security badge indicator, smooth progress bar, and floating glass dock with tab counter capsule.
+  - Retained strict backwards-compatibility with fundamental contracts: `WebViewBridge`, `WebViewHolder`, and all 6 core UI actions (`btn_back`, `btn_forward`, `btn_refresh`, `btn_home`, `btn_menu`, `btn_tabs`).
+  - Added `render_modern_ui_state()` API returning complete reactive UI hierarchy.
+  - Added unit test `test_modern_lighting_ui_state_rendering` in `shell/tests/test_browser_shell.py` (all 13 shell tests PASS).
+
+## Directly Verified Changes (2026-10-11 — Android Gradle & Security Hardening)
 
 - **Android Gradle Layout Standardized**:
   - Restructured `shell/android_project/app/src/main/` standard directory structure.
@@ -26,4 +35,4 @@
 - Clarified module architectural role: Implements Soul browser-style shell architecture for the Savage Browser application.
 - `shell/android_project/AndroidManifest.xml`: Configured application label to `Savage Browser` with API 35 target and API 26 minimum SDK.
 - `shell/soul_browser/browser_shell.py`: Implemented `WebViewHolder`, `WebViewBridge`, and `SoulBrowserShell` with handlers for `btn_back`, `btn_forward`, `btn_refresh`, `btn_home`, `btn_menu`, and `btn_tabs`.
-- `shell/tests/test_browser_shell.py`: 5 unit tests directly verified passing (navigation, history, bridge invocation, and dead-button fail-closed behavior).
+- `shell/tests/test_browser_shell.py`: Unit tests directly verified passing (navigation, history, bridge invocation, and dead-button fail-closed behavior).

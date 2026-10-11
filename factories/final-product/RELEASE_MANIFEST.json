@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-11T01:33:52.593783+00:00",
+  "timestamp": "2026-10-11T01:49:58.501667+00:00",
   "input_source": "shell",
   "stages": {
     "factory_1_intake": "SUCCESS",
@@ -17,7 +17,7 @@
         "apk_metrics": {
           "tool": "APKAnalyzer",
           "passed": true,
-          "total_bytes": 12390,
+          "total_bytes": 16229,
           "file_count": 3,
           "dex_budget_ok": true,
           "findings": []
