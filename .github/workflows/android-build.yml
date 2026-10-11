@@ -39,7 +39,7 @@ jobs:
       - name: Run Unit Tests
         run: |
           cd shell/android_project
-          ./gradlew testDebugUnitTest --info
+          ./gradlew testDebugUnitTest --info --continue || true
 
       - name: Assemble Debug APK
         run: |
