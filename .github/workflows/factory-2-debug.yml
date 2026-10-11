@@ -18,6 +18,17 @@ jobs:
       cancel-in-progress: false  # Never cancel running; one job at a time
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install coverage cryptography androguard pyopenssl
+
       - name: Check rules
         run: bash .claude/scripts/gates.sh
       - name: Find dead code
