@@ -1,6 +1,5 @@
 package com.savage.soulbrowser;
 
-import android.app.Activity;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.http.SslError;
@@ -9,30 +8,35 @@ import android.util.Log;
 import android.webkit.JavascriptInterface;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceRequest;
-import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
+import androidx.activity.OnBackPressedCallback;
+import androidx.appcompat.app.AppCompatActivity;
 
+import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Savage Browser Main Android Activity.
  * Hardened WebView implementation with:
  * - Strict HTTPS domain whitelist and HTTP scheme rejection
  * - Fail-closed SSL error handler (no silent SSL bypassing)
- * - Input validation on JavascriptInterface bridge methods
+ * - Modern OnBackPressedDispatcher callback handling
+ * - Static SecureSoulBridge avoiding Activity leaks with WeakReference
+ * - Unicode-preserving feedback validation (\p{L}\p{N})
  * - Domain-isolated storage and cleartext blocking
  */
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
     private static final String TAG = "SavageBrowser";
     private WebView webView;
 
     // Strict allowed domains for privileged bridge interaction
-    private static final Set<String> ALLOWED_BRIDGE_HOSTS = new HashSet<>(Arrays.asList(
+    public static final Set<String> ALLOWED_BRIDGE_HOSTS = new HashSet<>(Arrays.asList(
         "savage-tech-corner.io",
         "app.savage-tech-corner.io"
     ));
@@ -55,31 +59,48 @@ public class MainActivity extends Activity {
         settings.setUserAgentString("SavageBrowser/1.0 (Linux; Android 14; Mobile; SecurityHardened)");
 
         webView.setWebViewClient(new HardenedWebViewClient());
-        webView.addJavascriptInterface(new SecureSoulBridge(), "SoulBridge");
+        webView.addJavascriptInterface(new SecureSoulBridge(this, webView), "SoulBridge");
         webView.loadUrl("https://savage-tech-corner.io");
+
+        // Modern back-press handling replacing deprecated Activity.onBackPressed()
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (webView != null && webView.canGoBack()) {
+                    webView.goBack();
+                } else {
+                    setEnabled(false);
+                    getOnBackPressedDispatcher().onBackPressed();
+                }
+            }
+        });
     }
 
-    private class HardenedWebViewClient extends WebViewClient {
+    public static class HardenedWebViewClient extends WebViewClient {
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-            Uri uri = request.getUrl();
-            String scheme = uri.getScheme();
-
-            // Fail-closed on cleartext HTTP: Only secure HTTPS is permitted
-            if (!"https".equalsIgnoreCase(scheme)) {
-                Log.w(TAG, "Blocked insecure scheme: " + scheme);
-                Toast.makeText(MainActivity.this, "Insecure HTTP blocked by policy", Toast.LENGTH_SHORT).show();
+            if (request == null || request.getUrl() == null) {
                 return true;
             }
-            return false;
+            Uri uri = request.getUrl();
+            return shouldBlockScheme(uri.getScheme());
+        }
+
+        public static boolean shouldBlockScheme(String scheme) {
+            // Fail-closed on cleartext HTTP & custom non-HTTPS protocols: Only secure HTTPS is permitted
+            return !"https".equalsIgnoreCase(scheme);
         }
 
         @Override
         public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
             // Fail-closed: Never proceed on SSL error
             Log.e(TAG, "Fatal SSL Error encountered: " + error.toString());
-            Toast.makeText(MainActivity.this, "SSL Security Error: Connection Terminated", Toast.LENGTH_LONG).show();
-            handler.cancel();
+            if (view != null && view.getContext() != null) {
+                Toast.makeText(view.getContext(), "SSL Security Error: Connection Terminated", Toast.LENGTH_LONG).show();
+            }
+            if (handler != null) {
+                handler.cancel();
+            }
         }
 
         @Override
@@ -89,9 +110,23 @@ public class MainActivity extends Activity {
         }
     }
 
-    public class SecureSoulBridge {
+    /**
+     * Static bridge implementation avoiding Activity memory leaks and enforcing safe Unicode input.
+     */
+    public static class SecureSoulBridge {
+        private static final Pattern SAFE_FEEDBACK_PATTERN = Pattern.compile("^[\\p{L}\\p{N}\\s._!?,@#&()-]{1,500}$", Pattern.UNICODE_CHARACTER_CLASS);
+
+        private final WeakReference<MainActivity> activityRef;
+        private final WeakReference<WebView> webViewRef;
+
+        public SecureSoulBridge(MainActivity activity, WebView webView) {
+            this.activityRef = new WeakReference<>(activity);
+            this.webViewRef = new WeakReference<>(webView);
+        }
+
         @JavascriptInterface
         public String getAppVersion() {
+            WebView webView = webViewRef.get();
             String currentUrl = webView != null ? webView.getUrl() : null;
             if (!isPrivilegedOrigin(currentUrl)) {
                 Log.w(TAG, "Unauthorized bridge call from origin: " + currentUrl);
@@ -102,6 +137,7 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void postFeedback(String msg) {
+            WebView webView = webViewRef.get();
             String currentUrl = webView != null ? webView.getUrl() : null;
             if (!isPrivilegedOrigin(currentUrl)) {
                 Log.w(TAG, "Unauthorized bridge postFeedback call from: " + currentUrl);
@@ -111,12 +147,19 @@ public class MainActivity extends Activity {
                 Log.w(TAG, "Invalid or oversized feedback payload rejected");
                 return;
             }
-            // Sanitize message before surfacing
-            String sanitized = msg.replaceAll("[^a-zA-Z0-9 ._!?-]", "");
-            Toast.makeText(MainActivity.this, "Feedback: " + sanitized, Toast.LENGTH_SHORT).show();
+            // Whitelist-validate allowing international Unicode scripts without character stripping
+            String trimmed = msg.trim();
+            if (!SAFE_FEEDBACK_PATTERN.matcher(trimmed).matches()) {
+                Log.w(TAG, "Feedback rejected due to illegal characters or pattern violation");
+                return;
+            }
+            MainActivity activity = activityRef.get();
+            if (activity != null) {
+                Toast.makeText(activity, "Feedback: " + trimmed, Toast.LENGTH_SHORT).show();
+            }
         }
 
-        private boolean isPrivilegedOrigin(String url) {
+        public static boolean isPrivilegedOrigin(String url) {
             if (url == null) return false;
             try {
                 Uri uri = Uri.parse(url);
@@ -125,14 +168,9 @@ public class MainActivity extends Activity {
                 return false;
             }
         }
-    }
 
-    @Override
-    public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
+        public static boolean isInputValid(String input) {
+            return input != null && SAFE_FEEDBACK_PATTERN.matcher(input.trim()).matches();
         }
     }
 }
