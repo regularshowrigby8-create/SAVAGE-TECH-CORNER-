@@ -23,8 +23,12 @@ def verify_apk_provenance_and_modernity(apk_path: Path) -> list[str]:
         return [f"APK does not exist at {apk_path}"]
 
     try:
-        import androguard.core.bytecodes.apk as apk_mod
-        apk = apk_mod.APK(str(apk_path))
+        try:
+            import androguard.core.bytecodes.apk as apk_mod
+            apk = apk_mod.APK(str(apk_path))
+        except (ImportError, AttributeError):
+            from androguard.core.apk import APK
+            apk = APK(str(apk_path))
         
         # Check target SDK version
         target_sdk = int(apk.get_target_sdk_version() or 0)

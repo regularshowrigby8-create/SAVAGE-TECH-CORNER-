@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - production
+      - arena/**
   pull_request:
     branches:
       - main
@@ -41,7 +42,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r tools/factory/requirements/qa.in 2>/dev/null || true
-          pip install coverage cryptography androguard pyopenssl
+          pip install "androguard<4.0" coverage cryptography jsonschema pyopenssl
 
       - name: Secret Scan (Gitleaks)
         uses: gitleaks/gitleaks-action@v2
