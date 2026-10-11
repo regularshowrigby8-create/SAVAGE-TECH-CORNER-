@@ -1,0 +1,59 @@
+{
+  "name": "savage-tech-corner",
+  "version": "2.0.0",
+  "description": "Savage Tech Corner - Factory & Browser Ecosystem with Fully Integrated Quality Conveyor Belt",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "size": "size-limit",
+    "knip": "knip",
+    "audit:security": "npm audit --audit-level=high",
+    "conveyor-belt": "node scripts/conveyor_belt.js",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@eslint/js": "^9.25.0",
+    "@size-limit/file": "^11.2.0",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@types/node": "^22.14.0",
+    "axe-core": "^4.10.3",
+    "eslint": "^9.25.0",
+    "husky": "^9.1.7",
+    "knip": "^5.46.2",
+    "lint-staged": "^15.5.1",
+    "prettier": "^3.5.3",
+    "size-limit": "^11.2.0",
+    "typescript": "^5.8.2",
+    "vitest": "^3.1.1"
+  },
+  "lint-staged": {
+    "*.{js,ts,mjs,cjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml,html,css}": [
+      "prettier --write"
+    ]
+  },
+  "size-limit": [
+    {
+      "path": "frontend/compose_user_interface/compose_ui.py",
+      "limit": "50 KB"
+    },
+    {
+      "path": "shell/soul_browser/browser_shell.py",
+      "limit": "20 KB"
+    }
+  ]
+}

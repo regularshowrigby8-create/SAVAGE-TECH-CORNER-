@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deterministic master quality gate with Anti-Stub, Anti-Deception, and Authentic Debugging Invariants.
+# Deterministic master quality gate with Anti-Stub, Anti-Deception, and Interconnected Conveyor Belt Invariants.
 set -uo pipefail
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 cd "$ROOT_DIR"
@@ -89,10 +89,13 @@ fi
 echo "[GATE 8] Reproducible Build & Target SDK Modernity..."
 python3 tools/reproducible_build_verifier.py || fail build_provenance "Build provenance check failed"
 
-echo "[GATE 9] Fresh Multi-Factory Orchestrator Run..."
+echo "[GATE 9] Interconnected Conveyor Belt Pipeline..."
+node scripts/conveyor_belt.js || fail conveyor "Conveyor belt execution failed"
+
+echo "[GATE 10] Fresh Multi-Factory Orchestrator Run..."
 bash factory-2/scripts/run_all.sh || fail pipeline "Factory 2 pipeline reported failure"
 
-echo "[GATE 10] End-to-End System Integration Audit..."
+echo "[GATE 11] End-to-End System Integration Audit..."
 if [ "${SKIP_RECURSIVE_AUDIT:-0}" != "1" ]; then
   python3 test_entire_system.py || fail end_to_end "End-to-end system audit failed"
 else

@@ -1,6 +1,6 @@
-.PHONY: test gates build verify audit clean
+.PHONY: test gates build verify audit clean conveyor-belt
 
-all: test gates audit
+all: test gates audit conveyor-belt
 
 test:
 	python3 -m unittest discover -s shell/tests
@@ -21,4 +21,7 @@ audit:
 	python3 tools/schema_validator.py
 	python3 tools/reproducible_build_verifier.py
 
-verify: gates audit
+conveyor-belt:
+	node scripts/conveyor_belt.js
+
+verify: gates audit conveyor-belt

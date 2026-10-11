@@ -1,0 +1,30 @@
+# CodeRabbit AI Reviewer Configuration
+# Automated Free Tier AI Pull Request Reviews
+version: "2"
+language: "en-US"
+tone_instructions: "Rigorous, constructive, deeply focused on provenance, security, test coverage, and strict code invariants."
+early_access: false
+reviews:
+  profile: "assertive"
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - "main"
+      - "production"
+  tools:
+    ast-grep:
+      enabled: true
+    shellcheck:
+      enabled: true
+    ruff:
+      enabled: true
+    gitleaks:
+      enabled: true
+chat:
+  auto_reply: true

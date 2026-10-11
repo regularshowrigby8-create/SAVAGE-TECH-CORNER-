@@ -1,0 +1,7 @@
+{
+  "$schema": "https://unpkg.com/knip@5/overview/config-schema.json",
+  "entry": ["scripts/conveyor_belt.js", "tests/**/*.test.js"],
+  "project": ["scripts/**/*.js", "tests/**/*.js", "package.json"],
+  "ignore": ["node_modules/**", "dist/**", "build/**"],
+  "ignoreDependencies": ["@commitlint/cli", "@commitlint/config-conventional"]
+}
