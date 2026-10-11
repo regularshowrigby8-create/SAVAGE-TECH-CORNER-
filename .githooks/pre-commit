@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Git pre-commit hook: Strict Rule Enforcement & Anti-Bypass Gate
+# Ensures no rules are bypassed without an extremely good reason, a valid functional solution,
+# and passing all test suites across the system at least 5 consecutive times.
+
+set -uo pipefail
+
+echo "[GIT PRE-COMMIT] Executing fail-closed enforcement and quality gates..."
+
+# 1. Run deterministic quality gates
+if ! bash .claude/scripts/gates.sh; then
+    echo "================================================================================"
+    echo "[SECURITY REJECTION] Commit blocked: Quality gates failed."
+    echo "Rules cannot be bypassed or ignored without an extremely good reason and an"
+    echo "accompanying functional solution tested against everything at least 5 times."
+    echo "To request an emergency bypass exception, run:"
+    echo "  python3 tools/factory/enforce_rules.py --verify-bypass <request.json>"
+    echo "================================================================================"
+    exit 1
+fi
+
+echo "[GIT PRE-COMMIT] Quality gates verified green. Proceeding with commit."
+exit 0

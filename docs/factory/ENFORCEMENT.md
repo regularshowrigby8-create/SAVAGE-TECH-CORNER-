@@ -1,7 +1,6 @@
-# SAVAGE TECH CORNER — ENFORCEMENT RULES v3: ANTI-STUB & CONTINUOUS FORWARD PROGRESSION
+# SAVAGE TECH CORNER — ENFORCEMENT RULES v4: FAIL-CLOSED ANTI-BYPASS & 5X EXHAUSTIVE VERIFICATION
 
-Supersedes ENFORCEMENT v2. Institutionalizes strict anti-placeholder invariants,
-real-time analysis mandates, anti-deception rules, and forward-only architectural progression.
+Supersedes ENFORCEMENT v3. Establishes immutable, fail-closed rule enforcement across all developers, models, agents, and CI pipelines.
 
 ---
 
@@ -18,14 +17,22 @@ or decorative shell scripts (e.g. exit 0 fake wrappers).
 - Leaving stub code for "later" is strictly prohibited: unfinished code gets lost, causes regression,
   and accumulates technical debt that degrades high-assurance guarantees.
 
-**Fail-Closed Automated Check**:
-`agent_correctness.py` and `gates.sh` scan the entire repository for stub tokens:
-- Rejects unhandled `NotImplementedError`, empty `pass` in non-abstract methods, and unfunctional stubs.
-- Rejects decorative build scripts.
+---
+
+## 2. Strict Anti-Bypass & Exception Mandate
+
+**Standing Invariant**: **Rules cannot be bypassed, suppressed, or ignored under any standard condition.**
+
+In the unprecedented event that an operational exception is required:
+1. **Extremely Good Reason**: Must provide a comprehensive, rigorous architectural justification of at least 100 characters detailing why an exception is mathematically, structurally, or upstream-wise necessary.
+2. **Mandatory Functional Solution**: Every bypass request MUST include an actual functional solution file. Bypassing a rule to leave code broken, missing, or empty is rejected unconditionally.
+3. **5x Exhaustive Test Verification Across the Entire System**: The proposed solution and codebase MUST be executed against the entire system test suite (Factory 2 tests, Factory 3 tests, full system integration audit, and deterministic quality gates) **at least 5 consecutive times across isolated iterations** with a 100% pass rate.
+4. **Cryptographic Certificate**: If any single test fails during the 5 iterations, the bypass is aborted. Only if all 5 iterations pass is a cryptographic certificate issued and recorded in `factories/governance/rule_bypass_registry.json`.
+5. **Continuous Hash Validation**: If solution files are tampered with or modified post-certification, the bypass certificate is immediately invalidated.
 
 ---
 
-## 2. Anti-Deception & Provenance Verification Invariant
+## 3. Anti-Deception & Provenance Verification Invariant
 
 **Standing Mandate**: Deliverables must be the genuine product of this repository.
 
@@ -39,7 +46,7 @@ or decorative shell scripts (e.g. exit 0 fake wrappers).
 
 ---
 
-## 3. Strict Forward-Only Progression (No Working Backwards)
+## 4. Strict Forward-Only Progression (No Working Backwards)
 
 To stop working backwards or constantly cycling through criticism checks without forward movement:
 
@@ -55,18 +62,9 @@ To stop working backwards or constantly cycling through criticism checks without
 
 ---
 
-## 4. Every Markdown Claim Is Checkable
+## 5. Summary of Automated Quality Gates in CI & Git Pre-Commit
 
-Any `.md` file naming a file path or making a factual statement is mechanically tested:
-- Does the path exist?
-- Does the command return 0?
-- Is the claim verifiable in code?
-If not, `gates.sh` fails with `CLAIM FAILURE`.
-
----
-
-## 5. Summary of Automated Quality Gates in CI
-
+Every commit and CI run executes:
 ```bash
 echo "=== FACTORY GATE START ==="
 check_python_syntax
@@ -76,3 +74,4 @@ check_provenance_and_apk      # Verifies authentic package identity
 check_claims_and_paths        # Verifies all markdown claims
 check_wiring_and_coverage     # Verifies all tools are wired into run_all.sh
 ```
+Git pre-commit hooks (`.githooks/pre-commit`) and GitHub Actions fail closed if any rule is breached.
