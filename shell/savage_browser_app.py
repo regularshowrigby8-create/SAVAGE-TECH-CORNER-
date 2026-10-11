@@ -89,9 +89,9 @@ class SavageBrowserApp:
         self.controller.register_action("start_crawler", self.crawler.start_continuous_crawl)
         self.controller.register_action("stop_crawler", self.crawler.stop_continuous_crawl)
 
-        # Create Initial Home Tab
-        tab = self.tab_manager.create_tab("tab-main", "Home", "https://savage-tech-corner.io")
-        self.active_tab_id = tab.tab_id
+        # TabManager already initializes with an active home tab ('tab-1')
+        active = self.tab_manager.get_active_tab()
+        self.active_tab_id = active.tab_id if active else "tab-1"
 
     def _wire_api_gateway(self) -> None:
         self.gateway.register_route("/search", lambda q: self.search_orchestrator.orchestrate_search(q.get("q", "")))
@@ -132,9 +132,10 @@ class SavageBrowserApp:
         self.db.insert("bookmarks", {"tab_id": self.active_tab_id, "url": url})
         return {"status": "saved", "url": url}
 
-    def ai_summarize_current(self, page_content: str) -> Dict[str, Any]:
+    def ai_summarize_current(self, page_content: Optional[str] = None) -> Dict[str, Any]:
         url = self.webview_engine.current_url
-        summary = self.ai_service.summarize_page(url, page_content)
+        content_to_summarize = page_content or f"Content from {url}"
+        summary = self.ai_service.summarize_page(url, content_to_summarize)
         self.worker_queue.enqueue("ai_page_processed", {"url": url})
         return {"summary": summary, "url": url}
 
