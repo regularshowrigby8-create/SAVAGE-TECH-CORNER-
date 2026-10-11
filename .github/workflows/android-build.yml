@@ -39,13 +39,22 @@ jobs:
       - name: Assemble Debug APK
         run: |
           cd shell/android_project
-          ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tail -n 80
+          ./gradlew :app:assembleDebug --stacktrace --no-daemon
+
+      - name: Inspect Build Outputs
+        run: |
+          echo "=== Full file tree of shell/android_project/app/build ==="
+          find shell/android_project/app/build -ls || true
 
       - name: Locate Output APK
         id: apk_locator
         run: |
-          find shell/android_project/app/build/outputs/apk/debug/ -type f -name "*.apk" -ls
-          APK_FILE=$(find shell/android_project/app/build/outputs/apk/debug/ -type f -name "*.apk" | head -n 1)
+          APK_FILE=$(find shell/android_project/app/build -type f -name "*.apk" | head -n 1)
+          if [ -z "$APK_FILE" ]; then
+            echo "Searching whole repository for any generated .apk..."
+            find . -name "*.apk" -ls
+            APK_FILE=$(find . -name "*.apk" -not -path "*/assets/*" | head -n 1)
+          fi
           if [ -z "$APK_FILE" ]; then
             echo "ERROR: Could not find compiled APK" >&2
             exit 1
