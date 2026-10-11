@@ -75,7 +75,30 @@ jobs:
       - name: Run Production APK through Android VM Verifier & Diagnostics
         run: |
           echo "=== Executing Android VM Verifier and Crash Diagnostics ==="
-          python3 tools/vm_crash_and_install_debugger.py "${{ steps.apk_locator.outputs.apk_path }}" --api 34 --heap 256
+          python3 tools/vm_crash_and_install_debugger.py "${{ steps.apk_locator.outputs.apk_path }}" --api 34 --heap 256 --json 2>&1 | tee /tmp/vm_out.json || true
+          cat /tmp/vm_out.json
+          python3 -c "
+          import json, sys
+          try:
+              # Filter JSON from stdout
+              with open('/tmp/vm_out.json') as f:
+                  text = f.read()
+              # Find JSON block
+              start = text.find('{')
+              if start != -1:
+                  data = json.loads(text[start:])
+                  if not data.get('overall_healthy'):
+                      print('VM test failed:', data.get('install_errors'), data.get('runtime_crashes'))
+                      sys.exit(1)
+                  else:
+                      print('Android VM test passed cleanly!')
+              else:
+                  print('No JSON detected')
+                  sys.exit(1)
+          except Exception as e:
+              print('JSON parse error:', e)
+              sys.exit(1)
+          "
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
