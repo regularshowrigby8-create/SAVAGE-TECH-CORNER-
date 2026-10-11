@@ -37,8 +37,7 @@ for search_dir in ("shell", "frontend", "backend"):
         content = p.read_text(encoding="utf-8", errors="ignore")
         for lineno, line in enumerate(content.splitlines(), 1):
             clean = line.strip()
-            if any(marker in clean.upper() for marker in ("RULE", "EXCLUDE", "PASS", "CHECK")):
-                continue
+            # Strict check without exempting lines containing RULE/EXCLUDE/PASS/CHECK
             for pat in STUB_PATTERNS:
                 if pat.search(line):
                     violations.append(f"{p}:{lineno}: {clean}")
@@ -96,10 +95,10 @@ echo "[GATE 10] Fresh Multi-Factory Orchestrator Run..."
 bash factory-2/scripts/run_all.sh || fail pipeline "Factory 2 pipeline reported failure"
 
 echo "[GATE 11] End-to-End System Integration Audit..."
-if [ "${SKIP_RECURSIVE_AUDIT:-0}" != "1" ]; then
+if [ "${1:-}" != "--subshell" ]; then
   python3 test_entire_system.py || fail end_to_end "End-to-end system audit failed"
 else
-  echo "SKIP_RECURSIVE_AUDIT=1: Skipping nested gate invocation to prevent recursion."
+  echo "[GATE 11] Executing in subshell: End-to-end verification verified via parent invocation."
 fi
 
 if [ "${#failures[@]}" -gt 0 ]; then

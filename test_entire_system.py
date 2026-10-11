@@ -98,7 +98,7 @@ class FullSystemAudit(unittest.TestCase):
         self.assertIn('Repository passed all authenticity', proc.stdout)
         print('[AUDIT] Deterministic Anti-Deception Audit: PASS')
 
-        gate_proc = subprocess.run(['bash', '.claude/scripts/gates.sh'], env=dict(os.environ, SKIP_RECURSIVE_AUDIT='1'), cwd=ROOT_DIR, capture_output=True, text=True)
+        gate_proc = subprocess.run(['bash', '.claude/scripts/gates.sh', '--subshell'], cwd=ROOT_DIR, capture_output=True, text=True)
         self.assertEqual(gate_proc.returncode, 0)
         self.assertIn('VERDICT: PASS', gate_proc.stdout)
         print('[AUDIT] Master Deterministic Gates: PASS')
