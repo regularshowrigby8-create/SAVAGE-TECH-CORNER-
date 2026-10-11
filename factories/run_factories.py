@@ -132,11 +132,19 @@ def run_factory_pipeline(input_source: str = "shell") -> dict[str, object]:
 
         # Production Browser App Rules Enforcement Gate
         from browser_app_rules import verify_browser_app_rules
+        from android_vm_verifier import verify_apk_in_vm
+
         app_rules = verify_browser_app_rules(apk_output)
         print(f"[STAGE 3] Browser App Invariant Rules verification: {'PASS' if app_rules['passed'] else 'FAIL'}")
 
-        if not app_rules["passed"]:
-            print(f"[STAGE 3-BLOCK] Bogus/Mock APK rejected by Browser App Rules: {app_rules['violations']}")
+        # Stage 3 Stripped Android VM Test Gate
+        print("[STAGE 3] Factory 3: Running Stripped Android VM post-build verification...")
+        vm_results = verify_apk_in_vm(apk_output)
+        print(f"[STAGE 3] Android VM Status: {vm_results['vm_status']}")
+
+        if not app_rules["passed"] or not vm_results["passed"]:
+            errors = app_rules.get("violations", []) + vm_results.get("errors", [])
+            print(f"[STAGE 3-BLOCK] APK rejected by Factory 3 Android VM: {errors}")
             f3_certified = False
 
         if not f3_certified:
