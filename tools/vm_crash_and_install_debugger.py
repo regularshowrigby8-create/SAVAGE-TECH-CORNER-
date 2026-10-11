@@ -154,7 +154,6 @@ class AndroidVMDiagnosticSession:
                     with open(self.apk_path, "rb") as f:
                         f.seek(0, os.SEEK_END)
                         size = f.tell()
-                        # Search last 4KB for APK Signing Block magic: "APK Sig Block 42"
                         scan_size = min(4096, size)
                         f.seek(size - scan_size)
                         tail = f.read(scan_size)
@@ -180,7 +179,7 @@ class AndroidVMDiagnosticSession:
                                 f"App requires minSdk {min_sdk} but VM operates at API level {self.config['api_level']}"
                             )
 
-                        if pkg != "com.savage.soulbrowser":
+                        if pkg != "com.savage.soulbrowser" and not pkg.startswith("com.savage.soulbrowser"):
                             self._record_install_error(
                                 "INSTALL_FAILED_INVALID_APK",
                                 f"App package '{pkg}' does not match expected package 'com.savage.soulbrowser'"
