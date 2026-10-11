@@ -23,7 +23,7 @@
 
 | Directory | Maturity Status | Description |
 |---|---|---|
-| **`shell/android_project/`** | **Working / Release-Ready** | Production Android app with Gradle build chain (`settings.gradle.kts`, `build.gradle.kts`, `gradlew`), security-hardened `MainActivity.java`, and network security config. |
+| **`shell/android_project/`** | **Android Shell Project (Source Pipeline)** | Android Gradle source project with `MainActivity.java`; automated cloud build and APK artifacts compiled in CI via `.github/workflows/android-build.yml`. |
 | **`shell/soul_browser/`** | **Tested Prototype** | Python architectural model of browser shell and bridge with 100% test coverage. |
 | **`frontend/`** | **Architectural Prototype** | 8 modular prototype specifications (UI composition, tabs, storage, search providers). |
 | **`backend/`** | **Architectural Prototype** | 8 cloud backend prototype services (API gateway, search orchestration, sync, AI engine). |

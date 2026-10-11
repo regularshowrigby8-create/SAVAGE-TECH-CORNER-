@@ -107,23 +107,26 @@ def sign_apk_with_pkcs7(input_apk_path: Path, output_apk_path: Path) -> Path:
 
 
 def create_signed_apk(output_apk_path: Path) -> Path:
-    """Delivers verified authentic Android browser APK deliverable."""
+    """Delivers verified authentic Android browser APK deliverable with active signing and verification."""
     output_apk_path.parent.mkdir(parents=True, exist_ok=True)
 
+    source_apk = None
     shell_apk = ROOT_DIR / "shell" / "final-product" / "SavageBrowser-debug.apk"
-    if shell_apk.exists() and shell_apk.stat().st_size > 50000:
-        shutil.copy2(shell_apk, output_apk_path)
-        return output_apk_path
-
-    if output_apk_path.exists() and output_apk_path.stat().st_size > 50000:
-        return output_apk_path
-
+    assets_apk = ROOT_DIR / "assets" / "SavageBrowser-v2.0.0.apk"
     artifact_apk = ROOT_DIR / "artifacts" / "debug" / "SavageBrowser-debug.apk"
-    if artifact_apk.exists() and artifact_apk.stat().st_size > 50000:
-        shutil.copy2(artifact_apk, output_apk_path)
-        return output_apk_path
 
-    raise FileNotFoundError("Authentic signed Android Browser APK deliverable not found. Refusing to generate fake/mock stub APK.")
+    if assets_apk.exists() and assets_apk.stat().st_size > 50000:
+        source_apk = assets_apk
+    elif shell_apk.exists() and shell_apk.stat().st_size > 50000:
+        source_apk = shell_apk
+    elif artifact_apk.exists() and artifact_apk.stat().st_size > 50000:
+        source_apk = artifact_apk
+
+    if source_apk is None:
+        raise FileNotFoundError("Authentic signed Android Browser APK deliverable not found. Refusing to generate fake/mock stub APK.")
+
+    # Re-sign and verify package integrity
+    return sign_apk_with_pkcs7(source_apk, output_apk_path)
 
 
 def main() -> None:
