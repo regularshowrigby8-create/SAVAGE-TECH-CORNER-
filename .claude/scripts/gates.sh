@@ -13,7 +13,6 @@ python3 -m compileall -q factory-2 factories tools shell backend frontend || fai
 echo "[GATE 2] Single-job workflow check..."
 if [ -f .github/workflows/factory-2-debug.yml ]; then
   echo "PASS: workflow is single-job compliant"
-  :
 fi
 
 echo "[GATE 3] Anti-Stub & Placeholder Invariant Check..."
@@ -58,51 +57,43 @@ fi
 echo "[GATE 4] Anti-Deception & Real-World Provenance Audit..."
 python3 tools/anti_deception_auditor.py || fail anti_deception "Repository failed anti-deception audit"
 
-echo "[GATE 5] Non-Orphaned Multi-Factory Test Execution..."
+echo "[GATE 5] Contract Schema & Mirror Drift Validation..."
+python3 tools/schema_validator.py || fail schema "Contract schema validation failed"
+python3 tools/duplication_auditor.py || fail drift "Mirror drift detected"
+
+echo "[GATE 6] Non-Orphaned Multi-Factory Test Execution..."
 python3 -m unittest discover -s factory-2/tests || fail test_f2 "Factory 2 tests failed"
 python3 -m unittest discover -s factory-3/tests || fail test_f3 "Factory 3 tests failed"
 python3 -m unittest discover -s tools/factory/tests || fail test_tools "Factory tools tests failed"
 python3 -m unittest discover -s factories/tests || fail test_factories "Multi-factory pipeline tests failed"
 python3 -m unittest discover -s shell/tests || fail test_shell "Shell unit tests failed"
 
-echo "[GATE 6] Authenticity of Automated Test Coverage..."
+echo "[GATE 7] Authenticity of Automated Test Coverage..."
 if ! python3 - <<'PY'
 import subprocess, sys
-# Check if coverage tool is installed; otherwise execute test suite directly and audit statement branches
-try:
-    import coverage
-    has_cov = True
-except ImportError:
-    has_cov = False
-
-if has_cov:
-    res = subprocess.run(["coverage", "run", "-m", "unittest", "shell/tests/test_browser_shell.py"], capture_output=True, text=True)
-    if res.returncode != 0:
-        print(res.stderr)
-        sys.exit(1)
-    rep = subprocess.run(["coverage", "report", "-m", "--include=shell/soul_browser/browser_shell.py"], capture_output=True, text=True)
-    print(rep.stdout)
-    if "100%" not in rep.stdout:
-        print("FAILED: Browser shell automated coverage is not 100%")
-        sys.exit(1)
-else:
-    # Run unittest suite directly
-    res = subprocess.run(["python3", "-m", "unittest", "shell/tests/test_browser_shell.py"], capture_output=True, text=True)
-    if res.returncode != 0:
-        print(res.stderr)
-        sys.exit(1)
-    print("PASS: Shell browser unit test suite verified passing 100%")
-print("PASS: Test coverage verification passed")
+res = subprocess.run(["python3", "-m", "coverage", "run", "-m", "unittest", "shell/tests/test_browser_shell.py"], capture_output=True, text=True)
+if res.returncode != 0:
+    print(res.stderr)
+    sys.exit(1)
+rep = subprocess.run(["python3", "-m", "coverage", "report", "-m", "--include=shell/soul_browser/browser_shell.py"], capture_output=True, text=True)
+print(rep.stdout)
+if "100%" not in rep.stdout:
+    print("FAILED: Browser shell automated coverage is not 100%")
+    sys.exit(1)
+print("PASS: Browser shell verified 100% automated test coverage")
 PY
 then
   fail coverage "Automated test coverage verification failed"
 fi
 
-echo "[GATE 7] Fresh Multi-Factory Orchestrator Run..."
+echo "[GATE 8] Reproducible Build & Target SDK Modernity..."
+python3 tools/reproducible_build_verifier.py || fail build_provenance "Build provenance check failed"
+
+echo "[GATE 9] Fresh Multi-Factory Orchestrator Run..."
 bash factory-2/scripts/run_all.sh || fail pipeline "Factory 2 pipeline reported failure"
 
-echo "[GATE 8] End-to-End System Integration Audit..."
-if [ "0" != "1" ]; then
+echo "[GATE 10] End-to-End System Integration Audit..."
+if [ "${SKIP_RECURSIVE_AUDIT:-0}" != "1" ]; then
   python3 test_entire_system.py || fail end_to_end "End-to-end system audit failed"
 else
   echo "SKIP_RECURSIVE_AUDIT=1: Skipping nested gate invocation to prevent recursion."

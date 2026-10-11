@@ -1,0 +1,8 @@
+# Global code ownership for human-in-the-loop review
+* @regularshowrigby8-create
+
+# Critical system governance paths requiring human sign-off
+/docs/factory/ENFORCEMENT.md @regularshowrigby8-create
+/tools/factory/enforce_rules.py @regularshowrigby8-create
+/.claude/scripts/gates.sh @regularshowrigby8-create
+/schemas/ @regularshowrigby8-create
