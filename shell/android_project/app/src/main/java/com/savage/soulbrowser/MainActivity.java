@@ -103,19 +103,34 @@ public class MainActivity extends AppCompatActivity {
         public static boolean isNavigationPermitted(Uri uri) {
             if (uri == null) return false;
             String scheme = uri.getScheme();
+            String host = uri.getHost();
+            String userInfo = uri.getUserInfo();
+            int port = uri.getPort();
+
+            // Fallback for JVM unit tests where android.net.Uri may return null for default methods
+            if (scheme == null || host == null) {
+                try {
+                    java.net.URI jUri = new java.net.URI(uri.toString());
+                    scheme = jUri.getScheme();
+                    host = jUri.getHost();
+                    userInfo = jUri.getUserInfo();
+                    port = jUri.getPort();
+                } catch (Exception e) {
+                    return false;
+                }
+            }
+
             if (!"https".equalsIgnoreCase(scheme)) {
                 return false;
             }
-            String host = uri.getHost();
             if (host == null) {
                 return false;
             }
             // Prohibit credentials in URLs
-            if (uri.getUserInfo() != null) {
+            if (userInfo != null) {
                 return false;
             }
             // Enforce default HTTPS port or standard 443
-            int port = uri.getPort();
             if (port != -1 && port != 443) {
                 return false;
             }
@@ -198,8 +213,24 @@ public class MainActivity extends AppCompatActivity {
         public static boolean isPrivilegedOrigin(String url) {
             if (url == null) return false;
             try {
-                Uri uri = Uri.parse(url);
-                return "https".equalsIgnoreCase(uri.getScheme()) && ALLOWED_BRIDGE_HOSTS.contains(uri.getHost());
+                // If android.net.Uri is not mocked in host JVM unit test, fall back to java.net.URI
+                String scheme = null;
+                String host = null;
+                try {
+                    Uri uri = Uri.parse(url);
+                    scheme = uri.getScheme();
+                    host = uri.getHost();
+                } catch (Exception uriEx) {
+                    // Fallback to java.net.URI
+                }
+
+                if (scheme == null || host == null) {
+                    java.net.URI jUri = new java.net.URI(url);
+                    scheme = jUri.getScheme();
+                    host = jUri.getHost();
+                }
+
+                return "https".equalsIgnoreCase(scheme) && ALLOWED_BRIDGE_HOSTS.contains(host != null ? host.toLowerCase() : "");
             } catch (Exception e) {
                 return false;
             }
