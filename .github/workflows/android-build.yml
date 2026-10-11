@@ -44,7 +44,11 @@ jobs:
       - name: Assemble Debug APK
         run: |
           cd shell/android_project
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleDebug --stacktrace 2>&1 | tee /tmp/gradle_assemble.log || {
+            echo "=== GRADLE ASSEMBLE FAILURE DIAGNOSTIC LOG ==="
+            tail -n 100 /tmp/gradle_assemble.log
+            exit 1
+          }
 
       - name: Locate Output APK
         id: apk_locator
