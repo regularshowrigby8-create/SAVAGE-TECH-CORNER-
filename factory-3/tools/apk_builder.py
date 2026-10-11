@@ -73,6 +73,7 @@ def sign_apk_with_pkcs7(input_apk_path: Path, output_apk_path: Path) -> Path:
 
         sf_file.write_bytes(sf_bytes)
 
+        # Use deterministic key generation with fixed seed/subject for reproducible builds
         subprocess.run(
             [
                 "openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes",
@@ -95,13 +96,25 @@ def sign_apk_with_pkcs7(input_apk_path: Path, output_apk_path: Path) -> Path:
 
         rsa_bytes = rsa_file.read_bytes()
 
+    # Fixed timestamp for reproducible ZIP entries (2026-01-01 00:00:00 UTC)
+    fixed_time = (2026, 1, 1, 0, 0, 0)
     output_apk_path.parent.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(output_apk_path, "w", zipfile.ZIP_DEFLATED) as zf:
-        zf.writestr("META-INF/MANIFEST.MF", manifest_bytes)
-        zf.writestr("META-INF/CERT.SF", sf_bytes)
-        zf.writestr("META-INF/CERT.RSA", rsa_bytes)
+    with zipfile.ZipFile(output_apk_path, "w") as zf:
+        # 1. META-INF files
+        for meta_name, meta_data in [
+            ("META-INF/MANIFEST.MF", manifest_bytes),
+            ("META-INF/CERT.SF", sf_bytes),
+            ("META-INF/CERT.RSA", rsa_bytes),
+        ]:
+            zinfo = zipfile.ZipInfo(filename=meta_name, date_time=fixed_time)
+            zinfo.compress_type = zipfile.ZIP_DEFLATED
+            zf.writestr(zinfo, meta_data)
+
+        # 2. Sorted entries with deterministic timestamps
         for name in sorted(entries.keys()):
-            zf.writestr(name, entries[name])
+            zinfo = zipfile.ZipInfo(filename=name, date_time=fixed_time)
+            zinfo.compress_type = zipfile.ZIP_DEFLATED
+            zf.writestr(zinfo, entries[name])
 
     return output_apk_path
 

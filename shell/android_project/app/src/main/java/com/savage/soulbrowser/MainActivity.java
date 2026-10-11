@@ -35,11 +35,12 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "SavageBrowser";
     private WebView webView;
 
-    // Strict allowed domains for privileged bridge interaction
-    public static final Set<String> ALLOWED_BRIDGE_HOSTS = new HashSet<>(Arrays.asList(
+    // Strict allowed domains for browser navigation & bridge interaction
+    public static final Set<String> ALLOWED_HOSTS = new HashSet<>(Arrays.asList(
         "savage-tech-corner.io",
         "app.savage-tech-corner.io"
     ));
+    public static final Set<String> ALLOWED_BRIDGE_HOSTS = ALLOWED_HOSTS;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,7 +84,42 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
             Uri uri = request.getUrl();
-            return shouldBlockScheme(uri.getScheme());
+            return !isNavigationPermitted(uri);
+        }
+
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView view, String url) {
+            if (url == null) {
+                return true;
+            }
+            try {
+                Uri uri = Uri.parse(url);
+                return !isNavigationPermitted(uri);
+            } catch (Exception e) {
+                return true;
+            }
+        }
+
+        public static boolean isNavigationPermitted(Uri uri) {
+            if (uri == null) return false;
+            String scheme = uri.getScheme();
+            if (!"https".equalsIgnoreCase(scheme)) {
+                return false;
+            }
+            String host = uri.getHost();
+            if (host == null) {
+                return false;
+            }
+            // Prohibit credentials in URLs
+            if (uri.getUserInfo() != null) {
+                return false;
+            }
+            // Enforce default HTTPS port or standard 443
+            int port = uri.getPort();
+            if (port != -1 && port != 443) {
+                return false;
+            }
+            return ALLOWED_HOSTS.contains(host.toLowerCase());
         }
 
         public static boolean shouldBlockScheme(String scheme) {

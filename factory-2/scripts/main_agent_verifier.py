@@ -37,8 +37,9 @@ def compute_file_hash(path: Path) -> str:
 class MainAgentVerifier:
     """Verifies model-submitted proposals and safely implements approved fixes with rollback."""
 
-    def __init__(self, proposals_dir: Optional[Path] = None) -> None:
+    def __init__(self, proposals_dir: Optional[Path] = None, allowed_root: Optional[Path] = None) -> None:
         self.proposals_dir = proposals_dir or PROPOSALS_DIR
+        self.allowed_root = (allowed_root or ROOT_DIR).resolve()
         self.reports_dir = REPORTS_DIR
         self.reports_dir.mkdir(parents=True, exist_ok=True)
 
@@ -55,10 +56,29 @@ class MainAgentVerifier:
         target_path = Path(meta["target_file"]).resolve()
         candidate_path = Path(meta["candidate_file"]).resolve()
 
-        # Security Invariant: Target file MUST reside inside ROOT_DIR or a test directory
-        is_safe_parent = str(target_path).startswith(str(ROOT_DIR.resolve())) or "tmp" in str(target_path) or "temp" in str(target_path)
-        if not is_safe_parent:
+        # Security Invariant: Target file MUST strictly reside inside allowed_root
+        # In test environments, if target_path and proposals_dir share a common ancestor, allow it
+        valid_root = False
+        try:
+            target_path.relative_to(self.allowed_root)
+            valid_root = True
+        except ValueError:
+            try:
+                # If proposals_dir is specified (e.g. in test suite), allow targets inside its parent tree
+                target_path.relative_to(self.proposals_dir.parent.resolve())
+                valid_root = True
+            except ValueError:
+                valid_root = False
+
+        if not valid_root:
             return False, f"Security violation: Target file '{target_path}' is outside repository root"
+
+        # Candidate and proposal metadata MUST reside strictly inside proposals_dir
+        try:
+            candidate_path.relative_to(self.proposals_dir.resolve())
+            Path(meta_path).resolve().relative_to(self.proposals_dir.resolve())
+        except ValueError:
+            return False, "Security violation: Candidate or proposal metadata resides outside proposals directory"
 
         # Check 1: Files must exist
         if not target_path.exists():
@@ -124,11 +144,22 @@ class MainAgentVerifier:
                 # Attempt implementation
                 shutil.copy2(candidate_path, target_path)
 
-                # Post-implementation verification: If target file is python, verify AST & module import
+                # Post-implementation verification: If target file is python, verify AST, syntax, and run regression tests
                 test_passed = True
                 if target_path.suffix == ".py":
                     try:
                         ast.parse(target_path.read_text(encoding="utf-8"), filename=str(target_path))
+                        # Run relevant test suite if target is inside factory-2 app
+                        if "factory-2/app" in str(target_path) or "factories/factory-2/app" in str(target_path):
+                            test_file = ROOT_DIR / "factories" / "factory-2" / "app" / "tests" / "test_app.py"
+                            if test_file.exists():
+                                app_src = ROOT_DIR / "factories" / "factory-2" / "app" / "src"
+                                env = os.environ.copy()
+                                env["PYTHONPATH"] = f"{app_src}:{env.get('PYTHONPATH', '')}"
+                                cmd = [sys.executable, "-m", "unittest", str(test_file)]
+                                proc = subprocess.run(cmd, env=env, capture_output=True, timeout=15)
+                                if proc.returncode != 0:
+                                    test_passed = False
                     except Exception:
                         test_passed = False
 

@@ -19,15 +19,29 @@ export default [
         test: "readonly",
         expect: "readonly",
         beforeEach: "readonly",
-        afterEach: "readonly"
-      }
+        afterEach: "readonly",
+      },
     },
     rules: {
-      "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+      "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
       "no-undef": "error",
       "no-console": "off",
-      "semi": ["error", "always"],
-      "quotes": ["error", "double", { "avoidEscape": true }]
-    }
-  }
+      semi: ["error", "always"],
+      quotes: ["error", "double", { avoidEscape: true }],
+    },
+  },
+  {
+    files: ["**/*.cjs", "tools/factory/**/*.cjs", "tools/factory/**/*.js"],
+    languageOptions: {
+      sourceType: "commonjs",
+      globals: {
+        require: "readonly",
+        module: "readonly",
+        exports: "writable",
+        window: "readonly",
+        document: "readonly",
+        URL: "readonly",
+      },
+    },
+  },
 ];

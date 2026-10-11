@@ -44,6 +44,7 @@ ANDROID_INSECURE_PATTERNS = [
     (re.compile(r"""setAllowUniversalAccessFromFileURLs\s*\(\s*true\s*\)"""), "insecure_universal_file_access", "WebView allows universal access from file URLs"),
     (re.compile(r"""android:usesCleartextTraffic\s*=\s*['"]true['"]"""), "insecure_cleartext_traffic", "Cleartext HTTP traffic permitted in manifest"),
     (re.compile(r"""handler\.proceed\(\)"""), "insecure_ssl_bypass", "SSL error handler proceeds without verification"),
+    (re.compile(r"""shouldBlockScheme\(uri\.getScheme\(\)\)"""), "missing_host_allowlist_check", "WebView navigation validates scheme only without verifying allowed host domain"),
 ]
 
 

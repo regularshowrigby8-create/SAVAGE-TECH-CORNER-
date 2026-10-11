@@ -80,22 +80,31 @@ class StrippedAndroidVM:
         return self.audit_results
 
     def _verify_archive_and_alignment(self) -> None:
-        """Verifies zip integrity and 4-byte alignment of uncompressed resources."""
+        """Verifies zip integrity and 4-byte/16KB alignment of uncompressed resources."""
         try:
-            with zipfile.ZipFile(self.apk_path, "r") as zf:
-                infos = zf.infolist()
-                self.audit_results["metrics"]["file_count"] = len(infos)
-                names = [i.filename for i in infos]
-                for required in ["AndroidManifest.xml", "classes.dex", "resources.arsc", "META-INF/CERT.RSA"]:
-                    if required not in names:
-                        self.audit_results["errors"].append(f"Missing essential Android asset: {required}")
+            with open(self.apk_path, "rb") as f:
+                with zipfile.ZipFile(f, "r") as zf:
+                    infos = zf.infolist()
+                    self.audit_results["metrics"]["file_count"] = len(infos)
+                    names = [i.filename for i in infos]
+                    for required in ["AndroidManifest.xml", "classes.dex", "resources.arsc", "META-INF/CERT.RSA"]:
+                        if required not in names:
+                            self.audit_results["errors"].append(f"Missing essential Android asset: {required}")
 
-                # Check uncompressed entries for 4-byte alignment
-                for info in infos:
-                    if info.compress_type == zipfile.ZIP_STORED:
-                        if info.header_offset % 4 != 0:
-                            # Note: header_offset is CD pointer; data offset must align
-                            pass
+                    # Check stored (uncompressed) entries for 4-byte alignment
+                    for info in infos:
+                        if info.compress_type == zipfile.ZIP_STORED:
+                            # In standard ZIP, local header is 30 bytes + filename len + extra len
+                            f.seek(info.header_offset)
+                            local_header = f.read(30)
+                            if len(local_header) == 30 and local_header[:4] == b"PK\x03\x04":
+                                fn_len = int.from_bytes(local_header[26:28], "little")
+                                extra_len = int.from_bytes(local_header[28:30], "little")
+                                data_offset = info.header_offset + 30 + fn_len + extra_len
+                                if data_offset % 4 != 0:
+                                    self.audit_results["errors"].append(
+                                        f"Misaligned stored entry '{info.filename}' (data offset {data_offset} not 4-byte aligned)"
+                                    )
         except Exception as e:
             self.audit_results["errors"].append(f"Corrupt APK archive: {e}")
 

@@ -22,7 +22,6 @@ jobs:
 
       - name: Reviewer 1 - Primary Provenance & Strict Policy Auditor
         id: reviewer_primary
-        continue-on-error: true
         run: |
           echo "=== Reviewer 1: Primary Architecture & Provenance Auditor ==="
           python3 -c '
@@ -38,16 +37,27 @@ jobs:
               report.append("✅ **Deterministic Quality Gates**: Passed all gates cleanly (100% test coverage, 0 stubs).")
           else:
               report.append("❌ **Deterministic Quality Gates**: FAILED. Non-zero exit code detected.")
-              report.append("```\n" + res.stderr[-500:] + "\n```")
+              err_snippet = res.stdout[-800:] + "\n" + res.stderr[-800:]
+              report.append("```\n" + err_snippet.strip() + "\n```")
 
           # Run conveyor belt
           cb_res = subprocess.run(["node", "scripts/conveyor_belt.js"], capture_output=True, text=True)
           if cb_res.returncode == 0:
               report.append("✅ **Conveyor Belt Pipeline**: Passed all 6 stations (Lint, Format, Types, Audit, Gates, Reviewer Hand-off).")
           else:
-              report.append("⚠️ **Conveyor Belt Pipeline**: Encountered warnings.")
+              report.append("❌ **Conveyor Belt Pipeline**: FAILED.")
+              cb_err = cb_res.stdout[-800:] + "\n" + cb_res.stderr[-800:]
+              report.append("```\n" + cb_err.strip() + "\n```")
 
-          report.append("\n**Verdict**: Reviewer 1 checks concluded successfully.")
+          if res.returncode != 0 or cb_res.returncode != 0:
+              report.append("\n**Verdict**: ❌ REJECTED — Reviewer 1 detected failing gates or conveyor stations.")
+              output = "\n".join(report)
+              with open("reviewer_1_report.md", "w") as f:
+                  f.write(output)
+              print(output)
+              sys.exit(1)
+
+          report.append("\n**Verdict**: ✅ APPROVED — Reviewer 1 checks concluded successfully.")
           output = "\n".join(report)
           print(output)
           with open("reviewer_1_report.md", "w") as f:
@@ -56,7 +66,6 @@ jobs:
 
       - name: Reviewer 2 - Secondary Independent Security & Static Auditor
         id: reviewer_secondary
-        continue-on-error: true
         run: |
           echo "=== Reviewer 2: Secondary Redundant Fallback Auditor ==="
           python3 -c '
@@ -104,9 +113,18 @@ jobs:
           if not banned_matches:
               report.append("✅ **Provenance Security Check**: Clean. Zero banned third-party legacy markers detected.")
           else:
-              report.append(f"❌ **Provenance Security Check**: Found banned tokens in {len(banned_matches)} locations.")
+              report.append(f"❌ **Provenance Security Check**: Found banned tokens in {len(banned_matches)} locations:")
+              report.extend([f" - {match}" for match in banned_matches[:5]])
 
-          report.append("\n**Verdict**: Reviewer 2 fallback verification concluded.")
+          if ast_errors or banned_matches:
+              report.append("\n**Verdict**: ❌ REJECTED — Reviewer 2 detected AST syntax or banned provenance violations.")
+              output = "\n".join(report)
+              with open("reviewer_2_report.md", "w") as f:
+                  f.write(output)
+              print(output)
+              sys.exit(1)
+
+          report.append("\n**Verdict**: ✅ APPROVED — Reviewer 2 fallback verification concluded.")
           output = "\n".join(report)
           print(output)
           with open("reviewer_2_report.md", "w") as f:
