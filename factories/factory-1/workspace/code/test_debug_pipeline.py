@@ -1,16 +1,29 @@
 #!/usr/bin/env python3
 """Behavioral tests for Factory 1 scanners."""
 
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-from workspace.code.debug_pipeline import (
-    run_debug_pipeline,
-    scan_for_dead_buttons,
-    scan_for_dead_code,
-    scan_for_incomplete,
-)
+ROOT_DIR = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT_DIR / "code"))
+sys.path.insert(0, str(ROOT_DIR.parent.parent))
+
+try:
+    from debug_pipeline import (
+        run_debug_pipeline,
+        scan_for_dead_buttons,
+        scan_for_dead_code,
+        scan_for_incomplete,
+    )
+except ImportError:
+    from workspace.code.debug_pipeline import (
+        run_debug_pipeline,
+        scan_for_dead_buttons,
+        scan_for_dead_code,
+        scan_for_incomplete,
+    )
 
 
 class TestDebugPipeline(unittest.TestCase):
