@@ -33,9 +33,11 @@ class TestSoulBrowserShell(unittest.TestCase):
     def test_bridge_invocation(self) -> None:
         res = self.shell.bridge.invoke("getAppVersion")
         self.assertEqual(res, "1.0.0-soul")
+        ui_ver = self.shell.bridge.invoke("getUIVersion")
+        self.assertEqual(ui_ver, "2.0.0-lighting-modern")
 
     def test_all_ui_buttons_handled(self) -> None:
-        required_buttons = ["btn_back", "btn_forward", "btn_refresh", "btn_home", "btn_menu", "btn_tabs"]
+        required_buttons = ["btn_back", "btn_forward", "btn_refresh", "btn_home", "btn_menu", "btn_tabs", "btn_ai_assistant"]
         for btn in required_buttons:
             out = self.shell.click_button(btn)
             self.assertIsInstance(out, dict)
@@ -57,6 +59,16 @@ class TestSoulBrowserShell(unittest.TestCase):
         updated_state = self.shell.render_modern_ui_state()
         self.assertTrue(updated_state["omnibox"]["is_secure"])
         self.assertEqual(updated_state["omnibox"]["title"], "savage-tech-corner.io")
+        self.assertEqual(updated_state["theme"]["version"], "2.0.0")
+
+    def test_ai_assistant_drawer_toggle(self) -> None:
+        self.assertFalse(self.shell.ai_drawer_open)
+        res = self.shell.click_button("btn_ai_assistant")
+        self.assertTrue(res["open"])
+        self.assertTrue(self.shell.ai_drawer_open)
+        res2 = self.shell.click_button("btn_ai_assistant")
+        self.assertFalse(res2["open"])
+        self.assertFalse(self.shell.ai_drawer_open)
 
 
 if __name__ == "__main__":

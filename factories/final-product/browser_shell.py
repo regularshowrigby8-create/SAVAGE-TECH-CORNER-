@@ -1,8 +1,10 @@
 """Soul browser-style shell architecture for Savage Browser.
 
-Modern Lighting Shell UI:
+Modern Lighting Shell UI 2.0:
 - Rebuilt with modern translucent glassmorphism theme, dynamic address omnibox,
   pill navigation buttons, tabs badge indicator, and quick actions drawer.
+- Added Modern UI 2.0 specs: blur effects, floating quick-actions bar, AI assistant button,
+  and dark theme / OLED color palettes.
 - Fundamentally preserves core contracts: WebViewBridge, WebViewHolder, and action_* buttons.
 """
 
@@ -44,7 +46,7 @@ class WebViewHolder:
         self.history_index: int = -1
         self.dom_storage_enabled: bool = True
         self.javascript_enabled: bool = True
-        self.user_agent: str = "SavageBrowser/1.0 (Linux; Android 14; Mobile; LightingUI)"
+        self.user_agent: str = "SavageBrowser/2.0 (Linux; Android 14; Mobile; ModernLightingUI)"
         self.downloads: List[Dict[str, Any]] = []
         self.progress: int = 100
         self.title: str = "New Tab"
@@ -86,31 +88,51 @@ class WebViewHolder:
 
 
 class ModernLightingUITheme:
-    """Design tokens and layout metrics for the Modern Lighting Shell UI."""
+    """Design tokens and layout metrics for the Modern Lighting Shell UI 2.0."""
 
-    THEME_NAME = "ModernLightingGlass"
+    THEME_NAME = "ModernLightingGlass2"
     ACCENT_COLOR = "#6366F1"  # Indigo Electric
-    SURFACE_BLUR = "backdrop-filter: blur(20px)"
-    BORDER_RADIUS = "16dp"
-    ELEVATION = "8dp"
+    ACCENT_CYAN = "#06B6D4"   # Cyber Cyan Glow
+    BACKGROUND_DARK = "#090D16"
+    SURFACE_BLUR = "backdrop-filter: blur(24px)"
+    BORDER_RADIUS = "18dp"
+    ELEVATION = "10dp"
 
     @classmethod
     def get_layout_spec(cls) -> Dict[str, Any]:
         return {
+            "version": "2.0.0",
             "omnibox": {
-                "style": "floating_pill",
+                "style": "floating_pill_glass",
                 "security_indicator": "lock_icon_verified",
-                "corner_radius": "24dp",
-                "background": "rgba(255, 255, 255, 0.85)",
+                "corner_radius": "28dp",
+                "background": "rgba(30, 41, 59, 0.75)",
+                "border": "1px solid rgba(255, 255, 255, 0.12)",
+                "shadow": "0 8px 32px 0 rgba(0, 0, 0, 0.37)",
             },
             "bottom_bar": {
-                "style": "glass_dock",
+                "style": "glass_dock_floating",
                 "blur": cls.SURFACE_BLUR,
-                "buttons": ["btn_back", "btn_forward", "btn_home", "btn_tabs", "btn_refresh", "btn_menu"],
+                "background": "rgba(15, 23, 42, 0.85)",
+                "elevation": cls.ELEVATION,
+                "buttons": [
+                    "btn_back",
+                    "btn_forward",
+                    "btn_home",
+                    "btn_tabs",
+                    "btn_refresh",
+                    "btn_menu",
+                    "btn_ai_assistant",
+                ],
+            },
+            "quick_actions_dock": {
+                "style": "slide_dock",
+                "actions": ["reader_mode", "bookmark", "share", "ai_summary"],
             },
             "tabs_badge": {
-                "style": "counter_capsule",
+                "style": "counter_capsule_glow",
                 "color": cls.ACCENT_COLOR,
+                "glow": f"0 0 12px {cls.ACCENT_COLOR}",
             },
         }
 
@@ -129,6 +151,7 @@ class SoulBrowserShell:
         self.buttons: Dict[str, Callable[..., Any]] = {}
         self.tab_count: int = 1
         self.menu_open: bool = False
+        self.ai_drawer_open: bool = False
         self._setup_ui()
         self._setup_bridge()
 
@@ -139,9 +162,11 @@ class SoulBrowserShell:
         self.buttons["btn_home"] = self.action_home
         self.buttons["btn_menu"] = self.action_menu
         self.buttons["btn_tabs"] = self.action_tabs
+        self.buttons["btn_ai_assistant"] = self.action_ai_assistant
 
     def _setup_bridge(self) -> None:
         self.bridge.register_interface("getAppVersion", lambda: "1.0.0-soul")
+        self.bridge.register_interface("getUIVersion", lambda: "2.0.0-lighting-modern")
         self.bridge.register_interface("postFeedback", lambda msg: f"Received: {msg}")
 
     def click_button(self, button_id: str) -> Any:
@@ -187,7 +212,15 @@ class SoulBrowserShell:
         return {
             "action": "menu",
             "open": self.menu_open,
-            "items": ["Bookmarks", "History", "Downloads", "Desktop Site", "Settings", "AI Summarize"],
+            "items": [
+                "Bookmarks",
+                "History",
+                "Downloads",
+                "Desktop Site",
+                "Settings",
+                "AI Assistant",
+                "Privacy Center",
+            ],
         }
 
     def action_tabs(self) -> Dict[str, Any]:
@@ -195,7 +228,16 @@ class SoulBrowserShell:
             "action": "tabs",
             "count": self.tab_count,
             "active_url": self.webview.current_url,
-            "ui_mode": "grid_switcher",
+            "ui_mode": "grid_switcher_cards",
+        }
+
+    def action_ai_assistant(self) -> Dict[str, Any]:
+        self.ai_drawer_open = not self.ai_drawer_open
+        return {
+            "action": "ai_assistant",
+            "open": self.ai_drawer_open,
+            "url": self.webview.current_url,
+            "mode": "smart_summary_and_qna",
         }
 
     def render_modern_ui_state(self) -> Dict[str, Any]:
@@ -213,5 +255,6 @@ class SoulBrowserShell:
                 "forward_enabled": self.webview.can_go_forward(),
                 "tabs_badge": self.tab_count,
                 "menu_active": self.menu_open,
+                "ai_drawer_active": self.ai_drawer_open,
             },
         }
