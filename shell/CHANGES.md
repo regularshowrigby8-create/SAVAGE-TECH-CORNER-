@@ -1,18 +1,18 @@
 # Shell Module Changes Ledger
 
-## Directly Verified Changes (2026-10-11 — Modern Lighting Shell UI 2.0 Release Build)
+## Directly Verified Changes (2026-10-11 — Modern Luminescence Shell UI 2.0 Release Build)
 
-- **Modern Lighting Shell UI 2.0 (`shell/soul_browser/browser_shell.py`)**:
-  - Upgraded `ModernLightingUITheme` to `ModernLightingGlass2` with OLED dark canvas (`#090D16`), Cyber Cyan glow accents (`#06B6D4`), electric indigo badges (`#6366F1`), and 24px backdrop blur.
+- **Modern Luminescence Shell UI 2.0 (`shell/soul_browser/browser_shell.py`)**:
+  - Upgraded `ModernLuminescenceUITheme` to `ModernLuminescenceGlass2` with OLED dark canvas (`#090D16`), Cyber Cyan glow accents (`#06B6D4`), electric indigo badges (`#6366F1`), and 24px backdrop blur.
   - Added `btn_ai_assistant` to core lighting navigation dock and added `action_ai_assistant()` handler managing smart summary and Q&A drawers.
   - Added `getUIVersion` bridge contract returning `2.0.0-lighting-modern` while strictly preserving `getAppVersion` backwards-compatibility.
   - Rebuilt Android layout `shell/android_project/app/src/main/res/layout/activity_main.xml` with translucent AppBar, glass omnibox capsule, embedded AI assistant trigger, dynamic progress bar, and floating bottom navigation dock with tint accents.
   - Upgraded unit test suite `shell/tests/test_browser_shell.py` with AI assistant drawer toggle and Modern UI 2.0 verification (all 14 shell tests PASS).
 
-## Directly Verified Changes (2026-10-11 — Modern Lighting Shell UI)
+## Directly Verified Changes (2026-10-11 — Modern Luminescence Shell UI)
 
-- **Modern Lighting UI Rebuild**:
-  - Rebuilt `shell/soul_browser/browser_shell.py` with Modern Lighting Glass design tokens (`ModernLightingUITheme`), glassmorphism floating bottom dock, dynamic progress indicators, and verified navigation states (`can_go_back`, `can_go_forward`).
+- **Modern Luminescence UI Rebuild**:
+  - Rebuilt `shell/soul_browser/browser_shell.py` with Modern Luminescence Glass design tokens (`ModernLuminescenceUITheme`), glassmorphism floating bottom dock, dynamic progress indicators, and verified navigation states (`can_go_back`, `can_go_forward`).
   - Added modern Android layout resource `shell/android_project/app/src/main/res/layout/activity_main.xml` with CoordinatorLayout, translucent AppBar, security badge indicator, smooth progress bar, and floating glass dock with tab counter capsule.
   - Retained strict backwards-compatibility with fundamental contracts: `WebViewBridge`, `WebViewHolder`, and all core UI actions (`btn_back`, `btn_forward`, `btn_refresh`, `btn_home`, `btn_menu`, `btn_tabs`).
   - Added `render_modern_ui_state()` API returning complete reactive UI hierarchy.

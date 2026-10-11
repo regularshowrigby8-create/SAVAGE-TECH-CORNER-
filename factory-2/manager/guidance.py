@@ -46,8 +46,8 @@ def review_findings() -> List[str]:
             except Exception:
                 pass
 
-        # Check for explicit critic rejection
-        if "Verdict: FAIL" in content or "BLOCKING" in content and "Zero blocking" not in content:
+        # Check for explicit critic rejection (including Verdict: FIX-FIRST)
+        if "Verdict: FAIL" in content or "Verdict: FIX-FIRST" in content or ("BLOCKING" in content and "Zero blocking" not in content):
             has_fatal_blocker = True
 
         # Generalized Decision Engine

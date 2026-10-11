@@ -161,7 +161,13 @@ class ModelFinder:
 
         new_discoveries: List[Dict[str, Any]] = []
 
-        # Check curated GitHub models
+        # 1. Check curated remote online repositories
+        remote_models = self.fetch_curated_sources()
+        for rm in remote_models:
+            if rm["name"].lower() not in existing_online:
+                new_discoveries.append(rm)
+
+        # 2. Check curated GitHub models
         for candidate in DISCOVERED_GITHUB_MODELS:
             c_name = candidate["name"]
             c_type = candidate.get("type")

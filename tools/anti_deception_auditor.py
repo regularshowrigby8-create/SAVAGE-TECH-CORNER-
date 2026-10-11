@@ -16,6 +16,7 @@ import argparse
 import ast
 import io
 import os
+import re
 import sys
 import zipfile
 from pathlib import Path

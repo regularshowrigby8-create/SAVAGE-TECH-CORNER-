@@ -31,10 +31,10 @@ def audit_ui_element_handlers() -> List[str]:
         return findings
 
     try:
-        from soul_browser.browser_shell import ModernLightingUITheme, SoulBrowserShell
+        from soul_browser.browser_shell import ModernLuminescenceUITheme, SoulBrowserShell
 
         shell = SoulBrowserShell()
-        layout_spec = ModernLightingUITheme.get_layout_spec()
+        layout_spec = ModernLuminescenceUITheme.get_layout_spec()
         required_buttons: List[str] = layout_spec.get("bottom_bar", {}).get("buttons", [])
 
         if not required_buttons:

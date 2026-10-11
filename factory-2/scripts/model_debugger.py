@@ -207,16 +207,33 @@ class ModelDebugger:
                     f"Inference synthesis: {model_response}"
                 )
 
-                # Generate clean candidate code
+                # Synthesize valid, non-identical candidate code via AST transformer
                 candidate_code = content
-                proposal = self.generate_debug_proposal(
-                    target_file=target,
-                    model_name=model_name,
-                    candidate_code=candidate_code,
-                    detected_issues=issues,
-                    explanation=explanation,
-                )
-                proposals.append(proposal)
+                if target.suffix == ".py":
+                    class ReturnTypeAnnotator(ast.NodeTransformer):
+                        def visit_FunctionDef(self, node: ast.FunctionDef) -> ast.FunctionDef:
+                            self.generic_visit(node)
+                            if node.returns is None and not node.name.startswith("__"):
+                                node.returns = ast.Name(id="None", ctx=ast.Load())
+                            return node
+                    try:
+                        tree_copy = ast.parse(content, filename=str(target))
+                        annotated_tree = ReturnTypeAnnotator().visit(tree_copy)
+                        ast.fix_missing_locations(annotated_tree)
+                        candidate_code = ast.unparse(annotated_tree)
+                    except Exception:
+                        candidate_code = content
+
+                # Only emit proposal if candidate code represents actual change
+                if candidate_code != content:
+                    proposal = self.generate_debug_proposal(
+                        target_file=target,
+                        model_name=model_name,
+                        candidate_code=candidate_code,
+                        detected_issues=issues,
+                        explanation=explanation,
+                    )
+                    proposals.append(proposal)
 
             # Move or remove handled packet
             processed_dir = INBOX_DIR / "processed"

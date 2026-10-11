@@ -1,6 +1,6 @@
 """Soul browser-style shell architecture for Savage Browser.
 
-Modern Lighting Shell UI 2.0:
+Modern Luminescence Shell UI 2.0:
 - Rebuilt with modern translucent glassmorphism theme, dynamic address omnibox,
   pill navigation buttons, tabs badge indicator, and quick actions drawer.
 - Added Modern UI 2.0 specs: blur effects, floating quick-actions bar, AI assistant button,
@@ -46,7 +46,7 @@ class WebViewHolder:
         self.history_index: int = -1
         self.dom_storage_enabled: bool = True
         self.javascript_enabled: bool = True
-        self.user_agent: str = "SavageBrowser/2.0 (Linux; Android 14; Mobile; ModernLightingUI)"
+        self.user_agent: str = "SavageBrowser/2.0 (Linux; Android 14; Mobile; ModernLuminescenceUI)"
         self.downloads: List[Dict[str, Any]] = []
         self.progress: int = 100
         self.title: str = "New Tab"
@@ -87,10 +87,10 @@ class WebViewHolder:
         return dl
 
 
-class ModernLightingUITheme:
-    """Design tokens and layout metrics for the Modern Lighting Shell UI 2.0."""
+class ModernLuminescenceUITheme:
+    """Design tokens and layout metrics for the Modern Luminescence Shell UI 2.0."""
 
-    THEME_NAME = "ModernLightingGlass2"
+    THEME_NAME = "ModernLuminescenceGlass2"
     ACCENT_COLOR = "#6366F1"  # Indigo Electric
     ACCENT_CYAN = "#06B6D4"   # Cyber Cyan Glow
     BACKGROUND_DARK = "#090D16"
@@ -128,6 +128,7 @@ class ModernLightingUITheme:
             "quick_actions_dock": {
                 "style": "slide_dock",
                 "actions": ["reader_mode", "bookmark", "share", "ai_summary"],
+                "glow_accent": cls.ACCENT_CYAN,
             },
             "tabs_badge": {
                 "style": "counter_capsule_glow",
@@ -138,7 +139,7 @@ class ModernLightingUITheme:
 
 
 class SoulBrowserShell:
-    """Modern Lighting Browser Android shell coordinator.
+    """Modern Luminescence Browser Android shell coordinator.
 
     Retains the exact same fundamental contract and button IDs while presenting
     a modern streamlined UI layout state tree.
@@ -147,7 +148,7 @@ class SoulBrowserShell:
     def __init__(self) -> None:
         self.webview = WebViewHolder()
         self.bridge = WebViewBridge()
-        self.theme = ModernLightingUITheme()
+        self.theme = ModernLuminescenceUITheme()
         self.buttons: Dict[str, Callable[..., Any]] = {}
         self.tab_count: int = 1
         self.menu_open: bool = False

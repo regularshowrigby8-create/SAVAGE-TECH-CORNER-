@@ -1,4 +1,4 @@
-"""Unit tests for Modern Lighting Soul Browser Shell."""
+"""Unit tests for Modern Luminescence Soul Browser Shell."""
 
 import sys
 import unittest
@@ -7,7 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from soul_browser.browser_shell import SoulBrowserShell, WebViewHolder, WebViewBridge, ModernLightingUITheme
+from soul_browser.browser_shell import SoulBrowserShell, WebViewHolder, WebViewBridge, ModernLuminescenceUITheme
 
 
 class TestSoulBrowserShell(unittest.TestCase):

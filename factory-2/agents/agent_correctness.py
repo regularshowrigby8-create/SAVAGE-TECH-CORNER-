@@ -100,11 +100,21 @@ def analyze_correctness(directory: str = ".") -> List[Dict[str, Any]]:
                 inspector = ASTCodebaseInspector()
                 inspector.visit(tree)
 
-                # Flag dead private functions that are defined but never called anywhere in the file
+                # Multi-file scope: Verify private function is not called within the file or module package
                 unused_funcs = set(inspector.defined_funcs.keys()) - inspector.called_funcs
+                parent_dir = Path(fpath).parent
+                sibling_content = ""
+                for sib in parent_dir.glob("*.py"):
+                    if sib.is_file() and sib != Path(fpath):
+                        try:
+                            sibling_content += sib.read_text(encoding="utf-8", errors="ignore") + "\n"
+                        except Exception:
+                            pass
+
                 for func_name in sorted(unused_funcs):
-                    # Exclude standard test hooks or factory lifecycle conventions
                     if not func_name.startswith(("_test", "_setup", "_teardown")):
+                        if func_name in sibling_content:
+                            continue
                         findings.append({
                             "type": "dead_code_function",
                             "file": fpath,
