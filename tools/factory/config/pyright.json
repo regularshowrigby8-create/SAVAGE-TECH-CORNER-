@@ -1,0 +1,12 @@
+{
+  "include": [
+    "../factory.py",
+    "../install.py",
+    "../safety.py",
+    "../ci_evidence.py",
+    "../automation.py",
+    "../factory_map.py"
+  ],
+  "pythonVersion": "3.11",
+  "typeCheckingMode": "basic"
+}

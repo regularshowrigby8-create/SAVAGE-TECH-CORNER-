@@ -1,0 +1,6 @@
+-r ../../../backend/requirements.txt
+coverage==7.16.2
+hypothesis==6.168.3
+pytest==9.1.1
+# Starlette 1.7 test-client dependency; no backend runtime requirement changes.
+httpx2==2.13.1

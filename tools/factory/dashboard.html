@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Searchhh · Development factory</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0d1722;
+        --panel: #162533;
+        --ink: #ecf4f4;
+        --muted: #b0c3cd;
+        --accent: #79e0c1;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          16px/1.55 system-ui,
+          sans-serif;
+      }
+      header,
+      main,
+      footer {
+        max-width: 1380px;
+        margin: auto;
+        padding: 32px;
+      }
+      header {
+        border-bottom: 1px solid #36505d;
+      }
+      nav {
+        display: flex;
+        gap: 24px;
+        margin-bottom: 32px;
+      }
+      a {
+        color: var(--accent);
+        overflow-wrap: anywhere;
+      }
+      h1 {
+        font-size: clamp(32px, 5vw, 56px);
+        line-height: 1.1;
+        letter-spacing: -2px;
+        margin: 8px 0 20px;
+      }
+      h2 {
+        margin-top: 40px;
+      }
+      small {
+        display: block;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      p {
+        max-width: 920px;
+      }
+      .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        color: var(--accent);
+        font-size: 12px;
+      }
+      .cards,
+      .gaps {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+        gap: 16px;
+      }
+      .card,
+      article {
+        background: var(--panel);
+        padding: 22px;
+        border: 1px solid #36505d;
+        border-radius: 12px;
+      }
+      .card strong {
+        font-size: 30px;
+        display: block;
+      }
+      .flow {
+        padding: 20px;
+        border-left: 4px solid var(--accent);
+        background: var(--panel);
+      }
+      .notice {
+        color: #ffdb9b;
+      }
+      .filters {
+        display: flex;
+        gap: 18px;
+        align-items: end;
+        flex-wrap: wrap;
+      }
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      input,
+      select,
+      button {
+        font: inherit;
+        padding: 10px 14px;
+        border: 1px solid #78949f;
+        border-radius: 6px;
+        background: #142431;
+        color: var(--ink);
+      }
+      button {
+        cursor: pointer;
+        background: #22624f;
+      }
+      button:focus-visible,
+      input:focus-visible,
+      select:focus-visible,
+      a:focus-visible {
+        outline: 3px solid #ffdc8e;
+        outline-offset: 3px;
+      }
+      .table {
+        overflow: auto;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 14px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 16px 12px;
+        border-bottom: 1px solid #36505d;
+        vertical-align: top;
+      }
+      thead {
+        background: var(--panel);
+      }
+      td:nth-child(3) {
+        min-width: 240px;
+      }
+      th[scope="row"] {
+        min-width: 145px;
+      }
+      tr[hidden] {
+        display: none;
+      }
+      footer {
+        color: var(--muted);
+      }
+      code {
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <nav aria-label="Sections">
+        <b>SEARCHHH / FACTORY</b><a href="#tools">Tool map</a
+        ><a href="#gaps">Human-owned gaps</a
+        ><a href="#next">Next integrations</a>
+      </nav>
+      <div class="eyebrow">Development automation · not release approval</div>
+      <h1>Checks run by tools.<br />Decisions stay accountable.</h1>
+      <p>
+        A map of every incorporated engine, its upstream repository and job. A
+        failing check remains a failing check. Nothing here auto-merges, signs
+        an APK or closes a production issue.
+      </p>
+      <div class="cards">
+        <div class="card">
+          <strong>@@COUNT@@ engines</strong>Concrete commands in the registry
+        </div>
+        <div class="card">
+          <strong>@@EXECUTED@@ executed</strong>Snapshot @@SOURCE@@: @@COUNTS@@
+        </div>
+        <div class="card">
+          <strong>70–80% target</strong>Routine active effort saved<small
+            >NOT MEASURED — not a completion meter</small
+          >
+        </div>
+      </div>
+    </header>
+    <main>
+      <h2>The production path</h2>
+      <p class="flow">
+        Change → scope plan → isolated checks → bounded reports → review packets
+        → one reviewed repair → rerun → canonical gates → authorized release
+      </p>
+      <p class="notice">
+        This dashboard uses the explicitly labeled execution snapshot, not live
+        certification. Tools without snapshot execution are UNVERIFIED here.
+        Actual new results belong in the execution report; native, device and
+        signing gates remain mandatory.
+      </p>
+      <section id="tools">
+        <h2>Every tool, repository and responsibility</h2>
+        <div class="filters">
+          <label for="search"
+            >Find a tool or responsibility<input
+              id="search"
+              type="search"
+              placeholder="e.g. security, Kotlin, accessibility" /></label
+          ><label for="state"
+            >Snapshot result<select id="state">
+              <option value="">All results</option>
+              <option>PASS</option>
+              <option>FAIL</option>
+              <option>REPORTED</option>
+              <option>UNVERIFIED</option>
+            </select></label
+          ><button id="reset" type="button">Reset filters</button>
+        </div>
+        <p id="count" aria-live="polite"></p>
+        <div class="table">
+          <table>
+            <caption>
+              All @@COUNT@@ registered engines; wrappers and dependencies are
+              not extra tools.
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Engine</th>
+                <th scope="col">Handles</th>
+                <th scope="col">Source repository</th>
+                <th scope="col">When selected</th>
+                <th scope="col">Evidence scope</th>
+              </tr>
+            </thead>
+            <tbody>
+              @@ROWS@@
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section id="gaps">
+        <h2>What the agent and reviewer still handle</h2>
+        <div class="gaps">
+          <article>
+            <h3>Meaning and priority</h3>
+            <p>
+              Reproduce failures, determine real root causes, preserve aliases,
+              separate false positives from risks, and choose the next bounded
+              ticket.
+            </p>
+          </article>
+          <article>
+            <h3>Correct repairs</h3>
+            <p>
+              Design changes, author behavior assertions, review patches,
+              resolve dependency/API migrations and verify durable state. No
+              blind bulk autofix.
+            </p>
+          </article>
+          <article>
+            <h3>Native reality</h3>
+            <p>
+              Device/WebView bridges, OEM behavior, physical performance,
+              TalkBack usability and visually approved reference screens need
+              native evidence.
+            </p>
+          </article>
+          <article>
+            <h3>Security and release</h3>
+            <p>
+              Interpret secret candidates without publishing values; decide
+              trust boundaries and consent. Maintainers approve keys, protected
+              reviews and production signing.
+            </p>
+          </article>
+          <article>
+            <h3>Measurement</h3>
+            <p>
+              Record at least ten comparable before/after active-effort samples.
+              CI elapsed time or tool counts cannot establish 70–80% savings.
+            </p>
+          </article>
+          <article>
+            <h3>Unparsed evidence</h3>
+            <p>
+              Eight report formats have location parsers. Unsupported reports
+              and malformed evidence remain explicit review work, never empty
+              green results.
+            </p>
+          </article>
+        </div>
+      </section>
+      <section id="next">
+        <h2>Next integrations — not yet implemented</h2>
+        <p>
+          These repositories are candidates with concrete prerequisites. They
+          are not counted in the @@COUNT@@ engines.
+        </p>
+        <div class="gaps">@@PLANNED@@</div>
+      </section>
+    </main>
+    <footer>
+      No APK approval. No measured productivity percentage. S00 remains open.
+      Repository policies cannot force reader/fork consent or replace protected
+      maintainer review.
+    </footer>
+    <script>
+      const search = document.getElementById("search");
+      const state = document.getElementById("state");
+      const rows = Array.from(document.querySelectorAll("tbody tr"));
+      function filter() {
+        const query = search.value.trim().toLowerCase();
+        let visible = 0;
+        for (const row of rows) {
+          row.hidden = !(
+            row.textContent.toLowerCase().includes(query) &&
+            (!state.value || row.dataset.state === state.value)
+          );
+          if (!row.hidden) visible++;
+        }
+        document.getElementById("count").textContent =
+          visible + " of " + rows.length + " tools shown";
+      }
+      search.addEventListener("input", filter);
+      state.addEventListener("change", filter);
+      document.getElementById("reset").addEventListener("click", () => {
+        search.value = "";
+        state.value = "";
+        filter();
+        search.focus();
+      });
+      filter();
+    </script>
+  </body>
+</html>

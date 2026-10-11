@@ -1,0 +1,194 @@
+{
+  "21": {
+    "lookupUrl": "https://github.com/LAW-Unimi/BUbiNG",
+    "note": "Submitted repository returned 404. LAW's official software page links LAW-Unimi/BUbiNG. GitHub SPDX metadata and LAW website licensing statements differ; inspect exact source license before importing.",
+    "additionalEvidence": [
+      "https://law.di.unimi.it/software.php"
+    ]
+  },
+  "26": {
+    "canonicalUrl": "https://code.launchpad.net/beautifulsoup",
+    "sourceUrl": "https://code.launchpad.net/beautifulsoup",
+    "repositoryStatus": "upstream_source_link_verified",
+    "license": "MIT",
+    "evidenceUrl": "https://www.crummy.com/software/BeautifulSoup/",
+    "note": "Upstream confirms Launchpad source and MIT license. HTML parser, not independent crawler."
+  },
+  "36": {
+    "lookupUrl": "https://github.com/madeindjs/spider",
+    "note": "Submitted spider_rust path returned 404. madeindjs/spider redirects to spider-rs/spider. Corrected codebase, not a separate added model/tool."
+  },
+  "37": {
+    "canonicalUrl": "https://www.cs.cmu.edu/~rcm/websphinx/",
+    "sourceUrl": "https://www.cs.cmu.edu/~rcm/websphinx/websphinx.zip",
+    "repositoryStatus": "upstream_source_link_verified",
+    "license": "CMU permissive plus bundled Apache library; review files",
+    "evidenceUrl": "https://www.cs.cmu.edu/~rcm/websphinx/",
+    "note": "Upstream links source ZIP; last listed release 0.5, July 2002. Not Android-tested."
+  },
+  "38": {
+    "canonicalUrl": "https://sourceforge.net/projects/j-spider/",
+    "sourceUrl": "https://sourceforge.net/projects/j-spider/files/",
+    "repositoryStatus": "upstream_source_link_verified",
+    "license": "LGPL (version to verify)",
+    "evidenceUrl": "https://j-spider.sourceforge.net/",
+    "note": "Project page confirms Java/LGPL and development 0.5; no stable version listed."
+  },
+  "39": {
+    "canonicalUrl": "https://sourceforge.net/projects/arachnid/",
+    "sourceUrl": "https://sourceforge.net/projects/arachnid/files/",
+    "repositoryStatus": "upstream_source_link_verified",
+    "license": "GPL-2.0",
+    "category": "crawler",
+    "evidenceUrl": "https://sourceforge.net/projects/arachnid/",
+    "note": "Actual Java framework; project marked inactive, source ZIP 0.40 linked."
+  },
+  "40": {
+    "lookupUrl": "https://github.com/Maxime2/dataparksearch",
+    "note": "Submitted org/repo returned 404. Located DataparkSearch source under Maxime2; repository links the project homepage."
+  },
+  "41": {
+    "canonicalUrl": "https://sourceforge.net/projects/mnogosearch/",
+    "sourceUrl": "https://sourceforge.net/projects/mnogosearch/files/",
+    "repositoryStatus": "upstream_source_link_verified",
+    "license": "GPL-2.0 / other; version-specific",
+    "evidenceUrl": "https://sourceforge.net/projects/mnogosearch/",
+    "note": "Submitted GitHub path returned 404. SourceForge retains source distributions; old versions, not a maintained-runtime certification."
+  },
+  "42": {
+    "canonicalUrl": "https://sourceforge.net/projects/htdig/",
+    "sourceUrl": "https://sourceforge.net/projects/htdig/files/",
+    "repositoryStatus": "upstream_source_link_verified",
+    "license": "LGPL-2.0 (SourceForge metadata)",
+    "evidenceUrl": "https://sourceforge.net/projects/htdig/",
+    "note": "Submitted GitHub path returned 404. Original project/source releases available on SourceForge."
+  },
+  "43": {
+    "lookupUrl": "https://github.com/swish-e/swish-e",
+    "note": "Website fetch failed; located archived Swish-e repository. License metadata NOASSERTION requires source review."
+  },
+  "44": {
+    "canonicalUrl": "https://sourceforge.net/projects/egothor/",
+    "sourceUrl": "https://sourceforge.net/p/egothor/code/",
+    "repositoryStatus": "upstream_source_link_verified",
+    "license": "Other License; review source",
+    "evidenceUrl": "https://sourceforge.net/projects/egothor/",
+    "note": "Historical Java search-engine code remains on SourceForge. Current egothor.org advertises a different private-beta generation; do not equate it with this historical code."
+  },
+  "49": {
+    "canonicalUrl": "https://svn.apache.org/repos/asf/incubator/droids/",
+    "sourceUrl": "https://svn.apache.org/repos/asf/incubator/droids/",
+    "repositoryStatus": "upstream_source_link_verified",
+    "license": "Apache project; exact historical files to review",
+    "evidenceUrl": "https://incubator.apache.org/projects/droids.html",
+    "note": "Submitted GitHub path returned 404. Apache links historical SVN; retired 2015-11-01. Source link documented, checkout not tested."
+  },
+  "50": {
+    "note": "Submitted nicmart/PHPCrawler returned 404; exact project identity unresolved. PHPCrawl at SourceForge is a possible alternative, not silently substituted.",
+    "alternativeUrl": "https://sourceforge.net/projects/phpcrawl/"
+  },
+  "51": {
+    "canonicalUrl": "https://sourceforge.net/projects/phpcrawl/",
+    "sourceUrl": "https://sourceforge.net/projects/phpcrawl/files/",
+    "repositoryStatus": "upstream_source_link_verified",
+    "license": "GPL-2.0",
+    "evidenceUrl": "https://sourceforge.net/projects/phpcrawl/",
+    "note": "Submitted GitHub path returned 404. PHPCrawl project/source release 0.8.3 located on SourceForge."
+  },
+  "52": {
+    "canonicalUrl": "https://sourceforge.net/projects/simplehtmldom/",
+    "sourceUrl": "https://sourceforge.net/p/simplehtmldom/repository/",
+    "repositoryStatus": "upstream_source_link_verified",
+    "license": "MIT",
+    "evidenceUrl": "https://sourceforge.net/projects/simplehtmldom/",
+    "note": "SourceForge identifies PHP DOM parser and source repository, not a crawling scheduler."
+  },
+  "68": {
+    "canonicalUrl": "https://www.gnu.org/software/wget/",
+    "sourceUrl": "https://ftp.gnu.org/gnu/wget/",
+    "repositoryStatus": "upstream_source_link_verified",
+    "license": "GPL (check chosen release)",
+    "evidenceUrl": "https://www.gnu.org/software/wget/",
+    "note": "GNU confirms recursive retrieval and source archive. Submitted Savannah Git path retained separately."
+  },
+  "78": {
+    "note": "Submitted s0md3v/urlscan returned 404 and repository search found no matching project under that owner. Do not substitute urlscan.io or unrelated namesakes."
+  },
+  "83": {
+    "canonicalUrl": "https://gitlab.com/kalilinux/packages/dirbuster",
+    "sourceUrl": "https://gitlab.com/kalilinux/packages/dirbuster/-/tree/upstream",
+    "repositoryStatus": "packaging_repository_verified",
+    "revision": "634d1666be2b434e499f415edffd99392a7430d7",
+    "evidenceUrl": "https://gitlab.com/kalilinux/packages/dirbuster",
+    "note": "Kali packaging repository verified; upstream branch and bundled JAR present. This is not proof a complete original Java source tree is present. License/source provenance needs package inspection."
+  },
+  "92": {
+    "lookupUrl": "https://github.com/z0m31en7/Uscrapper",
+    "category": "security_crawler",
+    "resolutionConfidence": "probable_intended_project",
+    "note": "Submitted URL contains a literal space. Same-owner Python project z0m31en7/Uscrapper (different spelling) verified via GitHub metadata and README; recorded as the probable intended codebase, not an exact URL match. OSINT/personal-data extraction features are not automatically executed."
+  },
+  "65": {
+    "integration": "new_optional_backend",
+    "executionTarget": "python_optional_backend_not_android",
+    "note": "Integrated on already-fetched HTML in the optional Scrapy backend. Not installed in the phone-native runtime."
+  },
+  "66": {
+    "integration": "new_optional_backend",
+    "executionTarget": "python_optional_backend_not_android",
+    "note": "Integrated on already-fetched HTML in the optional Scrapy backend. Not installed in the phone-native runtime."
+  },
+  "67": {
+    "integration": "existing_backend_dependency",
+    "executionTarget": "python_optional_backend_not_android",
+    "note": "Parsel supplies Scrapy response selectors; this dependency is not an additional independent crawling engine."
+  },
+  "1": {
+    "configurationSupport": {
+      "robotsTxt": "ROBOTSTXT_OBEY is configurable; upstream default False. Searchhh backend sets True.",
+      "rateLimits": "AUTOTHROTTLE_ENABLED controls client throttling, not provider-enforced quotas.",
+      "politenessDelays": "DOWNLOAD_DELAY is configurable; upstream default 0. Searchhh backend sets 3.",
+      "maxDepth": "DEPTH_LIMIT=0 means no depth limit; Searchhh backend limits depth.",
+      "domainScope": "unverified"
+    },
+    "configurationEvidence": [
+      "https://github.com/scrapy/scrapy/blob/HEAD/scrapy/settings/default_settings.py"
+    ]
+  },
+  "2": {
+    "configurationSupport": {
+      "robotsTxt": "IgnoreRobotsTxt option exists.",
+      "rateLimits": "unverified",
+      "politenessDelays": "unverified",
+      "maxDepth": "MaxDepth is configurable, default 0.",
+      "domainScope": "AllowedDomains and DisallowedDomains options exist."
+    },
+    "configurationEvidence": [
+      "https://github.com/gocolly/colly/blob/HEAD/colly.go"
+    ]
+  },
+  "3": {
+    "configurationSupport": {
+      "robotsTxt": "unverified",
+      "rateLimits": "-rl, -rlm, -hrl and -hrlm set client request caps; no server-limit bypass.",
+      "politenessDelays": "-rd controls request delay.",
+      "maxDepth": "-d controls maximum depth; unlimited sentinel not verified.",
+      "domainScope": "-ns disables default host scope; -cs/-cos define regex scope."
+    },
+    "configurationEvidence": [
+      "https://github.com/projectdiscovery/katana/blob/HEAD/README.md"
+    ]
+  },
+  "5": {
+    "configurationSupport": {
+      "robotsTxt": "--robots controls discovery FROM robots.txt; not proof of enforcement or an ignore switch.",
+      "rateLimits": "unverified",
+      "politenessDelays": "--delay and --random-delay are configurable.",
+      "maxDepth": "--depth 0 documented as infinite recursion.",
+      "domainScope": "unverified"
+    },
+    "configurationEvidence": [
+      "https://github.com/jaeles-project/gospider/blob/HEAD/README.md"
+    ]
+  }
+}

@@ -1,0 +1,120 @@
+Scrapy|Python|https://github.com/scrapy/scrapy|crawler
+Colly|Go|https://github.com/gocolly/colly|crawler
+Katana|Go|https://github.com/projectdiscovery/katana|crawler
+Hakrawler|Go|https://github.com/hakluke/hakrawler|crawler
+Gospider|Go|https://github.com/jaeles-project/gospider|crawler
+crawler4j|Java|https://github.com/yasserg/crawler4j|crawler
+Apache Nutch|Java|https://github.com/apache/nutch|crawler
+Crawlee|JS/Py|https://github.com/apify/crawlee|crawler
+Heritrix3|Java|https://github.com/internetarchive/heritrix3|archiver
+WebMagic|Java|https://github.com/code4craft/webmagic|crawler
+Node-Crawler|Node.js|https://github.com/bda-research/node-crawler|crawler
+pyspider|Python|https://github.com/binux/pyspider|crawler
+StormCrawler|Java|https://github.com/DigitalPebble/storm-crawler|crawler
+YaCy|Java|https://github.com/yacy/yacy_search_server|crawler_indexer
+Frontera|Python|https://github.com/scrapinghub/frontera|frontier
+Crawl4AI|Python|https://github.com/unclecode/crawl4ai|crawler
+Scrapy-Splash|Python|https://github.com/scrapinghub/scrapy-splash|browser_adapter
+ScrapyRT|Python|https://github.com/scrapinghub/scrapyrt|service
+Scrapyd|Python|https://github.com/scrapy/scrapyd|service
+ACHE Crawler|Java|https://github.com/VIDA-NYU/ache|crawler
+BUbiNG|Java|https://github.com/nicktaj/bubing|crawler
+Xapian|C++|https://github.com/xapian/xapian|indexer
+Playwright|Node/Py|https://github.com/microsoft/playwright|browser_automation
+Puppeteer|Node.js|https://github.com/puppeteer/puppeteer|browser_automation
+Selenium|Multi|https://github.com/SeleniumHQ/selenium|browser_automation
+BeautifulSoup|Python|https://code.launchpad.net/beautifulsoup|parser
+Guzzle|PHP|https://github.com/guzzle/guzzle|http_client
+Goutte|PHP|https://github.com/FriendsOfPHP/Goutte|http_parser
+Symfony Panther|PHP|https://github.com/symfony/panther|browser_automation
+Roach|PHP|https://github.com/roach-php/core|crawler
+Spatie Crawler|PHP|https://github.com/spatie/crawler|crawler
+DomCrawler|PHP|https://github.com/symfony/dom-crawler|parser
+Meilisearch|Rust|https://github.com/meilisearch/meilisearch|indexer
+Tinysearch|Rust|https://github.com/tinysearch/tinysearch|indexer
+Tantivy|Rust|https://github.com/quickwit-oss/tantivy|indexer
+SpiderRust|Rust|https://github.com/madeindjs/spider_rust|crawler
+WebSPHINX|Java|https://www.cs.cmu.edu/~rcm/websphinx/|crawler
+JSpider|Java|https://j-spider.sourceforge.net/|crawler
+Arachnid|Java|https://sourceforge.net/projects/arachnid/|identity_unresolved
+DataparkSearch|C|https://github.com/dataparksearch/dataparksearch|crawler_indexer
+mnoGoSearch|C|https://github.com/mnogosearch/mnogosearch|crawler_indexer
+ht://Dig|C++|https://github.com/htdig/htdig|crawler_indexer
+Swish-e|C|https://swish-e.org/|crawler_indexer
+Egothor|Java|https://www.egothor.org/|crawler_indexer
+Apache Lucene|Java|https://github.com/apache/lucene|indexer
+Apache Solr|Java|https://github.com/apache/solr|indexer
+OpenSearchServer|Java|https://github.com/jaeksoft/opensearchserver|crawler_indexer
+Sphinx|C++|https://github.com/sphinxsearch/sphinx|indexer
+Apache Droids|Java|https://github.com/apache/incubator-retired-droids|crawler
+PHP-Crawler|PHP|https://github.com/nicmart/PHPCrawler|crawler
+PHPCrawl|PHP|https://github.com/kuuurt13/phpcrawl|crawler
+SimpleHTMLDOM|PHP|https://sourceforge.net/projects/simplehtmldom/|parser
+QueryPath|PHP|https://github.com/technosophos/querypath|parser
+DiDOM|PHP|https://github.com/Imangazaliev/DiDOM|parser
+Requests-HTML|Python|https://github.com/psf/requests-html|http_parser
+MechanicalSoup|Python|https://github.com/MechanicalSoup/MechanicalSoup|browser_automation
+RoboBrowser|Python|https://github.com/jmcarp/robobrowser|browser_automation
+Grab|Python|https://github.com/lorien/grab|crawler
+Portia|Python|https://github.com/scrapinghub/portia|crawler
+Helium|Python|https://github.com/mherrmann/helium|browser_automation
+Autoscraper|Python|https://github.com/alirezamika/autoscraper|extractor
+Newspaper3k|Python|https://github.com/codelucas/newspaper|extractor
+Readability|Python|https://github.com/buriy/python-readability|extractor
+Goose3|Python|https://github.com/goose3/goose3|extractor
+Trafilatura|Python|https://github.com/adbar/trafilatura|extractor_crawler
+Extruct|Python|https://github.com/scrapinghub/extruct|structured_extractor
+Parsel|Python|https://github.com/scrapy/parsel|parser
+Wget|C|https://git.savannah.gnu.org/cgit/wget.git|recursive_downloader
+HTTrack|C|https://github.com/xroche/httrack|archiver
+Curl|C|https://github.com/curl/curl|http_client
+Axel|C|https://github.com/axel-download-accelerator/axel|downloader
+Aria2|C++|https://github.com/aria2/aria2|downloader
+Waybackpy|Python|https://github.com/akamhy/waybackpy|archive_client
+Wayback Machine Scraper|Python|https://github.com/sangaline/wayback-machine-scraper|archive_client
+Gau (GetAllURLs)|Go|https://github.com/lc/gau|passive_url_discovery
+Gauplus|Go|https://github.com/bp0lr/gauplus|passive_url_discovery
+Waybackurls|Go|https://github.com/tomnomnom/waybackurls|passive_url_discovery
+Urlscan|Go|https://github.com/s0md3v/urlscan|identity_unresolved
+Cariddi|Go|https://github.com/edoardottt/cariddi|security_crawler
+GoBuster|Go|https://github.com/OJ/gobuster|content_enumeration
+FFuF|Go|https://github.com/ffuf/ffuf|content_enumeration
+Dirsearch|Python|https://github.com/maurosoria/dirsearch|content_enumeration
+Dirbuster|Java|https://gitlab.com/kalilinux/packages/dirbuster|content_enumeration
+Feroxbuster|Rust|https://github.com/epi052/feroxbuster|content_enumeration
+Rustbuster|Rust|https://github.com/phra/rustbuster|content_enumeration
+LinkFinder|Python|https://github.com/GerbenJavado/LinkFinder|javascript_link_extractor
+JSFinder|Python|https://github.com/Threezh1/JSFinder|javascript_link_extractor
+SecretFinder|Python|https://github.com/m4ll0k/SecretFinder|secret_scanner
+Mantra|Go|https://github.com/Brosck/mantra|secret_scanner
+Crawlergo|Go|https://github.com/Qianlitp/crawlergo|security_crawler
+Rad|Go|https://github.com/chaitin/rad|security_crawler
+Uscraper|Python|https://github.com/z0m31en7/us scraper|identity_unresolved
+Photon|Python|https://github.com/s0md3v/Photon|security_crawler
+Sn1per|Bash|https://github.com/1N3/Sn1per|security_suite
+Osmedeus|Go|https://github.com/j3ssie/osmedeus|security_suite
+Amass|Go|https://github.com/owasp-amass/amass|asset_discovery
+Subfinder|Go|https://github.com/projectdiscovery/subfinder|asset_discovery
+Assetfinder|Go|https://github.com/tomnomnom/assetfinder|asset_discovery
+Findomain|Rust|https://github.com/Findomain/Findomain|asset_discovery
+Chaos|Go|https://github.com/projectdiscovery/chaos-client|asset_discovery
+Crawlee Python|Python|https://github.com/apify/crawlee-python|crawler
+Browsertrix Crawler|TypeScript|https://github.com/webrecorder/browsertrix-crawler|archiver
+Brozzler|Python|https://github.com/internetarchive/brozzler|archiver
+Scrapling|Python|https://github.com/D4Vinci/Scrapling|crawler
+Scrapy Playwright|Python|https://github.com/scrapy-plugins/scrapy-playwright|browser_adapter
+Scrapy Redis|Python|https://github.com/rmax/scrapy-redis|frontier
+Scrapy Cluster|Python|https://github.com/istresearch/scrapy-cluster|crawler
+OpenWPM|Python|https://github.com/openwpm/OpenWPM|browser_crawler
+Firecrawl|TypeScript|https://github.com/firecrawl/firecrawl|crawler
+Crawlab|Go|https://github.com/crawlab-team/crawlab|orchestrator
+Elastic Open Web Crawler|Ruby|https://github.com/elastic/crawler|crawler
+Ferret|Go|https://github.com/MontFerret/ferret|browser_crawler
+Geziyor|Go|https://github.com/geziyor/geziyor|crawler
+LinkChecker|Python|https://github.com/linkchecker/linkchecker|crawler
+Simplecrawler|Node.js|https://github.com/simplecrawler/simplecrawler|crawler
+Osmosis|Node.js|https://github.com/rchipka/node-osmosis|crawler
+Norconex HTTP Collector|Java|https://github.com/Norconex/collector-http|crawler
+Apache ManifoldCF|Java|https://github.com/apache/manifoldcf|connector_framework
+ArchiveBox|Python|https://github.com/ArchiveBox/ArchiveBox|archiver
+Crawly|Elixir|https://github.com/elixir-crawly/crawly|crawler

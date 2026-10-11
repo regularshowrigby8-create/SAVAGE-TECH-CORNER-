@@ -1,0 +1,662 @@
+{
+  "date": "2026-09-30",
+  "pypi": {
+    "ruff": {
+      "version": "0.16.9",
+      "python": ">=3.7",
+      "links": {
+        "Changelog": "https://github.com/astral-sh/ruff/blob/main/CHANGELOG.md",
+        "Documentation": "https://docs.astral.sh/ruff/",
+        "Homepage": "https://docs.astral.sh/ruff",
+        "Repository": "https://github.com/astral-sh/ruff"
+      }
+    },
+    "pylint": {
+      "version": "4.1.1",
+      "python": ">=3.10.0",
+      "links": {
+        "Bug Tracker": "https://github.com/pylint-dev/pylint/issues",
+        "Discord Server": "https://discord.com/invite/Egy6P8AMB5",
+        "Docs: Contributor Guide": "https://pylint.readthedocs.io/en/latest/development_guide/contributor_guide/index.html",
+        "Docs: User Guide": "https://pylint.readthedocs.io/en/latest/",
+        "Source Code": "https://github.com/pylint-dev/pylint",
+        "What's New": "https://pylint.readthedocs.io/en/latest/whatsnew/4/",
+        "homepage": "https://github.com/pylint-dev/pylint"
+      }
+    },
+    "mypy": {
+      "version": "2.3.1",
+      "python": ">=3.10",
+      "links": {
+        "Changelog": "https://github.com/python/mypy/blob/master/CHANGELOG.md",
+        "Documentation": "https://mypy.readthedocs.io/en/stable/index.html",
+        "Homepage": "https://www.mypy-lang.org/",
+        "Issues": "https://github.com/python/mypy/issues",
+        "Repository": "https://github.com/python/mypy"
+      }
+    },
+    "bandit": {
+      "version": "1.9.4",
+      "python": ">=3.10",
+      "links": {
+        "Discord": "https://discord.gg/qYxpadCgkx",
+        "Documentation": "https://bandit.readthedocs.io/",
+        "Homepage": "https://bandit.readthedocs.io/",
+        "Issue Tracker": "https://github.com/PyCQA/bandit/issues",
+        "Release Notes": "https://github.com/PyCQA/bandit/releases",
+        "Source Code": "https://github.com/PyCQA/bandit",
+        "Sponsor": "https://psfmember.org/civicrm/contribute/transact/?reset=1&id=42"
+      }
+    },
+    "semgrep": {
+      "version": "1.178.0",
+      "python": ">=3.10",
+      "links": {
+        "Changelog": "https://github.com/semgrep/semgrep/blob/develop/CHANGELOG.md",
+        "Documentation": "https://semgrep.dev/docs",
+        "Homepage": "https://semgrep.dev",
+        "Issues": "https://github.com/semgrep/semgrep/issues",
+        "Repository": "https://github.com/semgrep/semgrep"
+      }
+    },
+    "pip-audit": {
+      "version": "2.10.1",
+      "python": ">=3.10",
+      "links": {
+        "Homepage": "https://pypi.org/project/pip-audit/",
+        "Issues": "https://github.com/pypa/pip-audit/issues",
+        "Source": "https://github.com/pypa/pip-audit"
+      }
+    },
+    "deptry": {
+      "version": "0.25.1",
+      "python": ">=3.10",
+      "links": {
+        "changelog": "https://github.com/osprey-oss/deptry/blob/main/CHANGELOG.md",
+        "documentation": "https://deptry.com",
+        "homepage": "https://deptry.com",
+        "repository": "https://github.com/osprey-oss/deptry"
+      }
+    },
+    "vulture": {
+      "version": "2.16",
+      "python": ">=3.9",
+      "links": {
+        "Changelog": "https://github.com/jendrikseipp/vulture/blob/main/CHANGELOG.md",
+        "Homepage": "https://github.com/jendrikseipp/vulture",
+        "Repository": "https://github.com/jendrikseipp/vulture"
+      }
+    },
+    "xenon": {
+      "version": "0.9.3",
+      "python": null,
+      "links": {
+        "Download": "https://pypi.python.org/xenon/",
+        "Homepage": "https://xenon.readthedocs.org/"
+      }
+    },
+    "interrogate": {
+      "version": "1.7.0",
+      "python": ">=3.8",
+      "links": {
+        "Bug Tracker": "https://github.com/econchick/interrogate/issues",
+        "Documentation": "https://interrogate.readthedocs.io",
+        "Homepage": "https://interrogate.readthedocs.io",
+        "Source Code": "https://github.com/econchick/interrogate"
+      }
+    },
+    "pytest": {
+      "version": "9.1.1",
+      "python": ">=3.10",
+      "links": {
+        "Changelog": "https://docs.pytest.org/en/stable/changelog.html",
+        "Contact": "https://docs.pytest.org/en/stable/contact.html",
+        "Funding": "https://docs.pytest.org/en/stable/sponsor.html",
+        "Homepage": "https://docs.pytest.org/en/latest/",
+        "Source": "https://github.com/pytest-dev/pytest",
+        "Tracker": "https://github.com/pytest-dev/pytest/issues"
+      }
+    },
+    "coverage": {
+      "version": "7.16.2",
+      "python": ">=3.10",
+      "links": {
+        "Documentation": "https://coverage.readthedocs.io/en/7.16.2",
+        "Funding": "https://tidelift.com/subscription/pkg/pypi-coverage?utm_source=pypi-coverage&utm_medium=referral&utm_campaign=pypi",
+        "Homepage": "https://github.com/coveragepy/coveragepy",
+        "Issues": "https://github.com/coveragepy/coveragepy/issues",
+        "Mastodon": "https://hachyderm.io/@coveragepy",
+        "Mastodon (nedbat)": "https://hachyderm.io/@nedbat"
+      }
+    },
+    "hypothesis": {
+      "version": "6.168.3",
+      "python": ">=3.10",
+      "links": {
+        "changelog": "https://hypothesis.readthedocs.io/en/latest/changelog.html",
+        "documentation": "https://hypothesis.readthedocs.io",
+        "homepage": "https://hypothesis.works",
+        "issues": "https://github.com/HypothesisWorks/hypothesis/issues",
+        "source": "https://github.com/HypothesisWorks/hypothesis"
+      }
+    },
+    "mutmut": {
+      "version": "3.8.0",
+      "python": ">=3.10",
+      "links": {
+        "Changelog": "https://github.com/boxed/mutmut/blob/main/HISTORY.rst",
+        "Documentation": "https://mutmut.readthedocs.io/en/latest/",
+        "Homepage": "https://github.com/boxed/mutmut",
+        "Issues": "https://github.com/boxed/mutmut/issues",
+        "Repository": "https://github.com/boxed/mutmut"
+      }
+    },
+    "codespell": {
+      "version": "2.4.3",
+      "python": ">=3.9",
+      "links": {
+        "homepage": "https://github.com/codespell-project/codespell",
+        "repository": "https://github.com/codespell-project/codespell"
+      }
+    },
+    "yamllint": {
+      "version": "1.38.0",
+      "python": ">=3.10",
+      "links": {
+        "documentation": "https://yamllint.readthedocs.io",
+        "homepage": "https://github.com/adrienverge/yamllint",
+        "repository": "https://github.com/adrienverge/yamllint"
+      }
+    },
+    "check-jsonschema": {
+      "version": "0.38.2",
+      "python": ">=3.10",
+      "links": {
+        "Homepage": "https://github.com/python-jsonschema/check-jsonschema"
+      }
+    },
+    "reuse": {
+      "version": "6.2.0",
+      "python": ">=3.10",
+      "links": {
+        "Documentation": "https://reuse.readthedocs.org/",
+        "Homepage": "https://reuse.software/",
+        "Repository": "https://github.com/fsfe/reuse-tool"
+      }
+    },
+    "pip-licenses": {
+      "version": "5.5.5",
+      "python": ">=3.9",
+      "links": {
+        "homepage": "https://github.com/raimon49/pip-licenses",
+        "issues": "https://github.com/raimon49/pip-licenses/issues",
+        "releasenotes": "https://github.com/raimon49/pip-licenses/releases"
+      }
+    },
+    "cyclonedx-bom": {
+      "version": "7.5.0",
+      "python": "<4,>=3.9",
+      "links": {
+        "Bug Tracker": "https://github.com/CycloneDX/cyclonedx-python/issues",
+        "Changelog": "https://github.com/CycloneDX/cyclonedx-python/releases",
+        "Documentation": "https://cyclonedx-bom-tool.readthedocs.io/",
+        "Funding": "https://owasp.org/donate/?reponame=www-project-cyclonedx&title=OWASP+CycloneDX",
+        "Homepage": "https://github.com/CycloneDX/cyclonedx-python/#readme",
+        "Repository": "https://github.com/CycloneDX/cyclonedx-python/"
+      }
+    },
+    "detect-secrets": {
+      "version": "1.5.0",
+      "python": null,
+      "links": {
+        "Download": "https://github.com/Yelp/detect-secrets/archive/1.5.0.tar.gz",
+        "Homepage": "https://github.com/Yelp/detect-secrets"
+      }
+    },
+    "zizmor": {
+      "version": "1.30.1",
+      "python": ">=3.10",
+      "links": {
+        "Documentation": "https://docs.zizmor.sh",
+        "Homepage": "https://docs.zizmor.sh",
+        "Source Code": "https://github.com/zizmorcore/zizmor"
+      }
+    },
+    "shellcheck-py": {
+      "version": "0.11.0.1",
+      "python": ">=3.9",
+      "links": {
+        "Homepage": "https://github.com/ryanrhee/shellcheck-py"
+      }
+    },
+    "shfmt-py": {
+      "version": "4.2.0",
+      "python": ">=3.9",
+      "links": {
+        "Changelog": "https://github.com/MaxWinterstein/shfmt-py/releases",
+        "Homepage": "https://github.com/MaxWinterstein/shfmt-py",
+        "Issues": "https://github.com/MaxWinterstein/shfmt-py/issues",
+        "Upstream (mvdan/sh)": "https://github.com/mvdan/sh"
+      }
+    },
+    "actionlint-py": {
+      "version": "1.7.12.25",
+      "python": ">=3.7",
+      "links": {
+        "Bug Reports": "https://github.com/Mateusz-Grzelinski/actionlint-py/issues",
+        "Homepage": "https://github.com/Mateusz-Grzelinski/actionlint-py"
+      }
+    },
+    "hadolint-bin": {
+      "version": "2.15.1",
+      "python": ">=3.7",
+      "links": {
+        "Repository": "https://github.com/justin-yan/pybin"
+      }
+    },
+    "checkov": {
+      "version": "3.3.20",
+      "python": ">=3.9",
+      "links": {
+        "Homepage": "https://github.com/bridgecrewio/checkov"
+      }
+    },
+    "uv": {
+      "version": "0.12.21",
+      "python": ">=3.8",
+      "links": {
+        "Changelog": "https://github.com/astral-sh/uv/blob/main/CHANGELOG.md",
+        "Discord": "https://discord.gg/astral-sh",
+        "Documentation": "https://docs.astral.sh/uv",
+        "Homepage": "https://pypi.org/project/uv/",
+        "Releases": "https://github.com/astral-sh/uv/releases",
+        "Repository": "https://github.com/astral-sh/uv"
+      }
+    },
+    "httpx2": {
+      "version": "2.13.1",
+      "python": ">=3.10",
+      "links": {
+        "Changelog": "https://github.com/pydantic/httpx2/blob/main/src/httpx2/CHANGELOG.md",
+        "Homepage": "https://github.com/pydantic/httpx2",
+        "Source": "https://github.com/pydantic/httpx2"
+      },
+      "role": "Development-only Starlette TestClient dependency, not another tool engine"
+    }
+  },
+  "npm": {
+    "pyright": {
+      "name": "pyright",
+      "version": "1.1.414",
+      "engines": {
+        "node": ">=14.0.0"
+      },
+      "homepage": "https://github.com/Microsoft/pyright#readme",
+      "repository": {
+        "url": "git+https://github.com/Microsoft/pyright.git",
+        "type": "git",
+        "directory": "packages/pyright"
+      },
+      "license": "MIT",
+      "bin": {
+        "pyright": "index.js",
+        "pyright-langserver": "langserver.index.js"
+      }
+    },
+    "eslint": {
+      "name": "eslint",
+      "version": "10.11.0",
+      "engines": {
+        "node": "^20.19.0 || ^22.13.0 || >=24"
+      },
+      "homepage": "https://eslint.org",
+      "repository": {
+        "url": "git+https://github.com/eslint/eslint.git",
+        "type": "git"
+      },
+      "license": "MIT",
+      "bin": {
+        "eslint": "bin/eslint.js"
+      }
+    },
+    "prettier": {
+      "name": "prettier",
+      "version": "3.9.9",
+      "engines": {
+        "node": ">=14"
+      },
+      "homepage": "https://prettier.io",
+      "repository": {
+        "url": "git+https://github.com/prettier/prettier.git",
+        "type": "git"
+      },
+      "license": "MIT",
+      "bin": {
+        "prettier": "bin/prettier.cjs"
+      }
+    },
+    "jest": {
+      "name": "jest",
+      "version": "30.5.2",
+      "engines": {
+        "node": "^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0"
+      },
+      "homepage": "https://jestjs.io/",
+      "repository": {
+        "url": "git+https://github.com/jestjs/jest.git",
+        "type": "git",
+        "directory": "packages/jest"
+      },
+      "license": "MIT",
+      "bin": {
+        "jest": "bin/jest.js"
+      }
+    },
+    "jscpd": {
+      "name": "jscpd",
+      "version": "5.3.3",
+      "engines": {
+        "node": ">=18"
+      },
+      "homepage": "https://jscpd.dev",
+      "repository": {
+        "url": "git+https://github.com/kucherenko/jscpd.git",
+        "type": "git",
+        "directory": "rust/jscpd"
+      },
+      "license": "MIT",
+      "bin": {
+        "jscpd": "run-jscpd.js"
+      }
+    },
+    "knip": {
+      "name": "knip",
+      "version": "6.38.0",
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      },
+      "homepage": "https://knip.dev",
+      "repository": {
+        "url": "git+https://github.com/webpro-nl/knip.git",
+        "type": "git",
+        "directory": "packages/knip"
+      },
+      "license": "ISC",
+      "bin": {
+        "knip": "bin/knip.js",
+        "knip-bun": "bin/knip-bun.js"
+      }
+    },
+    "dependency-cruiser": {
+      "name": "dependency-cruiser",
+      "version": "18.4.0",
+      "engines": {
+        "node": "^22||^24||>=26"
+      },
+      "homepage": "https://github.com/sverweij/dependency-cruiser",
+      "repository": {
+        "url": "git+https://github.com/sverweij/dependency-cruiser.git",
+        "type": "git"
+      },
+      "license": "MIT",
+      "bin": {
+        "depcruise": "bin/dependency-cruiser.mjs",
+        "depcruise-fmt": "bin/depcruise-fmt.mjs",
+        "dependency-cruise": "bin/dependency-cruiser.mjs",
+        "depcruise-baseline": "bin/depcruise-baseline.mjs",
+        "dependency-cruiser": "bin/dependency-cruiser.mjs",
+        "depcruise-wrap-stream-in-html": "bin/wrap-stream-in-html.mjs"
+      }
+    },
+    "npm-check-updates": {
+      "name": "npm-check-updates",
+      "version": "23.1.0",
+      "engines": {
+        "npm": ">=10.0.0",
+        "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+      },
+      "homepage": "https://github.com/raineorshine/npm-check-updates",
+      "repository": {
+        "url": "git+https://github.com/raineorshine/npm-check-updates.git",
+        "type": "git"
+      },
+      "license": "Apache-2.0",
+      "bin": {
+        "ncu": "build/cli.js",
+        "npm-check-updates": "build/cli.js"
+      }
+    },
+    "markdownlint-cli2": {
+      "name": "markdownlint-cli2",
+      "version": "0.23.3",
+      "engines": {
+        "node": ">=22"
+      },
+      "homepage": "https://github.com/DavidAnson/markdownlint-cli2",
+      "repository": {
+        "url": "git+https://github.com/DavidAnson/markdownlint-cli2.git",
+        "type": "git"
+      },
+      "license": "MIT",
+      "bin": {
+        "markdownlint-cli2": "markdownlint-cli2-bin.mjs"
+      }
+    },
+    "markdown-link-check": {
+      "name": "markdown-link-check",
+      "version": "3.15.0",
+      "engines": null,
+      "homepage": "https://github.com/tcort/markdown-link-check#readme",
+      "repository": {
+        "url": "git://github.com/tcort/markdown-link-check.git",
+        "type": "git"
+      },
+      "license": "ISC",
+      "bin": {
+        "markdown-link-check": "markdown-link-check"
+      }
+    },
+    "html-validate": {
+      "name": "html-validate",
+      "version": "11.16.1",
+      "engines": {
+        "node": "^22.22.0 || >= 24.8.0"
+      },
+      "homepage": "https://html-validate.org",
+      "repository": {
+        "url": "git+https://gitlab.com/html-validate/html-validate.git",
+        "type": "git"
+      },
+      "license": "MIT",
+      "bin": {
+        "html-validate": "bin/html-validate.mjs"
+      }
+    },
+    "stylelint": {
+      "name": "stylelint",
+      "version": "17.15.0",
+      "engines": {
+        "node": ">=20.19.0"
+      },
+      "homepage": "https://stylelint.io",
+      "repository": {
+        "url": "git+https://github.com/stylelint/stylelint.git",
+        "type": "git"
+      },
+      "license": "MIT",
+      "bin": {
+        "stylelint": "bin/stylelint.mjs"
+      }
+    },
+    "stylelint-config-standard": {
+      "name": "stylelint-config-standard",
+      "version": "40.0.0",
+      "engines": {
+        "node": ">=20.19.0"
+      },
+      "homepage": "https://github.com/stylelint/stylelint-config-standard#readme",
+      "repository": {
+        "url": "git+https://github.com/stylelint/stylelint-config-standard.git",
+        "type": "git"
+      },
+      "license": "MIT",
+      "bin": null
+    },
+    "retire": {
+      "name": "retire",
+      "version": "5.7.0",
+      "engines": {
+        "node": ">= 18.0.0"
+      },
+      "homepage": "https://github.com/RetireJS/retire.js#readme",
+      "repository": {
+        "url": "git+https://github.com/RetireJS/retire.js.git",
+        "type": "git"
+      },
+      "license": "Apache-2.0",
+      "bin": {
+        "retire": "lib/cli.js"
+      }
+    },
+    "@ast-grep/cli": {
+      "name": "@ast-grep/cli",
+      "version": "0.45.3",
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "homepage": "https://ast-grep.github.io",
+      "repository": {
+        "url": "git+https://github.com/ast-grep/ast-grep.git",
+        "type": "git"
+      },
+      "license": "MIT",
+      "bin": {
+        "sg": "sg",
+        "ast-grep": "ast-grep"
+      }
+    }
+  },
+  "go_releases": {
+    "gitleaks": {
+      "repo": "gitleaks/gitleaks",
+      "version": "v8.30.1",
+      "url": "https://github.com/gitleaks/gitleaks/releases/tag/v8.30.1"
+    },
+    "syft": {
+      "repo": "anchore/syft",
+      "version": "v1.52.0",
+      "url": "https://github.com/anchore/syft/releases/tag/v1.52.0"
+    },
+    "trivy": {
+      "repo": "aquasecurity/trivy",
+      "version": "v0.74.0",
+      "url": "https://github.com/aquasecurity/trivy/releases/tag/v0.74.0"
+    },
+    "osv-scanner": {
+      "repo": "google/osv-scanner",
+      "version": "v2.6.0",
+      "url": "https://github.com/google/osv-scanner/releases/tag/v2.6.0"
+    }
+  },
+  "notes": [
+    "Registry metadata identifies versions and provenance, not a complete upstream security review.",
+    "shellcheck-py, shfmt-py, actionlint-py and hadolint-bin are packaging wrappers; each counts as its one upstream engine only.",
+    "Existing Jest29.7.0 preserved; no Android dependency changed."
+  ],
+  "binary_installation": {
+    "actionlint": {
+      "type": "github-binary",
+      "version": "v1.7.12",
+      "url": "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz",
+      "sha256": "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8",
+      "archive": "tar.gz",
+      "asset": "actionlint_1.7.12_linux_amd64.tar.gz"
+    },
+    "osv-scanner": {
+      "type": "github-binary",
+      "module": "github.com/google/osv-scanner/v2/cmd/osv-scanner",
+      "version": "v2.6.0",
+      "url": "https://github.com/google/osv-scanner/releases/download/v2.6.0/osv-scanner_linux_amd64",
+      "sha256": "ca69b3d3cd08f889a49dc0a383122f71cc528b83803671df5fd874d97485b108",
+      "archive": "raw",
+      "asset": "osv-scanner_linux_amd64"
+    },
+    "syft": {
+      "type": "github-binary",
+      "module": "github.com/anchore/syft/cmd/syft",
+      "version": "v1.52.0",
+      "url": "https://github.com/anchore/syft/releases/download/v1.52.0/syft_1.52.0_linux_amd64.tar.gz",
+      "sha256": "caeedb81fb0491615f1ebd1761e4145d41ee86dd2cc7bf80669f9f5ad9d6133d",
+      "archive": "tar.gz",
+      "asset": "syft_1.52.0_linux_amd64.tar.gz"
+    },
+    "trivy": {
+      "type": "github-binary",
+      "module": "github.com/aquasecurity/trivy/cmd/trivy",
+      "version": "v0.74.0",
+      "url": "https://github.com/aquasecurity/trivy/releases/download/v0.74.0/trivy_0.74.0_Linux-64bit.tar.gz",
+      "sha256": "2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a",
+      "archive": "tar.gz",
+      "asset": "trivy_0.74.0_Linux-64bit.tar.gz"
+    },
+    "gitleaks": {
+      "type": "github-binary",
+      "module": "github.com/gitleaks/gitleaks/v8",
+      "version": "v8.30.1",
+      "url": "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz",
+      "sha256": "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb",
+      "archive": "tar.gz",
+      "asset": "gitleaks_8.30.1_linux_x64.tar.gz"
+    }
+  },
+  "superseded": {
+    "actionlint-py": "Initial wrapper installation failed to fetch upstream. Replaced with digest-pinned official v1.7.12 binary; not an extra engine."
+  },
+  "factory2_research": {
+    "playwright": {
+      "version": "1.63.0",
+      "repository": {
+        "url": "git+https://github.com/microsoft/playwright.git",
+        "type": "git"
+      }
+    },
+    "axe-core": {
+      "version": "4.13.0",
+      "repository": {
+        "url": "https://github.com/dequelabs/axe-core.git",
+        "type": "git"
+      }
+    },
+    "@taplo/cli": {
+      "version": "0.7.0",
+      "repository": {
+        "url": "git+https://github.com/tamasfe/taplo.git",
+        "type": "git"
+      }
+    },
+    "pipdeptree": {
+      "version": "4.2.5",
+      "repository": {
+        "Changelog": "https://pipdeptree.readthedocs.io/en/latest/changelog.html",
+        "Documentation": "https://pipdeptree.readthedocs.io",
+        "Homepage": "https://github.com/tox-dev/pipdeptree",
+        "Source": "https://github.com/tox-dev/pipdeptree",
+        "Tracker": "https://github.com/tox-dev/pipdeptree/issues"
+      }
+    },
+    "openapi-spec-validator": {
+      "version": "0.9.0",
+      "repository": {
+        "Documentation": "https://openapi-spec-validator.readthedocs.io/en/latest/",
+        "Source": "https://github.com/python-openapi/openapi-spec-validator"
+      }
+    },
+    "npm": {
+      "version": "12.1.0",
+      "repository": {
+        "url": "git+https://github.com/npm/cli.git",
+        "type": "git"
+      }
+    }
+  }
+}

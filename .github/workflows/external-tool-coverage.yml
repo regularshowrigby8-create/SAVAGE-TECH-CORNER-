@@ -1,0 +1,39 @@
+name: External tool coverage
+on:
+  push:
+    branches: [arena/01a0ea36-searchhh]
+    paths:
+      - '.mega-linter.yml'
+      - 'app/**'
+      - 'ad-filter/**'
+      - 'adblock-client/**'
+      - 'backend/**'
+      - 'js-tests/**'
+      - 'tools/**'
+      - '.github/workflows/external-tool-coverage.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  security-events: write
+jobs:
+  megalinter:
+    name: MegaLinter coverage (report-only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - name: Run MegaLinter without source mutation
+        uses: oxsecurity/megalinter/flavors/ci_light@v8
+        env:
+          APPLY_FIXES: none
+          VALIDATE_ALL_CODEBASE: false
+          REPORT_OUTPUT_FOLDER: build/reports/factory/megalinter
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload MegaLinter evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: megalinter-${{ github.run_id }}
+          path: build/reports/factory/megalinter/
+          if-no-files-found: warn

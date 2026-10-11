@@ -1,0 +1,2 @@
+-r ../../../backend/requirements.txt
+openapi-spec-validator==0.9.0

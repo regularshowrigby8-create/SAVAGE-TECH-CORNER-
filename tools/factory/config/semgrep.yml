@@ -1,0 +1,14 @@
+rules:
+  - id: searchhh-python-unverified-tls
+    languages: [python]
+    message: TLS verification must not be disabled; audit the real caller.
+    severity: ERROR
+    patterns:
+      - pattern-either:
+          - pattern: requests.$METHOD(..., verify=False, ...)
+          - pattern: httpx.$METHOD(..., verify=False, ...)
+  - id: searchhh-shell-interpolation
+    languages: [python]
+    message: Use argument arrays without shell interpolation.
+    severity: ERROR
+    pattern: subprocess.$METHOD(..., shell=True, ...)

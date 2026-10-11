@@ -1,3 +1,3 @@
 # Dead Code Criticism
 Findings:
-AST Dead Code Scanner: Zero unreferenced private entities detected — PASS
+Identified 1 potentially unused private helper(s): _loop in frontend/search_providers/webview_crawler.py

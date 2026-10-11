@@ -48,6 +48,12 @@ class TestSavageBrowserApp(unittest.TestCase):
         self.assertIn("backend_health", state)
         self.assertEqual(state["backend_health"]["status"], "HEALTHY")
 
+    def test_continuous_webview_crawler(self):
+        res = self.app.crawler.simulate_search("Savage Browser APK")
+        self.assertTrue(len(res) >= 1)
+        self.assertTrue(len(self.app.crawler.crawl_queue) >= 1)
+        self.app.crawler.stop_continuous_crawl()
+
 
 if __name__ == "__main__":
     unittest.main()

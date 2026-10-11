@@ -42,6 +42,7 @@ from client import BrowserApiClient
 from downloads import DownloadManager
 from storage import LocalStorageStore
 from providers import SearchProviderRegistry
+from webview_crawler import WebViewCrawler
 
 from gateway import ApiGateway
 from db import DatabaseManager
@@ -76,12 +77,17 @@ class SavageBrowserApp:
         self.download_manager = DownloadManager()
         self.local_storage = LocalStorageStore()
         self.search_registry = SearchProviderRegistry()
+        self.crawler = WebViewCrawler()
 
         # Wire Backend Route Handlers to ApiGateway
         self._wire_api_gateway()
 
         # Wire Frontend Controller Actions
         self._wire_frontend_controller()
+
+        # Wire and start continuous background crawler (lazy start on demand)
+        self.controller.register_action("start_crawler", self.crawler.start_continuous_crawl)
+        self.controller.register_action("stop_crawler", self.crawler.stop_continuous_crawl)
 
         # Create Initial Home Tab
         tab = self.tab_manager.create_tab("tab-main", "Home", "https://savage-tech-corner.io")

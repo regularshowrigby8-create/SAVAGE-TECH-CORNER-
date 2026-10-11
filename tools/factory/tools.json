@@ -1,0 +1,2180 @@
+{
+  "schema_version": 1,
+  "tools": [
+    {
+      "id": "git",
+      "name": "Git",
+      "purpose": "Reject whitespace errors in the current patch",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "profiles": [
+        "core",
+        "fast"
+      ],
+      "upstream": "https://git-scm.com/docs/git-diff",
+      "kind": "check",
+      "requires": [
+        "git"
+      ],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "system"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "gh",
+      "name": "GitHub CLI",
+      "purpose": "Collect actual same-branch CI state without publishing",
+      "command": [
+        "gh",
+        "run",
+        "list",
+        "--branch",
+        "arena/01a0ea36-searchhh",
+        "--limit",
+        "10",
+        "--json",
+        "databaseId,headSha,status,conclusion,name"
+      ],
+      "profiles": [
+        "evidence"
+      ],
+      "upstream": "https://cli.github.com/manual/gh_run_list",
+      "kind": "report",
+      "requires": [
+        "gh"
+      ],
+      "network": true,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "system"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "ripgrep",
+      "name": "ripgrep",
+      "purpose": "Locate WebView security-sensitive call sites",
+      "command": [
+        "rg",
+        "--line-number",
+        "--glob",
+        "*.kt",
+        "onReceivedSslError|addJavascriptInterface|javaScriptEnabled",
+        "app/src/main"
+      ],
+      "profiles": [
+        "triage"
+      ],
+      "upstream": "https://github.com/BurntSushi/ripgrep",
+      "kind": "search",
+      "requires": [
+        "rg"
+      ],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "system"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "gradle",
+      "name": "Gradle",
+      "purpose": "Inspect actual resolved app runtime dependencies",
+      "command": [
+        "./gradlew",
+        "--continue",
+        ":app:dependencies",
+        "--configuration",
+        "releaseRuntimeClasspath",
+        "-PuniversalApk",
+        "--max-workers=2"
+      ],
+      "profiles": [
+        "android"
+      ],
+      "upstream": "https://docs.gradle.org/current/userguide/viewing_debugging_dependencies.html",
+      "kind": "report",
+      "requires": [
+        "java",
+        "android-sdk"
+      ],
+      "network": true,
+      "timeout_seconds": 1800,
+      "install": {
+        "type": "project",
+        "version_source": "gradle/libs.versions.toml and gradle/wrapper/gradle-wrapper.properties"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "android-lint",
+      "name": "Android Lint",
+      "purpose": "Run app/library debug and app release static gates",
+      "command": [
+        "./gradlew",
+        "--continue",
+        ":app:lintDebug",
+        ":ad-filter:lintDebug",
+        ":adblock-client:lintDebug",
+        ":app:lintRelease",
+        "-PuniversalApk",
+        "--max-workers=2"
+      ],
+      "profiles": [
+        "android"
+      ],
+      "upstream": "https://developer.android.com/studio/write/lint",
+      "kind": "check",
+      "requires": [
+        "java",
+        "android-sdk"
+      ],
+      "network": true,
+      "timeout_seconds": 1800,
+      "install": {
+        "type": "project",
+        "version_source": "gradle/libs.versions.toml and gradle/wrapper/gradle-wrapper.properties"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "detekt",
+      "name": "Detekt",
+      "purpose": "Preserve strict Kotlin complexity/error-handling gate",
+      "command": [
+        "./gradlew",
+        "--continue",
+        "detekt",
+        "-PuniversalApk",
+        "--max-workers=2"
+      ],
+      "profiles": [
+        "android"
+      ],
+      "upstream": "https://detekt.dev/docs/gettingstarted/gradle/",
+      "kind": "check",
+      "requires": [
+        "java",
+        "android-sdk"
+      ],
+      "network": true,
+      "timeout_seconds": 1800,
+      "install": {
+        "type": "project",
+        "version_source": "gradle/libs.versions.toml and gradle/wrapper/gradle-wrapper.properties"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "ktlint",
+      "name": "ktlint",
+      "purpose": "Check Kotlin formatting without rewriting source",
+      "command": [
+        "./gradlew",
+        "--continue",
+        "ktlintCheck",
+        "-PuniversalApk",
+        "--max-workers=2"
+      ],
+      "profiles": [
+        "android"
+      ],
+      "upstream": "https://pinterest.github.io/ktlint/",
+      "kind": "check",
+      "requires": [
+        "java",
+        "android-sdk"
+      ],
+      "network": true,
+      "timeout_seconds": 1800,
+      "install": {
+        "type": "project",
+        "version_source": "gradle/libs.versions.toml and gradle/wrapper/gradle-wrapper.properties"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "r8",
+      "name": "R8",
+      "purpose": "Verify release shrinking and runtime exclusions without APK assembly",
+      "command": [
+        "./gradlew",
+        "--continue",
+        ":app:verifyReleaseRuntimeDependencies",
+        ":app:minifyReleaseWithR8",
+        "-PuniversalApk",
+        "--max-workers=2"
+      ],
+      "profiles": [
+        "android"
+      ],
+      "upstream": "https://r8.googlesource.com/r8/",
+      "kind": "check",
+      "requires": [
+        "java",
+        "android-sdk"
+      ],
+      "network": true,
+      "timeout_seconds": 1800,
+      "install": {
+        "type": "project",
+        "version_source": "gradle/libs.versions.toml and gradle/wrapper/gradle-wrapper.properties"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "adb",
+      "name": "Android Debug Bridge",
+      "purpose": "Report real attached devices; absence cannot certify device tests",
+      "command": [
+        "{sdk:adb}",
+        "devices",
+        "-l"
+      ],
+      "profiles": [
+        "device"
+      ],
+      "upstream": "https://developer.android.com/tools/adb",
+      "kind": "report",
+      "requires": [
+        "android-sdk"
+      ],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "sdk"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "apksigner",
+      "name": "APK Signer",
+      "purpose": "Inspect actual APK signature without signing",
+      "command": [
+        "{sdk:apksigner}",
+        "verify",
+        "--verbose",
+        "--print-certs",
+        "{apk}"
+      ],
+      "profiles": [
+        "apk-inspection"
+      ],
+      "upstream": "https://developer.android.com/tools/apksigner",
+      "kind": "report",
+      "requires": [
+        "android-sdk",
+        "apk"
+      ],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "sdk"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "apkanalyzer",
+      "name": "APK Analyzer",
+      "purpose": "Inspect actual decoded manifest",
+      "command": [
+        "{sdk:apkanalyzer}",
+        "manifest",
+        "print",
+        "{apk}"
+      ],
+      "profiles": [
+        "apk-inspection"
+      ],
+      "upstream": "https://developer.android.com/tools/apkanalyzer",
+      "kind": "report",
+      "requires": [
+        "android-sdk",
+        "apk"
+      ],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "sdk"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "aapt2",
+      "name": "AAPT2",
+      "purpose": "Inspect APK package/resource metadata",
+      "command": [
+        "{sdk:aapt2}",
+        "dump",
+        "badging",
+        "{apk}"
+      ],
+      "profiles": [
+        "apk-inspection"
+      ],
+      "upstream": "https://developer.android.com/tools/aapt2",
+      "kind": "report",
+      "requires": [
+        "android-sdk",
+        "apk"
+      ],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "sdk"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "ruff",
+      "name": "ruff",
+      "purpose": "Fast Python defect/style triage",
+      "command": [
+        "{pybin:ruff}/ruff",
+        "check",
+        "backend/searchhh",
+        "tools/quality",
+        "tools/factory",
+        "--output-format",
+        "json"
+      ],
+      "profiles": [
+        "python",
+        "fast"
+      ],
+      "upstream": "https://docs.astral.sh/ruff",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "python",
+        "package": "ruff",
+        "version": "0.16.9",
+        "environment": "ruff",
+        "extra": []
+      },
+      "source_writes": false
+    },
+    {
+      "id": "pylint",
+      "name": "pylint",
+      "purpose": "Semantic checks on factory orchestration",
+      "command": [
+        "{pybin:pylint}/pylint",
+        "--output-format=json",
+        "tools/factory/factory.py",
+        "tools/factory/install.py",
+        "tools/factory/safety.py",
+        "tools/factory/ci_evidence.py",
+        "tools/factory/automation.py",
+        "tools/factory/factory_map.py"
+      ],
+      "profiles": [
+        "python"
+      ],
+      "upstream": "https://github.com/pylint-dev/pylint",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "python",
+        "package": "pylint",
+        "version": "4.1.1",
+        "environment": "pylint",
+        "extra": []
+      },
+      "source_writes": false
+    },
+    {
+      "id": "mypy",
+      "name": "mypy",
+      "purpose": "Type-check orchestration boundaries",
+      "command": [
+        "{pybin:mypy}/mypy",
+        "--explicit-package-bases",
+        "--check-untyped-defs",
+        "--cache-dir",
+        "{out}/mypy-cache",
+        "tools/factory/factory.py",
+        "tools/factory/install.py",
+        "tools/factory/safety.py",
+        "tools/factory/ci_evidence.py",
+        "tools/factory/automation.py",
+        "tools/factory/factory_map.py"
+      ],
+      "profiles": [
+        "python"
+      ],
+      "upstream": "https://www.mypy-lang.org/",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "python",
+        "package": "mypy",
+        "version": "2.3.1",
+        "environment": "mypy",
+        "extra": []
+      },
+      "source_writes": false
+    },
+    {
+      "id": "pyright",
+      "name": "pyright",
+      "purpose": "Independent type/data-flow checks",
+      "command": [
+        "{nodebin}/pyright",
+        "--project",
+        "tools/factory/config/pyright.json",
+        "--outputjson"
+      ],
+      "profiles": [
+        "python"
+      ],
+      "upstream": "https://github.com/Microsoft/pyright#readme",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "npm",
+        "package": "pyright",
+        "version": "1.1.414"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "bandit",
+      "name": "bandit",
+      "purpose": "Python security patterns",
+      "command": [
+        "{pybin:bandit}/bandit",
+        "-r",
+        "-f",
+        "json",
+        "backend/searchhh",
+        "tools/factory/factory.py",
+        "tools/factory/install.py",
+        "tools/factory/safety.py",
+        "tools/factory/ci_evidence.py"
+      ],
+      "profiles": [
+        "security",
+        "python"
+      ],
+      "upstream": "https://bandit.readthedocs.io/",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "python",
+        "package": "bandit",
+        "version": "1.9.4",
+        "environment": "bandit",
+        "extra": []
+      },
+      "source_writes": false,
+      "reports": [
+        {
+          "path": "output.log",
+          "format": "json",
+          "count_field": "results"
+        }
+      ]
+    },
+    {
+      "id": "semgrep",
+      "name": "semgrep",
+      "purpose": "Local security rules, no cloud scan",
+      "command": [
+        "{pybin:semgrep}/semgrep",
+        "scan",
+        "--config",
+        "tools/factory/config/semgrep.yml",
+        "--metrics",
+        "off",
+        "--disable-version-check",
+        "--error",
+        "--json",
+        "backend/searchhh",
+        "tools/factory"
+      ],
+      "profiles": [
+        "security"
+      ],
+      "upstream": "https://semgrep.dev",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 300,
+      "install": {
+        "type": "python",
+        "package": "semgrep",
+        "version": "1.178.0",
+        "environment": "semgrep",
+        "extra": []
+      },
+      "source_writes": false
+    },
+    {
+      "id": "pip-audit",
+      "name": "pip-audit",
+      "purpose": "Audit declared backend Python dependencies",
+      "command": [
+        "{pybin:pip-audit}/pip-audit",
+        "-r",
+        "backend/requirements.txt",
+        "-f",
+        "json",
+        "--progress-spinner",
+        "off"
+      ],
+      "profiles": [
+        "supply-chain"
+      ],
+      "upstream": "https://pypi.org/project/pip-audit/",
+      "kind": "check",
+      "requires": [],
+      "network": true,
+      "timeout_seconds": 300,
+      "install": {
+        "type": "python",
+        "package": "pip-audit",
+        "version": "2.10.1",
+        "environment": "pip-audit",
+        "extra": []
+      },
+      "source_writes": false
+    },
+    {
+      "id": "deptry",
+      "name": "deptry",
+      "purpose": "Find missing/unused backend requirement declarations",
+      "command": [
+        "{pybin:deptry}/deptry",
+        "backend",
+        "--requirements-files",
+        "backend/requirements.txt",
+        "--json-output",
+        "{out}/deptry.json",
+        "--package-module-name-map",
+        "PyYAML=yaml"
+      ],
+      "profiles": [
+        "python"
+      ],
+      "upstream": "https://deptry.com",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "python",
+        "package": "deptry",
+        "version": "0.25.1",
+        "environment": "deptry",
+        "extra": []
+      },
+      "source_writes": false,
+      "reports": [
+        {
+          "path": "deptry.json",
+          "format": "json",
+          "count_field": ""
+        }
+      ]
+    },
+    {
+      "id": "vulture",
+      "name": "vulture",
+      "purpose": "Find unreachable Python candidates for review",
+      "command": [
+        "{pybin:vulture}/vulture",
+        "backend/searchhh"
+      ],
+      "profiles": [
+        "python"
+      ],
+      "upstream": "https://github.com/jendrikseipp/vulture",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "python",
+        "package": "vulture",
+        "version": "2.16",
+        "environment": "vulture",
+        "extra": []
+      },
+      "source_writes": false
+    },
+    {
+      "id": "xenon",
+      "name": "xenon",
+      "purpose": "Bound backend cyclomatic complexity",
+      "command": [
+        "{pybin:xenon}/xenon",
+        "--max-absolute",
+        "B",
+        "--max-modules",
+        "B",
+        "--max-average",
+        "A",
+        "backend/searchhh"
+      ],
+      "profiles": [
+        "python"
+      ],
+      "upstream": "https://xenon.readthedocs.org/",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "python",
+        "package": "xenon",
+        "version": "0.9.3",
+        "environment": "xenon",
+        "extra": []
+      },
+      "source_writes": false
+    },
+    {
+      "id": "interrogate",
+      "name": "interrogate",
+      "purpose": "Check factory public documentation coverage",
+      "command": [
+        "{pybin:interrogate}/interrogate",
+        "--fail-under",
+        "100",
+        "-vv",
+        "tools/factory"
+      ],
+      "profiles": [
+        "docs"
+      ],
+      "upstream": "https://interrogate.readthedocs.io",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "python",
+        "package": "interrogate",
+        "version": "1.7.0",
+        "environment": "interrogate",
+        "extra": []
+      },
+      "source_writes": false
+    },
+    {
+      "id": "pytest",
+      "name": "pytest",
+      "purpose": "Execute real backend tests",
+      "command": [
+        "{pybin:qa}/pytest",
+        "backend/tests",
+        "-q",
+        "-W",
+        "error",
+        "--strict-config",
+        "--strict-markers"
+      ],
+      "profiles": [
+        "tests"
+      ],
+      "upstream": "https://docs.pytest.org/en/latest/",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 300,
+      "install": {
+        "type": "python",
+        "package": "pytest",
+        "version": "9.1.1",
+        "environment": "qa",
+        "extra": [
+          "coverage==7.16.2",
+          "hypothesis==6.168.3",
+          "-r backend/requirements.txt"
+        ]
+      },
+      "source_writes": false
+    },
+    {
+      "id": "coverage",
+      "name": "coverage",
+      "purpose": "Measure existing quality test coverage",
+      "command": [
+        "{pybin:qa}/coverage",
+        "run",
+        "--data-file",
+        "{out}/.coverage",
+        "--source",
+        "tools.quality,tools.factory",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools/quality/tests",
+        "-q"
+      ],
+      "profiles": [
+        "tests"
+      ],
+      "upstream": "https://github.com/coveragepy/coveragepy",
+      "kind": "report",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "python",
+        "package": "coverage",
+        "version": "7.16.2",
+        "environment": "qa",
+        "extra": [
+          "pytest==9.1.1",
+          "hypothesis==6.168.3",
+          "-r backend/requirements.txt"
+        ]
+      },
+      "source_writes": false,
+      "reports": [
+        {
+          "path": ".coverage",
+          "format": "binary"
+        }
+      ]
+    },
+    {
+      "id": "hypothesis",
+      "name": "Hypothesis",
+      "purpose": "Generate adversarial factory safety inputs",
+      "command": [
+        "{pybin:qa}/pytest",
+        "tools/factory/properties",
+        "-q"
+      ],
+      "profiles": [
+        "tests"
+      ],
+      "upstream": "https://hypothesis.readthedocs.io/",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "python",
+        "package": "hypothesis",
+        "version": "6.168.3",
+        "environment": "qa",
+        "extra": [
+          "pytest==9.1.1",
+          "coverage==7.16.2",
+          "-r backend/requirements.txt"
+        ]
+      },
+      "source_writes": false
+    },
+    {
+      "id": "mutmut",
+      "name": "mutmut",
+      "purpose": "Mutation-test a scratch copy of actual safety logic",
+      "command": [
+        "{pybin:mutmut}/mutmut",
+        "run",
+        "--max-children",
+        "2"
+      ],
+      "profiles": [
+        "mutation"
+      ],
+      "upstream": "https://github.com/boxed/mutmut",
+      "kind": "report",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 300,
+      "install": {
+        "type": "python",
+        "package": "mutmut",
+        "version": "3.8.0",
+        "environment": "mutmut",
+        "extra": []
+      },
+      "source_writes": false,
+      "setup": "mutation"
+    },
+    {
+      "id": "codespell",
+      "name": "codespell",
+      "purpose": "Find actual English typos without replacing text",
+      "command": [
+        "{pybin:codespell}/codespell",
+        "README.md",
+        "AGENTS.md",
+        "docs/factory",
+        "tools/factory",
+        "--skip",
+        "*.json,*.lock,*/locks/*"
+      ],
+      "profiles": [
+        "docs"
+      ],
+      "upstream": "https://github.com/codespell-project/codespell",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "python",
+        "package": "codespell",
+        "version": "2.4.3",
+        "environment": "codespell",
+        "extra": []
+      },
+      "source_writes": false
+    },
+    {
+      "id": "yamllint",
+      "name": "yamllint",
+      "purpose": "Validate workflow/Compose YAML strictly",
+      "command": [
+        "{pybin:yamllint}/yamllint",
+        "--strict",
+        ".github/workflows",
+        "backend/compose.yml",
+        "tools/factory/config/semgrep.yml"
+      ],
+      "profiles": [
+        "ci",
+        "fast"
+      ],
+      "upstream": "https://github.com/adrienverge/yamllint",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "python",
+        "package": "yamllint",
+        "version": "1.38.0",
+        "environment": "yamllint",
+        "extra": []
+      },
+      "source_writes": false
+    },
+    {
+      "id": "check-jsonschema",
+      "name": "check-jsonschema",
+      "purpose": "Validate concrete factory registry schema",
+      "command": [
+        "{pybin:check-jsonschema}/check-jsonschema",
+        "--schemafile",
+        "tools/factory/tool.schema.json",
+        "tools/factory/tools.json"
+      ],
+      "profiles": [
+        "core",
+        "fast"
+      ],
+      "upstream": "https://github.com/python-jsonschema/check-jsonschema",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "python",
+        "package": "check-jsonschema",
+        "version": "0.38.2",
+        "environment": "check-jsonschema",
+        "extra": []
+      },
+      "source_writes": false
+    },
+    {
+      "id": "reuse",
+      "name": "reuse",
+      "purpose": "Audit source license/SPDX completeness",
+      "command": [
+        "{pybin:reuse}/reuse",
+        "lint"
+      ],
+      "profiles": [
+        "supply-chain"
+      ],
+      "upstream": "https://reuse.software/",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 300,
+      "install": {
+        "type": "python",
+        "package": "reuse",
+        "version": "6.2.0",
+        "environment": "reuse",
+        "extra": [],
+        "extras": [
+          "charset-normalizer"
+        ]
+      },
+      "source_writes": false
+    },
+    {
+      "id": "pip-licenses",
+      "name": "pip-licenses",
+      "purpose": "Inventory installed backend QA dependency licenses",
+      "command": [
+        "{pybin:pip-licenses}/pip-licenses",
+        "--python",
+        "{pybin:qa}/python",
+        "--format",
+        "json"
+      ],
+      "profiles": [
+        "supply-chain"
+      ],
+      "upstream": "https://github.com/raimon49/pip-licenses",
+      "kind": "report",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "python",
+        "package": "pip-licenses",
+        "version": "5.5.5",
+        "environment": "pip-licenses",
+        "extra": []
+      },
+      "source_writes": false
+    },
+    {
+      "id": "cyclonedx-py",
+      "name": "cyclonedx-py",
+      "purpose": "Generate declared-requirement SBOM (not full APK SBOM)",
+      "command": [
+        "{pybin:cyclonedx-py}/cyclonedx-py",
+        "requirements",
+        "backend/requirements.txt",
+        "--output-format",
+        "JSON",
+        "--output-file",
+        "{out}/backend.cdx.json"
+      ],
+      "profiles": [
+        "supply-chain"
+      ],
+      "upstream": "https://github.com/CycloneDX/cyclonedx-python/#readme",
+      "kind": "report",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "python",
+        "package": "cyclonedx-bom",
+        "version": "7.5.0",
+        "environment": "cyclonedx-py",
+        "extra": []
+      },
+      "source_writes": false,
+      "reports": [
+        {
+          "path": "backend.cdx.json",
+          "format": "json",
+          "count_field": "components"
+        }
+      ]
+    },
+    {
+      "id": "detect-secrets",
+      "name": "detect-secrets",
+      "purpose": "Hash-only working-tree secret candidates",
+      "command": [
+        "{pybin:detect-secrets}/detect-secrets",
+        "scan",
+        "--no-verify"
+      ],
+      "profiles": [
+        "security"
+      ],
+      "upstream": "https://github.com/Yelp/detect-secrets",
+      "kind": "secret-scan",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "python",
+        "package": "detect-secrets",
+        "version": "1.5.0",
+        "environment": "detect-secrets",
+        "extra": []
+      },
+      "source_writes": false
+    },
+    {
+      "id": "zizmor",
+      "name": "zizmor",
+      "purpose": "Audit workflow permissions/injection offline",
+      "command": [
+        "{pybin:zizmor}/zizmor",
+        "--offline",
+        "--format",
+        "json",
+        ".github/workflows"
+      ],
+      "profiles": [
+        "ci",
+        "security"
+      ],
+      "upstream": "https://docs.zizmor.sh",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "python",
+        "package": "zizmor",
+        "version": "1.30.1",
+        "environment": "zizmor",
+        "extra": []
+      },
+      "source_writes": false
+    },
+    {
+      "id": "shellcheck",
+      "name": "shellcheck",
+      "purpose": "Check actual CI shell scripts",
+      "command": [
+        "{pybin:shellcheck}/shellcheck",
+        "--format=json",
+        "tools/quality/device_verification.sh",
+        "mainframer.sh"
+      ],
+      "profiles": [
+        "ci",
+        "fast"
+      ],
+      "upstream": "https://github.com/ryanrhee/shellcheck-py",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "python",
+        "package": "shellcheck-py",
+        "version": "0.11.0.1",
+        "environment": "shellcheck",
+        "extra": []
+      },
+      "source_writes": false
+    },
+    {
+      "id": "shfmt",
+      "name": "shfmt",
+      "purpose": "Show shell formatting diff without writing",
+      "command": [
+        "{pybin:shfmt}/shfmt",
+        "-d",
+        "tools/quality/device_verification.sh",
+        "mainframer.sh"
+      ],
+      "profiles": [
+        "ci"
+      ],
+      "upstream": "https://github.com/MaxWinterstein/shfmt-py",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "python",
+        "package": "shfmt-py",
+        "version": "4.2.0",
+        "environment": "shfmt",
+        "extra": []
+      },
+      "source_writes": false
+    },
+    {
+      "id": "actionlint",
+      "name": "actionlint",
+      "purpose": "Check workflow expressions and structure",
+      "command": [
+        "{gobin}/actionlint",
+        "-color"
+      ],
+      "profiles": [
+        "ci",
+        "fast"
+      ],
+      "upstream": "https://github.com/Mateusz-Grzelinski/actionlint-py",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "github-binary",
+        "version": "v1.7.12",
+        "url": "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz",
+        "sha256": "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8",
+        "archive": "tar.gz",
+        "asset": "actionlint_1.7.12_linux_amd64.tar.gz"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "hadolint",
+      "name": "hadolint",
+      "purpose": "Check backend Dockerfile best practices",
+      "command": [
+        "{pybin:hadolint}/hadolint",
+        "--format",
+        "json",
+        "backend/Dockerfile"
+      ],
+      "profiles": [
+        "containers"
+      ],
+      "upstream": "https://github.com/justin-yan/pybin",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "python",
+        "package": "hadolint-bin",
+        "version": "2.15.1",
+        "environment": "hadolint",
+        "extra": []
+      },
+      "source_writes": false
+    },
+    {
+      "id": "eslint",
+      "name": "eslint",
+      "purpose": "Check browser assets and test JS without fixes",
+      "command": [
+        "{nodebin}/eslint",
+        "--config",
+        "tools/factory/config/eslint.config.cjs",
+        "app/src/main/assets",
+        "js-tests",
+        "--format",
+        "json"
+      ],
+      "profiles": [
+        "javascript"
+      ],
+      "upstream": "https://eslint.org",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "npm",
+        "package": "eslint",
+        "version": "10.11.0"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "prettier",
+      "name": "prettier",
+      "purpose": "Check factory docs/config formatting without writes",
+      "command": [
+        "{nodebin}/prettier",
+        "--check",
+        "tools/factory/config/*",
+        "tools/factory/tools.json",
+        "docs/factory/*.md",
+        "--prose-wrap",
+        "always"
+      ],
+      "profiles": [
+        "docs",
+        "fast"
+      ],
+      "upstream": "https://prettier.io",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "npm",
+        "package": "prettier",
+        "version": "3.9.9"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "jest",
+      "name": "jest",
+      "purpose": "Execute existing translation/browser JS tests",
+      "command": [
+        "{nodebin}/jest",
+        "--config",
+        "js-tests/package.json",
+        "--runInBand",
+        "--env",
+        "{node}/node_modules/jest-environment-jsdom/build/index.js"
+      ],
+      "profiles": [
+        "tests"
+      ],
+      "upstream": "https://jestjs.io/",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 300,
+      "install": {
+        "type": "npm",
+        "package": "jest",
+        "version": "29.7.0"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "jscpd",
+      "name": "jscpd",
+      "purpose": "Locate cross-file duplication before extracting helpers",
+      "command": [
+        "{nodebin}/jscpd",
+        "app/src/main/java",
+        "backend/searchhh",
+        "js-tests",
+        "--format",
+        "kotlin,python,javascript",
+        "--reporters",
+        "json",
+        "--output",
+        "{out}/duplicates",
+        "--threshold",
+        "0"
+      ],
+      "profiles": [
+        "triage"
+      ],
+      "upstream": "https://jscpd.dev",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 300,
+      "install": {
+        "type": "npm",
+        "package": "jscpd",
+        "version": "5.3.3"
+      },
+      "source_writes": false,
+      "reports": [
+        {
+          "path": "duplicates/jscpd-report.json",
+          "format": "json",
+          "count_field": "duplicates"
+        }
+      ]
+    },
+    {
+      "id": "knip",
+      "name": "knip",
+      "purpose": "Audit JS test entrypoints and dependency use",
+      "command": [
+        "{nodebin}/knip",
+        "--config",
+        "{root}/tools/factory/config/knip.json",
+        "--directory",
+        "js-tests",
+        "--reporter",
+        "json"
+      ],
+      "profiles": [
+        "javascript"
+      ],
+      "upstream": "https://knip.dev",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "npm",
+        "package": "knip",
+        "version": "6.38.0"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "dependency-cruiser",
+      "name": "depcruise",
+      "purpose": "Enforce JS test dependency boundaries",
+      "command": [
+        "{nodebin}/depcruise",
+        "--config",
+        "tools/factory/config/dependency-cruiser.cjs",
+        "--output-type",
+        "json",
+        "js-tests"
+      ],
+      "profiles": [
+        "javascript"
+      ],
+      "upstream": "https://github.com/sverweij/dependency-cruiser",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "npm",
+        "package": "dependency-cruiser",
+        "version": "18.4.0"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "npm-check-updates",
+      "name": "npm-check-updates",
+      "purpose": "Report JS dependency upgrades without applying them",
+      "command": [
+        "{nodebin}/npm-check-updates",
+        "--packageFile",
+        "js-tests/package.json",
+        "--jsonUpgraded"
+      ],
+      "profiles": [
+        "supply-chain"
+      ],
+      "upstream": "https://github.com/raineorshine/npm-check-updates",
+      "kind": "report",
+      "requires": [],
+      "network": true,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "npm",
+        "package": "npm-check-updates",
+        "version": "23.1.0"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "markdownlint",
+      "name": "markdownlint-cli2",
+      "purpose": "Check work instructions and factory docs",
+      "command": [
+        "{nodebin}/markdownlint-cli2",
+        "README.md",
+        "AGENTS.md",
+        "docs/factory/*.md"
+      ],
+      "profiles": [
+        "docs"
+      ],
+      "upstream": "https://github.com/DavidAnson/markdownlint-cli2",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "npm",
+        "package": "markdownlint-cli2",
+        "version": "0.23.3"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "markdown-link-check",
+      "name": "markdown-link-check",
+      "purpose": "Check factory documentation links with bounded timeout",
+      "command": [
+        "{nodebin}/markdown-link-check",
+        "--config",
+        "tools/factory/config/links.json",
+        "docs/factory/README.md"
+      ],
+      "profiles": [
+        "docs"
+      ],
+      "upstream": "https://github.com/tcort/markdown-link-check#readme",
+      "kind": "check",
+      "requires": [],
+      "network": true,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "npm",
+        "package": "markdown-link-check",
+        "version": "3.15.0"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "html-validate",
+      "name": "html-validate",
+      "purpose": "Validate actual browser HTML templates",
+      "command": [
+        "{nodebin}/html-validate",
+        "--config",
+        "tools/factory/config/htmlvalidate.json",
+        "--formatter",
+        "json",
+        "app/src/main/assets/*.html"
+      ],
+      "profiles": [
+        "web-assets"
+      ],
+      "upstream": "https://html-validate.org",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "npm",
+        "package": "html-validate",
+        "version": "11.16.1"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "stylelint",
+      "name": "stylelint",
+      "purpose": "Validate actual reader/browser CSS",
+      "command": [
+        "{nodebin}/stylelint",
+        "--config",
+        "tools/factory/config/stylelint.cjs",
+        "--formatter",
+        "json",
+        "app/src/main/assets/*.css"
+      ],
+      "profiles": [
+        "web-assets"
+      ],
+      "upstream": "https://stylelint.io",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "npm",
+        "package": "stylelint",
+        "version": "17.15.0"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "retire",
+      "name": "retire",
+      "purpose": "Audit vendored browser JS for vulnerable libraries",
+      "command": [
+        "{nodebin}/retire",
+        "--path",
+        "app/src/main/assets",
+        "--outputformat",
+        "json",
+        "--outputpath",
+        "{out}/retire.json"
+      ],
+      "profiles": [
+        "security"
+      ],
+      "upstream": "https://github.com/RetireJS/retire.js#readme",
+      "kind": "check",
+      "requires": [],
+      "network": true,
+      "timeout_seconds": 300,
+      "install": {
+        "type": "npm",
+        "package": "retire",
+        "version": "5.7.0"
+      },
+      "source_writes": false,
+      "reports": [
+        {
+          "path": "retire.json",
+          "format": "json",
+          "count_field": "data"
+        }
+      ]
+    },
+    {
+      "id": "osv-scanner",
+      "name": "osv-scanner",
+      "purpose": "Audit dependency metadata against OSV",
+      "command": [
+        "{gobin}/osv-scanner",
+        "scan",
+        "source",
+        "--lockfile=backend/requirements.txt",
+        "--format=json"
+      ],
+      "profiles": [
+        "supply-chain"
+      ],
+      "upstream": "https://github.com/google/osv-scanner",
+      "kind": "check",
+      "requires": [],
+      "network": true,
+      "timeout_seconds": 300,
+      "install": {
+        "type": "github-binary",
+        "module": "github.com/google/osv-scanner/v2/cmd/osv-scanner",
+        "version": "v2.6.0",
+        "url": "https://github.com/google/osv-scanner/releases/download/v2.6.0/osv-scanner_linux_amd64",
+        "sha256": "ca69b3d3cd08f889a49dc0a383122f71cc528b83803671df5fd874d97485b108",
+        "archive": "raw",
+        "asset": "osv-scanner_linux_amd64"
+      },
+      "source_writes": false,
+      "reports": [
+        {
+          "path": "output.log",
+          "format": "json"
+        }
+      ]
+    },
+    {
+      "id": "syft",
+      "name": "syft",
+      "purpose": "Generate source-directory SBOM for dependency review",
+      "command": [
+        "{gobin}/syft",
+        "scan",
+        "dir:backend",
+        "--output",
+        "cyclonedx-json={out}/backend-syft.cdx.json"
+      ],
+      "profiles": [
+        "supply-chain"
+      ],
+      "upstream": "https://github.com/anchore/syft",
+      "kind": "report",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 300,
+      "install": {
+        "type": "github-binary",
+        "module": "github.com/anchore/syft/cmd/syft",
+        "version": "v1.52.0",
+        "url": "https://github.com/anchore/syft/releases/download/v1.52.0/syft_1.52.0_linux_amd64.tar.gz",
+        "sha256": "caeedb81fb0491615f1ebd1761e4145d41ee86dd2cc7bf80669f9f5ad9d6133d",
+        "archive": "tar.gz",
+        "asset": "syft_1.52.0_linux_amd64.tar.gz"
+      },
+      "source_writes": false,
+      "reports": [
+        {
+          "path": "backend-syft.cdx.json",
+          "format": "json",
+          "count_field": "components"
+        }
+      ]
+    },
+    {
+      "id": "trivy",
+      "name": "trivy",
+      "purpose": "Audit container configuration security",
+      "command": [
+        "{gobin}/trivy",
+        "config",
+        "--format",
+        "json",
+        "--exit-code",
+        "1",
+        "backend"
+      ],
+      "profiles": [
+        "containers"
+      ],
+      "upstream": "https://github.com/aquasecurity/trivy",
+      "kind": "check",
+      "requires": [],
+      "network": true,
+      "timeout_seconds": 300,
+      "install": {
+        "type": "github-binary",
+        "module": "github.com/aquasecurity/trivy/cmd/trivy",
+        "version": "v0.74.0",
+        "url": "https://github.com/aquasecurity/trivy/releases/download/v0.74.0/trivy_0.74.0_Linux-64bit.tar.gz",
+        "sha256": "2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a",
+        "archive": "tar.gz",
+        "asset": "trivy_0.74.0_Linux-64bit.tar.gz"
+      },
+      "source_writes": false,
+      "reports": [
+        {
+          "path": "output.log",
+          "format": "json",
+          "count_field": "Results"
+        }
+      ]
+    },
+    {
+      "id": "gitleaks",
+      "name": "gitleaks",
+      "purpose": "Audit committed history with redacted secret output",
+      "command": [
+        "{gobin}/gitleaks",
+        "git",
+        "--redact",
+        "--no-banner",
+        "--report-format",
+        "json",
+        "--report-path",
+        "{out}/gitleaks.json",
+        "."
+      ],
+      "profiles": [
+        "security"
+      ],
+      "upstream": "https://github.com/gitleaks/gitleaks",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 300,
+      "install": {
+        "type": "github-binary",
+        "module": "github.com/gitleaks/gitleaks/v8",
+        "version": "v8.30.1",
+        "url": "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz",
+        "sha256": "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb",
+        "archive": "tar.gz",
+        "asset": "gitleaks_8.30.1_linux_x64.tar.gz"
+      },
+      "source_writes": false,
+      "reports": [
+        {
+          "path": "gitleaks.json",
+          "format": "json",
+          "count_field": ""
+        }
+      ]
+    },
+    {
+      "id": "checkov",
+      "name": "checkov",
+      "purpose": "Audit Dockerfile security independently of style",
+      "command": [
+        "{pybin:checkov}/checkov",
+        "-f",
+        "backend/Dockerfile",
+        "--framework",
+        "dockerfile",
+        "--output",
+        "json",
+        "--skip-download"
+      ],
+      "profiles": [
+        "containers"
+      ],
+      "upstream": "https://github.com/bridgecrewio/checkov",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 300,
+      "install": {
+        "type": "python",
+        "package": "checkov",
+        "version": "3.3.20",
+        "environment": "checkov",
+        "extra": []
+      },
+      "source_writes": false
+    },
+    {
+      "id": "docker-compose",
+      "name": "Docker Compose",
+      "purpose": "Validate real backend service wiring without starting services",
+      "command": [
+        "docker",
+        "compose",
+        "--env-file",
+        "{out}/compose.env",
+        "-f",
+        "backend/compose.yml",
+        "config",
+        "--quiet"
+      ],
+      "profiles": [
+        "containers"
+      ],
+      "upstream": "https://docs.docker.com/reference/cli/docker/compose/config/",
+      "kind": "check",
+      "requires": [
+        "docker"
+      ],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "system"
+      },
+      "source_writes": false,
+      "setup": "compose"
+    },
+    {
+      "id": "ast-grep",
+      "name": "ast-grep",
+      "purpose": "Find Kotlin SSL bypass candidates using syntax, not text replacement",
+      "command": [
+        "{nodebin}/ast-grep",
+        "scan",
+        "--rule",
+        "tools/factory/config/ssl-rule.yml",
+        "--json",
+        "app/src/main/java"
+      ],
+      "profiles": [
+        "triage",
+        "security"
+      ],
+      "upstream": "https://ast-grep.github.io",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "npm",
+        "package": "@ast-grep/cli",
+        "version": "0.45.3"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "playwright",
+      "name": "Playwright",
+      "purpose": "Real Chromium control actions on repository HTML and factory dashboard; not Android WebView certification",
+      "command": [
+        "node",
+        "tools/factory/browser_checks.cjs",
+        "smoke",
+        "{out}"
+      ],
+      "profiles": [
+        "browser",
+        "tests"
+      ],
+      "upstream": "https://github.com/microsoft/playwright",
+      "kind": "check",
+      "requires": [
+        "node",
+        "browser"
+      ],
+      "network": false,
+      "timeout_seconds": 240,
+      "install": {
+        "type": "npm",
+        "package": "playwright",
+        "version": "1.63.0"
+      },
+      "source_writes": false,
+      "reports": [
+        {
+          "path": "browser.json",
+          "format": "json",
+          "count_field": "checks"
+        }
+      ],
+      "setup": "browser"
+    },
+    {
+      "id": "axe-core",
+      "name": "axe-core",
+      "purpose": "Accessibility violations in rendered repository HTML; manual/native accessibility remains required",
+      "command": [
+        "node",
+        "tools/factory/browser_checks.cjs",
+        "accessibility",
+        "{out}"
+      ],
+      "profiles": [
+        "browser",
+        "accessibility"
+      ],
+      "upstream": "https://github.com/dequelabs/axe-core",
+      "kind": "check",
+      "requires": [
+        "node",
+        "browser"
+      ],
+      "network": false,
+      "timeout_seconds": 240,
+      "install": {
+        "type": "npm",
+        "package": "axe-core",
+        "version": "4.13.0"
+      },
+      "source_writes": false,
+      "reports": [
+        {
+          "path": "axe.json",
+          "format": "json",
+          "count_field": "violations"
+        }
+      ],
+      "setup": "browser"
+    },
+    {
+      "id": "pipdeptree",
+      "name": "pipdeptree",
+      "purpose": "Detect conflicts and cycles in the real isolated backend QA environment",
+      "command": [
+        "{pybin:pipdeptree}/pipdeptree",
+        "--python",
+        "{pybin:qa}/python",
+        "--warn",
+        "fail",
+        "--json-tree"
+      ],
+      "profiles": [
+        "python",
+        "supply-chain"
+      ],
+      "upstream": "https://github.com/tox-dev/pipdeptree",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 240,
+      "install": {
+        "type": "python",
+        "package": "pipdeptree",
+        "version": "4.2.5",
+        "environment": "pipdeptree"
+      },
+      "source_writes": false,
+      "reports": [
+        {
+          "path": "output.log",
+          "format": "json",
+          "count_field": ""
+        }
+      ]
+    },
+    {
+      "id": "openapi-spec-validator",
+      "name": "OpenAPI Spec Validator",
+      "purpose": "Validate the actual FastAPI-generated schema without starting services or claiming endpoint behavior",
+      "command": [
+        "{pybin:openapi}/python",
+        "tools/factory/openapi_check.py",
+        "{out}"
+      ],
+      "profiles": [
+        "api",
+        "python"
+      ],
+      "upstream": "https://github.com/python-openapi/openapi-spec-validator",
+      "kind": "check",
+      "requires": [],
+      "network": false,
+      "timeout_seconds": 240,
+      "install": {
+        "type": "python",
+        "package": "openapi-spec-validator",
+        "version": "0.9.0",
+        "environment": "openapi"
+      },
+      "source_writes": false,
+      "reports": [
+        {
+          "path": "openapi-result.json",
+          "format": "json"
+        }
+      ]
+    },
+    {
+      "id": "taplo",
+      "name": "Taplo",
+      "purpose": "Validate Gradle version-catalog TOML syntax without requiring Java",
+      "command": [
+        "{nodebin}/taplo",
+        "lint",
+        "gradle/libs.versions.toml"
+      ],
+      "profiles": [
+        "android-config",
+        "fast"
+      ],
+      "upstream": "https://github.com/tamasfe/taplo",
+      "kind": "check",
+      "requires": [
+        "node"
+      ],
+      "network": false,
+      "timeout_seconds": 240,
+      "install": {
+        "type": "npm",
+        "package": "@taplo/cli",
+        "version": "0.7.0"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "npm-audit",
+      "name": "npm audit",
+      "purpose": "Audit locked development npm dependencies; no automatic upgrades",
+      "command": [
+        "{nodebin}/npm",
+        "audit",
+        "--prefix",
+        "{node}",
+        "--json"
+      ],
+      "profiles": [
+        "supply-chain"
+      ],
+      "upstream": "https://github.com/npm/cli",
+      "kind": "check",
+      "requires": [
+        "node"
+      ],
+      "network": true,
+      "timeout_seconds": 240,
+      "install": {
+        "type": "npm",
+        "package": "npm",
+        "version": "12.1.0"
+      },
+      "source_writes": false,
+      "reports": [
+        {
+          "path": "output.log",
+          "format": "json"
+        }
+      ]
+    },
+    {
+      "id": "app-security-policy",
+      "name": "Searchhh app security policy",
+      "purpose": "Enforce repeatable product-owned HTTPS, WebView, TLS, file-access, exported-surface and credential policy contracts",
+      "command": [
+        "python3",
+        "tools/factory/app_security_policy.py",
+        "{out}/app-security.json"
+      ],
+      "profiles": [
+        "app-security",
+        "security",
+        "webview",
+        "android",
+        "release"
+      ],
+      "upstream": "https://developer.android.com/privacy-and-security/security-best-practices",
+      "kind": "secret-scan",
+      "requires": [
+        "python"
+      ],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "system"
+      },
+      "source_writes": false,
+      "reports": [
+        {
+          "path": "app-security.json",
+          "format": "json",
+          "count_field": "findings"
+        }
+      ]
+    },
+    {
+      "id": "ui-contract-policy",
+      "name": "Searchhh UI contract policy",
+      "purpose": "Verify implemented routes use the central menu registry, theme boundary and stable semantic tags",
+      "command": [
+        "python3",
+        "tools/factory/ui_contract_policy.py",
+        "{out}/ui-contract.json"
+      ],
+      "profiles": [
+        "android",
+        "ui",
+        "tests",
+        "accessibility"
+      ],
+      "upstream": "https://developer.android.com/develop/ui/compose",
+      "kind": "check",
+      "requires": [
+        "python"
+      ],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "system"
+      },
+      "source_writes": false,
+      "reports": [
+        {
+          "path": "ui-contract.json",
+          "format": "json",
+          "count_field": "findings"
+        }
+      ]
+    },
+    {
+      "id": "import-android-sdk",
+      "name": "Stripped Android SDK importer",
+      "purpose": "Locate or safely import a local SDK and fail closed when the Android build environment is incomplete",
+      "command": [
+        "python3",
+        "tools/quality/import_android_sdk.py"
+      ],
+      "profiles": [
+        "android",
+        "environment",
+        "core"
+      ],
+      "upstream": "https://developer.android.com/tools/sdkmanager",
+      "kind": "report",
+      "requires": [
+        "python3"
+      ],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "system"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "finding-lifecycle",
+      "name": "Finding lifecycle validator",
+      "purpose": "Enforce bounded OPEN-to-VERIFIED repair transitions and preserve recheck evidence",
+      "command": [
+        "python3",
+        "tools/factory/finding_lifecycle.py",
+        "--help"
+      ],
+      "profiles": [
+        "core",
+        "evidence",
+        "tests"
+      ],
+      "upstream": "https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues",
+      "kind": "check",
+      "requires": [
+        "python3"
+      ],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "system"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "production-chain",
+      "name": "Production handoff chain",
+      "purpose": "Connect registered checks through fail-closed source-to-release stage handoffs",
+      "command": [
+        "python3",
+        "tools/factory/production_chain.py"
+      ],
+      "profiles": [
+        "core",
+        "evidence",
+        "android",
+        "device",
+        "release"
+      ],
+      "upstream": "https://docs.github.com/en/actions/using-workflows/about-workflows",
+      "kind": "report",
+      "requires": [
+        "python3"
+      ],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "system"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "language-router",
+      "name": "Mixed-language router",
+      "purpose": "Detect repository languages and select compatible factory profiles without claiming execution",
+      "command": [
+        "python3",
+        "tools/factory/language_router.py",
+        "--help"
+      ],
+      "profiles": [
+        "core",
+        "evidence",
+        "python",
+        "javascript",
+        "android",
+        "browser",
+        "security"
+      ],
+      "upstream": "https://github.com/semgrep/semgrep",
+      "kind": "report",
+      "requires": [
+        "python3"
+      ],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "system"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "gradle-quality-queue",
+      "name": "Gradle quality remediation queue",
+      "purpose": "Normalize actual KtLint and Detekt reports into bounded repair packets",
+      "command": [
+        "python3",
+        "tools/factory/gradle_quality_queue.py",
+        "--output",
+        "build/reports/factory/gradle-remediation-queue.json"
+      ],
+      "profiles": [
+        "android",
+        "evidence",
+        "tests"
+      ],
+      "upstream": "https://github.com/detekt/detekt",
+      "kind": "report",
+      "requires": [
+        "python3"
+      ],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "system"
+      },
+      "source_writes": false
+    },
+    {
+      "id": "unfinished-repair",
+      "name": "Unfinished-code bounded repair",
+      "purpose": "Apply only explicit, mechanically safe Unit repairs for empty Kotlin callbacks; semantic findings remain open",
+      "command": [
+        "python3",
+        "tools/factory/unfinished_repair.py"
+      ],
+      "profiles": [
+        "core",
+        "fast"
+      ],
+      "upstream": "https://kotlinlang.org/docs/lambdas.html",
+      "kind": "report",
+      "requires": [
+        "python3"
+      ],
+      "network": false,
+      "timeout_seconds": 180,
+      "install": {
+        "type": "system"
+      },
+      "source_writes": false
+    }
+  ]
+}

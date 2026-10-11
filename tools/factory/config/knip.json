@@ -1,0 +1,4 @@
+{
+  "entry": ["tests/**/*.test.js", "helpers/**/*.js"],
+  "project": ["tests/**/*.js", "helpers/**/*.js"]
+}

@@ -1,0 +1,6 @@
+id: searchhh-ssl-proceed
+language: Kotlin
+severity: error
+message: Audit SSL proceed calls; invalid certificates must be cancelled.
+rule:
+  pattern: $HANDLER.proceed()

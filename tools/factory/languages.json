@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "languages": {
+    "python": {"extensions": [".py", ".pyi"], "filenames": [], "markers": ["pyproject.toml", "requirements.txt", "backend"], "profile": "python", "tools": ["ruff", "pyright", "mypy", "bandit", "pytest"]},
+    "javascript": {"extensions": [".js", ".mjs", ".cjs"], "filenames": [], "markers": ["package.json", "js-tests"], "profile": "javascript", "tools": ["eslint", "prettier", "jest", "jscpd", "playwright"]},
+    "typescript": {"extensions": [".ts", ".tsx"], "filenames": [], "markers": ["tsconfig.json"], "profile": "typescript", "tools": ["eslint", "prettier", "jest", "playwright"]},
+    "kotlin": {"extensions": [".kt", ".kts"], "filenames": [], "markers": ["gradlew", "build.gradle.kts", "settings.gradle.kts"], "profile": "kotlin", "tools": ["ktlint", "detekt", "android-lint"]},
+    "java": {"extensions": [".java"], "filenames": [], "markers": ["pom.xml", "build.gradle", "build.gradle.kts"], "profile": "java", "tools": []},
+    "c_cpp": {"extensions": [".c", ".h", ".cc", ".cpp", ".cxx", ".hpp"], "filenames": [], "markers": ["CMakeLists.txt", "Makefile"], "profile": "c-cpp", "tools": []},
+    "shell": {"extensions": [".sh", ".bash", ".zsh"], "filenames": [], "markers": [], "profile": "shell", "tools": ["shellcheck", "shfmt"]},
+    "html": {"extensions": [".html", ".htm"], "filenames": [], "markers": [], "profile": "web", "tools": ["html-validate", "axe-core", "prettier", "playwright"]},
+    "css": {"extensions": [".css", ".scss", ".less"], "filenames": [], "markers": [], "profile": "web", "tools": ["stylelint", "prettier"]},
+    "yaml": {"extensions": [".yml", ".yaml"], "filenames": [], "markers": [], "profile": "configuration", "tools": ["yamllint", "check-jsonschema", "prettier"]},
+    "json": {"extensions": [".json"], "filenames": [], "markers": [], "profile": "configuration", "tools": ["check-jsonschema", "prettier"]},
+    "toml": {"extensions": [".toml"], "filenames": [], "markers": [], "profile": "configuration", "tools": ["taplo"]},
+    "dockerfile": {"extensions": [], "filenames": ["Dockerfile", "Containerfile"], "markers": ["docker-compose.yml", "docker-compose.yaml"], "profile": "containers", "tools": ["hadolint", "trivy", "checkov"]}
+  }
+}

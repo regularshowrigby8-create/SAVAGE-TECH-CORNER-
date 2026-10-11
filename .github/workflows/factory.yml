@@ -1,0 +1,120 @@
+name: Development factory diagnostics
+"on":
+  workflow_dispatch:
+  push:
+    branches: [arena/01a0ea36-searchhh]
+    paths:
+      - "tools/factory/**"
+      - "tools/quality/tests/test_factory*.py"
+      - "app/**"
+      - "ad-filter/**"
+      - "adblock-client/**"
+      - "backend/**"
+      - "js-tests/**"
+      - "gradle/**"
+      - "*.gradle.kts"
+      - ".github/workflows/factory.yml"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: factory-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  factory:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        family: [python, node, binary, core]
+    env:
+      FACTORY_FAMILY: ${{ matrix.family }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "22.22.3"
+      - name: Test factory safety and existing quality checkers
+        run: python3 -m unittest discover -s tools/quality/tests -v
+      - name: Install missing hosted core prerequisite
+        if: matrix.family == 'core'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends ripgrep
+          dpkg-query --show ripgrep
+      - name: Install locked development tools
+        if: matrix.family != 'core'
+        run: |
+          python3 tools/factory/install.py --ecosystem "$FACTORY_FAMILY" --workers 3
+      - name: Provision actual Chromium and its host libraries
+        if: matrix.family == 'node'
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: build/factory/browsers
+        run: |
+          node build/factory/node/node_modules/playwright/cli.js install-deps chromium
+          python3 tools/factory/install.py --ecosystem browser
+      - name: Verify dashboard interactions
+        if: matrix.family == 'node'
+        env:
+          NODE_PATH: build/factory/node/node_modules
+        run: |
+          python3 -m tools.factory.automation overview
+          node tools/factory/dashboard.test.cjs build/reports/factory/overview.html
+      - name: Generate review packets without closing issues
+        run: python3 -m tools.factory.factory triage
+      - name: Run actual diagnostic jobs and preserve failures
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, os, subprocess, sys
+          family = os.environ['FACTORY_FAMILY']
+          types = {'python': {'python'}, 'node': {'npm'}, 'binary': {'github-binary'}, 'core': {'system'}}[family]
+          tools = json.load(open('tools/factory/tools.json'))['tools']
+          ids = [tool['id'] for tool in tools if tool['install']['type'] in types]
+          if family == 'core':
+              ids.append('adb')
+          # Native Gradle engines remain in canonical mandatory CI; APK inspection
+          # needs a real artifact and is never satisfied with a fabricated APK.
+          result = subprocess.run(['python3', '-m', 'tools.factory.factory', 'run', '--tools', ','.join(ids), '--workers', '3'])
+          sys.exit(result.returncode)
+          PY
+      - name: Normalize supported reports without hiding failures
+        if: always()
+        run: |
+          python3 - <<'PYCODE'
+          import subprocess, sys
+          from pathlib import Path
+          summaries = sorted(Path('build/reports/factory').glob('*/summary.json'))
+          if not summaries:
+              raise RuntimeError('No actual summary; cannot invent a clean queue')
+          result = subprocess.run(['python3', '-m', 'tools.factory.automation', 'report', '--summary', str(summaries[-1])])
+          sys.exit(result.returncode)
+          PYCODE
+      - name: Export bounded execution receipts
+        if: always()
+        run: python3 -m tools.factory.ci_evidence
+      - name: Retain development evidence, not release assets
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: factory-${{ matrix.family }}-${{ github.run_id }}
+          retention-days: 7
+          path: |
+            build/reports/factory/**/summary.json
+            build/reports/factory/**/result.json
+            build/reports/factory/**/gitleaks/gitleaks.json
+            build/reports/factory/review-queue.json
+            build/reports/factory/overview.html
+            build/reports/factory/**/playwright/*.png
+            build/reports/factory/**/playwright/browser.json
+            build/reports/factory/**/axe-core/axe.json
+            build/factory/install-*.json
+            build/factory/install-logs/

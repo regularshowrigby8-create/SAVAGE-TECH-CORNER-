@@ -1,0 +1,421 @@
+{
+  "date": "2026-09-30",
+  "repositories": {
+    "git": {
+      "repository": "https://github.com/git/git",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "gh": {
+      "repository": "https://github.com/cli/cli",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "ripgrep": {
+      "repository": "https://github.com/BurntSushi/ripgrep",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "gradle": {
+      "repository": "https://github.com/gradle/gradle",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "detekt": {
+      "repository": "https://github.com/detekt/detekt",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "ktlint": {
+      "repository": "https://github.com/ktlint/ktlint",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "ruff": {
+      "repository": "https://github.com/astral-sh/ruff",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "pylint": {
+      "repository": "https://github.com/pylint-dev/pylint",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "mypy": {
+      "repository": "https://github.com/python/mypy",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "pyright": {
+      "repository": "https://github.com/microsoft/pyright",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "bandit": {
+      "repository": "https://github.com/PyCQA/bandit",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "semgrep": {
+      "repository": "https://github.com/semgrep/semgrep",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "pip-audit": {
+      "repository": "https://github.com/pypa/pip-audit",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "deptry": {
+      "repository": "https://github.com/osprey-oss/deptry",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "vulture": {
+      "repository": "https://github.com/jendrikseipp/vulture",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "xenon": {
+      "repository": "https://github.com/rubik/xenon",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "interrogate": {
+      "repository": "https://github.com/econchick/interrogate",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "pytest": {
+      "repository": "https://github.com/pytest-dev/pytest",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "coverage": {
+      "repository": "https://github.com/coveragepy/coveragepy",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "hypothesis": {
+      "repository": "https://github.com/HypothesisWorks/hypothesis",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "mutmut": {
+      "repository": "https://github.com/boxed/mutmut",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "codespell": {
+      "repository": "https://github.com/codespell-project/codespell",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "yamllint": {
+      "repository": "https://github.com/adrienverge/yamllint",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "check-jsonschema": {
+      "repository": "https://github.com/python-jsonschema/check-jsonschema",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "reuse": {
+      "repository": "https://github.com/fsfe/reuse-tool",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "pip-licenses": {
+      "repository": "https://github.com/raimon49/pip-licenses",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "cyclonedx-py": {
+      "repository": "https://github.com/CycloneDX/cyclonedx-python",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "detect-secrets": {
+      "repository": "https://github.com/Yelp/detect-secrets",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "zizmor": {
+      "repository": "https://github.com/zizmorcore/zizmor",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "shellcheck": {
+      "repository": "https://github.com/koalaman/shellcheck",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "shfmt": {
+      "repository": "https://github.com/mvdan/sh",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "actionlint": {
+      "repository": "https://github.com/rhysd/actionlint",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "hadolint": {
+      "repository": "https://github.com/hadolint/hadolint",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "eslint": {
+      "repository": "https://github.com/eslint/eslint",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "prettier": {
+      "repository": "https://github.com/prettier/prettier",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "jest": {
+      "repository": "https://github.com/jestjs/jest",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "jscpd": {
+      "repository": "https://github.com/kucherenko/jscpd",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "knip": {
+      "repository": "https://github.com/webpro-nl/knip",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "dependency-cruiser": {
+      "repository": "https://github.com/sverweij/dependency-cruiser",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "npm-check-updates": {
+      "repository": "https://github.com/raineorshine/npm-check-updates",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "markdownlint": {
+      "repository": "https://github.com/DavidAnson/markdownlint-cli2",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "markdown-link-check": {
+      "repository": "https://github.com/tcort/markdown-link-check",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "stylelint": {
+      "repository": "https://github.com/stylelint/stylelint",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "retire": {
+      "repository": "https://github.com/RetireJS/retire.js",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "osv-scanner": {
+      "repository": "https://github.com/google/osv-scanner",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "syft": {
+      "repository": "https://github.com/anchore/syft",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "trivy": {
+      "repository": "https://github.com/aquasecurity/trivy",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "gitleaks": {
+      "repository": "https://github.com/gitleaks/gitleaks",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "checkov": {
+      "repository": "https://github.com/bridgecrewio/checkov",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "docker-compose": {
+      "repository": "https://github.com/docker/compose",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "ast-grep": {
+      "repository": "https://github.com/ast-grep/ast-grep",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "playwright": {
+      "repository": "https://github.com/microsoft/playwright",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "axe-core": {
+      "repository": "https://github.com/dequelabs/axe-core",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "pipdeptree": {
+      "repository": "https://github.com/tox-dev/pipdeptree",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "openapi-spec-validator": {
+      "repository": "https://github.com/python-openapi/openapi-spec-validator",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "taplo": {
+      "repository": "https://github.com/tamasfe/taplo",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "npm-audit": {
+      "repository": "https://github.com/npm/cli",
+      "metadata_verified": true,
+      "archived": false
+    },
+    "android-lint": {
+      "repository": "https://android.googlesource.com/platform/tools/base/",
+      "metadata_verified": false,
+      "provenance": "Official source location; not queried through GitHub API"
+    },
+    "r8": {
+      "repository": "https://r8.googlesource.com/r8/",
+      "metadata_verified": false,
+      "provenance": "Official source location; not queried through GitHub API"
+    },
+    "adb": {
+      "repository": "https://android.googlesource.com/platform/packages/modules/adb/",
+      "metadata_verified": false,
+      "provenance": "Official source location; not queried through GitHub API"
+    },
+    "apksigner": {
+      "repository": "https://android.googlesource.com/platform/tools/apksig/",
+      "metadata_verified": false,
+      "provenance": "Official source location; not queried through GitHub API"
+    },
+    "apkanalyzer": {
+      "repository": "https://android.googlesource.com/platform/tools/base/",
+      "metadata_verified": false,
+      "provenance": "Official source location; not queried through GitHub API"
+    },
+    "aapt2": {
+      "repository": "https://android.googlesource.com/platform/frameworks/base/",
+      "metadata_verified": false,
+      "provenance": "Official source location; not queried through GitHub API"
+    },
+    "html-validate": {
+      "repository": "https://gitlab.com/html-validate/html-validate",
+      "metadata_verified": false,
+      "provenance": "Official source location; not queried through GitHub API"
+    },
+    "app-security-policy": {
+      "repository": "https://developer.android.com/privacy-and-security/security-best-practices",
+      "metadata_verified": false,
+      "provenance": "Official Android security guidance; policy contract is repository-local"
+    },
+    "ui-contract-policy": {
+      "repository": "https://developer.android.com/develop/ui/compose",
+      "metadata_verified": false,
+      "provenance": "Official Android Compose guidance; repository-local contract"
+    },
+    "import-android-sdk": {
+      "repository": "https://developer.android.com/tools/sdkmanager",
+      "metadata_verified": false,
+      "provenance": "Repository-local fail-closed stripped SDK importer; no binary is committed"
+    },
+    "finding-lifecycle": {
+      "repository": "https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues",
+      "metadata_verified": false,
+      "provenance": "Repository-local lifecycle policy based on the retrieved plan"
+    },
+    "production-chain": {
+      "repository": "https://docs.github.com/en/actions/using-workflows/about-workflows",
+      "metadata_verified": false,
+      "provenance": "Repository-local fail-closed production stage handoff"
+    },
+    "language-router": {
+      "repository": "https://github.com/semgrep/semgrep",
+      "metadata_verified": false,
+      "provenance": "Repository-local language manifest and changed-file router"
+    },
+    "gradle-quality-queue": {
+      "repository": "https://github.com/detekt/detekt",
+      "metadata_verified": false,
+      "provenance": "Repository-local XML normalization and bounded remediation packets"
+    },
+    "unfinished-repair": {
+      "repository": "https://github.com/SEARCHHH/unfinished-repair",
+      "metadata_verified": true,
+      "archived": false
+    }
+  },
+  "planned": [
+    {
+      "tool": "CodeQL",
+      "repository": "https://github.com/github/codeql",
+      "handles": "Interprocedural Kotlin/Java/Python/JS security analysis",
+      "gap": "Build extraction, query scope, policy and resource budget; not enabled"
+    },
+    {
+      "tool": "Schemathesis",
+      "repository": "https://github.com/schemathesis/schemathesis",
+      "handles": "Generated API request/response property tests",
+      "gap": "Isolated real PostgreSQL/Redis lifecycle and destructive-operation boundaries"
+    },
+    {
+      "tool": "Maestro",
+      "repository": "https://github.com/mobile-dev-inc/maestro",
+      "handles": "Device start/stop/save/navigation journeys",
+      "gap": "Real test APK/emulator, semantic selectors and durable-state assertions"
+    },
+    {
+      "tool": "Roborazzi",
+      "repository": "https://github.com/takahirom/roborazzi",
+      "handles": "Native screen image regression",
+      "gap": "Reachable screens, deterministic fixtures and reviewed references"
+    },
+    {
+      "tool": "Macrobenchmark",
+      "repository": "https://android.googlesource.com/platform/frameworks/support/",
+      "handles": "Android startup and scrolling performance",
+      "gap": "Release-like internal build, physical-device sampling and agreed budgets"
+    },
+    {
+      "tool": "Perfetto",
+      "repository": "https://android.googlesource.com/platform/external/perfetto/",
+      "handles": "CPU, memory, scheduling and frame traces",
+      "gap": "Repeatable device scenarios and interpretation; not a pass/fail budget by itself"
+    },
+    {
+      "tool": "OWASP ZAP",
+      "repository": "https://github.com/zaproxy/zaproxy",
+      "handles": "DAST against a disposable owned backend",
+      "gap": "Authenticated fixture, allowlisted target and no third-party crawling"
+    },
+    {
+      "tool": "k6",
+      "repository": "https://github.com/grafana/k6",
+      "handles": "Backend concurrency, latency and error-rate checks",
+      "gap": "Representative workloads, resource budget and safe dedicated test services"
+    },
+    {
+      "tool": "Renovate",
+      "repository": "https://github.com/renovatebot/renovate",
+      "handles": "Reviewed dependency update proposals",
+      "gap": "Maintainer GitHub App authorization and PR policy; no activation or auto-merge"
+    }
+  ]
+}
