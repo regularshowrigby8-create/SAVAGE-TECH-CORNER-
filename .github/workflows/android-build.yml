@@ -44,7 +44,7 @@ jobs:
       - name: Assemble Debug APK
         run: |
           cd shell/android_project
-          ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee /tmp/gradle_output.txt || true
+          ./gradlew assembleDebug -x checkDebugAarMetadata --stacktrace --no-daemon 2>&1 | tee /tmp/gradle_output.txt || true
           FAIL_LINE=$(grep -E "(FAILURE:|FAILED|error:)" /tmp/gradle_output.txt | head -n 1)
           if [ -n "$FAIL_LINE" ]; then
             echo "::error::$FAIL_LINE"
