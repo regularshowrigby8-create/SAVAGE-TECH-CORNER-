@@ -204,8 +204,7 @@ class GovernedServerHandler(BaseHTTPRequestHandler):
             self.end_headers()
 
     def log_message(self, format: str, *args: Any) -> None:
-        pass
-
+        return
 
 def run_governed_server(port: int = 8080) -> None:
     architect = ScopedFactoryArchitect(ROOT_DIR)

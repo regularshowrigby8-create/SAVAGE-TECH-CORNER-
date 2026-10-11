@@ -159,7 +159,9 @@ class StrippedAndroidVM:
             try:
                 with zipfile.ZipFile(self.apk_path, "r") as zf:
                     axml = zf.read("AndroidManifest.xml")
-                    if b"com.savage.soulbrowser" not in axml:
+                    pkg_utf8 = b"com.savage.soulbrowser"
+                    pkg_utf16 = "com.savage.soulbrowser".encode("utf-16le")
+                    if pkg_utf8 not in axml and pkg_utf16 not in axml:
                         self.audit_results["errors"].append("Package name com.savage.soulbrowser not in Manifest")
             except Exception as e:
                 self.audit_results["errors"].append(f"Manifest inspection error: {e}")

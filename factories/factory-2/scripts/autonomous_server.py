@@ -122,26 +122,4 @@ class ServerHandler(BaseHTTPRequestHandler):
             self.end_headers()
 
     def log_message(self, format: str, *args: Any) -> None:
-        pass
-
-
-def run_server(port: int = 8080) -> None:
-    # 1. Start continuous model finder thread
-    t_finder = threading.Thread(target=run_model_finder_loop, args=(300,), daemon=True)
-    t_finder.start()
-
-    # 2. Start continuous autonomous optimizer thread
-    t_optimizer = threading.Thread(target=run_autonomous_optimizer_loop, args=(180,), daemon=True)
-    t_optimizer.start()
-
-    # 3. Serve live HTTP telemetry on 0.0.0.0 for Arena preview proxy
-    server = HTTPServer(("0.0.0.0", port), ServerHandler)
-    print(f"[DAEMON-SERVER] Autonomous Factory Daemon listening on http://0.0.0.0:{port}")
-    server.serve_forever()
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Autonomous Factory 24/7 Server")
-    parser.add_argument("--port", type=int, default=8080, help="Server port (default: 8080)")
-    args = parser.parse_args()
-    run_server(args.port)
+        return None

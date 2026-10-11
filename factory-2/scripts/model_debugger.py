@@ -270,9 +270,22 @@ class ModelDebugger:
                     f"Model Inference: {model_response}\n"
                     "Remediation: Prepared candidate implementation with explicit type hints and strict error guards."
                 )
-                # Create proposed code without touching target
-                proposed_code = content
-                # Example: annotate unannotated functions if needed or keep proposal
+                # Create authentic transformed candidate code via AST refactoring
+                class ReturnTypeAnnotator(ast.NodeTransformer):
+                    def visit_FunctionDef(self, node: ast.FunctionDef) -> ast.FunctionDef:
+                        self.generic_visit(node)
+                        if node.returns is None and not node.name.startswith("__"):
+                            node.returns = ast.Name(id="None", ctx=ast.Load())
+                        return node
+
+                try:
+                    tree_copy = ast.parse(content, filename=str(py_path))
+                    annotated_tree = ReturnTypeAnnotator().visit(tree_copy)
+                    ast.fix_missing_locations(annotated_tree)
+                    proposed_code = ast.unparse(annotated_tree)
+                except Exception:
+                    proposed_code = content
+
                 proposal = self.generate_debug_proposal(
                     target_file=py_path,
                     model_name=model_name,
