@@ -44,17 +44,9 @@ jobs:
       - name: Assemble Debug APK
         run: |
           cd shell/android_project
-          ./gradlew assembleDebug -x checkDebugAarMetadata --stacktrace --no-daemon 2>&1 | tee /tmp/gradle_output.txt || true
-          FAIL_LINE=$(grep -E "(FAILURE:|FAILED|error:)" /tmp/gradle_output.txt | head -n 1)
-          if [ -n "$FAIL_LINE" ]; then
-            echo "::error::$FAIL_LINE"
-          fi
-          APK_FILE=$(find app/build/outputs/apk -name "*.apk" 2>/dev/null | head -n 1)
-          if [ -z "$APK_FILE" ]; then
-            echo "::error::Gradle assembleDebug did not produce an APK!"
-            exit 1
-          fi
-          echo "Built APK located at: $APK_FILE"
+          ./gradlew assembleDebug --stacktrace --no-daemon
+          echo "=== Built Output Directory Content ==="
+          ls -la app/build/outputs/apk/debug/
 
       - name: Locate Output APK
         id: apk_locator
