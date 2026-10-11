@@ -24,5 +24,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Compatibility activity alias for existing system UI launcher caches -->
+        <activity
+            android:name=".activities.BrowserActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SavageBrowser"
+            android:configChanges="orientation|screenSize|keyboardHidden">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
     </application>
 </manifest>
