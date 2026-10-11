@@ -104,3 +104,7 @@ class FullSystemAudit(unittest.TestCase):
         print('[AUDIT] Master Deterministic Gates: PASS')
 
 
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
+
+

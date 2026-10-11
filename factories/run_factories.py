@@ -39,9 +39,10 @@ def run_factory_pipeline(input_source: str = "shell") -> dict[str, object]:
     }
 
     try:
-        # Step 1: Stage input source into Factory 2 app space
-        target_app_dir = FACTORY_2_DIR / "app" / "src"
-        # Always clean staging workspace to avoid shipping stale artifacts
+        # Step 1: Stage input source into the Factory 2 debug staging area.
+        # NOTE: staged artifacts are transient; never rmtree tracked source trees
+        # (previously this wiped factories/factory-2/app/src and broke its test suite).
+        target_app_dir = FACTORY_2_DIR / "debug" / "staging"
         if target_app_dir.exists():
             shutil.rmtree(target_app_dir)
         target_app_dir.mkdir(parents=True, exist_ok=True)
@@ -127,8 +128,17 @@ def run_factory_pipeline(input_source: str = "shell") -> dict[str, object]:
         print("[STAGE 3] Factory 3: Building and signing Savage Browser Android APK...")
         from apk_builder import create_signed_apk
         apk_output = FINAL_PRODUCT_DIR / "SavageBrowser-debug.apk"
-        create_signed_apk(apk_output)
-        print(f"[STAGE 3] Savage Browser APK successfully assembled: {apk_output.name} ({apk_output.stat().st_size / 1024:.2f} KB)")
+        apk_build_errors: list[str] = []
+        try:
+            create_signed_apk(apk_output)
+            print(f"[STAGE 3] Savage Browser APK successfully assembled: {apk_output.name} ({apk_output.stat().st_size / 1024:.2f} KB)")
+        except Exception as apk_err:
+            # Fail closed: never ship an APK that fails structural/runtime verification.
+            apk_build_errors.append(str(apk_err))
+            print(f"[STAGE 3-BLOCK] APK build/verification rejected artifact: {apk_err}")
+            if apk_output.exists():
+                apk_output.unlink()
+                print("[STAGE 3-BLOCK] Removed rejected APK from final-product to prevent shipping a broken artifact.")
 
         # Stage 3 Audit Gate: Fail closed if broker flagged critical findings
         broker_clean = broker_result.get("clean", False)
@@ -147,7 +157,7 @@ def run_factory_pipeline(input_source: str = "shell") -> dict[str, object]:
         print(f"[STAGE 3] Android VM Status: {vm_results['vm_status']}")
 
         if not app_rules["passed"] or not vm_results["passed"]:
-            errors = app_rules.get("violations", []) + vm_results.get("errors", [])
+            errors = apk_build_errors + app_rules.get("violations", []) + vm_results.get("errors", [])
             print(f"[STAGE 3-BLOCK] APK rejected by Factory 3 Android VM: {errors}")
             f3_certified = False
 
@@ -162,6 +172,7 @@ def run_factory_pipeline(input_source: str = "shell") -> dict[str, object]:
         pipeline_log["stages"]["factory_3_android_tools"] = {
             "broker_audit": broker_result,
             "certification": f3_result,
+            "apk_build_errors": apk_build_errors,
             "gradle_wrapper_ready": gradle_available,
         }
 
@@ -183,7 +194,10 @@ def run_factory_pipeline(input_source: str = "shell") -> dict[str, object]:
             json.dump(pipeline_log, f, indent=2)
 
         print(f"[STAGE 4] Final Product release populated with: {delivered_files}")
-        print(f"=== PIPELINE COMPLETE: VERIFIED & CERTIFIED (Status: {pipeline_log['status']}) ===")
+        if pipeline_log["status"] == "CERTIFIED":
+            print("=== PIPELINE COMPLETE: VERIFIED & CERTIFIED (Status: CERTIFIED) ===")
+        else:
+            print(f"=== PIPELINE COMPLETE: REJECTED — certification failed, artifact withheld (Status: {pipeline_log['status']}) ===")
         return pipeline_log
 
     except Exception as e:

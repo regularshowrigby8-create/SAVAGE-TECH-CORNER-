@@ -8,6 +8,9 @@ test:
 	python3 -m unittest discover -s factory-3/tests
 	python3 -m unittest discover -s tools/factory/tests
 	python3 -m unittest discover -s factories/tests
+	python3 factory-2/app/tests/test_app.py
+	python3 factories/factory-2/app/tests/test_app.py
+	python3 factories/factory-2/tests/test_model_debugger.py
 
 coverage:
 	python3 -m coverage run -m unittest shell/tests/test_browser_shell.py

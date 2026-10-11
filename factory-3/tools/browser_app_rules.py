@@ -50,18 +50,21 @@ def verify_browser_app_rules(apk_path: Path) -> Dict[str, Any]:
                 violations.append("Violation: Missing cryptographic signature block (META-INF/*.RSA)")
 
             # Rule 5: Provenance & Anti-Deception Invariant
-            # Rejects third-party packages or foreign attribution strings
+            # Rejects third-party packages or foreign attribution strings.
+            # NOTE: binary AXML stores strings as UTF-16LE, so tokens must be
+            # matched in both raw and UTF-16LE encodings (a raw-ASCII scan can
+            # never match a UTF-16 manifest and previously false-passed).
             manifest_data = zf.read("AndroidManifest.xml")
             classes_dex = zf.read("classes.dex")
 
-            if b"acr.browser" in manifest_data or b"acr/browser" in classes_dex:
+            if "acr.browser".encode("utf-16-le") in manifest_data or b"acr.browser" in manifest_data or b"acr/browser" in classes_dex:
                 violations.append("Violation: Foreign package identifier detected ('acr.browser'). Provenance check failed.")
 
-            if b"anthonycr" in classes_dex:
-                violations.append("Violation: Third-party repository attribution detected in DEX bytecode. Deception check failed.")
+            if b"anthonycr" in classes_dex or "anthonycr".encode("utf-16-le") in manifest_data:
+                violations.append("Violation: Third-party repository attribution detected in bytecode/manifest. Deception check failed.")
 
             # Rule 6: Package Identity Match
-            if b"savage" not in manifest_data.lower() and b"savage" not in classes_dex.lower():
+            if "savage".encode("utf-16-le") not in manifest_data and b"savage" not in manifest_data.lower() and b"savage" not in classes_dex.lower():
                 violations.append("Violation: APK does not match Savage Browser package identity ('com.savage.soulbrowser').")
 
     except zipfile.BadZipFile:

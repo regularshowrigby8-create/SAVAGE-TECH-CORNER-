@@ -15,6 +15,7 @@ import difflib
 import hashlib
 import json
 import os
+import shutil
 import sys
 import time
 from datetime import datetime, timezone
@@ -23,15 +24,16 @@ from typing import Any, Dict, List, Optional
 
 
 _curr = Path(__file__).resolve()
-ROOT_DIR = _curr.parent.parent.parent
+FACTORY_DIR = _curr.parent.parent
+ROOT_DIR = FACTORY_DIR.parent
 if not (ROOT_DIR / "models" / "free-models.json").exists() and (ROOT_DIR.parent / "models" / "free-models.json").exists():
     ROOT_DIR = ROOT_DIR.parent
 MODELS_FILE = ROOT_DIR / "models" / "free-models.json"
-PROPOSALS_DIR = ROOT_DIR / "factory-2" / "debug" / "proposals"
-DEFAULT_TARGET_DIR = ROOT_DIR / "factory-2" / "app" / "src"
+PROPOSALS_DIR = FACTORY_DIR / "debug" / "proposals"
+DEFAULT_TARGET_DIR = FACTORY_DIR / "app" / "src"
 
 
-INBOX_DIR = ROOT_DIR / "factory-2" / "debug" / "inbox"
+INBOX_DIR = FACTORY_DIR / "debug" / "inbox"
 
 def load_model_registry() -> Dict[str, Any]:
     """Loads all offline and online models from models/free-models.json."""

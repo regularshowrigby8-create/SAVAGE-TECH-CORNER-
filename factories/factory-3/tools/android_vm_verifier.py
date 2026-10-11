@@ -33,7 +33,76 @@ except ImportError:
 try:
     from androguard.core.apk import APK
 except ImportError:
-    APK = None
+    try:
+        from androguard.core.bytecodes.apk import APK
+    except ImportError:
+        APK = None
+
+
+# --- BEGIN shared stdlib DEX integrity block (keep in sync across APK tooling) ---
+def _read_uleb128(buf: bytes, off: int) -> "tuple[int, int]":
+    val = 0
+    shift = 0
+    while True:
+        b = buf[off]
+        off += 1
+        val |= (b & 0x7F) << shift
+        if not (b & 0x80):
+            break
+        shift += 7
+    return val, off
+
+
+def verify_dex_structure(dex: bytes) -> "list[str]":
+    """Pure-stdlib DEX structural integrity verification (works without androguard).
+
+    Fail-closed against the corruption class found in the legacy re-signed APK:
+    truncated/padded bodies, corrupt map lists, and unresolvable class definitions
+    (a launcher activity with no loadable class definition crashes with
+    ClassNotFoundException immediately on start).
+    """
+    errors: "list[str]" = []
+    if len(dex) < 112 or dex[:4] != b"dex\n":
+        return ["classes.dex is missing or has a corrupt Dalvik magic header"]
+    try:
+        file_size = struct.unpack_from("<I", dex, 32)[0]
+        if file_size != len(dex):
+            errors.append(
+                f"classes.dex header file_size ({file_size}) != actual length ({len(dex)}): "
+                "truncated or trailing-garbage body"
+            )
+        map_off = struct.unpack_from("<I", dex, 52)[0]
+        if map_off == 0 or map_off + 4 > min(file_size, len(dex)):
+            errors.append("classes.dex map_off points outside the declared file body")
+        else:
+            map_size = struct.unpack_from("<I", dex, map_off)[0]
+            if map_size > 10000 or map_off + 4 + map_size * 12 > len(dex):
+                errors.append(f"classes.dex map list corrupt ({map_size} entries exceed file bounds)")
+        string_ids_size, string_ids_off = struct.unpack_from("<II", dex, 56)
+        type_ids_size, type_ids_off = struct.unpack_from("<II", dex, 64)
+        class_defs_size, class_defs_off = struct.unpack_from("<II", dex, 96)
+        sane = 0
+        for i in range(class_defs_size):
+            try:
+                type_idx = struct.unpack_from("<I", dex, class_defs_off + i * 32)[0]
+                str_idx = struct.unpack_from("<I", dex, type_ids_off + type_idx * 4)[0]
+                s_off = struct.unpack_from("<I", dex, string_ids_off + str_idx * 4)[0]
+                _, p = _read_uleb128(dex, s_off)
+                end = dex.index(b"\x00", p, min(p + 255, len(dex)))
+                s = dex[p:end]
+                if s[:1] == b"L" and s[-1:] == b";" and b"/" in s:
+                    sane += 1
+            except Exception:
+                continue
+        if class_defs_size == 0 or sane < max(4, class_defs_size * 2 // 3):
+            errors.append(
+                f"classes.dex class-def table unresolvable ({sane}/{class_defs_size} sane descriptors): "
+                "type/string tables are corrupt; ART will throw VerifyError/ClassNotFoundException"
+            )
+    except Exception as e:
+        errors.append(f"classes.dex structural parse failed: {e}")
+    return errors
+# --- END shared stdlib DEX integrity block ---
 
 
 class StrippedAndroidVM:
@@ -176,14 +245,29 @@ class StrippedAndroidVM:
                 self.audit_results["errors"].append(f"Manifest inspection error: {e}")
 
     def _verify_dex_bytecode_and_runtime(self) -> None:
-        """Ensures classes.dex is valid Dalvik executable bytecode."""
+        """Ensures classes.dex is valid Dalvik bytecode with loadable class definitions
+        for every manifest-declared activity (prevents launcher ClassNotFoundException)."""
         try:
             with zipfile.ZipFile(self.apk_path, "r") as zf:
                 dex = zf.read("classes.dex")
                 if len(dex) < 1000 or dex[:4] != b"dex\n":
                     self.audit_results["errors"].append("Corrupt or invalid Dalvik classes.dex header")
-                else:
-                    self.audit_results["metrics"]["dex_size_bytes"] = len(dex)
+                    return
+                self.audit_results["metrics"]["dex_size_bytes"] = len(dex)
+
+                # Structural integrity: header/map/class-def tables must be parseable by ART.
+                for err in verify_dex_structure(dex):
+                    self.audit_results["errors"].append(err)
+
+                # Activity linkage: required launcher activities must resolve to loadable
+                # classes in this primary DEX (REQUIRED_MANIFEST_ACTIVITIES contract).
+                for activity in self.REQUIRED_MANIFEST_ACTIVITIES:
+                    descriptor = ("L" + activity.replace(".", "/") + ";").encode("utf-8")
+                    if descriptor not in dex:
+                        self.audit_results["errors"].append(
+                            f"Required activity '{activity}' has no class in classes.dex: "
+                            "launch would crash with ClassNotFoundException"
+                        )
         except Exception as e:
             self.audit_results["errors"].append(f"DEX runtime verification error: {e}")
 

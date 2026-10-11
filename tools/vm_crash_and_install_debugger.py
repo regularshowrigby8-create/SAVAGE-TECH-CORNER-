@@ -41,6 +41,72 @@ except (ImportError, AttributeError):
 APKClass = ModernAPK or LegacyAPK
 
 
+# --- BEGIN shared stdlib DEX integrity block (keep in sync across APK tooling) ---
+def _read_uleb128(buf: bytes, off: int) -> Tuple[int, int]:
+    val = 0
+    shift = 0
+    while True:
+        b = buf[off]
+        off += 1
+        val |= (b & 0x7F) << shift
+        if not (b & 0x80):
+            break
+        shift += 7
+    return val, off
+
+
+def verify_dex_structure(dex: bytes) -> List[str]:
+    """Pure-stdlib DEX structural integrity verification (works without androguard).
+
+    Fail-closed against the corruption class found in the legacy re-signed APK:
+    truncated/padded bodies, corrupt map lists, and unresolvable class definitions
+    (a launcher activity with no loadable class definition crashes with
+    ClassNotFoundException immediately on start).
+    """
+    errors: List[str] = []
+    if len(dex) < 112 or dex[:4] != b"dex\n":
+        return ["classes.dex is missing or has a corrupt Dalvik magic header"]
+    try:
+        file_size = struct.unpack_from("<I", dex, 32)[0]
+        if file_size != len(dex):
+            errors.append(
+                f"classes.dex header file_size ({file_size}) != actual length ({len(dex)}): "
+                "truncated or trailing-garbage body"
+            )
+        map_off = struct.unpack_from("<I", dex, 52)[0]
+        if map_off == 0 or map_off + 4 > min(file_size, len(dex)):
+            errors.append("classes.dex map_off points outside the declared file body")
+        else:
+            map_size = struct.unpack_from("<I", dex, map_off)[0]
+            if map_size > 10000 or map_off + 4 + map_size * 12 > len(dex):
+                errors.append(f"classes.dex map list corrupt ({map_size} entries exceed file bounds)")
+        string_ids_size, string_ids_off = struct.unpack_from("<II", dex, 56)
+        type_ids_size, type_ids_off = struct.unpack_from("<II", dex, 64)
+        class_defs_size, class_defs_off = struct.unpack_from("<II", dex, 96)
+        sane = 0
+        for i in range(class_defs_size):
+            try:
+                type_idx = struct.unpack_from("<I", dex, class_defs_off + i * 32)[0]
+                str_idx = struct.unpack_from("<I", dex, type_ids_off + type_idx * 4)[0]
+                s_off = struct.unpack_from("<I", dex, string_ids_off + str_idx * 4)[0]
+                _, p = _read_uleb128(dex, s_off)
+                end = dex.index(b"\x00", p, min(p + 255, len(dex)))
+                s = dex[p:end]
+                if s[:1] == b"L" and s[-1:] == b";" and b"/" in s:
+                    sane += 1
+            except Exception:
+                continue
+        if class_defs_size == 0 or sane < max(4, class_defs_size * 2 // 3):
+            errors.append(
+                f"classes.dex class-def table unresolvable ({sane}/{class_defs_size} sane descriptors): "
+                "type/string tables are corrupt; ART will throw VerifyError/ClassNotFoundException"
+            )
+    except Exception as e:
+        errors.append(f"classes.dex structural parse failed: {e}")
+    return errors
+# --- END shared stdlib DEX integrity block ---
+
+
 class AndroidVMDiagnosticSession:
     def __init__(self, apk_path: Path, config: Optional[Dict[str, Any]] = None):
         self.apk_path = Path(apk_path)
@@ -238,12 +304,21 @@ class AndroidVMDiagnosticSession:
                         )
                         return
 
-                    # Verify that the declared activities exist as classes in the DEX bytecode
+                    # Fail-closed structural verification: a DEX that ART cannot parse
+                    # (corrupt map/class-def/string tables) crashes at install or launch.
+                    for struct_err in verify_dex_structure(dex_data):
+                        self._record_crash(
+                            "java.lang.VerifyError",
+                            struct_err,
+                            "at dalvik.system.DexFile.openDexFile(Native Method)\n"
+                            "at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:3600)"
+                        )
+
+                    # Verify that the declared activities resolve to classes in the DEX bytecode
                     for act in declared_activities:
                         # Convert package name to DEX type descriptor: com.savage.soulbrowser.MainActivity -> Lcom/savage/soulbrowser/MainActivity;
                         dex_type = ("L" + act.replace(".", "/") + ";").encode("utf-8")
-                        act_short = act.split(".")[-1].encode("utf-8")
-                        if dex_type not in dex_data and act_short not in dex_data:
+                        if dex_type not in dex_data:
                             self._record_crash(
                                 "java.lang.ClassNotFoundException",
                                 f"Didn't find class '{act}' on path: DexPathList[zip file '{self.apk_path}']",

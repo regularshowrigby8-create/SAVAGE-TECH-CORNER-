@@ -66,6 +66,10 @@ python3 -m unittest discover -s factory-3/tests || fail test_f3 "Factory 3 tests
 python3 -m unittest discover -s tools/factory/tests || fail test_tools "Factory tools tests failed"
 python3 -m unittest discover -s factories/tests || fail test_factories "Multi-factory pipeline tests failed"
 python3 -m unittest discover -s shell/tests || fail test_shell "Shell unit tests failed"
+# Application behavioral suites (self-bootstrapping sys.path) — previously orphaned
+python3 factory-2/app/tests/test_app.py > /dev/null || fail test_f2_app "Factory 2 app behavioral tests failed"
+python3 factories/factory-2/app/tests/test_app.py > /dev/null || fail test_ff2_app "Factories Factory 2 app behavioral tests failed"
+python3 factories/factory-2/tests/test_model_debugger.py > /dev/null || fail test_ff2_md "Factories Factory 2 model debugger tests failed"
 
 echo "[GATE 7] Authenticity of Automated Test Coverage..."
 if ! python3 - <<'PY'
