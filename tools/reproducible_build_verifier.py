@@ -111,6 +111,16 @@ def _verify_with_androguard(apk_path: Path) -> "list[str]":
         if pkg != APP_PACKAGE:
             errors.append(f"Package identity mismatch: expected {APP_PACKAGE}, found {pkg}")
 
+        # Structural DEX verification must ALSO run on the Androguard path:
+        # the corrupted stock APK passes every manifest/signing check above
+        # (targetSdk 34, v2/v3-signed, correct package) while its class-def
+        # table cannot resolve the launcher activity — the crash cause.
+        with zipfile.ZipFile(apk_path, "r") as zf:
+            if "classes.dex" in zf.namelist():
+                errors.extend(verify_dex_structure(zf.read("classes.dex")))
+            else:
+                errors.append("Missing required APK entry: classes.dex")
+
         return errors
     except ImportError:
         return []  # Signal to caller that stdlib fallback should run.
