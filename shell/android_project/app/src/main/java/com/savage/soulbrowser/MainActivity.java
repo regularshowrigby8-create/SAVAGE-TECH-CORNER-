@@ -5,12 +5,21 @@ import android.net.Uri;
 import android.net.http.SslError;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.webkit.JavascriptInterface;
 import android.webkit.SslErrorHandler;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
@@ -24,8 +33,10 @@ import java.util.regex.Pattern;
 /**
  * Savage Browser Main Android Activity.
  * Hardened WebView implementation with:
+ * - Inflates layout from activity_main.xml (Glass Omnibox + Bottom Navigation Dock)
  * - Strict HTTPS domain whitelist and HTTP scheme rejection
  * - Fail-closed SSL error handler (no silent SSL bypassing)
+ * - Dynamic electric progress bar tracking web page loading
  * - Modern OnBackPressedDispatcher callback handling
  * - Static SecureSoulBridge avoiding Activity leaks with WeakReference
  * - Unicode-preserving feedback validation (\p{L}\p{N})
@@ -34,6 +45,16 @@ import java.util.regex.Pattern;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "SavageBrowser";
     private WebView webView;
+    private ProgressBar progressBar;
+    private EditText editOmnibox;
+    private ImageView imgSecurityBadge;
+    private ImageButton btnActionRefresh;
+    private ImageButton btnNavBack;
+    private ImageButton btnNavForward;
+    private ImageButton btnNavHome;
+    private ImageButton btnNavTabs;
+    private ImageButton btnNavMenu;
+    private ImageButton btnActionAi;
 
     // Strict allowed domains for browser navigation & bridge interaction
     public static final Set<String> ALLOWED_HOSTS = new HashSet<>(Arrays.asList(
@@ -45,8 +66,25 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        webView = new WebView(this);
-        setContentView(webView);
+        setContentView(R.layout.activity_main);
+
+        // Bind layout views
+        webView = findViewById(R.id.main_webview);
+        progressBar = findViewById(R.id.page_progress_bar);
+        editOmnibox = findViewById(R.id.edit_omnibox);
+        imgSecurityBadge = findViewById(R.id.img_security_badge);
+        btnActionRefresh = findViewById(R.id.btn_action_refresh);
+        btnNavBack = findViewById(R.id.btn_nav_back);
+        btnNavForward = findViewById(R.id.btn_nav_forward);
+        btnNavHome = findViewById(R.id.btn_nav_home);
+        btnNavTabs = findViewById(R.id.btn_nav_tabs);
+        btnNavMenu = findViewById(R.id.btn_nav_menu);
+        btnActionAi = findViewById(R.id.btn_action_ai);
+
+        if (webView == null) {
+            Log.e(TAG, "main_webview not found in layout, instantiating programmatically");
+            webView = new WebView(this);
+        }
 
         WebSettings settings = webView.getSettings();
         // Restrict JavaScript and enable security invariants
@@ -57,11 +95,77 @@ public class MainActivity extends AppCompatActivity {
         settings.setAllowFileAccessFromFileURLs(false);
         settings.setAllowUniversalAccessFromFileURLs(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        settings.setUserAgentString("SavageBrowser/1.0 (Linux; Android 14; Mobile; SecurityHardened)");
+        settings.setUserAgentString("SavageBrowser/2.0 (Linux; Android 14; Mobile; SecurityHardened)");
 
         webView.setWebViewClient(new HardenedWebViewClient());
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onProgressChanged(WebView view, int newProgress) {
+                if (progressBar != null) {
+                    if (newProgress < 100) {
+                        progressBar.setVisibility(View.VISIBLE);
+                        progressBar.setProgress(newProgress);
+                    } else {
+                        progressBar.setVisibility(View.GONE);
+                    }
+                }
+            }
+        });
+
         webView.addJavascriptInterface(new SecureSoulBridge(this, webView), "SoulBridge");
         webView.loadUrl("https://savage-tech-corner.io");
+
+        // Omnibox submit handling
+        if (editOmnibox != null) {
+            editOmnibox.setOnEditorActionListener((v, actionId, event) -> {
+                if (actionId == EditorInfo.IME_ACTION_GO ||
+                    (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN)) {
+                    String input = editOmnibox.getText().toString().trim();
+                    if (!input.isEmpty()) {
+                        navigateToUrl(input);
+                    }
+                    return true;
+                }
+                return false;
+            });
+        }
+
+        // Action & Navigation listeners
+        if (btnActionRefresh != null) {
+            btnActionRefresh.setOnClickListener(v -> {
+                if (webView != null) webView.reload();
+            });
+        }
+        if (btnNavBack != null) {
+            btnNavBack.setOnClickListener(v -> {
+                if (webView != null && webView.canGoBack()) webView.goBack();
+            });
+        }
+        if (btnNavForward != null) {
+            btnNavForward.setOnClickListener(v -> {
+                if (webView != null && webView.canGoForward()) webView.goForward();
+            });
+        }
+        if (btnNavHome != null) {
+            btnNavHome.setOnClickListener(v -> {
+                if (webView != null) webView.loadUrl("https://savage-tech-corner.io");
+            });
+        }
+        if (btnNavTabs != null) {
+            btnNavTabs.setOnClickListener(v -> {
+                Toast.makeText(MainActivity.this, "Tabs: 1 active tab", Toast.LENGTH_SHORT).show();
+            });
+        }
+        if (btnNavMenu != null) {
+            btnNavMenu.setOnClickListener(v -> {
+                Toast.makeText(MainActivity.this, "Savage Browser v2.0.3 (Hardened)", Toast.LENGTH_SHORT).show();
+            });
+        }
+        if (btnActionAi != null) {
+            btnActionAi.setOnClickListener(v -> {
+                Toast.makeText(MainActivity.this, "Savage AI Assistant Ready", Toast.LENGTH_SHORT).show();
+            });
+        }
 
         // Modern back-press handling replacing deprecated Activity.onBackPressed()
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
@@ -75,6 +179,23 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private void navigateToUrl(String query) {
+        String targetUrl = query;
+        if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
+            targetUrl = "https://" + targetUrl;
+        }
+        try {
+            Uri uri = Uri.parse(targetUrl);
+            if (HardenedWebViewClient.isNavigationPermitted(uri)) {
+                webView.loadUrl(targetUrl);
+            } else {
+                Toast.makeText(this, "Security Policy: Host restricted to Savage Tech Corner network", Toast.LENGTH_LONG).show();
+            }
+        } catch (Exception e) {
+            Toast.makeText(this, "Invalid URL format", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public static class HardenedWebViewClient extends WebViewClient {
@@ -183,7 +304,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.w(TAG, "Unauthorized bridge call from origin: " + currentUrl);
                 return "ACCESS_DENIED";
             }
-            return "1.0.0-savage-hardened";
+            return "2.0.3-savage-hardened";
         }
 
         @JavascriptInterface
