@@ -1,13 +1,15 @@
 """Production Browser Application Invariant Enforcement Rules.
 
-Prevents:
-1. Toy/Mock placeholder projects ("add number", "hello world", 2-button test rigs).
-2. Unsigned or corrupted APK artifacts missing Android runtime standards (DEX, ARSC, CERT.RSA).
-3. Dead navigation or empty stub architectures.
+STRICT INTEGRITY ENFORCEMENT & ANTI-DECEPTION INVARIANTS:
+1. Anti-Foreign / Provenance Invariant: Rejects any third-party app packages, stub packages, or
+   unrelated projects (e.g. barebones/Lightning). The APK package identifier MUST match 'com.savage.soulbrowser'.
+2. Anti-Mock Invariant: Rejects stub DEX bytecode (<50 KB) or empty activities.
+3. Android Standards: Requires compiled binary AndroidManifest.xml, classes.dex, resources.arsc, and signature blocks.
 """
 
 from __future__ import annotations
 
+import re
 import zipfile
 from pathlib import Path
 from typing import Any, Dict, List
@@ -16,7 +18,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 
 
 def verify_browser_app_rules(apk_path: Path) -> Dict[str, Any]:
-    """Strictly audits that the packaged APK is an authentic, production-grade Android browser."""
+    """Strictly audits that the packaged APK is the authentic Savage Browser product."""
     violations: List[str] = []
 
     if not apk_path.exists():
@@ -47,15 +49,20 @@ def verify_browser_app_rules(apk_path: Path) -> Dict[str, Any]:
             if not has_sig:
                 violations.append("Violation: Missing cryptographic signature block (META-INF/*.RSA)")
 
-            # Rule 5: Reject bogus / mock sample keywords in manifest or resources
-            try:
-                manifest_data = zf.read("AndroidManifest.xml")
-                # Look for real browser intent filters or browser components
-                if b"browser" not in manifest_data.lower() and b"web" not in manifest_data.lower():
-                    # Not strictly failing if obfuscated, but checked
-                    pass
-            except Exception:
-                pass
+            # Rule 5: Provenance & Anti-Deception Invariant
+            # Rejects third-party packages or foreign attribution strings
+            manifest_data = zf.read("AndroidManifest.xml")
+            classes_dex = zf.read("classes.dex")
+
+            if b"acr.browser" in manifest_data or b"acr/browser" in classes_dex:
+                violations.append("Violation: Foreign package identifier detected ('acr.browser'). Provenance check failed.")
+
+            if b"anthonycr" in classes_dex:
+                violations.append("Violation: Third-party repository attribution detected in DEX bytecode. Deception check failed.")
+
+            # Rule 6: Package Identity Match
+            if b"savage" not in manifest_data.lower() and b"savage" not in classes_dex.lower():
+                violations.append("Violation: APK does not match Savage Browser package identity ('com.savage.soulbrowser').")
 
     except zipfile.BadZipFile:
         violations.append("Violation: APK is not a valid zip archive")
