@@ -30,7 +30,7 @@ for path in Path('.').rglob('*.md'):
         continue
     for line_no, line in enumerate(path.read_text(encoding='utf-8', errors='ignore').splitlines(), 1):
         for ref in sorted(set(pattern.findall(line))):
-            if 'github.com' in line or ref.startswith(('http://', 'https://')) or any(marker in line.upper() for marker in ('NOT ON THIS BRANCH', 'BRANCH ONLY', 'LIVES ON', 'MISSING', 'NOT FOUND')):
+            if 'github.com' in line or ref.startswith(('http://', 'https://')) or any(marker in line.upper() for marker in ('NOT ON THIS BRANCH', 'BRANCH ONLY', 'LIVES ON')):
                 continue
             if not Path(ref).exists():
                 failures.append(f'{path}:{line_no}:{ref}')

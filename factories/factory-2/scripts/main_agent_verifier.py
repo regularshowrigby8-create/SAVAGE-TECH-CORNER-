@@ -15,6 +15,7 @@ import ast
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -51,8 +52,13 @@ class MainAgentVerifier:
         with open(meta_path, "r", encoding="utf-8") as f:
             meta: Dict[str, Any] = json.load(f)
 
-        target_path = Path(meta["target_file"])
-        candidate_path = Path(meta["candidate_file"])
+        target_path = Path(meta["target_file"]).resolve()
+        candidate_path = Path(meta["candidate_file"]).resolve()
+
+        # Security Invariant: Target file MUST reside inside ROOT_DIR or a test directory (no dangerous system root path traversal)
+        is_safe_parent = str(target_path).startswith(str(ROOT_DIR.resolve())) or "tmp" in str(target_path) or "temp" in str(target_path)
+        if not is_safe_parent:
+            return False, f"Security violation: Target file '{target_path}' is outside repository root"
 
         # Check 1: Files must exist
         if not target_path.exists():
@@ -72,11 +78,12 @@ class MainAgentVerifier:
         except SyntaxError as e:
             return False, f"Candidate code has syntax error on line {e.lineno}: {e.msg}"
 
-        # Check 4: Safety / Secrets check
-        forbidden_keys = ["pass" + "word", "sec" + "ret", "api_" + "key"]
-        for key in forbidden_keys:
-            if f"{key}=" in candidate_src.replace(" ", "").lower():
-                return False, f"Security violation: candidate code contains hardcoded credential key '{key}'"
+        # Check 4: Safety / Secrets check (Allow os.environ / os.getenv safely)
+        assignment_pat = re.compile(r"""(?i)\b(api_key|password|secret)\s*=\s*['"][^'"]{8,}['"]""")
+        for match in assignment_pat.finditer(candidate_src):
+            val = match.group(0)
+            if not any(safe in val.lower() for safe in ("os.environ", "os.getenv", "placeholder", "mock")):
+                return False, f"Security violation: candidate code contains hardcoded credential '{match.group(1)}'"
 
         # Check 5: Charter Rule - No dead buttons in UI components
         if "button" in candidate_src.lower() and "onclick" not in candidate_src.lower() and "handler" not in candidate_src.lower():

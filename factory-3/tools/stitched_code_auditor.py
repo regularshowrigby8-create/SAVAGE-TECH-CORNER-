@@ -43,7 +43,8 @@ class StitchedCodeAuditor:
         violations: List[Dict[str, Any]] = []
 
         for p in root.rglob("*"):
-            if not p.is_file() or any(part.startswith((".", "__pycache__", "node_modules")) for part in p.parts):
+            rel_parts = p.relative_to(root).parts
+            if not p.is_file() or any(part.startswith((".", "__pycache__", "node_modules")) for part in rel_parts):
                 continue
 
             rel_path = str(p.relative_to(root))

@@ -2,7 +2,9 @@ name: Factory 2 — Single Debug Job
 
 on:
   push:
-    branches: [factory-2, arena/ac306e97-savage-tech-corner]
+    branches: [main, production, factory-2, pipeline, arena/**]
+  pull_request:
+    branches: [main, production, pipeline]
   schedule:
     - cron: '0 */6 * * *'  # Every 6 hours — only one job can trigger
   workflow_dispatch:

@@ -222,16 +222,18 @@ class ModelDebugger:
             issues: List[str] = []
 
             # Check 1: AST validation
+            tree = None
             try:
                 tree = ast.parse(content, filename=str(py_path))
             except SyntaxError as e:
                 issues.append(f"SyntaxError on line {e.lineno}: {e.msg}")
 
             # Check 2: Type hint completeness
-            for node in ast.walk(tree):
-                if isinstance(node, ast.FunctionDef) and not node.name.startswith("__"):
-                    if node.returns is None:
-                        issues.append(f"Function '{node.name}' at line {node.lineno} lacks explicit return type annotation")
+            if tree is not None:
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.FunctionDef) and not node.name.startswith("__"):
+                        if node.returns is None:
+                            issues.append(f"Function '{node.name}' at line {node.lineno} lacks explicit return type annotation")
 
             if issues:
                 explanation = (

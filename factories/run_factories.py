@@ -41,6 +41,9 @@ def run_factory_pipeline(input_source: str = "shell") -> dict[str, object]:
     try:
         # Step 1: Stage input source into Factory 2 app space
         target_app_dir = FACTORY_2_DIR / "app" / "src"
+        # Always clean staging workspace to avoid shipping stale artifacts
+        if target_app_dir.exists():
+            shutil.rmtree(target_app_dir)
         target_app_dir.mkdir(parents=True, exist_ok=True)
 
         loaded_files = []
@@ -63,6 +66,13 @@ def run_factory_pipeline(input_source: str = "shell") -> dict[str, object]:
                 loaded_files.append(manifest_src.name)
 
             print(f"[STAGE 1] Loaded {len(loaded_files)} shell & Android source file(s) into Factory 2 workspace")
+        elif input_source == "factory-1":
+            f1_code_dir = FACTORY_1_DIR / "workspace" / "code"
+            if f1_code_dir.exists():
+                for f in f1_code_dir.glob("*.py"):
+                    shutil.copy2(f, target_app_dir / f.name)
+                    loaded_files.append(f.name)
+            print(f"[STAGE 1] Loaded {len(loaded_files)} Factory 1 source file(s) into Factory 2 workspace")
         pipeline_log["stages"]["factory_1_intake"] = "SUCCESS"
 
         # Step 2: Feed to Factory 2 Models for non-mutating debug
@@ -108,6 +118,14 @@ def run_factory_pipeline(input_source: str = "shell") -> dict[str, object]:
         refiner = Factory3Refiner()
         f3_result = refiner.process_and_certify(target_app_dir)
         print(f"[STAGE 3] Factory 3 certification status: {f3_result['status']}")
+
+        # Stage 3 Audit Gate: Fail closed if broker flagged critical findings
+        broker_clean = broker_result.get("clean", False)
+        f3_certified = f3_result.get("status") == "CERTIFIED" and broker_clean
+
+        if not f3_certified:
+            print(f"[STAGE 3-BLOCK] Android refinement failed certification: broker clean={broker_clean}, cert={f3_result.get('status')}")
+            f3_result["status"] = "REJECTED"
 
         # Build and Package Android APK
         print("[STAGE 3] Factory 3: Building and signing Savage Browser Android APK...")

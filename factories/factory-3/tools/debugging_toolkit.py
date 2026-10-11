@@ -71,7 +71,7 @@ class LeakCanaryDetector:
 class StrictModeDetector:
     """Detects disk I/O, network calls, or blocking operations on the main thread."""
 
-    BLOCKING_CALLS_RE = re.compile(r"(?:requests\.(?:get|post)|urllib\.request|open\(.*['\"][wa]['\"]|time\.sleep)\(", re.IGNORECASE)
+    BLOCKING_CALLS_RE = re.compile(r"""(?:requests\.(?:get|post)|urllib\.request|open\s*\([^)]*['"][wa]\w*['"]|time\.sleep)\(""", re.IGNORECASE)
 
     def scan_file(self, file_path: Path) -> List[Dict[str, Any]]:
         findings = []

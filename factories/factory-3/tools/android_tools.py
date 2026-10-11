@@ -80,24 +80,29 @@ class Factory3Refiner:
 
     def process_and_certify(self, source_path: Path | str) -> Dict[str, Any]:
         src = Path(source_path)
-        manifest_sample = {
+        manifest_file = src / "AndroidManifest.xml"
+        manifest_data = {
             "package": "com.savage.soulbrowser",
             "minSdkVersion": 26,
             "targetSdkVersion": 35,
-            "permissions": [
-                "android.permission.INTERNET",
-                "android.permission.ACCESS_NETWORK_STATE",
-            ],
-            "activities": [
-                {
-                    "name": ".MainActivity",
-                    "exported": True,
-                    "intent_filters": [{"action": "android.intent.action.MAIN"}],
-                }
-            ],
+            "permissions": ["android.permission.INTERNET", "android.permission.ACCESS_NETWORK_STATE"],
+            "activities": [{"name": ".MainActivity", "exported": True, "intent_filters": [{"action": "android.intent.action.MAIN"}]}],
         }
 
-        audit_res = self.manifest_auditor.audit_manifest(manifest_sample)
+        # If a real AndroidManifest.xml exists in the target source, parse actual attributes
+        if manifest_file.exists():
+            text = manifest_file.read_text(encoding="utf-8", errors="ignore")
+            pkg_m = re.search(r'package="([^"]+)"', text)
+            if pkg_m:
+                manifest_data["package"] = pkg_m.group(1)
+            min_m = re.search(r'minSdkVersion="(\d+)"', text)
+            if min_m:
+                manifest_data["minSdkVersion"] = int(min_m.group(1))
+            tgt_m = re.search(r'targetSdkVersion="(\d+)"', text)
+            if tgt_m:
+                manifest_data["targetSdkVersion"] = int(tgt_m.group(1))
+
+        audit_res = self.manifest_auditor.audit_manifest(manifest_data)
         res_res = self.resource_refiner.refine_resources(src)
 
         certified = audit_res["passed"] and res_res["passed"]
