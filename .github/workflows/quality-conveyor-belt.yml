@@ -62,11 +62,16 @@ jobs:
       - name: Prettier Format Check
         run: |
           npx prettier --version
-          if ! npm run format:check; then
-            npx prettier --check . 2>&1 | grep '\[warn\]' | sed 's/\[warn\] //' | while read -r f; do
-              echo "::error file=$f,title=Unformatted file::prettier --check failed on $f"
+          set +e
+          OUT=$(npm run format:check 2>&1)
+          RC=$?
+          set -e
+          echo "$OUT"
+          if [ "$RC" -ne 0 ]; then
+            echo "$OUT" | grep -E '\[(warn|error)\]|Error' | head -8 | while IFS= read -r line; do
+              echo "::error::$(printf '%s' "$line" | head -c 240 | tr -d '\r' | sed 's/[%:]//g')"
             done
-            exit 1
+            exit "$RC"
           fi
 
       - name: TypeScript Strict Mode Check
