@@ -1,6 +1,9 @@
--r ../../../backend/requirements.txt
 coverage==7.16.2
 hypothesis==6.168.3
 pytest==9.1.1
 # Starlette 1.7 test-client dependency; no backend runtime requirement changes.
 httpx2==2.13.1
+# NOTE: the previous `-r ../../../backend/requirements.txt` include was removed:
+# backend/requirements.txt does not exist, so the include made every
+# `pip install -r qa.in` fail — hidden until now by a `|| true` mask in CI.
+# When backend owners define its runtime deps properly, restore a real include.
