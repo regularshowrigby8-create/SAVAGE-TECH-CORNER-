@@ -17,3 +17,4 @@ dist/
 
 # Factory 2 transient pipeline staging workspace
 factories/factory-2/debug/staging/
+results.sarif

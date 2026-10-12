@@ -9,3 +9,6 @@ docs/factory/FACTORY.html
 build/
 coverage/
 node_modules/
+
+# CI-generated scan output (gitleaks-action writes this at repo root in CI)
+results.sarif

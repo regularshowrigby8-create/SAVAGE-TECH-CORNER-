@@ -60,20 +60,7 @@ jobs:
           npm run lint
 
       - name: Prettier Format Check
-        run: |
-          set +e
-          echo "node=$(node --version) npm=$(npm --version)"
-          PV=$(npx prettier --version 2>&1); PRC=$?
-          echo "npx prettier --version rc=$PRC out=$PV"
-          OUT=$(npm run format:check 2>&1); RC=$?
-          echo "$OUT" | head -60
-          echo "format:check RC=$RC"
-          if [ "$RC" -ne 0 ]; then
-            echo "$OUT" | head -12 | while IFS= read -r l; do
-              [ -n "$l" ] && echo "::error::$(printf '%s' "$l" | head -c 200 | tr -cd '[:print:] ' | sed 's/%//g')"
-            done
-          fi
-          [ "$PRC" -eq 0 ] && [ "$RC" -eq 0 ]
+        run: npm run format:check
 
       - name: TypeScript Strict Mode Check
         run: npm run typecheck
