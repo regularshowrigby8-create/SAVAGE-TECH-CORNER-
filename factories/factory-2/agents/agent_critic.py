@@ -37,34 +37,56 @@ def adversarial_review(directory: str = ".") -> Dict[str, Any]:
     blocking: List[str] = []
     notes: List[str] = []
 
-    # 1. Audit Correctness Report
+    # 1. Audit Correctness Report (blocking types aligned with the agent's own exit policy)
+    CORRECTNESS_BLOCKING = {"syntax_error", "unreachable_code", "dead_code_function", "incomplete_marker"}
     correctness_findings = _parse_report_findings(reports_dir / "correctness_report.md")
     for f in correctness_findings:
         if isinstance(f, dict):
             k = f.get("type")
-            if k in {"syntax_error", "unreachable_code"}:
+            if k in CORRECTNESS_BLOCKING:
                 blocking.append(f"correctness:{k} in {f.get('file')}:{f.get('line')}")
+            elif k in {"missing_report", "malformed_report", "report_parse_error"}:
+                blocking.append(f"correctness:{k} — report unusable, fail-closed")
 
-    # 2. Audit Security Report
+    # 2. Audit Security Report (full blocking family, not a subset)
+    SECURITY_BLOCKING = {
+        "hardcoded_token", "high_entropy_secret", "insecure_cleartext_traffic",
+        "insecure_ssl_bypass", "insecure_file_access",
+        "insecure_universal_file_access", "insecure_subprocess_shell",
+    }
     security_findings = _parse_report_findings(reports_dir / "security_report.md")
     for f in security_findings:
         if isinstance(f, dict):
             k = f.get("type")
-            if k in {"hardcoded_token", "high_entropy_secret"}:
+            if k in SECURITY_BLOCKING:
                 blocking.append(f"security:{k} detected in {f.get('file')}")
+            elif k in {"missing_report", "malformed_report", "report_parse_error"}:
+                blocking.append(f"security:{k} — report unusable, fail-closed")
 
     # 3. Audit Architecture & Quality Reports
     arch_findings = _parse_report_findings(reports_dir / "architecture_report.md")
     for f in arch_findings:
-        if isinstance(f, dict) and f.get("type") in {"missing_category_directory", "layer_leak"}:
+        if isinstance(f, dict) and f.get("type") in {"missing_category_directory", "layer_leak", "parse_error",
+                                                      "missing_report", "malformed_report", "report_parse_error"}:
             blocking.append(f"architecture:{f.get('type')}")
 
     qual_findings = _parse_report_findings(reports_dir / "quality_report.md")
+    QUALITY_BLOCKING = {"missing_quality_infrastructure", "empty_source_file",
+                        "missing_report", "malformed_report", "report_parse_error"}
     for f in qual_findings:
-        if isinstance(f, dict) and f.get("type") not in {"factory2_pipeline_present", "branch_scoped"}:
+        if isinstance(f, dict) and f.get("type") in QUALITY_BLOCKING:
             blocking.append(f"quality:{f.get('type')}")
 
-    # 4. Anti-Fabrication Invariant: Verify model catalog exists and has > 10 models
+    # 4. Audit Model Debugger Report (its error types block, aligned with manager policy)
+    model_findings = _parse_report_findings(reports_dir / "model_debugger_report.md")
+    for f in model_findings:
+        if isinstance(f, dict) and f.get("type") in {
+            "insufficient_models", "model_catalog_error", "proposal_verification_error",
+            "missing_report", "malformed_report", "report_parse_error",
+        }:
+            blocking.append(f"model_debugger:{f.get('type')}")
+
+    # 5. Anti-Fabrication Invariant: Verify model catalog exists and has > 10 models
     model_cat = root / "models" / "free-models.json"
     if not model_cat.exists():
         blocking.append("missing_model_catalog")

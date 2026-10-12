@@ -26,18 +26,24 @@ const pkg = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, "package.json"), "utf
 
 // Dependencies whose usage is config-file-driven (invisible to import scans).
 // Each entry must name the committed file that references the package.
+// Dependencies whose usage is config-file-driven (no import/script binary
+// visible). Maps dep -> candidate anchor files; the dep is treated as used
+// only when at least one anchor EXISTS in this project. Anything with a
+// script binary in package.json is already covered by the scripts channel.
 const CONFIG_DRIVEN = {
-  typescript: "tsconfig.json",
-  prettier: ".prettierrc / prettier.config",
-  eslint: "eslint.config.js",
-  "lint-staged": ".husky/pre-commit",
-  husky: ".husky/",
-  commitlint: "commitlint.config.js",
-  "@commitlint/cli": "commitlint.config.js",
-  "@commitlint/config-conventional": "commitlint.config.js",
-  "size-limit": "package.json#size-limit",
-  "@size-limit/file": "package.json#size-limit",
-  "@vitest/coverage-v8": "vitest.config.js (coverage.provider = v8)",
+  typescript: ["tsconfig.json"],
+  commitlint: ["commitlint.config.js"],
+  "@commitlint/cli": ["commitlint.config.js"],
+  "@commitlint/config-conventional": ["commitlint.config.js"],
+  "lint-staged": [".husky/pre-commit"],
+  "size-limit": ["package.json"],
+  "@size-limit/file": ["package.json"],
+  "@vitest/coverage-v8": ["vitest.config.js"],
+  // Consumed by tsc itself for ambient node types; never imported directly.
+  "@types/node": ["tsconfig.json"],
+  // Consumed by conveyor stage 3 via node_modules file read (which itself
+  // throws if the package is absent — a hard runtime verification).
+  "axe-core": ["scripts/conveyor_belt.js"],
 };
 
 const IGNORED_DIRS = new Set([
@@ -53,17 +59,18 @@ const IGNORED_DIRS = new Set([
   ".factory",
 ]);
 const SOURCE_EXTS = new Set([".js", ".ts", ".cjs", ".mjs", ".jsx", ".tsx"]);
+// package.json is deliberately NOT in this list: it self-references every
+// declared dependency, which would make the referenced-in-config channel
+// trivially true for everything (a blind spot found during logic review).
 const CONFIG_FILES = [
   "eslint.config.js",
   "vitest.config.js",
   "commitlint.config.js",
-  "knip.json",
   "lighthouserc.json",
   "tsconfig.json",
   ".prettierrc",
   ".prettierrc.json",
   "prettier.config.js",
-  "package.json",
 ];
 
 function collectFiles(dir, exts, out = []) {
@@ -88,14 +95,24 @@ function packageRoot(spec) {
 }
 
 const usedPackages = new Set();
+// Covers: import/export ... from "pkg", require("pkg"), import("pkg"), and
+// bare side-effect imports (no `from`). Comment and JSDoc lines are skipped
+// so an import-looking sentence in prose cannot masquerade as code.
 const importRe =
-  /(?:import|export)[^'"]*?from\s*["']([^"']+)["']|(?:import|require)\s*\(\s*["']([^"']+)["']/g;
+  /(?:import|export)[^'";]*?from\s*["']([^"']+)["']|(?:import|require)\s*\(\s*["']([^"']+)["']|^\s*import\s*["']([^"']+)["']/gm;
 
 // 1. Scan all project source files for imports/requires.
 for (const file of collectFiles(ROOT_DIR, SOURCE_EXTS)) {
-  const text = fs.readFileSync(file, "utf8");
+  const text = fs
+    .readFileSync(file, "utf8")
+    .split("\n")
+    .filter((line) => {
+      const t = line.trim();
+      return !(t.startsWith("//") || t.startsWith("*") || t.startsWith("/*"));
+    })
+    .join("\n");
   for (const match of text.matchAll(importRe)) {
-    const root = packageRoot(match[1] || match[2]);
+    const root = packageRoot(match[1] || match[2] || match[3]);
     if (root) usedPackages.add(root);
   }
 }
@@ -115,11 +132,16 @@ for (const script of Object.values(pkg.scripts ?? {})) {
 
 const findings = [];
 
-// Declared but never used anywhere visible.
+// Declared but never used anywhere visible. Config-driven entries only
+// count when their anchor file actually exists in THIS project — an
+// unconditional allowlist would let a declared-but-dead package skate.
 for (const dep of Object.keys(declared)) {
   const imported = usedPackages.has(dep);
   const configUsed = configText.includes(dep);
-  const allowlisted = Object.prototype.hasOwnProperty.call(CONFIG_DRIVEN, dep);
+  let allowlisted = false;
+  if (Object.prototype.hasOwnProperty.call(CONFIG_DRIVEN, dep)) {
+    allowlisted = CONFIG_DRIVEN[dep].some((anchor) => fs.existsSync(path.join(ROOT_DIR, anchor)));
+  }
   if (!imported && !configUsed && !allowlisted) {
     findings.push(
       `UNUSED DEPENDENCY: "${dep}" is declared but never imported, executed, or referenced by config`,
@@ -133,19 +155,6 @@ for (const dep of usedPackages) {
     findings.push(
       `UNDECLARED IMPORT: "${dep}" is imported by source but missing from package.json`,
     );
-  }
-}
-
-// Allowlist entries must stay honest: flag config-driven claims whose
-// referenced anchor no longer exists.
-for (const [dep, anchor] of Object.entries(CONFIG_DRIVEN)) {
-  const anchorFile = anchor.split(/[ (/]/)[0];
-  if (anchorFile && !fs.existsSync(path.join(ROOT_DIR, anchorFile)) && dep in declared) {
-    if (!anchor.startsWith("package.json")) {
-      findings.push(
-        `STALE ALLOWLIST: "${dep}" claims usage via ${anchor}, but that file does not exist`,
-      );
-    }
   }
 }
 

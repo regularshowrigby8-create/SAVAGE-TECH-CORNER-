@@ -46,10 +46,16 @@ pipelineReport.push(
     if (!fs.existsSync(gitIgnore)) throw new Error("Missing .gitignore");
     if (!fs.existsSync(envExample)) throw new Error("Missing .env.example");
 
-    const gitignoreContent = fs.readFileSync(gitIgnore, "utf8");
-    if (!gitignoreContent.includes(".env") || !gitignoreContent.includes(".coverage")) {
-      throw new Error(".gitignore missing essential protection rules");
-    }
+    const gitignoreLines = fs
+      .readFileSync(gitIgnore, "utf8")
+      .split("\n")
+      .map((l) => l.trim())
+      .filter((l) => l && !l.startsWith("#"));
+    // Line-exact rule match: ".env.example" must not satisfy the ".env" shield.
+    if (!gitignoreLines.includes(".env"))
+      throw new Error(".gitignore missing exact '.env' secret-shield rule");
+    if (!gitignoreLines.includes(".coverage"))
+      throw new Error(".gitignore missing exact '.coverage' rule");
 
     return "Sanitation files intact, secret shielding active.";
   }),

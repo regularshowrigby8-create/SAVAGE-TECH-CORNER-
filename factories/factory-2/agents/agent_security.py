@@ -36,8 +36,11 @@ TOKEN_REGEXES = [
     (r"AKIA[0-9A-Z]{16}", "aws_access_key"),
 ]
 
+# Wide variable-name net for plaintext credential assignments. The entropy
+# floor (>3.0) plus the mock/example allowlist keeps false positives out while
+# catching real leaks under common names (the previous net had only 4 names).
 ASSIGNMENT_REGEX = re.compile(
-    r"""(?i)\b(api_key|secret_key|private_key|auth_token)\s*=\s*['"]([a-zA-Z0-9_\-\.]{16,})['"]"""
+    r"""(?i)\b(api_key|apikey|api_secret|secret_key|private_key|auth_token|access_token|access_key|client_secret|password|passwd|token)\s*=\s*['"]([a-zA-Z0-9_\-\.\$!@%*+]{16,})['"]"""
 )
 
 # Finding types that MUST block a green result. Anything else is advisory:
@@ -68,7 +71,8 @@ def scan_deep_security(directory: str = ".") -> List[Dict[str, Any]]:
     for root, dirs, files in os.walk(directory):
         dirs[:] = [d for d in dirs if d not in excluded_dirs and "report" not in d]
         for fname in files:
-            ext = Path(fname).suffix.lower()
+            # Dotfiles like ".env" have no pathlib suffix; fall back to the name.
+            ext = Path(fname).suffix.lower() or Path(fname).name.lower()
             if ext not in {".py", ".env", ".sh", ".xml", ".java", ".kt"}:
                 continue
             fpath = os.path.join(root, fname)
@@ -80,6 +84,17 @@ def scan_deep_security(directory: str = ".") -> List[Dict[str, Any]]:
                     content = f.read()
             except OSError:
                 continue
+
+            # Bandit-style inline suppression: any line containing `# nosec`
+            # or `//nosec` is masked (chars -> spaces, offsets preserved) so
+            # synthetic fixtures (e.g. truth-table test files) don't trip
+            # scanners. Every suppression stays greppable and auditable.
+            content = re.sub(
+                r"^.*(?:#\s*nosec|//\s*nosec).*$",
+                lambda m: " " * len(m.group(0)),
+                content,
+                flags=re.MULTILINE | re.IGNORECASE,
+            )
 
             # 1. Regex & Pattern Scanner
             for pat, token_type in TOKEN_REGEXES:

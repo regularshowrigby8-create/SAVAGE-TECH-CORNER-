@@ -45,8 +45,13 @@ def review_deep_architecture(directory: str = ".") -> List[Dict[str, Any]]:
                                     "file": str(py_path),
                                     "imported": alias.name,
                                 })
-            except (OSError, SyntaxError):
-                pass
+            except (OSError, SyntaxError) as exc:
+                # An unparseable backend file is a finding, never a silent skip.
+                findings.append({
+                    "type": "parse_error",
+                    "file": str(py_path),
+                    "detail": type(exc).__name__,
+                })
 
     findings.sort(key=lambda x: x.get("type", ""))
     report_file = root / "factory-2" / "reports" / "architecture_report.md"

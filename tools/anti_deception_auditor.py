@@ -60,16 +60,31 @@ def audit_binary_assets(repo_root: Path) -> List[str]:
                 data = f.read()
             with zipfile.ZipFile(io.BytesIO(data)) as zf:
                 for entry_name in zf.namelist():
-                    if any(entry_name.endswith(ext) for ext in ALLOWED_FORBIDDEN_TOKEN_FILES):
-                        continue
                     if entry_name.endswith('.md') or entry_name.endswith('.txt'):
                         continue
                     content = zf.read(entry_name)
-                    for tok in FORBIDDEN_TOKENS:
-                        if tok in content.lower():
+                    hits = [tok for tok in FORBIDDEN_TOKENS if tok in content.lower()]
+                    if not hits:
+                        continue
+                    # Archives redistribute this repo's own sources. An entry
+                    # whose inner path is an allowlisted source file is the
+                    # same content the source scan already permits — allowing
+                    # it by entry name mirrors the source policy. Guard: the
+                    # entry must be decodable UTF-8 text, so a compiled/binary
+                    # payload cannot hide tokens under a blessed filename.
+                    if entry_name in ALLOWED_FORBIDDEN_TOKEN_FILES:
+                        try:
+                            content.decode("utf-8")
+                            continue
+                        except UnicodeDecodeError:
                             violations.append(
-                                f"Binary '{rel}' contains foreign token '{tok.decode()}' inside entry '{entry_name}'"
+                                f"Binary '{rel}' entry '{entry_name}' matches an allowed path but is not UTF-8 source text — refusing to skip"
                             )
+                            continue
+                    for tok in hits:
+                        violations.append(
+                            f"Binary '{rel}' contains foreign token '{tok.decode()}' inside entry '{entry_name}'"
+                        )
         except Exception as e:
             # Corrupted archive or not a zip
             violations.append(f"Could not inspect archive '{rel}': {e}")
@@ -105,7 +120,10 @@ def audit_source_code_authenticity(repo_root: Path) -> List[str]:
             if tok.decode() in content.lower():
                 violations.append(f"Source file '{rel}' contains foreign token '{tok.decode()}'")
 
-        # Check for decorative stubs or empty mock returns
+        # Check for decorative stubs or empty mock returns (python-only: other
+        # extensions are not AST-parseable and would silently skip anyway)
+        if path.suffix.lower() != ".py":
+            continue
         try:
             tree = ast.parse(content, filename=rel)
             for node in ast.walk(tree):

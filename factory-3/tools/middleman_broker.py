@@ -117,18 +117,33 @@ class MiddlemanBroker:
 
         return report
 
-    def dispatch_error_packet(self, target_path: Path, findings: List[Dict[str, Any]], retry_count: int = 1) -> Dict[str, Any]:
-        """Creates a structured ErrorPacket and delivers it to Factory 2 AI agents' inbox with incremented retry count."""
+    def dispatch_error_packet(self, target_path: Path, findings: List[Dict[str, Any]], retry_count: int = 1, max_retries: int = 3) -> Dict[str, Any]:
+        """Creates a schema-conformant ErrorPacket and delivers it to Factory 2 AI agents' inbox with incremented retry count.
+
+        Conforms to tools/schema_validator.validate_error_packet: packet_id, timestamp,
+        target, findings (each with severity/tool/description), retry_count, max_retries, status."""
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         packet_id = f"ERR_PKT_{timestamp}_{target_path.stem}"
+        normalized_findings: List[Dict[str, Any]] = []
+        for finding in findings:
+            normalized = dict(finding)
+            if "severity" not in normalized:
+                normalized["severity"] = "ERROR"
+            if "tool" not in normalized:
+                normalized["tool"] = "Factory3.MiddlemanBroker"
+            if "description" not in normalized:
+                normalized["description"] = normalized.get("message", "no description provided")
+            normalized_findings.append(normalized)
         packet: Dict[str, Any] = {
             "packet_id": packet_id,
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "origin": "Factory-3.MiddlemanBroker",
             "target": str(target_path),
             "retry_count": retry_count,
-            "findings_count": len(findings),
-            "findings": findings,
+            "max_retries": max_retries,
+            "status": "DISPATCHED",
+            "findings_count": len(normalized_findings),
+            "findings": normalized_findings,
             "model_insight_prompt": f"Defects detected in {target_path.name}: " + "; ".join(f.get("message", "") for f in findings),
             "remediation_request": "Factory 2 agents please analyze findings, generate non-mutating proposals, and submit to verifier.",
         }
