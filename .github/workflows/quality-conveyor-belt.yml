@@ -53,9 +53,15 @@ jobs:
         # A failing audit MUST fail the belt — no || true anywhere in this workflow.
         run: npm run audit:security
 
-      - name: Code Quality & Linting
+      - name: ESLint
         run: |
+          node --version
+          npx eslint --version
           npm run lint
+
+      - name: Prettier Format Check
+        run: |
+          npx prettier --version
           npm run format:check
 
       - name: TypeScript Strict Mode Check
