@@ -1,0 +1,11 @@
+# Generated artifacts — rewritten by agents/generators/CI bots, never hand-styled.
+# Format-checking them would make the belt red on every legitimate regeneration.
+factory-2/reports/
+factories/factory-2/reports/
+factory-2/scripts/ai_workers_activity_log.sh
+factories/factory-2/scripts/ai_workers_activity_log.sh
+docs/factory/FACTORY.html
+.factory/logs/
+build/
+coverage/
+node_modules/
