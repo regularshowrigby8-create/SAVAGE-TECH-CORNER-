@@ -1,27 +1,59 @@
 #!/bin/sh
-# Real Gradle Wrapper bootstrap script
+# Real Gradle Wrapper bootstrap script (Gradle 8.7 pinned).
+# Prefers the checked-in gradle-wrapper.jar; downloads with sha256 verification
+# only if it is missing; fails honestly with a clear cause otherwise.
 set -e
 ROOT_DIR=$(cd "$(dirname "$0")" && pwd)
 WRAPPER_DIR="$ROOT_DIR/gradle/wrapper"
 WRAPPER_JAR="$WRAPPER_DIR/gradle-wrapper.jar"
-PROPERTIES="$WRAPPER_DIR/gradle-wrapper.properties"
+WRAPPER_MAIN="org.gradle.wrapper.GradleWrapperMain"
+EXPECTED_SHA256="cb0da6751c2b753a16ac168bb354870ebb1e162e9083f116729cec9c781156b8"
+WRAPPER_URL="https://raw.githubusercontent.com/gradle/gradle/v8.7.0/gradle/wrapper/gradle-wrapper.jar"
 
-# If gradle is already installed on the system, invoke it directly
-if command -v gradle >/dev/null 2>&1; then
-    exec gradle "$@"
+if ! command -v java >/dev/null 2>&1; then
+    echo "ERROR: Java 17+ is required to run this Gradle build but no 'java' executable was found on PATH." >&2
+    exit 1
 fi
 
-# Fallback: Download official Gradle wrapper if missing and curl exists
-if [ ! -f "$WRAPPER_JAR" ] && command -v curl >/dev/null 2>&1; then
-    mkdir -p "$WRAPPER_DIR"
-    curl -sSL -o "$WRAPPER_JAR" "https://raw.githubusercontent.com/gradle/gradle/v8.7.0/gradle/wrapper/gradle-wrapper.jar" 2>/dev/null || true
+DOWNLOADED=0
+if [ ! -f "$WRAPPER_JAR" ]; then
+    if command -v curl >/dev/null 2>&1; then
+        mkdir -p "$WRAPPER_DIR"
+        echo "gradlew: gradle-wrapper.jar missing; downloading official 8.7.0 wrapper..."
+        if ! curl -fsSL -o "$WRAPPER_JAR" "$WRAPPER_URL"; then
+            echo "ERROR: failed to download gradle-wrapper.jar from $WRAPPER_URL" >&2
+            rm -f "$WRAPPER_JAR"
+            exit 1
+        fi
+        DOWNLOADED=1
+    elif command -v gradle >/dev/null 2>&1; then
+        echo "WARN: gradle-wrapper.jar missing and no curl to fetch it; falling back to system gradle (version NOT pinned to 8.7)." >&2
+        exec gradle "$@"
+    else
+        echo "ERROR: gradle/wrapper/gradle-wrapper.jar is missing and cannot be downloaded (no curl)." >&2
+        echo "       Restore it from the repository or install curl." >&2
+        exit 1
+    fi
 fi
 
-if [ -f "$WRAPPER_JAR" ] && command -v java >/dev/null 2>&1; then
-    exec java -jar "$WRAPPER_JAR" "$@"
+# Integrity check, always (guards against accidental or malicious jar replacement).
+ACTUAL_SHA256=""
+if command -v sha256sum >/dev/null 2>&1; then
+    ACTUAL_SHA256=$(sha256sum "$WRAPPER_JAR" | awk '{print $1}')
+elif command -v shasum >/dev/null 2>&1; then
+    ACTUAL_SHA256=$(shasum -a 256 "$WRAPPER_JAR" | awk '{print $1}')
+fi
+if [ -n "$ACTUAL_SHA256" ] && [ "$ACTUAL_SHA256" != "$EXPECTED_SHA256" ]; then
+    echo "ERROR: gradle-wrapper.jar SHA-256 mismatch." >&2
+    echo "       expected: $EXPECTED_SHA256" >&2
+    echo "       actual:   $ACTUAL_SHA256" >&2
+    echo "       Refusing to execute an unverified wrapper jar." >&2
+    exit 1
+fi
+if [ "$DOWNLOADED" = 1 ]; then
+    echo "gradlew: wrapper jar downloaded and sha256-verified ($EXPECTED_SHA256)."
 fi
 
-# If neither gradle nor wrapper jar can run in this environment, fail honestly
-echo "ERROR: Neither Gradle nor Java wrapper could execute task '$*'." >&2
-echo "Please install Java 17 and Gradle, or ensure Android SDK is provisioned." >&2
-exit 1
+# IMPORTANT: the official gradle-wrapper.jar has NO Main-Class manifest attribute —
+# `java -jar` CANNOT launch it. Always invoke via the classpath + explicit main class.
+exec java -cp "$WRAPPER_JAR" "$WRAPPER_MAIN" "$@"
