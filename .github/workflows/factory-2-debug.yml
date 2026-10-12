@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main, production, pipeline]
   schedule:
-    - cron: '0 */6 * * *'  # Every 6 hours — only one job can trigger
+    - cron: "0 */6 * * *" # Every 6 hours — only one job can trigger
   workflow_dispatch:
 
 # ONLY ONE JOB. Never add a second.
@@ -15,14 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: factory-2-single
-      cancel-in-progress: false  # Never cancel running; one job at a time
+      cancel-in-progress: false # Never cancel running; one job at a time
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install Dependencies
         run: |
@@ -31,44 +31,22 @@ jobs:
 
       - name: Check rules
         run: bash .claude/scripts/gates.sh
-      - name: Find dead code
-        run: |
-          echo "=== DEAD CODE SCAN ==="
-          grep -rni 'unused\|unreachable\|dead' --exclude-dir='.git' . || echo "NONE FOUND"
-      - name: Find incomplete code
-        run: |
-          echo "=== INCOMPLETE CODE SCAN ==="
-          grep -rni 'TODO.*INCOMPLETE\|FIXME' --exclude-dir='.git' . || echo "NONE FOUND"
-      - name: Find dead buttons
-        run: |
-          echo "=== DEAD BUTTON SCAN ==="
-          grep -rni 'button\|btn' --exclude-dir='.git' --exclude-dir='node_modules' . | grep -vi 'handler\|onclick\|action' || echo "NONE FOUND"
-      - name: Run agent scripts
+      - name: Run agent scripts (each one fails the job on blocking findings)
         run: |
           python3 factory-2/agents/agent_correctness.py
           python3 factory-2/agents/agent_security.py
           python3 factory-2/agents/agent_architecture.py
           python3 factory-2/agents/agent_quality.py
           python3 factory-2/agents/agent_critic.py
-      - name: Manager review (real evaluation)
+          python3 factory-2/agents/agent_model_debugger.py
+      - name: "Manager review (fail-closed: REJECTED verdict or missing agent reports fail the job)"
         run: python3 factory-2/manager/guidance.py
-      - name: Run criticism checks
+      - name: "Run criticism checks (dead code, stubs, dead UI elements — findings fail the job)"
         run: |
           python3 factory-2/criticism/dead_code_check.py
           python3 factory-2/criticism/incomplete_check.py
           python3 factory-2/criticism/dead_buttons_check.py
-      - name: Report to Linear (optional — requires connected app key)
-        env:
-          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY || 'none' }}
+      - name: External reporting status
         run: |
-          echo "Would create Linear issue via linear__create_issue if key present"
-      - name: Report to Notion (optional — requires connected app key)
-        env:
-          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY || 'none' }}
-        run: |
-          echo "Would update Notion database via notion__create_page if key present"
-      - name: Report to Gmail (optional — requires verified alias)
-        env:
-          GMAIL_USER: ${{ secrets.GMAIL_USER || 'none' }}
-        run: |
-          echo "Would send notification via gmail__send_message if alias verified"
+          echo "::notice::Linear/Notion/Gmail reporting is performed through connected apps with audited comment/page IDs, not simulated here."
+          echo "::notice::The previous 'Would create/update/send' echo-only steps were removed: a step that claims it would report but never does is a false green."

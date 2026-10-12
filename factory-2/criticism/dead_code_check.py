@@ -32,8 +32,10 @@ def scan_real_dead_code() -> List[str]:
                                 called_funcs.add(node.func.id)
                             elif isinstance(node.func, ast.Attribute):
                                 called_funcs.add(node.func.attr)
-                except Exception:
-                    pass
+                except Exception as exc:
+                    # A file that cannot be parsed is a defect, not a skip:
+                    # silently swallowing it would under-report the scan.
+                    findings.append(f"Unparseable python file {fpath}: {type(exc).__name__}: {exc}")
 
     dead = [f"{func} in {defined_funcs[func]}" for func in defined_funcs if func not in called_funcs]
     if dead:
@@ -49,4 +51,10 @@ def scan_real_dead_code() -> List[str]:
 
 
 if __name__ == "__main__":
-    scan_real_dead_code()
+    results = scan_real_dead_code()
+    for result in results:
+        print(f"[DEAD-CODE-CRITICISM] {result}")
+    failures = [r for r in results if "— PASS" not in r]
+    if failures:
+        print(f"[DEAD-CODE-CRITICISM: FAIL] {len(failures)} blocking finding(s).")
+    raise SystemExit(1 if failures else 0)

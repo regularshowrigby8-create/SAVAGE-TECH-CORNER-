@@ -161,21 +161,17 @@
   <body>
     <header>
       <nav aria-label="Sections">
-        <b>SEARCHHH / FACTORY</b><a href="#tools">Tool map</a
-        ><a href="#gaps">Human-owned gaps</a
+        <b>SEARCHHH / FACTORY</b><a href="#tools">Tool map</a><a href="#gaps">Human-owned gaps</a
         ><a href="#next">Next integrations</a>
       </nav>
       <div class="eyebrow">Development automation · not release approval</div>
       <h1>Checks run by tools.<br />Decisions stay accountable.</h1>
       <p>
-        A map of every incorporated engine, its upstream repository and job. A
-        failing check remains a failing check. Nothing here auto-merges, signs
-        an APK or closes a production issue.
+        A map of every incorporated engine, its upstream repository and job. A failing check remains
+        a failing check. Nothing here auto-merges, signs an APK or closes a production issue.
       </p>
       <div class="cards">
-        <div class="card">
-          <strong>@@COUNT@@ engines</strong>Concrete commands in the registry
-        </div>
+        <div class="card"><strong>@@COUNT@@ engines</strong>Concrete commands in the registry</div>
         <div class="card">
           <strong>@@EXECUTED@@ executed</strong>Snapshot @@SOURCE@@: @@COUNTS@@
         </div>
@@ -189,14 +185,13 @@
     <main>
       <h2>The production path</h2>
       <p class="flow">
-        Change → scope plan → isolated checks → bounded reports → review packets
-        → one reviewed repair → rerun → canonical gates → authorized release
+        Change → scope plan → isolated checks → bounded reports → review packets → one reviewed
+        repair → rerun → canonical gates → authorized release
       </p>
       <p class="notice">
-        This dashboard uses the explicitly labeled execution snapshot, not live
-        certification. Tools without snapshot execution are UNVERIFIED here.
-        Actual new results belong in the execution report; native, device and
-        signing gates remain mandatory.
+        This dashboard uses the explicitly labeled execution snapshot, not live certification. Tools
+        without snapshot execution are UNVERIFIED here. Actual new results belong in the execution
+        report; native, device and signing gates remain mandatory.
       </p>
       <section id="tools">
         <h2>Every tool, repository and responsibility</h2>
@@ -220,8 +215,7 @@
         <div class="table">
           <table>
             <caption>
-              All @@COUNT@@ registered engines; wrappers and dependencies are
-              not extra tools.
+              All @@COUNT@@ registered engines; wrappers and dependencies are not extra tools.
             </caption>
             <thead>
               <tr>
@@ -244,48 +238,43 @@
           <article>
             <h3>Meaning and priority</h3>
             <p>
-              Reproduce failures, determine real root causes, preserve aliases,
-              separate false positives from risks, and choose the next bounded
-              ticket.
+              Reproduce failures, determine real root causes, preserve aliases, separate false
+              positives from risks, and choose the next bounded ticket.
             </p>
           </article>
           <article>
             <h3>Correct repairs</h3>
             <p>
-              Design changes, author behavior assertions, review patches,
-              resolve dependency/API migrations and verify durable state. No
-              blind bulk autofix.
+              Design changes, author behavior assertions, review patches, resolve dependency/API
+              migrations and verify durable state. No blind bulk autofix.
             </p>
           </article>
           <article>
             <h3>Native reality</h3>
             <p>
-              Device/WebView bridges, OEM behavior, physical performance,
-              TalkBack usability and visually approved reference screens need
-              native evidence.
+              Device/WebView bridges, OEM behavior, physical performance, TalkBack usability and
+              visually approved reference screens need native evidence.
             </p>
           </article>
           <article>
             <h3>Security and release</h3>
             <p>
-              Interpret secret candidates without publishing values; decide
-              trust boundaries and consent. Maintainers approve keys, protected
-              reviews and production signing.
+              Interpret secret candidates without publishing values; decide trust boundaries and
+              consent. Maintainers approve keys, protected reviews and production signing.
             </p>
           </article>
           <article>
             <h3>Measurement</h3>
             <p>
-              Record at least ten comparable before/after active-effort samples.
-              CI elapsed time or tool counts cannot establish 70–80% savings.
+              Record at least ten comparable before/after active-effort samples. CI elapsed time or
+              tool counts cannot establish 70–80% savings.
             </p>
           </article>
           <article>
             <h3>Unparsed evidence</h3>
             <p>
-              Eight report formats have location parsers. Unsupported reports
-              and malformed evidence remain explicit review work, never empty
-              green results.
+              Eight report formats have location parsers. Unsupported reports and malformed evidence
+              remain explicit review work, never empty green results.
             </p>
           </article>
         </div>
@@ -293,16 +282,15 @@
       <section id="next">
         <h2>Next integrations — not yet implemented</h2>
         <p>
-          These repositories are candidates with concrete prerequisites. They
-          are not counted in the @@COUNT@@ engines.
+          These repositories are candidates with concrete prerequisites. They are not counted in the
+          @@COUNT@@ engines.
         </p>
         <div class="gaps">@@PLANNED@@</div>
       </section>
     </main>
     <footer>
-      No APK approval. No measured productivity percentage. S00 remains open.
-      Repository policies cannot force reader/fork consent or replace protected
-      maintainer review.
+      No APK approval. No measured productivity percentage. S00 remains open. Repository policies
+      cannot force reader/fork consent or replace protected maintainer review.
     </footer>
     <script>
       const search = document.getElementById("search");

@@ -69,7 +69,9 @@ def validate_model_diagnosis(diagnosis: Dict[str, Any]) -> Tuple[bool, List[str]
     return len(errors) == 0, errors
 
 
-if __name__ == "__main__":
+def self_test() -> bool:
+    """Positive AND negative self-tests: a validator that cannot reject an
+    invalid packet would be a rubber stamp, so both directions are proven."""
     test_packet = {
         "packet_id": "ERR_PKT_20261011_040000_test123",
         "timestamp": "2026-10-11T04:00:00Z",
@@ -80,5 +82,54 @@ if __name__ == "__main__":
         "status": "DISPATCHED",
     }
     valid, errs = validate_error_packet(test_packet)
-    assert valid, f"Validation failed: {errs}"
-    print("[CONTRACT-VALIDATOR] Self-test verified cleanly.")
+    if not valid:
+        print(f"[CONTRACT-VALIDATOR: FAIL] Known-good packet rejected: {errs}")
+        return False
+
+    bad_packet = dict(test_packet, retry_count=-1, findings=[{"severity": "BOGUS", "tool": "x"}])
+    bad_valid, _bad_errs = validate_error_packet(bad_packet)
+    if bad_valid:
+        print("[CONTRACT-VALIDATOR: FAIL] Invalid packet was accepted — validator is a rubber stamp.")
+        return False
+
+    bad_diagnosis = {"status": "ok", "model": "m", "engine": "e", "remediations": "not-a-list", "confidence": 1.7}
+    diag_valid, _diag_errs = validate_model_diagnosis(bad_diagnosis)
+    if diag_valid:
+        print("[CONTRACT-VALIDATOR: FAIL] Invalid diagnosis was accepted — validator is a rubber stamp.")
+        return False
+
+    print("[CONTRACT-VALIDATOR] Self-test verified cleanly (accepts valid, rejects invalid).")
+    return True
+
+
+def validate_real_packets() -> tuple[int, int]:
+    """Validate every real serialized ErrorPacket found in the repo."""
+    checked = 0
+    invalid = 0
+    for base in ("factory-2", "factory-3", "factories"):
+        base_path = Path(base)
+        if not base_path.exists():
+            continue
+        for jf in base_path.rglob("*.json"):
+            if "node_modules" in jf.parts or "__pycache__" in jf.parts:
+                continue
+            try:
+                data = json.loads(jf.read_text(encoding="utf-8", errors="ignore"))
+            except (json.JSONDecodeError, OSError):
+                continue
+            if isinstance(data, dict) and "packet_id" in data:
+                checked += 1
+                ok, errors = validate_error_packet(data)
+                if not ok:
+                    invalid += 1
+                    print(f"[CONTRACT-VALIDATOR: FAIL] Real packet {jf} is invalid: {errors}")
+    return checked, invalid
+
+
+if __name__ == "__main__":
+    ok = self_test()
+    checked, invalid = validate_real_packets()
+    print(f"[CONTRACT-VALIDATOR] Real packets validated: {checked} checked, {invalid} invalid.")
+    if not ok or invalid:
+        sys.exit(1)
+    sys.exit(0)

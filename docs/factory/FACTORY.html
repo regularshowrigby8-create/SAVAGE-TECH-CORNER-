@@ -1,0 +1,1411 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Searchhh · Development factory</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0d1722;
+        --panel: #162533;
+        --ink: #ecf4f4;
+        --muted: #b0c3cd;
+        --accent: #79e0c1;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          16px/1.55 system-ui,
+          sans-serif;
+      }
+      header,
+      main,
+      footer {
+        max-width: 1380px;
+        margin: auto;
+        padding: 32px;
+      }
+      header {
+        border-bottom: 1px solid #36505d;
+      }
+      nav {
+        display: flex;
+        gap: 24px;
+        margin-bottom: 32px;
+      }
+      a {
+        color: var(--accent);
+        overflow-wrap: anywhere;
+      }
+      h1 {
+        font-size: clamp(32px, 5vw, 56px);
+        line-height: 1.1;
+        letter-spacing: -2px;
+        margin: 8px 0 20px;
+      }
+      h2 {
+        margin-top: 40px;
+      }
+      small {
+        display: block;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      p {
+        max-width: 920px;
+      }
+      .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        color: var(--accent);
+        font-size: 12px;
+      }
+      .cards,
+      .gaps {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+        gap: 16px;
+      }
+      .card,
+      article {
+        background: var(--panel);
+        padding: 22px;
+        border: 1px solid #36505d;
+        border-radius: 12px;
+      }
+      .card strong {
+        font-size: 30px;
+        display: block;
+      }
+      .flow {
+        padding: 20px;
+        border-left: 4px solid var(--accent);
+        background: var(--panel);
+      }
+      .notice {
+        color: #ffdb9b;
+      }
+      .filters {
+        display: flex;
+        gap: 18px;
+        align-items: end;
+        flex-wrap: wrap;
+      }
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      input,
+      select,
+      button {
+        font: inherit;
+        padding: 10px 14px;
+        border: 1px solid #78949f;
+        border-radius: 6px;
+        background: #142431;
+        color: var(--ink);
+      }
+      button {
+        cursor: pointer;
+        background: #22624f;
+      }
+      button:focus-visible,
+      input:focus-visible,
+      select:focus-visible,
+      a:focus-visible {
+        outline: 3px solid #ffdc8e;
+        outline-offset: 3px;
+      }
+      .table {
+        overflow: auto;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 14px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 16px 12px;
+        border-bottom: 1px solid #36505d;
+        vertical-align: top;
+      }
+      thead {
+        background: var(--panel);
+      }
+      td:nth-child(3) {
+        min-width: 240px;
+      }
+      th[scope="row"] {
+        min-width: 145px;
+      }
+      tr[hidden] {
+        display: none;
+      }
+      footer {
+        color: var(--muted);
+      }
+      code {
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <nav aria-label="Sections">
+        <b>SEARCHHH / FACTORY</b><a href="#tools">Tool map</a><a href="#gaps">Human-owned gaps</a
+        ><a href="#next">Next integrations</a>
+      </nav>
+      <div class="eyebrow">Development automation · not release approval</div>
+      <h1>Checks run by tools.<br />Decisions stay accountable.</h1>
+      <p>
+        A map of every incorporated engine, its upstream repository and job. A failing check remains
+        a failing check. Nothing here auto-merges, signs an APK or closes a production issue.
+      </p>
+      <div class="cards">
+        <div class="card"><strong>72 engines</strong>Concrete commands in the registry</div>
+        <div class="card"><strong>0 executed</strong>Snapshot bed97d8: 72 UNVERIFIED</div>
+        <div class="card">
+          <strong>70–80% target</strong>Routine active effort saved<small
+            >NOT MEASURED — not a completion meter</small
+          >
+        </div>
+      </div>
+    </header>
+    <main>
+      <h2>The production path</h2>
+      <p class="flow">
+        Change → scope plan → isolated checks → bounded reports → review packets → one reviewed
+        repair → rerun → canonical gates → authorized release
+      </p>
+      <p class="notice">
+        This dashboard uses the explicitly labeled execution snapshot, not live certification. Tools
+        without snapshot execution are UNVERIFIED here. Actual new results belong in the execution
+        report; native, device and signing gates remain mandatory.
+      </p>
+      <section id="tools">
+        <h2>Every tool, repository and responsibility</h2>
+        <div class="filters">
+          <label for="search"
+            >Find a tool or responsibility<input
+              id="search"
+              type="search"
+              placeholder="e.g. security, Kotlin, accessibility" /></label
+          ><label for="state"
+            >Snapshot result<select id="state">
+              <option value="">All results</option>
+              <option>PASS</option>
+              <option>FAIL</option>
+              <option>REPORTED</option>
+              <option>UNVERIFIED</option>
+            </select></label
+          ><button id="reset" type="button">Reset filters</button>
+        </div>
+        <p id="count" aria-live="polite"></p>
+        <div class="table">
+          <table>
+            <caption>
+              All 72 registered engines; wrappers and dependencies are not extra tools.
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Engine</th>
+                <th scope="col">Handles</th>
+                <th scope="col">Source repository</th>
+                <th scope="col">When selected</th>
+                <th scope="col">Evidence scope</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">Git</th>
+                <td>Reject whitespace errors in the current patch</td>
+                <td>
+                  <a href="https://github.com/git/git" target="_blank" rel="noopener noreferrer"
+                    >https://github.com/git/git</a
+                  >
+                </td>
+                <td>core, fast</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">GitHub CLI</th>
+                <td>Collect actual same-branch CI state without publishing</td>
+                <td>
+                  <a href="https://github.com/cli/cli" target="_blank" rel="noopener noreferrer"
+                    >https://github.com/cli/cli</a
+                  >
+                </td>
+                <td>evidence</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">ripgrep</th>
+                <td>Locate WebView security-sensitive call sites</td>
+                <td>
+                  <a
+                    href="https://github.com/BurntSushi/ripgrep"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/BurntSushi/ripgrep</a
+                  >
+                </td>
+                <td>triage</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">Gradle</th>
+                <td>Inspect actual resolved app runtime dependencies</td>
+                <td>
+                  <a
+                    href="https://github.com/gradle/gradle"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/gradle/gradle</a
+                  >
+                </td>
+                <td>android</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">Android Lint</th>
+                <td>Run app/library debug and app release static gates</td>
+                <td>
+                  <a
+                    href="https://android.googlesource.com/platform/tools/base/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://android.googlesource.com/platform/tools/base/</a
+                  >
+                </td>
+                <td>android</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">Detekt</th>
+                <td>Preserve strict Kotlin complexity/error-handling gate</td>
+                <td>
+                  <a
+                    href="https://github.com/detekt/detekt"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/detekt/detekt</a
+                  >
+                </td>
+                <td>android</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">ktlint</th>
+                <td>Check Kotlin formatting without rewriting source</td>
+                <td>
+                  <a
+                    href="https://github.com/ktlint/ktlint"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/ktlint/ktlint</a
+                  >
+                </td>
+                <td>android</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">R8</th>
+                <td>Verify release shrinking and runtime exclusions without APK assembly</td>
+                <td>
+                  <a
+                    href="https://r8.googlesource.com/r8/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://r8.googlesource.com/r8/</a
+                  >
+                </td>
+                <td>android</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">Android Debug Bridge</th>
+                <td>Report real attached devices; absence cannot certify device tests</td>
+                <td>
+                  <a
+                    href="https://android.googlesource.com/platform/packages/modules/adb/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://android.googlesource.com/platform/packages/modules/adb/</a
+                  >
+                </td>
+                <td>device</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">APK Signer</th>
+                <td>Inspect actual APK signature without signing</td>
+                <td>
+                  <a
+                    href="https://android.googlesource.com/platform/tools/apksig/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://android.googlesource.com/platform/tools/apksig/</a
+                  >
+                </td>
+                <td>apk-inspection</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">APK Analyzer</th>
+                <td>Inspect actual decoded manifest</td>
+                <td>
+                  <a
+                    href="https://android.googlesource.com/platform/tools/base/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://android.googlesource.com/platform/tools/base/</a
+                  >
+                </td>
+                <td>apk-inspection</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">AAPT2</th>
+                <td>Inspect APK package/resource metadata</td>
+                <td>
+                  <a
+                    href="https://android.googlesource.com/platform/frameworks/base/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://android.googlesource.com/platform/frameworks/base/</a
+                  >
+                </td>
+                <td>apk-inspection</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">ruff</th>
+                <td>Fast Python defect/style triage</td>
+                <td>
+                  <a
+                    href="https://github.com/astral-sh/ruff"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/astral-sh/ruff</a
+                  >
+                </td>
+                <td>python, fast</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">pylint</th>
+                <td>Semantic checks on factory orchestration</td>
+                <td>
+                  <a
+                    href="https://github.com/pylint-dev/pylint"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/pylint-dev/pylint</a
+                  >
+                </td>
+                <td>python</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">mypy</th>
+                <td>Type-check orchestration boundaries</td>
+                <td>
+                  <a href="https://github.com/python/mypy" target="_blank" rel="noopener noreferrer"
+                    >https://github.com/python/mypy</a
+                  >
+                </td>
+                <td>python</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">pyright</th>
+                <td>Independent type/data-flow checks</td>
+                <td>
+                  <a
+                    href="https://github.com/microsoft/pyright"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/microsoft/pyright</a
+                  >
+                </td>
+                <td>python</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">bandit</th>
+                <td>Python security patterns</td>
+                <td>
+                  <a
+                    href="https://github.com/PyCQA/bandit"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/PyCQA/bandit</a
+                  >
+                </td>
+                <td>security, python</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">semgrep</th>
+                <td>Local security rules, no cloud scan</td>
+                <td>
+                  <a
+                    href="https://github.com/semgrep/semgrep"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/semgrep/semgrep</a
+                  >
+                </td>
+                <td>security</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">pip-audit</th>
+                <td>Audit declared backend Python dependencies</td>
+                <td>
+                  <a
+                    href="https://github.com/pypa/pip-audit"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/pypa/pip-audit</a
+                  >
+                </td>
+                <td>supply-chain</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">deptry</th>
+                <td>Find missing/unused backend requirement declarations</td>
+                <td>
+                  <a
+                    href="https://github.com/osprey-oss/deptry"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/osprey-oss/deptry</a
+                  >
+                </td>
+                <td>python</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">vulture</th>
+                <td>Find unreachable Python candidates for review</td>
+                <td>
+                  <a
+                    href="https://github.com/jendrikseipp/vulture"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/jendrikseipp/vulture</a
+                  >
+                </td>
+                <td>python</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">xenon</th>
+                <td>Bound backend cyclomatic complexity</td>
+                <td>
+                  <a href="https://github.com/rubik/xenon" target="_blank" rel="noopener noreferrer"
+                    >https://github.com/rubik/xenon</a
+                  >
+                </td>
+                <td>python</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">interrogate</th>
+                <td>Check factory public documentation coverage</td>
+                <td>
+                  <a
+                    href="https://github.com/econchick/interrogate"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/econchick/interrogate</a
+                  >
+                </td>
+                <td>docs</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">pytest</th>
+                <td>Execute real backend tests</td>
+                <td>
+                  <a
+                    href="https://github.com/pytest-dev/pytest"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/pytest-dev/pytest</a
+                  >
+                </td>
+                <td>tests</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">coverage</th>
+                <td>Measure existing quality test coverage</td>
+                <td>
+                  <a
+                    href="https://github.com/coveragepy/coveragepy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/coveragepy/coveragepy</a
+                  >
+                </td>
+                <td>tests</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">Hypothesis</th>
+                <td>Generate adversarial factory safety inputs</td>
+                <td>
+                  <a
+                    href="https://github.com/HypothesisWorks/hypothesis"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/HypothesisWorks/hypothesis</a
+                  >
+                </td>
+                <td>tests</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">mutmut</th>
+                <td>Mutation-test a scratch copy of actual safety logic</td>
+                <td>
+                  <a
+                    href="https://github.com/boxed/mutmut"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/boxed/mutmut</a
+                  >
+                </td>
+                <td>mutation</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">codespell</th>
+                <td>Find actual English typos without replacing text</td>
+                <td>
+                  <a
+                    href="https://github.com/codespell-project/codespell"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/codespell-project/codespell</a
+                  >
+                </td>
+                <td>docs</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">yamllint</th>
+                <td>Validate workflow/Compose YAML strictly</td>
+                <td>
+                  <a
+                    href="https://github.com/adrienverge/yamllint"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/adrienverge/yamllint</a
+                  >
+                </td>
+                <td>ci, fast</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">check-jsonschema</th>
+                <td>Validate concrete factory registry schema</td>
+                <td>
+                  <a
+                    href="https://github.com/python-jsonschema/check-jsonschema"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/python-jsonschema/check-jsonschema</a
+                  >
+                </td>
+                <td>core, fast</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">reuse</th>
+                <td>Audit source license/SPDX completeness</td>
+                <td>
+                  <a
+                    href="https://github.com/fsfe/reuse-tool"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/fsfe/reuse-tool</a
+                  >
+                </td>
+                <td>supply-chain</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">pip-licenses</th>
+                <td>Inventory installed backend QA dependency licenses</td>
+                <td>
+                  <a
+                    href="https://github.com/raimon49/pip-licenses"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/raimon49/pip-licenses</a
+                  >
+                </td>
+                <td>supply-chain</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">cyclonedx-py</th>
+                <td>Generate declared-requirement SBOM (not full APK SBOM)</td>
+                <td>
+                  <a
+                    href="https://github.com/CycloneDX/cyclonedx-python"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/CycloneDX/cyclonedx-python</a
+                  >
+                </td>
+                <td>supply-chain</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">detect-secrets</th>
+                <td>Hash-only working-tree secret candidates</td>
+                <td>
+                  <a
+                    href="https://github.com/Yelp/detect-secrets"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/Yelp/detect-secrets</a
+                  >
+                </td>
+                <td>security</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">zizmor</th>
+                <td>Audit workflow permissions/injection offline</td>
+                <td>
+                  <a
+                    href="https://github.com/zizmorcore/zizmor"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/zizmorcore/zizmor</a
+                  >
+                </td>
+                <td>ci, security</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">shellcheck</th>
+                <td>Check actual CI shell scripts</td>
+                <td>
+                  <a
+                    href="https://github.com/koalaman/shellcheck"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/koalaman/shellcheck</a
+                  >
+                </td>
+                <td>ci, fast</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">shfmt</th>
+                <td>Show shell formatting diff without writing</td>
+                <td>
+                  <a href="https://github.com/mvdan/sh" target="_blank" rel="noopener noreferrer"
+                    >https://github.com/mvdan/sh</a
+                  >
+                </td>
+                <td>ci</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">actionlint</th>
+                <td>Check workflow expressions and structure</td>
+                <td>
+                  <a
+                    href="https://github.com/rhysd/actionlint"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/rhysd/actionlint</a
+                  >
+                </td>
+                <td>ci, fast</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">hadolint</th>
+                <td>Check backend Dockerfile best practices</td>
+                <td>
+                  <a
+                    href="https://github.com/hadolint/hadolint"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/hadolint/hadolint</a
+                  >
+                </td>
+                <td>containers</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">eslint</th>
+                <td>Check browser assets and test JS without fixes</td>
+                <td>
+                  <a
+                    href="https://github.com/eslint/eslint"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/eslint/eslint</a
+                  >
+                </td>
+                <td>javascript</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">prettier</th>
+                <td>Check factory docs/config formatting without writes</td>
+                <td>
+                  <a
+                    href="https://github.com/prettier/prettier"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/prettier/prettier</a
+                  >
+                </td>
+                <td>docs, fast</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">jest</th>
+                <td>Execute existing translation/browser JS tests</td>
+                <td>
+                  <a href="https://github.com/jestjs/jest" target="_blank" rel="noopener noreferrer"
+                    >https://github.com/jestjs/jest</a
+                  >
+                </td>
+                <td>tests</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">jscpd</th>
+                <td>Locate cross-file duplication before extracting helpers</td>
+                <td>
+                  <a
+                    href="https://github.com/kucherenko/jscpd"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/kucherenko/jscpd</a
+                  >
+                </td>
+                <td>triage</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">knip</th>
+                <td>Audit JS test entrypoints and dependency use</td>
+                <td>
+                  <a
+                    href="https://github.com/webpro-nl/knip"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/webpro-nl/knip</a
+                  >
+                </td>
+                <td>javascript</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">depcruise</th>
+                <td>Enforce JS test dependency boundaries</td>
+                <td>
+                  <a
+                    href="https://github.com/sverweij/dependency-cruiser"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/sverweij/dependency-cruiser</a
+                  >
+                </td>
+                <td>javascript</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">npm-check-updates</th>
+                <td>Report JS dependency upgrades without applying them</td>
+                <td>
+                  <a
+                    href="https://github.com/raineorshine/npm-check-updates"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/raineorshine/npm-check-updates</a
+                  >
+                </td>
+                <td>supply-chain</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">markdownlint-cli2</th>
+                <td>Check work instructions and factory docs</td>
+                <td>
+                  <a
+                    href="https://github.com/DavidAnson/markdownlint-cli2"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/DavidAnson/markdownlint-cli2</a
+                  >
+                </td>
+                <td>docs</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">markdown-link-check</th>
+                <td>Check factory documentation links with bounded timeout</td>
+                <td>
+                  <a
+                    href="https://github.com/tcort/markdown-link-check"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/tcort/markdown-link-check</a
+                  >
+                </td>
+                <td>docs</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">html-validate</th>
+                <td>Validate actual browser HTML templates</td>
+                <td>
+                  <a
+                    href="https://gitlab.com/html-validate/html-validate"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://gitlab.com/html-validate/html-validate</a
+                  >
+                </td>
+                <td>web-assets</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">stylelint</th>
+                <td>Validate actual reader/browser CSS</td>
+                <td>
+                  <a
+                    href="https://github.com/stylelint/stylelint"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/stylelint/stylelint</a
+                  >
+                </td>
+                <td>web-assets</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">retire</th>
+                <td>Audit vendored browser JS for vulnerable libraries</td>
+                <td>
+                  <a
+                    href="https://github.com/RetireJS/retire.js"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/RetireJS/retire.js</a
+                  >
+                </td>
+                <td>security</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">osv-scanner</th>
+                <td>Audit dependency metadata against OSV</td>
+                <td>
+                  <a
+                    href="https://github.com/google/osv-scanner"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/google/osv-scanner</a
+                  >
+                </td>
+                <td>supply-chain</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">syft</th>
+                <td>Generate source-directory SBOM for dependency review</td>
+                <td>
+                  <a
+                    href="https://github.com/anchore/syft"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/anchore/syft</a
+                  >
+                </td>
+                <td>supply-chain</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">trivy</th>
+                <td>Audit container configuration security</td>
+                <td>
+                  <a
+                    href="https://github.com/aquasecurity/trivy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/aquasecurity/trivy</a
+                  >
+                </td>
+                <td>containers</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">gitleaks</th>
+                <td>Audit committed history with redacted secret output</td>
+                <td>
+                  <a
+                    href="https://github.com/gitleaks/gitleaks"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/gitleaks/gitleaks</a
+                  >
+                </td>
+                <td>security</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">checkov</th>
+                <td>Audit Dockerfile security independently of style</td>
+                <td>
+                  <a
+                    href="https://github.com/bridgecrewio/checkov"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/bridgecrewio/checkov</a
+                  >
+                </td>
+                <td>containers</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">Docker Compose</th>
+                <td>Validate real backend service wiring without starting services</td>
+                <td>
+                  <a
+                    href="https://github.com/docker/compose"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/docker/compose</a
+                  >
+                </td>
+                <td>containers</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">ast-grep</th>
+                <td>Find Kotlin SSL bypass candidates using syntax, not text replacement</td>
+                <td>
+                  <a
+                    href="https://github.com/ast-grep/ast-grep"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/ast-grep/ast-grep</a
+                  >
+                </td>
+                <td>triage, security</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">Playwright</th>
+                <td>
+                  Real Chromium control actions on repository HTML and factory dashboard; not
+                  Android WebView certification
+                </td>
+                <td>
+                  <a
+                    href="https://github.com/microsoft/playwright"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/microsoft/playwright</a
+                  >
+                </td>
+                <td>browser, tests</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">axe-core</th>
+                <td>
+                  Accessibility violations in rendered repository HTML; manual/native accessibility
+                  remains required
+                </td>
+                <td>
+                  <a
+                    href="https://github.com/dequelabs/axe-core"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/dequelabs/axe-core</a
+                  >
+                </td>
+                <td>browser, accessibility</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">pipdeptree</th>
+                <td>Detect conflicts and cycles in the real isolated backend QA environment</td>
+                <td>
+                  <a
+                    href="https://github.com/tox-dev/pipdeptree"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/tox-dev/pipdeptree</a
+                  >
+                </td>
+                <td>python, supply-chain</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">OpenAPI Spec Validator</th>
+                <td>
+                  Validate the actual FastAPI-generated schema without starting services or claiming
+                  endpoint behavior
+                </td>
+                <td>
+                  <a
+                    href="https://github.com/python-openapi/openapi-spec-validator"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/python-openapi/openapi-spec-validator</a
+                  >
+                </td>
+                <td>api, python</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">Taplo</th>
+                <td>Validate Gradle version-catalog TOML syntax without requiring Java</td>
+                <td>
+                  <a
+                    href="https://github.com/tamasfe/taplo"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/tamasfe/taplo</a
+                  >
+                </td>
+                <td>android-config, fast</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">npm audit</th>
+                <td>Audit locked development npm dependencies; no automatic upgrades</td>
+                <td>
+                  <a href="https://github.com/npm/cli" target="_blank" rel="noopener noreferrer"
+                    >https://github.com/npm/cli</a
+                  >
+                </td>
+                <td>supply-chain</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">Searchhh app security policy</th>
+                <td>
+                  Enforce repeatable product-owned HTTPS, WebView, TLS, file-access,
+                  exported-surface and credential policy contracts
+                </td>
+                <td>
+                  <a
+                    href="https://developer.android.com/privacy-and-security/security-best-practices"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://developer.android.com/privacy-and-security/security-best-practices</a
+                  >
+                </td>
+                <td>app-security, security, webview, android, release</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">Searchhh UI contract policy</th>
+                <td>
+                  Verify implemented routes use the central menu registry, theme boundary and stable
+                  semantic tags
+                </td>
+                <td>
+                  <a
+                    href="https://developer.android.com/develop/ui/compose"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://developer.android.com/develop/ui/compose</a
+                  >
+                </td>
+                <td>android, ui, tests, accessibility</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">Stripped Android SDK importer</th>
+                <td>
+                  Locate or safely import a local SDK and fail closed when the Android build
+                  environment is incomplete
+                </td>
+                <td>
+                  <a
+                    href="https://developer.android.com/tools/sdkmanager"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://developer.android.com/tools/sdkmanager</a
+                  >
+                </td>
+                <td>android, environment, core</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">Finding lifecycle validator</th>
+                <td>
+                  Enforce bounded OPEN-to-VERIFIED repair transitions and preserve recheck evidence
+                </td>
+                <td>
+                  <a
+                    href="https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues</a
+                  >
+                </td>
+                <td>core, evidence, tests</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">Production handoff chain</th>
+                <td>
+                  Connect registered checks through fail-closed source-to-release stage handoffs
+                </td>
+                <td>
+                  <a
+                    href="https://docs.github.com/en/actions/using-workflows/about-workflows"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://docs.github.com/en/actions/using-workflows/about-workflows</a
+                  >
+                </td>
+                <td>core, evidence, android, device, release</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">Mixed-language router</th>
+                <td>
+                  Detect repository languages and select compatible factory profiles without
+                  claiming execution
+                </td>
+                <td>
+                  <a
+                    href="https://github.com/semgrep/semgrep"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/semgrep/semgrep</a
+                  >
+                </td>
+                <td>core, evidence, python, javascript, android, browser, security</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">Gradle quality remediation queue</th>
+                <td>Normalize actual KtLint and Detekt reports into bounded repair packets</td>
+                <td>
+                  <a
+                    href="https://github.com/detekt/detekt"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/detekt/detekt</a
+                  >
+                </td>
+                <td>android, evidence, tests</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+              <tr data-state="UNVERIFIED">
+                <th scope="row">Unfinished-code bounded repair</th>
+                <td>
+                  Apply only explicit, mechanically safe Unit repairs for empty Kotlin callbacks;
+                  semantic findings remain open
+                </td>
+                <td>
+                  <a
+                    href="https://github.com/SEARCHHH/unfinished-repair"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >https://github.com/SEARCHHH/unfinished-repair</a
+                  >
+                </td>
+                <td>core, fast</td>
+                <td>UNVERIFIED<small>Snapshot bed97d8</small></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section id="gaps">
+        <h2>What the agent and reviewer still handle</h2>
+        <div class="gaps">
+          <article>
+            <h3>Meaning and priority</h3>
+            <p>
+              Reproduce failures, determine real root causes, preserve aliases, separate false
+              positives from risks, and choose the next bounded ticket.
+            </p>
+          </article>
+          <article>
+            <h3>Correct repairs</h3>
+            <p>
+              Design changes, author behavior assertions, review patches, resolve dependency/API
+              migrations and verify durable state. No blind bulk autofix.
+            </p>
+          </article>
+          <article>
+            <h3>Native reality</h3>
+            <p>
+              Device/WebView bridges, OEM behavior, physical performance, TalkBack usability and
+              visually approved reference screens need native evidence.
+            </p>
+          </article>
+          <article>
+            <h3>Security and release</h3>
+            <p>
+              Interpret secret candidates without publishing values; decide trust boundaries and
+              consent. Maintainers approve keys, protected reviews and production signing.
+            </p>
+          </article>
+          <article>
+            <h3>Measurement</h3>
+            <p>
+              Record at least ten comparable before/after active-effort samples. CI elapsed time or
+              tool counts cannot establish 70–80% savings.
+            </p>
+          </article>
+          <article>
+            <h3>Unparsed evidence</h3>
+            <p>
+              Eight report formats have location parsers. Unsupported reports and malformed evidence
+              remain explicit review work, never empty green results.
+            </p>
+          </article>
+        </div>
+      </section>
+      <section id="next">
+        <h2>Next integrations — not yet implemented</h2>
+        <p>
+          These repositories are candidates with concrete prerequisites. They are not counted in the
+          72 engines.
+        </p>
+        <div class="gaps">
+          <article>
+            <h3>CodeQL <small>PLANNED ONLY</small></h3>
+            <p>Interprocedural Kotlin/Java/Python/JS security analysis</p>
+            <p>
+              <b>Gap:</b> Build extraction, query scope, policy and resource budget; not enabled
+            </p>
+            <a href="https://github.com/github/codeql">Upstream repository</a>
+          </article>
+          <article>
+            <h3>Schemathesis <small>PLANNED ONLY</small></h3>
+            <p>Generated API request/response property tests</p>
+            <p>
+              <b>Gap:</b> Isolated real PostgreSQL/Redis lifecycle and destructive-operation
+              boundaries
+            </p>
+            <a href="https://github.com/schemathesis/schemathesis">Upstream repository</a>
+          </article>
+          <article>
+            <h3>Maestro <small>PLANNED ONLY</small></h3>
+            <p>Device start/stop/save/navigation journeys</p>
+            <p>
+              <b>Gap:</b> Real test APK/emulator, semantic selectors and durable-state assertions
+            </p>
+            <a href="https://github.com/mobile-dev-inc/maestro">Upstream repository</a>
+          </article>
+          <article>
+            <h3>Roborazzi <small>PLANNED ONLY</small></h3>
+            <p>Native screen image regression</p>
+            <p><b>Gap:</b> Reachable screens, deterministic fixtures and reviewed references</p>
+            <a href="https://github.com/takahirom/roborazzi">Upstream repository</a>
+          </article>
+          <article>
+            <h3>Macrobenchmark <small>PLANNED ONLY</small></h3>
+            <p>Android startup and scrolling performance</p>
+            <p>
+              <b>Gap:</b> Release-like internal build, physical-device sampling and agreed budgets
+            </p>
+            <a href="https://android.googlesource.com/platform/frameworks/support/"
+              >Upstream repository</a
+            >
+          </article>
+          <article>
+            <h3>Perfetto <small>PLANNED ONLY</small></h3>
+            <p>CPU, memory, scheduling and frame traces</p>
+            <p>
+              <b>Gap:</b> Repeatable device scenarios and interpretation; not a pass/fail budget by
+              itself
+            </p>
+            <a href="https://android.googlesource.com/platform/external/perfetto/"
+              >Upstream repository</a
+            >
+          </article>
+          <article>
+            <h3>OWASP ZAP <small>PLANNED ONLY</small></h3>
+            <p>DAST against a disposable owned backend</p>
+            <p><b>Gap:</b> Authenticated fixture, allowlisted target and no third-party crawling</p>
+            <a href="https://github.com/zaproxy/zaproxy">Upstream repository</a>
+          </article>
+          <article>
+            <h3>k6 <small>PLANNED ONLY</small></h3>
+            <p>Backend concurrency, latency and error-rate checks</p>
+            <p>
+              <b>Gap:</b> Representative workloads, resource budget and safe dedicated test services
+            </p>
+            <a href="https://github.com/grafana/k6">Upstream repository</a>
+          </article>
+          <article>
+            <h3>Renovate <small>PLANNED ONLY</small></h3>
+            <p>Reviewed dependency update proposals</p>
+            <p>
+              <b>Gap:</b> Maintainer GitHub App authorization and PR policy; no activation or
+              auto-merge
+            </p>
+            <a href="https://github.com/renovatebot/renovate">Upstream repository</a>
+          </article>
+        </div>
+      </section>
+    </main>
+    <footer>
+      No APK approval. No measured productivity percentage. S00 remains open. Repository policies
+      cannot force reader/fork consent or replace protected maintainer review.
+    </footer>
+    <script>
+      const search = document.getElementById("search");
+      const state = document.getElementById("state");
+      const rows = Array.from(document.querySelectorAll("tbody tr"));
+      function filter() {
+        const query = search.value.trim().toLowerCase();
+        let visible = 0;
+        for (const row of rows) {
+          row.hidden = !(
+            row.textContent.toLowerCase().includes(query) &&
+            (!state.value || row.dataset.state === state.value)
+          );
+          if (!row.hidden) visible++;
+        }
+        document.getElementById("count").textContent =
+          visible + " of " + rows.length + " tools shown";
+      }
+      search.addEventListener("input", filter);
+      state.addEventListener("change", filter);
+      document.getElementById("reset").addEventListener("click", () => {
+        search.value = "";
+        state.value = "";
+        filter();
+        search.focus();
+      });
+      filter();
+    </script>
+  </body>
+</html>

@@ -15,16 +15,19 @@ All code contributions must adhere to the **Global Charter** (`docs/factory/CHAR
 ## 2. Local Development & Verification Workflow
 
 1. **Verify Python Syntax**:
+
    ```bash
    python3 -m py_compile $(git ls-files "*.py")
    ```
 
 2. **Execute Full Test Suite**:
+
    ```bash
    python3 test_entire_system.py
    ```
 
 3. **Run Deterministic Factory Gates**:
+
    ```bash
    bash .claude/scripts/gates.sh
    ```

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import ast
 import os
+import sys
 from pathlib import Path
 from typing import Any, Dict, List, Set
 
@@ -148,3 +149,10 @@ def analyze_correctness(directory: str = ".") -> List[Dict[str, Any]]:
 if __name__ == "__main__":
     results = analyze_correctness()
     print(f"[AGENT-CORRECTNESS] Scanned repo. Findings: {len(results)}")
+    if results:
+        for finding in results[:25]:
+            print(f"  DEFECT - {finding}")
+        print("[AGENT-CORRECTNESS: FAIL] Defects must be repaired before this agent reports green.")
+    else:
+        print("[AGENT-CORRECTNESS: PASS] Zero correctness defects detected.")
+    sys.exit(1 if results else 0)

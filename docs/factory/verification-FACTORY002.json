@@ -1,0 +1,305 @@
+{
+  "label": "SYNTHESIZED BASELINE \u2014 no committed execution evidence existed; every tool marked UNVERIFIED. Generated 2026-10-12 to restore the dashboard contract honestly (no claimed runs).",
+  "source_commit": "bed97d88312a4bbe4b1e86ed2f68ce2e617f5512",
+  "executed_count": 0,
+  "counts": {
+    "UNVERIFIED": 72
+  },
+  "pages": [
+    {
+      "page": 1,
+      "payload": {
+        "records": [
+          {
+            "id": "git",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "gh",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "ripgrep",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "gradle",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "android-lint",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "detekt",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "ktlint",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "r8",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "adb",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "apksigner",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "apkanalyzer",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "aapt2",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "ruff",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "pylint",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "mypy",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "pyright",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "bandit",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "semgrep",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "pip-audit",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "deptry",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "vulture",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "xenon",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "interrogate",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "pytest",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "coverage",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "hypothesis",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "mutmut",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "codespell",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "yamllint",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "check-jsonschema",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "reuse",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "pip-licenses",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "cyclonedx-py",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "detect-secrets",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "zizmor",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "shellcheck",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "shfmt",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "actionlint",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "hadolint",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "eslint",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "prettier",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "jest",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "jscpd",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "knip",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "dependency-cruiser",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "npm-check-updates",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "markdownlint",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "markdown-link-check",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "html-validate",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "stylelint",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "retire",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "osv-scanner",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "syft",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "trivy",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "gitleaks",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "checkov",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "docker-compose",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "ast-grep",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "playwright",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "axe-core",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "pipdeptree",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "openapi-spec-validator",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "taplo",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "npm-audit",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "app-security-policy",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "ui-contract-policy",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "import-android-sdk",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "finding-lifecycle",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "production-chain",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "language-router",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "gradle-quality-queue",
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "unfinished-repair",
+            "status": "UNVERIFIED"
+          }
+        ]
+      }
+    }
+  ]
+}

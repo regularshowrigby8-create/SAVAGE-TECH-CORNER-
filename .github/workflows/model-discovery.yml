@@ -2,8 +2,8 @@ name: Weekly Model Discovery Scan
 
 on:
   schedule:
-    - cron: '0 3 * * 1'  # Every Monday at 03:00 UTC
-  workflow_dispatch:      # Allows manual trigger
+    - cron: "0 3 * * 1" # Every Monday at 03:00 UTC
+  workflow_dispatch: # Allows manual trigger
 
 jobs:
   scan-models:
@@ -15,7 +15,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Run Model Finder
         run: |
@@ -23,4 +23,14 @@ jobs:
 
       - name: Verify Model Catalog
         run: |
-          python3 -c "import json; d = json.load(open('models/free-models.json')); print(f'Total models: {len(d.get(\"offline_coding_models\", [])) + sum(len(p.get(\"models\", [])) for p in d.get(\"providers\", []))}')"
+          python3 - <<'PY'
+          import json
+          d = json.load(open("models/free-models.json"))
+          total = len(d.get("offline_coding_models", [])) + sum(
+              len(p.get("models", [])) for p in d.get("providers", [])
+          )
+          print(f"Total models: {total}")
+          if total < 50:
+              raise SystemExit(f"CATALOG VERIFICATION FAILED: {total} models < 50 required")
+          print("Catalog verification passed.")
+          PY

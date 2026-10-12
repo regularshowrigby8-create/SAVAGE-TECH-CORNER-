@@ -14,6 +14,7 @@ import ast
 import math
 import os
 import re
+import sys
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -38,6 +39,18 @@ TOKEN_REGEXES = [
 ASSIGNMENT_REGEX = re.compile(
     r"""(?i)\b(api_key|secret_key|private_key|auth_token)\s*=\s*['"]([a-zA-Z0-9_\-\.]{16,})['"]"""
 )
+
+# Finding types that MUST block a green result. Anything else is advisory:
+# still printed and written to the report, but not a release blocker.
+BLOCKING_TYPES = {
+    "hardcoded_token",
+    "high_entropy_secret",
+    "insecure_cleartext_traffic",
+    "insecure_ssl_bypass",
+    "insecure_file_access",
+    "insecure_universal_file_access",
+    "insecure_subprocess_shell",
+}
 
 ANDROID_INSECURE_PATTERNS = [
     (re.compile(r"""setAllowFileAccess\s*\(\s*true\s*\)"""), "insecure_file_access", "WebView allows local file access"),
@@ -130,4 +143,16 @@ def scan_deep_security(directory: str = ".") -> List[Dict[str, Any]]:
 
 if __name__ == "__main__":
     results = scan_deep_security()
-    print(f"[AGENT-SECURITY] Security scan complete. Findings: {len(results)}")
+    blocking = [f for f in results if f.get("type") in BLOCKING_TYPES]
+    advisory = [f for f in results if f.get("type") not in BLOCKING_TYPES]
+    print(
+        f"[AGENT-SECURITY] Security scan complete. Findings: {len(results)} "
+        f"(blocking: {len(blocking)}, advisory: {len(advisory)})"
+    )
+    for finding in blocking[:25]:
+        print(f"  BLOCKING - {finding.get('type')}: {finding.get('file')}:{finding.get('line')}")
+    for finding in advisory[:25]:
+        print(f"  advisory - {finding.get('type')}: {finding.get('file')}:{finding.get('line')}")
+    if blocking:
+        print("[AGENT-SECURITY: FAIL] Blocking vulnerabilities must be repaired before green.")
+    sys.exit(1 if blocking else 0)

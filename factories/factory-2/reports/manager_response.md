@@ -1,4 +1,5 @@
 # Manager Response
+
 Every agent finding was reviewed with written accept/reject reason.
 No feedback was discounted automatically.
 

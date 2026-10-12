@@ -12,15 +12,35 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 
-def review_findings() -> List[str]:
+def review_findings() -> tuple[str, List[str]]:
     reports_dir = Path("factory-2/reports")
     manager_notes: List[str] = []
 
     if not reports_dir.exists():
         print("[MANAGER-ERROR] Reports directory does not exist!")
-        return ["REPORTS_DIR_MISSING"]
+        return "REJECTED", ["REPORTS_DIR_MISSING"]
 
     has_fatal_blocker = False
+
+    # Fail-closed: the full agent panel must have actually reported. A missing
+    # report means an agent never ran (or failed to write) — silently treating
+    # that as consent would be a false green.
+    expected_reports = {
+        "correctness_report",
+        "security_report",
+        "architecture_report",
+        "quality_report",
+        "critic_report",
+        "model_debugger_report",
+    }
+    present_reports = {p.stem for p in reports_dir.glob("*_report.md")}
+    missing_reports = expected_reports - present_reports
+    if missing_reports:
+        has_fatal_blocker = True
+        manager_notes.append(
+            f"MISSING AGENT REPORTS — ESCALATE: {sorted(missing_reports)} did not report. "
+            "An absent report is never an implicit pass."
+        )
 
     # Generalized Agent Evaluation Loop
     for report_file in sorted(reports_dir.glob("*_report.md")):
@@ -85,8 +105,11 @@ def review_findings() -> List[str]:
             f.write(note + "\n")
 
     print(f"[MANAGER] Generalized review complete. Verdict: {verdict}. All agent findings examined.")
-    return manager_notes
+    return verdict, manager_notes
 
 
 if __name__ == "__main__":
-    review_findings()
+    final_verdict, _notes = review_findings()
+    if final_verdict == "REJECTED":
+        print("[MANAGER: FAIL] REJECTED verdict blocks the pipeline — this step cannot be green.")
+    raise SystemExit(1 if final_verdict == "REJECTED" else 0)

@@ -9,6 +9,7 @@ from __future__ import annotations
 import ast
 import inspect
 import os
+import re
 import sys
 from pathlib import Path
 from typing import Any, Dict, List
@@ -60,15 +61,30 @@ def audit_ui_element_handlers() -> List[str]:
             except Exception as ex:
                 findings.append(f"Dead button detected: Handler for '{btn_id}' threw exception when clicked: {ex}")
 
-        # Also audit frontend HTML/JS buttons if present
+        # Also audit frontend HTML buttons if present: an id-bearing <button>
+        # without onclick must be bound from committed JS/TS, or it is dead.
         frontend_dir = ROOT_DIR / "frontend"
         if frontend_dir.exists():
+            js_corpus = ""
+            for jf in list(frontend_dir.rglob("*.js")) + list(frontend_dir.rglob("*.ts")):
+                js_corpus += jf.read_text(encoding="utf-8", errors="ignore") + "\n"
             for fpath in frontend_dir.rglob("*.html"):
                 content = fpath.read_text(encoding="utf-8", errors="ignore")
-                for line_no, line in enumerate(content.splitlines(), 1):
-                    if "<button" in line.lower() and "onclick" not in line.lower() and "id=" in line.lower():
-                        # Verify whether an event listener or onclick is attached
-                        pass
+                for match in re.finditer(r"<button\b[^>]*\bid=[\"']([^\"']+)[\"'][^>]*>", content, re.IGNORECASE):
+                    tag, button_id = match.group(0), match.group(1)
+                    if "onclick" in tag.lower():
+                        continue
+                    bound = (
+                        f'"{button_id}"' in js_corpus
+                        or f"'{button_id}'" in js_corpus
+                        or f"`{button_id}`" in js_corpus
+                        or f"#{button_id}" in js_corpus
+                    )
+                    if not bound:
+                        findings.append(
+                            f"Dead button detected: '<button id=\"{button_id}\">' in {fpath} "
+                            f"has no onclick attribute and no JS/TS binding referencing that id"
+                        )
 
         if not findings:
             findings.append(
@@ -88,4 +104,8 @@ if __name__ == "__main__":
     results = audit_ui_element_handlers()
     for r in results:
         print(f"[DEAD-BUTTON-AUDITOR] {r}")
+    failures = [r for r in results if "— PASS" not in r]
+    if failures:
+        print(f"[DEAD-BUTTON-AUDITOR: FAIL] {len(failures)} dead or unbound UI element(s).")
+    raise SystemExit(1 if failures else 0)
 

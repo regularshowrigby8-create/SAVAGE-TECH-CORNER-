@@ -33,7 +33,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install Node Dependencies
         run: npm ci || npm install
@@ -41,34 +41,34 @@ jobs:
       - name: Install Python Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r tools/factory/requirements/qa.in 2>/dev/null || true
+          pip install -r tools/factory/requirements/qa.in
           pip install "androguard<4.0" coverage cryptography jsonschema pyopenssl
 
       - name: Secret Scan (Gitleaks)
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
 
       - name: Dependency Vulnerability Audit
-        run: npm run audit:security || true
+        # A failing audit MUST fail the belt — no || true anywhere in this workflow.
+        run: npm run audit:security
 
       - name: Code Quality & Linting
         run: |
-          npm run lint || true
-          npm run format:check || true
+          npm run lint
+          npm run format:check
 
       - name: TypeScript Strict Mode Check
-        run: npm run typecheck || true
+        run: npm run typecheck
 
       - name: Unit & Integration Tests
-        run: npm run test || true
+        run: npm run test
 
-      - name: Knip Unused Dependencies & Files Audit
-        run: npm run knip || true
+      - name: Dependency Usage Audit (unused/undeclared)
+        run: npm run audit:deps
 
       - name: Bundle Size Enforcement
-        run: npm run size || true
+        run: npm run size
 
       - name: Run Master Quality Gates
         run: bash .claude/scripts/gates.sh

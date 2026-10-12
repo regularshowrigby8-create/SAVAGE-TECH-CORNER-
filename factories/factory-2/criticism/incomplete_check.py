@@ -31,8 +31,9 @@ def scan_stubs_and_incomplete() -> List[str]:
                                 if isinstance(stmt, ast.Pass) and not node.name.startswith("__"):
                                     stub_count += 1
                                     findings.append(f"Stub function '{node.name}' with pass-only body in {fpath}:{node.lineno}")
-                except Exception:
-                    pass
+                except Exception as exc:
+                    # Unparseable file = defect, never a silent skip.
+                    findings.append(f"Unparseable python file {fpath}: {type(exc).__name__}: {exc}")
 
     if stub_count == 0:
         findings.append("Incomplete & Stub Scanner: Zero unhandled empty stub functions — PASS")
@@ -45,4 +46,10 @@ def scan_stubs_and_incomplete() -> List[str]:
 
 
 if __name__ == "__main__":
-    scan_stubs_and_incomplete()
+    results = scan_stubs_and_incomplete()
+    for result in results:
+        print(f"[INCOMPLETE-CRITICISM] {result}")
+    failures = [r for r in results if "— PASS" not in r]
+    if failures:
+        print(f"[INCOMPLETE-CRITICISM: FAIL] {len(failures)} blocking finding(s).")
+    raise SystemExit(1 if failures else 0)

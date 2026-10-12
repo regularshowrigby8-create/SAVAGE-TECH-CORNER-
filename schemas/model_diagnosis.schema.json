@@ -2,13 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "ModelDiagnosis",
   "type": "object",
-  "required": [
-    "status",
-    "model",
-    "engine",
-    "remediations",
-    "confidence"
-  ],
+  "required": ["status", "model", "engine", "remediations", "confidence"],
   "properties": {
     "status": {
       "type": "string",

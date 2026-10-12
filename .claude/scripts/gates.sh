@@ -11,8 +11,34 @@ echo "[GATE 1] Python syntax compilation..."
 python3 -m compileall -q factory-2 factories tools shell backend frontend || fail syntax "Python syntax errors"
 
 echo "[GATE 2] Single-job workflow check..."
-if [ -f .github/workflows/factory-2-debug.yml ]; then
-  echo "PASS: workflow is single-job compliant"
+if [ ! -f .github/workflows/factory-2-debug.yml ]; then
+  fail single_job_missing "factory-2-debug.yml is missing — single-job invariant cannot be verified"
+elif ! python3 - <<'PY'
+import re, sys
+
+lines = open(".github/workflows/factory-2-debug.yml", encoding="utf-8").read().splitlines()
+in_jobs = False
+job_names = []
+for line in lines:
+    if line.startswith("jobs:"):
+        in_jobs = True
+        continue
+    if in_jobs:
+        if line and not line.startswith((" ", "#")):
+            break
+        m = re.match(r"^  ([A-Za-z0-9_-]+):\s*$", line)
+        if m:
+            job_names.append(m.group(1))
+if not job_names:
+    print("Could not locate any job in jobs: block")
+    sys.exit(1)
+if len(job_names) != 1:
+    print(f"FAIL: factory-2-debug.yml declares {len(job_names)} jobs {job_names}; exactly 1 allowed")
+    sys.exit(1)
+print(f"PASS: workflow is single-job compliant (job: {job_names[0]})")
+PY
+then
+  fail single_job "factory-2-debug.yml violates the single-job invariant"
 fi
 
 echo "[GATE 3] Anti-Stub & Placeholder Invariant Check..."

@@ -1,2 +1,3 @@
 # Security Report
+
 Findings: []

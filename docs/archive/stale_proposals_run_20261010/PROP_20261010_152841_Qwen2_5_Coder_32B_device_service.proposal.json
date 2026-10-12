@@ -10,9 +10,7 @@
   "target_file": "/home/user/SAVAGE-TECH-CORNER-/factory-2/app/src/device_service.py",
   "original_hash": "0529b6da5ac90e5bd8882eeed3b600d17d6714c15f78e59304fa39b4f2872334",
   "candidate_file": "/home/user/SAVAGE-TECH-CORNER-/factory-2/debug/proposals/PROP_20261010_152841_Qwen2_5_Coder_32B_device_service.candidate.py",
-  "detected_issues": [
-    "routine_inspection"
-  ],
+  "detected_issues": ["routine_inspection"],
   "explanation": "Model verified code and confirmed no regressions.",
   "diff": "",
   "status": "IMPLEMENTED",
