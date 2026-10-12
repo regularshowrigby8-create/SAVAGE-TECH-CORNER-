@@ -6,26 +6,25 @@ _curr = Path(__file__).resolve()
 TOOLS_DIR = _curr.parent.parent / "tools"
 sys.path.insert(0, str(TOOLS_DIR))
 
-from browser_app_rules import verify_browser_app_rules
+from browser_app_rules import (
+    ANDROID_PROJECT_DIR,
+    verify_browser_app_rules,
+    verify_browser_source_rules,
+)
 
 
 class TestBrowserAppRules(unittest.TestCase):
-    def test_current_apk_passes_rules(self):
-        # Locate project root whether running from factories/factory-3 or root mirror
-        curr = Path(__file__).resolve()
-        # Find root containing 'factories' or 'shell'
-        root = curr.parents[2]
-        if not (root / "factories").exists() and curr.parents[3].exists():
-            root = curr.parents[3]
-
-        apk_path = root / "factories" / "final-product" / "SavageBrowser-debug.apk"
-        if not apk_path.exists():
-            apk_path = root / "shell" / "final-product" / "SavageBrowser-debug.apk"
-        
-        self.assertTrue(apk_path.exists(), f"APK path does not exist: {apk_path}")
-        res = verify_browser_app_rules(apk_path)
+    def test_source_architecture_passes_rules(self):
+        """The retained Android source architecture must satisfy the provenance,
+        completeness, and anti-mock browser rules (no APK binary is tracked)."""
+        res = verify_browser_source_rules(ANDROID_PROJECT_DIR)
         self.assertTrue(res["passed"], f"Violations: {res.get('violations')}")
-        self.assertGreaterEqual(res["artifact_size_bytes"], 50000)
+
+    def test_apk_binary_audit_is_deprecated_fail_closed(self):
+        """The old APK-binary audit entry point must refuse clearly (fail-closed),
+        never silently pass, since no APK is tracked in the repository."""
+        with self.assertRaises(NotImplementedError):
+            verify_browser_app_rules("anything.apk")
 
 
 if __name__ == "__main__":

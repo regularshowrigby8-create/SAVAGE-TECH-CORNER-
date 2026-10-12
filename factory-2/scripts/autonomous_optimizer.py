@@ -83,6 +83,8 @@ class MultiAgentOptimizer:
     def run_agent_performance(self) -> Dict[str, Any]:
         """Measures APK artifact size and pipeline execution efficiency."""
         self.log("[Agent-Performance] Measuring factory pipeline and APK build efficiency...")
+        # No APK binary is tracked in this repository; size is reported only when a
+        # genuinely built artifact is present (0 = none built in this checkout).
         apk_path = self.root_dir / "factories" / "final-product" / "SavageBrowser-debug.apk"
         apk_size = apk_path.stat().st_size if apk_path.exists() else 0
         return {"status": "OPTIMAL", "apk_size_bytes": apk_size}

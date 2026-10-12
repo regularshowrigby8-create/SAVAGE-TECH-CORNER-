@@ -510,23 +510,51 @@ class TestDexVerifierLogic(unittest.TestCase):
         errors = self.verifier.verify_dex_structure(fixture.read_bytes())
         self.assertTrue(errors, "the known-corrupt canary DEX must produce structural errors")
 
-    def test_real_apk_dex_shards_all_valid(self) -> None:
-        import zipfile
-        apk = ROOT / "assets" / "SavageBrowser-v2.0.0.apk"
-        with zipfile.ZipFile(apk) as zf:
-            dex_names = [n for n in zf.namelist() if n.startswith("classes") and n.endswith(".dex")]
-            self.assertTrue(dex_names, "APK must contain dex shards")
-            for name in dex_names:
-                errors = self.verifier.verify_dex_structure(zf.read(name))
-                self.assertEqual(errors, [], f"{name} must stay structurally valid")
+    def test_valid_fixture_dex_accepted(self) -> None:
+        """Positive control: a structurally valid classes.dex extracted from the
+        former tracked build artifact must pass verification (kept as a fixture so
+        the gate's accepting path stays covered without any tracked APK)."""
+        fixture = ROOT / "factories" / "tests" / "fixtures" / "valid_classes.dex"
+        self.assertTrue(fixture.exists(), "valid_classes.dex fixture is missing")
+        errors = self.verifier.verify_dex_structure(fixture.read_bytes())
+        self.assertEqual(errors, [], f"valid classes.dex must stay structurally valid: {errors}")
 
     def test_v2_signing_block_detected_and_absent_on_garbage(self) -> None:
-        apk = ROOT / "assets" / "SavageBrowser-v2.0.0.apk"
-        self.assertTrue(self.verifier._has_v2_signing_block(apk))
-        with tempfile.NamedTemporaryFile(suffix=".apk") as tf:
-            tf.write(b"PK\x05\x06" + b"\x00" * 18)
-            tf.flush()
-            self.assertFalse(self.verifier._has_v2_signing_block(Path(tf.name)))
+        """Build a minimal ZIP, then graft the real extracted v2/v3 signing-block
+        bytes before its Central Directory. The detector must see the block; a
+        garbage/malformed blob must read as unsigned."""
+        import io
+        import struct
+        import zipfile
+
+        block = (ROOT / "factories" / "tests" / "fixtures" / "real_v2_signing_block.bin").read_bytes()
+        self.assertTrue(block, "real_v2_signing_block.bin fixture is missing/empty")
+
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as zf:
+            zf.writestr("classes.dex", b"dex\n035\x00" + b"\x00" * 200)
+        unsigned = buf.getvalue()
+
+        # Graft the signing block immediately before the Central Directory and
+        # patch the EOCD cd_offset so the parser walks to it correctly.
+        eocd = unsigned.rfind(b"PK\x05\x06")
+        cd_offset = struct.unpack_from("<I", unsigned, eocd + 16)[0]
+        signed = unsigned[:cd_offset] + block + unsigned[cd_offset:]
+        signed = bytearray(signed)
+        struct.pack_into("<I", signed, len(signed) - 22 + 16, cd_offset + len(block))
+
+        with tempfile.TemporaryDirectory() as td:
+            signed_path = Path(td) / "signed.apk"
+            signed_path.write_bytes(bytes(signed))
+            self.assertTrue(self.verifier._has_v2_signing_block(signed_path))
+
+            unsigned_path = Path(td) / "unsigned.apk"
+            unsigned_path.write_bytes(unsigned)
+            self.assertFalse(self.verifier._has_v2_signing_block(unsigned_path))
+
+            garbage_path = Path(td) / "garbage.apk"
+            garbage_path.write_bytes(b"PK\x05\x06" + b"\x00" * 18)
+            self.assertFalse(self.verifier._has_v2_signing_block(garbage_path))
 
 
 class TestMiddlemanSchemaContract(unittest.TestCase):

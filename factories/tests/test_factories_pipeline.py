@@ -37,39 +37,26 @@ class TestMultiFactoryAndModels(unittest.TestCase):
         log = run_factory_pipeline(input_source="shell")
         self.assertEqual(log["stages"]["factory_1_intake"], "SUCCESS")
         self.assertEqual(log["stages"]["factory_2_agents"]["verdict"], "SHIP")
-        # Certification is honest: CERTIFIED only when a structurally sound APK exists.
-        # While the tracked stock APK fails DEX structural verification the pipeline
-        # MUST report REJECTED (never certify a launch-crashing artifact).
-        # Certification is honest: CERTIFIED only when a structurally sound APK exists.
-        # If the tracked stock APK passes structural verification the pipeline MUST certify;
-        # if it is corrupted the pipeline MUST report REJECTED and record the reason.
-        self.assertIn(
+        # Honest certification: with no APK binary tracked in the repository the
+        # final packaging stage has no artifact to ship, so the pipeline MUST NOT
+        # certify. It must fail closed (REJECTED) and record the rejection reason.
+        self.assertEqual(
             log["stages"]["factory_3_android_tools"]["certification"]["status"],
-            {"CERTIFIED", "REJECTED"},
+            "REJECTED",
+            "with no tracked built APK the pipeline must refuse certification",
         )
-        if log["status"] == "REJECTED":
-            self.assertTrue(
-                log["stages"]["factory_3_android_tools"]["apk_build_errors"],
-                "REJECTED pipeline must record the APK rejection reason",
-            )
-        else:
-            self.assertFalse(
-                log["stages"]["factory_3_android_tools"].get("apk_build_errors"),
-                "CERTIFIED pipeline must not carry APK rejection errors",
-            )
-            self.assertTrue(
-                (FACTORIES_DIR / "final-product" / "SavageBrowser-debug.apk").exists(),
-                "CERTIFIED pipeline must deliver the verified APK into final-product",
-            )
+        self.assertTrue(
+            log["stages"]["factory_3_android_tools"].get("apk_build_errors"),
+            "REJECTED pipeline must record the APK rejection reason",
+        )
+        # Non-APK deliverables (the web shell + manifest) are still real artifacts.
         final_product_dir = FACTORIES_DIR / "final-product"
         self.assertTrue((final_product_dir / "browser_shell.py").exists())
         self.assertTrue((final_product_dir / "RELEASE_MANIFEST.json").exists())
 
     def test_dex_structure_gate_flags_corrupted_stale_apk_from_history(self) -> None:
-        """Historical regression canary: the stale pre-fix stock APK (asset commit d487ac9)
-        shipped a classes.dex whose class-def table cannot resolve its manifest activities
-        (5/175 sane descriptors → launcher ClassNotFoundException on-device). Its bytes are
-        pinned as a fixture so the structural gate can never silently weaken again."""
+        """Historical regression canary: the stale pre-fix stock classes.dex pinned as
+        a fixture must keep failing structural verification."""
         sys.path.insert(0, str(FACTORIES_DIR / "factory-3" / "tools"))
         from apk_builder import verify_dex_structure
 
@@ -82,41 +69,27 @@ class TestMultiFactoryAndModels(unittest.TestCase):
             "the gate must specifically detect the unresolvable class-definition table",
         )
 
-    def test_dex_structure_gate_accepts_current_build(self) -> None:
-        """The actively tracked APK must pass structural verification on every dex shard."""
+    def test_dex_structure_gate_accepts_valid_fixture(self) -> None:
+        """Positive control: the valid classes.dex fixture (extracted from the former
+        tracked build artifact) must pass structural verification."""
         sys.path.insert(0, str(FACTORIES_DIR / "factory-3" / "tools"))
-        import zipfile
         from apk_builder import verify_dex_structure
 
-        apk = ROOT_DIR / "assets" / "SavageBrowser-v2.0.0.apk"
-        self.assertTrue(apk.exists())
-        with zipfile.ZipFile(apk, "r") as zf:
-            dex_names = sorted(n for n in zf.namelist() if n.startswith("classes") and n.endswith(".dex"))
-            self.assertTrue(dex_names, "APK must contain at least one classes*.dex")
-            for dex_name in dex_names:
-                errors = verify_dex_structure(zf.read(dex_name))
-                self.assertEqual(errors, [], f"tracked APK {dex_name} failed structural verification: {errors}")
+        fixture = Path(__file__).parent / "fixtures" / "valid_classes.dex"
+        self.assertTrue(fixture.exists(), "valid_classes.dex fixture is missing")
+        errors = verify_dex_structure(fixture.read_bytes())
+        self.assertEqual(errors, [], f"valid classes.dex must stay structurally valid: {errors}")
 
-    def test_apk_builder_contract_follows_artifact_integrity(self) -> None:
-        """create_signed_apk must COPY a structurally valid candidate forward, and must
-        REFUSE (RuntimeError) a corrupted one — never silently certify garbage."""
+    def test_apk_builder_deprecated_fails_closed(self) -> None:
+        """create_signed_apk is deprecated (no APK binary tracked): it must raise a
+        clear error instead of copying a stale artifact or silently succeeding."""
         sys.path.insert(0, str(FACTORIES_DIR / "factory-3" / "tools"))
-        import tempfile, zipfile
-        from apk_builder import create_signed_apk, verify_dex_structure, ROOT_DIR as APK_ROOT
+        import tempfile
+        from apk_builder import create_signed_apk
 
-        stock = APK_ROOT / "assets" / "SavageBrowser-v2.0.0.apk"
         with tempfile.TemporaryDirectory() as tmp:
-            if not stock.exists():
-                self.skipTest("no stock APK tracked")
-            with zipfile.ZipFile(stock, "r") as zf:
-                stock_valid = not verify_dex_structure(zf.read("classes.dex"))
-            out = Path(tmp) / "out.apk"
-            if stock_valid:
-                built = create_signed_apk(out)
-                self.assertTrue(built.exists() and built.stat().st_size > 100_000)
-            else:
-                with self.assertRaises(RuntimeError):
-                    create_signed_apk(out)
+            with self.assertRaises(NotImplementedError):
+                create_signed_apk(Path(tmp) / "out.apk")
 
 
 if __name__ == "__main__":

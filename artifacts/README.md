@@ -1,10 +1,16 @@
 # Generated Artifacts Directory
 
-This directory contains build deliverables, test reports, and manifests generated during CI and factory pipeline runs.
+This directory contains manifests and reports generated during CI and factory
+pipeline runs.
+
+**No APK/AAB binaries are tracked in this repository** ("delete all APK versions,
+keep the architecture"). Android binaries are produced by CI
+(`.github/workflows/android-build.yml`), published as CI artifacts / GitHub
+Releases, and are git-ignored (`*.apk`, `*.aab`).
 
 ## Subdirectories:
 
-- `debug/`: Intermediate and debug Android APKs (`SavageBrowser-debug.apk`).
-- `release/`: Signed release-candidate APKs and bundles.
-- `reports/`: Test outputs, static analysis summaries, and coverage audits.
-- `manifests/`: Formal build and release manifests (`RELEASE_MANIFEST.json`).
+- `debug/`: (empty) former location of debug APKs — retained for layout only;
+  no binaries are committed.
+- `archives/`: Folder change archives (`.zip` snapshots of source folders).
+- `manifests/`: Formal release/pipeline manifests (`RELEASE_MANIFEST.json`).

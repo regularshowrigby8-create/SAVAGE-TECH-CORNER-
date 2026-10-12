@@ -145,20 +145,34 @@ def run_factory_pipeline(input_source: str = "shell") -> dict[str, object]:
         f3_certified = f3_result.get("status") == "CERTIFIED" and broker_clean
 
         # Production Browser App Rules Enforcement Gate
-        from browser_app_rules import verify_browser_app_rules
-        from android_vm_verifier import verify_apk_in_vm
+        from browser_app_rules import verify_browser_source_rules
 
-        app_rules = verify_browser_app_rules(apk_output)
-        print(f"[STAGE 3] Browser App Invariant Rules verification: {'PASS' if app_rules['passed'] else 'FAIL'}")
+        if apk_output.exists():
+            # A genuinely built APK exists (e.g. produced by CI Gradle build):
+            # audit the binary artifact with the full binary + stripped VM gates.
+            from android_vm_verifier import verify_apk_in_vm
 
-        # Stage 3 Stripped Android VM Test Gate
-        print("[STAGE 3] Factory 3: Running Stripped Android VM post-build verification...")
-        vm_results = verify_apk_in_vm(apk_output)
-        print(f"[STAGE 3] Android VM Status: {vm_results['vm_status']}")
-
-        if not app_rules["passed"] or not vm_results["passed"]:
-            errors = apk_build_errors + app_rules.get("violations", []) + vm_results.get("errors", [])
-            print(f"[STAGE 3-BLOCK] APK rejected by Factory 3 Android VM: {errors}")
+            print("[STAGE 3] Browser App source rules + binary VM gates on built APK...")
+            source_rules = verify_browser_source_rules()
+            print(f"[STAGE 3] Browser App source rules: {'PASS' if source_rules['passed'] else 'FAIL'}")
+            vm_results = verify_apk_in_vm(apk_output)
+            print(f"[STAGE 3] Android VM Status: {vm_results['vm_status']}")
+            if not source_rules["passed"] or not vm_results["passed"]:
+                errors = apk_build_errors + source_rules.get("violations", []) + vm_results.get("errors", [])
+                print(f"[STAGE 3-BLOCK] APK rejected by Factory 3 gates: {errors}")
+                f3_certified = False
+        else:
+            # No built APK in this checkout (repository tracks no APK binaries).
+            # Audit the source architecture instead, and fail closed: without a
+            # genuinely built artifact there is nothing to certify.
+            print("[STAGE 3] No built APK present (repo tracks no APK binaries); auditing source architecture...")
+            source_rules = verify_browser_source_rules()
+            print(f"[STAGE 3] Browser App source rules: {'PASS' if source_rules['passed'] else 'FAIL'}")
+            errors = apk_build_errors + source_rules.get("violations", []) + [
+                "no built APK artifact present to certify"
+            ]
+            if not source_rules["passed"] or True:
+                print(f"[STAGE 3-BLOCK] certification blocked: {errors}")
             f3_certified = False
 
         if not f3_certified:

@@ -91,28 +91,20 @@ jobs:
             exit $ERR
           }
 
+      - name: Reproducible Build & Provenance Gate (source + built APK)
+        run: |
+          echo "=== Source architecture gate + freshly-built APK audit ==="
+          python3 tools/reproducible_build_verifier.py --apk "${{ steps.apk_locator.outputs.apk_path }}"
+
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: SavageBrowser-apk
           path: ${{ steps.apk_locator.outputs.apk_path }}
 
-      - name: Sync Verified APK Into Repository Assets
-        if: success() && github.event_name != 'pull_request'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          mkdir -p assets shell/final-product artifacts/debug
-          cp "${{ steps.apk_locator.outputs.apk_path }}" "assets/SavageBrowser-v2.0.0.apk"
-          cp "${{ steps.apk_locator.outputs.apk_path }}" "shell/final-product/SavageBrowser-debug.apk"
-          cp "${{ steps.apk_locator.outputs.apk_path }}" "artifacts/debug/SavageBrowser-debug.apk"
-          if git diff --quiet -- assets shell/final-product artifacts/debug; then
-            echo "APK bytes unchanged; nothing to sync."
-            exit 0
-          fi
-          git add "assets/SavageBrowser-v2.0.0.apk" "shell/final-product/SavageBrowser-debug.apk" "artifacts/debug/SavageBrowser-debug.apk"
-          git commit -m "ci: sync verified Gradle-built APK into assets [skip ci]"
-          git push
+      # NOTE: This repository tracks NO APK binaries ("delete all APK versions,
+      # keep the architecture"). The freshly built APK above is published only as
+      # a CI artifact and on GitHub Releases — never committed back into git.
 
       - name: Create Release Tag
         id: release_tag
@@ -126,7 +118,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           VERSION="${{ steps.apk_locator.outputs.version_name }}"
           TAG="v${VERSION}-build.${GITHUB_RUN_NUMBER}"
-          # Tag the branch tip, which now includes any APK sync commit produced above
           git fetch origin "$BRANCH_NAME"
           git tag -a "$TAG" "$(git rev-parse "origin/$BRANCH_NAME")" -m "Savage Browser v${VERSION} — CI build ${GITHUB_RUN_NUMBER}"
           git push origin "$TAG"

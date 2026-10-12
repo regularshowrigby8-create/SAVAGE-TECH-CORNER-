@@ -18,3 +18,11 @@ dist/
 # Factory 2 transient pipeline staging workspace
 factories/factory-2/debug/staging/
 results.sarif
+
+# APK/AAB build artifacts — repository tracks NO Android binaries (builds are
+# produced by CI and shipped via artifacts/releases only). "delete all APK
+# versions, keep the architecture".
+*.apk
+*.aab
+# Gradle build outputs (APKs land here after ./gradlew assembleDebug)
+shell/android_project/**/build/outputs/

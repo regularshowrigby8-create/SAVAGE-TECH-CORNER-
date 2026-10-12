@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-12T04:06:40.314729+00:00",
+  "timestamp": "2026-10-12T05:31:33.022839+00:00",
   "input_source": "shell",
   "stages": {
     "factory_1_intake": "SUCCESS",
@@ -48,11 +48,13 @@
           "compression_ready": true
         },
         "certified_for_final_product": true,
-        "status": "CERTIFIED"
+        "status": "REJECTED"
       },
-      "apk_build_errors": [],
+      "apk_build_errors": [
+        "create_signed_apk() is not available. apk_builder is deprecated: repository no longer tracks any APK binary. Build the APK from shell/android_project via CI (.github/workflows/android-build.yml) instead of copying a prebuilt artifact."
+      ],
       "gradle_wrapper_ready": true
     }
   },
-  "status": "CERTIFIED"
+  "status": "REJECTED"
 }
