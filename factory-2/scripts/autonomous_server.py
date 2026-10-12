@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 import threading
 import time
@@ -29,7 +28,9 @@ ROOT_DIR = Path(__file__).resolve().parent.parent.parent
 if not (ROOT_DIR / "factories").exists() and (ROOT_DIR.parent / "factories").exists():
     ROOT_DIR = ROOT_DIR.parent
 
-sys.path.insert(0, str(ROOT_DIR / "factory-2" / "scripts"))
+# Import sibling engine modules from THIS file's own tree (the factories/ mirror
+# copy must use factories/factory-2/scripts, not the top-level factory-2/scripts).
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from model_finder import ModelFinder
 from autonomous_optimizer import MultiAgentOptimizer
 
@@ -123,3 +124,39 @@ class ServerHandler(BaseHTTPRequestHandler):
 
     def log_message(self, format: str, *args: Any) -> None:
         return None
+
+
+def main() -> int:
+    """Start the 24/7 autonomous factory daemon: background engine loops + telemetry HTTP server."""
+    parser = argparse.ArgumentParser(description="SAVAGE Factory Autonomous Server (24/7 dual-engine daemon)")
+    parser.add_argument("--port", type=int, default=8080, help="Telemetry HTTP port (default 8080)")
+    parser.add_argument("--host", default="0.0.0.0", help="Telemetry bind host (default 0.0.0.0)")
+    parser.add_argument("--finder-interval", type=int, default=300, help="Seconds between model scans")
+    parser.add_argument("--optimizer-interval", type=int, default=180, help="Seconds between improvement cycles")
+    args = parser.parse_args()
+
+    finder_worker = threading.Thread(
+        target=run_model_finder_loop, args=(args.finder_interval,), name="model-finder", daemon=True
+    )
+    optimizer_worker = threading.Thread(
+        target=run_autonomous_optimizer_loop, args=(args.optimizer_interval,), name="optimizer", daemon=True
+    )
+    finder_worker.start()
+    optimizer_worker.start()
+
+    server = HTTPServer((args.host, args.port), ServerHandler)
+    print(
+        f"[DAEMON] SAVAGE-FACTORY-AUTONOMOUS-SERVER live on {args.host}:{args.port} "
+        f"(finder every {args.finder_interval}s, optimizer every {args.optimizer_interval}s)"
+    )
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("[DAEMON] Shutdown requested; stopping telemetry server")
+    finally:
+        server.server_close()
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

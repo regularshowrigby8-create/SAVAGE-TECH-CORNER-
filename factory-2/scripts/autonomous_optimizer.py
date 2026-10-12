@@ -11,8 +11,6 @@ Orchestrates the multi-agent AI improvement swarm powered by DeepSeek-R1-Distill
 from __future__ import annotations
 
 import argparse
-import json
-import os
 import subprocess
 import sys
 import time
@@ -122,8 +120,42 @@ class MultiAgentOptimizer:
             f"- **Sub-Agents Active**: {', '.join(self.LLM_IDENTITY['sub_agents'])}\n"
             f"- **System Status**: Architecture: {summary['architecture']} | Security: {summary['security']} | "
             f"Quality: {summary['quality']} | Performance: {summary['performance']}\n"
-            f"- **Direct Verification**: All deterministic gates green; multi-branch integrity certified.\n"
+            f"- **Direct Verification**: {_ledger_verdict(summary)}\n"
         )
         if CHANGES_FILE.exists():
             with open(CHANGES_FILE, "a", encoding="utf-8") as f:
                 f.write(entry)
+def _ledger_verdict(summary: Dict[str, Any]) -> str:
+    """Derive the ledger's verification claim from the ACTUAL per-agent statuses —
+    never write a blanket 'green' claim that the cycle did not earn."""
+    ok_states = {"PASS", "HEALTHY", "OPTIMAL"}
+    checks = {
+        "architecture": summary.get("architecture"),
+        "security": summary.get("security"),
+        "quality": summary.get("quality"),
+        "performance": summary.get("performance"),
+    }
+    failing = {name: status for name, status in checks.items() if status not in ok_states}
+    if not failing:
+        return "All agent checks passed (architecture/security/quality/performance)."
+    return "REGRESSIONS DETECTED — gate not green: " + ", ".join(
+        f"{name}={status}" for name, status in failing.items()
+    )
+
+
+def main() -> int:
+    """Run continuous autonomous improvement cycles (one-shot with --once)."""
+    parser = argparse.ArgumentParser(description="Factory Continuous Autonomous Improvement Engine")
+    parser.add_argument("--interval", type=int, default=180, help="Seconds between cycles (default 180)")
+    parser.add_argument("--once", action="store_true", help="Run exactly one improvement cycle then exit")
+    args = parser.parse_args()
+    optimizer = MultiAgentOptimizer(ROOT_DIR)
+    while True:
+        optimizer.run_improvement_cycle()
+        if args.once:
+            return 0
+        time.sleep(args.interval)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

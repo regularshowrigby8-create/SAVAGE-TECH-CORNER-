@@ -115,7 +115,7 @@ class WebViewCrawler:
             return
         self.is_running = True
 
-        def _loop() -> None:
+        def crawl_loop() -> None:
             idx = 0
             while self.is_running:
                 try:
@@ -130,7 +130,7 @@ class WebViewCrawler:
                     pass
                 time.sleep(interval)
 
-        self._thread = threading.Thread(target=_loop, daemon=True)
+        self._thread = threading.Thread(target=crawl_loop, daemon=True)
         self._thread.start()
 
     def stop_continuous_crawl(self) -> None:
