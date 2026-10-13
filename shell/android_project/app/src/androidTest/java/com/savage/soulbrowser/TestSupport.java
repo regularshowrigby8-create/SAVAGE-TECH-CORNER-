@@ -57,21 +57,18 @@ public final class TestSupport {
     }
 
     /**
-     * Empties the local store and the preferences so a test really starts from a first launch.
+     * Removes the local store and the preferences so a test really starts from a first launch.
      *
-     * <p>The rows are deleted through the application's own connection rather than by unlinking the
-     * database file: deleting the file under a live {@link android.database.sqlite.SQLiteOpenHelper}
-     * leaves that helper writing into an unlinked inode, so the next test sees a mix of stale rows
-     * and rows that never reach the disk. The connection is dropped first, so a file a corruption
-     * test rewrote is reopened (and repaired by {@code BrowserStore.open}) before it is emptied.
+     * <p>The application's cached connection is dropped first, and only then are the files removed:
+     * deleting a database file under a live {@link android.database.sqlite.SQLiteOpenHelper} leaves
+     * that helper writing into an unlinked inode, so the next test would see a mix of stale rows and
+     * rows that never reach the disk. The file is left absent, which is the state a first launch
+     * really has and the precondition the corruption-recovery tests assert.
      */
     public static void wipeLocalData() {
         Context context = context();
-        SavageBrowserApp app = SavageBrowserApp.from(context);
-        app.reopenLocalStore();
-        SQLiteDatabase database = app.database().getWritableDatabase();
-        database.delete(BrowserDatabase.TABLE_HISTORY, null, null);
-        database.delete(BrowserDatabase.TABLE_BOOKMARKS, null, null);
+        SavageBrowserApp.from(context).reopenLocalStore();
+        BrowserDatabase.deleteDatabaseFiles(context, BrowserDatabase.DATABASE_NAME);
         context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE).edit().clear().commit();
     }
 
@@ -194,9 +191,10 @@ public final class TestSupport {
      *
      * <p>The page is published at {@code baseUrl} in two ways, because a data load with a null
      * history URL is recorded as {@code about:blank}: the base URL resolves the page's own origin,
-     * and the history URL is what the WebView reports as the current URL and hands to
-     * {@code onPageStarted} / {@code onPageFinished}. Passing the same URL for both makes the load
-     * observable exactly like a real page at that address.
+     * and the history URL becomes the history entry. Chromium still reports the load itself as a
+     * {@code data:} URL, so this helper is for tests that need real rendered content (titles, the
+     * back/forward stack) rather than for tests that need the application to know an address -
+     * those navigate through the omnibox with {@link #navigateForReal}.
      */
     public static void injectPage(MainActivity activity, String baseUrl, String heading) {
         String html = String.format(PAGE_TEMPLATE, heading, heading);
@@ -204,6 +202,30 @@ public final class TestSupport {
     }
 
     /** The tab count the dock shows. The dock control is a {@link android.widget.TextView}. */
+    /**
+     * Navigates the way a user does: the address is typed into the omnibox and submitted, so the
+     * application's own resolution, policy, tab bookkeeping and history recording all run.
+     *
+     * <p>A CI emulator has no route to the internet, so the page itself reports a load failure -
+     * but the navigation is real: the WebView is asked for that URL, the application knows it, and
+     * the URL is what the WebView reports afterwards. Tests that need the *content* of a page use
+     * {@link #injectPage}, and tests that need the application to know an address use this.
+     */
+    public static void navigateForReal(MainActivity activity, String url) {
+        android.widget.EditText omnibox = activity.findViewById(R.id.edit_omnibox);
+        omnibox.setText(url);
+        omnibox.onEditorAction(android.view.inputmethod.EditorInfo.IME_ACTION_GO);
+    }
+
+    public static void navigateForReal(ActivityScenario<MainActivity> scenario, String url) {
+        on(scenario, activity -> navigateForReal(activity, url));
+    }
+
+    /** The title of the document the active WebView is showing, or {@code null}. */
+    public static String pageTitle(MainActivity activity) {
+        return webViewOf(activity).getTitle();
+    }
+
     public static int openTabCount(MainActivity activity) {
         android.widget.TextView tabs = activity.findViewById(R.id.btn_nav_tabs);
         return Integer.parseInt(tabs.getText().toString());

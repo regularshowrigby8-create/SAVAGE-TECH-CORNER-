@@ -39,7 +39,7 @@ public class StateRestoreTest {
     @Test
     public void currentUrlSurvivesRecreation() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
-            TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE, "Rotation"));
+            TestSupport.navigateForReal(scenario, PAGE);
             TestSupport.waitUntil("the page to load", () -> PAGE.equals(url(scenario)),
                     () -> TestSupport.describeBrowser(scenario));
 
@@ -56,7 +56,7 @@ public class StateRestoreTest {
     @Test
     public void tabsSurviveRecreation() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
-            TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE, "Rotation"));
+            TestSupport.navigateForReal(scenario, PAGE);
             TestSupport.waitUntil("the first tab to load", () -> PAGE.equals(url(scenario)),
                     () -> TestSupport.describeBrowser(scenario));
 
@@ -81,7 +81,7 @@ public class StateRestoreTest {
     @Test
     public void rotationKeepsThePageVisible() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
-            TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE, "Rotation"));
+            TestSupport.navigateForReal(scenario, PAGE);
             TestSupport.waitUntil("the page to load", () -> PAGE.equals(url(scenario)),
                     () -> TestSupport.describeBrowser(scenario));
 

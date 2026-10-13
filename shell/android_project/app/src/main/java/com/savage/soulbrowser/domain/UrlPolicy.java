@@ -196,7 +196,12 @@ public final class UrlPolicy {
 
     /**
      * Canonical form used as the de-duplication key for bookmarks and history: lower-cased
-     * scheme and host, no default port, no fragment, and a non-empty path.
+     * scheme and host, no default port, no fragment, a non-empty path, and no trailing slash
+     * outside the site root.
+     *
+     * <p>{@code https://example.com/page} and {@code https://example.com/page/} are the same page on
+     * every server that redirects one to the other, and a browser that stored them twice would count
+     * one visit twice and offer the same bookmark twice. The site root keeps its slash.
      */
     public static String normalizeKey(String url) {
         if (url == null) {
@@ -219,7 +224,11 @@ public final class UrlPolicy {
             key.append(':').append(port);
         }
         String path = uri.getRawPath();
-        key.append(path == null || path.isEmpty() ? "/" : path);
+        if (path == null || path.isEmpty() || "/".equals(path)) {
+            key.append('/');
+        } else {
+            key.append(path.endsWith("/") ? path.substring(0, path.length() - 1) : path);
+        }
         if (uri.getRawQuery() != null) {
             key.append('?').append(uri.getRawQuery());
         }

@@ -61,11 +61,16 @@ public class ViewStateMachineTest {
     }
 
     @Test
-    public void blockedShowsRetryAndKeepsMessageAfterFinalProgressEvent() {
+    public void blockedKeepsItsMessageAndOffersNoRetry() {
         ViewStateMachine machine = new ViewStateMachine();
         machine.onBlocked();
         assertEquals(ViewState.BLOCKED, machine.state());
-        assertTrue(machine.showsRetry());
+        // A blocked address was refused by a static rule, so a retry cannot succeed; the message is
+        // what the user gets. (AC-022: a refusal is explained, not retried.)
+        assertFalse("a refusal can never succeed, so it must not promise a retry",
+                machine.showsRetry());
+        assertFalse("a refused navigation is not a queued retry",
+                machine.requestRetry());
         // WebView still reports 100% after a refused/failed load; the message must stay visible.
         machine.onProgress(100);
         assertEquals(ViewState.BLOCKED, machine.state());

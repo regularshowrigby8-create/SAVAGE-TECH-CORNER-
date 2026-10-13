@@ -93,11 +93,17 @@ public final class ViewStateMachine {
         return state != ViewState.CONTENT && !(state == ViewState.LOADING && hasContent);
     }
 
-    /** Retry is offered for every recoverable refusal/failure, never while loading. */
+    /**
+     * Retry is offered for every recoverable failure, and never while loading.
+     *
+     * <p>{@link ViewState#BLOCKED} is deliberately excluded: a blocked address was refused by a
+     * static rule (unsupported scheme, cleartext, origin not in the allow-list), so repeating the
+     * same request cannot succeed. Offering Retry there would promise the user something the
+     * browser cannot deliver; the message says what happened instead.
+     */
     public boolean showsRetry() {
         return state == ViewState.ERROR
                 || state == ViewState.OFFLINE
-                || state == ViewState.BLOCKED
                 || state == ViewState.TLS_ERROR;
     }
 

@@ -126,11 +126,14 @@ for expected in "edit_omnibox" "btn_nav_back" "btn_nav_tabs" "btn_action_bookmar
 done
 
 echo "[9/12] kill the process and relaunch (restart persistence, first restart)"
-adb shell am kill "$PACKAGE"
+# force-stop, not `am kill`: `am kill` only reclaims *background* processes, and the browser is in the
+# foreground here, so it survives `am kill` - which is what made this step fail on a perfectly healthy
+# build. force-stop is the platform's "this process is gone" operation.
+adb shell am force-stop "$PACKAGE"
 sleep 2
 ALIVE=$(adb shell pidof "$PACKAGE" | tr -d '\r')
 if [ -n "$ALIVE" ]; then
-    echo "FAIL: the process survived am kill" >&2
+    echo "FAIL: the process survived force-stop" >&2
     exit 1
 fi
 if ! LAUNCH_OUTPUT=$(adb shell am start -W -n "$PACKAGE/$ACTIVITY" 2>&1); then
@@ -143,7 +146,7 @@ grep -qE "Status: ok" <<<"$LAUNCH_OUTPUT" || {
 }
 
 echo "[10/12] kill and relaunch a second time"
-adb shell am kill "$PACKAGE"
+adb shell am force-stop "$PACKAGE"
 sleep 2
 if ! LAUNCH_OUTPUT=$(adb shell am start -W -n "$PACKAGE/$ACTIVITY" 2>&1); then
     echo "FAIL: the app did not relaunch on the second restart: $LAUNCH_OUTPUT" >&2

@@ -91,6 +91,16 @@ public class UrlPolicyTest {
                 UrlPolicy.normalizeKey("https://example.com/a#section"));
         assertTrue(UrlPolicy.normalizeKey("https://example.com/a?b=1")
                 .endsWith("/a?b=1"));
+        // A trailing slash is the same page: storing both would count one visit twice.
+        assertEquals(UrlPolicy.normalizeKey("https://example.com/a"),
+                UrlPolicy.normalizeKey("https://example.com/a/"));
+        assertEquals(UrlPolicy.normalizeKey("https://example.com/a/"),
+                UrlPolicy.normalizeKey("https://example.com/a/#section"));
+        assertEquals(UrlPolicy.normalizeKey("https://example.com/a?b=1"),
+                UrlPolicy.normalizeKey("https://example.com/a/?b=1"));
+        // The site root keeps its slash, and a non-root path keeps its shape otherwise.
+        assertEquals("https://example.com/", UrlPolicy.normalizeKey("https://example.com"));
+        assertEquals("https://example.com/a/b", UrlPolicy.normalizeKey("https://example.com/a/b/"));
     }
 
     @Test

@@ -37,10 +37,10 @@ public class BackNavigationTest {
     @Test
     public void systemBackGoesBackInWebView() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
-            TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE_A, "Page A"));
+            TestSupport.navigateForReal(scenario, PAGE_A);
             TestSupport.waitUntil("page A to load", () -> PAGE_A.equals(url(scenario)),
                     () -> TestSupport.describeBrowser(scenario));
-            TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE_B, "Page B"));
+            TestSupport.navigateForReal(scenario, PAGE_B);
             TestSupport.waitUntil("page B to load", () -> PAGE_B.equals(url(scenario)),
                     () -> TestSupport.describeBrowser(scenario));
 
@@ -55,10 +55,13 @@ public class BackNavigationTest {
     @Test
     public void systemBackFinishesAtRoot() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
-            TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE_A, "Page A"));
-            TestSupport.waitUntil("page A to load", () -> PAGE_A.equals(url(scenario)),
+            // The launch requests the home page, and that request is the first entry of this
+            // session's history: there is nothing behind it, so Back belongs to the system and the
+            // activity must finish instead of doing nothing.
+            TestSupport.waitUntil("the first page to settle",
+                    () -> !TestSupport.onResult(scenario, MainActivity::isLoading),
                     () -> TestSupport.describeBrowser(scenario));
-            Assert.assertFalse("page A is the root of this session",
+            Assert.assertFalse("the home page is the root of this session",
                     TestSupport.onResult(scenario,
                             activity -> TestSupport.webViewOf(activity).canGoBack()));
 

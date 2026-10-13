@@ -38,12 +38,12 @@ public class NavigationStateTest {
     @Test
     public void backAndForwardReflectWebViewHistory() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
-            TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE_A, "Page A"));
+            TestSupport.navigateForReal(scenario, PAGE_A);
             TestSupport.waitUntil("page A to be the current page",
                     () -> PAGE_A.equals(currentUrl(scenario)),
                     () -> TestSupport.describeBrowser(scenario));
 
-            TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE_B, "Page B"));
+            TestSupport.navigateForReal(scenario, PAGE_B);
             TestSupport.waitUntil("page B to become the current page with a history entry behind it",
                     () -> PAGE_B.equals(currentUrl(scenario)) && canGoBack(scenario),
                     () -> TestSupport.describeBrowser(scenario));
@@ -67,7 +67,7 @@ public class NavigationStateTest {
     @Test
     public void reloadStopsLoadingAndHomeResets() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
-            TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE_A, "Page A"));
+            TestSupport.navigateForReal(scenario, PAGE_A);
             TestSupport.waitUntil("page A to finish loading",
                     () -> PAGE_A.equals(currentUrl(scenario)) && !isLoading(scenario),
                     () -> TestSupport.describeBrowser(scenario));

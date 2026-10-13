@@ -24,6 +24,9 @@ import com.savage.soulbrowser.ui.MainActivity;
 @RunWith(AndroidJUnit4.class)
 public class MainActivityLaunchTest {
 
+    /** An address used by the progress test; no page body is needed, only the request. */
+    private static final String PAGE_FOR_PROGRESS = "https://example.com/progress";
+
     @Before
     public void clearLocalState() {
         TestSupport.wipeLocalData();
@@ -51,12 +54,24 @@ public class MainActivityLaunchTest {
                 // A brand new browser session starts with exactly one home tab, and the dock says so.
                 Assert.assertEquals(1, TestSupport.openTabCount(activity));
 
-                // Nothing is loading and nothing is refused on a clean launch.
-                Assert.assertFalse(activity.isLoading());
-                Assert.assertNotEquals(View.VISIBLE,
-                        TestSupport.visibilityOf(activity, R.id.state_overlay));
-                Assert.assertNotEquals(View.VISIBLE,
-                        TestSupport.visibilityOf(activity, R.id.state_retry));
+            });
+
+            // The launch requests the home page. On a runner without egress that request fails and
+            // the browser says so; what must never happen is the browser refusing its own start
+            // page, and the chrome must still be there while the failure is explained.
+            TestSupport.waitUntil("the first load to settle after the clean launch", () ->
+                            !TestSupport.onResult(scenario, MainActivity::isLoading),
+                    () -> TestSupport.describeBrowser(scenario));
+            TestSupport.on(scenario, activity -> {
+                Assert.assertNotEquals("the browser never blocks its own home page",
+                        com.savage.soulbrowser.domain.ViewState.BLOCKED,
+                        activity.currentViewState());
+                Assert.assertNotEquals("the browser never reports a TLS failure for its own home page",
+                        com.savage.soulbrowser.domain.ViewState.TLS_ERROR,
+                        activity.currentViewState());
+                EditText omnibox = activity.findViewById(R.id.edit_omnibox);
+                Assert.assertEquals("the omnibox shows the address that was requested",
+                        MainActivity.HOME_URL, omnibox.getText().toString());
             });
         }
     }
@@ -141,21 +156,20 @@ public class MainActivityLaunchTest {
                         TestSupport.visibilityOf(activity, R.id.page_progress_bar));
             });
 
-            // The chrome client reports progress through this callback; driving it proves the
-            // bar reflects loading and disappears again on completion.
-            TestSupport.on(scenario, activity -> activity.onProgress(40));
-            TestSupport.waitUntil("the progress bar to appear", () -> {
+            // A real navigation drives the chrome client the way a page does: the bar appears while
+            // the request is in flight, reports a value below 100, and goes away once it settles.
+            TestSupport.navigateForReal(scenario, PAGE_FOR_PROGRESS);
+            TestSupport.waitUntil("the progress bar to appear during a real navigation", () -> {
                 ProgressBar progress = TestSupport.onResult(scenario,
                         activity -> activity.findViewById(R.id.page_progress_bar));
-                return progress.getVisibility() == View.VISIBLE && progress.getProgress() == 40;
-            });
+                return progress.getVisibility() == View.VISIBLE && progress.getProgress() < 100;
+            }, () -> TestSupport.describeBrowser(scenario));
 
-            TestSupport.on(scenario, activity -> activity.onProgress(100));
-            TestSupport.waitUntil("the progress bar to disappear", () -> {
+            TestSupport.waitUntil("the progress bar to disappear when the load settles", () -> {
                 ProgressBar progress = TestSupport.onResult(scenario,
                         activity -> activity.findViewById(R.id.page_progress_bar));
                 return progress.getVisibility() != View.VISIBLE;
-            });
+            }, () -> TestSupport.describeBrowser(scenario));
         }
     }
 

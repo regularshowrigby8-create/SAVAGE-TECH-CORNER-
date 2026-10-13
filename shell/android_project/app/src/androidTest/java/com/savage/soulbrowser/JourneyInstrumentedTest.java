@@ -34,10 +34,12 @@ import com.savage.soulbrowser.ui.MainActivity;
 /**
  * AC-004 to AC-009 and AC-034: the six core journeys, driven through the real UI.
  *
- * <p>Pages are injected into the real WebView (see {@link TestSupport#injectPage}) so a journey
- * does not depend on a third party site being reachable during a CI run; the WebView, its history,
- * the tab manager, the repositories and the activities are all the production ones. The journey
- * that must involve the network - offline detection - turns the emulator radios off instead.
+ * <p>Each journey drives the real application: addresses are submitted through the omnibox (see
+ * {@link TestSupport#navigateForReal}), so the WebView, its history, the tab manager, the
+ * repositories and the activities are all the production ones. A CI emulator has no route to the
+ * internet, so a page body cannot be relied on - the journeys assert what the browser does with an
+ * address it was given, which is exactly what the acceptance criteria describe. The journey that
+ * must involve connectivity - offline detection - turns the emulator radios off instead.
  */
 @RunWith(AndroidJUnit4.class)
 public class JourneyInstrumentedTest {
@@ -58,13 +60,13 @@ public class JourneyInstrumentedTest {
     @Test
     public void j1BrowseThenBackThenHome() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
-            TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE_A, "Page A"));
+            TestSupport.navigateForReal(scenario, PAGE_A);
             TestSupport.waitUntil("the first page to load", () -> PAGE_A.equals(url(scenario)),
                     () -> TestSupport.describeBrowser(scenario));
             Assert.assertTrue("a loaded page counts as content",
                     TestSupport.onResult(scenario, MainActivity::hasLoadedPage));
 
-            TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE_B, "Page B"));
+            TestSupport.navigateForReal(scenario, PAGE_B);
             TestSupport.waitUntil("the second page to load", () -> PAGE_B.equals(url(scenario)),
                     () -> TestSupport.describeBrowser(scenario));
 
@@ -82,7 +84,7 @@ public class JourneyInstrumentedTest {
     @Test
     public void j3BookmarkCurrentPageAndOpenIt() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
-            TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE_A, "Page A"));
+            TestSupport.navigateForReal(scenario, PAGE_A);
             TestSupport.waitUntil("the page to load", () -> PAGE_A.equals(url(scenario)),
                     () -> TestSupport.describeBrowser(scenario));
 
@@ -112,7 +114,7 @@ public class JourneyInstrumentedTest {
     @Test
     public void j3StarTwiceKeepsOneRow() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
-            TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE_A, "Page A"));
+            TestSupport.navigateForReal(scenario, PAGE_A);
             TestSupport.waitUntil("the page to load", () -> PAGE_A.equals(url(scenario)),
                     () -> TestSupport.describeBrowser(scenario));
 
@@ -132,7 +134,7 @@ public class JourneyInstrumentedTest {
     @Test
     public void j4HistoryRecordsVisitAndReopensIt() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
-            TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE_A, "Page A"));
+            TestSupport.navigateForReal(scenario, PAGE_A);
             TestSupport.waitUntil("the visit to be written to the local store", () -> {
                 HistoryRepository history = history();
                 return history.count() == 1 && PAGE_A.equals(history.recent(1).get(0).getUrl());
@@ -151,7 +153,7 @@ public class JourneyInstrumentedTest {
     @Test
     public void j5TabsOpenSwitchClose() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
-            TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE_A, "Page A"));
+            TestSupport.navigateForReal(scenario, PAGE_A);
             TestSupport.waitUntil("the first tab to show page A", () -> PAGE_A.equals(url(scenario)),
                     () -> TestSupport.describeBrowser(scenario));
             Assert.assertEquals(1, tabCount(scenario));
