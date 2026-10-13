@@ -100,27 +100,27 @@ jobs:
 
       - name: Gradle clean
         working-directory: shell/android_project
-        run: set -euo pipefail; chmod +x gradlew && ./gradlew clean --stacktrace --no-daemon 2>&1 | tee -a "$RUNNER_TEMP/gradle.log"
+        run: set -euo pipefail; chmod +x gradlew && ./gradlew clean --stacktrace --no-daemon 2>&1 | tee -a "$RUNNER_TEMP/build.log"
 
       - name: Unit tests (JVM)
         working-directory: shell/android_project
-        run: set -euo pipefail; ./gradlew testDebugUnitTest --stacktrace --no-daemon 2>&1 | tee -a "$RUNNER_TEMP/gradle.log"
+        run: set -euo pipefail; ./gradlew testDebugUnitTest --stacktrace --no-daemon 2>&1 | tee -a "$RUNNER_TEMP/build.log"
 
       - name: Android Lint (abortOnError)
         working-directory: shell/android_project
-        run: set -euo pipefail; ./gradlew lintDebug lintRelease --stacktrace --no-daemon 2>&1 | tee -a "$RUNNER_TEMP/gradle.log"
+        run: set -euo pipefail; ./gradlew lintDebug lintRelease --stacktrace --no-daemon 2>&1 | tee -a "$RUNNER_TEMP/build.log"
 
       - name: Assemble debug APK
         working-directory: shell/android_project
-        run: set -euo pipefail; ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee -a "$RUNNER_TEMP/gradle.log"
+        run: set -euo pipefail; ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee -a "$RUNNER_TEMP/build.log"
 
       - name: Assemble release APK (R8 + resource shrinking)
         working-directory: shell/android_project
-        run: set -euo pipefail; ./gradlew assembleRelease --stacktrace --no-daemon 2>&1 | tee -a "$RUNNER_TEMP/gradle.log"
+        run: set -euo pipefail; ./gradlew assembleRelease --stacktrace --no-daemon 2>&1 | tee -a "$RUNNER_TEMP/build.log"
 
       - name: Assemble instrumented test APK
         working-directory: shell/android_project
-        run: set -euo pipefail; ./gradlew assembleDebugAndroidTest --stacktrace --no-daemon 2>&1 | tee -a "$RUNNER_TEMP/gradle.log"
+        run: set -euo pipefail; ./gradlew assembleDebugAndroidTest --stacktrace --no-daemon 2>&1 | tee -a "$RUNNER_TEMP/build.log"
 
       - name: Inspect and hash the built APKs
         id: apk
@@ -171,36 +171,42 @@ jobs:
 
       - name: Verify APK identity, version and provenance
         run: |
+          set -euo pipefail
           python3 -m pip install --upgrade pip
           python3 -m pip install "androguard>=4.0"
-          python3 tools/reproducible_build_verifier.py --apk "${{ steps.apk.outputs.DEBUG_APK }}" \
-            --expect-signed --json apk-evidence.json
-          cat apk-evidence.json
+          {
+            python3 tools/reproducible_build_verifier.py --apk "${{ steps.apk.outputs.DEBUG_APK }}" \
+              --expect-signed --json apk-evidence.json
+            cat apk-evidence.json
+          } 2>&1 | tee -a "$RUNNER_TEMP/build.log"
 
-      # A hosted runner's raw log is not always retrievable through the API; this step turns the
-      # interesting part of the Gradle output into error annotations, so a failed build is
-      # diagnosable from the commit's checks without guessing.
-      - name: Surface the Gradle failure
+      # A hosted runner's raw log is not always retrievable through the API; every shell step above
+      # appends to one log file and this step turns the end of it into error annotations, so a red
+      # build is diagnosable from the commit's checks instead of being a mystery.
+      - name: Surface the failure
         if: failure()
         run: |
           set -uo pipefail
-          LOG="${RUNNER_TEMP:-/tmp}/gradle.log"
+          LOG="${RUNNER_TEMP:-/tmp}/build.log"
           if [ ! -s "$LOG" ]; then
-            echo "::error title=gradle failure::the Gradle log is empty - the failure happened before Gradle ran"
+            echo "::error title=CI failure::nothing was logged - the failure happened before any build step ran"
             exit 0
           fi
           python3 - "$LOG" <<'PYEOF'
           import io, sys
-          lines = io.open(sys.argv[1], encoding="utf-8", errors="replace").read().splitlines()
-          keys = ("FAILURE:", "What went wrong", "Caused by:", "Execution failed", "> Task", "error:",
-                  "Could not", "Cannot", "Unsupported", "A problem occurred", "Deprecated Gradle")
-          picked = [l.rstrip() for l in lines if any(k in l for k in keys)]
-          tail = picked[-60:] if picked else lines[-60:]
+          lines = [l.rstrip() for l in
+                   io.open(sys.argv[1], encoding="utf-8", errors="replace").read().splitlines()]
+          keys = ("FAILURE:", "What went wrong", "Caused by:", "Execution failed", "error:", "ERROR",
+                  "FAIL", "Error", "Could not", "Cannot", "Unsupported", "A problem occurred",
+                  "Traceback", "AssertionError", "mismatch", "expected")
+          picked = [l for l in lines if any(k in l for k in keys)]
+          tail = picked[-60:] if picked else []
+          tail += ["..."] if tail else []
+          tail += lines[-45:]
           def esc(text):
               return text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
           for i in range(0, len(tail), 12):
-              chunk = esc("\n".join(tail[i:i + 12]))
-              print("::error title=gradle failure tail::" + chunk)
+              print("::error title=CI failure tail::" + esc("\n".join(tail[i:i + 12])))
           PYEOF
 
       - name: Upload APKs, reports and evidence
