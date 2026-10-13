@@ -96,6 +96,75 @@ def read_source_contract() -> dict:
     return {"permissions": sorted(permissions), "launcher_activity": launcher}
 
 
+PROTECTION_BASE_FLAGS = {
+    0x0: "normal",
+    0x1: "dangerous",
+    0x2: "signature",
+    0x3: "signatureOrSystem",
+}
+PROTECTION_EXTRA_FLAGS = {
+    0x4: "internal",
+    0x8: "privileged",
+    0x10: "development",
+    0x20: "appop",
+    0x40: "pre23",
+    0x80: "installer",
+    0x100: "verifier",
+    0x200: "preinstalled",
+    0x400: "setup",
+    0x80000000: "vendorPrivileged",
+}
+
+
+def protection_level_names(raw) -> set:
+    """Decodes an APK's {@code android:protectionLevel} into flag names.
+
+    A compiled manifest stores the bitmask, so androguard reports ``0x00000002`` where the source
+    says ``signature``. Reading that as an opaque string would make this gate pass or fail for the
+    wrong reason, so the bits are spelled out.
+    """
+    if raw is None:
+        return set()
+    text = str(raw).strip()
+    if not text:
+        return set()
+    try:
+        value = int(text, 16) if text.lower().startswith("0x") else int(text)
+    except ValueError:
+        return {part.strip().lower() for part in text.replace("|", " ").split() if part.strip()}
+    names = {PROTECTION_BASE_FLAGS.get(value & 0xF, hex(value & 0xF))}
+    names.update(name for flag, name in PROTECTION_EXTRA_FLAGS.items() if value & flag)
+    return names
+
+
+def is_signature_protected(raw) -> bool:
+    """True when the protection level means 'only an app signed with the same key can hold this'."""
+    return bool({"signature", "signatureOrSystem"} & protection_level_names(raw))
+
+
+def permission_findings(application_id: str, platform_permissions, self_permissions,
+                       protection_levels) -> list:
+    """Returns the permission problems of an APK, given the identity the build declares.
+
+    Kept separate from {@link main} so that the rule itself is unit-tested instead of being trusted.
+    """
+    findings = []
+    unexpected_platform = sorted(set(platform_permissions) - ALLOWED_PLATFORM_PERMISSIONS)
+    if unexpected_platform:
+        findings.append("the APK requests platform permissions the product does not need: "
+                        f"{unexpected_platform}")
+    for name in self_permissions:
+        if name != application_id + AGP_DYNAMIC_RECEIVER_SUFFIX:
+            findings.append(f"the APK declares an unexpected self-permission: {name}")
+            continue
+        level = protection_levels.get(name)
+        if not is_signature_protected(level):
+            findings.append(f"{name} is declared with protectionLevel={level!r} "
+                            f"({sorted(protection_level_names(level)) or 'not declared'}), "
+                            f"which is not signature-protected")
+    return findings
+
+
 def read_apk_permissions(apk) -> tuple:
     """Splits the APK's requested permissions into platform and self-declared ones.
 
@@ -245,22 +314,14 @@ def main() -> int:
     platform_permissions, self_permissions, protection_levels = read_apk_permissions(apk)
     evidence["platform_permissions"] = platform_permissions
     evidence["self_declared_permissions"] = {
-        name: protection_levels.get(name, "<not declared>") for name in self_permissions
+        name: {
+            "protectionLevel": protection_levels.get(name),
+            "protectionLevelFlags": sorted(protection_level_names(protection_levels.get(name))),
+        } for name in self_permissions
     }
 
-    unexpected_platform = sorted(set(platform_permissions) - ALLOWED_PLATFORM_PERMISSIONS)
-    if unexpected_platform:
-        errors.append(f"the APK requests platform permissions the product does not need: "
-                      f"{unexpected_platform}")
-    for name in self_permissions:
-        expected_name = expected["application_id"] + AGP_DYNAMIC_RECEIVER_SUFFIX
-        if name != expected_name:
-            errors.append(f"the APK declares an unexpected self-permission: {name}")
-            continue
-        level = protection_levels.get(name, "")
-        if "signature" not in level:
-            errors.append(f"{name} is declared with protectionLevel='{level}', "
-                          f"which is not signature-protected")
+    errors.extend(permission_findings(expected["application_id"], platform_permissions,
+                                      self_permissions, protection_levels))
 
     cleartext = apk.get_attribute_value("application", "usesCleartextTraffic")
     network_config = apk.get_attribute_value("application", "networkSecurityConfig")
