@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
 }
@@ -32,7 +34,7 @@ android {
     // APK, which is the honest result.
     val keystorePropertiesFile = rootProject.file("keystore.properties")
     if (keystorePropertiesFile.exists()) {
-        val keystoreProperties = java.util.Properties().apply {
+        val keystoreProperties = Properties().apply {
             keystorePropertiesFile.inputStream().use { load(it) }
         }
         signingConfigs.create("release") {
