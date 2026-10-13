@@ -152,15 +152,15 @@ public class JourneyInstrumentedTest {
                 return history.recent(5).stream()
                         .anyMatch(entry -> PAGE_A.equals(entry.getUrl()));
             }, () -> TestSupport.describeBrowser(scenario) + " " + historySummary());
-        }
 
-        try (ActivityScenario<HistoryActivity> list = ActivityScenario.launch(
-                new Intent(TestSupport.context(), HistoryActivity.class)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))) {
-            onView(withId(R.id.list_history)).check(matches(isDisplayed()));
-            onView(withText(containsString("example.com"))).perform(click());
+            try (ActivityScenario<HistoryActivity> list = ActivityScenario.launch(
+                    new Intent(TestSupport.context(), HistoryActivity.class)
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))) {
+                onView(withId(R.id.list_history)).check(matches(isDisplayed()));
+                onView(withText(containsString("example.com"))).perform(click());
+            }
+            assertBrowserCameBackTo(scenario, PAGE_A);
         }
-        assertBrowserCameBackTo(scenario, PAGE_A);
     }
 
     @Test
