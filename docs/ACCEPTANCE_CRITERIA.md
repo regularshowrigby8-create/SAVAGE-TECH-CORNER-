@@ -422,7 +422,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Given**: the built APK
 - **When**: its manifest is read
 - **Then**: `package=com.savage.soulbrowser`, `versionCode=5`, `versionName=3.0.0`, `minSdk=26`, `targetSdk=35`
-- **Test method**: `tools/reproducible_build_verifier.py --apk <apk> --json apk-evidence.json` (reads the expected identity from `app/build.gradle.kts`)
+- **Test method**: `tools/reproducible_build_verifier.py --apk <apk> --json apk-evidence.json` (reads the expected identity from `app/build.gradle.kts`), gate behaviour pinned by `shell/tests/test_apk_gate.py#ExpectedIdentityTest`
 - **Evidence required**: verifier stdout + `android-artifact-verification.txt`
 
 ### AC-046 — The APK is signed and provenance matches its hash
@@ -431,7 +431,7 @@ from the repository's own authoritative documents instead of being invented:
 - **When**: `apksigner verify` runs and the SHA-256 is recomputed
 - **Then**: v1+v2 signing verify, the signer is the Android debug key (intentional for this build),
   and the recorded SHA-256 equals the recomputed SHA-256 of the file
-- **Test method**: `tools/reproducible_build_verifier.py --apk <apk>` (SHA-256 + certificate identity in `apk-evidence.json`) and the CI step `apksigner verify --print-certs`
+- **Test method**: `tools/reproducible_build_verifier.py --apk <apk>` (SHA-256 + certificate identity in `apk-evidence.json`), `shell/tests/test_apk_gate.py#FailClosedExitCodeTest` (fails closed, exits non-zero, never claims a pre-built APK as provenance) and the CI step `apksigner verify --print-certs`
 - **Evidence required**: apksigner output + `sha256sum` output in the evidence bundle
 
 ### AC-047 — Reproducible from a clean checkout
