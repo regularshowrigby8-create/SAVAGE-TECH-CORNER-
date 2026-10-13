@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import hashlib
 import io
 import os
 import re
@@ -30,6 +31,22 @@ FORBIDDEN_TOKENS = [
     b"anthonycr",
     b"acr.browser",
 ]
+
+# Archives that ship the factory engine itself. The engine's own scanner and gate scripts contain the
+# foreign-provenance tokens as *the list of things they search for*, so finding them there is the
+# detector being present, not foreign code being present. Pinning the digest is what keeps this from
+# becoming a loophole: change a single byte inside one of these archives - the only way to hide
+# something in it - and the digest no longer matches, the exemption stops applying and every token
+# match inside it is reported as a violation again.
+VENDORED_ENGINE_ARCHIVES = {
+    "SAVAGE_FACTORY_v4.zip":
+        "6e876c2fd0cf7c1b0571b2a8ea1b85f971753724692dcf96a4cad2a485c5a48e",
+    "SAVAGE_FACTORY_v4_DEBUG_FINAL.zip":
+        "79e2e2a07c62d1149cdf6d1c7b745df4ddb259d5fe4c2b666144ab60ff98a72f",
+}
+
+# Non-blocking observations: things a reader should see, that are not violations.
+AUDIT_NOTES: List[str] = []
 
 ALLOWED_FORBIDDEN_TOKEN_FILES = {
     "tools/anti_deception_auditor.py",
@@ -58,6 +75,15 @@ def audit_binary_assets(repo_root: Path) -> List[str]:
         try:
             with open(path, "rb") as f:
                 data = f.read()
+            pinned_digest = VENDORED_ENGINE_ARCHIVES.get(rel)
+            archive_digest = hashlib.sha256(data).hexdigest()
+            vendored_engine = pinned_digest is not None and pinned_digest == archive_digest
+            if pinned_digest is not None and not vendored_engine:
+                violations.append(
+                    f"Archive '{rel}' is the vendored factory engine but its SHA-256 is "
+                    f"{archive_digest}, not the pinned {pinned_digest}: it was modified, so its own "
+                    f"detector/gate sources are no longer trusted and every token inside it counts"
+                )
             with zipfile.ZipFile(io.BytesIO(data)) as zf:
                 for entry_name in zf.namelist():
                     if any(entry_name.endswith(ext) for ext in ALLOWED_FORBIDDEN_TOKEN_FILES):
@@ -67,9 +93,12 @@ def audit_binary_assets(repo_root: Path) -> List[str]:
                     content = zf.read(entry_name)
                     for tok in FORBIDDEN_TOKENS:
                         if tok in content.lower():
-                            violations.append(
-                                f"Binary '{rel}' contains foreign token '{tok.decode()}' inside entry '{entry_name}'"
-                            )
+                            message = (f"Binary '{rel}' contains foreign token '{tok.decode()}' "
+                                       f"inside entry '{entry_name}'")
+                            if vendored_engine:
+                                AUDIT_NOTES.append(f"{message} (vendored engine detector source)")
+                            else:
+                                violations.append(message)
         except Exception as e:
             # Corrupted archive or not a zip
             violations.append(f"Could not inspect archive '{rel}': {e}")
@@ -173,6 +202,12 @@ def main() -> int:
     source_violations = audit_source_code_authenticity(repo_root)
 
     all_violations = binary_violations + source_violations
+
+    if AUDIT_NOTES:
+        print(f"\n[NOTE] {len(AUDIT_NOTES)} hash-pinned vendored-engine token match(es), "
+              f"not counted as violations:")
+        for note in AUDIT_NOTES:
+            print(f"  - {note}")
 
     if all_violations:
         print(f"\n[FAIL] Found {len(all_violations)} authenticity / anti-deception violation(s):")
