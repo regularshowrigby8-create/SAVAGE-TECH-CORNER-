@@ -47,16 +47,45 @@ jobs:
           java-version: '17'
           cache: gradle
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+      # The GitHub-hosted runner image already provides the Android SDK; this step proves it and
+      # installs the exact platform and build-tools the build pins, instead of hiding the check
+      # behind a third-party setup action.
+      - name: Prepare the Android SDK
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          if [ -z "$SDK_ROOT" ] || [ ! -d "$SDK_ROOT" ]; then
+            echo "::error::no Android SDK on this runner (ANDROID_HOME unset)"
+            exit 1
+          fi
+          SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER=$(command -v sdkmanager)
+          fi
+          if [ ! -x "$SDKMANAGER" ]; then
+            echo "::error::sdkmanager not found in $SDK_ROOT"
+            exit 1
+          fi
+          printf 'y\n%.0s' {1..40} | "$SDKMANAGER" --licenses > /dev/null
+          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0" "platform-tools"
+          "$SDKMANAGER" --list_installed | sed -n '1,30p'
+          test -d "$SDK_ROOT/platforms/android-35" || {
+            echo "::error::platform android-35 is not installed"; exit 1; }
+          test -d "$SDK_ROOT/build-tools/35.0.0" || {
+            echo "::error::build-tools 35.0.0 are not installed"; exit 1; }
+          echo "SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
 
       - name: Set up Python
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.11'
 
-      - name: Install Android SDK platform 35 and build-tools 35.0.0
-        run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
+      - name: Verify the SDK packages the build pins
+        run: |
+          set -euo pipefail
+          test -d "$SDK_ROOT/platforms/android-35"
+          test -d "$SDK_ROOT/build-tools/35.0.0"
+          echo "platform 35 and build-tools 35.0.0 present under $SDK_ROOT"
 
       - name: Repository invariants (assets, manifest, pins, no placeholders)
         run: python3 -m unittest discover -s shell/tests -v
@@ -178,8 +207,33 @@ jobs:
           java-version: '17'
           cache: gradle
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+      # The GitHub-hosted runner image already provides the Android SDK; this step proves it and
+      # installs the exact platform and build-tools the build pins, instead of hiding the check
+      # behind a third-party setup action.
+      - name: Prepare the Android SDK
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          if [ -z "$SDK_ROOT" ] || [ ! -d "$SDK_ROOT" ]; then
+            echo "::error::no Android SDK on this runner (ANDROID_HOME unset)"
+            exit 1
+          fi
+          SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER=$(command -v sdkmanager)
+          fi
+          if [ ! -x "$SDKMANAGER" ]; then
+            echo "::error::sdkmanager not found in $SDK_ROOT"
+            exit 1
+          fi
+          printf 'y\n%.0s' {1..40} | "$SDKMANAGER" --licenses > /dev/null
+          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0" "platform-tools"
+          "$SDKMANAGER" --list_installed | sed -n '1,30p'
+          test -d "$SDK_ROOT/platforms/android-35" || {
+            echo "::error::platform android-35 is not installed"; exit 1; }
+          test -d "$SDK_ROOT/build-tools/35.0.0" || {
+            echo "::error::build-tools 35.0.0 are not installed"; exit 1; }
+          echo "SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
 
       - name: Enable KVM for the emulator
         run: |
@@ -188,9 +242,6 @@ jobs:
             | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-
-      - name: Install Android SDK platform 35 and build-tools 35.0.0
-        run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0" "platform-tools"
 
       - name: Run instrumented tests on an API 35 emulator
         uses: ReactiveCircus/android-emulator-runner@b530d96654c385303d652368551fb075bc2f0b6b # v2.35.0
