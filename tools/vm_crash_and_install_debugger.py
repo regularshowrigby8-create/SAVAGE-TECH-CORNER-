@@ -2,16 +2,21 @@
 """
 tools/vm_crash_and_install_debugger.py
 
-Android VM Deep Crash & Install Diagnostics and Recovery Subsystem.
-Emulates Android OS 14 PackageInstaller, ART/Dalvik class loader,
-and View/Theme inflation subsystem with:
-1. Deep DexBytecode inspection: Parses Dalvik DEX structures, verifies that declared
-   activities in AndroidManifest.xml are actually defined in classes.dex.
-2. Layout & Resource Inflation Verifier: Traverses all binary/compiled XML layout files,
-   checks referenced view attributes, strings, drawables, styles, and custom widgets.
-3. Theme Compatibility Analyzer: Enforces MaterialComponents/AppCompat ancestry
-   and flags missing DayNight / attribute references.
-4. Generates an active, executable diagnostic audit script of everything verified.
+STATIC APK STRUCTURE ANALYSER - it does not install, launch or emulate anything.
+
+This tool reads an APK file and checks the consistency of its *static* structure:
+1. Package archive & signature block presence (ZIP integrity, classes.dex, resources.arsc, v2/v3
+   signature block), with the same checks a package manager would perform before installing.
+2. DEX inspection: parses the DEX header and class list and verifies that the activities declared
+   in AndroidManifest.xml are actually defined in the bytecode.
+3. Resource inflation audit: traverses the compiled binary XML layouts and reports references to
+   views, strings, drawables and styles.
+4. Theme ancestry: reports the theme names referenced by the manifest.
+5. Emits the findings as JSON plus a copy-pasteable audit script.
+
+Everything it reports is derived from the file on disk. It cannot and does not produce install,
+launch or crash results - those require a real emulator/device and are produced by
+tools/android_apk_smoke.sh and the instrumented tests in the CI workflow.
 """
 
 from __future__ import annotations
@@ -60,8 +65,8 @@ class AndroidVMDiagnosticSession:
         self.results: Dict[str, Any] = {
             "apk": str(self.apk_path),
             "vm_configuration": self.config,
-            "installer_status": "UNKNOWN",
-            "runtime_status": "UNKNOWN",
+            "static_analysis_status": "NOT_RUN",
+            "dex_linkage_status": "NOT_RUN",
             "install_errors": [],
             "runtime_crashes": [],
             "crash_traces": [],
@@ -69,42 +74,43 @@ class AndroidVMDiagnosticSession:
             "recommendations": [],
             "activity_inspections": [],
             "execution_audit_log": [],
-            "overall_healthy": False,
+            "static_analysis_clean": False,
         }
 
     def _log(self, message: str) -> None:
         self.execution_log.append(message)
 
     def run(self) -> Dict[str, Any]:
-        """Execute deep VM installation and runtime crash simulation."""
-        self._log(f"VM Init: Booting virtual ART runtime (API {self.config['api_level']}, Heap {self.config['simulated_heap_mb']}MB)")
+        """Run the static structure analysis over the APK on disk."""
+        self._log(f"Static analysis start (target API {self.config['api_level']}, "
+                  f"expectations from config {self.config['min_supported_api']}+)")
         if not self.apk_path.exists():
             self._record_install_error("INSTALL_FAILED_INVALID_APK", f"APK file does not exist: {self.apk_path}")
             return self.results
 
-        # Stage 1: PackageInstaller Verification
-        self._simulate_package_installer()
+        # Stage 1: package archive and signature structure
+        self._check_package_archive()
 
         if self.results["install_errors"]:
-            self.results["installer_status"] = "FAILED"
-            self.results["runtime_status"] = "NOT_REACHED"
+            self.results["static_analysis_status"] = "STRUCTURE_INVALID"
+            self.results["dex_linkage_status"] = "NOT_REACHED"
             self._generate_recommendations()
             self.results["execution_audit_log"] = self.execution_log
             return self.results
 
-        self.results["installer_status"] = "INSTALL_SUCCESS"
+        self.results["static_analysis_status"] = "STRUCTURE_VALID"
 
-        # Stage 2: Runtime Crash, DEX Class Linkage & Inflation Simulation
-        self._simulate_runtime_execution()
+        # Stage 2: DEX class linkage and inflation references
+        self._analyse_dex_and_resources()
 
         if self.results["runtime_crashes"]:
-            self.results["runtime_status"] = "CRASHED"
+            self.results["dex_linkage_status"] = "INCONSISTENT"
         else:
-            self.results["runtime_status"] = "EXECUTION_HEALTHY"
+            self.results["dex_linkage_status"] = "CONSISTENT"
 
-        self.results["overall_healthy"] = (
-            self.results["installer_status"] == "INSTALL_SUCCESS" and
-            self.results["runtime_status"] == "EXECUTION_HEALTHY"
+        self.results["static_analysis_clean"] = (
+            self.results["static_analysis_status"] == "STRUCTURE_VALID" and
+            self.results["dex_linkage_status"] == "CONSISTENT"
         )
 
         self._generate_recommendations()
@@ -112,7 +118,8 @@ class AndroidVMDiagnosticSession:
         return self.results
 
     def _record_install_error(self, code: str, reason: str) -> None:
-        self._log(f"[INSTALL_ERROR] {code}: {reason}")
+        """Records a *static* structural defect (the code mirrors the package manager wording)."""
+        self._log(f"[STRUCTURE_DEFECT] {code}: {reason}")
         self.results["install_errors"].append({"code": code, "reason": reason})
 
     def _record_crash(self, exception_type: str, message: str, stacktrace: str) -> None:
@@ -123,9 +130,9 @@ class AndroidVMDiagnosticSession:
         })
         self.results["crash_traces"].append(stacktrace)
 
-    def _simulate_package_installer(self) -> None:
-        """Simulate PackageManager / PackageInstaller checks."""
-        self._log("Stage 1: Simulating Android OS PackageInstaller archive & signature validation")
+    def _check_package_archive(self) -> None:
+        """The archive and signature checks a package manager performs before installing."""
+        self._log("Stage 1: reading the APK archive and signature structure")
         try:
             with zipfile.ZipFile(self.apk_path, "r") as zf:
                 namelist = zf.namelist()
@@ -195,9 +202,9 @@ class AndroidVMDiagnosticSession:
         except Exception as e:
             self._record_install_error("INSTALL_FAILED_CONTAINER_ERROR", f"Unexpected filesystem or installer error: {e}")
 
-    def _simulate_runtime_execution(self) -> None:
-        """Deep simulation of ART Dalvik class loader and View inflation."""
-        self._log("Stage 2: Simulating Dalvik Class Loader & Activity Lifecycle Execution")
+    def _analyse_dex_and_resources(self) -> None:
+        """Reads the DEX header and the compiled resources to check static consistency."""
+        self._log("Stage 2: reading classes.dex and the compiled resource table")
         try:
             with zipfile.ZipFile(self.apk_path, "r") as zf:
                 namelist = zf.namelist()
@@ -282,17 +289,22 @@ class AndroidVMDiagnosticSession:
             elif "NoClassDefFoundError" in exc:
                 recs.append("Ensure multi-dex packaging includes all runtime dependencies in primary classes.dex.")
 
-        if not recs and self.results["overall_healthy"]:
-            recs.append("No errors detected. APK is 100% certified and ready for physical/emulator deployment.")
+        if not recs and self.results["static_analysis_clean"]:
+            recs.append("No static structure defect detected. This is a file-level result only: "
+                        "run tools/android_apk_smoke.sh and the instrumented tests on a real device "
+                        "for install, launch and crash evidence.")
 
         self.results["recommendations"] = list(dict.fromkeys(recs))
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Android VM Crash & Install Diagnostics")
+    parser = argparse.ArgumentParser(
+        description="Static APK structure analyser (does not install or run the APK)")
     parser.add_argument("apk", help="Path to APK file to audit")
     parser.add_argument("--api", type=int, default=34, help="Target Android API level (default: 34)")
-    parser.add_argument("--heap", type=int, default=256, help="Simulated VM heap size in MB (default: 256)")
+    parser.add_argument("--heap", type=int, default=256,
+                        help="Heap size the deployment target is expected to offer, in MB "
+                             "(recorded in the report; nothing is executed)")
     parser.add_argument("--json", action="store_true", help="Output results in JSON format")
 
     args = parser.parse_args()
@@ -307,22 +319,24 @@ def main() -> int:
         print(json.dumps(res, indent=2))
     else:
         print("\n" + "=" * 60)
-        print("ANDROID VM INSTALL & CRASH REPORT")
+        print("STATIC APK STRUCTURE REPORT (no installation, no emulator)")
         print("=" * 60)
         print(f"Target APK:         {res['apk']}")
-        print(f"VM API Level:       {res['vm_configuration']['api_level']}")
-        print(f"Installer Status:   {res['installer_status']}")
-        print(f"Runtime Status:     {res['runtime_status']}")
-        print(f"Overall Healthy:    {'PASS [YES]' if res['overall_healthy'] else 'FAIL [NO]'}")
+        print(f"Target API Level:   {res['vm_configuration']['api_level']}")
+        print(f"Archive Structure:  {res['static_analysis_status']}")
+        print(f"DEX/Resource Link:  {res['dex_linkage_status']}")
+        print(f"Statically Clean:   {'PASS [YES]' if res['static_analysis_clean'] else 'FAIL [NO]'}")
+        print("NOTE: this is a file-level analysis. Install, launch and crash evidence come from")
+        print("      tools/android_apk_smoke.sh and the instrumented tests, never from this tool.")
         print("-" * 60)
 
         if res["install_errors"]:
-            print("\n[!] INSTALLATION ERRORS:")
+            print("\n[!] STRUCTURAL DEFECTS:")
             for e in res["install_errors"]:
                 print(f"    - {e['code']}: {e['reason']}")
 
         if res["runtime_crashes"]:
-            print("\n[!] RUNTIME CRASHES:")
+            print("\n[!] STATIC LINKAGE DEFECTS:")
             for c in res["runtime_crashes"]:
                 print(f"    - {c['exception']}: {c['message']}")
 
@@ -341,7 +355,7 @@ def main() -> int:
             print(f"    - {r}")
         print("=" * 60 + "\n")
 
-    return 0 if res["overall_healthy"] else 1
+    return 0 if res["static_analysis_clean"] else 1
 
 
 if __name__ == "__main__":

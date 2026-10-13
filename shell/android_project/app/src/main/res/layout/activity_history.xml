@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/canvas">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/list_history"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:contentDescription="@string/title_history"
+        android:paddingBottom="@dimen/screen_padding"
+        android:scrollbars="vertical" />
+
+    <LinearLayout
+        android:id="@+id/history_empty_state"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="@dimen/screen_padding"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="@dimen/state_icon_size"
+            android:layout_height="@dimen/state_icon_size"
+            android:contentDescription="@string/cd_empty_illustration"
+            android:src="@drawable/ic_history" />
+
+        <TextView
+            android:id="@+id/history_empty_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/screen_padding"
+            android:text="@string/history_empty_title"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/history_empty_message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/item_vertical_padding"
+            android:gravity="center"
+            android:text="@string/history_empty_message"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp" />
+    </LinearLayout>
+</FrameLayout>

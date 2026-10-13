@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="dock_height">56dp</dimen>
+    <dimen name="app_bar_height">56dp</dimen>
+    <dimen name="touch_target_min">48dp</dimen>
+    <dimen name="screen_padding">16dp</dimen>
+    <dimen name="item_vertical_padding">12dp</dimen>
+    <dimen name="list_row_icon">24dp</dimen>
+    <dimen name="omnibox_height">40dp</dimen>
+    <dimen name="progress_height">3dp</dimen>
+    <dimen name="state_icon_size">48dp</dimen>
+</resources>

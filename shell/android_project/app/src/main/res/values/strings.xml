@@ -1,5 +1,85 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Application identity -->
     <string name="app_name">Savage Browser</string>
-    <string name="appbar_scrolling_view_behavior">com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior</string>
+    <string name="title_bookmarks">Bookmarks</string>
+    <string name="title_history">History</string>
+
+    <!-- Omnibox -->
+    <string name="omnibox_hint">Search or enter address</string>
+    <string name="omnibox_label">Address and search bar</string>
+    <string name="security_secure">Secure connection (HTTPS)</string>
+    <string name="security_insecure">Not a secure connection</string>
+    <string name="security_blocked">Navigation blocked by security policy</string>
+
+    <!-- Navigation dock -->
+    <string name="action_back">Back</string>
+    <string name="action_forward">Forward</string>
+    <string name="action_home">Home</string>
+    <string name="action_reload">Reload</string>
+    <string name="action_stop">Stop loading</string>
+    <string name="action_menu">Menu</string>
+    <string name="action_bookmark_add">Add bookmark</string>
+    <string name="action_bookmark_remove">Remove bookmark</string>
+    <string name="action_delete_entry">Delete entry</string>
+    <string name="tabs_label">Tabs: %1$d open</string>
+    <string name="tabs_title">Tabs</string>
+    <string name="tabs_new">New tab</string>
+    <string name="tabs_close">Close tab %1$s</string>
+    <string name="tabs_active">Active tab</string>
+
+    <!-- States -->
+    <string name="state_loading">Loading…</string>
+    <string name="state_offline_title">You are offline</string>
+    <string name="state_offline_message">Savage Browser could not reach the network. Saved bookmarks and history are still available.</string>
+    <string name="state_error_title">This page could not be loaded</string>
+    <string name="state_error_message">The address may be wrong or the site may be unavailable.</string>
+    <string name="state_blocked_title">Blocked for your safety</string>
+    <string name="state_blocked_message">Only encrypted HTTPS addresses can be opened. Cleartext HTTP, file, javascript and data addresses are refused.</string>
+    <string name="state_ssl_title">Connection not secure</string>
+    <string name="state_ssl_message">The certificate for this site could not be verified. The connection was closed and nothing was sent.</string>
+    <string name="state_retry">Retry</string>
+
+    <!-- Bookmarks screen -->
+    <string name="bookmarks_empty_title">No bookmarks yet</string>
+    <string name="bookmarks_empty_message">Open a page and tap the star to save it here.</string>
+    <string name="bookmarks_delete">Delete bookmark %1$s</string>
+    <string name="bookmarks_added">Bookmark saved</string>
+    <string name="bookmarks_already_saved">Already in bookmarks</string>
+    <string name="bookmarks_removed">Bookmark removed</string>
+    <string name="bookmarks_pending_sync">Waiting to sync: %1$d</string>
+
+    <!-- History screen -->
+    <string name="history_empty_title">No history yet</string>
+    <string name="history_empty_message">Pages you visit are listed here, stored only on this device.</string>
+    <string name="history_delete">Delete history entry %1$s</string>
+    <string name="history_clear_all">Delete all history</string>
+    <string name="history_clear_confirm_title">Delete all history?</string>
+    <string name="history_clear_confirm_message">This removes every locally stored visit. It cannot be undone.</string>
+    <string name="history_cleared">History deleted</string>
+    <string name="history_visit_count">Visits: %1$d</string>
+
+    <!-- Menu -->
+    <string name="menu_bookmarks">Bookmarks</string>
+    <string name="menu_history">History</string>
+    <string name="menu_desktop_site">Desktop site</string>
+    <string name="menu_desktop_site_on">Desktop site enabled</string>
+    <string name="menu_desktop_site_off">Desktop site disabled</string>
+    <string name="menu_search_provider">Search engine: %1$s</string>
+    <string name="menu_clear_history">Clear browsing history</string>
+    <string name="menu_about">About Savage Browser</string>
+    <string name="menu_about_message">%1$s (build %2$d)\n\nSavage Browser is the security-hardened Android shell of the Savage Tech Corner ecosystem. HTTPS only, fail-closed TLS, no trackers, no unnecessary permissions.</string>
+
+    <!-- Permissions / downloads -->
+    <string name="permission_denied">Permission request denied by policy</string>
+    <string name="download_requires_https">Only HTTPS downloads are allowed</string>
+    <string name="download_started">Download started</string>
+    <string name="download_failed">Download could not be started</string>
+
+    <!-- Accessibility content descriptions -->
+    <string name="cd_security_badge">Connection security indicator</string>
+    <string name="cd_bookmark_item">Bookmark entry</string>
+    <string name="cd_history_item">History entry</string>
+    <string name="cd_empty_illustration">Decorative illustration</string>
+    <string name="cd_new_tab">Open a new tab</string>
 </resources>

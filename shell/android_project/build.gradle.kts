@@ -1,7 +1,8 @@
 plugins {
-    id("com.android.application") version "8.5.0" apply false
+    id("com.android.application") version "8.7.3" apply false
 }
 
 tasks.register("clean", Delete::class) {
     delete(rootProject.layout.buildDirectory)
+    delete(project(":app").layout.buildDirectory)
 }

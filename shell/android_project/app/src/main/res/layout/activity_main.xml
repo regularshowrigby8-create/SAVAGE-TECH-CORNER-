@@ -2,43 +2,43 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#090D16">
+    android:background="@color/canvas"
+    android:orientation="vertical">
 
-    <!-- Modern Translucent Top App Bar / Glass Omnibox 2.0 -->
+    <!-- App bar: security indicator, omnibox, bookmark action, reload/stop action -->
     <LinearLayout
         android:id="@+id/app_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="#1E293B">
+        android:background="@color/surface_bar"
+        android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="@dimen/app_bar_height"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingHorizontal="12dp">
+            android:paddingStart="@dimen/screen_padding"
+            android:paddingEnd="@dimen/screen_padding">
 
-            <!-- Security Badge -->
-            <TextView
+            <ImageView
                 android:id="@+id/img_security_badge"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:gravity="center"
-                android:text="🔒"
-                android:textSize="14sp" />
+                android:layout_width="@dimen/list_row_icon"
+                android:layout_height="@dimen/list_row_icon"
+                android:contentDescription="@string/cd_security_badge"
+                android:src="@drawable/ic_lock" />
 
-            <!-- Omnibox Capsule -->
             <LinearLayout
                 android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_marginHorizontal="8dp"
+                android:layout_height="@dimen/omnibox_height"
+                android:layout_marginStart="@dimen/screen_padding"
+                android:layout_marginEnd="@dimen/screen_padding"
                 android:layout_weight="1"
-                android:background="#334155"
+                android:background="@color/surface_input"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingHorizontal="10dp">
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp">
 
                 <EditText
                     android:id="@+id/edit_omnibox"
@@ -46,134 +46,164 @@
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@null"
-                    android:hint="Search or enter URL"
+                    android:contentDescription="@string/omnibox_label"
+                    android:hint="@string/omnibox_hint"
                     android:imeOptions="actionGo"
                     android:inputType="textUri"
-                    android:textColor="#F8FAFC"
-                    android:textColorHint="#94A3B8"
+                    android:importantForAutofill="no"
+                    android:maxLines="1"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_muted"
                     android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/btn_action_ai"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:gravity="center"
-                    android:text="✦"
-                    android:textColor="#6366F1"
-                    android:textSize="18sp" />
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/btn_action_refresh"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:gravity="center"
-                android:text="↻"
-                android:textColor="#CBD5E1"
-                android:textSize="18sp" />
+            <ImageButton
+                android:id="@+id/btn_action_bookmark"
+                android:layout_width="@dimen/touch_target_min"
+                android:layout_height="@dimen/touch_target_min"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/action_bookmark_add"
+                android:src="@drawable/ic_star_outline" />
+
+            <ImageButton
+                android:id="@+id/btn_action_reload"
+                android:layout_width="@dimen/touch_target_min"
+                android:layout_height="@dimen/touch_target_min"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/action_reload"
+                android:src="@drawable/ic_refresh" />
         </LinearLayout>
 
-        <!-- Dynamic Electric Progress Bar -->
         <ProgressBar
             android:id="@+id/page_progress_bar"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
-            android:layout_height="3dp"
+            android:layout_height="@dimen/progress_height"
             android:max="100"
             android:progress="0" />
     </LinearLayout>
 
-    <!-- Main Native WebView Container -->
+    <!-- Content area: the tab WebViews plus the single view-state overlay -->
     <FrameLayout
         android:id="@+id/webview_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
 
-        <WebView
-            android:id="@+id/main_webview"
+        <LinearLayout
+            android:id="@+id/state_overlay"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:background="@color/canvas"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="@dimen/screen_padding"
+            android:visibility="gone">
+
+            <ProgressBar
+                android:id="@+id/state_progress"
+                android:layout_width="@dimen/state_icon_size"
+                android:layout_height="@dimen/state_icon_size"
+                android:indeterminate="true" />
+
+            <ImageView
+                android:id="@+id/state_icon"
+                android:layout_width="@dimen/state_icon_size"
+                android:layout_height="@dimen/state_icon_size"
+                android:contentDescription="@string/cd_empty_illustration"
+                android:src="@drawable/ic_warning"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/state_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/screen_padding"
+                android:gravity="center"
+                android:text="@string/state_loading"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/state_message"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/item_vertical_padding"
+                android:gravity="center"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/state_retry"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/touch_target_min"
+                android:layout_marginTop="@dimen/screen_padding"
+                android:text="@string/state_retry"
+                android:visibility="gone" />
+        </LinearLayout>
     </FrameLayout>
 
-    <!-- Modern Floating Glassmorphism Bottom Navigation Dock 2.0 -->
+    <!-- Bottom navigation dock -->
     <LinearLayout
         android:id="@+id/bottom_navigation_dock"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:background="#0F172A"
+        android:layout_height="@dimen/dock_height"
+        android:background="@color/surface_dock"
         android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingHorizontal="12dp">
+        android:orientation="horizontal">
 
-        <TextView
+        <ImageButton
             android:id="@+id/btn_nav_back"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:gravity="center"
-            android:text="◀"
-            android:textColor="#F8FAFC"
-            android:textSize="18sp" />
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/action_back"
+            android:src="@drawable/ic_back" />
 
-        <TextView
+        <ImageButton
             android:id="@+id/btn_nav_forward"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:gravity="center"
-            android:text="▶"
-            android:textColor="#F8FAFC"
-            android:textSize="18sp" />
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/action_forward"
+            android:src="@drawable/ic_forward" />
 
-        <TextView
+        <ImageButton
             android:id="@+id/btn_nav_home"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:gravity="center"
-            android:text="⌂"
-            android:textColor="#6366F1"
-            android:textSize="22sp" />
-
-        <FrameLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1">
-
-            <TextView
-                android:id="@+id/btn_nav_tabs"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:text="❐"
-                android:textColor="#F8FAFC"
-                android:textSize="20sp" />
-
-            <TextView
-                android:id="@+id/txt_tabs_badge"
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:layout_gravity="top|end"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="10dp"
-                android:background="#6366F1"
-                android:gravity="center"
-                android:text="1"
-                android:textColor="#FFFFFF"
-                android:textSize="10sp"
-                android:textStyle="bold" />
-        </FrameLayout>
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/action_home"
+            android:src="@drawable/ic_home" />
 
         <TextView
+            android:id="@+id/btn_nav_tabs"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/touch_target_min"
+            android:layout_marginStart="6dp"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:background="@drawable/tab_count_background"
+            android:clickable="true"
+            android:contentDescription="@string/tabs_title"
+            android:focusable="true"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <ImageButton
             android:id="@+id/btn_nav_menu"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:gravity="center"
-            android:text="⋮"
-            android:textColor="#F8FAFC"
-            android:textSize="22sp" />
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/action_menu"
+            android:src="@drawable/ic_menu" />
     </LinearLayout>
-
 </LinearLayout>
