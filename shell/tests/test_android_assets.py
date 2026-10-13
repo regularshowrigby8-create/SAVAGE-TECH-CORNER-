@@ -7,6 +7,7 @@ when a file is missing, because a missing file is reported as a failure.
 """
 
 import re
+import os
 import unittest
 from pathlib import Path
 
@@ -290,6 +291,25 @@ class AndroidTestsExistTest(unittest.TestCase):
         missing = sorted(path for path in expected if not (ANDROID_ROOT / path).is_file())
         self.assertEqual([], missing)
 
+    def test_emulator_script_is_posix_shell_safe(self):
+        """The emulator action runs its script with /usr/bin/sh (dash) on the runner image.
+
+        `set -o pipefail` and ${PIPESTATUS[0]} are bash-only, so an inline bash script there dies
+        with exit code 2 before any test runs. The action must call a bash script file instead.
+        """
+        workflow = (REPO_ROOT / ".github" / "workflows" / "android-build.yml").read_text(
+            encoding="utf-8")
+        block = workflow.split("script: |", 1)[1].split("\n\n", 1)[0] \
+            if "script: |" in workflow else ""
+        self.assertNotIn("pipefail", block)
+        self.assertNotIn("PIPESTATUS", block)
+        self.assertNotIn("[[", block)
+        self.assertIn("bash tools/ci/android_emulator_run.sh", block)
+        runner = REPO_ROOT / "tools" / "ci" / "android_emulator_run.sh"
+        self.assertTrue(runner.is_file(), "the emulator stage script must exist")
+        self.assertTrue(os.access(runner, os.X_OK), "the emulator stage script must be executable")
+        self.assertIn("connectedDebugAndroidTest", runner.read_text(encoding="utf-8"))
+
     def test_no_test_is_disabled(self):
         offenders = []
         for path in (ANDROID_ROOT / "app" / "src").rglob("*.java"):
@@ -314,10 +334,19 @@ class AndroidWorkflowTest(unittest.TestCase):
         self.workflow = read(REPO_ROOT / ".github" / "workflows" / "android-build.yml")
 
     def test_workflow_runs_the_full_android_gate(self):
+        """Every command the pipeline must run is present in the workflow or in a script it calls.
+
+        The emulator stage moved into tools/ci/android_emulator_run.sh because the emulator action
+        executes its script with dash; the check follows the command, it does not drop it.
+        """
+        stage_script = REPO_ROOT / "tools" / "ci" / "android_emulator_run.sh"
+        self.assertTrue(stage_script.is_file())
+        pipeline = self.workflow + stage_script.read_text(encoding="utf-8")
+        self.assertIn("bash tools/ci/android_emulator_run.sh", self.workflow)
         for command in ("./gradlew", "testDebugUnitTest", "lintDebug", "assembleDebug",
                         "assembleRelease", "assembleDebugAndroidTest", "connectedDebugAndroidTest"):
             with self.subTest(command=command):
-                self.assertIn(command, self.workflow)
+                self.assertIn(command, pipeline)
 
     def test_workflow_cannot_hide_failures(self):
         self.assertNotIn("continue-on-error", self.workflow)

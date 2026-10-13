@@ -182,6 +182,27 @@ jobs:
               --expect-signed --json apk-evidence.json
             cat apk-evidence.json
           } 2>&1 | tee -a "$RUNNER_TEMP/build.log"
+          # The run keeps its own evidence: a notice annotation survives in the checks API, so the
+          # APK identity this run verified can be read back after the runner is gone.
+          python3 - <<'PYEOF'
+          import io, json
+          evidence = json.load(io.open("apk-evidence.json", encoding="utf-8"))
+          facts = [
+              f"apk={evidence['apk']}",
+              f"size_bytes={evidence['size_bytes']}",
+              f"sha256={evidence['sha256']}",
+              f"package={evidence['package']} versionName={evidence['version_name']} "
+              f"versionCode={evidence['version_code']}",
+              f"min_sdk={evidence['min_sdk']} target_sdk={evidence['target_sdk']}",
+              f"permissions={evidence['permissions']}",
+              f"signed v1={evidence['is_signed_v1']} v2={evidence['is_signed_v2']} "
+              f"v3={evidence['is_signed_v3']}",
+              f"certificate={evidence['certificate_subject']} "
+              f"sha256={evidence['certificate_sha256']}",
+              f"launcher={evidence['main_activity']}",
+          ]
+          print("::notice title=APK evidence::" + "%0A".join(facts))
+          PYEOF
 
       # A hosted runner's raw log is not always retrievable through the API; every shell step above
       # appends to one log file and this step turns the end of it into error annotations, so a red
@@ -302,19 +323,38 @@ jobs:
           arch: x86_64
           emulator-options: -no-window -no-audio -no-boot-anim -camera-back none -camera-front none -gpu swiftshader_indirect
           disable-animations: true
+          # The action runs this with /usr/bin/sh (dash), which rejects bash-only syntax such as
+          # `set -o pipefail`; the real work therefore lives in a bash script that dash can invoke.
           script: |
-            set -euo pipefail
-            LOG="${RUNNER_TEMP:-/tmp}/build.log"
-            cd shell/android_project
-            ./gradlew connectedDebugAndroidTest --stacktrace --no-daemon 2>&1 | tee -a "$LOG"
-            cd ../..
-            DEBUG_APK=$(find shell/android_project/app/build/outputs/apk/debug -name '*.apk' | head -n 1)
-            if [ -z "$DEBUG_APK" ]; then
-              echo "::error::the debug APK is missing on the emulator runner"
-              exit 1
-            fi
-            chmod +x tools/android_apk_smoke.sh
-            bash tools/android_apk_smoke.sh "$DEBUG_APK" 2>&1 | tee -a "$LOG"
+            set -e
+            bash tools/ci/android_emulator_run.sh
+
+      - name: Surface the failure
+        if: failure()
+        run: |
+          set -uo pipefail
+          LOG="${RUNNER_TEMP:-/tmp}/build.log"
+          if [ ! -s "$LOG" ]; then
+            echo "::error title=CI failure::nothing was logged on the emulator runner"
+            exit 0
+          fi
+          python3 - "$LOG" <<'PYEOF'
+          import io, sys
+          lines = [l.rstrip() for l in
+                   io.open(sys.argv[1], encoding="utf-8", errors="replace").read().splitlines()]
+          keys = ("FAILED", "AssertionError", "Exception", "FAIL", "FAILURE", "error:", "Error",
+                  "no emulator", "failed", "not found", "mismatch", "refused")
+          picked = [l for l in lines if any(k in l for k in keys)]
+          tail = picked[-60:] if picked else []
+          tail += ["..."] if tail else []
+          tail += lines[-45:]
+
+          def esc(text):
+              return text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+
+          for i in range(0, len(tail), 12):
+              print("::error title=CI failure tail::" + esc("\n".join(tail[i:i + 12])))
+          PYEOF
 
       # Evidence collection runs even when the tests failed, so a failure can still be diagnosed.
       # It is not a gate, so it checks for what is there instead of masking command failures.
