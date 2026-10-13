@@ -280,16 +280,16 @@ from the repository's own authoritative documents instead of being invented:
 - **Given**: a page requests CAMERA, MICROPHONE or GEOLOCATION
 - **When**: `onPermissionRequest` / geolocation prompt is delivered
 - **Then**: the request is denied (fail-closed) and no runtime permission is requested from the user
-- **Test method**: `PermissionPolicyTest#allWebPermissionRequestsAreDenied`
-- **Evidence required**: JVM test XML
+- **Test method**: `PermissionPolicyTest#allWebPermissionRequestsAreDenied`, `WebPermissionTest#theInstalledPackageRequestsNoRuntimePermission`, `WebPermissionTest#geolocationPromptIsDeniedAndReported`
+- **Evidence required**: JVM test XML + instrumentation test XML
 
 ### AC-029 — Denial is visible, not silent
 - **Feature**: F-09
 - **Given**: a denied WebView permission request
 - **When**: the denial happens
 - **Then**: a user-visible message ("Permission denied") is shown and a `PermissionRequest.DENY` result is recorded
-- **Test method**: `PermissionPolicyTest#denialIsReported`, emulator logcat assertion `W/SavageBrowser` denial line
-- **Evidence required**: JVM test XML + emulator logcat
+- **Test method**: `PermissionPolicyTest#denialIsReported` (policy), `WebPermissionTest#geolocationPromptIsDeniedAndReported` (the real chrome client installed on the real WebView answers the platform callback with deny), `WebPermissionTest#denialIsLoggedForTheEmulatorLog` (logcat `W/SavageBrowser` line, read back through `UiAutomation`)
+- **Evidence required**: JVM test XML + instrumentation test XML + emulator logcat
 
 ### AC-030 — Back navigation inside a page
 - **Feature**: F-03

@@ -285,6 +285,7 @@ class AndroidTestsExistTest(unittest.TestCase):
             "app/src/androidTest/java/com/savage/soulbrowser/HistoryActivityTest.java",
             "app/src/androidTest/java/com/savage/soulbrowser/SslPolicyTest.java",
             "app/src/androidTest/java/com/savage/soulbrowser/BridgePolicyTest.java",
+            "app/src/androidTest/java/com/savage/soulbrowser/WebPermissionTest.java",
         }
         missing = sorted(path for path in expected if not (ANDROID_ROOT / path).is_file())
         self.assertEqual([], missing)

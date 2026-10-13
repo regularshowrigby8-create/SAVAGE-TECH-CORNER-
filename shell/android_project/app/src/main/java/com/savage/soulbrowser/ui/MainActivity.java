@@ -45,6 +45,7 @@ import com.savage.soulbrowser.domain.DisplayText;
 import com.savage.soulbrowser.domain.DownloadPolicy;
 import com.savage.soulbrowser.domain.OmniboxResolution;
 import com.savage.soulbrowser.domain.OmniboxResolver;
+import com.savage.soulbrowser.domain.PermissionPolicy;
 import com.savage.soulbrowser.domain.SearchProvider;
 import com.savage.soulbrowser.domain.TabList;
 import com.savage.soulbrowser.domain.UrlPolicy;
@@ -108,6 +109,8 @@ public final class MainActivity extends AppCompatActivity implements
 
     @Nullable
     private String lastTarget;
+    @Nullable
+    private String lastWebPermissionDenial;
     private boolean pageLoaded;
     private boolean loading;
 
@@ -671,8 +674,22 @@ public final class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onWebPermissionDenied(String origin, Set<String> resources) {
-        Log.w(TAG, "Web permission denied for host=" + UrlPolicy.hostOf(origin));
+        String host = String.valueOf(UrlPolicy.hostOf(origin));
+        String reason = PermissionPolicy.denialReason(origin, resources);
+        lastWebPermissionDenial = host + " (" + resources + "): " + reason;
+        Log.w(TAG, "Web permission denied for host=" + host
+                + " resources=" + resources + " reason=" + reason);
         showToast(getString(R.string.permission_denied));
+    }
+
+    /**
+     * Description of the most recent WebView permission denial ("host (resources): reason"), or
+     * {@code null} when nothing has been denied yet. The browser never grants a web permission, and
+     * this record is what the instrumented tests read to prove that a denial happened and why.
+     */
+    @Nullable
+    public String lastWebPermissionDenial() {
+        return lastWebPermissionDenial;
     }
 
     @Override

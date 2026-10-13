@@ -191,6 +191,28 @@ public final class TestSupport {
         }
     }
 
+    /**
+     * Reads recent logcat output through {@code UiAutomation}. This is the emulator logcat
+     * evidence the acceptance criteria ask for, captured by the test that caused the log line
+     * rather than by hand.
+     */
+    public static String logcat(String filterSpec, int lineCount) {
+        Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
+        StringBuilder output = new StringBuilder();
+        try (ParcelFileDescriptor descriptor = instrumentation.getUiAutomation()
+                .executeShellCommand("logcat -d -t " + lineCount + " -s " + filterSpec);
+             FileInputStream stream = new FileInputStream(descriptor.getFileDescriptor())) {
+            byte[] buffer = new byte[4096];
+            int read;
+            while ((read = stream.read(buffer)) != -1) {
+                output.append(new String(buffer, 0, read, java.nio.charset.StandardCharsets.UTF_8));
+            }
+        } catch (IOException exception) {
+            throw new AssertionError("logcat dump failed for filter " + filterSpec, exception);
+        }
+        return output.toString();
+    }
+
     public static boolean isOnline() {
         return new NetworkStatus(context()).isOnline();
     }

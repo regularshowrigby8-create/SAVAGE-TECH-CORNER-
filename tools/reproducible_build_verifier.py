@@ -32,10 +32,30 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 APP_GRADLE = ROOT_DIR / "shell" / "android_project" / "app" / "build.gradle.kts"
 MANIFEST = ROOT_DIR / "shell" / "android_project" / "app" / "src" / "main" / "AndroidManifest.xml"
 
-# androguard logs the whole parsing process at DEBUG level; the gate only needs its results.
+# androguard logs the whole parsing process at DEBUG level through loguru; the gate only needs its
+# results, and a wall of parser trace would bury the one line that matters.
 logging.getLogger("androguard").setLevel(logging.CRITICAL)
 logging.getLogger("asn1crypto").setLevel(logging.CRITICAL)
 logging.getLogger("loguru").setLevel(logging.CRITICAL)
+try:  # loguru is configured outside the stdlib logging tree
+    from loguru import logger as _loguru
+
+    _loguru.remove()
+    _loguru.disable("androguard")
+except Exception:  # pragma: no cover - absence of loguru is not a failure
+    pass
+
+# Permissions the application may request. Anything else is a finding.
+ALLOWED_PLATFORM_PERMISSIONS = {
+    "android.permission.INTERNET",
+    "android.permission.ACCESS_NETWORK_STATE",
+}
+# The Android Gradle Plugin adds one package-scoped, signature-protected permission when a bundled
+# library registers broadcast receivers at runtime. It cannot be granted to any other application
+# and it never prompts the user, but it is still checked - name and protection level - rather than
+# waved through as "some extra permission".
+AGP_DYNAMIC_RECEIVER_SUFFIX = ".DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+ANDROID_NS = "{http://schemas.android.com/apk/res/android}"
 
 
 def read_expected_identity() -> dict:
@@ -74,6 +94,25 @@ def read_source_contract() -> dict:
                     and "android.intent.category.LAUNCHER" in categories):
                 launcher = activity.get(namespace + "name")
     return {"permissions": sorted(permissions), "launcher_activity": launcher}
+
+
+def read_apk_permissions(apk) -> tuple:
+    """Splits the APK's requested permissions into platform and self-declared ones.
+
+    Self-declared permissions come with the protection level the APK declares for them, so the gate
+    can insist that anything the application publishes about itself is signature-protected.
+    """
+    requested = sorted(apk.get_permissions())
+    platform = [name for name in requested if name.startswith("android.permission.")]
+    self_declared = [name for name in requested if not name.startswith("android.permission.")]
+    protection_levels = {}
+    for element in apk.get_android_manifest_xml():
+        if element.tag.split("}")[-1] != "permission":
+            continue
+        name = element.get(ANDROID_NS + "name")
+        if name is not None:
+            protection_levels[name] = element.get(ANDROID_NS + "protectionLevel") or ""
+    return platform, self_declared, protection_levels
 
 
 def load_apk(apk_path: Path):
@@ -203,13 +242,34 @@ def main() -> int:
         errors.append(f"targetSdk mismatch: expected {expected['target_sdk']}, "
                       f"found {evidence['target_sdk']}")
 
-    allowed_permissions = {
-        "android.permission.INTERNET",
-        "android.permission.ACCESS_NETWORK_STATE",
+    platform_permissions, self_permissions, protection_levels = read_apk_permissions(apk)
+    evidence["platform_permissions"] = platform_permissions
+    evidence["self_declared_permissions"] = {
+        name: protection_levels.get(name, "<not declared>") for name in self_permissions
     }
-    unexpected_permissions = sorted(set(evidence["permissions"]) - allowed_permissions)
-    if unexpected_permissions:
-        errors.append(f"unexpected permissions in the APK: {unexpected_permissions}")
+
+    unexpected_platform = sorted(set(platform_permissions) - ALLOWED_PLATFORM_PERMISSIONS)
+    if unexpected_platform:
+        errors.append(f"the APK requests platform permissions the product does not need: "
+                      f"{unexpected_platform}")
+    for name in self_permissions:
+        expected_name = expected["application_id"] + AGP_DYNAMIC_RECEIVER_SUFFIX
+        if name != expected_name:
+            errors.append(f"the APK declares an unexpected self-permission: {name}")
+            continue
+        level = protection_levels.get(name, "")
+        if "signature" not in level:
+            errors.append(f"{name} is declared with protectionLevel='{level}', "
+                          f"which is not signature-protected")
+
+    cleartext = apk.get_attribute_value("application", "usesCleartextTraffic")
+    network_config = apk.get_attribute_value("application", "networkSecurityConfig")
+    evidence["uses_cleartext_traffic"] = str(cleartext)
+    evidence["has_network_security_config"] = network_config is not None
+    if str(cleartext).lower() in ("true", "0x1"):
+        errors.append("the APK allows cleartext traffic")
+    elif cleartext is None and network_config is None and int(expected["target_sdk"]) >= 28:
+        errors.append("the APK neither forbids cleartext nor ships a network security config")
 
     signed = bool(evidence["is_signed_v1"] or evidence["is_signed_v2"] or evidence["is_signed_v3"])
     if args.expect_signed and not signed:
@@ -224,9 +284,10 @@ def main() -> int:
         if evidence["main_activity"] != expected_launcher:
             errors.append(f"launcher mismatch: the manifest declares {expected_launcher}, "
                           f"the APK launches {evidence['main_activity']}")
-    if sorted(contract["permissions"]) != sorted(evidence["permissions"]):
-        errors.append("the permissions in the APK differ from the permissions in the manifest: "
-                      f"manifest={sorted(contract['permissions'])} apk={sorted(evidence['permissions'])}")
+    if sorted(contract["permissions"]) != sorted(platform_permissions):
+        errors.append("the platform permissions in the APK differ from the permissions in the "
+                      f"manifest: manifest={sorted(contract['permissions'])} "
+                      f"apk={sorted(platform_permissions)}")
 
     print(f"[APK-GATE] APK:            {evidence['apk']}")
     print(f"[APK-GATE] size / sha256:  {evidence['size_bytes']} bytes / {evidence['sha256']}")
@@ -236,7 +297,10 @@ def main() -> int:
           f"({evidence['version_code']}) (expected {expected['version_name']} "
           f"({expected['version_code']}))")
     print(f"[APK-GATE] sdk:            min {evidence['min_sdk']} / target {evidence['target_sdk']}")
-    print(f"[APK-GATE] permissions:    {evidence['permissions']}")
+    print(f"[APK-GATE] permissions:    platform={evidence['platform_permissions']} "
+          f"self={evidence['self_declared_permissions']}")
+    print(f"[APK-GATE] cleartext:      usesCleartextTraffic={evidence['uses_cleartext_traffic']} "
+          f"networkSecurityConfig={evidence['has_network_security_config']}")
     print(f"[APK-GATE] signed:         v1={evidence['is_signed_v1']} v2={evidence['is_signed_v2']} "
           f"v3={evidence['is_signed_v3']}")
     print(f"[APK-GATE] launcher:       {evidence['main_activity']}")
