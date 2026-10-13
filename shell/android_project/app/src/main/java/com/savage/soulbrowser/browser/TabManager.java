@@ -56,6 +56,26 @@ public final class TabManager {
         this.factory = factory;
         this.listener = listener;
         this.tabList = TabList.withHomeTab(homeUrl);
+        // The model starts with the home tab, so the home tab must have a WebView from the start:
+        // a tab without a WebView cannot show anything, and leaving it unattached is what let a
+        // second, empty tab appear on a first launch.
+        attach(tabList.active().getId());
+    }
+
+    /**
+     * Makes sure the active tab has a WebView (a restored session can activate a tab whose WebView
+     * has not been materialised yet). Unlike {@link #openTab(String)} this never adds a tab, so it
+     * cannot change the tab count the user sees.
+     *
+     * @return the active WebView, or {@code null} when the model has no active tab
+     */
+    public WebView ensureActiveWebView() {
+        TabList.Tab active = tabList.active();
+        if (active == null) {
+            return null;
+        }
+        WebView existing = webViews.get(active.getId());
+        return existing != null ? existing : attach(active.getId());
     }
 
     public TabList tabList() {
@@ -175,6 +195,15 @@ public final class TabManager {
             restored.add(new TabList.Tab("restored-" + i, url,
                     titles != null && i < titles.length ? titles[i] : null));
         }
+        // The constructor materialised the home tab; the restored set replaces it, so the old
+        // WebView must go - otherwise it would stay in the container forever, invisible, holding
+        // memory and making the container hold one more child than there are tabs.
+        for (WebView stale : webViews.values()) {
+            container.removeView(stale);
+            stale.stopLoading();
+            stale.destroy();
+        }
+        webViews.clear();
         tabList = TabList.restore(homeUrl, restored, savedState.getInt(KEY_ACTIVE, 0));
 
         List<TabList.Tab> tabs = tabList.tabs();

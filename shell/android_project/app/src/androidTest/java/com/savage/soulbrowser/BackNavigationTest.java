@@ -38,12 +38,15 @@ public class BackNavigationTest {
     public void systemBackGoesBackInWebView() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
             TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE_A, "Page A"));
-            TestSupport.waitUntil("page A to load", () -> PAGE_A.equals(url(scenario)));
+            TestSupport.waitUntil("page A to load", () -> PAGE_A.equals(url(scenario)),
+                    () -> TestSupport.describeBrowser(scenario));
             TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE_B, "Page B"));
-            TestSupport.waitUntil("page B to load", () -> PAGE_B.equals(url(scenario)));
+            TestSupport.waitUntil("page B to load", () -> PAGE_B.equals(url(scenario)),
+                    () -> TestSupport.describeBrowser(scenario));
 
             pressBack();
-            TestSupport.waitUntil("system Back to return to page A", () -> PAGE_A.equals(url(scenario)));
+            TestSupport.waitUntil("system Back to return to page A", () -> PAGE_A.equals(url(scenario)),
+                    () -> TestSupport.describeBrowser(scenario));
             Assert.assertFalse("the browser activity is still running",
                     TestSupport.onResult(scenario, activity -> activity.isFinishing()));
         }
@@ -53,7 +56,8 @@ public class BackNavigationTest {
     public void systemBackFinishesAtRoot() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
             TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE_A, "Page A"));
-            TestSupport.waitUntil("page A to load", () -> PAGE_A.equals(url(scenario)));
+            TestSupport.waitUntil("page A to load", () -> PAGE_A.equals(url(scenario)),
+                    () -> TestSupport.describeBrowser(scenario));
             Assert.assertFalse("page A is the root of this session",
                     TestSupport.onResult(scenario,
                             activity -> TestSupport.webViewOf(activity).canGoBack()));
@@ -61,7 +65,8 @@ public class BackNavigationTest {
             pressBack();
 
             TestSupport.waitUntil("the browser activity to finish at its root page",
-                    () -> TestSupport.onResult(scenario, activity -> activity.isFinishing()));
+                    () -> TestSupport.onResult(scenario, activity -> activity.isFinishing()),
+                    () -> TestSupport.describeBrowser(scenario));
         }
     }
 

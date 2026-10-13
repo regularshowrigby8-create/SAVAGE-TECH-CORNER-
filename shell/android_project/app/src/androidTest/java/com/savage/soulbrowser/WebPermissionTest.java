@@ -99,10 +99,13 @@ public final class WebPermissionTest {
                             "https://untrusted.example/", callback));
             assertTrue("the untrusted prompt is answered", callback.invoked);
 
+            // The app logs the denied host, never the full URL: the log is evidence, not a
+            // browsing record. The host is what the log must name, and the test reads it back.
             TestSupport.waitUntil("the denial to reach the log",
-                    () -> TestSupport.logcat("SavageBrowser:W", 400)
-                            .contains("https://untrusted.example"));
-            String log = TestSupport.logcat("SavageBrowser:W", 400);
+                    () -> TestSupport.logcat("SavageBrowser:W", 2000)
+                            .contains("Web permission denied for host=untrusted.example"),
+                    () -> TestSupport.logcat("SavageBrowser:W", 2000));
+            String log = TestSupport.logcat("SavageBrowser:W", 2000);
             assertTrue("the denial is logged with its reason: " + log,
                     log.contains("Web permission denied"));
             assertTrue("the log names the denying rule: " + log,

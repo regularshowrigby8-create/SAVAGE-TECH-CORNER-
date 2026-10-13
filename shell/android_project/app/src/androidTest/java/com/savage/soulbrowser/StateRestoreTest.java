@@ -40,12 +40,14 @@ public class StateRestoreTest {
     public void currentUrlSurvivesRecreation() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
             TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE, "Rotation"));
-            TestSupport.waitUntil("the page to load", () -> PAGE.equals(url(scenario)));
+            TestSupport.waitUntil("the page to load", () -> PAGE.equals(url(scenario)),
+                    () -> TestSupport.describeBrowser(scenario));
 
             scenario.recreate();
 
             TestSupport.waitUntil("the restored browser to be back on the same page",
-                    () -> PAGE.equals(url(scenario)));
+                    () -> PAGE.equals(url(scenario)),
+                    () -> TestSupport.describeBrowser(scenario));
             Assert.assertEquals("one tab is restored", 1,
                     TestSupport.onResult(scenario, TestSupport::openTabCount).intValue());
         }
@@ -55,20 +57,24 @@ public class StateRestoreTest {
     public void tabsSurviveRecreation() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
             TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE, "Rotation"));
-            TestSupport.waitUntil("the first tab to load", () -> PAGE.equals(url(scenario)));
+            TestSupport.waitUntil("the first tab to load", () -> PAGE.equals(url(scenario)),
+                    () -> TestSupport.describeBrowser(scenario));
 
             // Open a second tab through the same dialog the user would use.
             TestSupport.on(scenario, activity -> activity.findViewById(R.id.btn_nav_tabs).performClick());
             onView(withText(R.string.tabs_new)).inRoot(isDialog()).perform(click());
             TestSupport.waitUntil("a second tab to exist",
-                    () -> TestSupport.onResult(scenario, TestSupport::openTabCount) == 2);
+                    () -> TestSupport.onResult(scenario, TestSupport::openTabCount) == 2,
+                    () -> TestSupport.describeBrowser(scenario));
 
             scenario.recreate();
 
             TestSupport.waitUntil("the restored session to still have both tabs",
-                    () -> TestSupport.onResult(scenario, TestSupport::openTabCount).intValue() == 2);
+                    () -> TestSupport.onResult(scenario, TestSupport::openTabCount).intValue() == 2,
+                    () -> TestSupport.describeBrowser(scenario));
             TestSupport.waitUntil("the restored session to show the page we were on",
-                    () -> url(scenario).startsWith("https://"));
+                    () -> url(scenario).startsWith("https://"),
+                    () -> TestSupport.describeBrowser(scenario));
         }
     }
 
@@ -76,7 +82,8 @@ public class StateRestoreTest {
     public void rotationKeepsThePageVisible() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
             TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE, "Rotation"));
-            TestSupport.waitUntil("the page to load", () -> PAGE.equals(url(scenario)));
+            TestSupport.waitUntil("the page to load", () -> PAGE.equals(url(scenario)),
+                    () -> TestSupport.describeBrowser(scenario));
 
             Integer before = TestSupport.onResult(scenario,
                     activity -> System.identityHashCode(TestSupport.webViewOf(activity)));

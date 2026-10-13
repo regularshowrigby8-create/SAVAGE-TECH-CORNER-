@@ -124,6 +124,14 @@ public class MainActivityLaunchTest {
     @Test
     public void progressIndicatorExists() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
+            // The launch itself requests the home page, so wait for that request to settle before
+            // deciding what "idle" looks like - otherwise the assertion races the first load.
+            TestSupport.waitUntil("the first load to settle so the progress bar is idle", () ->
+                            !TestSupport.onResult(scenario, MainActivity::isLoading)
+                                    && TestSupport.visibility(scenario, R.id.page_progress_bar)
+                                    != View.VISIBLE,
+                    () -> TestSupport.describeBrowser(scenario));
+
             TestSupport.on(scenario, activity -> {
                 ProgressBar progress = activity.findViewById(R.id.page_progress_bar);
                 Assert.assertNotNull("the progress bar must exist", progress);

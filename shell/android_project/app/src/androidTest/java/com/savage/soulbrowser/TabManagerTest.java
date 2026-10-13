@@ -46,7 +46,10 @@ public class TabManagerTest {
     public void switchAndCloseKeepsAtLeastOneTab() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
             TestSupport.on(scenario, activity -> {
-                FrameLayout container = activity.findViewById(R.id.webview_container);
+                // A container the test owns: the activity's own container already holds the home
+                // tab's WebView, so counting children there would measure the activity rather than
+                // the manager under test.
+                FrameLayout container = ownContainer(activity);
                 RecordingListener listener = new RecordingListener();
                 TabManager manager = new TabManager(activity, container, MainActivity.HOME_URL,
                         () -> new WebView(activity), listener);
@@ -94,7 +97,7 @@ public class TabManagerTest {
     public void closingLastTabOpensHomeTab() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
             TestSupport.on(scenario, activity -> {
-                FrameLayout container = activity.findViewById(R.id.webview_container);
+                FrameLayout container = ownContainer(activity);
                 TabManager manager = new TabManager(activity, container, MainActivity.HOME_URL,
                         () -> new WebView(activity), new RecordingListener());
                 String only = manager.activeTab().getId();
@@ -111,6 +114,17 @@ public class TabManagerTest {
                         manager.activeWebView());
             });
         }
+    }
+
+    /**
+     * Adds a container to the running activity and returns it, so a {@link TabManager} built by a
+     * test has a container of its own and its WebView counts are not polluted by the activity's.
+     */
+    private static FrameLayout ownContainer(MainActivity activity) {
+        FrameLayout container = new FrameLayout(activity);
+        activity.addContentView(container, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        return container;
     }
 
     private static int visibleChildren(FrameLayout container) {

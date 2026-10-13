@@ -197,19 +197,22 @@ public final class MainActivity extends AppCompatActivity implements
             }
             lastTarget = savedInstanceState.getString(STATE_LAST_TARGET);
         }
-        if (tabManager.activeWebView() == null) {
-            tabManager.openTab(null);
-        }
+        // The tab model already has its home tab; make sure it has a WebView instead of opening a
+        // second, empty tab (which is what a first launch used to show: "1" in the dock next to a
+        // blank page, and two entries in the tab switcher).
+        tabManager.ensureActiveWebView();
         if (savedInstanceState == null) {
             String requested = requestedUrlFromIntent(getIntent());
             navigateTo(requested == null ? HOME_URL : requested, false);
         } else {
-            onTabSetChanged(tabManager.size());
             TabList.Tab active = tabManager.activeTab();
             if (active != null) {
                 onActiveTabChanged(active.getUrl(), active.getTitle());
             }
         }
+        // The dock is rendered from the model on every start, so the count the user sees can never
+        // be a stale or empty label from the layout.
+        onTabSetChanged(tabManager.size());
         renderState();
     }
 

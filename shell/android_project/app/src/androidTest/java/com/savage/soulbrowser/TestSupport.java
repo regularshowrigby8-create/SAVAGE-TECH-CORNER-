@@ -4,11 +4,11 @@ import android.app.Activity;
 import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.ParcelFileDescriptor;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
-import android.widget.Button;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.junit.Assert;
 import com.savage.soulbrowser.ui.MainActivity;
@@ -34,8 +35,13 @@ import com.savage.soulbrowser.ui.MainActivity;
  */
 public final class TestSupport {
 
-    /** Generous upper bound: WebView work happens off the test thread on a shared CI emulator. */
-    public static final long TIMEOUT_MS = 20_000L;
+    /**
+     * Upper bound for every wait. WebView work happens off the test thread, and a hosted emulator
+     * that is also booting the system WebView provider can take tens of seconds for the first load
+     * of a test run; a bound that is too tight turns slow infrastructure into a reported
+     * application defect.
+     */
+    public static final long TIMEOUT_MS = 45_000L;
 
     /** Preferences file name of {@code BrowserPreferences} (package private there). */
     public static final String PREFERENCES_NAME = "savage_browser_prefs";
@@ -50,10 +56,22 @@ public final class TestSupport {
         return InstrumentationRegistry.getInstrumentation().getTargetContext();
     }
 
-    /** Removes the local database and preferences so a test really starts from a first launch. */
+    /**
+     * Empties the local store and the preferences so a test really starts from a first launch.
+     *
+     * <p>The rows are deleted through the application's own connection rather than by unlinking the
+     * database file: deleting the file under a live {@link android.database.sqlite.SQLiteOpenHelper}
+     * leaves that helper writing into an unlinked inode, so the next test sees a mix of stale rows
+     * and rows that never reach the disk. The connection is dropped first, so a file a corruption
+     * test rewrote is reopened (and repaired by {@code BrowserStore.open}) before it is emptied.
+     */
     public static void wipeLocalData() {
         Context context = context();
-        BrowserDatabase.deleteDatabaseFiles(context, BrowserDatabase.DATABASE_NAME);
+        SavageBrowserApp app = SavageBrowserApp.from(context);
+        app.reopenLocalStore();
+        SQLiteDatabase database = app.database().getWritableDatabase();
+        database.delete(BrowserDatabase.TABLE_HISTORY, null, null);
+        database.delete(BrowserDatabase.TABLE_BOOKMARKS, null, null);
         context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE).edit().clear().commit();
     }
 
@@ -100,6 +118,15 @@ public final class TestSupport {
     }
 
     public static void waitUntil(String what, BooleanSupplier condition) {
+        waitUntil(what, condition, () -> "no observation was supplied");
+    }
+
+    /**
+     * Waits for {@code condition}, and on timeout reports what was actually observed. A timeout
+     * that only says "the page never loaded" cannot be acted on; one that also prints the URL, the
+     * load flag and the view state can.
+     */
+    public static void waitUntil(String what, BooleanSupplier condition, Supplier<String> observed) {
         long deadline = System.currentTimeMillis() + TIMEOUT_MS;
         while (System.currentTimeMillis() < deadline) {
             if (condition.getAsBoolean()) {
@@ -107,7 +134,36 @@ public final class TestSupport {
             }
             sleep(100L);
         }
-        Assert.fail("timed out after " + TIMEOUT_MS + " ms waiting for " + what);
+        Assert.fail("timed out after " + TIMEOUT_MS + " ms waiting for " + what
+                + "; observed: " + observed.get());
+    }
+
+    /**
+     * One-line description of what the browser is showing, for timeout messages: every WebView URL
+     * in the container, the load flag, the view state and the tab count the dock displays. Reading
+     * it never throws, because it is only ever used while reporting a failure.
+     */
+    public static String describeBrowser(ActivityScenario<MainActivity> scenario) {
+        try {
+            return onResult(scenario, activity -> {
+                StringBuilder urls = new StringBuilder();
+                ViewGroup container = activity.findViewById(R.id.webview_container);
+                for (int i = 0; container != null && i < container.getChildCount(); i++) {
+                    View child = container.getChildAt(i);
+                    if (child instanceof WebView) {
+                        urls.append(urls.length() == 0 ? "" : ", ").append(((WebView) child).getUrl());
+                    }
+                }
+                View dock = activity.findViewById(R.id.btn_nav_tabs);
+                return "urls=[" + urls + "] loading=" + activity.isLoading()
+                        + " state=" + activity.currentViewState()
+                        + " loaded=" + activity.hasLoadedPage()
+                        + " tabs=" + (dock instanceof android.widget.TextView
+                                ? ((android.widget.TextView) dock).getText() : "?");
+            });
+        } catch (RuntimeException | AssertionError problem) {
+            return "browser state unavailable (" + problem.getClass().getSimpleName() + ")";
+        }
     }
 
     public static void sleep(long millis) {
@@ -133,14 +189,23 @@ public final class TestSupport {
         return null;
     }
 
-    /** Loads deterministic content into the real WebView without depending on the network. */
+    /**
+     * Loads deterministic content into the real WebView without depending on the network.
+     *
+     * <p>The page is published at {@code baseUrl} in two ways, because a data load with a null
+     * history URL is recorded as {@code about:blank}: the base URL resolves the page's own origin,
+     * and the history URL is what the WebView reports as the current URL and hands to
+     * {@code onPageStarted} / {@code onPageFinished}. Passing the same URL for both makes the load
+     * observable exactly like a real page at that address.
+     */
     public static void injectPage(MainActivity activity, String baseUrl, String heading) {
         String html = String.format(PAGE_TEMPLATE, heading, heading);
-        webViewOf(activity).loadDataWithBaseURL(baseUrl, html, "text/html", "UTF-8", null);
+        webViewOf(activity).loadDataWithBaseURL(baseUrl, html, "text/html", "UTF-8", baseUrl);
     }
 
+    /** The tab count the dock shows. The dock control is a {@link android.widget.TextView}. */
     public static int openTabCount(MainActivity activity) {
-        Button tabs = activity.findViewById(R.id.btn_nav_tabs);
+        android.widget.TextView tabs = activity.findViewById(R.id.btn_nav_tabs);
         return Integer.parseInt(tabs.getText().toString());
     }
 

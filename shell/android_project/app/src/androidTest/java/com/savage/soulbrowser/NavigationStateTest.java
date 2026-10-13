@@ -39,22 +39,28 @@ public class NavigationStateTest {
     public void backAndForwardReflectWebViewHistory() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
             TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE_A, "Page A"));
-            TestSupport.waitUntil("page A to be the current page", () -> PAGE_A.equals(currentUrl(scenario)));
+            TestSupport.waitUntil("page A to be the current page",
+                    () -> PAGE_A.equals(currentUrl(scenario)),
+                    () -> TestSupport.describeBrowser(scenario));
 
             TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE_B, "Page B"));
             TestSupport.waitUntil("page B to become the current page with a history entry behind it",
-                    () -> PAGE_B.equals(currentUrl(scenario)) && canGoBack(scenario));
+                    () -> PAGE_B.equals(currentUrl(scenario)) && canGoBack(scenario),
+                    () -> TestSupport.describeBrowser(scenario));
 
             TestSupport.waitUntil("the Back control to be enabled", () -> enabled(scenario, R.id.btn_nav_back));
 
             TestSupport.on(scenario, activity -> activity.findViewById(R.id.btn_nav_back).performClick());
-            TestSupport.waitUntil("the browser to return to page A", () -> PAGE_A.equals(currentUrl(scenario)));
+            TestSupport.waitUntil("the browser to return to page A",
+                    () -> PAGE_A.equals(currentUrl(scenario)),
+                    () -> TestSupport.describeBrowser(scenario));
             TestSupport.waitUntil("the Forward control to be enabled once we are back",
                     () -> enabled(scenario, R.id.btn_nav_forward));
 
             TestSupport.on(scenario, activity -> activity.findViewById(R.id.btn_nav_forward).performClick());
             TestSupport.waitUntil("the browser to move forward to page B again",
-                    () -> PAGE_B.equals(currentUrl(scenario)));
+                    () -> PAGE_B.equals(currentUrl(scenario)),
+                    () -> TestSupport.describeBrowser(scenario));
         }
     }
 
@@ -63,7 +69,8 @@ public class NavigationStateTest {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
             TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE_A, "Page A"));
             TestSupport.waitUntil("page A to finish loading",
-                    () -> PAGE_A.equals(currentUrl(scenario)) && !isLoading(scenario));
+                    () -> PAGE_A.equals(currentUrl(scenario)) && !isLoading(scenario),
+                    () -> TestSupport.describeBrowser(scenario));
             Assert.assertEquals("an idle page offers Reload",
                     TestSupport.onResult(scenario, activity -> activity.getString(R.string.action_reload)),
                     TestSupport.description(scenario, R.id.btn_action_reload));
@@ -82,7 +89,8 @@ public class NavigationStateTest {
 
             TestSupport.on(scenario, activity -> activity.findViewById(R.id.btn_nav_home).performClick());
             TestSupport.waitUntil("Home to request the home URL",
-                    () -> MainActivity.HOME_URL.equals(currentUrl(scenario)));
+                    () -> MainActivity.HOME_URL.equals(currentUrl(scenario)),
+                    () -> TestSupport.describeBrowser(scenario));
         }
     }
 

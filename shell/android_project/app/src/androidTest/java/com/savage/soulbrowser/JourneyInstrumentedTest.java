@@ -59,19 +59,23 @@ public class JourneyInstrumentedTest {
     public void j1BrowseThenBackThenHome() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
             TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE_A, "Page A"));
-            TestSupport.waitUntil("the first page to load", () -> PAGE_A.equals(url(scenario)));
+            TestSupport.waitUntil("the first page to load", () -> PAGE_A.equals(url(scenario)),
+                    () -> TestSupport.describeBrowser(scenario));
             Assert.assertTrue("a loaded page counts as content",
                     TestSupport.onResult(scenario, MainActivity::hasLoadedPage));
 
             TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE_B, "Page B"));
-            TestSupport.waitUntil("the second page to load", () -> PAGE_B.equals(url(scenario)));
+            TestSupport.waitUntil("the second page to load", () -> PAGE_B.equals(url(scenario)),
+                    () -> TestSupport.describeBrowser(scenario));
 
             TestSupport.on(scenario, activity -> activity.findViewById(R.id.btn_nav_back).performClick());
-            TestSupport.waitUntil("Back to return to the first page", () -> PAGE_A.equals(url(scenario)));
+            TestSupport.waitUntil("Back to return to the first page", () -> PAGE_A.equals(url(scenario)),
+                    () -> TestSupport.describeBrowser(scenario));
 
             TestSupport.on(scenario, activity -> activity.findViewById(R.id.btn_nav_home).performClick());
             TestSupport.waitUntil("Home to leave the visited page for the home URL",
-                    () -> MainActivity.HOME_URL.equals(url(scenario)));
+                    () -> MainActivity.HOME_URL.equals(url(scenario)),
+                    () -> TestSupport.describeBrowser(scenario));
         }
     }
 
@@ -79,7 +83,8 @@ public class JourneyInstrumentedTest {
     public void j3BookmarkCurrentPageAndOpenIt() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
             TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE_A, "Page A"));
-            TestSupport.waitUntil("the page to load", () -> PAGE_A.equals(url(scenario)));
+            TestSupport.waitUntil("the page to load", () -> PAGE_A.equals(url(scenario)),
+                    () -> TestSupport.describeBrowser(scenario));
 
             TestSupport.on(scenario,
                     activity -> activity.findViewById(R.id.btn_action_bookmark).performClick());
@@ -108,7 +113,8 @@ public class JourneyInstrumentedTest {
     public void j3StarTwiceKeepsOneRow() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
             TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE_A, "Page A"));
-            TestSupport.waitUntil("the page to load", () -> PAGE_A.equals(url(scenario)));
+            TestSupport.waitUntil("the page to load", () -> PAGE_A.equals(url(scenario)),
+                    () -> TestSupport.describeBrowser(scenario));
 
             BookmarkRepository bookmarks = bookmarks();
             TestSupport.on(scenario,
@@ -130,7 +136,7 @@ public class JourneyInstrumentedTest {
             TestSupport.waitUntil("the visit to be written to the local store", () -> {
                 HistoryRepository history = history();
                 return history.count() == 1 && PAGE_A.equals(history.recent(1).get(0).getUrl());
-            });
+            }, () -> TestSupport.describeBrowser(scenario) + " history=" + history().count());
         }
 
         try (ActivityScenario<HistoryActivity> list = ActivityScenario.launch(
@@ -146,19 +152,22 @@ public class JourneyInstrumentedTest {
     public void j5TabsOpenSwitchClose() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
             TestSupport.on(scenario, activity -> TestSupport.injectPage(activity, PAGE_A, "Page A"));
-            TestSupport.waitUntil("the first tab to show page A", () -> PAGE_A.equals(url(scenario)));
+            TestSupport.waitUntil("the first tab to show page A", () -> PAGE_A.equals(url(scenario)),
+                    () -> TestSupport.describeBrowser(scenario));
             Assert.assertEquals(1, tabCount(scenario));
 
             // Open a second tab from the tab switcher.
             TestSupport.on(scenario, activity -> activity.findViewById(R.id.btn_nav_tabs).performClick());
             onView(withText(R.string.tabs_title)).inRoot(isDialog()).check(matches(isDisplayed()));
             onView(withText(R.string.tabs_new)).inRoot(isDialog()).perform(click());
-            TestSupport.waitUntil("a second tab to exist", () -> tabCount(scenario) == 2);
+            TestSupport.waitUntil("a second tab to exist", () -> tabCount(scenario) == 2,
+                    () -> TestSupport.describeBrowser(scenario));
 
             // Switch back to the tab that shows page A.
             TestSupport.on(scenario, activity -> activity.findViewById(R.id.btn_nav_tabs).performClick());
             onView(withText(containsString("example.com"))).inRoot(isDialog()).perform(click());
-            TestSupport.waitUntil("switching to restore page A", () -> PAGE_A.equals(url(scenario)));
+            TestSupport.waitUntil("switching to restore page A", () -> PAGE_A.equals(url(scenario)),
+                    () -> TestSupport.describeBrowser(scenario));
             Assert.assertEquals("switching does not drop a tab", 2, tabCount(scenario));
 
             // Close the other tab from the switcher; the session keeps the tab that is left.
@@ -166,7 +175,8 @@ public class JourneyInstrumentedTest {
             onView(allOf(withId(R.id.item_close),
                     hasSibling(hasDescendant(withText(containsString("savage-tech-corner.io"))))))
                     .inRoot(isDialog()).perform(click());
-            TestSupport.waitUntil("the closed tab to disappear", () -> tabCount(scenario) == 1);
+            TestSupport.waitUntil("the closed tab to disappear", () -> tabCount(scenario) == 1,
+                    () -> TestSupport.describeBrowser(scenario));
             Assert.assertEquals("the surviving tab still shows the page we were on",
                     PAGE_A, url(scenario));
         }

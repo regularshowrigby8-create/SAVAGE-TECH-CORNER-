@@ -37,6 +37,22 @@ public final class SavageBrowserApp extends Application {
         return database;
     }
 
+    /**
+     * Drops the cached store and repositories so the next access opens the database file again.
+     *
+     * <p>Used when the file on disk was replaced behind the process that cached the connection (a
+     * repair, a restore, or the corruption-recovery test): without this, the old connection would
+     * keep writing to a file the application can no longer read.
+     */
+    public synchronized void reopenLocalStore() {
+        if (database != null) {
+            database.close();
+            database = null;
+        }
+        historyRepository = null;
+        bookmarkRepository = null;
+    }
+
     public synchronized HistoryRepository historyRepository() {
         if (historyRepository == null) {
             historyRepository = new HistoryRepository(database());

@@ -41,33 +41,44 @@ echo "[1/12] device ready: $(adb shell getprop ro.build.version.sdk | tr -d '\r'
 
 echo "[2/12] APK structure on the host"
 [ -s "$APK" ] || { echo "FAIL: the APK is empty" >&2; exit 1; }
-unzip -l "$APK" | grep -q "AndroidManifest.xml" || {
-    echo "FAIL: the APK has no AndroidManifest.xml" >&2
+# The listing is read in full before it is matched. Piping a listing straight into `grep -q` makes
+# the producer die of SIGPIPE as soon as grep has its answer, and with `set -o pipefail` that
+# non-zero producer turns a match into "no AndroidManifest.xml" - a false failure.
+APK_LISTING=$(unzip -l "$APK") || {
+    echo "FAIL: the APK is not a readable ZIP archive: $APK" >&2
     exit 1
 }
-unzip -l "$APK" | grep -qE "classes[0-9]*\.dex" || {
-    echo "FAIL: the APK has no classes.dex" >&2
+grep -q "AndroidManifest.xml" <<<"$APK_LISTING" || {
+    echo "FAIL: the APK has no AndroidManifest.xml. Entries:" >&2
+    head -n 20 <<<"$APK_LISTING" >&2
+    exit 1
+}
+grep -qE "classes[0-9]*\.dex" <<<"$APK_LISTING" || {
+    echo "FAIL: the APK has no classes.dex. Entries:" >&2
+    head -n 20 <<<"$APK_LISTING" >&2
     exit 1
 }
 unzip -t "$APK" >/dev/null || { echo "FAIL: the APK is not a valid ZIP" >&2; exit 1; }
 echo "       APK: $APK ($(stat -c%s "$APK") bytes)"
 
 echo "[3/12] uninstall any previous installation"
-if adb shell pm list packages "$PACKAGE" | grep -q "package:$PACKAGE"; then
-    adb uninstall "$PACKAGE" | grep -q "Success" || {
-        echo "FAIL: a previous installation could not be removed" >&2
+PACKAGES=$(adb shell pm list packages "$PACKAGE" | tr -d '\r')
+if grep -qx "package:$PACKAGE" <<<"$PACKAGES"; then
+    UNINSTALL_OUTPUT=$(adb uninstall "$PACKAGE" 2>&1)
+    grep -q "Success" <<<"$UNINSTALL_OUTPUT" || {
+        echo "FAIL: a previous installation could not be removed: $UNINSTALL_OUTPUT" >&2
         exit 1
     }
 fi
 
 echo "[4/12] install"
 INSTALL_OUTPUT=$(adb install -r -t "$APK" 2>&1)
-echo "$INSTALL_OUTPUT" | sed 's/^/       /'
-echo "$INSTALL_OUTPUT" | grep -q "Success" || { echo "FAIL: adb install did not succeed" >&2; exit 1; }
+sed 's/^/       /' <<<"$INSTALL_OUTPUT"
+grep -q "Success" <<<"$INSTALL_OUTPUT" || { echo "FAIL: adb install did not succeed" >&2; exit 1; }
 
 echo "[5/12] the installed package matches the APK"
 INSTALLED=$(adb shell pm list packages "$PACKAGE" | tr -d '\r')
-echo "$INSTALLED" | grep -qx "package:$PACKAGE" || {
+grep -qx "package:$PACKAGE" <<<"$INSTALLED" || {
     echo "FAIL: $PACKAGE is not installed after a successful install" >&2
     exit 1
 }
@@ -75,16 +86,18 @@ APK_PATH=$(adb shell pm path "$PACKAGE" | tr -d '\r' | sed 's/^package://')
 echo "       installed at: $APK_PATH"
 
 echo "[6/12] launch the launcher activity"
-adb shell am start -W -n "$PACKAGE/$ACTIVITY" | sed 's/^/       /' | tee /tmp/savage_launch.txt
-grep -qE "Status: ok" /tmp/savage_launch.txt || {
+LAUNCH_OUTPUT=$(adb shell am start -W -n "$PACKAGE/$ACTIVITY" 2>&1)
+sed 's/^/       /' <<<"$LAUNCH_OUTPUT"
+grep -qE "Status: ok" <<<"$LAUNCH_OUTPUT" || {
     echo "FAIL: the launcher activity did not report Status: ok" >&2
     exit 1
 }
 
 echo "[7/12] the activity is the resumed top activity and the process is alive"
 sleep 3
-TOP=$(adb shell dumpsys activity activities | grep -m1 -E "ResumedActivity|mResumedActivity" | tr -d '\r')
-echo "$TOP" | grep -q "$PACKAGE" || {
+ACTIVITIES=$(adb shell dumpsys activity activities | tr -d '\r')
+TOP=$(grep -m1 -E "ResumedActivity|mResumedActivity" <<<"$ACTIVITIES")
+grep -q "$PACKAGE" <<<"$TOP" || {
     echo "FAIL: the browser is not the resumed activity: $TOP" >&2
     exit 1
 }
@@ -94,9 +107,10 @@ if [ -z "$PID" ]; then
     exit 1
 fi
 echo "       pid $PID, resumed: $TOP"
-if adb logcat -d -b crash | grep -q "$PACKAGE"; then
+CRASH_LOG=$(adb logcat -d -b crash)
+if grep -q "$PACKAGE" <<<"$CRASH_LOG"; then
     echo "FAIL: the app produced a crash entry on first launch" >&2
-    adb logcat -d -b crash | grep "$PACKAGE" >&2
+    grep "$PACKAGE" <<<"$CRASH_LOG" >&2
     exit 1
 fi
 
@@ -114,20 +128,29 @@ done
 echo "[9/12] kill the process and relaunch (restart persistence, first restart)"
 adb shell am kill "$PACKAGE"
 sleep 2
-if adb shell pidof "$PACKAGE" | grep -q .; then
+ALIVE=$(adb shell pidof "$PACKAGE" | tr -d '\r')
+if [ -n "$ALIVE" ]; then
     echo "FAIL: the process survived am kill" >&2
     exit 1
 fi
-adb shell am start -W -n "$PACKAGE/$ACTIVITY" | grep -qE "Status: ok" || {
-    echo "FAIL: the app did not relaunch after being killed" >&2
+if ! LAUNCH_OUTPUT=$(adb shell am start -W -n "$PACKAGE/$ACTIVITY" 2>&1); then
+    echo "FAIL: the app did not relaunch after being killed: $LAUNCH_OUTPUT" >&2
+    exit 1
+fi
+grep -qE "Status: ok" <<<"$LAUNCH_OUTPUT" || {
+    echo "FAIL: the relaunch did not report Status: ok: $LAUNCH_OUTPUT" >&2
     exit 1
 }
 
 echo "[10/12] kill and relaunch a second time"
 adb shell am kill "$PACKAGE"
 sleep 2
-adb shell am start -W -n "$PACKAGE/$ACTIVITY" | grep -qE "Status: ok" || {
-    echo "FAIL: the app did not relaunch on the second restart" >&2
+if ! LAUNCH_OUTPUT=$(adb shell am start -W -n "$PACKAGE/$ACTIVITY" 2>&1); then
+    echo "FAIL: the app did not relaunch on the second restart: $LAUNCH_OUTPUT" >&2
+    exit 1
+fi
+grep -qE "Status: ok" <<<"$LAUNCH_OUTPUT" || {
+    echo "FAIL: the second relaunch did not report Status: ok: $LAUNCH_OUTPUT" >&2
     exit 1
 }
 
@@ -135,17 +158,31 @@ echo "[11/12] the app is still alive and has not crashed"
 sleep 3
 PID=$(adb shell pidof "$PACKAGE" | tr -d '\r')
 [ -n "$PID" ] || { echo "FAIL: no live process after the restarts" >&2; exit 1; }
-if adb logcat -d -b crash | grep -q "$PACKAGE"; then
+CRASH_LOG=$(adb logcat -d -b crash)
+if grep -q "$PACKAGE" <<<"$CRASH_LOG"; then
     echo "FAIL: the app crashed during the smoke test" >&2
-    adb logcat -d -b crash | grep "$PACKAGE" >&2
+    grep "$PACKAGE" <<<"$CRASH_LOG" >&2
     exit 1
 fi
 
 echo "[12/12] uninstall and reinstall"
-adb uninstall "$PACKAGE" | grep -q "Success" || { echo "FAIL: uninstall failed" >&2; exit 1; }
-adb install -r -t "$APK" | grep -q "Success" || { echo "FAIL: reinstall failed" >&2; exit 1; }
-adb shell am start -W -n "$PACKAGE/$ACTIVITY" | grep -qE "Status: ok" || {
-    echo "FAIL: the reinstalled app did not launch" >&2
+UNINSTALL_OUTPUT=$(adb uninstall "$PACKAGE" 2>&1)
+grep -q "Success" <<<"$UNINSTALL_OUTPUT" || {
+    echo "FAIL: uninstall failed: $UNINSTALL_OUTPUT" >&2
+    exit 1
+}
+REINSTALL_OUTPUT=$(adb install -r -t "$APK" 2>&1)
+sed 's/^/       /' <<<"$REINSTALL_OUTPUT"
+grep -q "Success" <<<"$REINSTALL_OUTPUT" || {
+    echo "FAIL: reinstall failed: $REINSTALL_OUTPUT" >&2
+    exit 1
+}
+if ! LAUNCH_OUTPUT=$(adb shell am start -W -n "$PACKAGE/$ACTIVITY" 2>&1); then
+    echo "FAIL: the reinstalled app did not launch: $LAUNCH_OUTPUT" >&2
+    exit 1
+fi
+grep -qE "Status: ok" <<<"$LAUNCH_OUTPUT" || {
+    echo "FAIL: the reinstalled app did not report Status: ok: $LAUNCH_OUTPUT" >&2
     exit 1
 }
 
