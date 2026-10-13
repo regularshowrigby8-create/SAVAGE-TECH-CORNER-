@@ -1,0 +1,73 @@
+# SAVAGE FACTORY — review of the "Factory rework" commit (7b82bed)
+
+Reviewed: `SAVAGE_FACTORY_v4.zip` (the new single-file factory, 3,360 lines, engine embedded as base64) and how it fits the rest of the repo (CHARTER, ENFORCEMENT, `gates.sh`, workflows). `SAVAGE-TECH-ENVIRONMENT-FINAL.zip` I only listed (436 files, looks like a repo snapshot); I did not review it in depth.
+
+Everything marked **Verified** was reproduced in throwaway copies outside your repo (Python 3.13, no API keys, so the LLM paths ran on the built-in offline stub).
+
+## Verdict
+
+v4 has good ideas (trust tiers, dry-run-first deletion, "deterministic shell, agentic core", drift detection in the improver). But several headline claims are not true as implemented, and three behaviours can destroy work in your real repo. **Do not run `python3 SAVAGE_FACTORY.py all` or `adopt --apply` at the repo root yet.**
+
+---
+
+## P0 — fix before running it on the real repo
+
+| # | Problem | Evidence | Fix |
+|---|---------|----------|-----|
+| 1 | **`init` overwrites existing files without `--force`.** Docs say it is additive and never overwrites. | **Verified.** On a copy of your repo `init` rewrote `README.md` and `docs/CHANGES.md`. `docs/CHANGES.md` is your Charter rule 9 change ledger. Cause: `write_tree()` only skips *identical* files; any file with different content is written. | In `write_tree`, if the file exists and `not force`: skip and report it as a conflict. Write generated docs to a namespaced folder (e.g. `docs/factory-v4/`) instead of `README.md` / `docs/CHANGES.md`. |
+| 2 | **`adopt --apply --mirrors` would delete real code.** MIRROR only checks that both directories exist, never that they match. | **Verified.** `factory-2/` has 6 files that `factories/factory-2/` lacks (incl. `app/src/device_service.py`, `main.py`, `ui_controller.py`) and 9 files differ. `factory-3/` has a unique `CHANGES.md`. Also `gates.sh` GATE 1, 6 and 10 run `factory-2/...` and `factory-3/tests`, so the gate would break. | Classify as MIRROR only when `filecmp.dircmp` shows zero differences; otherwise report DRIFT and never auto-delete. Make deletes recoverable (`git rm`, or move to `_to_delete/`). |
+| 3 | **`adopt` DELETE bucket includes tracked evidence.** `*.log`, `dist/`, `build/` are deleted by pattern. | **Verified.** It lists `factories/autonomous_improvement.log` and `factories/logs/mcp_server.log`, both committed. | Only delete paths that are untracked or git-ignored (`git ls-files --error-unmatch` / `git check-ignore`). |
+| 4 | **"Preview before anything is touched" is impossible.** `adopt` imports from the tree that `init` writes, and crashes with `ModuleNotFoundError: factory.adopt` if you run it first. | **Verified.** | Run the planner from the embedded bundle (in memory), or make `adopt` print "run init first" instead of a traceback. Better: `adopt` should work with zero writes. |
+| 5 | **Repair loop can write outside its sandbox.** The model's `file` path is joined to the candidate dir without validation. | **Verified.** A fix with `"file": "../victim/owned.txt"` overwrote a file in a sibling directory. | Resolve the path and require it to stay inside the candidate root; reject absolute paths and `..`. |
+| 6 | **Model-written code runs with your secrets.** Gates and holdout call `subprocess.run` with no `env=`, so `GITHUB_TOKEN` / `*_API_KEY` are inherited, with network access. "Worktree isolation" is a directory, not a sandbox. | Code read (`gates.py`, `holdout.py`, `verifier.py`). | Pass an allowlisted env (`PATH`, temp `HOME`), run with no network (container `--network none` or `unshare -n`), add resource limits. |
+
+---
+
+## P1 — claims that are not true yet (the "verification" is mostly self-referential)
+
+7. **`gate` does not look at your repo.** It scans only its own embedded bundle for two strings. **Verified:** a folder containing a `raise NotImplemented…` file and a fake AWS key still prints `VERDICT: PASS`. The `secrets=none` text is a hard-coded string, so it can never report anything else. This breaks your own rule "no faked results". Fix: walk `root`, reuse `gates._scan_text`, compute the secrets result.
+8. **`all` → "ALL GREEN" in 0.15 s proves little.** It checks that the files it just wrote exist and compile, that a constant list has ≥ 200 entries, and a "gateway self-test" that is `json.dumps({"ok": True})` (cannot fail). The real smoke build is opt-in (`doctor --smoke`) and not part of `all`. Fix: `all` runs `doctor --smoke`; the gateway test does a real JSON-RPC round trip; fail if a `verified` tool is not installed.
+9. **Best-of-N is cosmetic.** **Verified:** 8 candidates, 1 unique content hash. The model's "improvement suggestion" is stored as a label and never applied, so scoring runs build+test 8 times on identical files. This is exactly the padding Charter rule 7 forbids. Fix: generate real variants (validated patches per candidate) or default `N=1` until that exists.
+10. **The shipped artifact is a canned template.** **Verified:** `build "quantum chess engine with neural evaluation"` → generic `python_cli` scaffold that upper-cases text, verdict `SHIP`. The spec's acceptance tests (`builds`, `tests pass`, `no hollow code`) are never turned into executable checks. Fix: generate spec-specific tests, and return a distinct verdict (e.g. `TEMPLATE-ONLY`) when no model-written code was applied.
+11. **The "sealed holdout" isn't sealed or independent.** It re-runs the same build/test commands as the public gates; the sealed ID derives from the public spec and the source is in the repo. It adds only: has-tests, size bound, determinism. Fix: hidden behavioural tests produced from the spec by a different model, stored outside the candidate's context, run after the build.
+12. **Verifier independence is not enforced.** `_resolve` falls back to any "usable" endpoint, and local endpoints (ollama, lmstudio…) always count as usable even when not running, so generator and verifier can be the same model. The tie-break also sees only a ~100-char label, not the code. Fix: record the model per call, assert generator ≠ verifier, pass the actual diff.
+13. **`_auto_fix` writes empty files to satisfy `files_exist`.** **Verified:** creates a 0-byte `main.py`. That is the stub pattern your ENFORCEMENT §1 bans. Fix: delete it and fail instead.
+14. **Trust tiers are labels, not evidence.** 75 tools are hard-coded `verified`. **Verified:** on a normal host the improver found 18 of them absent (demoted), and promotes 20 others to `verified` just because a binary with that name is on PATH (no run, no version, no known-answer test). The 32 MCP servers I read only report whether a binary exists (`shutil.which`); none executes the tool. Fix: promotion needs a known-answer test on a fixture plus a recorded version.
+15. **In a real git repo, "worktree isolation" checks out the entire repo per candidate.** **Verified:** inside a git repo each candidate dir held 97 files (scaffold is 3–4), so gates and secret scans run over the whole checkout, and `size_bounds` (≤ 500 files) will start failing as your repo grows (yours has 417 tracked files). `worktree.release()` is never called, so worktrees stay registered. Candidates also nest as `.worktrees/.worktrees/candidate_NN`. Fix: create worktrees from the repo root with sparse checkout (or just use temp dirs), call `release()` in a `finally`, fix the double nesting.
+16. **Single file with an unreviewable engine.** The engine ships as a base64 blob. `BUILD.md` tells you to rebuild from `_parts/pack.py`, but `_parts/` is not in the commit or the zip, so there is no reviewable source of truth and PR diffs show nothing. Fix: commit the real sources and generate the single file in CI.
+
+Smaller: build artifacts include `__pycache__/*.pyc`; the secret regex only knows `AKIA…`, `ghp_…`, `sk-…` (misses `github_pat_`, `AIza…`, `xox…`, private-key blocks); the verifier's hollow check flags any `return True` or `except NotImplementedError` as hollow.
+
+---
+
+## P2 — the rest of the factory (your existing setup)
+
+17. **`quality-conveyor-belt.yml` cannot fail.** Lint, format, typecheck, tests, knip, size and dependency audit all end in `|| true` (lines 44, 54, 58–59, 62, 65, 68, 71) and gitleaks has `continue-on-error: true`. This violates ENFORCEMENT §2. v4's own `adopt` flags this file as REWRITE. The only real gate in that workflow is `gates.sh`, and `gates.sh` does not run vitest or Playwright. Fix: remove every `|| true`; keep gitleaks blocking.
+18. **`gates.sh` has decorative or weak gates.**
+    - GATE 2 ("single-job workflow") only checks the file exists, then prints PASS.
+    - GATE 3 (anti-stub) scans only `shell/ frontend/ backend/` `.py` files, not `factory-2/`, `factories/`, `tools/`, `factory-3/`, and no JS/TS/Java.
+    - GATE 7 greps coverage text for "95%…100%" on **one** file; use `coverage report --fail-under=95` over the real source set.
+    - `gates.sh --subshell` (line 98) skips GATE 11, a bypass ENFORCEMENT §2 forbids.
+    - GATE 5 (`duplication_auditor.py`) compares 4 hard-coded file pairs, so it **passes** while 9 files differ between `factory-2/` and `factories/factory-2/`. Fix: compare whole trees, or better, remove the duplicate tree.
+19. **Six places already called "factory", and v4 adds more.** `factory-2/`, `factories/`, `factory-3/`, `.factory/`, `tools/factory/` and `factory/` exist today; `init` writes a further engine into `factory/` plus a new `savage/` tree. ENFORCEMENT §4.4 says code must exist in exactly one canonical directory. Pick one tree, update `gates.sh`/Makefile paths, then delete the other. Don't add a parallel factory; port v4's best ideas (tiers, dry-run adopt, improver drift detection) into the existing one.
+20. **Repo bloat and stale artifacts.** 7.3 MB tracked, 16 zips/APKs. Three APKs are byte-identical (`shell/final-product/`, `assets/`, `artifacts/debug/`), and the fourth (`factories/final-product/`) differs, so which one is "the" release is unclear. `SAVAGE-TECH-ENVIRONMENT-FINAL.zip` (1.4 MB) is a stale copy of the repo; `artifacts/archives/*.zip` (9 files) and `factories/factory-setup.zip` duplicate directories; `factory-2/debug/audit_log.jsonl` is 676 KB; `docs/archive/stale_proposals_run_20261010/` holds 30+ generated candidates and `.orig_backup` files. Fix: build archives and APKs in CI and attach them to Releases; keep one APK path plus its SHA-256 in `RELEASE_MANIFEST.json`; git-ignore logs; delete the archive folder.
+21. **`ZIP_LINK.md` is stale.** It says `factory-setup.zip` has two top-level dirs (`factory-1/`, `factory-2/`) and no nested zips. **Verified:** it has `factory-1` (21 files), `factory-2` (56), `factory-3` (15), `final-product` (9) and 1 nested zip. Charter rule 8 says every claim must reference a literal path and be checked; add a gate that checks claims like this.
+22. **CI hardening.** Actions use floating tags (`@v4`, `@v5`, `@v2`), including third-party `gitleaks-action` and `softprops/action-gh-release`; pin them to commit SHAs (Dependabot already covers `github-actions`, so it will keep them updated). Only 3 of 5 workflows declare `permissions:`; add least-privilege blocks to all.
+23. **Tests are thin.** The 5 unit suites pass at this commit (4 + 4 + 2 + 13 tests plus factory-3), but vitest and Playwright specs exist and nothing blocking runs them.
+
+---
+
+## Suggested order (biggest quality gain per hour)
+
+1. Remove all `|| true` / `continue-on-error` from `quality-conveyor-belt.yml`, and make GATE 2 / GATE 3 / GATE 7 real. (small, high impact)
+2. Make `init` non-destructive and `adopt` content-aware and git-aware (P0 #1–4). (small)
+3. Make `gate` and `doctor` compute real results (P1 #7–8); decide that `gates.sh` is the one gate and v4's `gate` calls it. (small)
+4. Fix repair-loop path validation and sandbox the subprocess env (P0 #5–6). (small–medium)
+5. Collapse to one canonical factory tree and clean the committed binaries and archives (P2 #19–21). (medium)
+6. Make the harness real: spec-derived hidden tests, real candidate variants, enforced verifier independence (P1 #9–12). (largest)
+
+## What I did not check
+
+- No live LLM keys were used; spec amplification, repair and verifier tie-breaks ran on the offline stub. Findings 9, 12 and 13 follow from the code and the offline runs; behaviour with a real model may differ in detail.
+- I did not run the full `gates.sh` (needs node, coverage, androguard), build the Android project, or inspect the APKs.
+- I did not review `SAVAGE-TECH-ENVIRONMENT-FINAL.zip` beyond its file list.
