@@ -100,27 +100,27 @@ jobs:
 
       - name: Gradle clean
         working-directory: shell/android_project
-        run: chmod +x gradlew && ./gradlew clean --stacktrace --no-daemon
+        run: set -euo pipefail; chmod +x gradlew && ./gradlew clean --stacktrace --no-daemon 2>&1 | tee -a "$RUNNER_TEMP/gradle.log"
 
       - name: Unit tests (JVM)
         working-directory: shell/android_project
-        run: ./gradlew testDebugUnitTest --stacktrace --no-daemon
+        run: set -euo pipefail; ./gradlew testDebugUnitTest --stacktrace --no-daemon 2>&1 | tee -a "$RUNNER_TEMP/gradle.log"
 
       - name: Android Lint (abortOnError)
         working-directory: shell/android_project
-        run: ./gradlew lintDebug lintRelease --stacktrace --no-daemon
+        run: set -euo pipefail; ./gradlew lintDebug lintRelease --stacktrace --no-daemon 2>&1 | tee -a "$RUNNER_TEMP/gradle.log"
 
       - name: Assemble debug APK
         working-directory: shell/android_project
-        run: ./gradlew assembleDebug --stacktrace --no-daemon
+        run: set -euo pipefail; ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee -a "$RUNNER_TEMP/gradle.log"
 
       - name: Assemble release APK (R8 + resource shrinking)
         working-directory: shell/android_project
-        run: ./gradlew assembleRelease --stacktrace --no-daemon
+        run: set -euo pipefail; ./gradlew assembleRelease --stacktrace --no-daemon 2>&1 | tee -a "$RUNNER_TEMP/gradle.log"
 
       - name: Assemble instrumented test APK
         working-directory: shell/android_project
-        run: ./gradlew assembleDebugAndroidTest --stacktrace --no-daemon
+        run: set -euo pipefail; ./gradlew assembleDebugAndroidTest --stacktrace --no-daemon 2>&1 | tee -a "$RUNNER_TEMP/gradle.log"
 
       - name: Inspect and hash the built APKs
         id: apk
@@ -176,6 +176,32 @@ jobs:
           python3 tools/reproducible_build_verifier.py --apk "${{ steps.apk.outputs.DEBUG_APK }}" \
             --expect-signed --json apk-evidence.json
           cat apk-evidence.json
+
+      # A hosted runner's raw log is not always retrievable through the API; this step turns the
+      # interesting part of the Gradle output into error annotations, so a failed build is
+      # diagnosable from the commit's checks without guessing.
+      - name: Surface the Gradle failure
+        if: failure()
+        run: |
+          set -uo pipefail
+          LOG="${RUNNER_TEMP:-/tmp}/gradle.log"
+          if [ ! -s "$LOG" ]; then
+            echo "::error title=gradle failure::the Gradle log is empty - the failure happened before Gradle ran"
+            exit 0
+          fi
+          python3 - "$LOG" <<'PYEOF'
+          import io, sys
+          lines = io.open(sys.argv[1], encoding="utf-8", errors="replace").read().splitlines()
+          keys = ("FAILURE:", "What went wrong", "Caused by:", "Execution failed", "> Task", "error:",
+                  "Could not", "Cannot", "Unsupported", "A problem occurred", "Deprecated Gradle")
+          picked = [l.rstrip() for l in lines if any(k in l for k in keys)]
+          tail = picked[-60:] if picked else lines[-60:]
+          def esc(text):
+              return text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+          for i in range(0, len(tail), 12):
+              chunk = esc("\n".join(tail[i:i + 12]))
+              print("::error title=gradle failure tail::" + chunk)
+          PYEOF
 
       - name: Upload APKs, reports and evidence
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
