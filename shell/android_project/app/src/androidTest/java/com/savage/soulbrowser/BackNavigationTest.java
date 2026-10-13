@@ -102,9 +102,14 @@ public class BackNavigationTest {
         SystemClock.sleep(250L);
     }
 
-    /** {@code true} once the browser activity no longer exists. */
+    /**
+     * {@code true} once the browser activity no longer exists.
+     *
+     * <p>The state is compared by name so this check does not depend on where the library declares
+     * the enum, and so it stays readable next to the library version the project pins.
+     */
     private static boolean isGone(ActivityScenario<MainActivity> scenario) {
-        return scenario.getState() == ActivityScenario.State.DESTROYED;
+        return "DESTROYED".equals(scenario.getState().name());
     }
 
     private static boolean canGoBack(ActivityScenario<MainActivity> scenario) {
