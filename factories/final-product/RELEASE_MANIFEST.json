@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-13T07:27:46.884218+00:00",
+  "timestamp": "2026-10-13T08:21:18.363727+00:00",
   "input_source": "shell",
   "stages": {
     "factory_1_intake": "SUCCESS",
@@ -7,51 +7,8 @@
       "proposals_generated": 0,
       "proposals_verified": 0,
       "verdict": "SHIP"
-    },
-    "factory_3_android_tools": {
-      "broker_audit": {
-        "target": "/home/user/SAVAGE-TECH-CORNER-/factories/factory-2/app/src",
-        "clean": true,
-        "total_findings": 0,
-        "findings": [],
-        "apk_metrics": {
-          "tool": "APKAnalyzer",
-          "passed": true,
-          "total_bytes": 12937,
-          "file_count": 2,
-          "dex_budget_ok": true,
-          "findings": []
-        },
-        "experimental_diagnostics": {
-          "tool": "UnverifiedExperimentalTools",
-          "status": "EXPERIMENTAL_PASS",
-          "speculative_dead_paths": 0,
-          "jni_signature_leaks": 0
-        },
-        "retry_count": 0,
-        "max_retries": 3,
-        "status": "PASSED_FACTORY_3_CERTIFICATION"
-      },
-      "certification": {
-        "factory": "factory-3",
-        "target": "/home/user/SAVAGE-TECH-CORNER-/factories/factory-2/app/src",
-        "manifest_audit": {
-          "passed": true,
-          "findings": [],
-          "warnings": [],
-          "flagged_permissions": []
-        },
-        "resource_refinement": {
-          "passed": true,
-          "total_files_scanned": 2,
-          "missing_assets": [],
-          "compression_ready": true
-        },
-        "certified_for_final_product": true,
-        "status": "CERTIFIED"
-      },
-      "gradle_wrapper_ready": true
     }
   },
-  "status": "CERTIFIED"
+  "status": "FAILED",
+  "error": "the Gradle build failed with exit code 1; no APK was published and no older artifact is used as a substitute"
 }
