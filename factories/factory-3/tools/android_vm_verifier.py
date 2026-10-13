@@ -59,7 +59,13 @@ class StrippedAndroidVM:
         }
 
     def run_full_vm_verification(self) -> Dict[str, Any]:
-        """Runs the complete stripped Android VM test pipeline."""
+        """Runs the static APK audit pipeline.
+
+        Every check reads the APK file: archive integrity and alignment, the PKCS#7 signature
+        block, the declared manifest components and the DEX header. Nothing is installed or
+        executed - device evidence comes from tools/android_apk_smoke.sh and the instrumented
+        tests, so the status names say "static audit", not "certified".
+        """
         if not self.apk_path.exists():
             self.audit_results["errors"].append(f"APK file not found: {self.apk_path}")
             self.audit_results["vm_status"] = "REJECTED_MISSING_FILE"

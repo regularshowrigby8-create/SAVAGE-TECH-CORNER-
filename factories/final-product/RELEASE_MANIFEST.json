@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-11T04:27:46.509743+00:00",
+  "timestamp": "2026-10-13T07:27:46.884218+00:00",
   "input_source": "shell",
   "stages": {
     "factory_1_intake": "SUCCESS",
@@ -17,8 +17,8 @@
         "apk_metrics": {
           "tool": "APKAnalyzer",
           "passed": true,
-          "total_bytes": 9602,
-          "file_count": 1,
+          "total_bytes": 12937,
+          "file_count": 2,
           "dex_budget_ok": true,
           "findings": []
         },
@@ -43,7 +43,7 @@
         },
         "resource_refinement": {
           "passed": true,
-          "total_files_scanned": 1,
+          "total_files_scanned": 2,
           "missing_assets": [],
           "compression_ready": true
         },

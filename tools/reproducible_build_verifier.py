@@ -89,6 +89,23 @@ def load_apk(apk_path: Path):
     return APK(str(apk_path))
 
 
+def discover_built_apk() -> Path:
+    """Finds an APK produced by *this* checkout's Gradle build.
+
+    Only build output directories are searched: a pre-built APK committed to the repository was not
+    produced by this source tree, so it can never serve as build provenance.
+    """
+    outputs = ROOT_DIR / "shell" / "android_project" / "app" / "build" / "outputs" / "apk"
+    candidates = sorted(outputs.rglob("*.apk")) if outputs.is_dir() else []
+    if not candidates:
+        print(f"[APK-GATE] FAIL: no APK built by this checkout under "
+              f"{outputs.relative_to(ROOT_DIR)}")
+        print("[APK-GATE] run the real build first, then re-run this gate:")
+        print("[APK-GATE]   cd shell/android_project && ./gradlew assembleDebug")
+        raise SystemExit(1)
+    return candidates[-1].resolve()
+
+
 def sha256_of(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -115,13 +132,14 @@ def check_zip(apk_path: Path) -> list:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="APK identity, version and signing gate")
-    parser.add_argument("--apk", required=True, help="path of the APK to verify")
+    parser.add_argument("--apk", help="path of the APK to verify "
+                                      "(default: the APK this checkout built with Gradle)")
     parser.add_argument("--expect-signed", action="store_true",
                         help="fail when the APK has no signature block")
     parser.add_argument("--json", help="write the evidence to this JSON file")
     args = parser.parse_args()
 
-    apk_path = Path(args.apk).resolve()
+    apk_path = Path(args.apk).resolve() if args.apk else discover_built_apk()
     errors: list = []
 
     if not apk_path.is_file():
