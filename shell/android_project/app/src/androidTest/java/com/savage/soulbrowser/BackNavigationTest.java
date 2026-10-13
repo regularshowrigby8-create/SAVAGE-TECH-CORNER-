@@ -71,15 +71,30 @@ public class BackNavigationTest {
                             activity -> TestSupport.webViewOf(activity).canGoBack()));
 
             pressBack();
-
             TestSupport.waitUntil("the browser activity to finish at its root page",
-                    () -> TestSupport.onResult(scenario, activity -> activity.isFinishing()),
-                    () -> TestSupport.describeBrowser(scenario));
+                    () -> Boolean.TRUE.equals(observation(scenario, android.app.Activity::isFinishing)),
+                    () -> {
+                        Boolean finishing = observation(scenario, android.app.Activity::isFinishing);
+                        return finishing == null
+                                ? "browser state unavailable (the activity is already gone)"
+                                : "finishing=" + finishing;
+                    });
         }
     }
 
-    /** Sends a real system back press through the instrumentation, not a synthetic view click. */
+    /**
+     * Sends a real system back press through the instrumentation, not a synthetic view click.
+     *
+     * <p>Key dispatch is capped first. {@code sendKeyDownUpSync} waits for the key to be delivered
+     * through the system's key-dispatch timeout, and on a loaded emulator that wait can outlive the
+     * browser: the activity is already gone when the timeout expires, so the call throws and hides
+     * the behaviour the test is about. A short cap returns as soon as the key has been handled by the
+     * application instead of outliving it.
+     */
     private static void pressBack() {
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .executeShellCommand("settings put global key_dispatch_timeout_millis 1000");
         InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
         SystemClock.sleep(250L);
     }

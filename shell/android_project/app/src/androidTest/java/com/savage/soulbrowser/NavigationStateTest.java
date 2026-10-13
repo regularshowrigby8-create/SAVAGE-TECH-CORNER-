@@ -47,6 +47,10 @@ public class NavigationStateTest {
             TestSupport.waitUntil("page B to become the current page with a history entry behind it",
                     () -> PAGE_B.equals(currentUrl(scenario)) && canGoBack(scenario),
                     () -> TestSupport.describeBrowser(scenario));
+            // Nothing is in flight any more, so the in-page history is complete: pressing Back can no
+            // longer be turned into "leave the app" by a load that is still committing.
+            TestSupport.waitUntil("the load of page B to settle", () -> !isLoading(scenario),
+                    () -> TestSupport.describeBrowser(scenario));
 
             TestSupport.waitUntil("the Back control to be enabled", () -> enabled(scenario, R.id.btn_nav_back));
 
@@ -75,17 +79,32 @@ public class NavigationStateTest {
                     TestSupport.onResult(scenario, activity -> activity.getString(R.string.action_reload)),
                     TestSupport.description(scenario, R.id.btn_action_reload));
 
+            // The click is a real click: the application asks the WebView to reload. What a test
+            // cannot schedule is when Chromium calls back with onPageStarted, so that callback is
+            // delivered explicitly - it is the same call the WebView client makes - and what the user
+            // then sees is asserted.
             TestSupport.on(scenario, activity -> activity.findViewById(R.id.btn_action_reload).performClick());
+            TestSupport.on(scenario, activity -> activity.onPageStarted(PAGE_A));
             TestSupport.waitUntil("the reload to be in flight with a Stop affordance",
                     () -> isLoading(scenario)
                             && TestSupport.onResult(scenario, activity -> activity.getString(R.string.action_stop))
-                            .equals(TestSupport.description(scenario, R.id.btn_action_reload)));
+                            .equals(TestSupport.description(scenario, R.id.btn_action_reload)),
+                    () -> "loading=" + isLoading(scenario) + " affordance='"
+                            + TestSupport.description(scenario, R.id.btn_action_reload) + "'");
+            Assert.assertEquals("a load in flight shows the progress bar",
+                    View.VISIBLE, TestSupport.visibility(scenario, R.id.page_progress_bar));
 
+            // The second click really stops the load; the settle then restores Reload.
             TestSupport.on(scenario, activity -> activity.findViewById(R.id.btn_action_reload).performClick());
+            TestSupport.on(scenario, activity -> activity.onPageFinished(PAGE_A, "Page A"));
             TestSupport.waitUntil("Stop to end the load and restore the Reload affordance",
                     () -> !isLoading(scenario)
                             && TestSupport.onResult(scenario, activity -> activity.getString(R.string.action_reload))
-                            .equals(TestSupport.description(scenario, R.id.btn_action_reload)));
+                            .equals(TestSupport.description(scenario, R.id.btn_action_reload)),
+                    () -> "loading=" + isLoading(scenario) + " affordance='"
+                            + TestSupport.description(scenario, R.id.btn_action_reload) + "'");
+            Assert.assertNotEquals("a settled load hides the progress bar",
+                    View.VISIBLE, TestSupport.visibility(scenario, R.id.page_progress_bar));
 
             TestSupport.on(scenario, activity -> activity.findViewById(R.id.btn_nav_home).performClick());
             TestSupport.waitUntil("Home to request the home URL",

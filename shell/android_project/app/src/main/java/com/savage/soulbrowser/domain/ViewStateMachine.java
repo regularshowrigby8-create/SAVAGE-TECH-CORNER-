@@ -12,18 +12,29 @@ public final class ViewStateMachine {
     private int progress;
     private boolean hasContent;
     private boolean retryPending;
+    private boolean loading;
 
     public ViewStateMachine() {
         this.state = ViewState.LOADING;
         this.progress = 0;
         this.hasContent = false;
         this.retryPending = false;
+        // The browser starts by loading its home page, so the first thing the user sees is a load in
+        // flight.
+        this.loading = true;
     }
 
-    /** A navigation (re)started. */
+    /**
+     * A navigation (re)started.
+     *
+     * <p>Existing content stays on screen (the state stays {@link ViewState#CONTENT}, so the overlay
+     * never covers a page the user is reading) but the load is marked as in flight, because that is
+     * exactly what the thin progress bar is for.
+     */
     public void onNavigationStarted() {
         retryPending = false;
         progress = 0;
+        loading = true;
         state = hasContent ? ViewState.CONTENT : ViewState.LOADING;
     }
 
@@ -39,33 +50,48 @@ public final class ViewStateMachine {
             hasContent = true;
             state = ViewState.CONTENT;
             retryPending = false;
+            loading = false;
             return;
         }
+        loading = true;
         state = hasContent ? ViewState.CONTENT : ViewState.LOADING;
     }
 
-    /** The page finished rendering; content is now available. */
+    /** The page finished rendering; content is now available and no load is in flight. */
     public void onContentReady() {
         hasContent = true;
         progress = 100;
         state = ViewState.CONTENT;
         retryPending = false;
+        loading = false;
     }
 
     public void onLoadError() {
         state = ViewState.ERROR;
+        // Nothing is in flight any more: the bar must not keep animating over a message about the
+        // failure that ended the load.
+        loading = false;
     }
 
     public void onOffline() {
         state = ViewState.OFFLINE;
+        // Nothing is in flight any more: the bar must not keep animating over a message about the
+        // failure that ended the load.
+        loading = false;
     }
 
     public void onBlocked() {
         state = ViewState.BLOCKED;
+        // Nothing is in flight any more: the bar must not keep animating over a message about the
+        // failure that ended the load.
+        loading = false;
     }
 
     public void onTlsError() {
         state = ViewState.TLS_ERROR;
+        // Nothing is in flight any more: the bar must not keep animating over a message about the
+        // failure that ended the load.
+        loading = false;
     }
 
     /** @return {@code true} while a failure or refusal message is displayed */
@@ -107,9 +133,16 @@ public final class ViewStateMachine {
                 || state == ViewState.TLS_ERROR;
     }
 
-    /** The thin progress bar is shown while a page is loading and hidden once it is ready. */
+    /**
+     * The thin progress bar is shown while a load is in flight and hidden once it settles.
+     *
+     * <p>It is deliberately not tied to {@link ViewState#LOADING}: a navigation that starts while a
+     * page is already displayed keeps that page (no overlay), and the bar is then the only sign the
+     * browser is working. Keying it off the loading flag also means the bar is never shown over a
+     * refusal or failure message.
+     */
     public boolean showsProgressBar() {
-        return state == ViewState.LOADING && progress < 100;
+        return loading && progress < 100;
     }
 
     /**

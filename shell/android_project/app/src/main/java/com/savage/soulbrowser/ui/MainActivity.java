@@ -631,6 +631,7 @@ public final class MainActivity extends AppCompatActivity implements
         } else {
             viewState.onLoadError();
         }
+        updateNavigationControls();
         renderState();
         Log.w(TAG, "Main frame load failed: " + description);
     }
@@ -640,6 +641,7 @@ public final class MainActivity extends AppCompatActivity implements
         lastTarget = url;
         loading = false;
         viewState.onTlsError();
+        updateNavigationControls();
         renderState();
         Log.w(TAG, "TLS refused: " + com.savage.soulbrowser.browser.SslDecision.describe(primaryError));
     }
@@ -649,6 +651,9 @@ public final class MainActivity extends AppCompatActivity implements
         loading = true;
         viewState.onNavigationStarted();
         updateSecurityBadge(url);
+        // The reload action is also the stop action, so it has to advertise Stop as soon as a load
+        // is in flight - which is exactly when the WebView says the load started.
+        updateNavigationControls();
         renderState();
     }
 

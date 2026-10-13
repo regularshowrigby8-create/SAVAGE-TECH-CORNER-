@@ -106,14 +106,16 @@ public class JourneyInstrumentedTest {
                     .equals(TestSupport.onResult(scenario,
                             activity -> activity.getString(R.string.action_bookmark_remove))));
 
-            // Opening the bookmark from the stored list must load it in the browser.
+            // Opening the bookmark from the stored list must load it in the browser. The list is a
+            // real activity and its row is really clicked; the browser then comes back through the
+            // same intent the list sends, which is what makes the address observable.
             try (ActivityScenario<BookmarksActivity> list = ActivityScenario.launch(
                     new Intent(TestSupport.context(), BookmarksActivity.class)
                             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))) {
                 onView(withId(R.id.list_bookmarks)).check(matches(isDisplayed()));
                 onView(withText(containsString("example.com"))).perform(click());
             }
-            TestSupport.waitForViewText(R.id.edit_omnibox, "example.com");
+            assertBrowserCameBackTo(scenario, PAGE_A);
         }
     }
 
@@ -141,7 +143,9 @@ public class JourneyInstrumentedTest {
     public void j4HistoryRecordsVisitAndReopensIt() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
             // The launch itself visits the home page, so the store legitimately holds more than the
-            // visit this journey makes: what has to be true is that this address was recorded.
+            // visit this journey makes: what has to be true is that this address was recorded. The
+            // scenario stays open through the assertion below because the list sends the browser back
+            // to the same task, and a closed scenario would destroy the activity that receives it.
             TestSupport.navigateForReal(scenario, PAGE_A);
             TestSupport.waitUntil("the visit to be written to the local store", () -> {
                 HistoryRepository history = history();
@@ -156,7 +160,7 @@ public class JourneyInstrumentedTest {
             onView(withId(R.id.list_history)).check(matches(isDisplayed()));
             onView(withText(containsString("example.com"))).perform(click());
         }
-        TestSupport.waitForViewText(R.id.edit_omnibox, "example.com");
+        assertBrowserCameBackTo(scenario, PAGE_A);
     }
 
     @Test
@@ -231,6 +235,25 @@ public class JourneyInstrumentedTest {
 
     private static int tabCount(ActivityScenario<MainActivity> scenario) {
         return TestSupport.onResult(scenario, TestSupport::openTabCount);
+    }
+
+    /**
+     * Waits until the browser is (back) on {@code expected}.
+     *
+     * <p>The list activities send {@code ACTION_VIEW}-style intents at the browser, so the browser
+     * comes back through {@code onNewIntent} and the address it was given is what must end up in the
+     * address bar. The same task is what makes this observable: the list's {@code finish()} leaves a
+     * destroyed activity behind if it started a new task of its own.
+     */
+    private static void assertBrowserCameBackTo(ActivityScenario<MainActivity> scenario, String expected) {
+        TestSupport.waitUntil("the browser to come back to " + expected,
+                () -> expected.equals(TestSupport.onResult(scenario,
+                        activity -> TestSupport.webViewOf(activity).getUrl()))
+                        && expected.equals(TestSupport.onResult(scenario,
+                        activity -> TestSupport.textOf(activity, R.id.edit_omnibox))),
+                () -> TestSupport.describeBrowser(scenario) + " omnibox='"
+                        + TestSupport.onResult(scenario,
+                        activity -> TestSupport.textOf(activity, R.id.edit_omnibox)) + "'");
     }
 
     private static boolean canGoBack(ActivityScenario<MainActivity> scenario) {

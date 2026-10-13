@@ -119,6 +119,37 @@ public class ViewStateMachineTest {
     }
 
     @Test
+    public void progressBarTracksTheLoadNotTheOverlay() {
+        // A navigation that starts while a page is displayed keeps the page (no overlay) and still
+        // shows the bar: the bar is the only sign the browser is working in that case.
+        ViewStateMachine machine = new ViewStateMachine();
+        machine.onContentReady();
+        assertFalse("nothing is in flight once the page is ready", machine.showsProgressBar());
+
+        machine.onNavigationStarted();
+        assertEquals("the loaded page stays on screen", ViewState.CONTENT, machine.state());
+        assertFalse("the overlay must not cover a page the user is reading", machine.showsOverlay());
+        assertTrue("a load in flight shows the bar", machine.showsProgressBar());
+
+        machine.onProgress(60);
+        assertTrue(machine.showsProgressBar());
+        machine.onContentReady();
+        assertFalse(machine.showsProgressBar());
+    }
+
+    @Test
+    public void progressBarIsHiddenForAFailure() {
+        ViewStateMachine machine = new ViewStateMachine();
+        machine.onNavigationStarted();
+        machine.onLoadError();
+        assertFalse("the bar must not animate over a failure message", machine.showsProgressBar());
+        // WebView still reports 100% after a failed load; that must not restart the bar either.
+        machine.onProgress(100);
+        assertFalse(machine.showsProgressBar());
+        assertEquals("the failure message stays on screen", ViewState.ERROR, machine.state());
+    }
+
+    @Test
     public void progressIsClamped() {
         ViewStateMachine machine = new ViewStateMachine();
         machine.onProgress(-10);
