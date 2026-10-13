@@ -37,17 +37,16 @@ public class BackNavigationTest {
     @Test
     public void systemBackGoesBackInWebView() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
+            // Both pages have to be *settled* history entries before Back is pressed. A navigation
+            // that is still in flight has not been committed to the in-page history, and Back is also
+            // the gesture that leaves the app when there is nothing behind the current page - so
+            // pressing it too early finished the activity instead of returning to page A.
             TestSupport.navigateForReal(scenario, PAGE_A);
-            TestSupport.waitUntil("page A to load", () -> PAGE_A.equals(url(scenario)),
-                    () -> TestSupport.describeBrowser(scenario));
-            // Page B must be the committed history entry before Back is pressed. Back is also the
-            // gesture that leaves the app when there is nothing behind the current page, so pressing
-            // it while the load is still in flight finished the activity and made the rest of the
-            // test observe a destroyed activity instead of the browser.
+            TestSupport.waitForSettledNavigation(scenario, PAGE_A);
             TestSupport.navigateForReal(scenario, PAGE_B);
-            TestSupport.waitUntil("page B to become the current entry with history behind it",
-                    () -> PAGE_B.equals(url(scenario)) && canGoBack(scenario),
-                    () -> TestSupport.describeBrowser(scenario));
+            TestSupport.waitForSettledNavigation(scenario, PAGE_B);
+            TestSupport.waitUntil("page B to have a history entry behind it",
+                    () -> canGoBack(scenario), () -> TestSupport.describeBrowser(scenario));
 
             pressBack();
             TestSupport.waitUntil("system Back to return to page A", () -> PAGE_A.equals(url(scenario)),
@@ -71,8 +70,12 @@ public class BackNavigationTest {
                             activity -> TestSupport.webViewOf(activity).canGoBack()));
 
             pressBack();
+            // "Back left the app" means the activity is finishing, or is already gone - the platform
+            // destroys it as soon as there is nothing left to show, and a wait that only accepted
+            // `isFinishing()` would then miss the very behaviour it is checking for.
             TestSupport.waitUntil("the browser activity to finish at its root page",
-                    () -> Boolean.TRUE.equals(observation(scenario, android.app.Activity::isFinishing)),
+                    () -> isGone(scenario)
+                            || Boolean.TRUE.equals(observation(scenario, android.app.Activity::isFinishing)),
                     () -> {
                         Boolean finishing = observation(scenario, android.app.Activity::isFinishing);
                         return finishing == null
@@ -97,6 +100,11 @@ public class BackNavigationTest {
                 .executeShellCommand("settings put global key_dispatch_timeout_millis 1000");
         InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
         SystemClock.sleep(250L);
+    }
+
+    /** {@code true} once the browser activity no longer exists. */
+    private static boolean isGone(ActivityScenario<MainActivity> scenario) {
+        return scenario.getState() == ActivityScenario.State.DESTROYED;
     }
 
     private static boolean canGoBack(ActivityScenario<MainActivity> scenario) {

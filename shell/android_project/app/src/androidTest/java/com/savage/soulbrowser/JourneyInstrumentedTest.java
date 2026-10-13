@@ -61,20 +61,17 @@ public class JourneyInstrumentedTest {
     public void j1BrowseThenBackThenHome() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
             TestSupport.navigateForReal(scenario, PAGE_A);
-            TestSupport.waitUntil("the first page to load", () -> PAGE_A.equals(url(scenario)),
-                    () -> TestSupport.describeBrowser(scenario));
+            TestSupport.waitForSettledNavigation(scenario, PAGE_A);
             Assert.assertTrue("a loaded page counts as content",
                     TestSupport.onResult(scenario, MainActivity::hasLoadedPage));
 
-            // Wait until page B is the committed entry: a navigation that is still in flight has not
-            // been added to the WebView's history yet, and pressing Back then either cancels the
-            // pending entry or finds nothing behind it - which is not a browser defect but a race in
-            // the test. The WebView reports the requested URL as soon as the load starts, so the
-            // history entry is the thing to wait for.
+            // Both pages have to be settled history entries: the WebView reports a URL as soon as a
+            // load starts, but a navigation that is still in flight has not been committed to the
+            // history, and pressing Back then cancels the pending entry instead of walking back.
             TestSupport.navigateForReal(scenario, PAGE_B);
-            TestSupport.waitUntil("the second page to become the current entry with history behind it",
-                    () -> PAGE_B.equals(url(scenario)) && canGoBack(scenario),
-                    () -> TestSupport.describeBrowser(scenario));
+            TestSupport.waitForSettledNavigation(scenario, PAGE_B);
+            TestSupport.waitUntil("the second page to have a history entry behind it",
+                    () -> canGoBack(scenario), () -> TestSupport.describeBrowser(scenario));
 
             TestSupport.on(scenario, activity -> activity.findViewById(R.id.btn_nav_back).performClick());
             TestSupport.waitUntil("Back to return to the first page", () -> PAGE_A.equals(url(scenario)),
@@ -91,8 +88,7 @@ public class JourneyInstrumentedTest {
     public void j3BookmarkCurrentPageAndOpenIt() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
             TestSupport.navigateForReal(scenario, PAGE_A);
-            TestSupport.waitUntil("the page to load", () -> PAGE_A.equals(url(scenario)),
-                    () -> TestSupport.describeBrowser(scenario));
+            TestSupport.waitForSettledNavigation(scenario, PAGE_A);
 
             TestSupport.on(scenario,
                     activity -> activity.findViewById(R.id.btn_action_bookmark).performClick());
@@ -115,7 +111,7 @@ public class JourneyInstrumentedTest {
                 onView(withId(R.id.list_bookmarks)).check(matches(isDisplayed()));
                 onView(withText(containsString("example.com"))).perform(click());
             }
-            assertBrowserCameBackTo(scenario, PAGE_A);
+            assertBrowserCameBackTo(PAGE_A);
         }
     }
 
@@ -159,7 +155,7 @@ public class JourneyInstrumentedTest {
                 onView(withId(R.id.list_history)).check(matches(isDisplayed()));
                 onView(withText(containsString("example.com"))).perform(click());
             }
-            assertBrowserCameBackTo(scenario, PAGE_A);
+            assertBrowserCameBackTo(PAGE_A);
         }
     }
 
@@ -167,8 +163,7 @@ public class JourneyInstrumentedTest {
     public void j5TabsOpenSwitchClose() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
             TestSupport.navigateForReal(scenario, PAGE_A);
-            TestSupport.waitUntil("the first tab to show page A", () -> PAGE_A.equals(url(scenario)),
-                    () -> TestSupport.describeBrowser(scenario));
+            TestSupport.waitForSettledNavigation(scenario, PAGE_A);
             Assert.assertEquals(1, tabCount(scenario));
 
             // Open a second tab from the tab switcher.
@@ -245,15 +240,11 @@ public class JourneyInstrumentedTest {
      * address bar. The same task is what makes this observable: the list's {@code finish()} leaves a
      * destroyed activity behind if it started a new task of its own.
      */
-    private static void assertBrowserCameBackTo(ActivityScenario<MainActivity> scenario, String expected) {
-        TestSupport.waitUntil("the browser to come back to " + expected,
-                () -> expected.equals(TestSupport.onResult(scenario,
-                        activity -> TestSupport.webViewOf(activity).getUrl()))
-                        && expected.equals(TestSupport.onResult(scenario,
-                        activity -> TestSupport.textOf(activity, R.id.edit_omnibox))),
-                () -> TestSupport.describeBrowser(scenario) + " omnibox='"
-                        + TestSupport.onResult(scenario,
-                        activity -> TestSupport.textOf(activity, R.id.edit_omnibox)) + "'");
+    private static void assertBrowserCameBackTo(String expected) {
+        TestSupport.waitUntil("the browser in front to show the opened address " + expected,
+                () -> expected.equals(TestSupport.resumedBrowserAddress()),
+                () -> "the address bar of the browser in front shows '"
+                        + TestSupport.resumedBrowserAddress() + "'");
     }
 
     private static boolean canGoBack(ActivityScenario<MainActivity> scenario) {

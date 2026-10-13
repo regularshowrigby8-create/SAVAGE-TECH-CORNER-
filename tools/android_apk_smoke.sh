@@ -31,15 +31,29 @@ if [ "${2:-}" = "--package" ] && [ -n "${3:-}" ]; then
     PACKAGE="$3"
 fi
 
+# A failing command aborts the script (`set -e`), and an abort that prints nothing is a red job
+# nobody can diagnose - the fifth emulator run died at step 9 with no message at all. Every step
+# names itself in STEP, and the trap reports the step it stopped in.
+STEP="startup"
+on_exit() {
+    status=$?
+    if [ "$status" -ne 0 ]; then
+        echo "FAIL: the smoke test stopped during ${STEP} (exit ${status})" >&2
+    fi
+}
+trap on_exit EXIT
+
 adb wait-for-device
 BOOT_COMPLETED=$(adb shell getprop sys.boot_completed | tr -d '\r')
 if [ "$BOOT_COMPLETED" != "1" ]; then
     echo "FAIL: the device has not finished booting (sys.boot_completed=$BOOT_COMPLETED)" >&2
     exit 1
 fi
-echo "[1/12] device ready: $(adb shell getprop ro.build.version.sdk | tr -d '\r') (API)"
+STEP="[1/12] device ready: $(adb shell getprop ro.build.version.sdk | tr -d '\r') (API)"
+echo "${STEP}"
 
-echo "[2/12] APK structure on the host"
+STEP="[2/12] APK structure on the host"
+echo "${STEP}"
 [ -s "$APK" ] || { echo "FAIL: the APK is empty" >&2; exit 1; }
 # The listing is read in full before it is matched. Piping a listing straight into `grep -q` makes
 # the producer die of SIGPIPE as soon as grep has its answer, and with `set -o pipefail` that
@@ -61,7 +75,8 @@ grep -qE "classes[0-9]*\.dex" <<<"$APK_LISTING" || {
 unzip -t "$APK" >/dev/null || { echo "FAIL: the APK is not a valid ZIP" >&2; exit 1; }
 echo "       APK: $APK ($(stat -c%s "$APK") bytes)"
 
-echo "[3/12] uninstall any previous installation"
+STEP="[3/12] uninstall any previous installation"
+echo "${STEP}"
 PACKAGES=$(adb shell pm list packages "$PACKAGE" | tr -d '\r')
 if grep -qx "package:$PACKAGE" <<<"$PACKAGES"; then
     UNINSTALL_OUTPUT=$(adb uninstall "$PACKAGE" 2>&1)
@@ -71,12 +86,14 @@ if grep -qx "package:$PACKAGE" <<<"$PACKAGES"; then
     }
 fi
 
-echo "[4/12] install"
+STEP="[4/12] install"
+echo "${STEP}"
 INSTALL_OUTPUT=$(adb install -r -t "$APK" 2>&1)
 sed 's/^/       /' <<<"$INSTALL_OUTPUT"
 grep -q "Success" <<<"$INSTALL_OUTPUT" || { echo "FAIL: adb install did not succeed" >&2; exit 1; }
 
-echo "[5/12] the installed package matches the APK"
+STEP="[5/12] the installed package matches the APK"
+echo "${STEP}"
 INSTALLED=$(adb shell pm list packages "$PACKAGE" | tr -d '\r')
 grep -qx "package:$PACKAGE" <<<"$INSTALLED" || {
     echo "FAIL: $PACKAGE is not installed after a successful install" >&2
@@ -85,7 +102,8 @@ grep -qx "package:$PACKAGE" <<<"$INSTALLED" || {
 APK_PATH=$(adb shell pm path "$PACKAGE" | tr -d '\r' | sed 's/^package://')
 echo "       installed at: $APK_PATH"
 
-echo "[6/12] launch the launcher activity"
+STEP="[6/12] launch the launcher activity"
+echo "${STEP}"
 LAUNCH_OUTPUT=$(adb shell am start -W -n "$PACKAGE/$ACTIVITY" 2>&1)
 sed 's/^/       /' <<<"$LAUNCH_OUTPUT"
 grep -qE "Status: ok" <<<"$LAUNCH_OUTPUT" || {
@@ -93,7 +111,8 @@ grep -qE "Status: ok" <<<"$LAUNCH_OUTPUT" || {
     exit 1
 }
 
-echo "[7/12] the activity is the resumed top activity and the process is alive"
+STEP="[7/12] the activity is the resumed top activity and the process is alive"
+echo "${STEP}"
 sleep 3
 ACTIVITIES=$(adb shell dumpsys activity activities | tr -d '\r')
 TOP=$(grep -m1 -E "ResumedActivity|mResumedActivity" <<<"$ACTIVITIES")
@@ -114,7 +133,8 @@ if grep -q "$PACKAGE" <<<"$CRASH_LOG"; then
     exit 1
 fi
 
-echo "[8/12] the browser chrome is on screen (view hierarchy dump)"
+STEP="[8/12] the browser chrome is on screen (view hierarchy dump)"
+echo "${STEP}"
 adb shell uiautomator dump /sdcard/savage_ui.xml >/dev/null
 adb shell cat /sdcard/savage_ui.xml > /tmp/savage_ui.xml
 for expected in "edit_omnibox" "btn_nav_back" "btn_nav_tabs" "btn_action_bookmark"; do
@@ -125,11 +145,16 @@ for expected in "edit_omnibox" "btn_nav_back" "btn_nav_tabs" "btn_action_bookmar
     echo "       found $expected"
 done
 
-echo "[9/12] kill the process and relaunch (restart persistence, first restart)"
+STEP="[9/12] kill the process and relaunch (restart persistence, first restart)"
+echo "${STEP}"
 # force-stop, not `am kill`: `am kill` only reclaims *background* processes, and the browser is in the
 # foreground here, so it survives `am kill` - which is what made this step fail on a perfectly healthy
-# build. force-stop is the platform's "this process is gone" operation.
-adb shell am force-stop "$PACKAGE"
+# build. force-stop is the platform's "this process is gone" operation, and its outcome is checked
+# explicitly so a refusal is reported instead of silently ending the run.
+if ! FORCE_STOP_OUTPUT=$(adb shell am force-stop "$PACKAGE" 2>&1); then
+    echo "FAIL: the platform refused to stop the process: $FORCE_STOP_OUTPUT" >&2
+    exit 1
+fi
 sleep 2
 ALIVE=$(adb shell pidof "$PACKAGE" | tr -d '\r')
 if [ -n "$ALIVE" ]; then
@@ -145,8 +170,12 @@ grep -qE "Status: ok" <<<"$LAUNCH_OUTPUT" || {
     exit 1
 }
 
-echo "[10/12] kill and relaunch a second time"
-adb shell am force-stop "$PACKAGE"
+STEP="[10/12] kill and relaunch a second time"
+echo "${STEP}"
+if ! FORCE_STOP_OUTPUT=$(adb shell am force-stop "$PACKAGE" 2>&1); then
+    echo "FAIL: the platform refused to stop the process on the second restart: $FORCE_STOP_OUTPUT" >&2
+    exit 1
+fi
 sleep 2
 if ! LAUNCH_OUTPUT=$(adb shell am start -W -n "$PACKAGE/$ACTIVITY" 2>&1); then
     echo "FAIL: the app did not relaunch on the second restart: $LAUNCH_OUTPUT" >&2
@@ -157,7 +186,8 @@ grep -qE "Status: ok" <<<"$LAUNCH_OUTPUT" || {
     exit 1
 }
 
-echo "[11/12] the app is still alive and has not crashed"
+STEP="[11/12] the app is still alive and has not crashed"
+echo "${STEP}"
 sleep 3
 PID=$(adb shell pidof "$PACKAGE" | tr -d '\r')
 [ -n "$PID" ] || { echo "FAIL: no live process after the restarts" >&2; exit 1; }
@@ -168,7 +198,8 @@ if grep -q "$PACKAGE" <<<"$CRASH_LOG"; then
     exit 1
 fi
 
-echo "[12/12] uninstall and reinstall"
+STEP="[12/12] uninstall and reinstall"
+echo "${STEP}"
 UNINSTALL_OUTPUT=$(adb uninstall "$PACKAGE" 2>&1)
 grep -q "Success" <<<"$UNINSTALL_OUTPUT" || {
     echo "FAIL: uninstall failed: $UNINSTALL_OUTPUT" >&2

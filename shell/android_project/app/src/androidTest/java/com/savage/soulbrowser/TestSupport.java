@@ -310,6 +310,55 @@ public final class TestSupport {
     }
 
     /**
+     * Waits until a real navigation has <em>settled</em>: the WebView reports the address and no load
+     * is in flight.
+     *
+     * <p>The WebView reports the URL as soon as a load starts, but a load that is still in flight has
+     * not been committed to the in-page history yet - cancelling it (by starting the next navigation,
+     * or by pressing Back) discards the entry. Tests that then rely on the history, or that press
+     * Back, must wait for this and not only for the URL, or they race the browser instead of testing
+     * it.
+     */
+    public static void waitForSettledNavigation(ActivityScenario<MainActivity> scenario, String url) {
+        waitUntil("the navigation to " + url + " to settle",
+                () -> url.equals(onResult(scenario, activity -> webViewOf(activity).getUrl()))
+                        && !Boolean.TRUE.equals(onResult(scenario, MainActivity::isLoading)),
+                () -> describeBrowser(scenario));
+    }
+
+    /**
+     * The address the currently <em>resumed</em> browser shows, or {@code null} when no browser is
+     * resumed.
+     *
+     * <p>Used after another activity (a list screen) has taken the screen: the platform may destroy a
+     * backgrounded activity and recreate it from the intent that started it. What the user sees - a
+     * browser on that address - is the same either way, so the assertion is made against whatever
+     * browser activity is in front instead of against one particular instance.
+     */
+    public static String resumedBrowserAddress() {
+        AtomicReference<String> address = new AtomicReference<>();
+        try {
+            InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
+                for (Activity activity :
+                        androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                                .getActivitiesInStage(
+                                        androidx.test.runner.lifecycle.Stage.RESUMED)) {
+                    if (activity instanceof MainActivity) {
+                        View omnibox = activity.findViewById(R.id.edit_omnibox);
+                        address.set(omnibox instanceof android.widget.TextView
+                                ? String.valueOf(((android.widget.TextView) omnibox).getText())
+                                : null);
+                        return;
+                    }
+                }
+            });
+        } catch (RuntimeException | AssertionError unavailable) {
+            return null;
+        }
+        return address.get();
+    }
+
+    /**
      * The text a view currently shows, or a short description of why it could not be read. Used only
      * while reporting a failed wait: a timeout that does not say what the view actually said cannot
      * be acted on, and "never showed X" is not enough to tell an empty view from an ambiguous match.

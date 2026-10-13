@@ -164,11 +164,7 @@ public class MainActivityLaunchTest {
             // asserted by delivering the same callbacks the WebView client delivers
             // (onPageStarted / onProgress / onPageFinished) and asserting what the user sees.
             TestSupport.navigateForReal(scenario, PAGE_FOR_PROGRESS);
-            TestSupport.waitUntil("the real navigation to settle", () ->
-                            PAGE_FOR_PROGRESS.equals(TestSupport.onResult(scenario,
-                                    activity -> TestSupport.webViewOf(activity).getUrl()))
-                                    && !TestSupport.onResult(scenario, MainActivity::isLoading),
-                    () -> TestSupport.describeBrowser(scenario));
+            TestSupport.waitForSettledNavigation(scenario, PAGE_FOR_PROGRESS);
 
             TestSupport.on(scenario, activity -> {
                 ProgressBar progress = activity.findViewById(R.id.page_progress_bar);

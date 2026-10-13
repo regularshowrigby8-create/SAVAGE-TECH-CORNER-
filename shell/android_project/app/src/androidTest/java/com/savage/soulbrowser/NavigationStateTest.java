@@ -38,19 +38,14 @@ public class NavigationStateTest {
     @Test
     public void backAndForwardReflectWebViewHistory() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
+            // Both pages have to be settled history entries: a load that is still in flight is not in
+            // the in-page history yet, so waiting only for the URL races the browser.
             TestSupport.navigateForReal(scenario, PAGE_A);
-            TestSupport.waitUntil("page A to be the current page",
-                    () -> PAGE_A.equals(currentUrl(scenario)),
-                    () -> TestSupport.describeBrowser(scenario));
-
+            TestSupport.waitForSettledNavigation(scenario, PAGE_A);
             TestSupport.navigateForReal(scenario, PAGE_B);
-            TestSupport.waitUntil("page B to become the current page with a history entry behind it",
-                    () -> PAGE_B.equals(currentUrl(scenario)) && canGoBack(scenario),
-                    () -> TestSupport.describeBrowser(scenario));
-            // Nothing is in flight any more, so the in-page history is complete: pressing Back can no
-            // longer be turned into "leave the app" by a load that is still committing.
-            TestSupport.waitUntil("the load of page B to settle", () -> !isLoading(scenario),
-                    () -> TestSupport.describeBrowser(scenario));
+            TestSupport.waitForSettledNavigation(scenario, PAGE_B);
+            TestSupport.waitUntil("page B to have a history entry behind it",
+                    () -> canGoBack(scenario), () -> TestSupport.describeBrowser(scenario));
 
             TestSupport.waitUntil("the Back control to be enabled", () -> enabled(scenario, R.id.btn_nav_back));
 
@@ -72,9 +67,7 @@ public class NavigationStateTest {
     public void reloadStopsLoadingAndHomeResets() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
             TestSupport.navigateForReal(scenario, PAGE_A);
-            TestSupport.waitUntil("page A to finish loading",
-                    () -> PAGE_A.equals(currentUrl(scenario)) && !isLoading(scenario),
-                    () -> TestSupport.describeBrowser(scenario));
+            TestSupport.waitForSettledNavigation(scenario, PAGE_A);
             Assert.assertEquals("an idle page offers Reload",
                     TestSupport.onResult(scenario, activity -> activity.getString(R.string.action_reload)),
                     TestSupport.description(scenario, R.id.btn_action_reload));

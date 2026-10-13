@@ -393,6 +393,26 @@ class AndroidWorkflowTest(unittest.TestCase):
         self.assertEqual([], offenders,
                          "these workflows run the master gate without preparing its toolchain")
 
+    def test_the_install_smoke_test_can_never_fail_silently(self):
+        """Every step of the on-device smoke test must report where it stopped.
+
+        The smoke script runs under `set -e`, so one failing command aborts it. On the fifth emulator
+        run it died inside step 9 and printed nothing at all, which left a red job with no reason in
+        it. The script therefore names each step and installs an EXIT trap that reports the step it
+        stopped in, and the two platform operations that can legitimately be refused are checked
+        explicitly.
+        """
+        script = read(REPO_ROOT / "tools" / "android_apk_smoke.sh")
+        self.assertIn("trap on_exit EXIT", script)
+        self.assertIn("the smoke test stopped during ${STEP}", script)
+        self.assertEqual(12, script.count('STEP="['),
+                         "each of the twelve steps must name itself in STEP")
+        self.assertNotIn("|| true", script)
+        # No `am force-stop` may run unguarded: an unexplained abort was one of its failure modes.
+        unguarded = [line for line in script.splitlines()
+                     if "am force-stop" in line and not line.startswith("if ! FORCE_STOP_OUTPUT=")]
+        self.assertEqual([], unguarded)
+
     def test_no_workflow_masks_a_failure(self):
         """No workflow may turn a failure into a pass; the belt and the reviewers must be honest."""
         for path in sorted((REPO_ROOT / ".github" / "workflows").glob("*.yml")):
