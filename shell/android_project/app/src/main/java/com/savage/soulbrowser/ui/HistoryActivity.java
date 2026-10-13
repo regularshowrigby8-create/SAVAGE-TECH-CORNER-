@@ -98,8 +98,14 @@ public final class HistoryActivity extends AppCompatActivity implements HistoryA
 
     @Override
     public void onOpen(HistoryEntry entry) {
+        // A browser that is already in this task is *the* browser: the list hands the address to that
+        // instance (onNewIntent) and gets out of the way, instead of stacking a second browser on top
+        // of the one the user came from - which also left the older instance stopped behind two
+        // screens and made "the browser is in front" unobservable. CLEAR_TOP also removes this list,
+        // whose finish() is already on its way out.
         Intent intent = new Intent(this, MainActivity.class);
         intent.putExtra(MainActivity.EXTRA_OPEN_URL, entry.getUrl());
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         startActivity(intent);
         finish();
     }

@@ -137,22 +137,31 @@ public final class TestSupport {
 
     /**
      * One-line description of what the browser is showing, for timeout messages: every WebView URL
-     * in the container, the load flag, the view state and the tab count the dock displays. Reading
-     * it never throws, because it is only ever used while reporting a failure.
+     * in the container, the address the back-forward list has actually committed, whether the page
+     * history has an entry to go back to, the load flag, the view state and the tab count the dock
+     * displays. Reading it never throws, because it is only ever used while reporting a failure.
      */
     public static String describeBrowser(ActivityScenario<MainActivity> scenario) {
         try {
             return onResult(scenario, activity -> {
                 StringBuilder urls = new StringBuilder();
+                String committed = "none";
+                String canGoBack = "unknown";
                 ViewGroup container = activity.findViewById(R.id.webview_container);
                 for (int i = 0; container != null && i < container.getChildCount(); i++) {
                     View child = container.getChildAt(i);
                     if (child instanceof WebView) {
-                        urls.append(urls.length() == 0 ? "" : ", ").append(((WebView) child).getUrl());
+                        WebView webView = (WebView) child;
+                        urls.append(urls.length() == 0 ? "" : ", ").append(webView.getUrl());
+                        android.webkit.WebHistoryItem current =
+                                webView.copyBackForwardList().getCurrentItem();
+                        committed = current == null ? "none" : current.getUrl();
+                        canGoBack = String.valueOf(webView.canGoBack());
                     }
                 }
                 View dock = activity.findViewById(R.id.btn_nav_tabs);
-                return "urls=[" + urls + "] loading=" + activity.isLoading()
+                return "urls=[" + urls + "] committed=" + committed + " back=" + canGoBack
+                        + " loading=" + activity.isLoading()
                         + " state=" + activity.currentViewState()
                         + " loaded=" + activity.hasLoadedPage()
                         + " tabs=" + (dock instanceof android.widget.TextView
@@ -310,20 +319,67 @@ public final class TestSupport {
     }
 
     /**
-     * Waits until a real navigation has <em>settled</em>: the WebView reports the address and no load
-     * is in flight.
+     * Waits until a real navigation has <em>settled</em>: the WebView has committed the address to
+     * its page history and no load is in flight.
      *
-     * <p>The WebView reports the URL as soon as a load starts, but a load that is still in flight has
-     * not been committed to the in-page history yet - cancelling it (by starting the next navigation,
-     * or by pressing Back) discards the entry. Tests that then rely on the history, or that press
-     * Back, must wait for this and not only for the URL, or they race the browser instead of testing
-     * it.
+     * <p>{@link WebView#getUrl()} is not evidence of a committed page: its own documentation says the
+     * current page may not have changed yet although a load has begun, so it reports a navigation
+     * that is still <em>provisional</em>. The emulator run showed what that costs - after two
+     * navigations this wait had accepted, the page history held a single entry, because starting the
+     * second navigation had cancelled the provisional first one; Back then had nothing to walk back
+     * to, and the bookmark star of the second test read the address of a page that was never
+     * committed. What Back, the history and the repository keys are built on is the committed entry
+     * of the back-forward list, so that is what this waits for.
      */
     public static void waitForSettledNavigation(ActivityScenario<MainActivity> scenario, String url) {
-        waitUntil("the navigation to " + url + " to settle",
-                () -> url.equals(onResult(scenario, activity -> webViewOf(activity).getUrl()))
+        waitUntil("the navigation to " + url + " to commit and finish loading",
+                () -> url.equals(committedUrl(scenario))
                         && !Boolean.TRUE.equals(onResult(scenario, MainActivity::isLoading)),
                 () -> describeBrowser(scenario));
+    }
+
+    /**
+     * The address of the entry the active WebView has <em>committed</em> to its page history, or
+     * {@code null} while nothing is committed or no WebView is attached.
+     *
+     * <p>Distinct from {@link WebView#getUrl()}, which already names a provisional load.
+     */
+    public static String committedUrl(ActivityScenario<MainActivity> scenario) {
+        return onResult(scenario, activity -> {
+            android.webkit.WebHistoryItem current = null;
+            ViewGroup container = activity.findViewById(R.id.webview_container);
+            for (int i = 0; container != null && i < container.getChildCount(); i++) {
+                View child = container.getChildAt(i);
+                if (child instanceof WebView && child.getVisibility() == View.VISIBLE) {
+                    current = ((WebView) child).copyBackForwardList().getCurrentItem();
+                    break;
+                }
+            }
+            return current == null ? null : current.getUrl();
+        });
+    }
+
+    /**
+     * The names of the activities the lifecycle monitor currently reports as <em>resumed</em>, or a
+     * short reason why they could not be read. Used only inside failure messages: "the address bar
+     * shows 'null'" is not diagnosable, "the front activity was BookmarksActivity" is.
+     */
+    public static String resumedActivityNames() {
+        StringBuilder names = new StringBuilder();
+        try {
+            InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
+                for (Activity activity :
+                        androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                                .getActivitiesInStage(
+                                        androidx.test.runner.lifecycle.Stage.RESUMED)) {
+                    names.append(names.length() == 0 ? "" : ", ")
+                            .append(activity.getClass().getSimpleName());
+                }
+            });
+        } catch (RuntimeException | AssertionError unavailable) {
+            return "unreadable (" + unavailable.getClass().getSimpleName() + ")";
+        }
+        return names.length() == 0 ? "(none)" : names.toString();
     }
 
     /**
@@ -333,7 +389,9 @@ public final class TestSupport {
      * <p>Used after another activity (a list screen) has taken the screen: the platform may destroy a
      * backgrounded activity and recreate it from the intent that started it. What the user sees - a
      * browser on that address - is the same either way, so the assertion is made against whatever
-     * browser activity is in front instead of against one particular instance.
+     * browser activity is in front instead of against one particular instance. A wait built on this
+     * reports {@link #resumedActivityNames()} on timeout, so "no browser is in front" can be told
+     * apart from "the browser is in front but shows something else".
      */
     public static String resumedBrowserAddress() {
         AtomicReference<String> address = new AtomicReference<>();

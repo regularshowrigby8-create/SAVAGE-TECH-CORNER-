@@ -413,6 +413,29 @@ class AndroidWorkflowTest(unittest.TestCase):
                      if "am force-stop" in line and not line.startswith("if ! FORCE_STOP_OUTPUT=")]
         self.assertEqual([], unguarded)
 
+    def test_the_process_read_never_aborts_the_smoke_test(self):
+        """Reading the process list must not be able to end the run without a reason.
+
+        `adb shell pidof` exits non-zero when it matches nothing, which is the *expected* answer right
+        after `am force-stop`. Inside `$( ... )` with `set -o pipefail`, that non-zero producer made
+        the assignment itself fail, so `set -e` ended the script before it printed anything: the
+        emulator job reported "stopped during [9/12]" with no cause. `pid_of` reads the producer's
+        status on purpose and reports a real adb failure, so the not-running answer stays a result.
+        """
+        script = read(REPO_ROOT / "tools" / "android_apk_smoke.sh")
+        self.assertIn("set -euo pipefail", script,
+                      "the hazard this pins only exists because the script uses pipefail")
+        helper = re.search(r"^pid_of\(\) \{.*?^\}\n", script, re.S | re.M)
+        self.assertIsNotNone(helper, "the smoke test must read process ids through its pid_of helper")
+        self.assertIn("output=$(adb shell pidof", helper.group(0),
+                      "pid_of is the one place that may read the process list")
+        self.assertEqual(1, script.count("$(adb shell pidof"),
+                         "the process list may only be read inside the pid_of helper")
+        self.assertEqual(0, script.count('pidof "$PACKAGE" | tr'),
+                         "an unguarded `pidof | tr` substitution is what aborted the run silently")
+        self.assertEqual(3, script.count('pid_of "$PACKAGE"'),
+                         "all three reads of the process list go through the helper")
+
     def test_no_workflow_masks_a_failure(self):
         """No workflow may turn a failure into a pass; the belt and the reviewers must be honest."""
         for path in sorted((REPO_ROOT / ".github" / "workflows").glob("*.yml")):

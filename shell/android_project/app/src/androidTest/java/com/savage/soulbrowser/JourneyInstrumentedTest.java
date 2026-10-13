@@ -4,6 +4,7 @@ import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.RootMatchers.isDialog;
+import static androidx.test.espresso.matcher.RootMatchers.withDecorView;
 import static androidx.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static androidx.test.espresso.matcher.ViewMatchers.hasSibling;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
@@ -11,7 +12,9 @@ import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.view.View;
 import android.widget.EditText;
@@ -23,6 +26,8 @@ import com.savage.soulbrowser.data.BookmarkRepository;
 import com.savage.soulbrowser.data.HistoryRepository;
 import com.savage.soulbrowser.ui.BookmarksActivity;
 import com.savage.soulbrowser.ui.HistoryActivity;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -109,7 +114,7 @@ public class JourneyInstrumentedTest {
                     new Intent(TestSupport.context(), BookmarksActivity.class)
                             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))) {
                 onView(withId(R.id.list_bookmarks)).check(matches(isDisplayed()));
-                onView(withText(containsString("example.com"))).perform(click());
+                clickRow(list, "example.com");
             }
             assertBrowserCameBackTo(PAGE_A);
         }
@@ -119,19 +124,25 @@ public class JourneyInstrumentedTest {
     public void j3StarTwiceKeepsOneRow() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
             TestSupport.navigateForReal(scenario, PAGE_A);
-            TestSupport.waitUntil("the page to load", () -> PAGE_A.equals(url(scenario)),
-                    () -> TestSupport.describeBrowser(scenario));
+            // The star stores the address the browser is *on*. Acting while the navigation was still
+            // provisional stored page A and then toggled something else - the error page Chromium
+            // falls back to - so the second tap neither found nor removed page A's row.
+            TestSupport.waitForSettledNavigation(scenario, PAGE_A);
 
             BookmarkRepository bookmarks = bookmarks();
             TestSupport.on(scenario,
                     activity -> activity.findViewById(R.id.btn_action_bookmark).performClick());
-            TestSupport.waitUntil("the first tap to store one row", () -> bookmarks.count() == 1);
+            TestSupport.waitUntil("the first tap to store one row", () -> bookmarks.count() == 1,
+                    () -> TestSupport.describeBrowser(scenario));
 
             // The second tap toggles the same bookmark off again; two rows for one page can never
             // exist because the store has a unique key per canonical URL.
             TestSupport.on(scenario,
                     activity -> activity.findViewById(R.id.btn_action_bookmark).performClick());
-            TestSupport.waitUntil("the second tap to remove the bookmark", () -> bookmarks.count() == 0);
+            TestSupport.waitUntil("the second tap to remove the bookmark", () -> bookmarks.count() == 0,
+                    () -> "rows=" + bookmarks.count() + " star="
+                            + TestSupport.description(scenario, R.id.btn_action_bookmark) + " "
+                            + TestSupport.describeBrowser(scenario));
         }
     }
 
@@ -153,7 +164,7 @@ public class JourneyInstrumentedTest {
                     new Intent(TestSupport.context(), HistoryActivity.class)
                             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))) {
                 onView(withId(R.id.list_history)).check(matches(isDisplayed()));
-                onView(withText(containsString("example.com"))).perform(click());
+                clickRow(list, "example.com");
             }
             assertBrowserCameBackTo(PAGE_A);
         }
@@ -244,7 +255,27 @@ public class JourneyInstrumentedTest {
         TestSupport.waitUntil("the browser in front to show the opened address " + expected,
                 () -> expected.equals(TestSupport.resumedBrowserAddress()),
                 () -> "the address bar of the browser in front shows '"
-                        + TestSupport.resumedBrowserAddress() + "'");
+                        + TestSupport.resumedBrowserAddress() + "'; resumed activities: "
+                        + TestSupport.resumedActivityNames());
+    }
+
+    /**
+     * Clicks a row of a list screen inside that list's own window.
+     *
+     * <p>{@code onView(withText(...))} alone searches every root view of the process, and the browser
+     * that stays in the task behind the list shows the same address in its omnibox. The tap is then
+     * injected at the background view's coordinates and is delivered by the platform to the window in
+     * front - the row is never touched, the list never closes, and the journey reports a browser that
+     * never appeared. Scoping the lookup to the list's decor view makes the tap land on the row.
+     */
+    private static <A extends Activity> void clickRow(ActivityScenario<A> list, String text) {
+        AtomicReference<View> decor = new AtomicReference<>();
+        list.onActivity(activity -> decor.set(activity.getWindow().getDecorView()));
+        // The row's own URL view is what is clicked: a row may show the address twice (as its title
+        // fallback and as its address) and matching both is an ambiguous match, not a click.
+        onView(allOf(withId(R.id.item_url), withText(containsString(text))))
+                .inRoot(withDecorView(is(decor.get())))
+                .perform(click());
     }
 
     private static boolean canGoBack(ActivityScenario<MainActivity> scenario) {

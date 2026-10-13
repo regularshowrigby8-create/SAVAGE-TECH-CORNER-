@@ -49,6 +49,7 @@ from the repository's own authoritative documents instead of being invented:
 | A14 | Does a _blocked_ navigation offer Retry?                                                         | No: Retry is offered for load errors, offline and TLS refusals, never for a blocked address                                                                                                                                                                                            | Blocking comes from a static rule (unsupported scheme, cleartext, host not allowed), so repeating the request cannot succeed; the earlier JVM expectation was wrong and `ViewStateMachineTest` pins the corrected rule                                       |
 | A15 | How do journeys load a page without depending on emulator egress?                                | Journeys that prove what the browser does with an _address_ submit it through the omnibox (`TestSupport.navigateForReal`); `injectPage` stays for content/title/history-stack assertions                                                                                               | The criteria describe the browser's behaviour, not a third party's response; Chromium reports a `loadDataWithBaseURL` load as a `data:` URL, so those tests must not assert `getUrl()`                                                                       |
 | A16 | Where is "a certificate error is refused" proven, when the handler cannot be observed on device? | `SslDecisionTest` (JVM: CANCEL for every error code) + `shell/tests/test_ssl_fail_closed.py` (no application source contains the accept path) + the instrumented `SslPolicyTest` for the visible refusal                                                                               | The SDK declares no public constructor for `SslErrorHandler`, so no instrumented test can subclass it; a network-based test would only show that a page did not render and would depend on egress                                                            |
+| A17 | An address is chosen in the bookmarks or history screen while a browser is already open          | The browser that is already in the task is brought to the front and navigated: the list sends `FLAG_ACTIVITY_CLEAR_TOP                                                                                                                                                                 | FLAG_ACTIVITY_SINGLE_TOP`, so `MainActivity.onNewIntent` performs the navigation                                                                                                                                                                             | Stacking a second browser instance on top of the first would leave one task with two browsers, and "the browser in front is back on that address" would stop being observable at all |
 
 ---
 
@@ -401,10 +402,10 @@ from the repository's own authoritative documents instead of being invented:
 ### AC-037 — Process restart restores the session
 
 - **Feature**: F-10
-- **Given**: the app was killed by the system (`adb shell am kill`)
+- **Given**: the app's process was ended by the platform (`adb shell am force-stop`)
 - **When**: it is relaunched from the launcher
 - **Then**: it starts cleanly at the restored/home tab without crash; persisted history and bookmarks are intact
-- **Test method**: `tools/android_apk_smoke.sh` steps 9-10 (`adb shell am kill com.savage.soulbrowser` + relaunch twice)
+- **Test method**: `tools/android_apk_smoke.sh` steps 9-11 (`am force-stop com.savage.soulbrowser` + relaunch twice, then a live-process check; `am kill` only reclaims _background_ processes, so the foreground browser survived it and the step failed on a healthy build)
 - **Evidence required**: emulator logcat + `am start -W` output in the evidence bundle
 
 ### AC-038 — Corrupted local database is recovered

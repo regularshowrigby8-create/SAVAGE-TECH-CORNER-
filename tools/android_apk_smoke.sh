@@ -43,6 +43,25 @@ on_exit() {
 }
 trap on_exit EXIT
 
+# $1 = package name. Prints the pids of that package, or nothing when it is not running.
+#
+# `pidof` exits non-zero when it matches nothing - which is the *expected* answer in the restart
+# step - and under `set -o pipefail` an unguarded `adb shell pidof | tr` inside `$( )` makes the
+# assignment itself fail, so `set -e` ends the script before it prints why: the fifth emulator run
+# stopped inside step 9 with no message at all. The producer's status is therefore read here, on
+# purpose, and only the "nothing matched" case is treated as an empty result. A real adb failure
+# (a dead device, an unknown command) is reported.
+pid_of() {
+    local output status=0
+    output=$(adb shell pidof "$1" 2>&1) || status=$?
+    output=$(tr -d '\r' <<<"$output")
+    if [ "${status:-0}" -ne 0 ] && [ -n "$output" ]; then
+        echo "FAIL: could not read the process list of $1: $output" >&2
+        return 1
+    fi
+    printf '%s' "$output"
+}
+
 adb wait-for-device
 BOOT_COMPLETED=$(adb shell getprop sys.boot_completed | tr -d '\r')
 if [ "$BOOT_COMPLETED" != "1" ]; then
@@ -120,7 +139,9 @@ grep -q "$PACKAGE" <<<"$TOP" || {
     echo "FAIL: the browser is not the resumed activity: $TOP" >&2
     exit 1
 }
-PID=$(adb shell pidof "$PACKAGE" | tr -d '\r')
+if ! PID=$(pid_of "$PACKAGE"); then
+    exit 1
+fi
 if [ -z "$PID" ]; then
     echo "FAIL: no live process for $PACKAGE after launch" >&2
     exit 1
@@ -156,7 +177,9 @@ if ! FORCE_STOP_OUTPUT=$(adb shell am force-stop "$PACKAGE" 2>&1); then
     exit 1
 fi
 sleep 2
-ALIVE=$(adb shell pidof "$PACKAGE" | tr -d '\r')
+if ! ALIVE=$(pid_of "$PACKAGE"); then
+    exit 1
+fi
 if [ -n "$ALIVE" ]; then
     echo "FAIL: the process survived force-stop" >&2
     exit 1
@@ -189,7 +212,9 @@ grep -qE "Status: ok" <<<"$LAUNCH_OUTPUT" || {
 STEP="[11/12] the app is still alive and has not crashed"
 echo "${STEP}"
 sleep 3
-PID=$(adb shell pidof "$PACKAGE" | tr -d '\r')
+if ! PID=$(pid_of "$PACKAGE"); then
+    exit 1
+fi
 [ -n "$PID" ] || { echo "FAIL: no live process after the restarts" >&2; exit 1; }
 CRASH_LOG=$(adb logcat -d -b crash)
 if grep -q "$PACKAGE" <<<"$CRASH_LOG"; then
