@@ -31,8 +31,10 @@ public final class BookmarkRepository {
     }
 
     /**
-     * Stores a bookmark. Duplicate taps update the stored title instead of creating a second row
-     * (the dedupe key is the canonical URL, protected by a UNIQUE constraint).
+     * Stores a bookmark. A page that is already stored is not written again and not rewritten: the
+     * user's existing entry keeps its title, its URL and its creation time (the dedupe key is the
+     * canonical URL, protected by a UNIQUE constraint). The caller learns from the result that the
+     * entry was already there, so the star can advertise removal instead of re-adding.
      */
     public AddResult add(String url, String title, long nowMillis) {
         if (UrlPolicy.verify(url) != UrlPolicy.Verdict.ALLOWED) {
@@ -44,15 +46,14 @@ public final class BookmarkRepository {
         }
         try {
             SQLiteDatabase db = database.getWritableDatabase();
+            if (contains(url)) {
+                // Same page: the stored row is the user's data and stays exactly as it is.
+                return AddResult.ALREADY_PRESENT;
+            }
             ContentValues values = new ContentValues();
             values.put(BrowserDatabase.COL_URL, url);
             values.put(BrowserDatabase.COL_DEDUPE_KEY, key);
             values.put(BrowserDatabase.COL_TITLE, title);
-            if (contains(url)) {
-                db.update(BrowserDatabase.TABLE_BOOKMARKS, values,
-                        BrowserDatabase.COL_DEDUPE_KEY + " = ?", new String[]{key});
-                return AddResult.ALREADY_PRESENT;
-            }
             values.put(BrowserDatabase.COL_CREATED_AT, nowMillis);
             values.put(BrowserDatabase.COL_SYNC_STATE,
                     com.savage.soulbrowser.domain.SyncState.PENDING.code());

@@ -348,6 +348,14 @@ public final class MainActivity extends AppCompatActivity implements
             webView.loadUrl(url);
         }
         preferences.setLastUrl(url);
+        // The address bar must name the address the browser was told to open. Waiting for the page
+        // to report its own URL is not enough: a page that never loads, or a browser screen opened
+        // straight from a bookmark, link or the launcher, showed an empty address bar - and
+        // onActiveTabChanged/onTabUpdated deliberately do not overwrite a focused omnibox (the user
+        // may be typing), so nothing else filled it in. An explicit navigation target is
+        // authoritative; the page's self-reported URL is not.
+        tabManager.updateActiveTab(url, null);
+        omnibox.setText(url);
         renderState();
         updateNavigationControls();
     }

@@ -65,8 +65,13 @@ public final class HistoryRepository {
                 }
             }
             ContentValues values = new ContentValues();
-            values.put(BrowserDatabase.COL_URL, url);
-            values.put(BrowserDatabase.COL_DEDUPE_KEY, key);
+            if (existingId < 0) {
+                // Only the first visit defines the row's identity. A revisit with a fragment or a
+                // trailing slash is the same page, so it refreshes the visit metadata below without
+                // renaming the address the entry is listed under.
+                values.put(BrowserDatabase.COL_URL, url);
+                values.put(BrowserDatabase.COL_DEDUPE_KEY, key);
+            }
             values.put(BrowserDatabase.COL_TITLE, title);
             values.put(BrowserDatabase.COL_LAST_VISIT, nowMillis);
             values.put(BrowserDatabase.COL_VISIT_COUNT, visitCount);

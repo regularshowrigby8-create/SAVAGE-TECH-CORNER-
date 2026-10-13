@@ -40,8 +40,13 @@ public class BackNavigationTest {
             TestSupport.navigateForReal(scenario, PAGE_A);
             TestSupport.waitUntil("page A to load", () -> PAGE_A.equals(url(scenario)),
                     () -> TestSupport.describeBrowser(scenario));
+            // Page B must be the committed history entry before Back is pressed. Back is also the
+            // gesture that leaves the app when there is nothing behind the current page, so pressing
+            // it while the load is still in flight finished the activity and made the rest of the
+            // test observe a destroyed activity instead of the browser.
             TestSupport.navigateForReal(scenario, PAGE_B);
-            TestSupport.waitUntil("page B to load", () -> PAGE_B.equals(url(scenario)),
+            TestSupport.waitUntil("page B to become the current entry with history behind it",
+                    () -> PAGE_B.equals(url(scenario)) && canGoBack(scenario),
                     () -> TestSupport.describeBrowser(scenario));
 
             pressBack();
@@ -79,8 +84,29 @@ public class BackNavigationTest {
         SystemClock.sleep(250L);
     }
 
+    private static boolean canGoBack(ActivityScenario<MainActivity> scenario) {
+        return Boolean.TRUE.equals(observation(scenario,
+                activity -> TestSupport.webViewOf(activity).canGoBack()));
+    }
+
+    /**
+     * Reads a value from the browser, or {@code null} once the activity is gone.
+     *
+     * <p>A Back press can legitimately finish the activity; that is the behaviour the root-page test
+     * asserts. Reporting the resulting destroyed-activity exception as a crash would hide the
+     * assertion the test was making, so the observation becomes a plain failed wait instead.
+     */
+    private static <T> T observation(ActivityScenario<MainActivity> scenario,
+                                     java.util.function.Function<MainActivity, T> read) {
+        try {
+            return TestSupport.onResult(scenario, read);
+        } catch (RuntimeException | AssertionError gone) {
+            return null;
+        }
+    }
+
     private static String url(ActivityScenario<MainActivity> scenario) {
-        return TestSupport.onResult(scenario, activity -> {
+        return observation(scenario, activity -> {
             if (activity.isFinishing()) {
                 return null;
             }

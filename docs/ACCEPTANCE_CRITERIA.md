@@ -229,7 +229,11 @@ from the repository's own authoritative documents instead of being invented:
 - **When**: the WebView reports progress < 100 and then 100
 - **Then**: the progress bar is visible and updated, then hidden at completion; the content view replaces the loading state
 - **Test method**: `ViewStateMachineTest#progressShowsAndHidesLoading`,
-  `MainActivityLaunchTest#progressIndicatorExists`
+  `MainActivityLaunchTest#progressIndicatorExists`. The instrumented test performs a real navigation
+  and then delivers the same callbacks the WebView client delivers (`onPageStarted` / `onProgress` /
+  `onPageFinished`) and asserts what the user sees: Chromium's own progress callback timing is not
+  schedulable, and on a runner whose DNS answers immediately the whole load can finish inside one
+  polling interval.
 - **Evidence required**: JVM + instrumentation test XML
 
 ### AC-020 — Error state for a failed main-frame load
@@ -370,6 +374,9 @@ from the repository's own authoritative documents instead of being invented:
 - **When**: the star action is tapped again
 - **Then**: exactly one row exists for that URL and the user is told it already exists
 - **Test method**: `BookmarkRepositoryTest#duplicateUpsertKeepsSingleRow`, `JourneyInstrumentedTest#j3StarTwiceKeepsOneRow`
+- **Note**: the repository reports `ALREADY_PRESENT` for a page it already holds and leaves the stored
+  row exactly as the user created it (title, URL and creation time are not rewritten); the star is a
+  toggle, so the second tap on the same page removes the bookmark, and one row can never exist twice.
 - **Evidence required**: JVM + instrumentation test XML
 
 ### AC-035 — Duplicate history entries do not duplicate rows per visit URL

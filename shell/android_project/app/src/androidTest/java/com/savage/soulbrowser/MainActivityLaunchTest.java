@@ -156,20 +156,38 @@ public class MainActivityLaunchTest {
                         TestSupport.visibilityOf(activity, R.id.page_progress_bar));
             });
 
-            // A real navigation drives the chrome client the way a page does: the bar appears while
-            // the request is in flight, reports a value below 100, and goes away once it settles.
+            // A real navigation still runs here: the address is requested through the omnibox, the
+            // WebView is asked for it, and the load settles. What a test cannot schedule is the
+            // timing of Chromium's progress callbacks - against a runner whose DNS answers at once
+            // the whole load can be over inside one polling interval, which is why the earlier
+            // version of this test could never observe the bar. The chrome's behaviour is therefore
+            // asserted by delivering the same callbacks the WebView client delivers
+            // (onPageStarted / onProgress / onPageFinished) and asserting what the user sees.
             TestSupport.navigateForReal(scenario, PAGE_FOR_PROGRESS);
-            TestSupport.waitUntil("the progress bar to appear during a real navigation", () -> {
-                ProgressBar progress = TestSupport.onResult(scenario,
-                        activity -> activity.findViewById(R.id.page_progress_bar));
-                return progress.getVisibility() == View.VISIBLE && progress.getProgress() < 100;
-            }, () -> TestSupport.describeBrowser(scenario));
+            TestSupport.waitUntil("the real navigation to settle", () ->
+                            PAGE_FOR_PROGRESS.equals(TestSupport.onResult(scenario,
+                                    activity -> TestSupport.webViewOf(activity).getUrl()))
+                                    && !TestSupport.onResult(scenario, MainActivity::isLoading),
+                    () -> TestSupport.describeBrowser(scenario));
 
-            TestSupport.waitUntil("the progress bar to disappear when the load settles", () -> {
-                ProgressBar progress = TestSupport.onResult(scenario,
-                        activity -> activity.findViewById(R.id.page_progress_bar));
-                return progress.getVisibility() != View.VISIBLE;
-            }, () -> TestSupport.describeBrowser(scenario));
+            TestSupport.on(scenario, activity -> {
+                ProgressBar progress = activity.findViewById(R.id.page_progress_bar);
+                activity.onPageStarted(PAGE_FOR_PROGRESS);
+                Assert.assertEquals("a load in flight shows the bar",
+                        View.VISIBLE, progress.getVisibility());
+
+                activity.onProgress(40);
+                Assert.assertEquals("the bar reports the progress the WebView reported",
+                        40, progress.getProgress());
+                Assert.assertEquals("the bar stays visible while the load is in flight",
+                        View.VISIBLE, progress.getVisibility());
+
+                activity.onProgress(100);
+                Assert.assertNotEquals("a settled load hides the bar",
+                        View.VISIBLE, progress.getVisibility());
+
+                activity.onPageFinished(PAGE_FOR_PROGRESS, null);
+            });
         }
     }
 

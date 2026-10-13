@@ -310,6 +310,42 @@ public final class TestSupport {
     }
 
     /**
+     * The text a view currently shows, or a short description of why it could not be read. Used only
+     * while reporting a failed wait: a timeout that does not say what the view actually said cannot
+     * be acted on, and "never showed X" is not enough to tell an empty view from an ambiguous match.
+     */
+    private static String observedText(int viewId) {
+        AtomicReference<String> observed = new AtomicReference<>("(no view found)");
+        // ViewAction has two abstract methods, so it cannot be written as a lambda.
+        androidx.test.espresso.ViewAction readText = new androidx.test.espresso.ViewAction() {
+            @Override
+            public org.hamcrest.Matcher<View> getConstraints() {
+                return org.hamcrest.Matchers.any(View.class);
+            }
+
+            @Override
+            public String getDescription() {
+                return "read the text of view " + viewId;
+            }
+
+            @Override
+            public void perform(androidx.test.espresso.UiController controller, View view) {
+                observed.set(view instanceof android.widget.TextView
+                        ? String.valueOf(((android.widget.TextView) view).getText())
+                        : view.getClass().getSimpleName());
+            }
+        };
+        try {
+            androidx.test.espresso.Espresso.onView(
+                            androidx.test.espresso.matcher.ViewMatchers.withId(viewId))
+                    .perform(readText);
+        } catch (RuntimeException | AssertionError unreadable) {
+            observed.set("(unreadable: " + unreadable.getClass().getSimpleName() + ")");
+        }
+        return observed.get();
+    }
+
+    /**
      * Waits until an Espresso-visible view shows the expected text. Used after an activity starts
      * another activity, where the top activity is the one Espresso must look at.
      */
@@ -330,7 +366,7 @@ public final class TestSupport {
             }
         }
         throw new AssertionError("view " + viewId + " never showed text containing '"
-                + expectedSubstring + "'", last);
+                + expectedSubstring + "'; observed " + observedText(viewId), last);
     }
 
     /** Turns the emulator radios on or off and waits until the app sees the new state. */

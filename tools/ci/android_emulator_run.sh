@@ -34,14 +34,33 @@ tee -a "$LOG" < "$RUNNER_TEMP/instrumented-report.txt"
 echo "=== install, launch, kill, relaunch, uninstall and reinstall ===" | tee -a "$LOG"
 DEBUG_APK=$(find shell/android_project/app/build/outputs/apk/debug -name '*.apk' | head -n 1)
 SMOKE_STATUS=0
+SMOKE_REPORT="${RUNNER_TEMP:-/tmp}/smoke-report.txt"
+rm -f "$SMOKE_REPORT"
 if [ -n "$DEBUG_APK" ]; then
   chmod +x tools/android_apk_smoke.sh
-  bash tools/android_apk_smoke.sh "$DEBUG_APK" 2>&1 | tee -a "$LOG"
+  # The transcript is kept in its own file as well as in the shared log: the workflow's failure
+  # annotator keeps the last sixty lines that look like errors, and a long list of failing test cases
+  # can push the single "FAIL: <step>" line of the install smoke test out of that window. A smoke
+  # failure that is not reported is a red job nobody can diagnose.
+  bash tools/android_apk_smoke.sh "$DEBUG_APK" 2>&1 | tee -a "$LOG" "$SMOKE_REPORT"
   SMOKE_STATUS=${PIPESTATUS[0]}
   echo "android_apk_smoke exit=$SMOKE_STATUS" | tee -a "$LOG"
 else
   echo "the debug APK is missing on the emulator runner" | tee -a "$LOG"
   SMOKE_STATUS=1
+fi
+
+if [ "$SMOKE_STATUS" -ne 0 ] && [ -s "$SMOKE_REPORT" ]; then
+  # Keep the lines that explain the failure; if the transcript carries none, the tail still says
+  # which step was running. Newlines and percent signs are percent-encoded the way the annotation
+  # protocol expects, so the reason arrives as one annotation instead of being truncated away.
+  SMOKE_REASON=$(grep -a -E '^(FAIL|FAIL:)' "$SMOKE_REPORT" | tail -n 12)
+  if [ -z "$SMOKE_REASON" ]; then
+    SMOKE_REASON=$(tail -n 12 "$SMOKE_REPORT")
+  fi
+  SMOKE_REASON=${SMOKE_REASON//%/%25}
+  SMOKE_REASON=${SMOKE_REASON//$'\n'/%0A}
+  echo "::error title=install smoke test::${SMOKE_REASON}"
 fi
 
 if [ "$INSTRUMENTED_STATUS" -ne 0 ] || [ "$SMOKE_STATUS" -ne 0 ] || [ "$REPORT_STATUS" -eq 3 ]; then
