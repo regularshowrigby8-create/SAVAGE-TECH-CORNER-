@@ -48,8 +48,13 @@ VENDORED_ENGINE_ARCHIVES = {
 # Non-blocking observations: things a reader should see, that are not violations.
 AUDIT_NOTES: List[str] = []
 
+# Files that must name a foreign identifier in order to test that it is rejected. Each entry is a
+# detector or the test of a detector: the tokens below can only be proven to be caught by naming them
+# somewhere, so the place that does the naming is allow-listed instead of the rule being weakened.
 ALLOWED_FORBIDDEN_TOKEN_FILES = {
     "tools/anti_deception_auditor.py",
+    "factory-3/tests/test_browser_app_rules.py",
+    "factories/factory-3/tests/test_browser_app_rules.py",
     "factories/factory-3/tools/browser_app_rules.py",
     "factory-3/tools/browser_app_rules.py",
     ".claude/scripts/gates.sh",
