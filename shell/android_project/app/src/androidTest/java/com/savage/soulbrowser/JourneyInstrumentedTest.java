@@ -21,13 +21,12 @@ import android.widget.EditText;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.savage.soulbrowser.data.BookmarkRepository;
 import com.savage.soulbrowser.data.HistoryRepository;
 import com.savage.soulbrowser.ui.BookmarksActivity;
 import com.savage.soulbrowser.ui.HistoryActivity;
-
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -108,15 +107,10 @@ public class JourneyInstrumentedTest {
                             activity -> activity.getString(R.string.action_bookmark_remove))));
 
             // Opening the bookmark from the stored list must load it in the browser. The list is a
-            // real activity and its row is really clicked; the browser then comes back through the
-            // same intent the list sends, which is what makes the address observable.
-            try (ActivityScenario<BookmarksActivity> list = ActivityScenario.launch(
-                    new Intent(TestSupport.context(), BookmarksActivity.class)
-                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))) {
-                onView(withId(R.id.list_bookmarks)).check(matches(isDisplayed()));
-                clickRow(list, "example.com");
-            }
-            assertBrowserCameBackTo(PAGE_A);
+            // real screen with a really clicked row; the browser then comes back through the same
+            // intent the list sends, which is what makes the address observable.
+            openRow(BookmarksActivity.class, "example.com");
+            assertBrowserCameBackTo(scenario, PAGE_A);
         }
     }
 
@@ -150,9 +144,7 @@ public class JourneyInstrumentedTest {
     public void j4HistoryRecordsVisitAndReopensIt() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
             // The launch itself visits the home page, so the store legitimately holds more than the
-            // visit this journey makes: what has to be true is that this address was recorded. The
-            // scenario stays open through the assertion below because the list sends the browser back
-            // to the same task, and a closed scenario would destroy the activity that receives it.
+            // visit this journey makes: what has to be true is that this address was recorded.
             TestSupport.navigateForReal(scenario, PAGE_A);
             TestSupport.waitUntil("the visit to be written to the local store", () -> {
                 HistoryRepository history = history();
@@ -160,13 +152,8 @@ public class JourneyInstrumentedTest {
                         .anyMatch(entry -> PAGE_A.equals(entry.getUrl()));
             }, () -> TestSupport.describeBrowser(scenario) + " " + historySummary());
 
-            try (ActivityScenario<HistoryActivity> list = ActivityScenario.launch(
-                    new Intent(TestSupport.context(), HistoryActivity.class)
-                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))) {
-                onView(withId(R.id.list_history)).check(matches(isDisplayed()));
-                clickRow(list, "example.com");
-            }
-            assertBrowserCameBackTo(PAGE_A);
+            openRow(HistoryActivity.class, "example.com");
+            assertBrowserCameBackTo(scenario, PAGE_A);
         }
     }
 
@@ -244,38 +231,62 @@ public class JourneyInstrumentedTest {
     }
 
     /**
-     * Waits until the browser is (back) on {@code expected}.
+     * Waits until the browser is (back) in front, on {@code expected}.
      *
-     * <p>The list activities send {@code ACTION_VIEW}-style intents at the browser, so the browser
-     * comes back through {@code onNewIntent} and the address it was given is what must end up in the
-     * address bar. The same task is what makes this observable: the list's {@code finish()} leaves a
-     * destroyed activity behind if it started a new task of its own.
+     * <p>Two facts are asserted together, because either one alone can be true for the wrong reason.
+     * The address bar of the browser the list was opened from must show the address the list handed
+     * back (the list reuses that instance through {@code CLEAR_TOP}), and that browser's window must
+     * have the focus - a browser left behind another screen has no focus even though its address bar
+     * still shows the page the user was on. The failure message adds the platform's own resumed
+     * activity, so "the browser is in front" can be told apart from "something else is in front".
      */
-    private static void assertBrowserCameBackTo(String expected) {
+    private static void assertBrowserCameBackTo(ActivityScenario<MainActivity> scenario,
+                                                String expected) {
         TestSupport.waitUntil("the browser in front to show the opened address " + expected,
-                () -> expected.equals(TestSupport.resumedBrowserAddress()),
-                () -> "the address bar of the browser in front shows '"
-                        + TestSupport.resumedBrowserAddress() + "'; resumed activities: "
+                () -> expected.equals(TestSupport.browserAddress(scenario))
+                        && TestSupport.browserHasFocus(scenario),
+                () -> "the address bar of the browser shows '"
+                        + TestSupport.browserAddress(scenario) + "', its window has the focus: "
+                        + TestSupport.browserHasFocus(scenario) + "; the platform reports as resumed: "
+                        + TestSupport.platformResumedActivity()
+                        + "; the test lifecycle monitor reports: "
                         + TestSupport.resumedActivityNames());
     }
 
     /**
-     * Clicks a row of a list screen inside that list's own window.
+     * Opens a list screen inside the browser's task and taps one of its rows, the way a user does.
      *
-     * <p>{@code onView(withText(...))} alone searches every root view of the process, and the browser
-     * that stays in the task behind the list shows the same address in its omnibox. The tap is then
-     * injected at the background view's coordinates and is delivered by the platform to the window in
-     * front - the row is never touched, the list never closes, and the journey reports a browser that
-     * never appeared. Scoping the lookup to the list's decor view makes the tap land on the row.
+     * <p>{@link ActivityScenario#launch} cannot be used for this: it adds
+     * {@code FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_CLEAR_TASK}, which clears the task the browser is
+     * in and destroys the browser itself - the very browser the row is supposed to come back to. That
+     * is why these journeys used to fail with a browser that never reappeared. The instrumentation's
+     * own {@code startActivitySync} adds the task flag without the clearing one, so the screen is
+     * pushed on top of the browser exactly as the in-app screen is.
      */
-    private static <A extends Activity> void clickRow(ActivityScenario<A> list, String text) {
-        AtomicReference<View> decor = new AtomicReference<>();
-        list.onActivity(activity -> decor.set(activity.getWindow().getDecorView()));
-        // The row's own URL view is what is clicked: a row may show the address twice (as its title
-        // fallback and as its address) and matching both is an ambiguous match, not a click.
-        onView(allOf(withId(R.id.item_url), withText(containsString(text))))
-                .inRoot(withDecorView(is(decor.get())))
+    private static void openRow(Class<?> screen, String rowText) {
+        Activity list = InstrumentationRegistry.getInstrumentation()
+                .startActivitySync(new Intent(TestSupport.context(), screen)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        TestSupport.waitUntil("the " + screen.getSimpleName() + " screen to come to the front",
+                () -> Boolean.TRUE.equals(TestSupport.readOnMainThread(list, Activity::hasWindowFocus)),
+                () -> "the screen never took the window focus; the platform reports as resumed: "
+                        + TestSupport.platformResumedActivity());
+
+        // The row's own address view is what is clicked - a row may show the address twice (as its
+        // title fallback and as its address), and matching both is an ambiguous match, not a click -
+        // and it is looked up inside the screen's own window, never in the browser behind it.
+        View decor = TestSupport.readOnMainThread(list, activity -> activity.getWindow().getDecorView());
+        onView(allOf(withId(R.id.item_url), withText(containsString(rowText))))
+                .inRoot(withDecorView(is(decor)))
                 .perform(click());
+
+        // The screen closes itself as it hands the address over. A screen that keeps running means
+        // the tap never reached the row's click listener: without this the journey could only report
+        // that the browser never came back, not that the row was never opened.
+        TestSupport.waitUntil("the " + screen.getSimpleName() + " screen to close itself",
+                () -> Boolean.TRUE.equals(TestSupport.readOnMainThread(list, Activity::isFinishing)),
+                () -> "the row tap did not reach the row's click listener (the screen is not closing); "
+                        + "the platform reports as resumed: " + TestSupport.platformResumedActivity());
     }
 
     private static boolean canGoBack(ActivityScenario<MainActivity> scenario) {

@@ -274,17 +274,66 @@ public final class TestSupport {
      * same mechanism the platform's own UiAutomator uses. Used only to drive the emulator network.
      */
     public static void shell(String command) {
+        shellOutput(command);
+    }
+
+    /**
+     * Runs a shell command through {@code UiAutomation} (the shell user) and returns everything it
+     * printed. Used to read the platform's own state, which is the only source that knows which
+     * window is really in front.
+     */
+    public static String shellOutput(String command) {
         Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
+        StringBuilder output = new StringBuilder();
         try (ParcelFileDescriptor descriptor =
                      instrumentation.getUiAutomation().executeShellCommand(command);
              FileInputStream stream = new FileInputStream(descriptor.getFileDescriptor())) {
-            byte[] buffer = new byte[256];
-            while (stream.read(buffer) != -1) {
-                // drain the command output
+            byte[] buffer = new byte[4096];
+            int read;
+            while ((read = stream.read(buffer)) != -1) {
+                output.append(new String(buffer, 0, read, java.nio.charset.StandardCharsets.UTF_8));
             }
         } catch (IOException exception) {
             throw new AssertionError("shell command failed: " + command, exception);
         }
+        return output.toString();
+    }
+
+    /**
+     * The activity the platform reports as resumed and on top, as one line, or {@code "(none)"} when
+     * the dump names none.
+     *
+     * <p>Read from {@code dumpsys activity activities} - the same source the install smoke test uses,
+     * and the only one that knows which window really is in front. Used when reporting a failure, so
+     * "the browser never came back" can be told apart from "something else is in front of it".
+     */
+    public static String platformResumedActivity() {
+        for (String line : shellOutput("dumpsys activity activities").split("\n")) {
+            String trimmed = line.trim();
+            if (trimmed.startsWith("ResumedActivity:") || trimmed.startsWith("mResumedActivity:")) {
+                return trimmed;
+            }
+        }
+        return "(none)";
+    }
+
+    /**
+     * Reads a value from an activity on the main thread, or {@code null} once it is gone.
+     *
+     * <p>For screens this test starts itself and therefore holds as objects rather than as
+     * {@link ActivityScenario}s: a scenario cannot be used for them, because it clears the task it
+     * launches into (which would destroy the browser these journeys come back to).
+     */
+    public static <T> T readOnMainThread(Activity activity,
+                                        java.util.function.Function<Activity, T> read) {
+        AtomicReference<T> value = new AtomicReference<>();
+        try {
+            InstrumentationRegistry.getInstrumentation()
+                    .runOnMainSync(() -> value.set(read.apply(activity)));
+        } catch (RuntimeException | AssertionError gone) {
+            return null;
+        }
+        return value.get();
     }
 
     /**
@@ -383,37 +432,39 @@ public final class TestSupport {
     }
 
     /**
-     * The address the currently <em>resumed</em> browser shows, or {@code null} when no browser is
-     * resumed.
+     * The address the browser of this scenario shows, or {@code null} once that activity is gone.
      *
-     * <p>Used after another activity (a list screen) has taken the screen: the platform may destroy a
-     * backgrounded activity and recreate it from the intent that started it. What the user sees - a
-     * browser on that address - is the same either way, so the assertion is made against whatever
-     * browser activity is in front instead of against one particular instance. A wait built on this
-     * reports {@link #resumedActivityNames()} on timeout, so "no browser is in front" can be told
-     * apart from "the browser is in front but shows something else".
+     * <p>Used after another activity (a list screen) has taken the screen: the browser is the one the
+     * list was opened from, and the list hands the address back to it, so this instance is the
+     * browser the user ends up on. A destroyed activity is a legitimate state to report - a Back
+     * press can finish it - so it is reported as {@code null} instead of throwing.
      */
-    public static String resumedBrowserAddress() {
-        AtomicReference<String> address = new AtomicReference<>();
+    public static String browserAddress(ActivityScenario<MainActivity> scenario) {
         try {
-            InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
-                for (Activity activity :
-                        androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
-                                .getActivitiesInStage(
-                                        androidx.test.runner.lifecycle.Stage.RESUMED)) {
-                    if (activity instanceof MainActivity) {
-                        View omnibox = activity.findViewById(R.id.edit_omnibox);
-                        address.set(omnibox instanceof android.widget.TextView
-                                ? String.valueOf(((android.widget.TextView) omnibox).getText())
-                                : null);
-                        return;
-                    }
-                }
+            return onResult(scenario, activity -> {
+                View omnibox = activity.findViewById(R.id.edit_omnibox);
+                return omnibox instanceof android.widget.TextView
+                        ? String.valueOf(((android.widget.TextView) omnibox).getText())
+                        : null;
             });
-        } catch (RuntimeException | AssertionError unavailable) {
+        } catch (RuntimeException | AssertionError gone) {
             return null;
         }
-        return address.get();
+    }
+
+    /**
+     * True while the browser window of this scenario has the window focus, i.e. it is the window in
+     * front. Cheap enough to poll, and stronger than "the activity exists": a browser that was left
+     * behind another screen has no window focus.
+     */
+    public static boolean browserHasFocus(ActivityScenario<MainActivity> scenario) {
+        try {
+            return Boolean.TRUE.equals(onResult(scenario, activity ->
+                    activity.getWindow() != null
+                            && activity.getWindow().getDecorView().hasWindowFocus()));
+        } catch (RuntimeException | AssertionError gone) {
+            return false;
+        }
     }
 
     /**
