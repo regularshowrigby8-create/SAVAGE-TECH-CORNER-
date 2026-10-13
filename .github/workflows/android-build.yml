@@ -144,9 +144,12 @@ jobs:
           echo "RELEASE_SHA256=$RELEASE_SHA256" >> "$GITHUB_OUTPUT"
           echo "DEBUG_APK=$DEBUG_APK" >> "$GITHUB_OUTPUT"
           echo "RELEASE_APK=$RELEASE_APK" >> "$GITHUB_OUTPUT"
-          printf '%s  %s\n%s  %s\n' "$APK_SHA256" "$(basename "$DEBUG_APK")" \
-            "$RELEASE_SHA256" "$(basename "$RELEASE_APK")" > SHA256SUMS.txt
+          # Paths relative to the repository root, so the emulator job can check them from the
+          # workspace root after it downloads this artifact.
+          printf '%s  %s\n%s  %s\n' "$APK_SHA256" "$DEBUG_APK" \
+            "$RELEASE_SHA256" "$RELEASE_APK" > SHA256SUMS.txt
           cat SHA256SUMS.txt
+          sha256sum -c SHA256SUMS.txt
 
       - name: Verify the debug APK signature (v1 + v2 + v3)
         run: |
@@ -267,6 +270,22 @@ jobs:
             echo "::error::build-tools 35.0.0 are not installed"; exit 1; }
           echo "SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
 
+      # The emulator job starts from a clean checkout, so the APK it installs has to be the one the
+      # build job produced - not a rebuild, and never a file carried inside the repository.
+      - name: Download the APKs built by the build job
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: savage-browser-apk
+
+      - name: Verify the downloaded APK identity
+        run: |
+          set -euo pipefail
+          DEBUG_APK=$(find shell/android_project/app/build/outputs/apk/debug -name '*.apk' | head -n 1)
+          test -n "$DEBUG_APK" || { echo "::error::the build job produced no debug APK"; exit 1; }
+          echo "installing $DEBUG_APK"
+          sha256sum "$DEBUG_APK"
+          sha256sum -c SHA256SUMS.txt
+
       - name: Enable KVM for the emulator
         run: |
           set -euo pipefail
@@ -285,19 +304,17 @@ jobs:
           disable-animations: true
           script: |
             set -euo pipefail
+            LOG="${RUNNER_TEMP:-/tmp}/build.log"
             cd shell/android_project
-            ./gradlew connectedDebugAndroidTest --stacktrace --no-daemon
-
-      - name: Install, launch, kill, relaunch and reinstall the debug APK
-        run: |
-          set -euo pipefail
-          chmod +x tools/android_apk_smoke.sh
-          DEBUG_APK=$(find shell/android_project/app/build/outputs/apk/debug -name '*.apk' | head -n 1)
-          if [ -z "$DEBUG_APK" ]; then
-            echo "::error::the debug APK was not built by the build job"
-            exit 1
-          fi
-          bash tools/android_apk_smoke.sh "$DEBUG_APK"
+            ./gradlew connectedDebugAndroidTest --stacktrace --no-daemon 2>&1 | tee -a "$LOG"
+            cd ../..
+            DEBUG_APK=$(find shell/android_project/app/build/outputs/apk/debug -name '*.apk' | head -n 1)
+            if [ -z "$DEBUG_APK" ]; then
+              echo "::error::the debug APK is missing on the emulator runner"
+              exit 1
+            fi
+            chmod +x tools/android_apk_smoke.sh
+            bash tools/android_apk_smoke.sh "$DEBUG_APK" 2>&1 | tee -a "$LOG"
 
       # Evidence collection runs even when the tests failed, so a failure can still be diagnosed.
       # It is not a gate, so it checks for what is there instead of masking command failures.
