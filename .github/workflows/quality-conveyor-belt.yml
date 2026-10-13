@@ -63,30 +63,9 @@ jobs:
 
       # GATE 8 verifies an APK this checkout built. Building it here is what makes that gate a real
       # provenance check instead of a check that can only ever fail on a machine without the
-      # Android toolchain.
+      # Android toolchain. The preparation is shared with every other workflow that runs the gate.
       - name: Build the debug APK that GATE 8 verifies
-        run: |
-          set -euo pipefail
-          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
-          if [ -z "$SDK_ROOT" ] || [ ! -d "$SDK_ROOT" ]; then
-            echo "::error::no Android SDK on this runner (ANDROID_HOME unset)"
-            exit 1
-          fi
-          SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
-          if [ ! -x "$SDKMANAGER" ]; then
-            SDKMANAGER=$(command -v sdkmanager)
-          fi
-          if [ ! -x "$SDKMANAGER" ]; then
-            echo "::error::sdkmanager not found in $SDK_ROOT"
-            exit 1
-          fi
-          printf 'y\n%.0s' {1..40} | "$SDKMANAGER" --licenses > /dev/null
-          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0" "platform-tools"
-          cd shell/android_project
-          chmod +x gradlew
-          ./gradlew :app:assembleDebug --stacktrace --no-daemon
-          cd ../..
-          find shell/android_project/app/build/outputs/apk -name '*.apk' -exec sha256sum {} \;
+        run: bash tools/ci/prepare_android_gate_env.sh
 
       - name: Secret Scan (Gitleaks)
         uses: gitleaks/gitleaks-action@v2

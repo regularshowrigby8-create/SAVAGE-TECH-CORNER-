@@ -17,6 +17,11 @@ coverage/
 .playwright/
 .husky/_
 
+# CI-generated scan output: the security scan step writes its SARIF report into the workspace, and
+# Prettier would otherwise treat a machine-written result file as repository content and fail the
+# style check on a file no human maintains.
+*.sarif
+
 # Binary artefacts Prettier cannot parse
 *.zip
 *.apk

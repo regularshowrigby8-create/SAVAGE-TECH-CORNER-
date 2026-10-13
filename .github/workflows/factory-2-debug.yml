@@ -24,16 +24,17 @@ jobs:
         with:
           python-version: "3.11"
 
+      # The gates import androguard, coverage, cryptography, pyopenssl and jsonschema (see
+      # requirements-gate.txt); the factory's own suites add the QA toolchain. Installing the
+      # requirement files instead of a hand-written list is what keeps this step and the gates in
+      # step with each other.
       - name: Install Dependencies
         run: |
+          set -euo pipefail
           python -m pip install --upgrade pip
-          pip install "androguard<4.0" coverage cryptography jsonschema pyopenssl
+          python -m pip install -r requirements-gate.txt
+          python -m pip install -r tools/factory/requirements/qa.in
 
-      # The master gate ends in GATE 8, which verifies an APK that this checkout built. A job
-      # that runs the gate therefore has to provide the Android toolchain and build the APK;
-      # without this the gate can only ever fail and the job reports "failure" for a reason that
-      # has nothing to do with the code under test. shell/tests/test_android_assets.py keeps
-      # this pairing in place for every workflow that runs the gate.
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -46,28 +47,7 @@ jobs:
           java-version: "17"
 
       - name: Build the debug APK that GATE 8 verifies
-        run: |
-          set -euo pipefail
-          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
-          if [ -z "$SDK_ROOT" ] || [ ! -d "$SDK_ROOT" ]; then
-            echo "::error::no Android SDK on this runner (ANDROID_HOME unset)"
-            exit 1
-          fi
-          SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
-          if [ ! -x "$SDKMANAGER" ]; then
-            SDKMANAGER=$(command -v sdkmanager)
-          fi
-          if [ ! -x "$SDKMANAGER" ]; then
-            echo "::error::sdkmanager not found in $SDK_ROOT"
-            exit 1
-          fi
-          printf 'y\n%.0s' {1..40} | "$SDKMANAGER" --licenses > /dev/null
-          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0" "platform-tools"
-          cd shell/android_project
-          chmod +x gradlew
-          ./gradlew :app:assembleDebug --stacktrace --no-daemon
-          cd ../..
-          find shell/android_project/app/build/outputs/apk -name '*.apk' -exec sha256sum {} \;
+        run: bash tools/ci/prepare_android_gate_env.sh
 
       - name: Check rules
         run: bash .claude/scripts/gates.sh

@@ -364,6 +364,43 @@ class AndroidWorkflowTest(unittest.TestCase):
                 offenders.append(reference)
         self.assertEqual([], offenders, "every action must be pinned to a full commit SHA")
 
+    def test_every_workflow_that_runs_the_master_gate_prepares_its_toolchain(self):
+        """A job that runs the gate without the toolchain can only ever report failure.
+
+        GATE 7 needs the `coverage` module, GATE 8 verifies an APK this checkout built, GATE 9 runs
+        node and GATE 10 runs a factory pipeline. Three workflows were written without any of that,
+        so their gate step failed for reasons unrelated to the code - and a gate that cannot pass is
+        a gate people learn to ignore. Any workflow that invokes the master gate must therefore
+        prepare the environment (the shared script, or the equivalent steps inline).
+        """
+        workflows = sorted((REPO_ROOT / ".github" / "workflows").glob("*.yml"))
+        self.assertTrue(workflows, "the repository must have workflows to check")
+        offenders = []
+        checked = 0
+        for path in workflows:
+            text = read(path)
+            if "gates.sh" not in text:
+                continue
+            checked += 1
+            prepares_toolchain = (
+                "prepare_android_gate_env.sh" in text
+                or ("assembleDebug" in text and "setup-java" in text)
+            )
+            installs_coverage = "requirements-gate.txt" in text or "coverage" in text
+            if not prepares_toolchain or not installs_coverage:
+                offenders.append(path.name)
+        self.assertGreater(checked, 0, "no workflow was found to run the master gate")
+        self.assertEqual([], offenders,
+                         "these workflows run the master gate without preparing its toolchain")
+
+    def test_no_workflow_masks_a_failure(self):
+        """No workflow may turn a failure into a pass; the belt and the reviewers must be honest."""
+        for path in sorted((REPO_ROOT / ".github" / "workflows").glob("*.yml")):
+            text = read(path)
+            for pattern in ("continue-on-error", "|| true", "--ignore-errors", "allow_failure"):
+                with self.subTest(workflow=path.name, pattern=pattern):
+                    self.assertNotIn(pattern, text)
+
     def test_workflow_publishes_verifiable_apk_evidence(self):
         self.assertIn("sha256sum", self.workflow)
         self.assertIn("APK_SHA256", self.workflow)
