@@ -66,22 +66,19 @@ public class NavigationStateTest {
                     () -> PAGE_A.equals(currentUrl(scenario)) && !isLoading(scenario));
             Assert.assertEquals("an idle page offers Reload",
                     TestSupport.onResult(scenario, activity -> activity.getString(R.string.action_reload)),
-                    TestSupport.onResult(scenario, activity ->
-                            activity.findViewById(R.id.btn_action_reload).getContentDescription()));
+                    TestSupport.description(scenario, R.id.btn_action_reload));
 
             TestSupport.on(scenario, activity -> activity.findViewById(R.id.btn_action_reload).performClick());
             TestSupport.waitUntil("the reload to be in flight with a Stop affordance",
                     () -> isLoading(scenario)
                             && TestSupport.onResult(scenario, activity -> activity.getString(R.string.action_stop))
-                            .equals(TestSupport.onResult(scenario, activity ->
-                                    activity.findViewById(R.id.btn_action_reload).getContentDescription())));
+                            .equals(TestSupport.description(scenario, R.id.btn_action_reload)));
 
             TestSupport.on(scenario, activity -> activity.findViewById(R.id.btn_action_reload).performClick());
             TestSupport.waitUntil("Stop to end the load and restore the Reload affordance",
                     () -> !isLoading(scenario)
                             && TestSupport.onResult(scenario, activity -> activity.getString(R.string.action_reload))
-                            .equals(TestSupport.onResult(scenario, activity ->
-                                    activity.findViewById(R.id.btn_action_reload).getContentDescription())));
+                            .equals(TestSupport.description(scenario, R.id.btn_action_reload)));
 
             TestSupport.on(scenario, activity -> activity.findViewById(R.id.btn_nav_home).performClick());
             TestSupport.waitUntil("Home to request the home URL",

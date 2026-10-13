@@ -89,8 +89,7 @@ public class JourneyInstrumentedTest {
                     () -> bookmarks.contains(PAGE_A));
             Assert.assertEquals("storing the current page keeps exactly one row", 1, bookmarks.count());
             TestSupport.waitUntil("the star to advertise removal", () -> TestSupport
-                    .onResult(scenario, activity -> String.valueOf(
-                            activity.findViewById(R.id.btn_action_bookmark).getContentDescription()))
+                    .description(scenario, R.id.btn_action_bookmark)
                     .equals(TestSupport.onResult(scenario,
                             activity -> activity.getString(R.string.action_bookmark_remove))));
 

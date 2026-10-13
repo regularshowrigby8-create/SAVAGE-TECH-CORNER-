@@ -144,6 +144,24 @@ public final class TestSupport {
         return Integer.parseInt(tabs.getText().toString());
     }
 
+    /**
+     * The content description of a view, as a String. Views built from a string resource return a
+     * String at runtime, but the declared type is CharSequence, which makes the
+     * {@code assertEquals(String, Object, Object)} / {@code assertEquals(String, String, String)}
+     * pair ambiguous for javac. Reading it through this helper keeps the assertion honest about
+     * what it compares.
+     */
+    public static String descriptionOf(MainActivity activity, int viewId) {
+        View view = activity.findViewById(viewId);
+        Assert.assertNotNull("view " + viewId + " exists", view);
+        CharSequence description = view.getContentDescription();
+        return description == null ? "" : description.toString();
+    }
+
+    public static String description(ActivityScenario<MainActivity> scenario, int viewId) {
+        return onResult(scenario, activity -> descriptionOf(activity, viewId));
+    }
+
     public static String textOf(MainActivity activity, int viewId) {
         android.widget.TextView view = activity.findViewById(viewId);
         return view == null || view.getText() == null ? null : view.getText().toString();
