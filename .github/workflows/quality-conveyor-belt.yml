@@ -96,26 +96,63 @@ jobs:
       - name: Dependency Vulnerability Audit
         run: npm run audit:security
 
+      # Every check below writes its output to one log as well as to the job log. A hosted runner's
+      # raw log is not always retrievable afterwards, so this is what makes a red belt diagnosable
+      # instead of a step that says only "exit code 1"; the last step turns the tails into
+      # annotations.
       - name: Code Quality & Linting
         run: |
           set -euo pipefail
-          npm run lint
-          npm run format:check
+          LOG="${RUNNER_TEMP}/quality.log"
+          : > "$LOG"
+          npm run lint 2>&1 | tee -a "$LOG"
+          npm run format:check 2>&1 | tee -a "$LOG"
 
       - name: TypeScript Strict Mode Check
-        run: npm run typecheck
+        run: |
+          set -euo pipefail
+          npm run typecheck 2>&1 | tee -a "${RUNNER_TEMP}/quality.log"
 
       - name: Unit & Integration Tests
-        run: npm run test
+        run: |
+          set -euo pipefail
+          npm run test 2>&1 | tee -a "${RUNNER_TEMP}/quality.log"
 
       - name: Knip Unused Dependencies & Files Audit
-        run: npm run knip
+        run: |
+          set -euo pipefail
+          npm run knip 2>&1 | tee -a "${RUNNER_TEMP}/quality.log"
 
       - name: Bundle Size Enforcement
-        run: npm run size
+        run: |
+          set -euo pipefail
+          npm run size 2>&1 | tee -a "${RUNNER_TEMP}/quality.log"
 
       - name: Run Master Quality Gates
-        run: bash .claude/scripts/gates.sh
+        run: |
+          set -euo pipefail
+          bash .claude/scripts/gates.sh 2>&1 | tee "${RUNNER_TEMP}/gates.log"
 
       - name: Execute Interconnected Conveyor Belt
-        run: npm run conveyor-belt
+        run: |
+          set -euo pipefail
+          npm run conveyor-belt 2>&1 | tee "${RUNNER_TEMP}/conveyor.log"
+
+      - name: Surface the failure
+        if: failure()
+        run: |
+          set -uo pipefail
+          found=0
+          for name in gates conveyor quality; do
+            LOG="${RUNNER_TEMP}/${name}.log"
+            if [ ! -s "$LOG" ]; then continue; fi
+            found=1
+            tail_text=$(grep -a -E 'FAIL|ERROR|error|Error|warn|missing|cannot|Cannot' "$LOG" | tail -n 15)
+            if [ -z "$tail_text" ]; then tail_text=$(tail -n 15 "$LOG"); fi
+            tail_text=${tail_text//%/%25}
+            tail_text=${tail_text//$'\n'/%0A}
+            echo "::error title=${name} gate output::${tail_text}"
+          done
+          if [ "$found" -eq 0 ]; then
+            echo "::error title=conveyor belt::no captured output - the failure happened before any check ran"
+          fi
