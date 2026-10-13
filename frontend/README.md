@@ -5,6 +5,7 @@
 This directory houses the **architectural design model and prototype definitions** for Savage Browser's frontend subsystem. It models user-interface composition, tab coordination, navigation action dispatching, and security policy interfaces in Python before compilation to native Android Kotlin/Jetpack Compose components.
 
 ### Modular Prototypes:
+
 - `compose_user_interface/`: Declarative Compose tree models (App bar, web viewport, navigation bar).
 - `browser_controller/`: Intent & user action dispatching models.
 - `webview_engine/`: WebSettings security policy and scheme validation prototype.

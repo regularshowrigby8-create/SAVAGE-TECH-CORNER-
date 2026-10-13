@@ -12,46 +12,47 @@ The implementation brief supplied to this session contained **unfilled placehold
 `python3 SAVAGE_FACTORY.py --root . gate`, but no `SAVAGE_FACTORY.py` existed at the repository
 root (the factory shipped only as a ZIP payload).
 
-Per the operating rule *"if a requirement is unclear, record the ambiguity and choose the safest
-reasonable behavior; do not silently invent a major product decision"*, the brief was resolved
+Per the operating rule _"if a requirement is unclear, record the ambiguity and choose the safest
+reasonable behavior; do not silently invent a major product decision"_, the brief was resolved
 from the repository's own authoritative documents instead of being invented:
 
-| Brief field | Resolved value | Source of truth |
-|---|---|---|
-| App name | **Savage Browser** | `README.md` §1, `docs/ARCHITECTURE.md` §1 |
-| Goal | Security-hardened Android WebView browser for the Savage Tech Corner ecosystem | `README.md` §1, `docs/SECURITY.md` §1 |
-| Target users | Privacy/security-conscious Android users of the Savage ecosystem | `docs/SECURITY.md`, `docs/ARCHITECTURE.md` §5 |
-| Package / applicationId | `com.savage.soulbrowser` | `README.md`, `factory-3/tools/android_vm_verifier.py` |
-| Minimum SDK | 26 (Android 8.0) | `README.md` ("API 26 to 35"), existing `app/build.gradle.kts` |
-| Target SDK | 35 (Android 15) | `README.md` ("API 26 to 35"), `factory-3/tools/android_tools.py` |
-| Permissions | `INTERNET`, `ACCESS_NETWORK_STATE` only | existing manifest, `docs/ARCHITECTURE.md` §5 |
-| Offline behaviour | Offline-resilient: local data served, clean offline UI, retry | `docs/ARCHITECTURE.md` §5.3 |
-| Persisted data | Bookmarks + history in local SQLite, queued for later sync | `docs/ARCHITECTURE.md` §5.3 |
-| Security invariants | HTTPS-only, fail-closed TLS, origin-gated JS bridge | `docs/SECURITY.md` §1 |
+| Brief field             | Resolved value                                                                 | Source of truth                                                  |
+| ----------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| App name                | **Savage Browser**                                                             | `README.md` §1, `docs/ARCHITECTURE.md` §1                        |
+| Goal                    | Security-hardened Android WebView browser for the Savage Tech Corner ecosystem | `README.md` §1, `docs/SECURITY.md` §1                            |
+| Target users            | Privacy/security-conscious Android users of the Savage ecosystem               | `docs/SECURITY.md`, `docs/ARCHITECTURE.md` §5                    |
+| Package / applicationId | `com.savage.soulbrowser`                                                       | `README.md`, `factory-3/tools/android_vm_verifier.py`            |
+| Minimum SDK             | 26 (Android 8.0)                                                               | `README.md` ("API 26 to 35"), existing `app/build.gradle.kts`    |
+| Target SDK              | 35 (Android 15)                                                                | `README.md` ("API 26 to 35"), `factory-3/tools/android_tools.py` |
+| Permissions             | `INTERNET`, `ACCESS_NETWORK_STATE` only                                        | existing manifest, `docs/ARCHITECTURE.md` §5                     |
+| Offline behaviour       | Offline-resilient: local data served, clean offline UI, retry                  | `docs/ARCHITECTURE.md` §5.3                                      |
+| Persisted data          | Bookmarks + history in local SQLite, queued for later sync                     | `docs/ARCHITECTURE.md` §5.3                                      |
+| Security invariants     | HTTPS-only, fail-closed TLS, origin-gated JS bridge                            | `docs/SECURITY.md` §1                                            |
 
 ### Ambiguity log (decisions taken, with rationale)
 
-| # | Ambiguity | Decision | Rationale |
-|---|---|---|---|
-| A1 | Brief placeholders | Resolved from repo docs (table above) | Rule 11; no major product decision invented |
-| A2 | `SAVAGE_FACTORY.py` missing at root | Adopted the factory build that already ships in-repo (`SAVAGE_FACTORY_v4_DEBUG_FINAL.zip`, the hardened build) to `/SAVAGE_FACTORY.py` | Its own upload guide: "put this file at the root of your repository". V4-DEBUG is the build that fixes the review findings in `FACTORY_REVIEW.md` |
-| A3 | Materialising the factory (`init`) into the product repo | **Not** materialised in-tree | `NO_PADDING.md` + `docs/factory/ENFORCEMENT.md` §4.4 require one canonical factory tree; `FACTORY_REVIEW.md` P2 #19 explicitly forbids adding a parallel factory. `init`+`doctor` were executed in an isolated scratch copy instead (evidence recorded) |
-| A4 | "Required screens" (3) not specified | Browser, Bookmarks, History | Screens that the existing AppBar/dock controls and `docs/ARCHITECTURE.md` imply; each is a real Activity |
-| A5 | Tabs button previously showed a `Toast` (fake success) | Implemented real tabs; multi-WebView sessions with a switcher dialog | Rule 5 (no fake success responses); a toast is not a feature |
-| A6 | AppBar "AI assistant" button had no implementation | Removed; replaced by a working Bookmark (star) action | Rule 5; an unimplemented control is a dead control (`factory-2/criticism/dead_buttons_check.py` policy) |
-| A7 | `activities.BrowserActivity` existed only as an unreferenced exported alias | Removed | An exported component with a `MAIN` filter and no launcher category is dead surface area; `android_vm_verifier.py` accepts `MainActivity` |
-| A8 | Default search provider | DuckDuckGo (Google/Bing selectable) | Security/privacy posture of the product; user-selectable, persisted |
-| A9 | Non-443 HTTPS ports | Allowed | Blocking them breaks ordinary sites; the security boundary is the scheme + TLS validation, not the port |
-| A10 | Version bump | versionCode 5, versionName 3.0.0 | The rework changes package contents and behaviour; previous shipped value was 4 / 2.0.4 |
-| A11 | Release signing credentials | Not invented. Release variant is configured for a real keystore supplied via `keystore.properties`/env; the verified artifact is the debug-signed debug APK | Rule 9 (never invent secrets) |
-| A12 | `tools/vm_crash_and_install_debugger.py` claimed emulator/install results it cannot produce | Relabelled: it is a static APK structure analyser; real install/launch evidence now comes from the CI emulator job | Rule 3 (no invented emulator results) |
-| A13 | `factory-3` APK "build" copied a pre-existing APK and byte-patched a signing block | Replaced with a real Gradle build, or an explicit failure when no Android toolchain exists | Rule 3/13; a copied APK is not a build |
+| #   | Ambiguity                                                                                   | Decision                                                                                                                                                    | Rationale                                                                                                                                                                                                                                               |
+| --- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A1  | Brief placeholders                                                                          | Resolved from repo docs (table above)                                                                                                                       | Rule 11; no major product decision invented                                                                                                                                                                                                             |
+| A2  | `SAVAGE_FACTORY.py` missing at root                                                         | Adopted the factory build that already ships in-repo (`SAVAGE_FACTORY_v4_DEBUG_FINAL.zip`, the hardened build) to `/SAVAGE_FACTORY.py`                      | Its own upload guide: "put this file at the root of your repository". V4-DEBUG is the build that fixes the review findings in `FACTORY_REVIEW.md`                                                                                                       |
+| A3  | Materialising the factory (`init`) into the product repo                                    | **Not** materialised in-tree                                                                                                                                | `NO_PADDING.md` + `docs/factory/ENFORCEMENT.md` §4.4 require one canonical factory tree; `FACTORY_REVIEW.md` P2 #19 explicitly forbids adding a parallel factory. `init`+`doctor` were executed in an isolated scratch copy instead (evidence recorded) |
+| A4  | "Required screens" (3) not specified                                                        | Browser, Bookmarks, History                                                                                                                                 | Screens that the existing AppBar/dock controls and `docs/ARCHITECTURE.md` imply; each is a real Activity                                                                                                                                                |
+| A5  | Tabs button previously showed a `Toast` (fake success)                                      | Implemented real tabs; multi-WebView sessions with a switcher dialog                                                                                        | Rule 5 (no fake success responses); a toast is not a feature                                                                                                                                                                                            |
+| A6  | AppBar "AI assistant" button had no implementation                                          | Removed; replaced by a working Bookmark (star) action                                                                                                       | Rule 5; an unimplemented control is a dead control (`factory-2/criticism/dead_buttons_check.py` policy)                                                                                                                                                 |
+| A7  | `activities.BrowserActivity` existed only as an unreferenced exported alias                 | Removed                                                                                                                                                     | An exported component with a `MAIN` filter and no launcher category is dead surface area; `android_vm_verifier.py` accepts `MainActivity`                                                                                                               |
+| A8  | Default search provider                                                                     | DuckDuckGo (Google/Bing selectable)                                                                                                                         | Security/privacy posture of the product; user-selectable, persisted                                                                                                                                                                                     |
+| A9  | Non-443 HTTPS ports                                                                         | Allowed                                                                                                                                                     | Blocking them breaks ordinary sites; the security boundary is the scheme + TLS validation, not the port                                                                                                                                                 |
+| A10 | Version bump                                                                                | versionCode 5, versionName 3.0.0                                                                                                                            | The rework changes package contents and behaviour; previous shipped value was 4 / 2.0.4                                                                                                                                                                 |
+| A11 | Release signing credentials                                                                 | Not invented. Release variant is configured for a real keystore supplied via `keystore.properties`/env; the verified artifact is the debug-signed debug APK | Rule 9 (never invent secrets)                                                                                                                                                                                                                           |
+| A12 | `tools/vm_crash_and_install_debugger.py` claimed emulator/install results it cannot produce | Relabelled: it is a static APK structure analyser; real install/launch evidence now comes from the CI emulator job                                          | Rule 3 (no invented emulator results)                                                                                                                                                                                                                   |
+| A13 | `factory-3` APK "build" copied a pre-existing APK and byte-patched a signing block          | Replaced with a real Gradle build, or an explicit failure when no Android toolchain exists                                                                  | Rule 3/13; a copied APK is not a build                                                                                                                                                                                                                  |
 
 ---
 
 ## 1. Functional acceptance criteria
 
 ### AC-001 — Clean first launch
+
 - **Feature**: F-01 Application start
 - **Given**: a fresh install (no app data) on API 26+
 - **When**: the launcher icon is tapped
@@ -62,6 +63,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: instrumentation test result XML + emulator `am start -W` output (TotalTime, Status: ok)
 
 ### AC-002 — Page navigation and history stack
+
 - **Feature**: F-03 Navigation controls
 - **Given**: the browser is on a loaded `https://` page and a previously loaded page exists
 - **When**: the user taps Back, then Forward
@@ -71,6 +73,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: instrumentation test result XML
 
 ### AC-003 — Reload, stop and home
+
 - **Feature**: F-03 Navigation controls
 - **Given**: a page is loaded
 - **When**: the reload action is tapped while loading, then the home action is tapped
@@ -79,6 +82,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: instrumentation test result XML
 
 ### AC-004 — Journey J1: launch, browse, navigate
+
 - **Feature**: F-01/F-03
 - **Given**: the app is running with connectivity
 - **When**: the user opens the home page, follows an in-page link, presses Back twice and presses Home
@@ -87,6 +91,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: instrumentation result XML + emulator screenshot artifact
 
 ### AC-005 — Journey J2: omnibox search
+
 - **Feature**: F-02 Omnibox
 - **Given**: the omnibox is empty
 - **When**: the user types `android 15 sdk` and submits
@@ -95,6 +100,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: JVM test XML + instrumentation test XML
 
 ### AC-006 — Journey J3: bookmarks
+
 - **Feature**: F-05 Bookmarks
 - **Given**: a page is displayed
 - **When**: the user taps the star action and opens the Bookmarks screen
@@ -103,6 +109,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: instrumentation + JVM test XML
 
 ### AC-007 — Journey J4: history
+
 - **Feature**: F-06 History
 - **Given**: the app has visited at least one `https://` page
 - **When**: the user opens the History screen
@@ -111,6 +118,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: instrumentation test XML
 
 ### AC-008 — Journey J5: tabs
+
 - **Feature**: F-04 Tabs
 - **Given**: one tab is open
 - **When**: the user opens a new tab, switches back to the first, and closes the second
@@ -119,6 +127,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: JVM + instrumentation test XML
 
 ### AC-009 — Journey J6: offline and retry
+
 - **Feature**: F-07 Offline handling
 - **Given**: the device has no validated network
 - **When**: the user submits a URL
@@ -128,6 +137,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: JVM + instrumentation test XML
 
 ### AC-010 — Tabs survive configuration change
+
 - **Feature**: F-04/F-10
 - **Given**: two tabs are open
 - **When**: the activity is recreated (`ActivityScenario.recreate()`)
@@ -136,6 +146,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: instrumentation test XML
 
 ### AC-011 — Tab list shows title and URL
+
 - **Feature**: F-04
 - **Given**: tabs with known titles/URLs
 - **When**: the tab switcher is opened
@@ -145,6 +156,7 @@ from the repository's own authoritative documents instead of being invented:
   instrumentation when a `Context` is required; this AC is executed as `DisplayTextTest#titleFallsBackToHost`
 
 ### AC-012 — Empty tab list is impossible
+
 - **Feature**: F-04
 - **Given**: the last remaining tab
 - **When**: it is closed
@@ -153,6 +165,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: JVM test XML
 
 ### AC-013 — Invalid omnibox input is rejected safely
+
 - **Feature**: F-02
 - **Given**: the omnibox contains a blocked scheme (`javascript:alert(1)`, `file:///etc/passwd`, `data:text/html,x`)
 - **When**: the user submits
@@ -162,6 +175,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: JVM + instrumentation test XML
 
 ### AC-014 — Malformed input does not crash
+
 - **Feature**: F-02
 - **Given**: inputs such as `https://`, `://x`, `%%%`, a 100 KB string, and emoji
 - **When**: each is resolved
@@ -170,6 +184,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: JVM test XML
 
 ### AC-015 — Host-only input is upgraded to HTTPS
+
 - **Feature**: F-02
 - **Given**: the input `example.com` or `example.com:8443/path`
 - **When**: it is resolved
@@ -178,6 +193,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: JVM test XML
 
 ### AC-016 — Bookmarks empty state
+
 - **Feature**: F-05
 - **Given**: no bookmarks exist
 - **When**: the Bookmarks screen opens
@@ -186,6 +202,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: instrumentation test XML
 
 ### AC-017 — History empty state
+
 - **Feature**: F-06
 - **Given**: history was cleared
 - **When**: the History screen opens
@@ -194,6 +211,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: instrumentation test XML
 
 ### AC-018 — Empty content is never blank
+
 - **Feature**: F-05/F-06
 - **Given**: an item with a null/empty title
 - **When**: it is displayed
@@ -202,6 +220,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: JVM test XML
 
 ### AC-019 — Loading state
+
 - **Feature**: F-07
 - **Given**: a navigation has started
 - **When**: the WebView reports progress < 100 and then 100
@@ -211,6 +230,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: JVM + instrumentation test XML
 
 ### AC-020 — Error state for a failed main-frame load
+
 - **Feature**: F-07
 - **Given**: a main-frame load fails (host unresolved / no connectivity)
 - **When**: `onReceivedError` is delivered
@@ -219,6 +239,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: JVM test XML + emulator logcat excerpt
 
 ### AC-021 — SSL failure is fail-closed
+
 - **Feature**: F-01
 - **Given**: the WebView receives an SSL error
 - **When**: `onReceivedSslError` runs
@@ -228,6 +249,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: JVM test XML + `connectedDebugAndroidTest` XML
 
 ### AC-022 — Cleartext HTTP is blocked
+
 - **Feature**: F-01
 - **Given**: any `http://` URL (omnibox, intent, or in-page link)
 - **When**: navigation is attempted
@@ -236,6 +258,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: JVM + instrumentation test XML
 
 ### AC-023 — History persists across restart
+
 - **Feature**: F-06/F-10
 - **Given**: a visit was recorded
 - **When**: the process/DB helper is closed and re-opened (fresh helper = restart proxy)
@@ -244,6 +267,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: instrumentation test XML
 
 ### AC-024 — Bookmarks persist across restart
+
 - **Feature**: F-05/F-10
 - **Given**: a bookmark was added
 - **When**: the helper is closed and re-opened
@@ -252,6 +276,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: instrumentation test XML
 
 ### AC-025 — Settings persist
+
 - **Feature**: F-12
 - **Given**: the user selects the Google provider and enables desktop mode
 - **When**: preferences are re-read from a new store instance
@@ -260,6 +285,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: instrumentation test XML
 
 ### AC-026 — Rotation keeps the page
+
 - **Feature**: F-10
 - **Given**: a page is loaded
 - **When**: the device rotates
@@ -268,6 +294,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: JVM/static test XML + manifest excerpt in evidence bundle
 
 ### AC-027 — Recreation restores browser state
+
 - **Feature**: F-10
 - **Given**: a tab list and a current URL
 - **When**: `onSaveInstanceState` → `recreate()` → `onRestoreInstanceState`
@@ -276,6 +303,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: instrumentation test XML
 
 ### AC-028 — Permission requests are denied by default
+
 - **Feature**: F-09
 - **Given**: a page requests CAMERA, MICROPHONE or GEOLOCATION
 - **When**: `onPermissionRequest` / geolocation prompt is delivered
@@ -284,6 +312,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: JVM test XML + instrumentation test XML
 
 ### AC-029 — Denial is visible, not silent
+
 - **Feature**: F-09
 - **Given**: a denied WebView permission request
 - **When**: the denial happens
@@ -292,6 +321,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: JVM test XML + instrumentation test XML + emulator logcat
 
 ### AC-030 — Back navigation inside a page
+
 - **Feature**: F-03
 - **Given**: the WebView can go back
 - **When**: the system Back gesture is used
@@ -300,6 +330,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: instrumentation test XML
 
 ### AC-031 — Back closes the app only at the root page
+
 - **Feature**: F-03
 - **Given**: a single tab at its first page
 - **When**: the system Back gesture is used
@@ -308,6 +339,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: instrumentation test XML
 
 ### AC-032 — Accessibility labels on interactive controls
+
 - **Feature**: F-11
 - **Given**: every `ImageButton`/`TextView`-button in the browser, bookmarks and history layouts
 - **When**: the view hierarchy is inspected
@@ -316,6 +348,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: instrumentation test XML
 
 ### AC-033 — No hard-coded UI strings
+
 - **Feature**: F-11
 - **Given**: all layout XML files
 - **When**: they are parsed
@@ -325,6 +358,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: lint report + test XML
 
 ### AC-034 — Duplicate bookmark actions are idempotent
+
 - **Feature**: F-05
 - **Given**: a bookmark already exists for the current page
 - **When**: the star action is tapped again
@@ -333,6 +367,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: JVM + instrumentation test XML
 
 ### AC-035 — Duplicate history entries do not duplicate rows per visit URL
+
 - **Feature**: F-06
 - **Given**: the same URL is visited twice
 - **When**: history is queried
@@ -342,6 +377,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: JVM (pure SQL contract) + instrumentation test XML
 
 ### AC-036 — Duplicate Retry / double tap
+
 - **Feature**: F-07
 - **Given**: the error state with Retry
 - **When**: Retry is tapped twice quickly while offline
@@ -350,6 +386,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: JVM test XML
 
 ### AC-037 — Process restart restores the session
+
 - **Feature**: F-10
 - **Given**: the app was killed by the system (`adb shell am kill`)
 - **When**: it is relaunched from the launcher
@@ -358,6 +395,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: emulator logcat + `am start -W` output in the evidence bundle
 
 ### AC-038 — Corrupted local database is recovered
+
 - **Feature**: F-10
 - **Given**: the on-disk database file is overwritten with junk bytes
 - **When**: the repository opens it
@@ -366,6 +404,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: instrumentation test XML
 
 ### AC-039 — Missing local data is not an error
+
 - **Feature**: F-10
 - **Given**: no database file exists
 - **When**: history/bookmarks are queried
@@ -374,6 +413,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: instrumentation test XML
 
 ### AC-040 — Privileged bridge is origin-gated
+
 - **Feature**: F-08
 - **Given**: the bridge is injected into an untrusted page (or has no page)
 - **When**: `getAppVersion()` / `postFeedback()` is invoked
@@ -382,6 +422,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: JVM test XML
 
 ### AC-041 — Misleading host names do not pass the bridge check
+
 - **Feature**: F-08
 - **Given**: `https://evil-savage-tech-corner.io`, `https://savage-tech-corner.io.evil.com`,
   `https://savage-tech-corner.io:8443`, `http://savage-tech-corner.io`, `https://SAVAGE-TECH-CORNER.IO`
@@ -391,6 +432,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: JVM test XML
 
 ### AC-042 — Bridge input validation
+
 - **Feature**: F-08
 - **Given**: feedback payloads including `<script>`, SQL fragments, control characters, a 501-char
   string, and legitimate Unicode text
@@ -400,6 +442,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: JVM test XML
 
 ### AC-043 — No unnecessary permissions
+
 - **Feature**: F-01/F-13
 - **Given**: the built APK manifest
 - **When**: permissions are listed (`aapt2 dump badging` / `androguard`)
@@ -409,6 +452,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: badging output in the evidence bundle
 
 ### AC-044 — Release APK installs and launches
+
 - **Feature**: F-13
 - **Given**: the built debug-signed APK (`artifacts/debug/SavageBrowser-debug.apk`)
 - **When**: it is installed on a clean emulator (`adb install -r`) and launched
@@ -418,6 +462,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: emulator install/launch log, screenshot, APK SHA-256
 
 ### AC-045 — Package identity and version metadata
+
 - **Feature**: F-13
 - **Given**: the built APK
 - **When**: its manifest is read
@@ -426,6 +471,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: verifier stdout + `android-artifact-verification.txt`
 
 ### AC-046 — The APK is signed and provenance matches its hash
+
 - **Feature**: F-13
 - **Given**: the built APK and `artifacts/manifests/RELEASE_MANIFEST.json`
 - **When**: `apksigner verify` runs and the SHA-256 is recomputed
@@ -435,6 +481,7 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: apksigner output + `sha256sum` output in the evidence bundle
 
 ### AC-047 — Reproducible from a clean checkout
+
 - **Feature**: F-13
 - **Given**: a fresh clone of this branch at the built commit
 - **When**: the documented commands run (`gradle :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`)
@@ -447,30 +494,30 @@ from the repository's own authoritative documents instead of being invented:
 
 ## 2. Traceability summary
 
-| Requirement category (Phase 2 checklist) | Criteria |
-|---|---|
-| clean first launch | AC-001 |
-| normal navigation | AC-002, AC-003 |
-| core user journeys | AC-004 – AC-009 |
-| invalid input | AC-013, AC-014, AC-015 |
-| empty state | AC-016 – AC-018 |
-| loading state | AC-019 |
-| error state | AC-020 |
-| offline behaviour | AC-009, AC-021 |
-| persistence after restart | AC-023 – AC-025 |
-| configuration changes / rotation | AC-026, AC-027, AC-010 |
-| permission denial | AC-028, AC-029 |
-| back navigation | AC-030, AC-031 |
-| accessibility labels | AC-032, AC-033 |
-| duplicate actions | AC-034 – AC-036 |
-| process restart | AC-037 |
-| corrupted / missing local data | AC-038, AC-039 |
-| release APK installation and launch | AC-044 – AC-047 |
-| security invariants | AC-021, AC-022, AC-040 – AC-043 |
+| Requirement category (Phase 2 checklist) | Criteria                        |
+| ---------------------------------------- | ------------------------------- |
+| clean first launch                       | AC-001                          |
+| normal navigation                        | AC-002, AC-003                  |
+| core user journeys                       | AC-004 – AC-009                 |
+| invalid input                            | AC-013, AC-014, AC-015          |
+| empty state                              | AC-016 – AC-018                 |
+| loading state                            | AC-019                          |
+| error state                              | AC-020                          |
+| offline behaviour                        | AC-009, AC-021                  |
+| persistence after restart                | AC-023 – AC-025                 |
+| configuration changes / rotation         | AC-026, AC-027, AC-010          |
+| permission denial                        | AC-028, AC-029                  |
+| back navigation                          | AC-030, AC-031                  |
+| accessibility labels                     | AC-032, AC-033                  |
+| duplicate actions                        | AC-034 – AC-036                 |
+| process restart                          | AC-037                          |
+| corrupted / missing local data           | AC-038, AC-039                  |
+| release APK installation and launch      | AC-044 – AC-047                 |
+| security invariants                      | AC-021, AC-022, AC-040 – AC-043 |
 
 ## 3. Test-method notes (no test is weakened to pass)
 
-* **AC-021 (`SslDecisionTest` + instrumented `SslPolicyTest`)**: `android.webkit.SslErrorHandler`
+- **AC-021 (`SslDecisionTest` + instrumented `SslPolicyTest`)**: `android.webkit.SslErrorHandler`
   cannot be instantiated or subclassed by an app (`SslErrorHandler()` is `@hide`/`@SystemApi` and the
   SDK stub makes it package-private), and on the platform a bare instance's `cancel()` is an empty
   method - only the WebView's own provider subclass reacts. A fake handler would therefore prove
@@ -485,8 +532,8 @@ from the repository's own authoritative documents instead of being invented:
      would have rendered and the test would fail.
   3. A repository check (`shell/tests/test_android_assets.py`) fails the build if `proceed(` ever
      appears in the application sources, so the fail-closed invariant cannot regress silently.
-* **AC-011 / AC-032**: adapter/UI coverage that needs a real `Context` runs as instrumentation tests;
+- **AC-011 / AC-032**: adapter/UI coverage that needs a real `Context` runs as instrumentation tests;
   the pure display logic (`DisplayText.titleFor`) is additionally unit-tested on the JVM so the
   assertion exists in both layers.
-* Instrumented tests run on a real Android emulator in CI (`connectedDebugAndroidTest`). They are not
+- Instrumented tests run on a real Android emulator in CI (`connectedDebugAndroidTest`). They are not
   skipped, not `@Ignore`d, and their result XML is committed as evidence.

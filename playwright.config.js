@@ -9,6 +9,6 @@ export default defineConfig({
   reporter: "list",
   use: {
     headless: true,
-    trace: "on-first-retry"
-  }
+    trace: "on-first-retry",
+  },
 });

@@ -2,9 +2,7 @@
   "21": {
     "lookupUrl": "https://github.com/LAW-Unimi/BUbiNG",
     "note": "Submitted repository returned 404. LAW's official software page links LAW-Unimi/BUbiNG. GitHub SPDX metadata and LAW website licensing statements differ; inspect exact source license before importing.",
-    "additionalEvidence": [
-      "https://law.di.unimi.it/software.php"
-    ]
+    "additionalEvidence": ["https://law.di.unimi.it/software.php"]
   },
   "26": {
     "canonicalUrl": "https://code.launchpad.net/beautifulsoup",
@@ -163,9 +161,7 @@
       "maxDepth": "MaxDepth is configurable, default 0.",
       "domainScope": "AllowedDomains and DisallowedDomains options exist."
     },
-    "configurationEvidence": [
-      "https://github.com/gocolly/colly/blob/HEAD/colly.go"
-    ]
+    "configurationEvidence": ["https://github.com/gocolly/colly/blob/HEAD/colly.go"]
   },
   "3": {
     "configurationSupport": {
@@ -175,9 +171,7 @@
       "maxDepth": "-d controls maximum depth; unlimited sentinel not verified.",
       "domainScope": "-ns disables default host scope; -cs/-cos define regex scope."
     },
-    "configurationEvidence": [
-      "https://github.com/projectdiscovery/katana/blob/HEAD/README.md"
-    ]
+    "configurationEvidence": ["https://github.com/projectdiscovery/katana/blob/HEAD/README.md"]
   },
   "5": {
     "configurationSupport": {
@@ -187,8 +181,6 @@
       "maxDepth": "--depth 0 documented as infinite recursion.",
       "domainScope": "unverified"
     },
-    "configurationEvidence": [
-      "https://github.com/jaeles-project/gospider/blob/HEAD/README.md"
-    ]
+    "configurationEvidence": ["https://github.com/jaeles-project/gospider/blob/HEAD/README.md"]
   }
 }

@@ -1,6 +1,7 @@
 # tools/CHANGES.md — Changelog
 
 ## [Enforcement v4: Fail-Closed Anti-Bypass & 5x Exhaustive Verification Engine] - 2026-10-11
+
 - Created `tools/factory/enforce_rules.py` fail-closed verification engine.
 - Mandated that no rules can be bypassed or ignored without an extremely good, comprehensive architectural justification (min 100 characters).
 - Enforced that any bypass request must be accompanied by an authentic functional solution file.
@@ -10,6 +11,7 @@
 - All tests passing 100%.
 
 ## [Android deliverable: honest verification tooling] - 2026-10-13
+
 - **Reason for the changes below:** the tools previously reported results they could not produce
   (a "simulated" install) or verified a stale pre-built APK by default. Acceptance criteria AC-021,
   AC-044, AC-045, AC-046 and AC-047 require evidence that comes from real artifacts, so the tools

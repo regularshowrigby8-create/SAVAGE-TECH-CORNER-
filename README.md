@@ -21,15 +21,15 @@
 
 ## 2. Repository Layout & Maturity Status
 
-| Directory | Maturity Status | Description |
-|---|---|---|
+| Directory                    | Maturity Status                             | Description                                                                                                                                               |
+| ---------------------------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **`shell/android_project/`** | **Android Shell Project (Source Pipeline)** | Android Gradle source project with `MainActivity.java`; automated cloud build and APK artifacts compiled in CI via `.github/workflows/android-build.yml`. |
-| **`shell/soul_browser/`** | **Tested Prototype** | Python architectural model of browser shell and bridge with 100% test coverage. |
-| **`frontend/`** | **Architectural Prototype** | 8 modular prototype specifications (UI composition, tabs, storage, search providers). |
-| **`backend/`** | **Architectural Prototype** | 8 cloud backend prototype services (API gateway, search orchestration, sync, AI engine). |
-| **`factories/`** | **Working / Tested** | Multi-agent autonomous verification factory (`factory-1`, `factory-2`, `factory-3`). |
-| **`docs/`** | **Authoritative Specification** | Architecture specification, Charter invariants, and security guidelines. |
-| **`artifacts/`** | **Generated Deliverables** | CI-generated APKs, release manifests, and audit reports (`artifacts/debug/`, `artifacts/manifests/`). |
+| **`shell/soul_browser/`**    | **Tested Prototype**                        | Python architectural model of browser shell and bridge with 100% test coverage.                                                                           |
+| **`frontend/`**              | **Architectural Prototype**                 | 8 modular prototype specifications (UI composition, tabs, storage, search providers).                                                                     |
+| **`backend/`**               | **Architectural Prototype**                 | 8 cloud backend prototype services (API gateway, search orchestration, sync, AI engine).                                                                  |
+| **`factories/`**             | **Working / Tested**                        | Multi-agent autonomous verification factory (`factory-1`, `factory-2`, `factory-3`).                                                                      |
+| **`docs/`**                  | **Authoritative Specification**             | Architecture specification, Charter invariants, and security guidelines.                                                                                  |
+| **`artifacts/`**             | **Generated Deliverables**                  | CI-generated APKs, release manifests, and audit reports (`artifacts/debug/`, `artifacts/manifests/`).                                                     |
 
 ---
 
@@ -60,11 +60,11 @@ python3 factories/run_factories.py --source shell
 
 ## 5. Branch Architecture
 
-| Branch | Purpose |
-|---|---|
-| **`main`** | Production release baseline with strict Charter and gate enforcement. |
-| **`production`** | Certified releases and deployment artifacts. |
-| **`shell`** | Native Android project and Soul Browser shell architecture. |
-| **`frontend`** | Browser frontend modular prototypes. |
-| **`backend`** | Cloud backend modular services. |
-| **`pipeline`** | Multi-factory runners, packaging tools, and model discovery workflows. |
+| Branch           | Purpose                                                                |
+| ---------------- | ---------------------------------------------------------------------- |
+| **`main`**       | Production release baseline with strict Charter and gate enforcement.  |
+| **`production`** | Certified releases and deployment artifacts.                           |
+| **`shell`**      | Native Android project and Soul Browser shell architecture.            |
+| **`frontend`**   | Browser frontend modular prototypes.                                   |
+| **`backend`**    | Cloud backend modular services.                                        |
+| **`pipeline`**   | Multi-factory runners, packaging tools, and model discovery workflows. |

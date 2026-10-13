@@ -2,15 +2,14 @@
 const fs = require("node:fs");
 const assert = require("node:assert/strict");
 const { JSDOM } = require("jsdom");
-const dom = new JSDOM(
-  fs.readFileSync(process.argv[2] || "docs/factory/FACTORY.html", "utf8"),
-  { runScripts: "dangerously", url: "https://factory.invalid" },
-);
+const dom = new JSDOM(fs.readFileSync(process.argv[2] || "docs/factory/FACTORY.html", "utf8"), {
+  runScripts: "dangerously",
+  url: "https://factory.invalid",
+});
 const doc = dom.window.document;
 const search = doc.querySelector("#search");
 const state = doc.querySelector("#state");
-const visible = () =>
-  [...doc.querySelectorAll("tbody tr")].filter((row) => !row.hidden);
+const visible = () => [...doc.querySelectorAll("tbody tr")].filter((row) => !row.hidden);
 assert.equal(visible().length, 66);
 search.value = "pipdeptree";
 search.dispatchEvent(new dom.window.Event("input"));

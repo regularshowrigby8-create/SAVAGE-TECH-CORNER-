@@ -33,7 +33,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install Node Dependencies
         run: |
@@ -56,7 +56,7 @@ jobs:
         uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
 
       # GATE 8 verifies an APK this checkout built. Building it here is what makes that gate a real
       # provenance check instead of a check that can only ever fail on a machine without the

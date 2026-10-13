@@ -1,6 +1,7 @@
 # NO PADDING — REPO-WIDE RULE
 
 Every file must have a real purpose and be reachable from:
+
 - `.claude/scripts/gates.sh` (gate checks)
 - `.github/workflows/factory-2-debug.yml` (CI job)
 - `factory-2/scripts/run_all.sh` (pipeline execution)

@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main, production, pipeline]
   schedule:
-    - cron: '0 */6 * * *'  # Every 6 hours — only one job can trigger
+    - cron: "0 */6 * * *" # Every 6 hours — only one job can trigger
   workflow_dispatch:
 
 # ONLY ONE JOB. Never add a second.
@@ -15,14 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: factory-2-single
-      cancel-in-progress: false  # Never cancel running; one job at a time
+      cancel-in-progress: false # Never cancel running; one job at a time
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install Dependencies
         run: |

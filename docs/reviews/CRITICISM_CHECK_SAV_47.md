@@ -16,24 +16,24 @@ The repository is a **substantial prototype with several working Python componen
 
 ## Findings Summary & Action Items
 
-| ID | Severity | Finding |
-|---|---|---|
-| **C0** | CRITICAL | Master quality gate fails from clean checkout without pinned pip modules (`coverage`, `androguard`). |
-| **C1** | CRITICAL | CI workflows mask failures using `\|\| true`, `continue-on-error`, and fallback `npm install`. |
-| **H1** | HIGH | Native WebView navigation does not enforce documented host allowlist (`MainActivity.java`). |
-| **H2** | HIGH | Autonomous proposal verifier (`main_agent_verifier.py`) writes code after syntax-only checks without running tests or strict boundary checks. |
-| **H3** | HIGH | APK signing creates ephemeral keys on every build rather than stable release keystore. |
-| **H4** | HIGH | Android VM alignment check (`android_vm_verifier.py`) silently passes misaligned entries with `pass`. |
-| **H5** | HIGH | Security agent reports 0 findings while missing native WebView allowlist policy gaps. |
-| **H6** | HIGH | JavaScript test suite missing `jsdom` dependency for `dashboard.test.cjs`. |
-| **H7** | HIGH | E2E configuration broken (`playwright test` command mismatch / unlisted package). |
-| **H8** | HIGH | TypeScript strict check TS18003: no input files matching globs. |
-| **H9** | HIGH | ESLint configuration misclassifies `.cjs` CommonJS files (16 errors). |
-| **H10** | HIGH | Formatting check reports 97 unformatted tracked files. |
-| **H11** | HIGH | Dual-review workflow sets `continue-on-error: true` and logs success on failure. |
-| **M1** | MEDIUM | Verification runs mutate tracked release artifacts in working tree (`git status` dirty). |
-| **M2** | MEDIUM | Conveyor belt stages inspect configuration presence instead of executing real tools. |
-| **M3** | MEDIUM | Duplicate factory source trees (`factory-2` vs `factories/factory-2`). |
-| **M4** | MEDIUM | Release artifacts committed in multiple locations. |
-| **M5** | MEDIUM | Mixed prototype and production claims in documentation. |
-| **M6** | MEDIUM | End-to-end tests have environment-sensitive assertions and side effects. |
+| ID      | Severity | Finding                                                                                                                                       |
+| ------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **C0**  | CRITICAL | Master quality gate fails from clean checkout without pinned pip modules (`coverage`, `androguard`).                                          |
+| **C1**  | CRITICAL | CI workflows mask failures using `\|\| true`, `continue-on-error`, and fallback `npm install`.                                                |
+| **H1**  | HIGH     | Native WebView navigation does not enforce documented host allowlist (`MainActivity.java`).                                                   |
+| **H2**  | HIGH     | Autonomous proposal verifier (`main_agent_verifier.py`) writes code after syntax-only checks without running tests or strict boundary checks. |
+| **H3**  | HIGH     | APK signing creates ephemeral keys on every build rather than stable release keystore.                                                        |
+| **H4**  | HIGH     | Android VM alignment check (`android_vm_verifier.py`) silently passes misaligned entries with `pass`.                                         |
+| **H5**  | HIGH     | Security agent reports 0 findings while missing native WebView allowlist policy gaps.                                                         |
+| **H6**  | HIGH     | JavaScript test suite missing `jsdom` dependency for `dashboard.test.cjs`.                                                                    |
+| **H7**  | HIGH     | E2E configuration broken (`playwright test` command mismatch / unlisted package).                                                             |
+| **H8**  | HIGH     | TypeScript strict check TS18003: no input files matching globs.                                                                               |
+| **H9**  | HIGH     | ESLint configuration misclassifies `.cjs` CommonJS files (16 errors).                                                                         |
+| **H10** | HIGH     | Formatting check reports 97 unformatted tracked files.                                                                                        |
+| **H11** | HIGH     | Dual-review workflow sets `continue-on-error: true` and logs success on failure.                                                              |
+| **M1**  | MEDIUM   | Verification runs mutate tracked release artifacts in working tree (`git status` dirty).                                                      |
+| **M2**  | MEDIUM   | Conveyor belt stages inspect configuration presence instead of executing real tools.                                                          |
+| **M3**  | MEDIUM   | Duplicate factory source trees (`factory-2` vs `factories/factory-2`).                                                                        |
+| **M4**  | MEDIUM   | Release artifacts committed in multiple locations.                                                                                            |
+| **M5**  | MEDIUM   | Mixed prototype and production claims in documentation.                                                                                       |
+| **M6**  | MEDIUM   | End-to-end tests have environment-sensitive assertions and side effects.                                                                      |

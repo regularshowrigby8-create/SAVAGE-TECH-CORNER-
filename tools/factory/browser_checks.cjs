@@ -62,14 +62,10 @@ async function main() {
       assert.ok(
         await page
           .locator("tbody tr:visible")
-          .evaluateAll((rows) =>
-            rows.every((row) => row.dataset.state === "FAIL"),
-          ),
+          .evaluateAll((rows) => rows.every((row) => row.dataset.state === "FAIL")),
       );
       await page.locator("#reset").click();
-      report.checks.push(
-        "Dashboard search, no-match, status filter and reset change visible rows",
-      );
+      report.checks.push("Dashboard search, no-match, status filter and reset change visible rows");
       await page.screenshot({
         path: path.join(out, "factory.png"),
         fullPage: true,
@@ -81,10 +77,7 @@ async function main() {
       await page.screenshot({ path: path.join(out, "retry-before.png") });
       await page.locator("#retryBtn").click({ noWaitAfter: true });
       assert.equal(await page.locator("#retryBtn").isDisabled(), true);
-      assert.equal(
-        await page.locator("#retryBtn").textContent(),
-        "Reconnecting…",
-      );
+      assert.equal(await page.locator("#retryBtn").textContent(), "Reconnecting…");
       await page.screenshot({ path: path.join(out, "retry-after.png") });
       await page.reload();
       assert.equal(await page.locator("#retryBtn").isEnabled(), true);
@@ -116,8 +109,7 @@ async function main() {
         });
       }
     }
-    if (report.pageErrors.length || report.violations.length)
-      process.exitCode = 1;
+    if (report.pageErrors.length || report.violations.length) process.exitCode = 1;
   } finally {
     await browser.close();
   }

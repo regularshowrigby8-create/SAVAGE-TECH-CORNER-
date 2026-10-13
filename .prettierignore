@@ -1,0 +1,26 @@
+# Machine-written output. The factories rewrite these files on every run, so formatting them would
+# be undone immediately and every factory run would then look like a formatting regression. Prettier
+# checks the source a human maintains; the generated logs, reports and manifests are checked by the
+# gates that own them (factory tests, provenance checks, schema validation).
+workspace/
+**/logs/
+factory-2/reports/
+factories/factory-2/reports/
+docs/archive/
+RELEASE_MANIFEST.json
+
+# Build output and installed dependencies
+node_modules/
+build/
+dist/
+coverage/
+.playwright/
+.husky/_
+
+# Binary artefacts Prettier cannot parse
+*.zip
+*.apk
+*.jar
+*.aar
+*.png
+*.ico

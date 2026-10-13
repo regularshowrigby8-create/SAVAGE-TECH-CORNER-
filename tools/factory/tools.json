@@ -5,20 +5,11 @@
       "id": "git",
       "name": "Git",
       "purpose": "Reject whitespace errors in the current patch",
-      "command": [
-        "git",
-        "diff",
-        "--check"
-      ],
-      "profiles": [
-        "core",
-        "fast"
-      ],
+      "command": ["git", "diff", "--check"],
+      "profiles": ["core", "fast"],
       "upstream": "https://git-scm.com/docs/git-diff",
       "kind": "check",
-      "requires": [
-        "git"
-      ],
+      "requires": ["git"],
       "network": false,
       "timeout_seconds": 180,
       "install": {
@@ -41,14 +32,10 @@
         "--json",
         "databaseId,headSha,status,conclusion,name"
       ],
-      "profiles": [
-        "evidence"
-      ],
+      "profiles": ["evidence"],
       "upstream": "https://cli.github.com/manual/gh_run_list",
       "kind": "report",
-      "requires": [
-        "gh"
-      ],
+      "requires": ["gh"],
       "network": true,
       "timeout_seconds": 180,
       "install": {
@@ -68,14 +55,10 @@
         "onReceivedSslError|addJavascriptInterface|javaScriptEnabled",
         "app/src/main"
       ],
-      "profiles": [
-        "triage"
-      ],
+      "profiles": ["triage"],
       "upstream": "https://github.com/BurntSushi/ripgrep",
       "kind": "search",
-      "requires": [
-        "rg"
-      ],
+      "requires": ["rg"],
       "network": false,
       "timeout_seconds": 180,
       "install": {
@@ -96,15 +79,10 @@
         "-PuniversalApk",
         "--max-workers=2"
       ],
-      "profiles": [
-        "android"
-      ],
+      "profiles": ["android"],
       "upstream": "https://docs.gradle.org/current/userguide/viewing_debugging_dependencies.html",
       "kind": "report",
-      "requires": [
-        "java",
-        "android-sdk"
-      ],
+      "requires": ["java", "android-sdk"],
       "network": true,
       "timeout_seconds": 1800,
       "install": {
@@ -127,15 +105,10 @@
         "-PuniversalApk",
         "--max-workers=2"
       ],
-      "profiles": [
-        "android"
-      ],
+      "profiles": ["android"],
       "upstream": "https://developer.android.com/studio/write/lint",
       "kind": "check",
-      "requires": [
-        "java",
-        "android-sdk"
-      ],
+      "requires": ["java", "android-sdk"],
       "network": true,
       "timeout_seconds": 1800,
       "install": {
@@ -148,22 +121,11 @@
       "id": "detekt",
       "name": "Detekt",
       "purpose": "Preserve strict Kotlin complexity/error-handling gate",
-      "command": [
-        "./gradlew",
-        "--continue",
-        "detekt",
-        "-PuniversalApk",
-        "--max-workers=2"
-      ],
-      "profiles": [
-        "android"
-      ],
+      "command": ["./gradlew", "--continue", "detekt", "-PuniversalApk", "--max-workers=2"],
+      "profiles": ["android"],
       "upstream": "https://detekt.dev/docs/gettingstarted/gradle/",
       "kind": "check",
-      "requires": [
-        "java",
-        "android-sdk"
-      ],
+      "requires": ["java", "android-sdk"],
       "network": true,
       "timeout_seconds": 1800,
       "install": {
@@ -176,22 +138,11 @@
       "id": "ktlint",
       "name": "ktlint",
       "purpose": "Check Kotlin formatting without rewriting source",
-      "command": [
-        "./gradlew",
-        "--continue",
-        "ktlintCheck",
-        "-PuniversalApk",
-        "--max-workers=2"
-      ],
-      "profiles": [
-        "android"
-      ],
+      "command": ["./gradlew", "--continue", "ktlintCheck", "-PuniversalApk", "--max-workers=2"],
+      "profiles": ["android"],
       "upstream": "https://pinterest.github.io/ktlint/",
       "kind": "check",
-      "requires": [
-        "java",
-        "android-sdk"
-      ],
+      "requires": ["java", "android-sdk"],
       "network": true,
       "timeout_seconds": 1800,
       "install": {
@@ -212,15 +163,10 @@
         "-PuniversalApk",
         "--max-workers=2"
       ],
-      "profiles": [
-        "android"
-      ],
+      "profiles": ["android"],
       "upstream": "https://r8.googlesource.com/r8/",
       "kind": "check",
-      "requires": [
-        "java",
-        "android-sdk"
-      ],
+      "requires": ["java", "android-sdk"],
       "network": true,
       "timeout_seconds": 1800,
       "install": {
@@ -233,19 +179,11 @@
       "id": "adb",
       "name": "Android Debug Bridge",
       "purpose": "Report real attached devices; absence cannot certify device tests",
-      "command": [
-        "{sdk:adb}",
-        "devices",
-        "-l"
-      ],
-      "profiles": [
-        "device"
-      ],
+      "command": ["{sdk:adb}", "devices", "-l"],
+      "profiles": ["device"],
       "upstream": "https://developer.android.com/tools/adb",
       "kind": "report",
-      "requires": [
-        "android-sdk"
-      ],
+      "requires": ["android-sdk"],
       "network": false,
       "timeout_seconds": 180,
       "install": {
@@ -257,22 +195,11 @@
       "id": "apksigner",
       "name": "APK Signer",
       "purpose": "Inspect actual APK signature without signing",
-      "command": [
-        "{sdk:apksigner}",
-        "verify",
-        "--verbose",
-        "--print-certs",
-        "{apk}"
-      ],
-      "profiles": [
-        "apk-inspection"
-      ],
+      "command": ["{sdk:apksigner}", "verify", "--verbose", "--print-certs", "{apk}"],
+      "profiles": ["apk-inspection"],
       "upstream": "https://developer.android.com/tools/apksigner",
       "kind": "report",
-      "requires": [
-        "android-sdk",
-        "apk"
-      ],
+      "requires": ["android-sdk", "apk"],
       "network": false,
       "timeout_seconds": 180,
       "install": {
@@ -284,21 +211,11 @@
       "id": "apkanalyzer",
       "name": "APK Analyzer",
       "purpose": "Inspect actual decoded manifest",
-      "command": [
-        "{sdk:apkanalyzer}",
-        "manifest",
-        "print",
-        "{apk}"
-      ],
-      "profiles": [
-        "apk-inspection"
-      ],
+      "command": ["{sdk:apkanalyzer}", "manifest", "print", "{apk}"],
+      "profiles": ["apk-inspection"],
       "upstream": "https://developer.android.com/tools/apkanalyzer",
       "kind": "report",
-      "requires": [
-        "android-sdk",
-        "apk"
-      ],
+      "requires": ["android-sdk", "apk"],
       "network": false,
       "timeout_seconds": 180,
       "install": {
@@ -310,21 +227,11 @@
       "id": "aapt2",
       "name": "AAPT2",
       "purpose": "Inspect APK package/resource metadata",
-      "command": [
-        "{sdk:aapt2}",
-        "dump",
-        "badging",
-        "{apk}"
-      ],
-      "profiles": [
-        "apk-inspection"
-      ],
+      "command": ["{sdk:aapt2}", "dump", "badging", "{apk}"],
+      "profiles": ["apk-inspection"],
       "upstream": "https://developer.android.com/tools/aapt2",
       "kind": "report",
-      "requires": [
-        "android-sdk",
-        "apk"
-      ],
+      "requires": ["android-sdk", "apk"],
       "network": false,
       "timeout_seconds": 180,
       "install": {
@@ -345,10 +252,7 @@
         "--output-format",
         "json"
       ],
-      "profiles": [
-        "python",
-        "fast"
-      ],
+      "profiles": ["python", "fast"],
       "upstream": "https://docs.astral.sh/ruff",
       "kind": "check",
       "requires": [],
@@ -377,9 +281,7 @@
         "tools/factory/automation.py",
         "tools/factory/factory_map.py"
       ],
-      "profiles": [
-        "python"
-      ],
+      "profiles": ["python"],
       "upstream": "https://github.com/pylint-dev/pylint",
       "kind": "check",
       "requires": [],
@@ -411,9 +313,7 @@
         "tools/factory/automation.py",
         "tools/factory/factory_map.py"
       ],
-      "profiles": [
-        "python"
-      ],
+      "profiles": ["python"],
       "upstream": "https://www.mypy-lang.org/",
       "kind": "check",
       "requires": [],
@@ -438,9 +338,7 @@
         "tools/factory/config/pyright.json",
         "--outputjson"
       ],
-      "profiles": [
-        "python"
-      ],
+      "profiles": ["python"],
       "upstream": "https://github.com/Microsoft/pyright#readme",
       "kind": "check",
       "requires": [],
@@ -468,10 +366,7 @@
         "tools/factory/safety.py",
         "tools/factory/ci_evidence.py"
       ],
-      "profiles": [
-        "security",
-        "python"
-      ],
+      "profiles": ["security", "python"],
       "upstream": "https://bandit.readthedocs.io/",
       "kind": "check",
       "requires": [],
@@ -510,9 +405,7 @@
         "backend/searchhh",
         "tools/factory"
       ],
-      "profiles": [
-        "security"
-      ],
+      "profiles": ["security"],
       "upstream": "https://semgrep.dev",
       "kind": "check",
       "requires": [],
@@ -540,9 +433,7 @@
         "--progress-spinner",
         "off"
       ],
-      "profiles": [
-        "supply-chain"
-      ],
+      "profiles": ["supply-chain"],
       "upstream": "https://pypi.org/project/pip-audit/",
       "kind": "check",
       "requires": [],
@@ -571,9 +462,7 @@
         "--package-module-name-map",
         "PyYAML=yaml"
       ],
-      "profiles": [
-        "python"
-      ],
+      "profiles": ["python"],
       "upstream": "https://deptry.com",
       "kind": "check",
       "requires": [],
@@ -599,13 +488,8 @@
       "id": "vulture",
       "name": "vulture",
       "purpose": "Find unreachable Python candidates for review",
-      "command": [
-        "{pybin:vulture}/vulture",
-        "backend/searchhh"
-      ],
-      "profiles": [
-        "python"
-      ],
+      "command": ["{pybin:vulture}/vulture", "backend/searchhh"],
+      "profiles": ["python"],
       "upstream": "https://github.com/jendrikseipp/vulture",
       "kind": "check",
       "requires": [],
@@ -634,9 +518,7 @@
         "A",
         "backend/searchhh"
       ],
-      "profiles": [
-        "python"
-      ],
+      "profiles": ["python"],
       "upstream": "https://xenon.readthedocs.org/",
       "kind": "check",
       "requires": [],
@@ -655,16 +537,8 @@
       "id": "interrogate",
       "name": "interrogate",
       "purpose": "Check factory public documentation coverage",
-      "command": [
-        "{pybin:interrogate}/interrogate",
-        "--fail-under",
-        "100",
-        "-vv",
-        "tools/factory"
-      ],
-      "profiles": [
-        "docs"
-      ],
+      "command": ["{pybin:interrogate}/interrogate", "--fail-under", "100", "-vv", "tools/factory"],
+      "profiles": ["docs"],
       "upstream": "https://interrogate.readthedocs.io",
       "kind": "check",
       "requires": [],
@@ -692,9 +566,7 @@
         "--strict-config",
         "--strict-markers"
       ],
-      "profiles": [
-        "tests"
-      ],
+      "profiles": ["tests"],
       "upstream": "https://docs.pytest.org/en/latest/",
       "kind": "check",
       "requires": [],
@@ -705,11 +577,7 @@
         "package": "pytest",
         "version": "9.1.1",
         "environment": "qa",
-        "extra": [
-          "coverage==7.16.2",
-          "hypothesis==6.168.3",
-          "-r backend/requirements.txt"
-        ]
+        "extra": ["coverage==7.16.2", "hypothesis==6.168.3", "-r backend/requirements.txt"]
       },
       "source_writes": false
     },
@@ -731,9 +599,7 @@
         "tools/quality/tests",
         "-q"
       ],
-      "profiles": [
-        "tests"
-      ],
+      "profiles": ["tests"],
       "upstream": "https://github.com/coveragepy/coveragepy",
       "kind": "report",
       "requires": [],
@@ -744,11 +610,7 @@
         "package": "coverage",
         "version": "7.16.2",
         "environment": "qa",
-        "extra": [
-          "pytest==9.1.1",
-          "hypothesis==6.168.3",
-          "-r backend/requirements.txt"
-        ]
+        "extra": ["pytest==9.1.1", "hypothesis==6.168.3", "-r backend/requirements.txt"]
       },
       "source_writes": false,
       "reports": [
@@ -762,14 +624,8 @@
       "id": "hypothesis",
       "name": "Hypothesis",
       "purpose": "Generate adversarial factory safety inputs",
-      "command": [
-        "{pybin:qa}/pytest",
-        "tools/factory/properties",
-        "-q"
-      ],
-      "profiles": [
-        "tests"
-      ],
+      "command": ["{pybin:qa}/pytest", "tools/factory/properties", "-q"],
+      "profiles": ["tests"],
       "upstream": "https://hypothesis.readthedocs.io/",
       "kind": "check",
       "requires": [],
@@ -780,11 +636,7 @@
         "package": "hypothesis",
         "version": "6.168.3",
         "environment": "qa",
-        "extra": [
-          "pytest==9.1.1",
-          "coverage==7.16.2",
-          "-r backend/requirements.txt"
-        ]
+        "extra": ["pytest==9.1.1", "coverage==7.16.2", "-r backend/requirements.txt"]
       },
       "source_writes": false
     },
@@ -792,15 +644,8 @@
       "id": "mutmut",
       "name": "mutmut",
       "purpose": "Mutation-test a scratch copy of actual safety logic",
-      "command": [
-        "{pybin:mutmut}/mutmut",
-        "run",
-        "--max-children",
-        "2"
-      ],
-      "profiles": [
-        "mutation"
-      ],
+      "command": ["{pybin:mutmut}/mutmut", "run", "--max-children", "2"],
+      "profiles": ["mutation"],
       "upstream": "https://github.com/boxed/mutmut",
       "kind": "report",
       "requires": [],
@@ -829,9 +674,7 @@
         "--skip",
         "*.json,*.lock,*/locks/*"
       ],
-      "profiles": [
-        "docs"
-      ],
+      "profiles": ["docs"],
       "upstream": "https://github.com/codespell-project/codespell",
       "kind": "check",
       "requires": [],
@@ -857,10 +700,7 @@
         "backend/compose.yml",
         "tools/factory/config/semgrep.yml"
       ],
-      "profiles": [
-        "ci",
-        "fast"
-      ],
+      "profiles": ["ci", "fast"],
       "upstream": "https://github.com/adrienverge/yamllint",
       "kind": "check",
       "requires": [],
@@ -885,10 +725,7 @@
         "tools/factory/tool.schema.json",
         "tools/factory/tools.json"
       ],
-      "profiles": [
-        "core",
-        "fast"
-      ],
+      "profiles": ["core", "fast"],
       "upstream": "https://github.com/python-jsonschema/check-jsonschema",
       "kind": "check",
       "requires": [],
@@ -907,13 +744,8 @@
       "id": "reuse",
       "name": "reuse",
       "purpose": "Audit source license/SPDX completeness",
-      "command": [
-        "{pybin:reuse}/reuse",
-        "lint"
-      ],
-      "profiles": [
-        "supply-chain"
-      ],
+      "command": ["{pybin:reuse}/reuse", "lint"],
+      "profiles": ["supply-chain"],
       "upstream": "https://reuse.software/",
       "kind": "check",
       "requires": [],
@@ -925,9 +757,7 @@
         "version": "6.2.0",
         "environment": "reuse",
         "extra": [],
-        "extras": [
-          "charset-normalizer"
-        ]
+        "extras": ["charset-normalizer"]
       },
       "source_writes": false
     },
@@ -942,9 +772,7 @@
         "--format",
         "json"
       ],
-      "profiles": [
-        "supply-chain"
-      ],
+      "profiles": ["supply-chain"],
       "upstream": "https://github.com/raimon49/pip-licenses",
       "kind": "report",
       "requires": [],
@@ -972,9 +800,7 @@
         "--output-file",
         "{out}/backend.cdx.json"
       ],
-      "profiles": [
-        "supply-chain"
-      ],
+      "profiles": ["supply-chain"],
       "upstream": "https://github.com/CycloneDX/cyclonedx-python/#readme",
       "kind": "report",
       "requires": [],
@@ -1000,14 +826,8 @@
       "id": "detect-secrets",
       "name": "detect-secrets",
       "purpose": "Hash-only working-tree secret candidates",
-      "command": [
-        "{pybin:detect-secrets}/detect-secrets",
-        "scan",
-        "--no-verify"
-      ],
-      "profiles": [
-        "security"
-      ],
+      "command": ["{pybin:detect-secrets}/detect-secrets", "scan", "--no-verify"],
+      "profiles": ["security"],
       "upstream": "https://github.com/Yelp/detect-secrets",
       "kind": "secret-scan",
       "requires": [],
@@ -1026,17 +846,8 @@
       "id": "zizmor",
       "name": "zizmor",
       "purpose": "Audit workflow permissions/injection offline",
-      "command": [
-        "{pybin:zizmor}/zizmor",
-        "--offline",
-        "--format",
-        "json",
-        ".github/workflows"
-      ],
-      "profiles": [
-        "ci",
-        "security"
-      ],
+      "command": ["{pybin:zizmor}/zizmor", "--offline", "--format", "json", ".github/workflows"],
+      "profiles": ["ci", "security"],
       "upstream": "https://docs.zizmor.sh",
       "kind": "check",
       "requires": [],
@@ -1061,10 +872,7 @@
         "tools/quality/device_verification.sh",
         "mainframer.sh"
       ],
-      "profiles": [
-        "ci",
-        "fast"
-      ],
+      "profiles": ["ci", "fast"],
       "upstream": "https://github.com/ryanrhee/shellcheck-py",
       "kind": "check",
       "requires": [],
@@ -1089,9 +897,7 @@
         "tools/quality/device_verification.sh",
         "mainframer.sh"
       ],
-      "profiles": [
-        "ci"
-      ],
+      "profiles": ["ci"],
       "upstream": "https://github.com/MaxWinterstein/shfmt-py",
       "kind": "check",
       "requires": [],
@@ -1110,14 +916,8 @@
       "id": "actionlint",
       "name": "actionlint",
       "purpose": "Check workflow expressions and structure",
-      "command": [
-        "{gobin}/actionlint",
-        "-color"
-      ],
-      "profiles": [
-        "ci",
-        "fast"
-      ],
+      "command": ["{gobin}/actionlint", "-color"],
+      "profiles": ["ci", "fast"],
       "upstream": "https://github.com/Mateusz-Grzelinski/actionlint-py",
       "kind": "check",
       "requires": [],
@@ -1137,15 +937,8 @@
       "id": "hadolint",
       "name": "hadolint",
       "purpose": "Check backend Dockerfile best practices",
-      "command": [
-        "{pybin:hadolint}/hadolint",
-        "--format",
-        "json",
-        "backend/Dockerfile"
-      ],
-      "profiles": [
-        "containers"
-      ],
+      "command": ["{pybin:hadolint}/hadolint", "--format", "json", "backend/Dockerfile"],
+      "profiles": ["containers"],
       "upstream": "https://github.com/justin-yan/pybin",
       "kind": "check",
       "requires": [],
@@ -1173,9 +966,7 @@
         "--format",
         "json"
       ],
-      "profiles": [
-        "javascript"
-      ],
+      "profiles": ["javascript"],
       "upstream": "https://eslint.org",
       "kind": "check",
       "requires": [],
@@ -1201,10 +992,7 @@
         "--prose-wrap",
         "always"
       ],
-      "profiles": [
-        "docs",
-        "fast"
-      ],
+      "profiles": ["docs", "fast"],
       "upstream": "https://prettier.io",
       "kind": "check",
       "requires": [],
@@ -1229,9 +1017,7 @@
         "--env",
         "{node}/node_modules/jest-environment-jsdom/build/index.js"
       ],
-      "profiles": [
-        "tests"
-      ],
+      "profiles": ["tests"],
       "upstream": "https://jestjs.io/",
       "kind": "check",
       "requires": [],
@@ -1262,9 +1048,7 @@
         "--threshold",
         "0"
       ],
-      "profiles": [
-        "triage"
-      ],
+      "profiles": ["triage"],
       "upstream": "https://jscpd.dev",
       "kind": "check",
       "requires": [],
@@ -1297,9 +1081,7 @@
         "--reporter",
         "json"
       ],
-      "profiles": [
-        "javascript"
-      ],
+      "profiles": ["javascript"],
       "upstream": "https://knip.dev",
       "kind": "check",
       "requires": [],
@@ -1324,9 +1106,7 @@
         "json",
         "js-tests"
       ],
-      "profiles": [
-        "javascript"
-      ],
+      "profiles": ["javascript"],
       "upstream": "https://github.com/sverweij/dependency-cruiser",
       "kind": "check",
       "requires": [],
@@ -1349,9 +1129,7 @@
         "js-tests/package.json",
         "--jsonUpgraded"
       ],
-      "profiles": [
-        "supply-chain"
-      ],
+      "profiles": ["supply-chain"],
       "upstream": "https://github.com/raineorshine/npm-check-updates",
       "kind": "report",
       "requires": [],
@@ -1368,15 +1146,8 @@
       "id": "markdownlint",
       "name": "markdownlint-cli2",
       "purpose": "Check work instructions and factory docs",
-      "command": [
-        "{nodebin}/markdownlint-cli2",
-        "README.md",
-        "AGENTS.md",
-        "docs/factory/*.md"
-      ],
-      "profiles": [
-        "docs"
-      ],
+      "command": ["{nodebin}/markdownlint-cli2", "README.md", "AGENTS.md", "docs/factory/*.md"],
+      "profiles": ["docs"],
       "upstream": "https://github.com/DavidAnson/markdownlint-cli2",
       "kind": "check",
       "requires": [],
@@ -1399,9 +1170,7 @@
         "tools/factory/config/links.json",
         "docs/factory/README.md"
       ],
-      "profiles": [
-        "docs"
-      ],
+      "profiles": ["docs"],
       "upstream": "https://github.com/tcort/markdown-link-check#readme",
       "kind": "check",
       "requires": [],
@@ -1426,9 +1195,7 @@
         "json",
         "app/src/main/assets/*.html"
       ],
-      "profiles": [
-        "web-assets"
-      ],
+      "profiles": ["web-assets"],
       "upstream": "https://html-validate.org",
       "kind": "check",
       "requires": [],
@@ -1453,9 +1220,7 @@
         "json",
         "app/src/main/assets/*.css"
       ],
-      "profiles": [
-        "web-assets"
-      ],
+      "profiles": ["web-assets"],
       "upstream": "https://stylelint.io",
       "kind": "check",
       "requires": [],
@@ -1481,9 +1246,7 @@
         "--outputpath",
         "{out}/retire.json"
       ],
-      "profiles": [
-        "security"
-      ],
+      "profiles": ["security"],
       "upstream": "https://github.com/RetireJS/retire.js#readme",
       "kind": "check",
       "requires": [],
@@ -1514,9 +1277,7 @@
         "--lockfile=backend/requirements.txt",
         "--format=json"
       ],
-      "profiles": [
-        "supply-chain"
-      ],
+      "profiles": ["supply-chain"],
       "upstream": "https://github.com/google/osv-scanner",
       "kind": "check",
       "requires": [],
@@ -1550,9 +1311,7 @@
         "--output",
         "cyclonedx-json={out}/backend-syft.cdx.json"
       ],
-      "profiles": [
-        "supply-chain"
-      ],
+      "profiles": ["supply-chain"],
       "upstream": "https://github.com/anchore/syft",
       "kind": "report",
       "requires": [],
@@ -1580,18 +1339,8 @@
       "id": "trivy",
       "name": "trivy",
       "purpose": "Audit container configuration security",
-      "command": [
-        "{gobin}/trivy",
-        "config",
-        "--format",
-        "json",
-        "--exit-code",
-        "1",
-        "backend"
-      ],
-      "profiles": [
-        "containers"
-      ],
+      "command": ["{gobin}/trivy", "config", "--format", "json", "--exit-code", "1", "backend"],
+      "profiles": ["containers"],
       "upstream": "https://github.com/aquasecurity/trivy",
       "kind": "check",
       "requires": [],
@@ -1630,9 +1379,7 @@
         "{out}/gitleaks.json",
         "."
       ],
-      "profiles": [
-        "security"
-      ],
+      "profiles": ["security"],
       "upstream": "https://github.com/gitleaks/gitleaks",
       "kind": "check",
       "requires": [],
@@ -1670,9 +1417,7 @@
         "json",
         "--skip-download"
       ],
-      "profiles": [
-        "containers"
-      ],
+      "profiles": ["containers"],
       "upstream": "https://github.com/bridgecrewio/checkov",
       "kind": "check",
       "requires": [],
@@ -1701,14 +1446,10 @@
         "config",
         "--quiet"
       ],
-      "profiles": [
-        "containers"
-      ],
+      "profiles": ["containers"],
       "upstream": "https://docs.docker.com/reference/cli/docker/compose/config/",
       "kind": "check",
-      "requires": [
-        "docker"
-      ],
+      "requires": ["docker"],
       "network": false,
       "timeout_seconds": 180,
       "install": {
@@ -1729,10 +1470,7 @@
         "--json",
         "app/src/main/java"
       ],
-      "profiles": [
-        "triage",
-        "security"
-      ],
+      "profiles": ["triage", "security"],
       "upstream": "https://ast-grep.github.io",
       "kind": "check",
       "requires": [],
@@ -1749,22 +1487,11 @@
       "id": "playwright",
       "name": "Playwright",
       "purpose": "Real Chromium control actions on repository HTML and factory dashboard; not Android WebView certification",
-      "command": [
-        "node",
-        "tools/factory/browser_checks.cjs",
-        "smoke",
-        "{out}"
-      ],
-      "profiles": [
-        "browser",
-        "tests"
-      ],
+      "command": ["node", "tools/factory/browser_checks.cjs", "smoke", "{out}"],
+      "profiles": ["browser", "tests"],
       "upstream": "https://github.com/microsoft/playwright",
       "kind": "check",
-      "requires": [
-        "node",
-        "browser"
-      ],
+      "requires": ["node", "browser"],
       "network": false,
       "timeout_seconds": 240,
       "install": {
@@ -1786,22 +1513,11 @@
       "id": "axe-core",
       "name": "axe-core",
       "purpose": "Accessibility violations in rendered repository HTML; manual/native accessibility remains required",
-      "command": [
-        "node",
-        "tools/factory/browser_checks.cjs",
-        "accessibility",
-        "{out}"
-      ],
-      "profiles": [
-        "browser",
-        "accessibility"
-      ],
+      "command": ["node", "tools/factory/browser_checks.cjs", "accessibility", "{out}"],
+      "profiles": ["browser", "accessibility"],
       "upstream": "https://github.com/dequelabs/axe-core",
       "kind": "check",
-      "requires": [
-        "node",
-        "browser"
-      ],
+      "requires": ["node", "browser"],
       "network": false,
       "timeout_seconds": 240,
       "install": {
@@ -1831,10 +1547,7 @@
         "fail",
         "--json-tree"
       ],
-      "profiles": [
-        "python",
-        "supply-chain"
-      ],
+      "profiles": ["python", "supply-chain"],
       "upstream": "https://github.com/tox-dev/pipdeptree",
       "kind": "check",
       "requires": [],
@@ -1859,15 +1572,8 @@
       "id": "openapi-spec-validator",
       "name": "OpenAPI Spec Validator",
       "purpose": "Validate the actual FastAPI-generated schema without starting services or claiming endpoint behavior",
-      "command": [
-        "{pybin:openapi}/python",
-        "tools/factory/openapi_check.py",
-        "{out}"
-      ],
-      "profiles": [
-        "api",
-        "python"
-      ],
+      "command": ["{pybin:openapi}/python", "tools/factory/openapi_check.py", "{out}"],
+      "profiles": ["api", "python"],
       "upstream": "https://github.com/python-openapi/openapi-spec-validator",
       "kind": "check",
       "requires": [],
@@ -1891,20 +1597,11 @@
       "id": "taplo",
       "name": "Taplo",
       "purpose": "Validate Gradle version-catalog TOML syntax without requiring Java",
-      "command": [
-        "{nodebin}/taplo",
-        "lint",
-        "gradle/libs.versions.toml"
-      ],
-      "profiles": [
-        "android-config",
-        "fast"
-      ],
+      "command": ["{nodebin}/taplo", "lint", "gradle/libs.versions.toml"],
+      "profiles": ["android-config", "fast"],
       "upstream": "https://github.com/tamasfe/taplo",
       "kind": "check",
-      "requires": [
-        "node"
-      ],
+      "requires": ["node"],
       "network": false,
       "timeout_seconds": 240,
       "install": {
@@ -1918,21 +1615,11 @@
       "id": "npm-audit",
       "name": "npm audit",
       "purpose": "Audit locked development npm dependencies; no automatic upgrades",
-      "command": [
-        "{nodebin}/npm",
-        "audit",
-        "--prefix",
-        "{node}",
-        "--json"
-      ],
-      "profiles": [
-        "supply-chain"
-      ],
+      "command": ["{nodebin}/npm", "audit", "--prefix", "{node}", "--json"],
+      "profiles": ["supply-chain"],
       "upstream": "https://github.com/npm/cli",
       "kind": "check",
-      "requires": [
-        "node"
-      ],
+      "requires": ["node"],
       "network": true,
       "timeout_seconds": 240,
       "install": {
@@ -1952,23 +1639,11 @@
       "id": "app-security-policy",
       "name": "Searchhh app security policy",
       "purpose": "Enforce repeatable product-owned HTTPS, WebView, TLS, file-access, exported-surface and credential policy contracts",
-      "command": [
-        "python3",
-        "tools/factory/app_security_policy.py",
-        "{out}/app-security.json"
-      ],
-      "profiles": [
-        "app-security",
-        "security",
-        "webview",
-        "android",
-        "release"
-      ],
+      "command": ["python3", "tools/factory/app_security_policy.py", "{out}/app-security.json"],
+      "profiles": ["app-security", "security", "webview", "android", "release"],
       "upstream": "https://developer.android.com/privacy-and-security/security-best-practices",
       "kind": "secret-scan",
-      "requires": [
-        "python"
-      ],
+      "requires": ["python"],
       "network": false,
       "timeout_seconds": 180,
       "install": {
@@ -1987,22 +1662,11 @@
       "id": "ui-contract-policy",
       "name": "Searchhh UI contract policy",
       "purpose": "Verify implemented routes use the central menu registry, theme boundary and stable semantic tags",
-      "command": [
-        "python3",
-        "tools/factory/ui_contract_policy.py",
-        "{out}/ui-contract.json"
-      ],
-      "profiles": [
-        "android",
-        "ui",
-        "tests",
-        "accessibility"
-      ],
+      "command": ["python3", "tools/factory/ui_contract_policy.py", "{out}/ui-contract.json"],
+      "profiles": ["android", "ui", "tests", "accessibility"],
       "upstream": "https://developer.android.com/develop/ui/compose",
       "kind": "check",
-      "requires": [
-        "python"
-      ],
+      "requires": ["python"],
       "network": false,
       "timeout_seconds": 180,
       "install": {
@@ -2021,20 +1685,11 @@
       "id": "import-android-sdk",
       "name": "Stripped Android SDK importer",
       "purpose": "Locate or safely import a local SDK and fail closed when the Android build environment is incomplete",
-      "command": [
-        "python3",
-        "tools/quality/import_android_sdk.py"
-      ],
-      "profiles": [
-        "android",
-        "environment",
-        "core"
-      ],
+      "command": ["python3", "tools/quality/import_android_sdk.py"],
+      "profiles": ["android", "environment", "core"],
       "upstream": "https://developer.android.com/tools/sdkmanager",
       "kind": "report",
-      "requires": [
-        "python3"
-      ],
+      "requires": ["python3"],
       "network": false,
       "timeout_seconds": 180,
       "install": {
@@ -2046,21 +1701,11 @@
       "id": "finding-lifecycle",
       "name": "Finding lifecycle validator",
       "purpose": "Enforce bounded OPEN-to-VERIFIED repair transitions and preserve recheck evidence",
-      "command": [
-        "python3",
-        "tools/factory/finding_lifecycle.py",
-        "--help"
-      ],
-      "profiles": [
-        "core",
-        "evidence",
-        "tests"
-      ],
+      "command": ["python3", "tools/factory/finding_lifecycle.py", "--help"],
+      "profiles": ["core", "evidence", "tests"],
       "upstream": "https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues",
       "kind": "check",
-      "requires": [
-        "python3"
-      ],
+      "requires": ["python3"],
       "network": false,
       "timeout_seconds": 180,
       "install": {
@@ -2072,22 +1717,11 @@
       "id": "production-chain",
       "name": "Production handoff chain",
       "purpose": "Connect registered checks through fail-closed source-to-release stage handoffs",
-      "command": [
-        "python3",
-        "tools/factory/production_chain.py"
-      ],
-      "profiles": [
-        "core",
-        "evidence",
-        "android",
-        "device",
-        "release"
-      ],
+      "command": ["python3", "tools/factory/production_chain.py"],
+      "profiles": ["core", "evidence", "android", "device", "release"],
       "upstream": "https://docs.github.com/en/actions/using-workflows/about-workflows",
       "kind": "report",
-      "requires": [
-        "python3"
-      ],
+      "requires": ["python3"],
       "network": false,
       "timeout_seconds": 180,
       "install": {
@@ -2099,25 +1733,11 @@
       "id": "language-router",
       "name": "Mixed-language router",
       "purpose": "Detect repository languages and select compatible factory profiles without claiming execution",
-      "command": [
-        "python3",
-        "tools/factory/language_router.py",
-        "--help"
-      ],
-      "profiles": [
-        "core",
-        "evidence",
-        "python",
-        "javascript",
-        "android",
-        "browser",
-        "security"
-      ],
+      "command": ["python3", "tools/factory/language_router.py", "--help"],
+      "profiles": ["core", "evidence", "python", "javascript", "android", "browser", "security"],
       "upstream": "https://github.com/semgrep/semgrep",
       "kind": "report",
-      "requires": [
-        "python3"
-      ],
+      "requires": ["python3"],
       "network": false,
       "timeout_seconds": 180,
       "install": {
@@ -2135,16 +1755,10 @@
         "--output",
         "build/reports/factory/gradle-remediation-queue.json"
       ],
-      "profiles": [
-        "android",
-        "evidence",
-        "tests"
-      ],
+      "profiles": ["android", "evidence", "tests"],
       "upstream": "https://github.com/detekt/detekt",
       "kind": "report",
-      "requires": [
-        "python3"
-      ],
+      "requires": ["python3"],
       "network": false,
       "timeout_seconds": 180,
       "install": {
@@ -2156,19 +1770,11 @@
       "id": "unfinished-repair",
       "name": "Unfinished-code bounded repair",
       "purpose": "Apply only explicit, mechanically safe Unit repairs for empty Kotlin callbacks; semantic findings remain open",
-      "command": [
-        "python3",
-        "tools/factory/unfinished_repair.py"
-      ],
-      "profiles": [
-        "core",
-        "fast"
-      ],
+      "command": ["python3", "tools/factory/unfinished_repair.py"],
+      "profiles": ["core", "fast"],
       "upstream": "https://kotlinlang.org/docs/lambdas.html",
       "kind": "report",
-      "requires": [
-        "python3"
-      ],
+      "requires": ["python3"],
       "network": false,
       "timeout_seconds": 180,
       "install": {
