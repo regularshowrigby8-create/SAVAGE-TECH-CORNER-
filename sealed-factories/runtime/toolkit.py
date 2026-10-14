@@ -18,6 +18,7 @@ Contract for a tool:
 
 from __future__ import annotations
 
+import ast
 import csv
 import difflib
 import hashlib
@@ -26,6 +27,7 @@ import io
 import json
 import os
 import re
+import shlex
 import shutil
 import socket
 import sqlite3
@@ -526,37 +528,129 @@ def code_structure(workspace: Workspace, path: str) -> dict:
 # --------------------------------------------------------------------------- processes and languages
 
 
-def proc_run(workspace: Workspace, command: str, cwd: str = ".", timeout: int = DEFAULT_TIMEOUT,
-             env: dict | None = None, allow_failure: bool = False) -> dict:
-    """Runs a command inside the workspace and returns exactly what it produced.
+#: What this tool will not interpret. A command that needs one of these is asking for a shell, and
+#: a tool server that hands out a shell is how a path jail stops being a jail. `&&` is *not* in this
+#: list: `_split_chain` implements it here, so a build-then-run step needs no shell to be safe.
+_SHELL_ONLY = ("|", ">", "<", "`", "$(", ";", "&", "\n")
 
-    The command runs with a timeout and its exit code is reported, never interpreted: a caller that
-    wants a build to have succeeded must look at the code. `allow_failure` only silences the raise.
+
+def _split_chain(command: str) -> list[list[str]]:
+    """Splits a command line into the programs to run, honouring `&&` and nothing else."""
+    stages = []
+    for part in command.split("&&"):
+        for forbidden in _SHELL_ONLY:
+            if forbidden in part:
+                raise ToolError(f"this tool runs programs directly and does not implement "
+                                f"{forbidden!r}; call it once per program instead: "
+                                f"{command.strip()}")
+        argv = shlex.split(part)
+        if not argv:
+            raise ToolError(f"a step of this command is empty: {command.strip()}")
+        stages.append(argv)
+    return stages
+
+
+def proc_run(workspace: Workspace, command, cwd: str = ".", timeout: int = DEFAULT_TIMEOUT,
+             env: dict | None = None, allow_failure: bool = False) -> dict:
+    """Runs one program, or an `&&` chain of them, inside the workspace.
+
+    The command line is split into arguments and executed directly: no shell is involved, so a
+    pipeline, a redirect, a substitution or a background job cannot be smuggled through this tool.
+    `&&` is honoured by this function - each program runs only when the previous one exited 0.
+
+    The exit code is reported, never interpreted: a caller that wants a build to have succeeded must
+    look at the code. `allow_failure` only silences the raise.
     """
     where = workspace.resolve(cwd, must_exist=True)
     environment = dict(os.environ)
     environment.update(env or {})
+    stages = _split_chain(command) if isinstance(command, str) \
+        else [[str(part) for part in command]]
     started = time.time()
-    try:
-        done = subprocess.run(command, shell=True, cwd=where, capture_output=True, text=True,
-                              timeout=timeout, env=environment)
-    except subprocess.TimeoutExpired as expired:
-        raise ToolError(f"the command did not finish within {timeout}s: {command}") from expired
-    result = {"command": command, "cwd": workspace.relative(where), "exit_code": done.returncode,
-              "seconds": round(time.time() - started, 2), "stdout": done.stdout[-40_000:],
-              "stderr": done.stderr[-20_000:]}
-    if done.returncode != 0 and not allow_failure:
-        raise ToolError(f"the command exited {done.returncode}: {command}\n"
+    stdout: list[str] = []
+    stderr: list[str] = []
+    exit_code = 0
+    for argv in stages:
+        try:
+            done = subprocess.run(argv, cwd=where, capture_output=True, text=True, timeout=timeout,
+                                  env=environment)
+        except subprocess.TimeoutExpired as expired:
+            raise ToolError(f"the command did not finish within {timeout}s: {' '.join(argv)}") \
+                from expired
+        except FileNotFoundError as missing:
+            raise ToolError(f"{argv[0]} is not installed on this machine ({missing})") from missing
+        stdout.append(done.stdout or "")
+        stderr.append(done.stderr or "")
+        exit_code = done.returncode
+        if exit_code != 0:
+            break
+    result = {"command": command if isinstance(command, str) else " ".join(command),
+              "programs": [argv[0] for argv in stages], "steps": len(stages),
+              "cwd": workspace.relative(where), "exit_code": exit_code,
+              "seconds": round(time.time() - started, 2), "stdout": "".join(stdout)[-40_000:],
+              "stderr": "".join(stderr)[-20_000:]}
+    if exit_code != 0 and not allow_failure:
+        raise ToolError(f"the command exited {exit_code}: {result['command']}\n"
                         f"--- stderr ---\n{result['stderr'][-2000:]}")
     return result
 
 
 def git_command(workspace: Workspace, arguments: str, timeout: int = 60) -> dict:
+    """Runs exactly one git invocation. It is not a way to run something else.
+
+    The arguments are split here and refused if they contain anything that would chain a second
+    program onto the git call, so `git.command` cannot be used as a general executor.
+    """
     if shutil.which("git") is None:
         raise ToolError("git is not installed on this machine")
     if any(flag in arguments for flag in ("--exec", "filter-branch")):
         raise ToolError("that git subcommand is refused by this tool")
-    return proc_run(workspace, f"git {arguments}", timeout=timeout, allow_failure=True)
+    for forbidden in ("&&", *_SHELL_ONLY):
+        if forbidden in arguments:
+            raise ToolError(f"git.command runs one git command; {forbidden!r} is refused")
+    return proc_run(workspace, ["git", *shlex.split(arguments)], timeout=timeout,
+                    allow_failure=True)
+
+
+def code_syntax(workspace: Workspace, path: str = ".", limit: int = 20) -> dict:
+    """Parses source files to find ones that cannot even be read as their language.
+
+    Python is parsed here; JavaScript is handed to the toolchain (`node --check`) with its arguments
+    passed directly, and a machine without node says so instead of reporting a pass it did not
+    perform. A file whose language has no checker here is listed as unchecked, not as clean.
+    """
+    target = workspace.resolve(path, must_exist=True)
+    if target.is_dir():
+        candidates = sorted(entry for entry in target.rglob("*")
+                            if entry.is_file() and entry.suffix in (".py", ".js")
+                            and ".git" not in entry.parts and "node_modules" not in entry.parts)
+    else:
+        candidates = [target]
+    checked: list[dict] = []
+    unchecked: list[dict] = []
+    for entry in candidates[:max(0, limit)]:
+        relative = workspace.relative(entry)
+        if entry.suffix == ".py":
+            try:
+                ast.parse(entry.read_text(encoding="utf-8", errors="replace"), filename=relative)
+                checked.append({"path": relative, "checker": "ast", "ok": True})
+            except SyntaxError as problem:
+                checked.append({"path": relative, "checker": "ast", "ok": False,
+                                "error": f"line {problem.lineno}: {problem.msg}"})
+        elif shutil.which("node") is None:
+            unchecked.append({"path": relative, "checker": "node --check",
+                              "reason": "node is not installed on this machine"})
+        else:
+            done = subprocess.run(["node", "--check", str(entry)], capture_output=True, text=True,
+                                  timeout=60)
+            # node's stderr ends with its own version banner, so the diagnostic is the first line
+            # that names the problem rather than the last line printed.
+            lines = [line.strip() for line in (done.stderr or "").splitlines() if line.strip()]
+            detail = next((line for line in lines if "Error" in line), lines[0] if lines else "")
+            checked.append({"path": relative, "checker": "node --check", "ok": done.returncode == 0,
+                            "error": "" if done.returncode == 0 else detail[:200]})
+    return {"checked": checked, "unchecked": unchecked,
+            "clean": all(entry["ok"] for entry in checked), "files": len(candidates)}
 
 
 # --------------------------------------------------------------------------- network
@@ -943,10 +1037,16 @@ def build_registry(workspace: Workspace, gateway_url: str = "") -> dict:
         "code.structure": {"fn": lambda path: code_structure(workspace, path),
                            "description": "Symbols and imports of a source file (AST for Python).",
                            "schema": _schema({"path": _STR}, ["path"])},
+        "code.syntax": {"fn": lambda path=".", limit=20: code_syntax(workspace, path, limit),
+                        "description": "Parse source files for ones that are not valid: Python by "
+                                       "AST, JavaScript with node; anything else is reported as "
+                                       "unchecked, never as clean.",
+                        "schema": _schema({"path": _STR, "limit": _INT})},
         "proc.run": {"fn": lambda command, cwd=".", timeout=DEFAULT_TIMEOUT, allow_failure=False:
                      proc_run(workspace, command, cwd, timeout, None, allow_failure),
-                     "description": "Run a shell command inside the workspace and report its exit "
-                                    "code and output.",
+                     "description": "Run a program inside the workspace and report its exit code "
+                                    "and output. Programs run directly, without a shell; `&&` "
+                                    "chains them and other shell operators are refused.",
                      "schema": _schema({"command": _STR, "cwd": _STR, "timeout": _INT,
                                         "allow_failure": _BOOL}, ["command"])},
         "git.command": {"fn": lambda arguments, timeout=60: git_command(workspace, arguments, timeout),

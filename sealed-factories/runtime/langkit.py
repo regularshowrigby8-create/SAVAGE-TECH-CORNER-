@@ -243,8 +243,8 @@ int main() {
                  "run.sh": "#!/usr/bin/env bash\nset -euo pipefail\necho \"{name} ok\"\n",
                  "README.md": "# {name}\n\nScaffolded by the sealed factory runtime.\n",
              }),
-    Language("sql", ("sqlite3",), "sqlite3 --version", "sqlite3 app.db < schema.sql",
-             "sqlite3 app.db < schema.sql", "sqlite3 app.db",
+    Language("sql", ("sqlite3",), "sqlite3 --version", 'sqlite3 app.db ".read schema.sql"',
+             'sqlite3 app.db ".read schema.sql" "select count(*) from items;"', "sqlite3 app.db",
              files={
                  "schema.sql": "CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY, name TEXT "
                                "NOT NULL);\nINSERT INTO items (name) VALUES ('first');\n",
@@ -290,10 +290,12 @@ def probe(language: Language) -> dict:
                 "wanted": list(language.binaries)}
     version = None
     if language.version_command:
+        # The program is run directly, with its arguments split here: no shell, so a version probe
+        # cannot become a way to run something else, and a path with spaces still works.
+        probe = language.version_command.split()
+        probe[0] = found
         try:
-            done = subprocess.run(language.version_command.replace(language.binaries[0], found,
-                                                                   1),
-                                  shell=True, capture_output=True, text=True, timeout=25)
+            done = subprocess.run(probe, capture_output=True, text=True, timeout=25)
             version = (done.stdout or done.stderr).strip().splitlines()[0][:120]
         except (OSError, subprocess.SubprocessError, IndexError):
             version = None

@@ -709,6 +709,26 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: the belt's station 0 output and the run banner from a machine with nothing
   configured
 
+### AC-058 — The environment executes programs without a shell
+
+- **Feature**: F-14
+- **Given**: `proc.run` and `git.command`, the two tools that execute something, and the 159 agent
+  roles that use them
+- **When**: a command is run
+- **Then**: the command line is split into arguments and the program is executed directly; `&&` chains
+  programs and stops at the first non-zero exit, and every other shell operator - a pipe, a redirect,
+  a command substitution, a background job - is refused with the reason rather than interpreted;
+  `git.command` refuses anything that would chain a second program onto the git call; a program that
+  is not installed is a named failure; and source files are checked for validity by `code.syntax`
+  (Python by AST, JavaScript through `node --check` with its arguments passed directly), which
+  reports a file it could not check as unchecked rather than as clean
+- **Test method**: `shell/tests/test_sealed_environment.py`
+  (`test_the_program_runner_uses_no_shell_at_all`,
+  `test_the_syntax_tool_reports_what_it_could_and_could_not_check`), plus factory-2's own security
+  agent, whose `insecure_subprocess_shell` finding was the reason this changed
+- **Evidence required**: the absence of `shell=True` in `sealed-factories/runtime/`, the refusal
+  messages for each refused operator, and a `run_all.sh` result of `FACTORY 2 RESULT: PASS`
+
 ## 2. Traceability summary
 
 | Requirement category (Phase 2 checklist)  | Criteria                        |
@@ -741,6 +761,7 @@ from the repository's own authoritative documents instead of being invented:
 | portability and self-sufficiency          | AC-055                          |
 | the seal covers the runtime               | AC-056                          |
 | no user intervention                      | AC-057                          |
+| no shell anywhere in the environment      | AC-058                          |
 
 ## 3. Test-method notes (no test is weakened to pass)
 

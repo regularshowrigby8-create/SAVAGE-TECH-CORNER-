@@ -18,9 +18,9 @@ and its cause are recorded instead.
 | Imported factories   | 72 records, licence text kept, content where the licence permits                                                                           | `sealed-factories/vendor/`                         |
 | MCP tool servers     | 42 catalogued, 28 with a published launch command, 7 driven through a real handshake (52 tools)                                            | `sealed-factories/mcp-vendor/`, `mcp-servers.json` |
 | AI-focused factories | 23 (AutoGen, Semantic Kernel, CrewAI, LangGraph, LangChain, MetaGPT, OpenHands, SWE-agent, pydantic-ai, agno, llama_index, haystack, …)    | `sealed-factories/vendor-ai/`                      |
-| Runtime              | 9 modules: toolkit (40 tools), MCP tool server, gateway, agents, language packs, swarm, MCP link, sealcheck, CLI                           | `sealed-factories/runtime/`                        |
+| Runtime              | 9 modules: toolkit (41 tools), MCP tool server, gateway, agents, language packs, swarm, MCP link, sealcheck, CLI                           | `sealed-factories/runtime/`                        |
 | Licences carried     | 115 licence texts                                                                                                                          | `sealed-factories/licenses/`                       |
-| Seal                 | 137 factories, 1,849,160 payload bytes, 10 component files pinned, root `efd960c11d0ff4500a316d8f1ee6e521b70743cda00bf5249f0cf71de83b0a10` | `sealed-factories/SEAL.json`                       |
+| Seal                 | 137 factories, 1,849,160 payload bytes, 10 component files pinned, root `fda43a0242166e8828dbe214f2c0f93b0f86e51eec02c26cb51f4dbc721fd73b` | `sealed-factories/SEAL.json`                       |
 
 Groups, as the manifest itself counts them: 72 imported factories, 42 MCP tool servers, 23
 AI-focused factories. 98 records carry redistributed content; 39 are blueprint-only: the sealer
@@ -36,11 +36,11 @@ verifiable structure - file names, sizes and hashes - with their licence text an
 $ python3 tools/factory/seal_factories.py seal
 sealed 137 factories -> sealed-factories/SEAL.json
 component files pinned=10
-seal root sha256=efd960c11d0ff4500a316d8f1ee6e521b70743cda00bf5249f0cf71de83b0a10
+seal root sha256=fda43a0242166e8828dbe214f2c0f93b0f86e51eec02c26cb51f4dbc721fd73b
 payload bytes=1849160 licences=115
 
 $ python3 tools/factory/sealed_factory_runtime.py verify
-[SEAL] OK 1.0.0: 137 factories, 1849160 payload bytes, 115 licence texts, root efd960c11d0ff450…
+[SEAL] OK 1.0.0: 137 factories, 1849160 payload bytes, 115 licence texts, root fda43a0242166e88…
 ```
 
 The component's own verifier, run from a copy of `sealed-factories/` inside a different repository
@@ -48,7 +48,7 @@ The component's own verifier, run from a copy of `sealed-factories/` inside a di
 
 ```
 $ python3 /tmp/foreign2/component/runtime/cli.py verify
-[SEAL] OK 1.0.0: 137 factories, 1849160 payload bytes, 115 licence texts, root efd960c11d0ff450…
+[SEAL] OK 1.0.0: 137 factories, 1849160 payload bytes, 115 licence texts, root fda43a0242166e88…
 
 $ python3 /tmp/foreign2/component/runtime/cli.py run --root /tmp/foreign2/other-repo --limit 30 --model-calls 0
 [swarm] 159 roles, plan of 159 agent instances, executed 30 in 0.1s
@@ -65,8 +65,8 @@ The copy wrote its artefacts and report into `.sealed/` of the repository it was
 $ python3 tools/factory/sealed_factory_runtime.py run --max-model-calls 0 --env-limit 200
 [SEALED] 137 factories sealed (98 with redistributed content, 39 blueprint-only)
 [SEALED] models: local=[] keyed=[]
-[SEALED] environment: 40 tools (40 native, 0 bound from MCP), MCP catalogue 42 servers (2 verified here, 18 bindable on this machine), 159 agent roles, 7 language packs available (go, rust, java, kotlin, csharp, ruby missing)
-[SEALED] swarm: 159 agent instances of a 159-instance plan in 33.39s, 162 tool steps, 159/159 checks passed
+[SEALED] environment: 41 tools (41 native, 0 bound from MCP), MCP catalogue 42 servers (2 verified here, 18 bindable on this machine), 159 agent roles, 7 language packs available (go, rust, java, kotlin, csharp, ruby missing)
+[SEALED] swarm: 159 agent instances of a 159-instance plan in 3.41s, 162 tool steps, 159/159 checks passed
 [SEALED] 0 factories ran against a model, 96 ran in plan mode, 41 had no definitions in their sealed slice, 0 model calls failed, 0 unreadable
 [SEALED] 3 slice(s) carry content but define nothing this runtime reads as stages, workers or tools
 [SEALED] MCP servers: 42 catalogued, 52 tools observed by handshake
@@ -147,7 +147,7 @@ step — station 0 fails rather than sealing it.
 
 ```
 $ python3 -m unittest discover -s shell/tests
-Ran 176 tests in 170.044s
+Ran 178 tests in 29.697s
 
 OK
 
@@ -158,7 +158,7 @@ $ python3 tools/duplication_auditor.py
 [DUPLICATION-AUDITOR] PASS: All mirrors synchronized without unapproved drift.
 ```
 
-37 of those tests are new this round (`shell/tests/test_sealed_environment.py`), including five that
+39 of those tests are new this round (`shell/tests/test_sealed_environment.py`), including five that
 run the component in a foreign repository.
 
 ## 3. Acceptance criteria covered
@@ -171,6 +171,7 @@ run the component in a foreign repository.
 | AC-052    | A million agents planned, the limit executed exactly, the rest named | `SwarmTest`, `cli.py capacity`                                                                                                                        | §2.2                               |
 | AC-053    | Multi-agent coverage, AI-focused factories among the roles           | `test_the_environment_is_reported_with_every_part`, `test_the_seal_carries_the_mcp_and_ai_groups_too`                                                 | §2.1, §2.2                         |
 | AC-054    | "Any language" as far as the machine honestly goes                   | `LanguagePackTest`, `init --check`                                                                                                                    | §2.1 (7 available, 8 missing)      |
+| AC-058    | Programs run without a shell anywhere in the environment             | `test_the_program_runner_uses_no_shell_at_all`, `test_the_syntax_tool_could_and_could_not_check`, factory-2's security agent                          | §4                                 |
 | AC-055    | A copy works in another repository                                   | `PortabilityTest` (5 tests)                                                                                                                           | §2.1                               |
 | AC-056    | The seal covers the code that runs it                                | `test_the_seal_pins_the_code_that_runs_it`                                                                                                            | §2.1 (`component files pinned=10`) |
 | AC-057    | Plug and work, no user intervention                                  | `conveyor_belt.js` station 0, removal tests                                                                                                           | §2.5                               |
@@ -187,6 +188,10 @@ The full criterion text is in `docs/ACCEPTANCE_CRITERIA.md` (AC-049 … AC-057).
 | Two runs in the same second shared a run directory                                    | The second run's artefacts inflated the first run's directory and its `RUN.json` replaced the first one | each run gets its own directory (`-2`, `-3`, … when the timestamp is taken)                                                                                                                                                     |
 | MCP servers whose slice is a Go/Bun tree recorded as if they had structure            | Reported as `NO-STRUCTURE` with no explanation                                                          | an MCP server's tool list, once a handshake observed it, counts as its structure; a carried slice that still defines nothing is reported as such and counted (`3 slice(s) carry content but define nothing this runtime reads`) |
 | Blueprint-only records and carried-but-unreadable slices were conflated in the report | A reader could not tell which factories cannot run and why                                              | both are now distinct fields (`blueprint_only`, `carried_without_definitions`, `mcp_tools_verified`, `by_group`) in the report and the manifest                                                                                 |
+
+| `proc.run` executed through a shell | A tool server that hands out a shell is how a path jail stops being a jail, and this repository's own security agent flagged both call sites | the command line is split and programs run directly: `&&` chains them, and pipes, redirects, substitutions and background jobs are refused with the reason; `git.command` refuses chaining as well. The new `code.syntax` tool (the 41st) replaced the one role that used a pipeline |
+| A language role probed the pack's name instead of its binary | `language-javascript` ran `javascript --version` on every run; the shell's 127 hid it, and a role for a language with no toolchain made the same promise | each role probes the binary the machine reported (`node`, `cc`, `bash`, `npx`), a language with no program gets no specialist role, and a program that is not installed is a named failure rather than a quiet 127 |
+| A fixture credential tripped the repository's own scanner | factory-2's security agent read a realistic `sk-…` literal in the new tests as a leaked key, the critic blocked on it, and CI went red at the gate step | the fixture is credential-shaped but not entropic: the detector still matches it, and the scanner no longer reads the test file as a leak |
 
 ## 5. What is not claimed
 
@@ -207,6 +212,9 @@ The full criterion text is in `docs/ACCEPTANCE_CRITERIA.md` (AC-049 … AC-057).
   159 instances; the ceiling is asserted by the planning code and the capacity report.
 - **MCP servers that need pip/npm are the bonus layer.** The must-work layer is the 40 stdlib tools;
   the sealed run above bound none of them (`0 bound from MCP`) and still passed every check.
+- **The C and SQL packs now avoid shell redirects** (`sqlite3 app.db ".read schema.sql"`), and both
+  toolchains are absent from this machine, so neither pack has been built here: their commands are
+  argv-correct by construction, not by a build this machine ran.
 - **No APK is claimed here.** This round changes the sealed component and its tooling, not the
   Android app; the APK gate is `[APK-GATE]` in `gates.sh`, which fails in this checkout because no
   APK has been built here, and CI's own emulator/APK jobs are recorded in

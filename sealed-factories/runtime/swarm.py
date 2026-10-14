@@ -103,8 +103,12 @@ def run(root: str, task: str, instances: int = 1, workers: int = 16,
     workspace = Workspace(root)
     registry = build_registry(workspace, gateway_url)
     records = _imported_records()
-    languages = detect()["available"]
-    roles = catalogue(records, languages)
+    detected = detect()
+    languages = detected["available"]
+    # The available probes travel with their own record, so a language role probes the binary that
+    # actually answered on this machine (`node` for javascript, `cc` for c) and a language whose
+    # toolchain is missing gets no specialist role at all.
+    roles = catalogue(records, [probe for probe in detected["probes"] if probe["available"]])
     if roles_filter:
         wanted = by_id(roles)
         roles = [wanted[role] for role in roles_filter if role in wanted]
@@ -301,7 +305,7 @@ def catalogue_summary() -> dict:
 def capacity_report() -> dict:
     records = _imported_records()
     languages = detect()
-    roles = catalogue(records, languages["available"])
+    roles = catalogue(records, [probe for probe in languages["probes"] if probe["available"]])
     per_role = MAX_AGENTS // max(len(roles), 1)
     return {"roles": len(roles), "capacity": MAX_AGENTS, "max_instances_per_role": per_role,
             "languages": languages["available"], "missing_languages": languages["missing"],

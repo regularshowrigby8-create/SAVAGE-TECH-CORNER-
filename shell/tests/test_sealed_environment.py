@@ -104,12 +104,46 @@ class ToolLayerTest(unittest.TestCase):
     def test_unfinished_work_and_secrets_are_found_where_they_are(self) -> None:
         todos = self.registry["code.todos"]["fn"](path=".")
         self.assertEqual([f["line"] for f in todos["findings"]], [2])
-        (self.root / "config.py").write_text('API_KEY = "sk-abcdefghijklmnopqrstuvwxyz012345"\n',
+        # Deliberately low entropy and shaped like a credential: it matches the detector's OpenAI
+        # pattern, and this repository's own security agent will not read the fixture itself as a
+        # leaked key (it flags high-entropy assignments outside the test fixtures it recognises).
+        (self.root / "config.py").write_text('API_KEY = "sk-000000000000000000000000"\n',
                                              encoding="utf-8")
         secrets = self.registry["code.secrets"]["fn"](path=".")
         self.assertFalse(secrets["clean"])
         self.assertEqual(secrets["findings"][0]["path"], "config.py")
         self.assertEqual(secrets["findings"][0]["kind"], "openai-key")
+
+    def test_the_program_runner_uses_no_shell_at_all(self) -> None:
+        """A tool that hands out a shell is how a path jail stops being a jail."""
+        run = self.registry["proc.run"]["fn"]
+        self.assertEqual(run(command="python3 -c 'print(6*7)'")["stdout"].strip(), "42")
+        chained = run(command="python3 -c 'print(1)' && python3 -c 'print(2)'")
+        self.assertEqual(chained["stdout"].split(), ["1", "2"])
+        stopped = run(command="python3 -c 'raise SystemExit(4)' && python3 -c 'print(3)'",
+                      allow_failure=True)
+        self.assertEqual(stopped["exit_code"], 4)
+        self.assertEqual(stopped["stdout"].split(), [], "a failed step must stop the chain")
+        for refused in ("echo hi | wc -l", "echo hi > file.txt", "echo `whoami`", "echo $(whoami)",
+                        "echo a; echo b", "sleep 0 &"):
+            with self.subTest(command=refused):
+                with self.assertRaises(toolkit.ToolError):
+                    run(command=refused)
+        with self.assertRaises(toolkit.ToolError):
+            self.registry["git.command"]["fn"](arguments="status && rm -rf build")
+
+    def test_the_syntax_tool_reports_what_it_could_and_could_not_check(self) -> None:
+        (self.root / "broken.py").write_text("def add(a, b)\n    return a + b\n", encoding="utf-8")
+        report = self.registry["code.syntax"]["fn"](path=".")
+        checked = {entry["path"]: entry for entry in report["checked"]}
+        self.assertIn("broken.py", checked)
+        self.assertFalse(checked["broken.py"]["ok"])
+        self.assertIn("line 1", checked["broken.py"]["error"])
+        self.assertIn("src/core.py", checked)
+        self.assertTrue(checked["src/core.py"]["ok"])
+        self.assertFalse(report["clean"])
+        for entry in report["unchecked"]:
+            self.assertTrue(entry["reason"], "a file that was not checked must say why")
 
     def test_a_patch_applies_exactly_or_not_at_all(self) -> None:
         (self.root / "a.txt").write_text("one\ntwo\nthree\n", encoding="utf-8")

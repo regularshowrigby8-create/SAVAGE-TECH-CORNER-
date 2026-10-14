@@ -96,9 +96,7 @@ CORE_ROLES: tuple[Role, ...] = (
          _tool_calls("read", "write", "run", "state"),
          offline=({"tool": "fs.search", "args": {"pattern": "\\b(function|class|export)\\b",
                                                  "glob": "*.js", "limit": 40}},),
-         checks=({"tool": "proc.run", "args": {"command": "node --check $(git ls-files '*.js' "
-                                                          "| head -1) 2>/dev/null || true",
-                                               "allow_failure": True}},),
+         checks=({"tool": "code.syntax", "args": {"path": ".", "limit": 3}},),
          topology="maker-checker", tags=("language:javascript",)),
     Role("implementer-systems", "Implementer (systems languages)",
          "Write and change Go, Rust, C and C++ code.",
@@ -213,19 +211,34 @@ def imported_roles(records: list[dict]) -> list[Role]:
     return roles
 
 
-def catalogue(records: list[dict] | None = None, languages: list[str] | None = None) -> list[Role]:
-    """Core roles, one implementer per installed language, and the imported factories' roles."""
+def catalogue(records: list[dict] | None = None, languages: list[dict | str] | None = None
+              ) -> list[Role]:
+    """Core roles, one specialist per installed language, and the imported factories' roles.
+
+    `languages` is what `langkit.detect()` found: a probe record per language, or a bare name. When
+    the machine's own probe names the binary that answered (`node` for javascript, `cc` for c), that
+    is what the role probes with - a specialist that runs `javascript --version` would only ever
+    record a missing program.
+    """
     roles = list(CORE_ROLES)
-    for language in languages or []:
+    for probe in languages or []:
+        name = probe["language"] if isinstance(probe, dict) else probe
+        binary = probe.get("binary") if isinstance(probe, dict) else None
+        wanted = probe.get("wanted") or [] if isinstance(probe, dict) else []
+        offline = ({"tool": "proc.run",
+                    "args": {"command": f"{binary} --version", "allow_failure": True}}
+                   if binary else {"tool": "fs.list", "args": {"path": ".", "depth": 1}})
         roles.append(Role(
-            id=f"language-{language}",
-            title=f"Language specialist ({language})",
-            mission=f"Build, check and package {language} work with the toolchain installed here.",
+            id=f"language-{name}",
+            title=f"Language specialist ({name})",
+            mission=f"Build, check and package {name} work with the toolchain installed here"
+                    + (f" ({binary})." if binary else "; this language is a project layout, not a "
+                                                       "program, so the role works on files."),
             tools=_tool_calls("read", "write", "run"),
-            offline=({"tool": "proc.run", "args": {"command": f"{language} --version",
-                                                   "allow_failure": True}},),
+            offline=(offline,),
             checks=({"tool": "time.now", "args": {}},),
-            topology="squad", source="language", tags=(f"language:{language}",),
+            topology="squad", source="language",
+            tags=(f"language:{name}",) + tuple(f"binary:{b}" for b in wanted[:1]),
         ))
     roles.extend(imported_roles(records or []))
     return roles
