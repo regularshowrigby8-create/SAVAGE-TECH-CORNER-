@@ -123,7 +123,9 @@ this pipeline can run. Both now carry slices, and all 72 do.
 
 The 72 factories were catalogued in `docs/factory/IMPORTED_FACTORY_CATALOG.md`: 12 GitHub searches,
 869 repositories seen, 90 verified by reading their tree and README, 72 kept because they matched at
-least four of six factory characteristics, 55 of them carrying AI-worker code. Their stage structures
+least four of six factory characteristics, 48 of them carrying AI-worker code. 53 show AI-worker
+evidence in the slices sealed here (providers or entrypoints in the vendored files). Their stage
+structures
 are read at every run, which is how the belt's own station list is held to the same shape the
 industry actually uses — intake, workers, verification, revision, release.
 

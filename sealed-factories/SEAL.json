@@ -1,6 +1,6 @@
 {
  "seal_version": "1.0.0",
- "sealed_at": "2026-10-14T08:42:35Z",
+ "sealed_at": "2026-10-14T08:44:48Z",
  "component": "sealed-factories",
  "description": "The imported factory set. Dropped in or removed as one unit; runs before the repository's own factories and feeds them.",
  "contents": {
@@ -66,7 +66,7 @@
    "bytes": 97816,
    "content_redistributed": false,
    "payload": "payloads/abhinavpabbaraju-nexus-deep-research-agent.tar.gz",
-   "payload_sha256": "4aa5637e27dfc4d73209402afd7f2dc6a0b1316f09c37c1dbc4d85892603c4b4",
+   "payload_sha256": "5b9b3ce2d46c12c164a9c42954240d8380012e003b8b91bcfe64c1c3eb070e29",
    "payload_bytes": 1140,
    "providers": [
     "openai",
@@ -95,7 +95,7 @@
    "bytes": 62144,
    "content_redistributed": true,
    "payload": "payloads/addyosmani-factory.tar.gz",
-   "payload_sha256": "989215cff116ee00d629f51d821580f0c0aebc5d572536d7921a5946e1d339ae",
+   "payload_sha256": "7a02cd2b87af64185f9ea2e1590002dc27146897d1ed2d71696e0a1e57efe8f4",
    "payload_bytes": 25110,
    "providers": [
     "anthropic",
@@ -119,7 +119,7 @@
    "bytes": 14870,
    "content_redistributed": true,
    "payload": "payloads/agent-field-codeaf.tar.gz",
-   "payload_sha256": "b41358d312fff38f611c4c8d27b0f2371528fa1df3bb564ff6567c66bf1de961",
+   "payload_sha256": "dd5a27c2318c4bd4c5628b257bb30035574501e97a467b3ba2b1edeb751a8d92",
    "payload_bytes": 7691,
    "providers": [],
    "runtime": [],
@@ -140,7 +140,7 @@
    "bytes": 55399,
    "content_redistributed": true,
    "payload": "payloads/angelmsger-jenkins-cli.tar.gz",
-   "payload_sha256": "eec20bc95325739b91599f1bb0701f472572a77ed98a9fcf1c3463e62d8beeba",
+   "payload_sha256": "e99e89762991ea79d848d659fb6cdd8a2b3529243efd3ae3b6b6fbff881637f3",
    "payload_bytes": 21502,
    "providers": [
     "anthropic",
@@ -164,7 +164,7 @@
    "bytes": 124310,
    "content_redistributed": true,
    "payload": "payloads/ashishyesale7-lgflutterstarterkit.tar.gz",
-   "payload_sha256": "dab7fc1e908f432a08c1a9aaf0e304367da93f3fdad8e0b0c1d89c9ad2d12445",
+   "payload_sha256": "506f7206b9e4142dba7316676050f2b4fd5051a3074113a161d1cd1313214627",
    "payload_bytes": 44403,
    "providers": [
     "google"
@@ -187,7 +187,7 @@
    "bytes": 69407,
    "content_redistributed": false,
    "payload": "payloads/bassimeledath-dispatch.tar.gz",
-   "payload_sha256": "feef341145da66d93c6da94040dc0232f44aafb551a5f024d152ef9d7c385a27",
+   "payload_sha256": "6b298c54d3ec9139af7500339396845407d3c58e620be72e1f5df6a7082bae45",
    "payload_bytes": 1087,
    "providers": [
     "anthropic",
@@ -212,7 +212,7 @@
    "bytes": 25430,
    "content_redistributed": false,
    "payload": "payloads/bastani-inc-atomic.tar.gz",
-   "payload_sha256": "82fab1b754dd80af64ed5cedb47a225db84a745190cff4693cc56dd5d6b47e43",
+   "payload_sha256": "269da60d0ac5f1432c8ee318cc2911bef2912ce434068d5c407f5ae5b805261d",
    "payload_bytes": 1787,
    "providers": [
     "anthropic"
@@ -238,7 +238,7 @@
    "bytes": 7045,
    "content_redistributed": false,
    "payload": "payloads/bawfng04-chaos-moa-pipeline.tar.gz",
-   "payload_sha256": "c5f2e489f7df98d8289443eb880cd7bb9a85564019c4e1f5ba1eea0480bc9b7b",
+   "payload_sha256": "4ff14ebdd0d1cc2057217411512c348b5454c54699ed37e9bb320a487e68a0ee",
    "payload_bytes": 520,
    "providers": [],
    "runtime": [],
@@ -259,7 +259,7 @@
    "bytes": 41288,
    "content_redistributed": false,
    "payload": "payloads/benedicttenius-fabricsoftware.tar.gz",
-   "payload_sha256": "40210855ceb1161dd055a885b6554ea75206f0023ec66b6c0646048d5eadeb37",
+   "payload_sha256": "40d6c9c82bf61f25ef9faa473cfcf44153997dcb99e94f19fea0584747d3f127",
    "payload_bytes": 1267,
    "providers": [
     "anthropic"
@@ -287,7 +287,7 @@
    "bytes": 149242,
    "content_redistributed": false,
    "payload": "payloads/bjwanneng-veriflow-agent.tar.gz",
-   "payload_sha256": "73c2780ded42f6402a9208470727385455cb8d7901f63b060eb8075bd29934e4",
+   "payload_sha256": "3365ab4abdcf5922fa3fa577d7e11e2fd213a2fc61824b2b3fde49f556135da7",
    "payload_bytes": 1776,
    "providers": [
     "anthropic"
@@ -312,7 +312,7 @@
    "bytes": 142891,
    "content_redistributed": false,
    "payload": "payloads/brahmpreetsingh-oss-content-engine.tar.gz",
-   "payload_sha256": "162dbd3c4060b41dd1a8ceac89edfba3187b3d7df907d35200cf853738ba82b1",
+   "payload_sha256": "810321ece49aff5bb69a2295afe3e190aca69175308e2a5b8b80dea03fc9fbe9",
    "payload_bytes": 1609,
    "providers": [
     "anthropic"
@@ -335,7 +335,7 @@
    "bytes": 121611,
    "content_redistributed": true,
    "payload": "payloads/bryce-murphy-amas-framework.tar.gz",
-   "payload_sha256": "e7e9c27710a2350091d72b2e30bc648c03774c1cf3913009081ad4cfdaea772c",
+   "payload_sha256": "703e680df7131c8bcba074df6ea7f0a393397cb963615901c3e51067cbc017c2",
    "payload_bytes": 32256,
    "providers": [
     "anthropic",
@@ -360,7 +360,7 @@
    "bytes": 29461,
    "content_redistributed": true,
    "payload": "payloads/charlyhno-eng-jev-codex-pilot.tar.gz",
-   "payload_sha256": "cedad70377c3bdd08759f164a5fe341668895a79c99b8dfca33375138f307b67",
+   "payload_sha256": "af8f706c6af1582eef4519c6274fa90e18475b60888088e0d88415f9e17d34a0",
    "payload_bytes": 9225,
    "providers": [
     "anthropic"
@@ -383,7 +383,7 @@
    "bytes": 5338,
    "content_redistributed": true,
    "payload": "payloads/cleanwk-agent-pipeline-example.tar.gz",
-   "payload_sha256": "7589cdb02e0c593468e999c0585c7e1ab68089edb0eeac96dae8344fc19de987",
+   "payload_sha256": "715e23cd528288fbd90bae5be2d930f47ab90f3c1e2896e19383ebe5f7e0793e",
    "payload_bytes": 3424,
    "providers": [],
    "runtime": [],
@@ -404,7 +404,7 @@
    "bytes": 47988,
    "content_redistributed": true,
    "payload": "payloads/cloudflare-moltworker.tar.gz",
-   "payload_sha256": "9abb188603a2191cd07533cbe722006a560736cf66e6070e6439ce16ff000a2f",
+   "payload_sha256": "e3430fc111903f2b39046fe1cc70ea244de80af7cb443e9d2bdd7182c77abb20",
    "payload_bytes": 15568,
    "providers": [
     "openai",
@@ -431,7 +431,7 @@
    "bytes": 37250,
    "content_redistributed": true,
    "payload": "payloads/curie-eng-curie.tar.gz",
-   "payload_sha256": "b6d7be4e1edbb78fb50e4381fb0a3a0e15e015e075df6130acd94f28938ffe3c",
+   "payload_sha256": "f57cd7956779c1a3a108ed27ca65d541c04f7f4382fcb6d59a7b24afea631064",
    "payload_bytes": 16474,
    "providers": [],
    "runtime": [
@@ -454,7 +454,7 @@
    "bytes": 31896,
    "content_redistributed": true,
    "payload": "payloads/disler-inkwell-agent-sandboxes-and-software-factory.tar.gz",
-   "payload_sha256": "87c07e3a0294ad8bdbc253c687282838376d96f664bfd1960cafc72fc9154dc1",
+   "payload_sha256": "8fc8afc70c725e4a5dd8e90a375cdd550758ebe446fc2edbffda063226d003e7",
    "payload_bytes": 15789,
    "providers": [
     "anthropic"
@@ -482,7 +482,7 @@
    "bytes": 58898,
    "content_redistributed": true,
    "payload": "payloads/fabro-sh-fabro.tar.gz",
-   "payload_sha256": "87a5d53d812035a8c04db1662e0adc2c00c5aeae1b8278cfc792be18b392ec8a",
+   "payload_sha256": "a861f7bb451f5cdd8c9a7f28738a93545b418fd81e3d4e8ec5abbf2ee47c8a95",
    "payload_bytes": 23695,
    "providers": [
     "anthropic"
@@ -505,7 +505,7 @@
    "bytes": 34826,
    "content_redistributed": true,
    "payload": "payloads/finchello-tetra.tar.gz",
-   "payload_sha256": "b3b4439301ca81e5db1b2efa18edbf0774f2c1fdbda527fe9619aa98839303ca",
+   "payload_sha256": "1fb3a181eb7754749a48d53049235f6f45fdf80931a9149c6babf3a352d2fa43",
    "payload_bytes": 13191,
    "providers": [
     "anthropic"
@@ -533,7 +533,7 @@
    "bytes": 30740,
    "content_redistributed": true,
    "payload": "payloads/finna-finn-loop.tar.gz",
-   "payload_sha256": "cc7443c9badfdbf6ad016baf52db3a3707c6e99b0bec8b61592317c9b015cbd6",
+   "payload_sha256": "485128b0198572ad9a026395f8a4a294dee1bad8a24598801413a844a83d7ce8",
    "payload_bytes": 12779,
    "providers": [
     "anthropic"
@@ -556,7 +556,7 @@
    "bytes": 13021,
    "content_redistributed": true,
    "payload": "payloads/frankiezheng110-superteam.tar.gz",
-   "payload_sha256": "f055d6fceca5039a364e607c9417421e69b92c8f130d91067fdfbc3fca17385d",
+   "payload_sha256": "ee9cdffe35bb90dd06a553bfdbcc3d68ff7de3a7b4825972c6a35f6d19304491",
    "payload_bytes": 2334,
    "providers": [],
    "runtime": [],
@@ -577,7 +577,7 @@
    "bytes": 55471,
    "content_redistributed": true,
    "payload": "payloads/getcrew44-crew44.tar.gz",
-   "payload_sha256": "50b7d192502e356f5c6d2cebbcde8416972cc86e861a9ecbc08beead2c2f8ba6",
+   "payload_sha256": "1e6591cfcac1a07c07e60e4b62c52ad944899d15fa089b855a62502ac5854a0f",
    "payload_bytes": 20047,
    "providers": [],
    "runtime": [],
@@ -598,7 +598,7 @@
    "bytes": 137628,
    "content_redistributed": true,
    "payload": "payloads/gethuman-sh-human.tar.gz",
-   "payload_sha256": "5a7dca830c0604cd68280dc4591d7b2106f1d05253d9c388f1862550b9148c6e",
+   "payload_sha256": "fdf0540e28011ce3575f3f8e57c9d1f41899c42e270039a619a62047e847b5f0",
    "payload_bytes": 41808,
    "providers": [
     "anthropic"
@@ -621,7 +621,7 @@
    "bytes": 139857,
    "content_redistributed": false,
    "payload": "payloads/gratefuljinx77-speckit-claude.tar.gz",
-   "payload_sha256": "1ece0e4a65f6ee603c579e673e250ae73fa94658190fa3ee6513daf593895420",
+   "payload_sha256": "7b31b83af5bb08f676b1b9405fbab0ffe2f264f1d06308c9b81781510ec48e36",
    "payload_bytes": 1347,
    "providers": [
     "anthropic"
@@ -646,7 +646,7 @@
    "bytes": 68515,
    "content_redistributed": false,
    "payload": "payloads/gregoryjing-agentflow.tar.gz",
-   "payload_sha256": "b2e95d2ba2baa58183a5b66c8d6e8eb781ca3b088a35b568d8255e06911b499c",
+   "payload_sha256": "a26d8bfb9c7e84990763132595856535f60535c920fb338edfffc6006690b487",
    "payload_bytes": 1160,
    "providers": [
     "openai",
@@ -674,7 +674,7 @@
    "bytes": 80448,
    "content_redistributed": true,
    "payload": "payloads/grimgrimberg-daily-movers-agent.tar.gz",
-   "payload_sha256": "0304475548b46138196656de90ca39e8d13fb1c5668e0161ec0a7ec9503acaee",
+   "payload_sha256": "b4d8ca8b671de1c8545361ad59763b310f5dfaec04eb1ebce6d64fd4b4a6cc59",
    "payload_bytes": 20845,
    "providers": [
     "openai"
@@ -703,7 +703,7 @@
    "bytes": 24158,
    "content_redistributed": true,
    "payload": "payloads/hadamrd-titan.tar.gz",
-   "payload_sha256": "9aef34c22e699f6ccc842713efa04ab8814a7e4fe1fa4452bc7dbcc3e6d3d63e",
+   "payload_sha256": "ff74b7e3395960d3f905ee03f24e4ba83d154c0fda57496632bfc4af2e09d969",
    "payload_bytes": 11727,
    "providers": [],
    "runtime": [
@@ -726,7 +726,7 @@
    "bytes": 2933,
    "content_redistributed": false,
    "payload": "payloads/hdale85-openclaw-agent-workflow.tar.gz",
-   "payload_sha256": "4c06247f218f620b459fa92227418d07492a418711c45d80baf72d1623c8cc6c",
+   "payload_sha256": "89b2d19a548cb359083a2c65f2cae6a195818441c1d00457c43dd3783b828980",
    "payload_bytes": 522,
    "providers": [],
    "runtime": [],
@@ -747,7 +747,7 @@
    "bytes": 139845,
    "content_redistributed": true,
    "payload": "payloads/iusztinpaul-squid.tar.gz",
-   "payload_sha256": "63e07b2075ee2da3ab99b4d874b5c0ffdbe355646864e2ad27d6b236e9835ef4",
+   "payload_sha256": "32a94e5cba915c27075ed6f25b1390d5ca1d3c829b0c4dcced4faaf05d44822f",
    "payload_bytes": 53217,
    "providers": [
     "anthropic",
@@ -773,7 +773,7 @@
    "bytes": 47772,
    "content_redistributed": false,
    "payload": "payloads/jabbala10-bit-ai-agent-platform.tar.gz",
-   "payload_sha256": "c362fc4c5577c7dcf6374526849fc7c703ca136128d22ecc0baf679a8f1a581f",
+   "payload_sha256": "7bf0fc4740c05b1fdcb303c65bc05ffeecc5833b4de7c7ac13c3c6d8672c4d19",
    "payload_bytes": 869,
    "providers": [
     "openai",
@@ -806,7 +806,7 @@
    "bytes": 48270,
    "content_redistributed": false,
    "payload": "payloads/keweiw-projectfactory.tar.gz",
-   "payload_sha256": "409331ad8bffb1336f594b87a83151965fc1a323eae939c4bf6cf9037a000c6a",
+   "payload_sha256": "ccf1c61c3dd9f971048dc36470e6e6f1a8ba1a7ebac53d1464f88c3ae3c7cbb8",
    "payload_bytes": 1184,
    "providers": [
     "anthropic"
@@ -829,7 +829,7 @@
    "bytes": 143038,
    "content_redistributed": false,
    "payload": "payloads/kingdoja-ai-comic-drama-platform.tar.gz",
-   "payload_sha256": "91b130d3abd96f8cf746cf56251ac44f1de219853834afd35067853fa854636c",
+   "payload_sha256": "ab9348e3deb02494f7e812acd0bf9f1090bd0d2fcfce5248f67b73440f612a6d",
    "payload_bytes": 1955,
    "providers": [
     "openai",
@@ -860,7 +860,7 @@
    "bytes": 128377,
    "content_redistributed": true,
    "payload": "payloads/konflux-ci-konflux-ci.tar.gz",
-   "payload_sha256": "716bae28fb4629f07b1c22b37eddbe71f602fdf4f8c321d573dd3c9d87558300",
+   "payload_sha256": "3353fa1aa233eb93d37b3de4130d9221c37f400cebf2351755a01db802535f8b",
    "payload_bytes": 41791,
    "providers": [],
    "runtime": [
@@ -883,7 +883,7 @@
    "bytes": 75560,
    "content_redistributed": true,
    "payload": "payloads/kunchenguid-grok-ship.tar.gz",
-   "payload_sha256": "4e59659e0353d420e1b0b99acc007b133e311902852c457105967d5e6e2494df",
+   "payload_sha256": "26d49354458e67dace3192462b9c13af7c3e486b808e7ae0252a64fe0747c20a",
    "payload_bytes": 22994,
    "providers": [],
    "runtime": [
@@ -906,7 +906,7 @@
    "bytes": 88163,
    "content_redistributed": true,
    "payload": "payloads/mitkox-esf.tar.gz",
-   "payload_sha256": "283527f24b4f5fd9add219fbaac82998766acab66ca9e6d86e23defbf1615bc5",
+   "payload_sha256": "bc7b634c111fba95ecdfff316a45d9aea0b1968ed8b9df9676a390ff9ef046f9",
    "payload_bytes": 31093,
    "providers": [
     "openai",
@@ -937,7 +937,7 @@
    "bytes": 8183,
    "content_redistributed": false,
    "payload": "payloads/mohammedabdelshafy-clipops-studio.tar.gz",
-   "payload_sha256": "887aa94d4385d61c6d7350ab7e3e38bda7c2ea4cfaa68c208785d00e273aba46",
+   "payload_sha256": "ee9b5f52609d59972976887d41776d24a32bc9cf4cd1ddad5e37de82b7326693",
    "payload_bytes": 532,
    "providers": [
     "google"
@@ -960,7 +960,7 @@
    "bytes": 45714,
    "content_redistributed": false,
    "payload": "payloads/muskansoni0214-ai-agent-orchestration-pipeline.tar.gz",
-   "payload_sha256": "419c02ecfe54ed6d21dd1d4ab9fed8b5ec6495412ed0faaa74430718c6348fa1",
+   "payload_sha256": "b5502d7a838f07128e7f93194b3dcaabad23b96512b8d655a543544f1dcdca95",
    "payload_bytes": 1295,
    "providers": [
     "openai",
@@ -990,7 +990,7 @@
    "bytes": 9112,
    "content_redistributed": false,
    "payload": "payloads/opencharly-plugin-pipeline.tar.gz",
-   "payload_sha256": "c6623f7799cbdcc4843c658b43c83609195258381d9a4cab7c755b42e31e67ea",
+   "payload_sha256": "306efa3cd0c2a1c701ab3bea75033a7755e17891b5e59bb7b0f73005c42638bf",
    "payload_bytes": 578,
    "providers": [],
    "runtime": [],
@@ -1011,7 +1011,7 @@
    "bytes": 32470,
    "content_redistributed": true,
    "payload": "payloads/oraphadev-ai-workflow.tar.gz",
-   "payload_sha256": "6251dff30a44bb533b519a39ee0d771e528cfaef25348609e66fa4d88020b311",
+   "payload_sha256": "05fbbab5b81b2dd64ed0ae316ac0aec0371a4a63272d61b1f4d60c4fe4fa9840",
    "payload_bytes": 14752,
    "providers": [
     "anthropic"
@@ -1034,7 +1034,7 @@
    "bytes": 133028,
    "content_redistributed": false,
    "payload": "payloads/orbi-build-orbi.tar.gz",
-   "payload_sha256": "6f3ee5889afcd45a34eacd23708464b82540d9d0b2b2a247d1f315c153def118",
+   "payload_sha256": "4add7a16de3ca5b81d7db421f3bc1078c355e381b8beb1ca6a61ffa35abcf307",
    "payload_bytes": 1163,
    "providers": [
     "anthropic",
@@ -1062,7 +1062,7 @@
    "bytes": 20065,
    "content_redistributed": true,
    "payload": "payloads/os-factory-har.tar.gz",
-   "payload_sha256": "247f1cf15f09d9a2d6527a33e9569d6e82c279ee2d1f3838eceb33784d41727e",
+   "payload_sha256": "609ffddc47e419c739e785bc39c54b41877e92bf23275f1f6fb118ef85d6c979",
    "payload_bytes": 8312,
    "providers": [
     "anthropic"
@@ -1087,7 +1087,7 @@
    "bytes": 24736,
    "content_redistributed": true,
    "payload": "payloads/othmanadi-planning-with-files.tar.gz",
-   "payload_sha256": "f5007e7364d58d4ab1b17bfbdec5ef2abdb39d94d77b58b453f323de32b5806b",
+   "payload_sha256": "c9ec94c59791e189b07f4cf709729e6a65ad2cd57482467534a321bc0740578f",
    "payload_bytes": 7530,
    "providers": [],
    "runtime": [
@@ -1111,7 +1111,7 @@
    "bytes": 60411,
    "content_redistributed": true,
    "payload": "payloads/owainlewis-machinist.tar.gz",
-   "payload_sha256": "40023080ab441a9e543ca272af4642c4daecddc81b59ee043f0bd3876d762c6f",
+   "payload_sha256": "4fbe7cdb13a7a2eaf428d4dd6a73fefe54d3af414aabbc278b829b2952ece900",
    "payload_bytes": 20844,
    "providers": [
     "openai",
@@ -1140,7 +1140,7 @@
    "bytes": 59985,
    "content_redistributed": true,
    "payload": "payloads/parthalon025-autonomous-coding-toolkit.tar.gz",
-   "payload_sha256": "ee8e23afb9deece01e14c933ef68a4a402bd4d4f433cefd0066f4f3663367340",
+   "payload_sha256": "0685d895b8d0cf3e3876c9d6aa0cebb16e6f8a4ab830a6bef9df8ce9ba657b5d",
    "payload_bytes": 26141,
    "providers": [
     "anthropic"
@@ -1163,7 +1163,7 @@
    "bytes": 36961,
    "content_redistributed": false,
    "payload": "payloads/praneethaneelapareddigari-agentic-ai-workflow-copilot.tar.gz",
-   "payload_sha256": "d9d23929e75156742bf97955cefe3008ad4579de5c3194ffceecbcb570031806",
+   "payload_sha256": "a948d03fd2afc6f8036abbc930a0930663de34c51cccf4f50af1cbaf88f42d9e",
    "payload_bytes": 876,
    "providers": [
     "openai"
@@ -1192,7 +1192,7 @@
    "bytes": 136806,
    "content_redistributed": true,
    "payload": "payloads/professorpalmer-puppetmaster.tar.gz",
-   "payload_sha256": "ec67eb11e72d26a5b6b04d2d992043fde6afdde2dbc691c6323667dec7587bc1",
+   "payload_sha256": "ef6a427c2674ce195a3a8ee7bce1396b437b78fae16b4cf8f568c4412250d1a0",
    "payload_bytes": 47448,
    "providers": [
     "anthropic",
@@ -1219,7 +1219,7 @@
    "bytes": 56620,
    "content_redistributed": false,
    "payload": "payloads/rabya89-cv-evaluator.tar.gz",
-   "payload_sha256": "5215bd3c73559c9a235ab3ec855de585b0874f6592c3b2f5b53b1f95dbab268c",
+   "payload_sha256": "56acbf9537cd54f8d208ff89cc3fde4e5cbe4777f17d4323de0a34998c678e8a",
    "payload_bytes": 1161,
    "providers": [
     "anthropic"
@@ -1246,7 +1246,7 @@
    "bytes": 55156,
    "content_redistributed": true,
    "payload": "payloads/rocketride-org-rocketride-server.tar.gz",
-   "payload_sha256": "5444e97e1f8b748461cb3c9773eee498d81e4a783e0b626c4e31a3ccdd29df25",
+   "payload_sha256": "a5bbc27d9ed3dbbb1a5095d7be735d504401fbe749c9a2b73e8de055511e427d",
    "payload_bytes": 16722,
    "providers": [
     "anthropic",
@@ -1273,7 +1273,7 @@
    "bytes": 39508,
    "content_redistributed": false,
    "payload": "payloads/roxabi-roxabi-factory.tar.gz",
-   "payload_sha256": "57cc8a037959f6e2d486b439d22335df8c9f3a7d84a36446d839ed1049088b78",
+   "payload_sha256": "c2184c0a547f4662d421c6f75569bf5a6e2acf43c4d4cd89272d4619acdb08d4",
    "payload_bytes": 1922,
    "providers": [
     "anthropic"
@@ -1299,7 +1299,7 @@
    "bytes": 4308,
    "content_redistributed": true,
    "payload": "payloads/rukenzilan-4-agent-software-development-pipeline.tar.gz",
-   "payload_sha256": "a70b5c1813e101436710be82c5b1e677c46498cc362f4d7d9313ced4272893d8",
+   "payload_sha256": "71175c4b7098dc677a872e8909354bcdc402214cedcdf4f2f66d39d798e32c7d",
    "payload_bytes": 2617,
    "providers": [
     "anthropic"
@@ -1322,7 +1322,7 @@
    "bytes": 35754,
    "content_redistributed": true,
    "payload": "payloads/runfusion-fusion.tar.gz",
-   "payload_sha256": "f354267b37af0853d1ca82516978bbdbc9817ab1598463dffd786df06821ed04",
+   "payload_sha256": "246dbbe7c75c08dc2c8f898768e0e6d18894742f907e24e902bcb0de8733b583",
    "payload_bytes": 16084,
    "providers": [],
    "runtime": [
@@ -1345,7 +1345,7 @@
    "bytes": 131943,
    "content_redistributed": true,
    "payload": "payloads/salmanmohsen-synapse.tar.gz",
-   "payload_sha256": "46d2442d06004c8165645d9fc73f151e2a1aeffb683ecdff2186cee7f5534234",
+   "payload_sha256": "0b22f0632e2e4a5c22f59079513cc2c8e93ab4f6440a4801e86cca0daf81e007",
    "payload_bytes": 36527,
    "providers": [
     "local-llama",
@@ -1380,7 +1380,7 @@
    "bytes": 60797,
    "content_redistributed": false,
    "payload": "payloads/sandgardenhq-sgai.tar.gz",
-   "payload_sha256": "d783d5f915a2465cb8a8a60939ecec2dbaa7ea98d26580bf3d0202131c588679",
+   "payload_sha256": "c6729b793319f1ceff7db02651839f6f0d6e3dc106c8660ac2649ef76a0c215e",
    "payload_bytes": 2058,
    "providers": [
     "anthropic",
@@ -1406,7 +1406,7 @@
    "bytes": 34383,
    "content_redistributed": true,
    "payload": "payloads/sbhooley-ainativelang.tar.gz",
-   "payload_sha256": "1bbdab04b4b203b9d1631334c2dfb1180638f7dd9d06ea8cf5b78d9817cd1c86",
+   "payload_sha256": "400ac38020326fcffd858b415be45a0fc0c63f177a572baf79706362ed619b29",
    "payload_bytes": 15242,
    "providers": [
     "openai",
@@ -1433,7 +1433,7 @@
    "bytes": 38162,
    "content_redistributed": true,
    "payload": "payloads/sch0penheimer-aws-devsecops-hybrid-software-factory.tar.gz",
-   "payload_sha256": "9f97f3eda2c8f87dd22a9b01e1929498582b3cb8ff38544f4cc546550f11fb6a",
+   "payload_sha256": "0ffbd1ec9c5ed09764efdaa235d072a2200fde898cfff840cbe05ee205363f3e",
    "payload_bytes": 8525,
    "providers": [],
    "runtime": [],
@@ -1454,7 +1454,7 @@
    "bytes": 9809,
    "content_redistributed": true,
    "payload": "payloads/seanoliver-audioflare.tar.gz",
-   "payload_sha256": "d0e0e85b5441eafdfa320905f0687cfc1433368fc1b0d5ba8a3c7518cbddb6be",
+   "payload_sha256": "58075bba8c81cd1c2aa8bb4fd016117b05a8b34607218063615850ef68c4592b",
    "payload_bytes": 3870,
    "providers": [
     "openai"
@@ -1477,7 +1477,7 @@
    "bytes": 7547,
    "content_redistributed": false,
    "payload": "payloads/seif410-ai-marketing-agent-pipeline.tar.gz",
-   "payload_sha256": "ce8cc41e831a2145bffe4842c9d7fb149eaec9a7ea20f8f21fcb617b8aae30a2",
+   "payload_sha256": "63edd2e62c8c65a12abef5191b7f480a74318a19a3570b67653f625054646e72",
    "payload_bytes": 676,
    "providers": [
     "google"
@@ -1505,7 +1505,7 @@
    "bytes": 63084,
    "content_redistributed": true,
    "payload": "payloads/shawncsx-autosci.tar.gz",
-   "payload_sha256": "edee2c17f5aac1bcb66679e28d378af40f528657282c68813ce9cefcc1884a9e",
+   "payload_sha256": "9aadccc9b18471ca26a030ee5629e54163efb4bac9a32d0a98710546d499c27e",
    "payload_bytes": 22257,
    "providers": [
     "openai",
@@ -1533,7 +1533,7 @@
    "bytes": 138052,
    "content_redistributed": true,
    "payload": "payloads/shenwell-ai-software-factory-pipeline.tar.gz",
-   "payload_sha256": "1ce5c87325825a2c8bf0ec3980fb134d636d0363f3fec7df7d9f6b370b9a51e4",
+   "payload_sha256": "aa5a1cef30685823da05e5784ad7a986b4e1e4d015dcf1dfc83397833d192777",
    "payload_bytes": 51988,
    "providers": [
     "anthropic"
@@ -1558,7 +1558,7 @@
    "bytes": 1955,
    "content_redistributed": false,
    "payload": "payloads/shuanbao0-agent-factory.tar.gz",
-   "payload_sha256": "2ef47c7baa2a010daf57dcb020c856a806c3c88e50093faf909559df0c3f1a39",
+   "payload_sha256": "4954783c8192e82bac48d9f953d65e14d15d3732e27c23a0bc5c98f22aef3a8a",
    "payload_bytes": 1787,
    "providers": [],
    "runtime": [
@@ -1581,7 +1581,7 @@
    "bytes": 138323,
    "content_redistributed": true,
    "payload": "payloads/sufficientdaikon-sdd-copilot-agents.tar.gz",
-   "payload_sha256": "61709a6f5fb381e5751f74fd9fa6e4bf6819953abb3b443396baf9fee0f56e43",
+   "payload_sha256": "bbf5ae5598f12267578993932e123383c6a05491d25588394a8a2bdfdda2e65d",
    "payload_bytes": 42495,
    "providers": [],
    "runtime": [
@@ -1604,7 +1604,7 @@
    "bytes": 18288,
    "content_redistributed": false,
    "payload": "payloads/superplanehq-superplane.tar.gz",
-   "payload_sha256": "2236a7b7cb7d833f0ac965846e59befbc3f8b0850aac2c8480bec32f3cd9dadb",
+   "payload_sha256": "611fb18c28fbb5035b1a7009d913c6acad206df2dec5674c424c2a6a95ca8485",
    "payload_bytes": 1964,
    "providers": [],
    "runtime": [
@@ -1627,7 +1627,7 @@
    "bytes": 144305,
    "content_redistributed": false,
    "payload": "payloads/tanaydeo24-medagent.tar.gz",
-   "payload_sha256": "1fefea0012a8e135b1c6171132c64c7445b955a4aa241b61ac8d695f25530279",
+   "payload_sha256": "cebc1c11007b1ab3c913ac64fd1b64bf767e7fef288b2ff318ba3a29361308ff",
    "payload_bytes": 1361,
    "providers": [
     "openai"
@@ -1656,7 +1656,7 @@
    "bytes": 11845,
    "content_redistributed": false,
    "payload": "payloads/thealanwang-native-to-agentic-rag.tar.gz",
-   "payload_sha256": "86be9cf97811b96ed3f3e2168cc188036e5307d366e10976c06c5bfaf7f8dd66",
+   "payload_sha256": "7aa27accd707226977c825fdf9451faf8916fd52f07e60c0e2d46f60b347b13c",
    "payload_bytes": 537,
    "providers": [
     "ollama"
@@ -1679,7 +1679,7 @@
    "bytes": 119531,
    "content_redistributed": true,
    "payload": "payloads/thruwire-foreman.tar.gz",
-   "payload_sha256": "6774cb21d19f8c9d96cc0e8f24f94126bc02d57cab7f62630f2f72366809a03c",
+   "payload_sha256": "4b44ebcb9678378111103557659fbaaa15bf3652569b71ec0673098143f4c7d2",
    "payload_bytes": 30749,
    "providers": [],
    "runtime": [
@@ -1706,7 +1706,7 @@
    "bytes": 26716,
    "content_redistributed": true,
    "payload": "payloads/tikalk-adlc-team-skills.tar.gz",
-   "payload_sha256": "c66bb0768ba546082dd2e7b24d1424042ff30dfa63d9fdfeddd559795f3f16ea",
+   "payload_sha256": "bb8087e35b73e2f821532fcd5ffb8553f9ec18587aa93a55e2594f08fea5c95d",
    "payload_bytes": 8893,
    "providers": [],
    "runtime": [
@@ -1729,7 +1729,7 @@
    "bytes": 57384,
    "content_redistributed": false,
    "payload": "payloads/transconnectome-claude-code-coord.tar.gz",
-   "payload_sha256": "798261d0d1f2ec3dba1d3cf9a5e12ef0d71435fc6bc6ee3b516402df9f3c98c8",
+   "payload_sha256": "78d1fd243cebb8bd48059e50160d63a0d4189aa89645d41458f0ae08bad454ca",
    "payload_bytes": 812,
    "providers": [
     "anthropic",
@@ -1756,7 +1756,7 @@
    "bytes": 7567,
    "content_redistributed": false,
    "payload": "payloads/trutzzi-agentic-photo-flow.tar.gz",
-   "payload_sha256": "5b7fcef3f1f59e6f2df2bf153f80d89516a9dc79c9fcb22fba1ec84e78dd0aa7",
+   "payload_sha256": "861c109b4b7e760c457c4f3ef20b08cc8554e6e0b40cf7d72063644820425b14",
    "payload_bytes": 603,
    "providers": [
     "ollama"
@@ -1783,7 +1783,7 @@
    "bytes": 73122,
    "content_redistributed": true,
    "payload": "payloads/udoschneider-workflow-pipeline.tar.gz",
-   "payload_sha256": "75c77e477322d1fafb07528d8dafb1decff9afe2e03a49f0252e6d9db519ceb2",
+   "payload_sha256": "298185fa5bb926126958692936f519dea2d85eb39335fd54947fa391237b47fe",
    "payload_bytes": 25579,
    "providers": [
     "anthropic"
@@ -1806,7 +1806,7 @@
    "bytes": 10482,
    "content_redistributed": false,
    "payload": "payloads/vaibhav07772-autonomous-ai-software-factory.tar.gz",
-   "payload_sha256": "b9b5e75ab355e182036c0bfb9393348bad070f6d2c22bec798e591bdecd7cad1",
+   "payload_sha256": "3e94faf99b6fac43948143748655e1f103ff16875016d04f2570c07edae80666",
    "payload_bytes": 764,
    "providers": [
     "openai",
@@ -1835,7 +1835,7 @@
    "bytes": 11942,
    "content_redistributed": true,
    "payload": "payloads/vercel-labs-eve-software-factory-template.tar.gz",
-   "payload_sha256": "a8d17f807aaa53a6da35f93ec017f6c2348679861ca0645f4b801cda2393127c",
+   "payload_sha256": "3ff6e35f34926c4ad7e23b8196dc22ffeb470572ab253d0325b4cdc66ee7f984",
    "payload_bytes": 6050,
    "providers": [
     "openai",
@@ -1864,7 +1864,7 @@
    "bytes": 9945,
    "content_redistributed": true,
    "payload": "payloads/watt-mind-factory.tar.gz",
-   "payload_sha256": "fb644f430b14e476830130ed5f5eb2987daf4dc883c73ec7845958e4f3cff52d",
+   "payload_sha256": "602135fd167e92014a1ab20e3d32642ed11d23b480c1d6385d3388aa9f636805",
    "payload_bytes": 4867,
    "providers": [],
    "runtime": [],
