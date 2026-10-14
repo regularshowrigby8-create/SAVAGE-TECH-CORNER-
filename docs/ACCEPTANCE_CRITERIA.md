@@ -763,23 +763,30 @@ from the repository's own authoritative documents instead of being invented:
   of raising, so a run records a machine with no network as an observation rather than as a failure,
   and the six data tools are declared to the researcher role so an agent driving it with a model can
   call them, while no offline step calls one (`SEALED_GITHUB_API` points the tools at an enterprise
-  instance); every MCP launch that could not be completed is recorded in
+  instance); `SEALED_NO_NETWORK=1` switches outbound networking off for the tools that leave the
+  machine - `net.fetch`, `net.http` and all seven `github.*` tools - each refusing at once and naming
+  the switch as the cause, with the probe answering `disabled` rather than spending a timeout to
+  discover what the operator already knows, and no request leaving the process; every MCP launch that
+  could not be completed is recorded in
   `tools/factory/imported_mcp_servers.json` with the machine's own diagnosis in `launch_note`, and
   every launch that was completed records the exact command and the tools list the handshake
   returned, so the catalogue's counts are the number of servers actually driven through an
   `initialize` handshake and a tool listing; and the emulator stage proves the screen is awake and
   focused before the instrumented suite runs, reporting a warning when it is not
 - **Test method**: `shell/tests/test_sealed_environment.py` (`GitHubToolTest`, eleven tests: the tools
-  run against a local server answering the API's own shapes, refusals asserted
-  separately, the probe's three outcomes are each asserted, and the role/offline-step design is
-  pinned), `test_the_seal_carries_the_mcp_and_ai_groups_too` (which requires every count in the
+  run against a local server answering the API's own shapes, refusals asserted separately, the probe's
+  four outcomes - reachable, answered-but-wrong-base, unreachable and switched off - are each asserted,
+  the switch is asserted against a server that records whether it was contacted, and the
+  role/offline-step design is pinned), `test_the_seal_carries_the_mcp_and_ai_groups_too` (which requires every count in the
   sealed catalogue to equal the registry's, and every server marked verified to carry a command and
   a tool list), `shell/tests/test_androidtest_failure_report.py`
   (`test_the_stage_wakes_the_screen_before_it_runs_the_suite`), and the handshake harness
   `tools/factory/mcp_handshake.py` whose output those counts come from
 - **Evidence required**: the sealed run's tool count and tool-step count, the researcher role's
   artefact recording `github.probe` with `available=True` on this machine and with `available=False;
-status=0; reason=...` when the API is pointed at a dead host, the handshake transcripts for the
+status=0; reason=GitHub is not reachable from here: ...` when the API is pointed at a dead host, and
+  `reason=network calls are disabled: SEALED_NO_NETWORK is set` when the switch is on, the handshake
+  transcripts for the
   servers recorded as verified, the diagnosed `launch_note` for each server that refused, and the
   pre-flight `::warning` annotation from a run where the device did not come up
 - **Honest limitation**: a server that completes the handshake but publishes no tools

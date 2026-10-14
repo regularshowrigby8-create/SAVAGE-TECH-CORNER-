@@ -1,6 +1,6 @@
 {
  "seal_version": "1.0.0",
- "sealed_at": "2026-10-14T17:54:26Z",
+ "sealed_at": "2026-10-14T18:57:08Z",
  "component": "sealed-factories",
  "description": "The imported factory set. Dropped in or removed as one unit; runs before the repository's own factories and feeds them.",
  "contents": {
@@ -101,8 +101,8 @@
   },
   {
    "path": "runtime/toolkit.py",
-   "bytes": 71658,
-   "sha256": "58d37ce58e695529685aaab4bf88d2d7b6c09e3ee68ee7d4a9deecb0d49b8efc"
+   "bytes": 73084,
+   "sha256": "a4b73c7f9dfe34d90de965f29e515da21f6933dad8fdbd5b094842b54ae6cafd"
   },
   {
    "path": "runtime/toolserver.py",

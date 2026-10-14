@@ -20,7 +20,7 @@ own refusal is quoted instead of a summary of it.
 | MCP servers verified by handshake | 7 servers, 52 tools                                                      | **16 servers, 303 tools**, each with the command that was verified                                                                                                                                | `tools/factory/imported_mcp_servers.json` |
 | MCP servers that cannot start     | 24 of 42                                                                 | **14 of 42** not installed here; 7 more start but refuse for a named reason (see §2.2)                                                                                                            | catalogue + `cli.py mcp-probe`            |
 | Emulator stage                    | ran `connectedDebugAndroidTest` against whatever state the device was in | wakes the screen, dismisses the keyguard, and asserts `Awake` + a non-keyguard focus before the suite                                                                                             | `tools/ci/android_emulator_run.sh`        |
-| Seal root                         | `32bf92d3…`, 1,849,160 payload bytes                                     | **`d6b2faee…`**, 1,870,829 payload bytes, 137 factories, 10 component files pinned                                                                                                                | `sealed-factories/SEAL.json`              |
+| Seal root                         | `32bf92d3…`, 1,849,160 payload bytes                                     | **`0ece777b…`**, 1,870,829 payload bytes, 137 factories, 10 component files pinned                                                                                                                | `sealed-factories/SEAL.json`              |
 
 The seal root changed for one reason: `runtime/toolkit.py` gained the GitHub section and `runtime/agents.py`
 gave the researcher role the GitHub tool group, and the seal pins every runtime module by hash
@@ -133,6 +133,31 @@ deliberate trade - the alternative is a capability that is asserted rather than 
 cannot fail a run: the step is a probe, and the six data tools keep their refusal contract for
 everything else. On a machine with no network the run is 5 s slower and says so in its artefacts.
 
+### 2.1c The air gap is a switch, not a hope
+
+The probe's 5 s cap makes an air-gapped machine merely slow; `SEALED_NO_NETWORK=1` makes it honest and
+immediate. With the switch on, every tool that leaves the machine refuses at once and names the switch
+as the cause - `net.fetch`, `net.http` and all seven `github.*` tools - and the probe answers
+`disabled` instead of spending a timeout discovering what the operator already knows:
+
+```
+$ SEALED_NO_NETWORK=1 python3 sealed-factories/runtime/cli.py call github.repo \
+    --arguments '{"repository":"regularshowrigby8-create/SAVAGE-TECH-CORNER-"}'
+the tool refused: network calls are disabled: SEALED_NO_NETWORK is set        # exit status 1
+
+$ SEALED_NO_NETWORK=1 python3 sealed-factories/runtime/cli.py run --root . --roles researcher \
+    --limit 1 --model-calls 0
+[swarm] 0 ran with a model, 1 offline, 2 tool steps ok, 0 failed, 1/1 checks passed
+{"tool": "github.probe", "ok": true,
+ "summary": "available=False; status=0; reason=network calls are disabled: SEALED_NO_NETWORK is set"}
+```
+
+The tests do not take the tools' word for it: `GitHubToolTest` runs the switch against the stub server
+and asserts the stub's request log is **unchanged** afterwards, so what is pinned is that no request
+left the process - not merely that the answer was an error. The switch deliberately does not cover the
+component's own gateway on localhost: that is the machine talking to itself, and a run that cannot use
+its own gateway would be a different switch, not this one.
+
 ### 2.2 MCP round 2: what starts now, and the command that was verified
 
 Round 12 recorded 24 servers that could not be started. Each was re-run through the handshake harness
@@ -188,17 +213,17 @@ catalogue 42, installed 28, not_installed 14, probed 4
 $ python3 tools/factory/seal_factories.py seal
 sealed 137 factories -> sealed-factories/SEAL.json
 component files pinned=10
-seal root sha256=d6b2faeecc19ad0afe6804576254838deae44fafc375c536e227918cd4ffacb6
+seal root sha256=0ece777b6fee553fb4865990ce0f9c7443d59b8b4bb52d32d536fd51edc71546
 payload bytes=1870829 licences=115
 
 $ cat sealed-factories/SEAL.sha256
-d6b2faeecc19ad0afe6804576254838deae44fafc375c536e227918cd4ffacb6  SEAL.json
+0ece777b6fee553fb4865990ce0f9c7443d59b8b4bb52d32d536fd51edc71546  SEAL.json
 
 $ python3 tools/factory/seal_factories.py verify
-[SEAL] OK 1.0.0: 137 factories, 1870829 payload bytes, 115 licence texts, root d6b2faeecc19ad0a…
+[SEAL] OK 1.0.0: 137 factories, 1870829 payload bytes, 115 licence texts, root 0ece777b6fee553f…
 
 $ python3 tools/factory/sealed_factory_runtime.py verify
-[SEAL] OK 1.0.0: 137 factories, 1870829 payload bytes, 115 licence texts, root d6b2faeecc19ad0a…
+[SEAL] OK 1.0.0: 137 factories, 1870829 payload bytes, 115 licence texts, root 0ece777b6fee553f…
 ```
 
 A test rebuilds every payload from its record and requires the bytes on disk to match, so re-sealing
@@ -238,12 +263,12 @@ $ node scripts/conveyor_belt.js
 
 ```
 $ python3 -m unittest discover -s shell/tests
-Ran 192 tests in 71.310s
+Ran 195 tests in 81.373s
 
 OK
 ```
 
-That is 13 more than round 12's 179: eleven in `GitHubToolTest`, one in
+That is 16 more than round 12's 179: thirteen in `GitHubToolTest`, one in
 `test_androidtest_failure_report.py` (`test_the_stage_wakes_the_screen_before_it_runs_the_suite`) and one in `test_android_assets.py`
 (`test_the_hierarchy_dump_is_retried_without_softening_its_assertion`).
 `shell/tests/test_sealed_environment.py` now runs 50 tests, `test_sealed_factory_runtime.py` 23
@@ -285,6 +310,15 @@ focus. The stage now, before the suite:
 
 The exit statuses of the two `adb` commands are captured and printed rather than suppressed; what
 decides readiness is the state read back underneath, never the optimism of having issued a command.
+The stage names the pre-flight's own status too (`emulator pre-flight exit=1 (1 = the screen never
+reported itself ready)`) rather than letting it pass unremarked.
+
+The pre-flight is now a function, `emulator_preflight`, and
+`test_the_pre_flight_decides_from_what_it_read_back` **runs** it against a stub `adb` on PATH for three
+devices - one that comes up awake and focused, one that answers `Awake` but is still on the keyguard,
+and one whose screen stays asleep. The first must report ready with no annotation; the other two must
+emit `::warning title=emulator pre-flight::` and return 1. Until this test, the logic had only ever
+executed inside a hosted runner.
 
 ### 2.8 Continuous integration on this round's commit
 

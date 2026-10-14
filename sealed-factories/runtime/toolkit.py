@@ -658,6 +658,8 @@ def code_syntax(workspace: Workspace, path: str = ".", limit: int = 20) -> dict:
 
 
 def net_fetch(url: str, timeout: int = 30, as_text: bool = True, limit: int = MAX_HTTP_BYTES) -> dict:
+    if network_disabled():
+        raise ToolError(f"network calls are disabled: {NO_NETWORK_VAR} is set")
     if not re.match(r"^https?://", url, re.I):
         raise ToolError("only http(s) URLs can be fetched")
     request = urllib.request.Request(url, headers={"User-Agent": "sealed-factory-runtime/1.0"})
@@ -680,6 +682,8 @@ def net_fetch(url: str, timeout: int = 30, as_text: bool = True, limit: int = MA
 
 def net_http(url: str, method: str = "GET", headers: dict | None = None, body: str = "",
              timeout: int = 30) -> dict:
+    if network_disabled():
+        raise ToolError(f"network calls are disabled: {NO_NETWORK_VAR} is set")
     request = urllib.request.Request(url, data=body.encode() if body else None, method=method.upper(),
                                      headers=headers or {})
     try:
@@ -695,6 +699,19 @@ def net_http(url: str, method: str = "GET", headers: dict | None = None, body: s
 
 
 # --------------------------------------------------------------------------- github
+
+#: Set `SEALED_NO_NETWORK=1` on a machine that has no network at all, or on a run that must not use
+#: one. Every tool that reaches out then refuses at once and names the switch as the cause, instead of
+#: spending a timeout discovering what the operator already knows. It covers the tools that leave the
+#: machine - `net.fetch`, `net.http` and the seven `github.*` tools - and deliberately does not cover
+#: the component's own gateway on localhost, which is the machine talking to itself.
+NO_NETWORK_VAR = "SEALED_NO_NETWORK"
+
+
+def network_disabled() -> bool:
+    """Is outbound networking switched off for this process? Truthy values, not just "1"."""
+    return os.environ.get(NO_NETWORK_VAR, "").strip().lower() in ("1", "true", "yes", "on")
+
 
 #: Where the GitHub REST API lives. `SEALED_GITHUB_API` points the tools at an enterprise instance,
 #: which is the same API under a different host.
@@ -720,6 +737,8 @@ def _github_request(path: str, method: str = "GET", body: dict | None = None, ti
     the API *answering*, a refused connection is the API being absent, and a caller that conflates
     the two cannot report either honestly.
     """
+    if network_disabled():
+        raise ToolError(f"network calls are disabled: {NO_NETWORK_VAR} is set")
     if not re.match(r"^[\w./?=&%:-]+$", path):
         raise ToolError(f"that is not a GitHub API path: {path!r}")
     url = path if path.startswith("http") else f"{GITHUB_API}/{path.lstrip('/')}"
@@ -893,6 +912,11 @@ def github_probe(timeout: int = 5) -> dict:
     `available` is what the API answered, not what the environment hoped for; `token_present` says
     whether a credential was offered, without revealing it.
     """
+    if network_disabled():
+        return {"available": False, "reachable": False, "status": 0, "disabled": True,
+                "token_present": bool(github_token()), "url": GITHUB_API, "rate_limit": None,
+                "rate_limit_remaining": None,
+                "reason": f"network calls are disabled: {NO_NETWORK_VAR} is set"}
     exchange = _github_request("rate_limit", timeout=timeout)
     status = exchange["status"]
     if status == 0:
@@ -902,7 +926,7 @@ def github_probe(timeout: int = 5) -> dict:
     else:
         reason = (f"a host answered, but not with a rate limit (HTTP {status}); check "
                   f"SEALED_GITHUB_API and the credential")
-    return {"available": status == 200, "reachable": status != 0, "status": status,
+    return {"available": status == 200, "reachable": status != 0, "status": status, "disabled": False,
             "token_present": exchange["authenticated"], "url": exchange["url"],
             "rate_limit": exchange["rate_limit"],
             "rate_limit_remaining": exchange["rate_limit_remaining"], "reason": reason}

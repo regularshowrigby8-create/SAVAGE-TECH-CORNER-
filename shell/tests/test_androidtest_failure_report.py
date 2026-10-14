@@ -7,6 +7,8 @@ never present an empty result directory as a pass.
 
 import importlib.util
 import io
+import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -169,6 +171,51 @@ class WiringTest(unittest.TestCase):
                         stage.index("gradlew connectedDebugAndroidTest"))
         # And a screen that never came up is reported rather than silently assumed.
         self.assertIn("::warning title=emulator pre-flight::", stage)
+
+    def test_the_pre_flight_decides_from_what_it_read_back(self):
+        """The pre-flight is logic, so it gets run - against a stub adb on PATH - not just grepped.
+
+        Three devices: one that comes up awake and focused, one that answers Awake but is still on the
+        keyguard, and one whose screen stays asleep. The first must be reported ready, the others must
+        emit the `::warning` annotation, and none of them may abort the stage.
+        """
+        stage = (REPO_ROOT / "tools" / "ci" / "android_emulator_run.sh").read_text(encoding="utf-8")
+        block = re.search(r"^emulator_preflight\(\) \{.*?^\}\n", stage, re.S | re.M)
+        self.assertIsNotNone(block, "the pre-flight must stay a function a test can run")
+
+        def run_with(wakefulness: str, focus: str) -> tuple[int, str]:
+            with tempfile.TemporaryDirectory() as where:
+                adb = Path(where) / "adb"
+                adb.write_text(
+                    "#!/usr/bin/env bash\n"
+                    "case \"$*\" in\n"
+                    f"  *\"dumpsys power\"*) echo \"  mWakefulness={wakefulness}\"; exit 0 ;;\n"
+                    f"  *\"dumpsys window\"*) echo \"  mCurrentFocus={focus}\"; exit 0 ;;\n"
+                    "  *getprop*) echo 1; exit 0 ;;\n"
+                    "  *) exit 0 ;;\n"
+                    "esac\n", encoding="utf-8")
+                adb.chmod(0o755)
+                harness = Path(where) / "harness.sh"
+                harness.write_text(
+                    "#!/usr/bin/env bash\nset -uo pipefail\nsleep() { :; }\n"
+                    f"LOG={where}/log.txt\n" + block.group(0) + "\nemulator_preflight\nexit $?\n",
+                    encoding="utf-8")
+                done = subprocess.run(["bash", str(harness)], capture_output=True, text=True, timeout=120,
+                                      env={**os.environ, "PATH": f"{where}:{os.environ['PATH']}"})
+                return done.returncode, done.stdout + done.stderr
+
+        ready_code, ready_output = run_with("Awake", "Window{a b}")
+        self.assertEqual(0, ready_code, ready_output)
+        self.assertIn("screen awake and focused, keyguard dismissed", ready_output)
+        self.assertNotIn("::warning", ready_output)
+
+        for wakefulness, focus, device in (("Awake", "StatusBar{Keyguard}", "awake but on the keyguard"),
+                                           ("Asleep", "Window{a b}", "screen not awake")):
+            with self.subTest(device=device):
+                code, output = run_with(wakefulness, focus)
+                self.assertEqual(1, code, output)
+                self.assertIn("::warning title=emulator pre-flight::", output)
+                self.assertIn("the instrumented suite will run anyway", output)
 
     def test_the_workflow_never_suppresses_the_test_command(self):
         workflow = io.open(REPO_ROOT / ".github" / "workflows" / "android-build.yml",

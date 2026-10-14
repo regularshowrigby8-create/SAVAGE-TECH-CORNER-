@@ -486,6 +486,53 @@ class GitHubToolTest(unittest.TestCase):
                           and name != "github.probe"],
                          "an offline step calls GitHub for data, which fails without a network")
 
+    def test_the_air_gap_switch_stops_the_call_from_being_made_at_all(self) -> None:
+        """`SEALED_NO_NETWORK=1` must stop the attempt, not just report its failure.
+
+        The stub records every request it serves, so this asserts what "no network" means: with the
+        switch set the server is never contacted, every github tool refuses naming the switch, and the
+        probe answers `disabled` rather than a timeout's worth of "unreachable".
+        """
+        os.environ["SEALED_NO_NETWORK"] = "1"
+        self.addCleanup(os.environ.pop, "SEALED_NO_NETWORK", None)
+        before = len(self.stub.requests)
+
+        probe = self._call("github.probe")
+        self.assertFalse(probe["available"])
+        self.assertTrue(probe["disabled"])
+        self.assertIn("SEALED_NO_NETWORK", probe["reason"])
+
+        for tool, arguments in (("github.repo", {"repository": "owner/name"}),
+                                ("github.file", {"repository": "owner/name", "path": "README.md"}),
+                                ("github.search", {"kind": "repositories", "query": "x"}),
+                                ("github.issues", {"repository": "owner/name"}),
+                                ("github.commits", {"repository": "owner/name"}),
+                                ("github.pr", {"repository": "owner/name", "number": 1})):
+            with self.subTest(tool=tool):
+                with self.assertRaises(toolkit.ToolError) as raised:
+                    self._call(tool, **arguments)
+                self.assertIn("SEALED_NO_NETWORK", str(raised.exception))
+
+        self.assertEqual(before, len(self.stub.requests),
+                         "a request reached the server while the air gap was switched on")
+
+    def test_the_air_gap_switch_covers_the_network_tools_too(self) -> None:
+        """A switch called "no network" that leaves `net.fetch` free would be a lie."""
+        os.environ["SEALED_NO_NETWORK"] = "true"
+        self.addCleanup(os.environ.pop, "SEALED_NO_NETWORK", None)
+        before = len(self.stub.requests)
+        with self.assertRaises(toolkit.ToolError) as raised:
+            self._call("net.fetch", url=f"{self.stub.url}/repos/owner/name")
+        self.assertIn("SEALED_NO_NETWORK", str(raised.exception))
+        with self.assertRaises(toolkit.ToolError) as raised:
+            self._call("net.http", url=f"{self.stub.url}/repos/owner/name")
+        self.assertIn("SEALED_NO_NETWORK", str(raised.exception))
+        self.assertEqual(before, len(self.stub.requests))
+        # And with the switch off again, the same call goes through: the refusal is the switch's doing.
+        os.environ.pop("SEALED_NO_NETWORK")
+        self.assertEqual(self._call("net.fetch", url=f"{self.stub.url}/repos/owner/name")["status"], 200)
+        self.assertGreater(len(self.stub.requests), before)
+
     def test_an_unreachable_api_is_refused_with_the_reason_not_an_empty_result(self) -> None:
         """Offline is a normal state for this component, and it must say so."""
         toolkit.GITHUB_API = "http://127.0.0.1:9"  # discard port: accepted by nothing

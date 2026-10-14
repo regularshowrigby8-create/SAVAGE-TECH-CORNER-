@@ -27,46 +27,60 @@ cd "$WORKSPACE"
 # 38537518650 on 226b71c showed. Waking the screen and dismissing the keyguard before the suite is
 # the fix; the state is asserted afterwards rather than assumed, and a screen that is still not
 # interactive is reported instead of being left to fail six tests mysteriously.
-echo "=== emulator pre-flight: device, screen and keyguard ===" | tee -a "$LOG"
-adb wait-for-device
-for attempt in $(seq 1 30); do
-  booted=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
-  [ "$booted" = "1" ] && break
-  sleep 2
-done
-echo "sys.boot_completed=$booted after pre-flight wait" | tee -a "$LOG"
+# The pre-flight is a function so that a test can run it against a stub `adb` on PATH: what it
+# decides (ready, or a warning) is logic, and logic that only ever executes inside a hosted
+# runner is logic nobody checks. Its own output is unchanged, and it returns 0 when the screen
+# reported itself ready and 1 when it did not - the caller warns, and the suite runs either way.
+emulator_preflight() {
+    echo "=== emulator pre-flight: device, screen and keyguard ===" | tee -a "$LOG"
+    adb wait-for-device
+    for attempt in $(seq 1 30); do
+      booted=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
+      [ "$booted" = "1" ] && break
+      sleep 2
+    done
+    echo "sys.boot_completed=$booted after pre-flight wait" | tee -a "$LOG"
 
-SCREEN_READY=0
-WAKE_STATUS=0
-DISMISS_STATUS=0
-for attempt in $(seq 1 10); do
-  # The two commands below can fail harmlessly (an emulator already awake refuses to be woken again),
-  # so their exit status is captured and printed rather than suppressed: what decides readiness is
-  # the state read back underneath, never the optimism of having issued the command.
-  adb shell input keyevent KEYCODE_WAKEUP >/dev/null 2>&1
-  WAKE_STATUS=$?
-  adb shell wm dismiss-keyguard >/dev/null 2>&1
-  DISMISS_STATUS=$?
-  WAKE_STATE=$(adb shell dumpsys power 2>/dev/null | grep -m1 -E 'mWakefulness=' | tr -d '\r')
-  FOCUS=$(adb shell dumpsys window 2>/dev/null | grep -m1 -E 'mCurrentFocus=' | tr -d '\r')
-  case "$WAKE_STATE" in
-    *Awake*) case "$FOCUS" in
-               *Keyguard*) : ;;
-               *) SCREEN_READY=1 ;;
-             esac ;;
-  esac
-  [ "$SCREEN_READY" -eq 1 ] && break
-  sleep 2
-done
-echo "wake=$WAKE_STATUS dismiss-keyguard=$DISMISS_STATUS attempt=$attempt" | tee -a "$LOG"
-echo "power: ${WAKE_STATE:-unreadable}" | tee -a "$LOG"
-echo "focus: ${FOCUS:-unreadable}" | tee -a "$LOG"
-if [ "$SCREEN_READY" -ne 1 ]; then
-  echo "::warning title=emulator pre-flight::the screen did not report itself awake and focused after $attempt attempts; the instrumented suite will run anyway and its result is what counts"
-else
-  echo "emulator pre-flight: screen awake and focused, keyguard dismissed" | tee -a "$LOG"
-fi
+    SCREEN_READY=0
+    WAKE_STATUS=0
+    DISMISS_STATUS=0
+    for attempt in $(seq 1 10); do
+      # The two commands below can fail harmlessly (an emulator already awake refuses to be woken again),
+      # so their exit status is captured and printed rather than suppressed: what decides readiness is
+      # the state read back underneath, never the optimism of having issued the command.
+      adb shell input keyevent KEYCODE_WAKEUP >/dev/null 2>&1
+      WAKE_STATUS=$?
+      adb shell wm dismiss-keyguard >/dev/null 2>&1
+      DISMISS_STATUS=$?
+      WAKE_STATE=$(adb shell dumpsys power 2>/dev/null | grep -m1 -E 'mWakefulness=' | tr -d '\r')
+      FOCUS=$(adb shell dumpsys window 2>/dev/null | grep -m1 -E 'mCurrentFocus=' | tr -d '\r')
+      case "$WAKE_STATE" in
+        *Awake*) case "$FOCUS" in
+                   *Keyguard*) : ;;
+                   *) SCREEN_READY=1 ;;
+                 esac ;;
+      esac
+      [ "$SCREEN_READY" -eq 1 ] && break
+      sleep 2
+    done
+    echo "wake=$WAKE_STATUS dismiss-keyguard=$DISMISS_STATUS attempt=$attempt" | tee -a "$LOG"
+    echo "power: ${WAKE_STATE:-unreadable}" | tee -a "$LOG"
+    echo "focus: ${FOCUS:-unreadable}" | tee -a "$LOG"
+    if [ "$SCREEN_READY" -ne 1 ]; then
+      echo "::warning title=emulator pre-flight::the screen did not report itself awake and focused after $attempt attempts; the instrumented suite will run anyway and its result is what counts"
+    else
+      echo "emulator pre-flight: screen awake and focused, keyguard dismissed" | tee -a "$LOG"
+    fi
+    [ "$SCREEN_READY" -eq 1 ]
+}
 
+# The pre-flight's own status is named here rather than left to pass unremarked: 1 means the screen
+# never reported itself ready, which is a warning inside the function and not a gate - the instrumented
+# suite's result is what decides this stage. `set -uo pipefail` without `-e` is why this script
+# continues either way, and the line below makes that continuation visible in the log.
+emulator_preflight
+PREFLIGHT_STATUS=$?
+echo "emulator pre-flight exit=$PREFLIGHT_STATUS (1 = the screen never reported itself ready)" | tee -a "$LOG"
 echo "=== instrumented tests on the attached emulator ===" | tee -a "$LOG"
 ( cd shell/android_project && ./gradlew connectedDebugAndroidTest --stacktrace --no-daemon ) \
   2>&1 | tee -a "$LOG"
