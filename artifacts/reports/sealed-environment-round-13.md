@@ -536,6 +536,35 @@ CI-only tree is not a factory, and that each of the nine planned repositories ha
 suite goes from 205 to 242 tests, all passing, and the seal-sensitive and air-gapped jobs are
 unaffected.
 
+### 2.8e CI on the commit that grew the set
+
+`9e78a75` is the commit that adds the importers, the re-scan, the two test files and the 149-record
+seal. Every workflow it triggered is green, and the Android leg is the one that carries the APK:
+
+| Workflow                                   | Run                                                                                      | Result                 |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------- | ---------------------- |
+| Comprehensive Quality Conveyor Belt (push) | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38637242864 | success                |
+| Comprehensive Quality Conveyor Belt (PR)   | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38637254867 | success                |
+| Android Build, Test and Release (PR)       | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38637254875 | success                |
+| Factory 2 — Single Debug Job (push)        | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38637242865 | success                |
+| Factory 2 — Single Debug Job (PR)          | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38637254969 | cancelled (superseded) |
+| AI PR Code Reviewers (Dual Fallback)       | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38637254881 | success                |
+
+The belt's two jobs are green in both runs: `Conveyor Belt Verification Pipeline: success` and
+`Air-gapped sealed run (SEALED_NO_NETWORK=1): success` - so the seal this section quotes is the seal CI
+verified, and the air-gapped job ran it on a machine that installed nothing. The emulator check-run
+`116105703717` is `success` and its annotations are three runner deprecation notices, no `::error`.
+The Android build's own annotation reports the APK it built from this commit:
+
+```
+apk=/home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/shell/android_project/app/build/outputs/apk/debug/app-debug.apk
+sha256=d7facadd46fe356cb9c36edbab162968f583a4462a6bdfa61c47bb445ef39fbd
+```
+
+That APK is CI's, not this sandbox's: the local gate still fails at `gradlew :app:assembleDebug`
+because this machine has neither Gradle nor a JDK to run it (§4), and this report does not claim an
+APK from here.
+
 ### 2.9 The Android leg failed on `0e7547f`, and why
 
 The commit that wired GitHub into the run went red on one leg — and it is recorded here because a
@@ -634,7 +663,7 @@ signal that the screen did come up awake and focused - only the three runner dep
 | AC-060    | GitHub capability is inside the seal, exercised by the environment every run; the problems it was brought in for carry evidence | `GitHubToolTest` (11 tests), `test_the_seal_carries_the_mcp_and_ai_groups_too`, `test_the_stage_wakes_the_screen_before_it_runs_the_suite` | §2.1, §2.1b–§2.3, §2.7 |
 | AC-061    | The belt runs the sealed set first, with the GitHub tooling inside it, offline                                                  | `scripts/conveyor_belt.js` station 0, `test_sealed_factory_runtime.py`                                                                     | §2.5                   |
 | AC-051    | The environment works with no model, no keys and no network - now with a run behind it, not only tests                          | `test_airgap_judge.py` (10 tests), `test_sealed_environment.py`, the `Air-gapped sealed run` CI job                                        | §2.1c, §2.8b, §2.10    |
-| AC-062    | The set is grown by importing from many repositories, with the licence wall kept rather than worked around                      | `test_license_rescan.py` (23 tests), `test_factory_discovery.py` (14 tests), `test_imported_factories.py`                                  | §2.8d                  |
+| AC-062    | The set is grown by importing from many repositories, with the licence wall kept rather than worked around                      | `test_license_rescan.py` (23 tests), `test_factory_discovery.py` (14 tests), `test_imported_factories.py`                                  | §2.8d, §2.8e           |
 
 The criterion text is in `docs/ACCEPTANCE_CRITERIA.md` (AC-051, AC-060, AC-061, AC-062).
 
