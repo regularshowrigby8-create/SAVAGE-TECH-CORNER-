@@ -69,35 +69,46 @@ public class NavigationStateTest {
             TestSupport.navigateForReal(scenario, PAGE_A);
             TestSupport.waitForSettledNavigation(scenario, PAGE_A);
             Assert.assertEquals("an idle page offers Reload",
-                    TestSupport.onResult(scenario, activity -> activity.getString(R.string.action_reload)),
-                    TestSupport.description(scenario, R.id.btn_action_reload));
+                    reloadLabel(scenario), affordance(scenario));
 
-            // The click is a real click: the application asks the WebView to reload. What a test
-            // cannot schedule is when Chromium calls back with onPageStarted, so that callback is
-            // delivered explicitly - it is the same call the WebView client makes - and what the user
-            // then sees is asserted.
-            TestSupport.on(scenario, activity -> activity.findViewById(R.id.btn_action_reload).performClick());
+            // The reload action is also the stop action, so its label has to follow the load state.
+            //
+            // What a test cannot schedule is when Chromium reports the start of that load: the CI
+            // emulator has no route to the internet, so the requested page fails as soon as the name
+            // does not resolve and the load is over before any poll could see it. Waiting for the real
+            // in-flight moment therefore only passed while an *earlier* load happened to still be
+            // running - which is why this test broke as soon as the navigation before it really
+            // settled. The callback is delivered the way the WebView client delivers it (the same
+            // technique MainActivityLaunchTest uses for the progress bar), and both clicks below are
+            // real clicks on the real action.
             TestSupport.on(scenario, activity -> activity.onPageStarted(PAGE_A));
-            TestSupport.waitUntil("the reload to be in flight with a Stop affordance",
-                    () -> isLoading(scenario)
-                            && TestSupport.onResult(scenario, activity -> activity.getString(R.string.action_stop))
-                            .equals(TestSupport.description(scenario, R.id.btn_action_reload)),
+            TestSupport.waitUntil("a load in flight to advertise Stop",
+                    () -> isLoading(scenario) && stopLabel(scenario).equals(affordance(scenario)),
                     () -> "loading=" + isLoading(scenario) + " affordance='"
-                            + TestSupport.description(scenario, R.id.btn_action_reload) + "'");
+                            + affordance(scenario) + "'");
             Assert.assertEquals("a load in flight shows the progress bar",
                     View.VISIBLE, TestSupport.visibility(scenario, R.id.page_progress_bar));
 
-            // The second click really stops the load; the settle then restores Reload.
+            // The second click really takes the stop branch: the application stops the load it believes
+            // is in flight, and the next callback the WebView would deliver is the end of that load.
             TestSupport.on(scenario, activity -> activity.findViewById(R.id.btn_action_reload).performClick());
             TestSupport.on(scenario, activity -> activity.onPageFinished(PAGE_A, "Page A"));
-            TestSupport.waitUntil("Stop to end the load and restore the Reload affordance",
-                    () -> !isLoading(scenario)
-                            && TestSupport.onResult(scenario, activity -> activity.getString(R.string.action_reload))
-                            .equals(TestSupport.description(scenario, R.id.btn_action_reload)),
+            TestSupport.waitUntil("the stopped load to restore the Reload affordance",
+                    () -> !isLoading(scenario) && reloadLabel(scenario).equals(affordance(scenario)),
                     () -> "loading=" + isLoading(scenario) + " affordance='"
-                            + TestSupport.description(scenario, R.id.btn_action_reload) + "'");
+                            + affordance(scenario) + "'");
             Assert.assertNotEquals("a settled load hides the progress bar",
                     View.VISIBLE, TestSupport.visibility(scenario, R.id.page_progress_bar));
+
+            // Clicking Reload on an idle page asks the browser to load that page again: the browser has
+            // to come out of it committed on the same address and still usable, which a click that
+            // threw, or a WebView left in a broken state, would not do. (The load itself cannot be
+            // observed message by message on a runner whose DNS fails in a few milliseconds - see
+            // above - so what is asserted here is the state the user is left in.)
+            TestSupport.on(scenario, activity -> activity.findViewById(R.id.btn_action_reload).performClick());
+            TestSupport.waitForSettledNavigation(scenario, PAGE_A);
+            Assert.assertEquals("a reload leaves the idle page offering Reload again",
+                    reloadLabel(scenario), affordance(scenario));
 
             TestSupport.on(scenario, activity -> activity.findViewById(R.id.btn_nav_home).performClick());
             TestSupport.waitUntil("Home to request the home URL",
@@ -113,6 +124,19 @@ public class NavigationStateTest {
     private static boolean canGoBack(ActivityScenario<MainActivity> scenario) {
         return Boolean.TRUE.equals(TestSupport.onResult(scenario,
                 activity -> TestSupport.webViewOf(activity).canGoBack()));
+    }
+
+    /** What the reload/stop action currently advertises. */
+    private static String affordance(ActivityScenario<MainActivity> scenario) {
+        return TestSupport.description(scenario, R.id.btn_action_reload);
+    }
+
+    private static String reloadLabel(ActivityScenario<MainActivity> scenario) {
+        return TestSupport.onResult(scenario, activity -> activity.getString(R.string.action_reload));
+    }
+
+    private static String stopLabel(ActivityScenario<MainActivity> scenario) {
+        return TestSupport.onResult(scenario, activity -> activity.getString(R.string.action_stop));
     }
 
     private static boolean isLoading(ActivityScenario<MainActivity> scenario) {

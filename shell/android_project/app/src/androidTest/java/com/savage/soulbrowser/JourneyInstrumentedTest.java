@@ -4,7 +4,6 @@ import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.RootMatchers.isDialog;
-import static androidx.test.espresso.matcher.RootMatchers.withDecorView;
 import static androidx.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static androidx.test.espresso.matcher.ViewMatchers.hasSibling;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
@@ -12,12 +11,15 @@ import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.is;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.TextView;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -27,6 +29,9 @@ import com.savage.soulbrowser.data.BookmarkRepository;
 import com.savage.soulbrowser.data.HistoryRepository;
 import com.savage.soulbrowser.ui.BookmarksActivity;
 import com.savage.soulbrowser.ui.HistoryActivity;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -51,13 +56,28 @@ public class JourneyInstrumentedTest {
     private static final String PAGE_A = "https://example.com/a";
     private static final String PAGE_B = "https://example.com/b";
 
+    /** Screens this test put into the browser's task, so its teardown can close them again. */
+    private final List<Activity> screensOpenedByThisTest = new ArrayList<>();
+
     @Before
     public void clearLocalState() {
         TestSupport.wipeLocalData();
     }
 
     @After
-    public void restoreRadios() {
+    public void closeTheScreensThisTestOpenedAndRestoreRadios() {
+        // A journey that fails half way through leaves its list screen in the task, on top of the
+        // browser: the next journey would then be testing through that screen. The screen closes
+        // itself when the row is opened, so this only ever has work to do after a failure.
+        for (Activity screen : screensOpenedByThisTest) {
+            TestSupport.readOnMainThread(screen, activity -> {
+                if (!activity.isFinishing()) {
+                    activity.finish();
+                }
+                return null;
+            });
+        }
+        screensOpenedByThisTest.clear();
         TestSupport.setNetworkEnabled(true);
     }
 
@@ -107,8 +127,9 @@ public class JourneyInstrumentedTest {
                             activity -> activity.getString(R.string.action_bookmark_remove))));
 
             // Opening the bookmark from the stored list must load it in the browser. The list is a
-            // real screen with a really clicked row; the browser then comes back through the same
-            // intent the list sends, which is what makes the address observable.
+            // real screen and the row is opened through the row's own click listener; the browser then
+            // comes back through the same intent the list sends, which is what makes the address
+            // observable.
             openRow(BookmarksActivity.class, "example.com");
             assertBrowserCameBackTo(scenario, PAGE_A);
         }
@@ -254,7 +275,7 @@ public class JourneyInstrumentedTest {
     }
 
     /**
-     * Opens a list screen inside the browser's task and taps one of its rows, the way a user does.
+     * Opens a list screen inside the browser's task and opens one of its rows, the way a user does.
      *
      * <p>{@link ActivityScenario#launch} cannot be used for this: it adds
      * {@code FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_CLEAR_TASK}, which clears the task the browser is
@@ -262,31 +283,85 @@ public class JourneyInstrumentedTest {
      * is why these journeys used to fail with a browser that never reappeared. The instrumentation's
      * own {@code startActivitySync} adds the task flag without the clearing one, so the screen is
      * pushed on top of the browser exactly as the in-app screen is.
+     *
+     * <p>The row itself is opened by invoking its click listener on the row view of the real list -
+     * the same listener the platform invokes when the row is tapped, and the same way the rest of this
+     * suite presses the browser's buttons. Injected taps are used where the touch pipeline is what the
+     * criterion is about (the system Back press in {@code BackNavigationTest}); here the criterion is
+     * that opening a stored address navigates the browser, and an injected tap that lands on the
+     * background browser's omnibox cannot test that - which is exactly how this journey failed.
      */
-    private static void openRow(Class<?> screen, String rowText) {
+    private void openRow(Class<?> screen, String rowText) {
         Activity list = InstrumentationRegistry.getInstrumentation()
                 .startActivitySync(new Intent(TestSupport.context(), screen)
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        screensOpenedByThisTest.add(list);
         TestSupport.waitUntil("the " + screen.getSimpleName() + " screen to come to the front",
-                () -> Boolean.TRUE.equals(TestSupport.readOnMainThread(list, Activity::hasWindowFocus)),
+                () -> Boolean.TRUE.equals(
+                        TestSupport.readOnMainThread(list, Activity::hasWindowFocus)),
                 () -> "the screen never took the window focus; the platform reports as resumed: "
                         + TestSupport.platformResumedActivity());
 
-        // The row's own address view is what is clicked - a row may show the address twice (as its
-        // title fallback and as its address), and matching both is an ambiguous match, not a click -
-        // and it is looked up inside the screen's own window, never in the browser behind it.
-        View decor = TestSupport.readOnMainThread(list, activity -> activity.getWindow().getDecorView());
-        onView(allOf(withId(R.id.item_url), withText(containsString(rowText))))
-                .inRoot(withDecorView(is(decor)))
-                .perform(click());
+        View row = TestSupport.readOnMainThread(list,
+                activity -> clickableRowShowing(activity, rowText));
+        Assert.assertNotNull("the " + screen.getSimpleName() + " screen shows a row for " + rowText
+                + " whose click listener is attached; the platform reports as resumed: "
+                + TestSupport.platformResumedActivity(), row);
+        TestSupport.readOnMainThread(list, activity -> {
+            row.performClick();
+            return null;
+        });
 
-        // The screen closes itself as it hands the address over. A screen that keeps running means
-        // the tap never reached the row's click listener: without this the journey could only report
-        // that the browser never came back, not that the row was never opened.
+        // The screen opens the browser and closes itself. A screen that keeps running means the row
+        // was never opened: without this the journey could only report that the browser never came
+        // back, not that the row click never happened.
         TestSupport.waitUntil("the " + screen.getSimpleName() + " screen to close itself",
                 () -> Boolean.TRUE.equals(TestSupport.readOnMainThread(list, Activity::isFinishing)),
-                () -> "the row tap did not reach the row's click listener (the screen is not closing); "
-                        + "the platform reports as resumed: " + TestSupport.platformResumedActivity());
+                () -> "opening the row did not take the screen away; the platform reports as resumed: "
+                        + TestSupport.platformResumedActivity());
+    }
+
+    /**
+     * The clickable row of a list screen that shows {@code rowText}, or {@code null} when the list
+     * holds no such row. The search starts at the list, so the same address in the background
+     * browser's omnibox can never be mistaken for a row.
+     */
+    private static View clickableRowShowing(Activity screen, String rowText) {
+        View list = findFirst(screen.getWindow().getDecorView(),
+                view -> view instanceof RecyclerView);
+        if (list == null) {
+            return null;
+        }
+        View text = findFirst(list,
+                view -> view instanceof TextView
+                        && ((TextView) view).getText().toString().contains(rowText));
+        if (text == null) {
+            return null;
+        }
+        // The row is the nearest clickable ancestor of the text; the delete button next to it is a
+        // sibling, so it can never be what this returns.
+        View candidate = text;
+        while (candidate != null && !candidate.isClickable()) {
+            candidate = candidate.getParent() instanceof View ? (View) candidate.getParent() : null;
+        }
+        return candidate instanceof RecyclerView ? null : candidate;
+    }
+
+    /** Depth-first search for the first view the predicate accepts, or {@code null}. */
+    private static View findFirst(View root, java.util.function.Predicate<View> predicate) {
+        if (predicate.test(root)) {
+            return root;
+        }
+        if (root instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) root;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                View found = findFirst(group.getChildAt(i), predicate);
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
     }
 
     private static boolean canGoBack(ActivityScenario<MainActivity> scenario) {

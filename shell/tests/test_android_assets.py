@@ -15,6 +15,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 ANDROID_ROOT = REPO_ROOT / "shell" / "android_project"
 MAIN = ANDROID_ROOT / "app" / "src" / "main"
 JAVA = MAIN / "java" / "com" / "savage" / "soulbrowser"
+ANDROID_TEST = (ANDROID_ROOT / "app" / "src" / "androidTest" / "java" / "com" / "savage"
+                / "soulbrowser")
 RES = MAIN / "res"
 MANIFEST = MAIN / "AndroidManifest.xml"
 
@@ -435,6 +437,43 @@ class AndroidWorkflowTest(unittest.TestCase):
                          "an unguarded `pidof | tr` substitution is what aborted the run silently")
         self.assertEqual(3, script.count('pid_of "$PACKAGE"'),
                          "all three reads of the process list go through the helper")
+
+    def test_the_list_journeys_do_not_clear_the_task_they_open_into(self):
+        """A journey must not destroy the browser it is about to come back to.
+
+        `ActivityScenario.launch` adds `FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_CLEAR_TASK` to the
+        intent it is given (androidx `InstrumentationActivityInvoker`), so launching a list screen with
+        it cleared the task the browser was in and destroyed the browser itself - which is why the two
+        journeys that open a stored address kept failing with a browser that never came back. They now
+        push the screen into the browser's task with the instrumentation's `startActivitySync`, open
+        the row through the row's own click listener, and require the browser's window to be in front.
+        """
+        journey = read(ANDROID_TEST / "JourneyInstrumentedTest.java")
+        self.assertNotIn("ActivityScenario.launch(", journey,
+                         "a list screen must not be launched with a task-clearing scenario")
+        self.assertIn("startActivitySync", journey)
+        self.assertIn("row.performClick()", journey)
+        self.assertIn("browserHasFocus", journey,
+                      "the journey has to require the browser window in front, not just its address")
+        support = read(ANDROID_TEST / "TestSupport.java")
+        self.assertIn("copyBackForwardList", support,
+                      "a settled navigation means a committed entry, not a reported URL")
+        self.assertIn("committedUrl", support)
+
+    def test_the_navigation_controls_are_exercised_by_real_clicks(self):
+        """Reload/Stop must be driven by clicks on the real action, in both of its states.
+
+        Waiting for the real in-flight moment cannot be done on a runner whose DNS fails in a few
+        milliseconds: the load is over before any poll could see it, which is how that assertion used
+        to pass - only while a previous load happened to still be running. The WebView callback is
+        therefore delivered explicitly (the technique `MainActivityLaunchTest` already uses for the
+        progress bar) while the clicks stay real clicks on the real action; this pins both halves.
+        """
+        navigation = read(ANDROID_TEST / "NavigationStateTest.java")
+        self.assertEqual(2, navigation.count("R.id.btn_action_reload).performClick()"),
+                         "both the stop branch and the reload branch are real clicks")
+        self.assertIn("onPageStarted(", navigation)
+        self.assertIn("onPageFinished(", navigation)
 
     def test_no_workflow_masks_a_failure(self):
         """No workflow may turn a failure into a pass; the belt and the reviewers must be honest."""
