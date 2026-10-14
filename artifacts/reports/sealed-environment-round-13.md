@@ -405,6 +405,29 @@ airgapped_sealed_run:
     - run: bash tools/ci/airgap_run.sh
 ```
 
+### 2.8c The air-gapped job's first CI run
+
+`b452e68` is the commit that adds the job, and all six workflows are green on it — the new job among
+them:
+
+| Workflow                                   | Run                                                                                                     | Result  |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------- | ------- |
+| Comprehensive Quality Conveyor Belt (push) | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38630495387                | success |
+| Comprehensive Quality Conveyor Belt (PR)   | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38630503901                | success |
+| Android Build, Test and Release            | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38630503945                | success |
+| Factory 2 — Single Debug Job (push/PR)     | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38630495396, …/38630503935 | success |
+| AI PR Code Reviewers (Dual Fallback)       | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38630504024                | success |
+
+The belt run's jobs, as the API reports them: `Conveyor Belt Verification Pipeline: success` and
+`Air-gapped sealed run (SEALED_NO_NETWORK=1): success`, with the air-gapped job carrying two
+annotations, both runner deprecation notices and no `::error` — the script emits `::error` and exits
+non-zero unless the judge accepts, and the judge accepts only a run whose own artefact records the
+switch. So on a machine that installed nothing, the sealed environment ran, every check passed, no
+model call was made or claimed, and the researcher's probe recorded the air gap as the reason it could
+not reach GitHub. `gh run view --log` still cannot be read from here (the raw log download fails with
+`EOF`), so the job conclusions and annotations above are what was retrievable, and the local run in
+§2.8b is the verbatim output.
+
 ### 2.9 The Android leg failed on `0e7547f`, and why
 
 The commit that wired GitHub into the run went red on one leg — and it is recorded here because a
