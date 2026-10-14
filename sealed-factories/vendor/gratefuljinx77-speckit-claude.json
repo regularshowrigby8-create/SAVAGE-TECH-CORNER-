@@ -1,0 +1,39 @@
+{
+ "id": "gratefuljinx77-speckit-claude",
+ "full_name": "GratefulJinx77/speckit-claude",
+ "url": "https://github.com/GratefulJinx77/speckit-claude",
+ "license": "NOASSERTION",
+ "license_file": null,
+ "license_text_sha256": null,
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "8f42211b0e82d9eec1a9cc6d5e92d0281f8bc0f6",
+ "vendored_files": [
+  {
+   "path": "agents/speckit-workflow.md",
+   "bytes": 10693,
+   "sha256": "ed187c55eb8de93d096270a45690ba7d0202df2de9f4634911dc7c8ff304be5f"
+  },
+  {
+   "path": "README.md",
+   "bytes": 1429,
+   "sha256": "ff24089778a0c5cc1c827c5c029fc785ea13ddb6738d9a00ad5d77e7c65a6b54"
+  }
+ ],
+ "skipped": {
+  "budget": false,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 22
+ },
+ "providers": [
+  "anthropic"
+ ],
+ "entrypoints": [],
+ "runtime": [],
+ "notes": [],
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 2,
+ "vendored_bytes": 12122,
+ "content_redistributed": false
+}

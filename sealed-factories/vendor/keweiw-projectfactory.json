@@ -1,0 +1,74 @@
+{
+ "id": "keweiw-projectfactory",
+ "full_name": "keweiw/ProjectFactory",
+ "url": "https://github.com/keweiw/ProjectFactory",
+ "license": "NOASSERTION",
+ "license_file": null,
+ "license_text_sha256": null,
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "3ad45f96421d39c925686e557b52588f40e71d79",
+ "vendored_files": [
+  {
+   "path": "roles/design-agent.md",
+   "bytes": 2041,
+   "sha256": "906cb46e8f6fe0473e7ffe51a6bc7b5f4a837cffb164b060e7cacd3c36ad950a"
+  },
+  {
+   "path": "roles/architect-agent.md",
+   "bytes": 2605,
+   "sha256": "206868736a581a47a28a6836400237a05f91c4a82ccabfdafb060ee86680a0da"
+  },
+  {
+   "path": "roles/coding-agent.md",
+   "bytes": 2679,
+   "sha256": "fabfa18275b0c7c67111678a8a763d558acbc544a3f2c3379cac5109590ca1f5"
+  },
+  {
+   "path": "roles/testing-agent.md",
+   "bytes": 2750,
+   "sha256": "127d6e6b5498e8c2701e3ab2e761d32938a4c343e114bacd6600e8bdfaa6680d"
+  },
+  {
+   "path": "roles/spec-reviewer-agent.md",
+   "bytes": 2754,
+   "sha256": "29d624b576f4ede7db08acbbe31fad4882eadb97a4cd552d2924a7c0dbeb1ed3"
+  },
+  {
+   "path": "roles/code-review-agent.md",
+   "bytes": 2774,
+   "sha256": "0056e264dc409c8313ed08cd9b83e2c9a0190d22f41072cdd18ebdac51dd5675"
+  },
+  {
+   "path": "project/tickread/AGENTS.md",
+   "bytes": 4409,
+   "sha256": "d11b4aac6c50f2604bf6286ab962729a07fbaaaa2a847e8999839be226d907bc"
+  },
+  {
+   "path": "AGENTS.md",
+   "bytes": 6915,
+   "sha256": "00e461c7bfb56c8580ec3263d9045f20fa51a80f689fb448c0323161319f6481"
+  },
+  {
+   "path": "README.md",
+   "bytes": 5323,
+   "sha256": "6c760aa5bfe66ae29705661764fb8a1c9365509bdc5b6464d10a750b1d431cf1"
+  }
+ ],
+ "skipped": {
+  "budget": false,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 144
+ },
+ "providers": [
+  "anthropic"
+ ],
+ "entrypoints": [],
+ "runtime": [],
+ "notes": [],
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 9,
+ "vendored_bytes": 32250,
+ "content_redistributed": false
+}

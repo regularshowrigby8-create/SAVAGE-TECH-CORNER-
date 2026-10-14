@@ -124,9 +124,10 @@ class ImportedFactoryRegistryTest(unittest.TestCase):
                 self.assertIn(f'`{entry["id"]}`', catalog,
                               f'{entry["id"]} is in the registry but not in the catalog')
                 self.assertIn(entry["url"], catalog)
-        # Only the catalog table: its rows are `| `<id>` | [repo](url) | ...`, which distinguishes
-        # them from the class table above it.
-        listed = set(re.findall(r"^\| `([\w.-]+)` \| \[", catalog, re.M))
+        # Only the catalog table: its rows are `| `<id>` | [repo](url) | ...`. The class table above
+        # it also starts `| \`word\``, so the distinguishing part is the link that follows the id -
+        # and the padding between the cells is prettier's business, not this test's.
+        listed = set(re.findall(r"^\|\s*`([\w.-]+)`\s*\|\s*\[", catalog, re.M))
         self.assertEqual({entry["id"] for entry in self.entries}, listed,
                          "the catalog lists an id the registry does not hold")
 

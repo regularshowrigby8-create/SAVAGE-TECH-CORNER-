@@ -1,0 +1,69 @@
+{
+ "id": "jabbala10-bit-ai-agent-platform",
+ "full_name": "jabbala10-bit/ai-agent-platform",
+ "url": "https://github.com/jabbala10-bit/ai-agent-platform",
+ "license": "NOASSERTION",
+ "license_file": null,
+ "license_text_sha256": null,
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "6feaddb3dbf7246271a1b75c5b562b68dcae1357",
+ "vendored_files": [
+  {
+   "path": "src/ai_agent_platform/agent/factory.py",
+   "bytes": 1162,
+   "sha256": "94214f32d9bd08bb4b60fdaab97ed6402c8a9a2b09621e7666d03b8cbd993396"
+  },
+  {
+   "path": "src/ai_agent_platform/agent/agent.py",
+   "bytes": 3561,
+   "sha256": "a0b6297d5e05f97a935bf3ae2555f09610a29a0345b174e6d4be8db509508108"
+  },
+  {
+   "path": "src/ai_agent_platform/cli.py",
+   "bytes": 1276,
+   "sha256": "e8ac5f2f272e7ffc19822faeeb912db5d2f113a8ad1ae10409af8350eeb0002d"
+  },
+  {
+   "path": "src/ai_agent_platform/llm/factory.py",
+   "bytes": 1293,
+   "sha256": "2fd83f22a94caf8cc2089b47f5e4a5fcfcf34434e4fb094273900da0f63232b3"
+  },
+  {
+   "path": "src/ai_agent_platform/api/main.py",
+   "bytes": 1733,
+   "sha256": "de609ddca3f2579e01e61309d02ee394c6a038020296d69519c215772c657f73"
+  },
+  {
+   "path": "README.md",
+   "bytes": 38747,
+   "sha256": "56444453c5bdedb3dc596b20893659dc8febd069c8b228118fcaf2d74e94b063"
+  }
+ ],
+ "skipped": {
+  "budget": false,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 53
+ },
+ "providers": [
+  "openai",
+  "anthropic",
+  "ollama"
+ ],
+ "entrypoints": [
+  "src/ai_agent_platform/agent/factory.py",
+  "src/ai_agent_platform/agent/agent.py",
+  "src/ai_agent_platform/cli.py",
+  "src/ai_agent_platform/llm/factory.py",
+  "src/ai_agent_platform/api/main.py"
+ ],
+ "runtime": [
+  "python"
+ ],
+ "notes": [],
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 6,
+ "vendored_bytes": 47772,
+ "content_redistributed": false
+}

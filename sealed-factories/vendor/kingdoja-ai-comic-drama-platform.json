@@ -1,0 +1,162 @@
+{
+ "id": "kingdoja-ai-comic-drama-platform",
+ "full_name": "kingdoja/ai-comic-drama-platform",
+ "url": "https://github.com/kingdoja/ai-comic-drama-platform",
+ "license": "NOASSERTION",
+ "license_file": null,
+ "license_text_sha256": null,
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "c8927c9fc6c124c3268fb437eef5bcdc0edc1fc4",
+ "vendored_files": [
+  {
+   "path": "workers/agent-runtime/utils/__init__.py",
+   "bytes": 59,
+   "sha256": "debb2b6c67d4767009923216291f377ff52d7e600b4afbb44f831a535e73dc4e"
+  },
+  {
+   "path": "workers/agent-runtime/main.py",
+   "bytes": 132,
+   "sha256": "9aa9aba7ef3fd85d6563d03212b0e623d1dbf42bf7ad317eb6a727ca1bde5986"
+  },
+  {
+   "path": "workers/qa-runtime/main.py",
+   "bytes": 138,
+   "sha256": "6b508ffe859ac9334d1a5a777c673f4366816dfb920d7cd1c2b7dcc5cae43a38"
+  },
+  {
+   "path": "workers/media-runtime/main.py",
+   "bytes": 141,
+   "sha256": "92d7c911ff9fae3d30d8d133bb0cc5fc1011fc29cd6832ea48329bcbe0b027d4"
+  },
+  {
+   "path": "workers/agent-runtime/requirements.txt",
+   "bytes": 254,
+   "sha256": "2590330c0c0995b7d082f495278b581dee7d241e69050c0a2865ab48ce0c40ec"
+  },
+  {
+   "path": "workers/agent-runtime/agents/__init__.py",
+   "bytes": 630,
+   "sha256": "cb57797ff1f18b9c78de81561136d032095ad521882d6c43e09bb511733c6622"
+  },
+  {
+   "path": "workers/agent-runtime/services/__init__.py",
+   "bytes": 640,
+   "sha256": "4ed14f4cc915abb43dd9b33bdbea5a8fce15cae9ec98391a614af8a2fc46e255"
+  },
+  {
+   "path": "workers/agent-runtime/.env.example",
+   "bytes": 998,
+   "sha256": "5d31f5f4480568e189eac49ae659017ef84c457d2f74a7a9fd9f75d711af1d80"
+  },
+  {
+   "path": "workers/agent-runtime/utils/quick_test.py",
+   "bytes": 2323,
+   "sha256": "8ecafdaecae7c452b0a2ff99c6ee419ec065853ed4c1b4594d319b95633fcc16"
+  },
+  {
+   "path": "workers/agent-runtime/docs/AGENTS_COMPLETE.md",
+   "bytes": 3686,
+   "sha256": "a85ebd5f4a4cea4a14fbb0a5bb09ce9f890c2bbbdd56de1cbd50740add3e0f9d"
+  },
+  {
+   "path": "workers/agent-runtime/docs/MIGRATION.md",
+   "bytes": 3752,
+   "sha256": "0b716622a5b7528f6653f2fd0614ba115072d482f85997301092df1eb04ee584"
+  },
+  {
+   "path": "workers/agent-runtime/docs/VALIDATOR.md",
+   "bytes": 5425,
+   "sha256": "4e5d8dee3d31662cad761d2fc5f5f6bd8052007d8aeab78664ce2ca9fbebfdaa"
+  },
+  {
+   "path": "workers/agent-runtime/utils/setup_llm.py",
+   "bytes": 6035,
+   "sha256": "c3594ed15c10fc4b77beb2df6527ed129ca751fee894bb2dd29460496d3ad1d5"
+  },
+  {
+   "path": "workers/agent-runtime/docs/LLM.md",
+   "bytes": 6294,
+   "sha256": "53b86d59d063888ab505db5d6d96bb9f3a2692606daf0fa548e96640d1ded5ca"
+  },
+  {
+   "path": "workers/agent-runtime/README.md",
+   "bytes": 8003,
+   "sha256": "f9843531eb37467e93286be568dc1fc9ec1fbc8b37bbf19ac00f979fc9814662"
+  },
+  {
+   "path": "workers/agent-runtime/docs/INTEGRATION_SUMMARY.md",
+   "bytes": 8446,
+   "sha256": "d745d577f91337cf38c6292a8cc2dec050be6ae35390d7ed2e13ca214052e542"
+  },
+  {
+   "path": "workers/agent-runtime/agents/base_agent.py",
+   "bytes": 9419,
+   "sha256": "4e9f43fed8e913548d6805d90af3f1d34172c1391965e7c447a5979e35d7346a"
+  },
+  {
+   "path": "workers/agent-runtime/services/llm_service.py",
+   "bytes": 11345,
+   "sha256": "71be535472ff6970c2cc7219114b2e3e1aa54145f8e31ff2ff19861eb8b40295"
+  },
+  {
+   "path": "workers/agent-runtime/services/validator.py",
+   "bytes": 12190,
+   "sha256": "96b0001ab88530ccd561f2ed962eba1093a6acbfdad99d1c4d48189c1be6135c"
+  },
+  {
+   "path": "workers/agent-runtime/agents/brief_agent.py",
+   "bytes": 13058,
+   "sha256": "6e56de66a8a0b504134524a56e0fdead52de248982538b16ab66a0e20f523ac7"
+  },
+  {
+   "path": "workers/agent-runtime/services/mock_llm_service.py",
+   "bytes": 13401,
+   "sha256": "e41f3447ea94ed7be43c2c258e00dc4e298d555e0f553ee176494c422e76e243"
+  },
+  {
+   "path": "workers/agent-runtime/agents/story_bible_agent.py",
+   "bytes": 15705,
+   "sha256": "e679f3e341449e754ef23bdaeab5ae4f42a64cacfb096db423613dfaa45d06e3"
+  },
+  {
+   "path": "workers/agent-runtime/agents/character_agent.py",
+   "bytes": 18499,
+   "sha256": "c0d002d67c6df2ceaa20ca3fd43e8b4a503952df1dbb4b09ae4736ecb185ac37"
+  },
+  {
+   "path": "apps/api/app/main.py",
+   "bytes": 1029,
+   "sha256": "0b519183bec405243f06d9bff43acbcde45e54d82b80f7651d101be27e2bb5bf"
+  },
+  {
+   "path": "apps/api/app/repositories/review_repository.py",
+   "bytes": 1436,
+   "sha256": "a0b274dd50c86835c2f6e977d0dd2a4eb92c065a843b15818b066b1c92748a16"
+  }
+ ],
+ "skipped": {
+  "budget": true,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 304
+ },
+ "providers": [
+  "openai",
+  "anthropic"
+ ],
+ "entrypoints": [
+  "workers/agent-runtime/main.py",
+  "workers/qa-runtime/main.py",
+  "workers/media-runtime/main.py",
+  "apps/api/app/main.py"
+ ],
+ "runtime": [
+  "python"
+ ],
+ "notes": [],
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 25,
+ "vendored_bytes": 143038,
+ "content_redistributed": false
+}

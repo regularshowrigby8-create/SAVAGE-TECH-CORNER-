@@ -3,6 +3,7 @@
  * Interconnected Quality Conveyor Belt Pipeline.
  * Orchestrates tools in structured sequential stages, passing verified context between stations:
  *
+ * Stage 0: The sealed imported factory set (72 factories, opened and run before everything else)
  * Stage 1: Sanitation & Hygiene (EditorConfig, .gitignore, Secrets)
  * Stage 2: Static Analysis & Types (ESLint, Prettier, TypeScript strict mode)
  * Stage 3: Accessibility & Performance (axe-core, Lighthouse CI config audit)
@@ -26,6 +27,8 @@ function runStage(stageNumber, stageName, runner) {
   try {
     const result = runner();
     console.log(`[STATION ${stageNumber}: PASS] ${stageName} satisfied.`);
+    // The evidence line, so a station that reports "absent" cannot be mistaken for one that ran.
+    if (typeof result === "string" && result.length) console.log(`              ${result}`);
     return { stageNumber, stageName, status: "PASS", details: result };
   } catch (error) {
     console.error(`[STATION ${stageNumber}: FAIL] ${error.message}`);
@@ -34,6 +37,47 @@ function runStage(stageNumber, stageName, runner) {
 }
 
 const pipelineReport = [];
+
+// Stage 0: The sealed factory set. It runs first, feeds this belt, and is removable as one unit:
+// when sealed-factories/ is not present the station reports ABSENT and the belt carries on with the
+// repository's own factories, which is the whole point of sealing it.
+pipelineReport.push(
+  runStage(0, "Sealed Imported Factory Set", () => {
+    const sealedDir = path.join(ROOT_DIR, "sealed-factories");
+    if (!fs.existsSync(sealedDir)) {
+      return "sealed component ABSENT - the belt continues with this repository's own factories";
+    }
+    const runtime = path.join(ROOT_DIR, "tools", "factory", "sealed_factory_runtime.py");
+    if (!fs.existsSync(runtime))
+      throw new Error("sealed-factories/ is present without its runtime");
+
+    // Verification first: a tampered component must stop the belt, not feed it. Both calls inherit
+    // stdio, so the belt's log carries the seal's own line and the models the run detected.
+    execSync("python3 tools/factory/sealed_factory_runtime.py verify", { stdio: "inherit" });
+    execSync("python3 tools/factory/sealed_factory_runtime.py run --max-model-calls 0", {
+      stdio: "inherit",
+    });
+
+    const reportPath = path.join(sealedDir, "manifest", "RUN-REPORT.json");
+    if (!fs.existsSync(reportPath)) throw new Error("the sealed run produced no report");
+    const report = JSON.parse(fs.readFileSync(reportPath, "utf8"));
+    if (report.status !== "RUN") throw new Error(`sealed run status was ${report.status}`);
+    const ran = report.summary.operational_model + report.summary.operational_plan;
+    if (ran + report.summary.no_structure !== report.factories.length) {
+      throw new Error(
+        `the sealed run accounts for ${ran + report.summary.no_structure} of ` +
+          `${report.factories.length} factories`,
+      );
+    }
+    if (report.summary.unreadable > 0) throw new Error("sealed payloads were unreadable");
+    return (
+      `${report.factories.length} sealed factories: ${ran} ran ` +
+      `(${report.summary.operational_model} against a model, ${report.summary.operational_plan} from ` +
+      `their own definitions), ${report.summary.no_structure} had no definitions in their slice; ` +
+      `${report.summary.stages_defined} stages and ${report.summary.workers_defined} workers read`
+    );
+  }),
+);
 
 // Stage 1: Sanitation & Hygiene
 pipelineReport.push(
@@ -121,6 +165,12 @@ pipelineReport.push(
   }),
 );
 
+// The banner states what actually happened at station 0: the sealed set ran, or it was not there.
+const sealedState = String(pipelineReport[0]?.details || "").startsWith("sealed component ABSENT")
+  ? "SEALED SET ABSENT"
+  : "SEALED SET RAN";
+const banner = `CONVEYOR BELT COMPLETE: ${sealedState} + ALL 6 CONNECTED STAGES PASSED`;
+
 console.log("\n======================================================================");
-console.log("       CONVEYOR BELT COMPLETE: ALL 6 INTERCONNECTED STAGES PASSED     ");
+console.log(`   ${banner} `);
 console.log("======================================================================");

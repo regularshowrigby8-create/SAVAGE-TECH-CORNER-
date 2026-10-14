@@ -1,0 +1,37 @@
+{
+ "id": "opencharly-plugin-pipeline",
+ "full_name": "opencharly/plugin-pipeline",
+ "url": "https://github.com/opencharly/plugin-pipeline",
+ "license": "NOASSERTION",
+ "license_file": null,
+ "license_text_sha256": null,
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "0b58dbbf9ab862feb74f34148d5bc9631e1cdda0",
+ "vendored_files": [
+  {
+   "path": "AGENTS.md",
+   "bytes": 4212,
+   "sha256": "16bfc60f0254a9cd02d43a9bc528878ae304d5b78ff6afd064c4df619468515d"
+  },
+  {
+   "path": "README.md",
+   "bytes": 4900,
+   "sha256": "f804f890031d5910bc08a2abc07265d09eb8e7e87b628632eddb09592780be78"
+  }
+ ],
+ "skipped": {
+  "budget": false,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 82
+ },
+ "providers": [],
+ "entrypoints": [],
+ "runtime": [],
+ "notes": [],
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 2,
+ "vendored_bytes": 9112,
+ "content_redistributed": false
+}

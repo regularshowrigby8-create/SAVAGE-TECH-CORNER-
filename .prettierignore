@@ -22,6 +22,11 @@ coverage/
 # style check on a file no human maintains.
 *.sarif
 
+# The sealed factory set: hash-verified data. Its records are written by the sealer, its
+# payload hashes are recorded in SEAL.json, and reformatting them would rewrite a component
+# whose whole point is that it is byte-exact. Its own tests verify it.
+sealed-factories/
+
 # Binary artefacts Prettier cannot parse
 *.zip
 *.apk

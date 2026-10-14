@@ -1,0 +1,36 @@
+{
+ "id": "bassimeledath-dispatch",
+ "full_name": "bassimeledath/dispatch",
+ "url": "https://github.com/bassimeledath/dispatch",
+ "license": "NOASSERTION",
+ "license_file": null,
+ "license_text_sha256": null,
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "e56c942c548a07c8ad35fce9b730522ec4db9d2d",
+ "vendored_files": [
+  {
+   "path": "README.md",
+   "bytes": 9060,
+   "sha256": "e9785f8e40c094dca394f032d7b9cbde37df627231d9596fecdbe4f3826b3c48"
+  }
+ ],
+ "skipped": {
+  "budget": false,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 23
+ },
+ "providers": [
+  "openai",
+  "anthropic",
+  "google"
+ ],
+ "entrypoints": [],
+ "runtime": [],
+ "notes": [],
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 1,
+ "vendored_bytes": 9060,
+ "content_redistributed": false
+}

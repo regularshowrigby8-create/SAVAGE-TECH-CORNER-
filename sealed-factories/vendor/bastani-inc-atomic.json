@@ -1,0 +1,158 @@
+{
+ "id": "bastani-inc-atomic",
+ "full_name": "bastani-inc/atomic",
+ "url": "https://github.com/bastani-inc/atomic",
+ "license": "NOASSERTION",
+ "license_file": "LICENSE",
+ "license_text_sha256": "a1a5bc156dbcb71d4f572e6ca7f6cea546f14769719d7afbbaa8fc0c64c34302",
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "8d98c9a8fff074d8e4a946b65a14f12679dab64c",
+ "vendored_files": [
+  {
+   "path": "packages/subagents/src/agents/agent-scope.ts",
+   "bytes": 219,
+   "sha256": "a292ae1ac37419f79fdc83fd777ba98b8145afeb7760bf146b89b53505bd9ec6"
+  },
+  {
+   "path": "packages/coding-agent/examples/extensions/subagent/agents/worker.md",
+   "bytes": 664,
+   "sha256": "ca2b2298fcbd8bfafcfe61977dc8075001a64b9c4d8c289c3b5eaa896efe6238"
+  },
+  {
+   "path": "packages/subagents/src/agents/agent-selection.ts",
+   "bytes": 739,
+   "sha256": "a66ec0b0cbbbfe1037eef92edcf6f70a9036ca15f5b0cd72885fa9cea76a2795"
+  },
+  {
+   "path": "packages/subagents/src/agents/agents.ts",
+   "bytes": 775,
+   "sha256": "22f4c69fbd739f77d4dfad531edcb5d34054c61de181865d18383780ecf82f85"
+  },
+  {
+   "path": "packages/coding-agent/examples/extensions/subagent/agents/planner.md",
+   "bytes": 898,
+   "sha256": "502208cc2bfacfd8d5efb6c954b2c20294ad9b5a0e2f9dcf98af6117b7f72951"
+  },
+  {
+   "path": "packages/coding-agent/examples/extensions/subagent/agents/reviewer.md",
+   "bytes": 935,
+   "sha256": "937a9625488d3ac9a44e449d1d11a27cc25fdb0db58b849fc9660bed6e315c31"
+  },
+  {
+   "path": "packages/coding-agent/examples/extensions/subagent/agents/scout.md",
+   "bytes": 1259,
+   "sha256": "221a07753fc744ff23820d56616a54cc8cb5e456ae719699bd59e51a21755c93"
+  },
+  {
+   "path": "packages/subagents/src/agents/identity.ts",
+   "bytes": 1489,
+   "sha256": "3fa56aa2f5d11bc70f6fb9d17e0410c20dffd31ccfc486b839f1372218aa1bc5"
+  },
+  {
+   "path": "packages/subagents/src/agents/agent-paths.ts",
+   "bytes": 2351,
+   "sha256": "fac576d0dd9d136a86b6dd8a9f8420634f0d67d9e2c3b3e7821ed9e08951c082"
+  },
+  {
+   "path": "packages/subagents/src/agents/agent-types.ts",
+   "bytes": 2766,
+   "sha256": "af8f160532c1e57441467406d4b0fdc4523007bb50fffe99dd3b0b3a84f7f160"
+  },
+  {
+   "path": "packages/subagents/agents/codebase-locator.md",
+   "bytes": 2861,
+   "sha256": "1fbbb935161836f2d30c423352c5584dc5124a7d301cf884cd2d686397ccebfb"
+  },
+  {
+   "path": "packages/subagents/agents/codebase-pattern-finder.md",
+   "bytes": 2928,
+   "sha256": "9b96b49ec46519aedf413d1922ced80f92e8b89f661640c4751bc7ab993e8eb0"
+  },
+  {
+   "path": "packages/subagents/agents/codebase-research-locator.md",
+   "bytes": 2937,
+   "sha256": "4589280412575f8e1bc82b8245ee7646f09f24b9d2e8b70b34323e1a862357b0"
+  },
+  {
+   "path": "packages/subagents/agents/codebase-analyzer.md",
+   "bytes": 3415,
+   "sha256": "a5b551f5ae637186b6be5dd240a9eb594da8792e2842a2706260b03084ffa461"
+  },
+  {
+   "path": "packages/subagents/src/agents/frontmatter.ts",
+   "bytes": 3478,
+   "sha256": "06e0f7f6932cb557ae84d4862eea28dc36460608929103003c2eeb54891f3895"
+  },
+  {
+   "path": "packages/subagents/agents/codebase-research-analyzer.md",
+   "bytes": 3528,
+   "sha256": "c271f224d5415b8a792369bfbd654eaa2a69ffe05fa58532210d96e97e77128e"
+  },
+  {
+   "path": "packages/subagents/agents/worker.md",
+   "bytes": 3677,
+   "sha256": "0ff5ac5c899b90c74c05476a4c6778fa9d05fd5a85b9b382af34d4932d8dedb1"
+  },
+  {
+   "path": "packages/subagents/agents/debugger.md",
+   "bytes": 4341,
+   "sha256": "d7b8adf032f3a935857b2f7aedfc60563517e41eee9b79f88dc6292a161080f6"
+  },
+  {
+   "path": "packages/subagents/src/agents/agent-discovery.ts",
+   "bytes": 4457,
+   "sha256": "e526fb019dabb054cc12c6f4bfb3d04fedccf8550f35f78870b43d66b07fac96"
+  },
+  {
+   "path": "packages/subagents/src/agents/agent-serializer.ts",
+   "bytes": 4516,
+   "sha256": "df1a25ddf7a7973de01d20681ae1540c1c1b4fdd6d14527436927eb155492030"
+  },
+  {
+   "path": "packages/workflows/skills/skill-creator/agents/comparator.md",
+   "bytes": 7287,
+   "sha256": "fe1fc9787c495d864c5d6eada47396478572325fde1b33a96d78bf4b849b7a3e"
+  },
+  {
+   "path": "packages/subagents/src/agents/agent-loaders.ts",
+   "bytes": 7859,
+   "sha256": "ef388204a6e7daa127c9a7949d728184d4b7fd93aef23a5dfa874e2a9b930ae3"
+  },
+  {
+   "path": "packages/subagents/agents/code-simplifier.md",
+   "bytes": 7923,
+   "sha256": "c51a3d9b106b62f4ee9b65ddd371b2823b8b3b34238b5fead8c4907284bd7ea3"
+  },
+  {
+   "path": "packages/subagents/agents/codebase-online-researcher.md",
+   "bytes": 8125,
+   "sha256": "ae5a6357ccc74cd84aba8949c2041ebffb987159fcc9cc6a5df4e61e0dddc9e1"
+  },
+  {
+   "path": "packages/workflows/skills/skill-creator/agents/grader.md",
+   "bytes": 9049,
+   "sha256": "57134da0c1a4eea33fbd74a1c9c44aa814f07d6bc64de303edb586f941e5d21a"
+  }
+ ],
+ "skipped": {
+  "budget": true,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 5532
+ },
+ "providers": [
+  "anthropic",
+  "google"
+ ],
+ "entrypoints": [],
+ "runtime": [
+  "node"
+ ],
+ "notes": [],
+ "_license_bytes": "TUlUIExpY2Vuc2UKCkNvcHlyaWdodCAoYykgMjAyNSBCYXN0YW5pLCBJbmMuCgpQZXJtaXNzaW9uIGlzIGhlcmVieSBncmFudGVkLCBmcmVlIG9mIGNoYXJnZSwgdG8gYW55IHBlcnNvbiBvYnRhaW5pbmcgYSBjb3B5Cm9mIHRoaXMgc29mdHdhcmUgYW5kIGFzc29jaWF0ZWQgZG9jdW1lbnRhdGlvbiBmaWxlcyAodGhlICJTb2Z0d2FyZSIpLCB0byBkZWFsCmluIHRoZSBTb2Z0d2FyZSB3aXRob3V0IHJlc3RyaWN0aW9uLCBpbmNsdWRpbmcgd2l0aG91dCBsaW1pdGF0aW9uIHRoZSByaWdodHMKdG8gdXNlLCBjb3B5LCBtb2RpZnksIG1lcmdlLCBwdWJsaXNoLCBkaXN0cmlidXRlLCBzdWJsaWNlbnNlLCBhbmQvb3Igc2VsbApjb3BpZXMgb2YgdGhlIFNvZnR3YXJlLCBhbmQgdG8gcGVybWl0IHBlcnNvbnMgdG8gd2hvbSB0aGUgU29mdHdhcmUgaXMKZnVybmlzaGVkIHRvIGRvIHNvLCBzdWJqZWN0IHRvIHRoZSBmb2xsb3dpbmcgY29uZGl0aW9uczoKClRoZSBhYm92ZSBjb3B5cmlnaHQgbm90aWNlIGFuZCB0aGlzIHBlcm1pc3Npb24gbm90aWNlIHNoYWxsIGJlIGluY2x1ZGVkIGluIGFsbApjb3BpZXMgb3Igc3Vic3RhbnRpYWwgcG9ydGlvbnMgb2YgdGhlIFNvZnR3YXJlLgoKSWYgeW91ciBwcm9kdWN0IG9yIHNlcnZpY2UgZXhjZWVkcyAxMDAgbWlsbGlvbiBtb250aGx5IGFjdGl2ZSB1c2VycyBvciAkMjAgbWlsbGlvbiBpbiBtb250aGx5IHJldmVudWUsIAp5b3UgbXVzdCBwcm9taW5lbnRseSBkaXNwbGF5ICdBdG9taWMnIG9uIHRoZSB1c2VyIGludGVyZmFjZSBvZiBzdWNoIHByb2R1Y3Qgb3Igc2VydmljZS4KClRIRSBTT0ZUV0FSRSBJUyBQUk9WSURFRCAiQVMgSVMiLCBXSVRIT1VUIFdBUlJBTlRZIE9GIEFOWSBLSU5ELCBFWFBSRVNTIE9SCklNUExJRUQsIElOQ0xVRElORyBCVVQgTk9UIExJTUlURUQgVE8gVEhFIFdBUlJBTlRJRVMgT0YgTUVSQ0hBTlRBQklMSVRZLApGSVRORVNTIEZPUiBBIFBBUlRJQ1VMQVIgUFVSUE9TRSBBTkQgTk9OSU5GUklOR0VNRU5ULiBJTiBOTyBFVkVOVCBTSEFMTCBUSEUKQVVUSE9SUyBPUiBDT1BZUklHSFQgSE9MREVSUyBCRSBMSUFCTEUgRk9SIEFOWSBDTEFJTSwgREFNQUdFUyBPUiBPVEhFUgpMSUFCSUxJVFksIFdIRVRIRVIgSU4gQU4gQUNUSU9OIE9GIENPTlRSQUNULCBUT1JUIE9SIE9USEVSV0lTRSwgQVJJU0lORyBGUk9NLApPVVQgT0YgT1IgSU4gQ09OTkVDVElPTiBXSVRIIFRIRSBTT0ZUV0FSRSBPUiBUSEUgVVNFIE9SIE9USEVSIERFQUxJTkdTIElOIFRIRQpTT0ZUV0FSRS4K",
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 25,
+ "vendored_bytes": 88476,
+ "content_redistributed": false
+}

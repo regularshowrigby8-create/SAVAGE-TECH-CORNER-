@@ -1,0 +1,94 @@
+{
+ "id": "gregoryjing-agentflow",
+ "full_name": "gregoryjing/agentflow",
+ "url": "https://github.com/gregoryjing/agentflow",
+ "license": "NOASSERTION",
+ "license_file": null,
+ "license_text_sha256": null,
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "e2c1011ab4fe929913788b1dbe05b414d6139335",
+ "vendored_files": [
+  {
+   "path": "agentflow/pipeline/__init__.py",
+   "bytes": 234,
+   "sha256": "ff773aa3dc66a1ba9dc8e1e8f8deece977f00bb77478263393e6fafd6fb1bdf8"
+  },
+  {
+   "path": "agentflow/pipeline/llm_json.py",
+   "bytes": 1237,
+   "sha256": "62f368b71c73e6eff1bfa2a493b9b4c68b289fbdae2edbe2d8b0d7626d205557"
+  },
+  {
+   "path": "agentflow/pipeline/types.py",
+   "bytes": 2092,
+   "sha256": "4ffb18011425ec3eed839d69dd26c6dce2e85a638932aa379062f106642d7608"
+  },
+  {
+   "path": "agentflow/pipeline/parser.py",
+   "bytes": 2369,
+   "sha256": "04dedeb7353c6d4fa492ce988d29d3ee669f1809f7c31a9329dbd043fc14a0e0"
+  },
+  {
+   "path": "agentflow/pipeline/verifier.py",
+   "bytes": 3267,
+   "sha256": "909eb86e98969b148de24e40f5b3a21824043593a6e28f080b3e9250cc5ec6f9"
+  },
+  {
+   "path": "agentflow/pipeline/executor.py",
+   "bytes": 6789,
+   "sha256": "fad40b44c48d946d8eafd0df60ab3b027f0c01244a5ae1407711358f1413e7b5"
+  },
+  {
+   "path": "agentflow/pipeline/planner.py",
+   "bytes": 9619,
+   "sha256": "cc3cd574ce8c022f75ceeeaf592efed3f9bbcd9ba2c4aa71bc1273a4ffcde19d"
+  },
+  {
+   "path": "agentflow/pipeline/runner.py",
+   "bytes": 15335,
+   "sha256": "9fb96b3acc0a388e3681d06c8e9f1c237ee4503ca97f3982d9b4a57ca8c6c1e7"
+  },
+  {
+   "path": "agentflow/cli.py",
+   "bytes": 9489,
+   "sha256": "104ce7f14201d3c50ef70c582aae5ec2ae338cf21cb299b44a20c3b223abb4e5"
+  },
+  {
+   "path": "config/dots3.json",
+   "bytes": 933,
+   "sha256": "df82f5a8949e3ca29f716a465947cb5add3385d3406b762b7dfc2377c3e7af2c"
+  },
+  {
+   "path": "config/default.json",
+   "bytes": 1943,
+   "sha256": "107221ec00ca37b0b4fa596a99636f75e63621680f4b24c80379ab94191ad107"
+  },
+  {
+   "path": "README.md",
+   "bytes": 15208,
+   "sha256": "cfe0a680c04e57e7c13e1f57b194b66c1c32b61c09d71c0a4e49d6231db1f91a"
+  }
+ ],
+ "skipped": {
+  "budget": false,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 45
+ },
+ "providers": [
+  "openai",
+  "anthropic"
+ ],
+ "entrypoints": [
+  "agentflow/cli.py"
+ ],
+ "runtime": [
+  "python"
+ ],
+ "notes": [],
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 12,
+ "vendored_bytes": 68515,
+ "content_redistributed": false
+}

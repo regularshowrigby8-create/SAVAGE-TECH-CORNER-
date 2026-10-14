@@ -1,0 +1,93 @@
+{
+ "id": "rabya89-cv-evaluator",
+ "full_name": "rabya89/cv_evaluator",
+ "url": "https://github.com/rabya89/cv_evaluator",
+ "license": "NOASSERTION",
+ "license_file": null,
+ "license_text_sha256": null,
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "54b1a835282ab9a61570c1d0fd80dd89d0e3317f",
+ "vendored_files": [
+  {
+   "path": "pipeline/runner.py",
+   "bytes": 887,
+   "sha256": "10406f52697cfccd4b81f6dc8b4349fd1bc5a3ff43b726f7dabf5966823b15e9"
+  },
+  {
+   "path": "pipeline/criteria_cache.py",
+   "bytes": 1060,
+   "sha256": "e5d8c29b120019550008cd093400bc0ca2d9cdbe40bf4380dd58647082c3706e"
+  },
+  {
+   "path": "pipeline/llm_client.py",
+   "bytes": 1268,
+   "sha256": "9cd303c9ea1b8714db9c9ac82c52a1e22e15bf5c72640a7062fc1c949f233927"
+  },
+  {
+   "path": "pipeline/stages/jd_parser.py",
+   "bytes": 2368,
+   "sha256": "539d1762a295cb5c9409bd4f529d82328930dfb97dfa90f9e97b80210f9aca01"
+  },
+  {
+   "path": "pipeline/stages/extraction.py",
+   "bytes": 3528,
+   "sha256": "9da408de0154aa62fefa101f866839a83b332cb4e8317484569fa8a53bd0a1c1"
+  },
+  {
+   "path": "pipeline/stages/critique.py",
+   "bytes": 4269,
+   "sha256": "b408b2c780a66487f45a578e61fcd93de1d180bc0cf0d4b9f04028a1f753be5f"
+  },
+  {
+   "path": "pipeline/stages/scoring.py",
+   "bytes": 5523,
+   "sha256": "101f018e822cdfde19a771fb18306a3bcbe3ed9faf9e85c938f96ea17fe401c7"
+  },
+  {
+   "path": "pipeline/stages/validator.py",
+   "bytes": 8386,
+   "sha256": "0e659a17c772834a2e4ea6c167047db583938fcf4166731c6a156bf7b323d73f"
+  },
+  {
+   "path": "pipeline/stages/reconciler.py",
+   "bytes": 8506,
+   "sha256": "2ab95a11a3cf2ba3cfe601b1425c51b65592a442b6e4de84eb84e00a2c755629"
+  },
+  {
+   "path": "pipeline/models.py",
+   "bytes": 9231,
+   "sha256": "f4e0e8df4a834a500aa3627b39410dd288fc8690b9cf861a8e3a80f525d5fdef"
+  },
+  {
+   "path": "main.py",
+   "bytes": 3195,
+   "sha256": "efe0a0aefd51f3ea2dc3173122c55b9c7df92b1f60277a82642aeb28289e0c46"
+  },
+  {
+   "path": "README.md",
+   "bytes": 8399,
+   "sha256": "6ea77059e553a25562c5ecb3a0bfe273bd5af78c5a6fefb0a42af656de0ce82b"
+  }
+ ],
+ "skipped": {
+  "budget": false,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 31
+ },
+ "providers": [
+  "anthropic"
+ ],
+ "entrypoints": [
+  "main.py"
+ ],
+ "runtime": [
+  "python"
+ ],
+ "notes": [],
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 12,
+ "vendored_bytes": 56620,
+ "content_redistributed": false
+}

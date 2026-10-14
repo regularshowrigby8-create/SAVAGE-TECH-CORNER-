@@ -1,0 +1,40 @@
+{
+ "id": "transconnectome-claude-code-coord",
+ "full_name": "Transconnectome/claude-code-coord",
+ "url": "https://github.com/Transconnectome/claude-code-coord",
+ "license": "NOASSERTION",
+ "license_file": "LICENSE",
+ "license_text_sha256": "704103baf7e19bfacb82395f369941703790c4a6c49504dbe9479d7aea62814f",
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "6e9ca4218b734d46189d02deaaf2aa4b0c44c55a",
+ "vendored_files": [
+  {
+   "path": "docs/AGENTS.md",
+   "bytes": 18387,
+   "sha256": "5f47cda12818e167d7d7595752af119b7b55f23a40359a816635fed89add203b"
+  },
+  {
+   "path": "README.md",
+   "bytes": 14809,
+   "sha256": "48645b39909f7981f12268a97167d5b658337b51eebb7ae4e4684e32ce6984d9"
+  }
+ ],
+ "skipped": {
+  "budget": false,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 35
+ },
+ "providers": [
+  "anthropic"
+ ],
+ "entrypoints": [],
+ "runtime": [],
+ "notes": [],
+ "_license_bytes": "TUlUIExpY2Vuc2UKCkNvcHlyaWdodCAoYykgMjAyNiBUcmFuc2Nvbm5lY3RvbWUgTGFiIChTTlUgQ29ubmVjdG9tZSBMYWIpCmh0dHBzOi8vZ2l0aHViLmNvbS9UcmFuc2Nvbm5lY3RvbWUKClBlcm1pc3Npb24gaXMgaGVyZWJ5IGdyYW50ZWQsIGZyZWUgb2YgY2hhcmdlLCB0byBhbnkgcGVyc29uIG9idGFpbmluZyBhIGNvcHkKb2YgdGhpcyBzb2Z0d2FyZSBhbmQgYXNzb2NpYXRlZCBkb2N1bWVudGF0aW9uIGZpbGVzICh0aGUgIlNvZnR3YXJlIiksIHRvIGRlYWwKaW4gdGhlIFNvZnR3YXJlIHdpdGhvdXQgcmVzdHJpY3Rpb24sIGluY2x1ZGluZyB3aXRob3V0IGxpbWl0YXRpb24gdGhlIHJpZ2h0cwp0byB1c2UsIGNvcHksIG1vZGlmeSwgbWVyZ2UsIHB1Ymxpc2gsIGRpc3RyaWJ1dGUsIHN1YmxpY2Vuc2UsIGFuZC9vciBzZWxsCmNvcGllcyBvZiB0aGUgU29mdHdhcmUsIGFuZCB0byBwZXJtaXQgcGVyc29ucyB0byB3aG9tIHRoZSBTb2Z0d2FyZSBpcwpmdXJuaXNoZWQgdG8gZG8gc28sIHN1YmplY3QgdG8gdGhlIGZvbGxvd2luZyBjb25kaXRpb25zOgoKVGhlIGFib3ZlIGNvcHlyaWdodCBub3RpY2UgYW5kIHRoaXMgcGVybWlzc2lvbiBub3RpY2Ugc2hhbGwgYmUgaW5jbHVkZWQgaW4gYWxsCmNvcGllcyBvciBzdWJzdGFudGlhbCBwb3J0aW9ucyBvZiB0aGUgU29mdHdhcmUuCgpUSEUgU09GVFdBUkUgSVMgUFJPVklERUQgIkFTIElTIiwgV0lUSE9VVCBXQVJSQU5UWSBPRiBBTlkgS0lORCwgRVhQUkVTUyBPUgpJTVBMSUVELCBJTkNMVURJTkcgQlVUIE5PVCBMSU1JVEVEIFRPIFRIRSBXQVJSQU5USUVTIE9GIE1FUkNIQU5UQUJJTElUWSwKRklUTkVTUyBGT1IgQSBQQVJUSUNVTEFSIFBVUlBPU0UgQU5EIE5PTklORlJJTkdFTUVOVC4gSU4gTk8gRVZFTlQgU0hBTEwgVEhFCkFVVEhPUlMgT1IgQ09QWVJJR0hUIEhPTERFUlMgQkUgTElBQkxFIEZPUiBBTlkgQ0xBSU0sIERBTUFHRVMgT1IgT1RIRVIKTElBQklMSVRZLCBXSEVUSEVSIElOIEFOIEFDVElPTiBPRiBDT05UUkFDVCwgVE9SVCBPUiBPVEhFUldJU0UsIEFSSVNJTkcgRlJPTSwKT1VUIE9GIE9SIElOIENPTk5FQ1RJT04gV0lUSCBUSEUgU09GVFdBUkUgT1IgVEhFIFVTRSBPUiBPVEhFUiBERUFMSU5HUyBJTiBUSEUKU09GVFdBUkUuCg==",
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 2,
+ "vendored_bytes": 33196,
+ "content_redistributed": false
+}

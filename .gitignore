@@ -14,3 +14,8 @@ build/
 .env.*.local
 node_modules/
 dist/
+
+# Written by tools/factory/sealed_factory_runtime.py on every run: plans, prompts, model
+# output, and the report. Committing them would mean committing a timestamped machine run.
+sealed-factories/runs/
+sealed-factories/manifest/

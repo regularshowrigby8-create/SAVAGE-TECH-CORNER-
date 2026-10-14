@@ -1,0 +1,146 @@
+{
+ "id": "sandgardenhq-sgai",
+ "full_name": "sandgardenhq/sgai",
+ "url": "https://github.com/sandgardenhq/sgai",
+ "license": "NOASSERTION",
+ "license_file": "LICENSE",
+ "license_text_sha256": "8c145535036d3bba0f712926c19e790860595876f93d89020bea248bf1bf9160",
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "9efbb7b3811e862a22659ed2424e4da834fdf0ba",
+ "vendored_files": [
+  {
+   "path": "cmd/sgai/skel/.sgai/agent/webmaster-reviewer.md",
+   "bytes": 2809,
+   "sha256": "c2d8de783799a574b66cf968329b4f4a88e9141d0447e7fce2fbd65a4ebf3fa6"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/agent/shell-script-developer.md",
+   "bytes": 3176,
+   "sha256": "ddabaa5e5d70a9898ccbdf1034427c673974e594e4db17c519be607806e5f616"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/agent/project-critic-sibling-evaluator.md",
+   "bytes": 3431,
+   "sha256": "74f704374cb73539c13b43f7a2bc77a590955ed1d033bc7b925314b26669bb6c"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/agent/project-critic-minority-report.md",
+   "bytes": 3523,
+   "sha256": "812a04ec8dde0f8aca111f725ffcbc42ecbfe97a723dfbda0374587cad1cc50b"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/agent/shell-script-reviewer.md",
+   "bytes": 3920,
+   "sha256": "e41575be12ad084bb217fddfe6c7e99175a5f25a428e7d27f99c1392878e71c3"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/agent/go.md",
+   "bytes": 5305,
+   "sha256": "9c0cb8627e350de520deca12dbe345e0fd8cd8de1ad7d89c53f58cbca957e96a"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/agent/react.md",
+   "bytes": 5559,
+   "sha256": "762f85b8d721ec820d23df519144678c1ff81541446d810fb7e0355b2f04b431"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/agent/shell-script.md",
+   "bytes": 5602,
+   "sha256": "edee315d2dca7a3c8c55d13b6809e2a8b1b7d044d825b84fa34bf236cd53cc72"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/agent/htmx-picocss.md",
+   "bytes": 5825,
+   "sha256": "1b458de3d3b2ba629f3a1bbfbc243ad239e06696650eaecffe26f6e7d8738dc6"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/agent/webmaster.md",
+   "bytes": 5828,
+   "sha256": "d8847406d5d84e521e7a930ffedd7c74996744dd33a22a49b0988f746c4aa683"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/agent/agent-sdk-verifier-py.md",
+   "bytes": 6198,
+   "sha256": "8106f15624a8da854aef19cbe7a7255b3bd091d4f8c124041c7a852a8a6ae9a4"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/agent/agent-sdk-verifier-ts.md",
+   "bytes": 6437,
+   "sha256": "cde7c583815af78856a97aa607bd87da58a9b8bf79146fe30f7f292b4f124ca2"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/agent/snippet-writer.md",
+   "bytes": 6826,
+   "sha256": "5f9e3764a69ce500989f3a64cc4e339484cc39e1b5111fd0c5612e2374333a58"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/agent/openai-sdk-verifier-ts.md",
+   "bytes": 6969,
+   "sha256": "88d055c446aed7f00e1db79ee82e47b215bd71a40e50d2b20146273023ca4f77"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/agent/vercel-deployer.md",
+   "bytes": 6996,
+   "sha256": "306393bd04c464e3e7256b46336a441cfe49b47bf1939e169eedfa2f3dfea679"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/agent/skill-writer.md",
+   "bytes": 7339,
+   "sha256": "f03cb6bb8d8f14d3ad78e07e2ba70f0ac3bab42e1ee257c167d560d849da9af0"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/agent/project-critic.md",
+   "bytes": 8077,
+   "sha256": "d371704c0f944103ef98233d5e53e59af7a97dc0c9e7fbc68996a088487e5f99"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/agent/exe-dev-deployer.md",
+   "bytes": 8383,
+   "sha256": "2af6cc17c361c00f20fa5fcc73bdfaa0a59cff87a19c070267916c1a6f66c3b3"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/agent/cloudflare-worker-deployer.md",
+   "bytes": 8669,
+   "sha256": "4d765a3375b6b98cc4c8452e23e6211c50d6bcc3139fc5aaceccb3bb1b14e69a"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/agent/openai-sdk-verifier-py.md",
+   "bytes": 8922,
+   "sha256": "366a7bc8e5e13ae76d2f74dbef94a122012f17ce3ee548cd0c7bccbfbb923824"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/agent/cli-output-style-adjuster.md",
+   "bytes": 10429,
+   "sha256": "699505ae029298e2e8df297a1d7966ba70fa945ce3f2af2e8656aaef0cd21989"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/agent/webmaster-developer.md",
+   "bytes": 11126,
+   "sha256": "6320034ade3400fe4e9f03276b664f47f037c1f7dc80b973392d312a239b5533"
+  },
+  {
+   "path": "AGENTS.md",
+   "bytes": 6474,
+   "sha256": "b12d857a59f8c254b222f3f87861ec5ebab91512783531ece4e60f0fdeb72780"
+  }
+ ],
+ "skipped": {
+  "budget": true,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 480
+ },
+ "providers": [
+  "anthropic",
+  "openai"
+ ],
+ "entrypoints": [],
+ "runtime": [],
+ "notes": [],
+ "_license_bytes": "Q29weXJpZ2h0IMKpIDIwMjYsIFNhbmRnYXJkZW4uY29tLgoKUGVybWlzc2lvbiBpcyBoZXJlYnkgZ3JhbnRlZCwgZnJlZSBvZiBjaGFyZ2UsIHRvIGFueSBwZXJzb24gb2J0YWluaW5nIGEgY29weSBvZiB0aGlzIHNvZnR3YXJlIGFuZCBhc3NvY2lhdGVkIGRvY3VtZW50YXRpb24gZmlsZXMgKHRoZSDigJxTb2Z0d2FyZeKAnSksIHRvIGRlYWwgaW4gdGhlIFNvZnR3YXJlIHdpdGhvdXQgcmVzdHJpY3Rpb24sIGluY2x1ZGluZyB3aXRob3V0IGxpbWl0YXRpb24gdGhlIHJpZ2h0cyB0byB1c2UsIGNvcHksIG1vZGlmeSwgbWVyZ2UsIHB1Ymxpc2gsIGRpc3RyaWJ1dGUsIHN1YmxpY2Vuc2UsIGFuZC9vciBzZWxsIGNvcGllcyBvZiB0aGUgU29mdHdhcmUsIGFuZCB0byBwZXJtaXQgcGVyc29ucyB0byB3aG9tIHRoZSBTb2Z0d2FyZSBpcyBmdXJuaXNoZWQgdG8gZG8gc28sIHN1YmplY3QgdG8gdGhlIGZvbGxvd2luZyBjb25kaXRpb25zOgoKVGhlIGFib3ZlIGNvcHlyaWdodCBub3RpY2UgYW5kIHRoaXMgcGVybWlzc2lvbiBub3RpY2Ugc2hhbGwgYmUgaW5jbHVkZWQgaW4gYWxsIGNvcGllcyBvciBzdWJzdGFudGlhbCBwb3J0aW9ucyBvZiB0aGUgU29mdHdhcmUuCk5vIGxpY2Vuc2VlIG9yIGRvd25zdHJlYW0gcmVjaXBpZW50IG1heSB1c2UgdGhlIFNvZnR3YXJlIChpbmNsdWRpbmcgYW55IG1vZGlmaWVkIG9yIGRlcml2YXRpdmUgdmVyc2lvbnMpIHRvIGRpcmVjdGx5IGNvbXBldGUgd2l0aCB0aGUgb3JpZ2luYWwgTGljZW5zb3IgYnkgb2ZmZXJpbmcgaXQgdG8gdGhpcmQgcGFydGllcyBhcyBhIGhvc3RlZCwgbWFuYWdlZCwgb3IgU29mdHdhcmUtYXMtYS1TZXJ2aWNlIChTYWFTKSBwcm9kdWN0IG9yIGNsb3VkIHNlcnZpY2Ugd2hlcmUgdGhlIHByaW1hcnkgdmFsdWUgb2YgdGhlIHNlcnZpY2UgaXMgdGhlIGZ1bmN0aW9uYWxpdHkgb2YgdGhlIFNvZnR3YXJlIGl0c2VsZi4KClRIRSBTT0ZUV0FSRSBJUyBQUk9WSURFRCDigJxBUyBJU+KAnSwgV0lUSE9VVCBXQVJSQU5UWSBPRiBBTlkgS0lORCwgRVhQUkVTUyBPUiBJTVBMSUVELCBJTkNMVURJTkcgQlVUIE5PVCBMSU1JVEVEIFRPIFRIRSBXQVJSQU5USUVTIE9GIE1FUkNIQU5UQUJJTElUWSwgRklUTkVTUyBGT1IgQSBQQVJUSUNVTEFSIFBVUlBPU0UgQU5EIE5PTklORlJJTkdFTUVOVC4gSU4gTk8gRVZFTlQgU0hBTEwgVEhFIEFVVEhPUlMgT1IgQ09QWVJJR0hUIEhPTERFUlMgQkUgTElBQkxFIEZPUiBBTlkgQ0xBSU0sIERBTUFHRVMgT1IgT1RIRVIgTElBQklMSVRZLCBXSEVUSEVSIElOIEFOIEFDVElPTiBPRiBDT05UUkFDVCwgVE9SVCBPUiBPVEhFUldJU0UsIEFSSVNJTkcgRlJPTSwgT1VUIE9GIE9SIElOIENPTk5FQ1RJT04gV0lUSCBUSEUgU09GVFdBUkUgT1IgVEhFIFVTRSBPUiBPVEhFUiBERUFMSU5HUyBJTiBUSEUgU09GVFdBUkUuCg==",
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 23,
+ "vendored_bytes": 147823,
+ "content_redistributed": false
+}
