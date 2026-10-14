@@ -13,6 +13,24 @@ This is the AC-047 evidence: the green run of this commit on GitHub-hosted runne
 | AI PR Code Reviewers (Dual Fallback) | [38518749631](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38518749631) | `success`  | 2026-10-14T05:49:55Z | 2026-10-14T05:53:12Z |
 | Factory 2 — Single Debug Job         | [38518749713](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38518749713) | `success`  | 2026-10-14T05:49:55Z | 2026-10-14T05:55:23Z |
 
+## The APK of the tip recorded here (`562cc8a`)
+
+| Field              | Value                                                                                                                                                    |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| File               | `app/build/outputs/apk/debug/app-debug.apk` of `shell/android_project/` (the Gradle build output; not a repository file)                                 |
+| Artifacts          | `savage-browser-apk` (zip 5,793,259 B) + `emulator-evidence` (543,139 B), containing `SHA256SUMS.txt`                                                    |
+| Size               | 5,795,660 bytes                                                                                                                                          |
+| SHA-256            | `85e14b96ee34a663a943466af2afe341ec7e7876945aabc89626c3e18b0ac0e2`                                                                                       |
+| Identity           | `package=com.savage.soulbrowser`, `versionName=3.0.0`, `versionCode=5`, `min_sdk=26`, `target_sdk=35`, launcher `com.savage.soulbrowser.ui.MainActivity` |
+| Permissions        | `INTERNET`, `ACCESS_NETWORK_STATE`, `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`                                                                           |
+| Signing            | v1+v2+v3, debug key (`CN=Android Debug`, certificate SHA-256 `e2ea8c85…`)                                                                                |
+| Verified on device | the emulator job hashed these bytes with `sha256sum -c SHA256SUMS.txt` before installing them                                                            |
+
+A later tip (`8d4ef1b`) built 5,795,656 bytes with SHA-256
+`5225dfe3d309335281716e5c13287ccd8112f0c71571baf8b4688082eed90cac` and debug certificate
+`ded84528…`: same identity, same permissions, same signing scheme, different bytes for the reason above.
+This file records the runs it names; it is not rewritten on every later commit of the branch.
+
 ## The runs recorded here, and the ones after them (state as of 2026-10-14)
 
 This file is a point-in-time record, so it names the runs it describes and nothing is rewritten when a
@@ -27,6 +45,14 @@ later commit runs again:
   [38521338224](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38521338224)
   (build job `115711482131`, emulator job `115712402004`, release job skipped), belt `38521337958`,
   reviewers `38521338163`, Factory 2 `38521338389`.
+- `562cc8a` - the tip whose APK annotation is quoted in the artifact table below: Android pipeline
+  [38522307493](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38522307493)
+  (build job `115714581099`, emulator job `115715606092`, release job skipped), belt `38522307470`,
+  reviewers `38522307480`, Factory 2 `38522307472`.
+- `8d4ef1b` - the run that proves the pipeline's provenance gate (A20) inside CI: the belt certified an
+  APK the build stage had just built and recorded, with the Android pipeline green as well
+  (build job `115726371442`, emulator job `115727439968`, release job skipped), belt `38526000985`,
+  reviewers `38526000973`, Factory 2 `38526000955`.
 
 The three runs' APKs are not byte-identical to each other, and the reason is worth stating rather than
 hiding: for `2943074` the size is 5,795,656 bytes (one byte fewer than `ca8f4d3`) with SHA-256
