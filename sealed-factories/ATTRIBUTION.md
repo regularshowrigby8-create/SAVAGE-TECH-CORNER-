@@ -7,7 +7,7 @@ Two kinds of entry, and the difference matters:
 * **content redistributed** — the licence permits it (MIT, Apache-2.0, BSD, ISC, CC0, Unlicense, 0BSD) and the licence text is included in `licenses/`. The vendored files are in `payloads/<id>.tar.gz`, hash-sealed and never merged into this product's source tree.
 * **blueprint only** — no licence was published, or the licence is one this repository cannot redistribute (AGPL, GPL) or that GitHub could not identify. **Not one byte of their content is redistributed**: the component records the commit, the file structure and the hashes, and re-implements the factory's design here. Their licence text is included when one exists, because attribution is the point.
 
-Sealed: 2026-10-14T17:16:30Z · component version 1.0.0 · 137 factories · 98 with redistributed content · 39 blueprint-only
+Sealed: 2026-10-14T17:54:26Z · component version 1.0.0 · 137 factories · 98 with redistributed content · 39 blueprint-only
 
 | factory | repository | licence | commit | files | bytes | redistribution |
 | --- | --- | --- | --- | --- | --- | --- |

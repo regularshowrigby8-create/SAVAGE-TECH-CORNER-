@@ -1,6 +1,6 @@
 {
  "seal_version": "1.0.0",
- "sealed_at": "2026-10-14T17:16:30Z",
+ "sealed_at": "2026-10-14T17:54:26Z",
  "component": "sealed-factories",
  "description": "The imported factory set. Dropped in or removed as one unit; runs before the repository's own factories and feeds them.",
  "contents": {
@@ -66,8 +66,8 @@
  "component_files": [
   {
    "path": "runtime/agents.py",
-   "bytes": 14830,
-   "sha256": "ba0d09dbe64b3280c585dab9ee4ea70d7410e659b0bb57c9db3b8896d7a8d3ea"
+   "bytes": 15522,
+   "sha256": "780dfd3d73e03dd602cfd8ec8bf0bf6c28684e7d62c1e7b394b827de7642b8c0"
   },
   {
    "path": "runtime/cli.py",
@@ -96,13 +96,13 @@
   },
   {
    "path": "runtime/swarm.py",
-   "bytes": 15188,
-   "sha256": "32510992c77abc5a4141ea820788ccde761056ba899b710d2bc8662311bddaaa"
+   "bytes": 15476,
+   "sha256": "d779e4f8b3e6f1e4a31d69048d1c71642fae1029c5a37ea79dbc6134c866e5be"
   },
   {
    "path": "runtime/toolkit.py",
-   "bytes": 68413,
-   "sha256": "32183f5012b8554262b2a26ccf52ab32980ecad38c979faee7e89e1bc1abd3b3"
+   "bytes": 71658,
+   "sha256": "58d37ce58e695529685aaab4bf88d2d7b6c09e3ee68ee7d4a9deecb0d49b8efc"
   },
   {
    "path": "runtime/toolserver.py",
@@ -111,8 +111,8 @@
   },
   {
    "path": "mcp-servers.json",
-   "bytes": 28404,
-   "sha256": "5c92147abf467a25f5bbbea0c15898b37099c91b2a6952f39099452bb7bc606a"
+   "bytes": 28513,
+   "sha256": "04c70f66172cbd2bd9393bc89a67ee5ce14b2178e780106927472556998e33ab"
   }
  ],
  "factories": [

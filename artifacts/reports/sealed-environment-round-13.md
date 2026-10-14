@@ -13,17 +13,18 @@ own refusal is quoted instead of a summary of it.
 
 ## 1. What changed
 
-| Part                              | Before (round 12)                                                        | Now                                                                                                      | Where                                     |
-| --------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| GitHub capability                 | absent — no GitHub tool existed in the registry                          | six tools: `github.repo`, `github.file`, `github.search`, `github.issues`, `github.commits`, `github.pr` | `sealed-factories/runtime/toolkit.py`     |
-| Tool count in the seal            | 41 tools                                                                 | **47 tools** (47 native, 0 bound from MCP)                                                               | sealed run, §2.4                          |
-| MCP servers verified by handshake | 7 servers, 52 tools                                                      | **16 servers, 303 tools**, each with the command that was verified                                       | `tools/factory/imported_mcp_servers.json` |
-| MCP servers that cannot start     | 24 of 42                                                                 | **14 of 42** not installed here; 7 more start but refuse for a named reason (see §2.2)                   | catalogue + `cli.py mcp-probe`            |
-| Emulator stage                    | ran `connectedDebugAndroidTest` against whatever state the device was in | wakes the screen, dismisses the keyguard, and asserts `Awake` + a non-keyguard focus before the suite    | `tools/ci/android_emulator_run.sh`        |
-| Seal root                         | `32bf92d3…`, 1,849,160 payload bytes                                     | **`822ed687…`**, 1,870,829 payload bytes, 137 factories, 10 component files pinned                       | `sealed-factories/SEAL.json`              |
+| Part                              | Before (round 12)                                                        | Now                                                                                                                                                                                               | Where                                     |
+| --------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| GitHub capability                 | absent — no GitHub tool existed in the registry                          | seven tools: the six data tools (`github.repo`, `github.file`, `github.search`, `github.issues`, `github.commits`, `github.pr`) plus `github.probe`, which the researcher role calls in every run | `sealed-factories/runtime/toolkit.py`     |
+| Tool count in the seal            | 41 tools                                                                 | **48 tools** (48 native, 0 bound from MCP)                                                                                                                                                        | sealed run, §2.4                          |
+| MCP servers verified by handshake | 7 servers, 52 tools                                                      | **16 servers, 303 tools**, each with the command that was verified                                                                                                                                | `tools/factory/imported_mcp_servers.json` |
+| MCP servers that cannot start     | 24 of 42                                                                 | **14 of 42** not installed here; 7 more start but refuse for a named reason (see §2.2)                                                                                                            | catalogue + `cli.py mcp-probe`            |
+| Emulator stage                    | ran `connectedDebugAndroidTest` against whatever state the device was in | wakes the screen, dismisses the keyguard, and asserts `Awake` + a non-keyguard focus before the suite                                                                                             | `tools/ci/android_emulator_run.sh`        |
+| Seal root                         | `32bf92d3…`, 1,849,160 payload bytes                                     | **`d6b2faee…`**, 1,870,829 payload bytes, 137 factories, 10 component files pinned                                                                                                                | `sealed-factories/SEAL.json`              |
 
-The seal root changed for one reason: `runtime/toolkit.py` gained the GitHub section, and the seal
-pins every runtime module by hash (AC-056). The payloads, the licence texts and the 137 records are
+The seal root changed for one reason: `runtime/toolkit.py` gained the GitHub section and `runtime/agents.py`
+gave the researcher role the GitHub tool group, and the seal pins every runtime module by hash
+(AC-056). The payloads, the licence texts and the 137 records are
 otherwise the same set.
 
 The root is `sha256(SEAL.json)`, and that document records when it was sealed (`sealed_at`), so the
@@ -93,6 +94,45 @@ token never appearing in a reply, a 404 surfacing GitHub's message, and an unrea
 with the reason instead of returning nothing. The real API is not required by the suite and the suite
 does not depend on it being up.
 
+### 2.1b The environment exercises GitHub itself, in every run
+
+Registering seven tools and leaving them for a human to call would make them a promise. The researcher
+role holds the six data tools - so an agent driving it with a model can reach GitHub - and its offline
+path calls `github.probe`, which is the one GitHub tool whose subject _is_ reachability: it reports what
+happened instead of raising, because a machine with no network has to be able to _record_ that as an
+observation, not fail a step over it. The probe's record lands in the run's own artefacts:
+
+```
+$ python3 sealed-factories/runtime/cli.py run --root . --limit 40 --model-calls 0
+[swarm] 0 ran with a model, 40 offline, 44 tool steps ok, 0 failed, 40/40 checks passed
+
+$ cat .sealed/swarm/<run>/artefacts/researcher-0000013.json
+{"tool": "github.probe", "ok": true, "summary": "available=True"}
+```
+
+and with the API pointed at a host that is not there, the same step records why - with no failed step
+and no failed check:
+
+```
+$ SEALED_GITHUB_API=http://127.0.0.1:9 python3 sealed-factories/runtime/cli.py run \
+    --root . --roles researcher --limit 1 --model-calls 0
+[swarm] 0 ran with a model, 1 offline, 2 tool steps ok, 0 failed, 1/1 checks passed
+
+{"tool": "github.probe", "ok": true,
+ "summary": "available=False; status=0; reason=GitHub is not reachable from here: [Errno 111] Connection refused"}
+```
+
+The three outcomes the probe distinguishes are asserted in `GitHubToolTest`: `available=True` when
+`/rate_limit` answers 200, `available=False, reachable=True, status=404` when a host answers but not
+with a rate limit (a wrong `SEALED_GITHUB_API`, say), and `available=False, reachable=False, status=0`
+when no host answers at all. The run's summariser was extended to keep `status` and `reason`, so the
+explanation survives into the artefact instead of only the boolean.
+
+**Cost, stated plainly:** this puts one bounded HTTPS request (5 s cap) into every swarm run. That is a
+deliberate trade - the alternative is a capability that is asserted rather than exercised - and it
+cannot fail a run: the step is a probe, and the six data tools keep their refusal contract for
+everything else. On a machine with no network the run is 5 s slower and says so in its artefacts.
+
 ### 2.2 MCP round 2: what starts now, and the command that was verified
 
 Round 12 recorded 24 servers that could not be started. Each was re-run through the handshake harness
@@ -110,6 +150,15 @@ Round 12 recorded 24 servers that could not be started. Each was re-run through 
 | n8n-mcp                   | `npx -y n8n-mcp`                                                                         | 7     |
 | awslabs aws-documentation | `uvx awslabs.aws-documentation-mcp-server@latest` (`awslabs.core-mcp-server` yanked)     | 5     |
 | mcp-atlassian             | `uvx mcp-atlassian`                                                                      | 0     |
+
+| dbt-mcp | `uvx --from dbt-mcp dbt-mcp` - refused, see below | 0 |
+dbt-mcp was re-diagnosed rather than left at "needs a newer Python": the package is `dbt-mcp 2.7.0`
+with `requires-python <3.14,>=3.12`, this machine's newest interpreter is 3.11.2, uv's interpreter
+download fails on GitHub release assets (`tls handshake eof`, unchanged by `UV_NATIVE_TLS=1`), and no
+CPython 3.12 distribution is obtainable from the hosts this sandbox can reach - PyPI answers 404 for
+`python3.12`, `python-3.12` and `python-standalone`, and the npm package `cpython` 0.10.1 is a 2.7-era
+node-gyp binding that clones CPython itself. That is now the recorded reason, in the package's own
+words and this machine's.
 
 Seven servers still refuse, and each one's refusal is recorded in the registry as `launch_note` in
 the machine's own words rather than as an unverified guess; the refusals are named in §4.
@@ -139,17 +188,17 @@ catalogue 42, installed 28, not_installed 14, probed 4
 $ python3 tools/factory/seal_factories.py seal
 sealed 137 factories -> sealed-factories/SEAL.json
 component files pinned=10
-seal root sha256=822ed6872eff0ef7caea6f9262d1114799cacf6d428630a15bfe38098d2f6c65
+seal root sha256=d6b2faeecc19ad0afe6804576254838deae44fafc375c536e227918cd4ffacb6
 payload bytes=1870829 licences=115
 
 $ cat sealed-factories/SEAL.sha256
-822ed6872eff0ef7caea6f9262d1114799cacf6d428630a15bfe38098d2f6c65  SEAL.json
+d6b2faeecc19ad0afe6804576254838deae44fafc375c536e227918cd4ffacb6  SEAL.json
 
 $ python3 tools/factory/seal_factories.py verify
-[SEAL] OK 1.0.0: 137 factories, 1870829 payload bytes, 115 licence texts, root 822ed6872eff0ef7…
+[SEAL] OK 1.0.0: 137 factories, 1870829 payload bytes, 115 licence texts, root d6b2faeecc19ad0a…
 
 $ python3 tools/factory/sealed_factory_runtime.py verify
-[SEAL] OK 1.0.0: 137 factories, 1870829 payload bytes, 115 licence texts, root 822ed6872eff0ef7…
+[SEAL] OK 1.0.0: 137 factories, 1870829 payload bytes, 115 licence texts, root d6b2faeecc19ad0a…
 ```
 
 A test rebuilds every payload from its record and requires the bytes on disk to match, so re-sealing
@@ -161,8 +210,8 @@ an unchanged tree is still a no-op after this round's changes (§2.6).
 $ python3 tools/factory/sealed_factory_runtime.py run --max-model-calls 0 --env-limit 200
 [SEALED] 137 factories sealed (98 with redistributed content, 39 blueprint-only)
 [SEALED] models: local=[] keyed=[]
-[SEALED] environment: 47 tools (47 native, 0 bound from MCP), MCP catalogue 42 servers (11 verified here, 28 bindable on this machine), 159 agent roles, 7 language packs available (go, rust, java, kotlin, csharp, ruby missing)
-[SEALED] swarm: 159 agent instances of a 159-instance plan in 4.75s, 162 tool steps, 159/159 checks passed
+[SEALED] environment: 48 tools (48 native, 0 bound from MCP), MCP catalogue 42 servers (11 verified here, 28 bindable on this machine), 159 agent roles, 7 language packs available (go, rust, java, kotlin, csharp, ruby missing)
+[SEALED] swarm: 159 agent instances of a 159-instance plan in 8.24s, 163 tool steps, 159/159 checks passed
 [SEALED] 0 factories ran against a model, 97 ran in plan mode, 40 had no definitions in their sealed slice, 0 model calls failed, 0 unreadable
 [SEALED] 2 slice(s) carry content but define nothing this runtime reads as stages, workers or tools
 [SEALED] MCP servers: 42 catalogued, 303 tools observed by handshake
@@ -189,14 +238,14 @@ $ node scripts/conveyor_belt.js
 
 ```
 $ python3 -m unittest discover -s shell/tests
-Ran 188 tests in 34.191s
+Ran 191 tests in 66.441s
 
 OK
 ```
 
-That is 9 more than round 12's 179: nine in `GitHubToolTest` and one more in
+That is 12 more than round 12's 179: eleven in `GitHubToolTest` and one more in
 `test_androidtest_failure_report.py` (`test_the_stage_wakes_the_screen_before_it_runs_the_suite`).
-`shell/tests/test_sealed_environment.py` now runs 47 tests, `test_sealed_factory_runtime.py` 23
+`shell/tests/test_sealed_environment.py` now runs 50 tests, `test_sealed_factory_runtime.py` 23
 (including the payload rebuild-and-compare). The rest of the gates, on the same tree:
 
 ```
@@ -273,10 +322,10 @@ was retrievable, and nothing more is claimed.
 
 ## 3. Acceptance criteria covered
 
-| Criterion | What it asserts                                                                         | Test                                                                                                                                      | Evidence        |
-| --------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| AC-060    | GitHub capability is inside the seal; the problems it was brought in for carry evidence | `GitHubToolTest` (9 tests), `test_the_seal_carries_the_mcp_and_ai_groups_too`, `test_the_stage_wakes_the_screen_before_it_runs_the_suite` | §2.1–§2.3, §2.7 |
-| AC-061    | The belt runs the sealed set first, with the GitHub tooling inside it, offline          | `scripts/conveyor_belt.js` station 0, `test_sealed_factory_runtime.py`                                                                    | §2.5            |
+| Criterion | What it asserts                                                                                                                 | Test                                                                                                                                       | Evidence               |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------- |
+| AC-060    | GitHub capability is inside the seal, exercised by the environment every run; the problems it was brought in for carry evidence | `GitHubToolTest` (11 tests), `test_the_seal_carries_the_mcp_and_ai_groups_too`, `test_the_stage_wakes_the_screen_before_it_runs_the_suite` | §2.1, §2.1b–§2.3, §2.7 |
+| AC-061    | The belt runs the sealed set first, with the GitHub tooling inside it, offline                                                  | `scripts/conveyor_belt.js` station 0, `test_sealed_factory_runtime.py`                                                                     | §2.5                   |
 
 The criterion text is in `docs/ACCEPTANCE_CRITERIA.md` (AC-060, AC-061).
 
@@ -285,13 +334,17 @@ The criterion text is in `docs/ACCEPTANCE_CRITERIA.md` (AC-060, AC-061).
 - **Seven MCP servers still refuse to start here**, each with the machine's own words recorded in
   `launch_note`: figma-context-mcp (`Either FIGMA_API_KEY or FIGMA_OAUTH_TOKEN is required`),
   context-mode (exits 1 after an npm deprecation warning — no stdio server), dbt-mcp (needs Python
-  ≥3.12,<3.14; this machine has 3.11.2 and uv's interpreter download fails
-  `invalid peer certificate: UnknownIssuer`), unity-mcp (`mcp-for-unity` is not in a package registry
+  ≥3.12,<3.14, which no reachable host can supply here — see §2.2), unity-mcp (`mcp-for-unity` is not in a package registry
   and the server needs a running Unity Editor), mcp-proxy (a bridge, not a tool server),
   `awslabs.core-mcp-server` (yanked upstream), github-mcp-server (a Go binary this sandbox cannot
   fetch — which is part of why the GitHub capability was written as native tools instead).
   `quickstart-resources`, `awesome-mcp-servers`, `mcp-for-beginners` and `mcp-chrome` are collections
   and examples with no one-line launch, and are catalogued as such.
+- **The GitHub data tools are declared to the researcher role but only exercised automatically as far
+  as a probe.** Calling them for data needs a model driving the agent (or a person running
+  `runtime/cli.py call github.*`); what every run does by itself is record whether the API is
+  reachable. Of the seven, six are covered by `GitHubToolTest` against a local server and by live calls
+  recorded in §2.1, and the seventh runs in every swarm pass.
 - **`mcp-atlassian` is counted as verified with 0 tools.** It completed `initialize` and answered
   `tools/list` with an empty list. The handshake is what was measured, so the count keeps it; it is
   named here so the 16-server figure cannot be read as 16 servers' worth of usable tools.

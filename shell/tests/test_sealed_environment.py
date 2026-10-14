@@ -321,7 +321,9 @@ class GitHubToolTest(unittest.TestCase):
                     self.wfile.write(body)
 
                 def do_GET(self):  # noqa: N802 - the handler's own name
-                    if self.path == "/repos/owner/name":
+                    if self.path == "/rate_limit":
+                        self._send({"resources": {"core": {"limit": 5000, "remaining": 4999}}})
+                    elif self.path == "/repos/owner/name":
                         self._send({"full_name": "owner/name", "description": "a stub",
                                     "language": "Python", "stargazers_count": 7, "forks_count": 1,
                                     "open_issues_count": 2, "default_branch": "main",
@@ -384,7 +386,7 @@ class GitHubToolTest(unittest.TestCase):
     def test_the_six_github_tools_are_registered_and_callable(self) -> None:
         self.assertEqual(sorted(n for n in self.registry if n.startswith("github.")),
                          ["github.commits", "github.file", "github.issues", "github.pr",
-                          "github.repo", "github.search"])
+                          "github.probe", "github.repo", "github.search"])
 
     def test_repository_metadata_comes_from_the_answer_not_from_guesswork(self) -> None:
         answer = self._call("github.repo", repository="owner/name")
@@ -434,6 +436,55 @@ class GitHubToolTest(unittest.TestCase):
         self.assertFalse(anonymous["authenticated"])
         os.environ.clear()
         os.environ.update(empty)
+
+    def test_the_probe_reports_reachability_instead_of_raising_either_way(self) -> None:
+        """`github.probe` is the one github tool whose subject *is* reachability.
+
+        A run has to be able to record "this machine cannot reach GitHub, and here is why" as a
+        successful observation, while the six data tools keep refusing. If the probe raised, the
+        researcher role's offline step would fail on every air-gapped machine.
+        """
+        reachable = self._call("github.probe")
+        self.assertTrue(reachable["available"])
+        self.assertTrue(reachable["reachable"])
+        self.assertEqual(reachable["status"], 200)
+        self.assertTrue(reachable["token_present"])
+        self.assertNotIn("0" * 38, json.dumps(reachable))
+
+        # A host that answers, but not with a rate limit: reachable, not usable, and it says which.
+        toolkit.GITHUB_API = f"{self.stub.url}/wrong-base"
+        wrong_base = self._call("github.probe")
+        self.assertFalse(wrong_base["available"])
+        self.assertTrue(wrong_base["reachable"])
+        self.assertIn("HTTP 404", wrong_base["reason"])
+
+        # No host at all: a different fact, reported as a different fact.
+        toolkit.GITHUB_API = "http://127.0.0.1:9"  # discard port: accepted by nothing
+        unreachable = self._call("github.probe")
+        self.assertFalse(unreachable["available"])
+        self.assertFalse(unreachable["reachable"])
+        self.assertEqual(unreachable["status"], 0)
+        self.assertIn("not reachable", unreachable["reason"])
+
+    def test_the_agents_can_reach_github_but_never_fetch_it_offline(self) -> None:
+        """The capability is declared to a role; the offline path only probes.
+
+        This pins the design rather than describing it: a role may hold the six data tools, but no
+        offline step may call one, because a failed step fails the belt on a machine with no network.
+        """
+        self.assertFalse(hasattr(toolkit, "TOOL_GROUPS"),
+                         "the tool groups belong to the agent catalogue, not the registry")
+        groups = agents.TOOL_GROUPS["github"]
+        self.assertEqual(set(groups), {"github.repo", "github.file", "github.search", "github.issues",
+                                       "github.commits", "github.pr", "github.probe"})
+        researcher = next(role for role in agents.catalogue([], ["python"])
+                          if role.id == "researcher")
+        self.assertTrue(set(groups) <= set(researcher.tools))
+        offline = [step["tool"] for step in researcher.offline]
+        self.assertIn("github.probe", offline)
+        self.assertFalse([name for name in offline if name.startswith("github.")
+                          and name != "github.probe"],
+                         "an offline step calls GitHub for data, which fails without a network")
 
     def test_an_unreachable_api_is_refused_with_the_reason_not_an_empty_result(self) -> None:
         """Offline is a normal state for this component, and it must say so."""

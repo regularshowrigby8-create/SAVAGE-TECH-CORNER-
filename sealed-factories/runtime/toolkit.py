@@ -711,14 +711,14 @@ def github_token() -> str:
     return ""
 
 
-def github_call(path: str, method: str = "GET", body: dict | None = None, timeout: int = 30,
-                raw: bool = False) -> dict:
-    """One GitHub REST call. The API's own answer is what comes back, including its errors.
+def _github_request(path: str, method: str = "GET", body: dict | None = None, timeout: int = 30,
+                    raw: bool = False) -> dict:
+    """One HTTP exchange with the API, without deciding what its outcome means.
 
-    A request without a token is still made: GitHub serves public data unauthenticated and answers
-    with the rate limit it applied, which is reported rather than guessed at. A 401/403 is reported
-    with GitHub's own message and the reason this environment could not authenticate, never as an
-    empty result that looks like "nothing found".
+    Returns `status` (0 when no host answered at all), the payload bytes and, when the host could not
+    be reached, `error`. The distinction matters and only this layer can make it: a 403 rate limit is
+    the API *answering*, a refused connection is the API being absent, and a caller that conflates
+    the two cannot report either honestly.
     """
     if not re.match(r"^[\w./?=&%:-]+$", path):
         raise ToolError(f"that is not a GitHub API path: {path!r}")
@@ -731,22 +731,45 @@ def github_call(path: str, method: str = "GET", body: dict | None = None, timeou
         headers["Authorization"] = f"Bearer {token}"
     data = json.dumps(body).encode() if body is not None else None
     request = urllib.request.Request(url, data=data, method=method.upper(), headers=headers)
+    exchange = {"url": url, "authenticated": bool(token), "status": 0, "error": "",
+                "payload": b"", "rate_limit": None, "rate_limit_remaining": None, "detail": ""}
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
-            payload = response.read(MAX_HTTP_BYTES)
-            used = {"status": response.status, "authenticated": bool(token),
-                    "rate_limit_remaining": response.headers.get("X-RateLimit-Remaining"),
-                    "rate_limit": response.headers.get("X-RateLimit-Limit")}
+            exchange["payload"] = response.read(MAX_HTTP_BYTES)
+            exchange["status"] = response.status
+            exchange["rate_limit"] = response.headers.get("X-RateLimit-Limit")
+            exchange["rate_limit_remaining"] = response.headers.get("X-RateLimit-Remaining")
     except urllib.error.HTTPError as problem:
-        detail = problem.read(4096).decode("utf-8", "replace")
-        hint = ""
-        if problem.code in (401, 403):
-            hint = (f"; this environment has {'a token' if token else 'no token'} - set "
-                    f"GITHUB_TOKEN (or GH_TOKEN) to raise the limit or to see private data")
-        raise ToolError(f"GitHub answered HTTP {problem.code} for {url}: {detail[:300]}{hint}") \
-            from problem
+        exchange["status"] = problem.code
+        exchange["detail"] = problem.read(4096).decode("utf-8", "replace")[:300]
     except urllib.error.URLError as problem:
-        raise ToolError(f"GitHub is not reachable from here: {problem.reason}") from problem
+        exchange["error"] = str(problem.reason)
+    return exchange
+
+
+def github_call(path: str, method: str = "GET", body: dict | None = None, timeout: int = 30,
+                raw: bool = False) -> dict:
+    """One GitHub REST call. The API's own answer is what comes back, including its errors.
+
+    A request without a token is still made: GitHub serves public data unauthenticated and answers
+    with the rate limit it applied, which is reported rather than guessed at. A 401/403 is reported
+    with GitHub's own message and the reason this environment could not authenticate, never as an
+    empty result that looks like "nothing found".
+    """
+    exchange = _github_request(path, method, body, timeout, raw)
+    url, payload = exchange["url"], exchange["payload"]
+    if exchange["status"] == 0:
+        raise ToolError(f"GitHub is not reachable from here: {exchange['error']}")
+    if exchange["status"] >= 400:
+        hint = ""
+        if exchange["status"] in (401, 403):
+            hint = (f"; this environment has {'a token' if exchange['authenticated'] else 'no token'}"
+                    f" - set GITHUB_TOKEN (or GH_TOKEN) to raise the limit or to see private data")
+        raise ToolError(f"GitHub answered HTTP {exchange['status']} for {url}: "
+                        f"{exchange['detail']}{hint}")
+    used = {"status": exchange["status"], "authenticated": exchange["authenticated"],
+            "rate_limit_remaining": exchange["rate_limit_remaining"],
+            "rate_limit": exchange["rate_limit"]}
     if raw:
         return {**used, "url": url, "text": payload.decode("utf-8", "replace")}
     try:
@@ -855,6 +878,34 @@ def github_pr(repository: str, number: int) -> dict:
                        "additions": f.get("additions"), "deletions": f.get("deletions")}
                       for f in (files["json"] if isinstance(files["json"], list) else [])],
             "authenticated": answer["authenticated"]}
+
+
+def github_probe(timeout: int = 5) -> dict:
+    """Can this machine use the GitHub API at all, right now?
+
+    This is the one github tool that does not raise when the network is absent, because asking
+    whether GitHub is reachable and being told "no, and here is why" is a *successful* probe. The
+    other six refuse, which is what makes them safe to call from a task: a refusal is never a
+    fabricated answer. The probe exists so a run can record the environment's GitHub reachability as
+    evidence - on this machine, on a machine behind a proxy, on a machine with no network at all -
+    without that recording turning into a failed step.
+
+    `available` is what the API answered, not what the environment hoped for; `token_present` says
+    whether a credential was offered, without revealing it.
+    """
+    exchange = _github_request("rate_limit", timeout=timeout)
+    status = exchange["status"]
+    if status == 0:
+        reason = f"GitHub is not reachable from here: {exchange['error']}"
+    elif status == 200:
+        reason = "the API answered /rate_limit"
+    else:
+        reason = (f"a host answered, but not with a rate limit (HTTP {status}); check "
+                  f"SEALED_GITHUB_API and the credential")
+    return {"available": status == 200, "reachable": status != 0, "status": status,
+            "token_present": exchange["authenticated"], "url": exchange["url"],
+            "rate_limit": exchange["rate_limit"],
+            "rate_limit_remaining": exchange["rate_limit_remaining"], "reason": reason}
 
 
 # --------------------------------------------------------------------------- state and data stores
@@ -1239,6 +1290,11 @@ def build_registry(workspace: Workspace, gateway_url: str = "") -> dict:
                            "description": "The most recent commits of a repository or branch.",
                            "schema": _schema({"repository": _STR, "limit": _INT, "branch": _STR},
                                              ["repository"])},
+        "github.probe": {"fn": github_probe,
+                         "description": "Report whether the GitHub API is reachable from here, and "
+                                        "why not when it is not. The only github tool that answers "
+                                        "instead of refusing when the network is absent.",
+                         "schema": _schema({"timeout": _INT}, [])},
         "github.pr": {"fn": lambda repository, number: github_pr(repository, number),
                       "description": "One pull request, its mergeability and the files it touches.",
                       "schema": _schema({"repository": _STR, "number": _INT},

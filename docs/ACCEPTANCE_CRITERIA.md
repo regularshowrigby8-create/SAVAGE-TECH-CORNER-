@@ -757,32 +757,41 @@ from the repository's own authoritative documents instead of being invented:
   in `GITHUB_TOKEN`/`GH_TOKEN`/`GITHUB_PERSONAL_ACCESS_TOKEN` when one exists and anonymously when
   none does; the credential is never returned in any reply, and the rate limit and whether the call
   was authenticated are reported instead; an API error surfaces GitHub's own message; a repository
-  name or search kind that is not valid is refused before any call is made; every MCP launch that
-  could not be completed is recorded in `tools/factory/imported_mcp_servers.json` with the machine's
-  own diagnosis in `launch_note`, and every launch that was completed records the exact command and
-  the tools list the handshake returned, so the catalogue's counts are the number of servers actually
-  driven through an `initialize` handshake and a tool listing; and the emulator stage proves the screen is awake and
+  name or search kind that is not valid is refused before any call is made; a seventh tool,
+  `github.probe`, reports whether the API is reachable from this machine - distinguishing a host
+  that answered from a host that was absent (`reachable`, `status`, `reason`) - and returns instead
+  of raising, so a run records a machine with no network as an observation rather than as a failure,
+  and the six data tools are declared to the researcher role so an agent driving it with a model can
+  call them, while no offline step calls one (`SEALED_GITHUB_API` points the tools at an enterprise
+  instance); every MCP launch that could not be completed is recorded in
+  `tools/factory/imported_mcp_servers.json` with the machine's own diagnosis in `launch_note`, and
+  every launch that was completed records the exact command and the tools list the handshake
+  returned, so the catalogue's counts are the number of servers actually driven through an
+  `initialize` handshake and a tool listing; and the emulator stage proves the screen is awake and
   focused before the instrumented suite runs, reporting a warning when it is not
-- **Test method**: `shell/tests/test_sealed_environment.py` (`GitHubToolTest`, which runs the tools
-  against a local server answering the API's own shapes and asserts the refusal paths separately),
-  `test_the_seal_carries_the_mcp_and_ai_groups_too` (which requires every count in the sealed
-  catalogue to equal the registry's, and every server marked verified to carry a command and a tool
-  list), `shell/tests/test_androidtest_failure_report.py`
+- **Test method**: `shell/tests/test_sealed_environment.py` (`GitHubToolTest`, eleven tests: the tools
+  run against a local server answering the API's own shapes, refusals asserted
+  separately, the probe's three outcomes are each asserted, and the role/offline-step design is
+  pinned), `test_the_seal_carries_the_mcp_and_ai_groups_too` (which requires every count in the
+  sealed catalogue to equal the registry's, and every server marked verified to carry a command and
+  a tool list), `shell/tests/test_androidtest_failure_report.py`
   (`test_the_stage_wakes_the_screen_before_it_runs_the_suite`), and the handshake harness
   `tools/factory/mcp_handshake.py` whose output those counts come from
-- **Evidence required**: the sealed run's tool count, the handshake transcripts for the servers
-  recorded as verified, the diagnosed `launch_note` for each server that refused, and the pre-flight
-  `::warning` annotation from a run where the device did not come up
+- **Evidence required**: the sealed run's tool count and tool-step count, the researcher role's
+  artefact recording `github.probe` with `available=True` on this machine and with `available=False;
+status=0; reason=...` when the API is pointed at a dead host, the handshake transcripts for the
+  servers recorded as verified, the diagnosed `launch_note` for each server that refused, and the
+  pre-flight `::warning` annotation from a run where the device did not come up
 - **Honest limitation**: a server that completes the handshake but publishes no tools
-  (`mcp-atlassian`, 0 tools) is counted as verified because the handshake is what was measured; it is
-  named here rather than rounded up, and the report says the same; the catalogue's "verified here"
-  figure counts catalogue entries (11) while the registry counts server names (16), and both are
-  published rather than one standing in for the other; the rate-limit tier observed on this machine
-  is the sandbox's own egress tier - an anonymous `curl` here is answered as an authenticated client -
-  so it is not evidence about an unauthenticated client elsewhere, and all the tool claims about
-  credentials are about whether the process sent a token. The emulator pre-flight is reliability
-  hardening: the failing run `226b71c` was not reproduced, so the change is not claimed as a proven
-  fix
+  (`mcp-atlassian`, 0 tools) is counted as verified because the handshake is what was measured; it
+  is named here rather than rounded up, and the report says the same; the catalogue's "verified
+  here" figure counts catalogue entries (11) while the registry counts server names (16), and both
+  are published rather than one standing in for the other; the rate-limit tier observed on this
+  machine is the sandbox's own egress tier - an anonymous `curl` here is answered as an
+  authenticated client - so it is not evidence about an unauthenticated client elsewhere, and all
+  the tool claims about credentials are about whether the process sent a token. The emulator pre-
+  flight is reliability hardening: the failing run `226b71c` was not reproduced, so the change is
+  not claimed as a proven fix
 
 ### AC-061 — The belt still runs the sealed set first, with GitHub tooling inside it
 

@@ -81,8 +81,11 @@ def _run_steps(registry: dict, steps: tuple[dict, ...], workspace: Workspace) ->
 
 def _summarise(value) -> str:
     if isinstance(value, dict):
+        # `reason` last, so that when the whole summary is trimmed the explanation of the answer is
+        # the part that survives: "available=False" alone is a thinner record than the run deserves.
         interesting = [key for key in ("path", "bytes", "matches", "findings", "clean", "totals",
-                                       "exit_code", "entries", "stored", "key", "available")
+                                       "exit_code", "entries", "stored", "key", "available", "status",
+                                       "reason")
                        if key in value]
         parts = []
         for key in interesting:
@@ -90,8 +93,8 @@ def _summarise(value) -> str:
             if isinstance(item, list):
                 parts.append(f"{key}={len(item)}")
             else:
-                parts.append(f"{key}={str(item)[:60]}")
-        return "; ".join(parts)[:240] or json.dumps(value)[:200]
+                parts.append(f"{key}={str(item)[:160 if key == 'reason' else 60]}")
+        return "; ".join(parts)[:320] or json.dumps(value)[:200]
     if isinstance(value, list):
         return f"{len(value)} item(s)"
     return str(value)[:200]

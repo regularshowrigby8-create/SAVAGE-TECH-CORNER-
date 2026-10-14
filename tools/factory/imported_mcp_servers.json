@@ -1539,12 +1539,12 @@
         "model-context-protocol"
       ],
       "command": [],
-      "requires": "the repository does not publish a one-line launch command",
+      "requires": "Python >=3.12,<3.14 (dbt-mcp 2.7.0 metadata on PyPI) - the README now points at the dbt docs and ships an .mcpb bundle in the release assets instead of a command line",
       "tools": [],
       "note": "",
       "import_class": "asset-only",
       "snapshot": "2026-10-14",
-      "launch_note": "needs Python >=3.12,<3.14; this machine has 3.11.2 and the interpreter uv tried to fetch was not downloadable from here",
+      "launch_note": "refused here: dbt-mcp 2.7.0 declares requires-python <3.14,>=3.12 and this machine's newest interpreter is 3.11.2; uv's interpreter download fails on GitHub release assets (`Failed to download https://github.com/astral-sh/python-build-standalone/releases/download/20261013/cpython-3.12.15%2B20261013-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz`: tls handshake eof, with UV_NATIVE_TLS=1 as well), and no CPython 3.12 distribution is obtainable from the hosts reachable from this sandbox (PyPI carries no interpreter package: python3.12, python-3.12 and python-standalone are all 404; the npm package cpython 0.10.1 is a 2.7-era node-gyp binding that clones CPython itself)",
       "launch_verified": false,
       "verified_servers": [],
       "command_source": ""

@@ -842,7 +842,7 @@
       "url": "https://github.com/dbt-labs/dbt-mcp",
       "license": "Apache-2.0",
       "command": [],
-      "requires": "the repository does not publish a one-line launch command",
+      "requires": "Python >=3.12,<3.14 (dbt-mcp 2.7.0 metadata on PyPI) - the README now points at the dbt docs and ships an .mcpb bundle in the release assets instead of a command line",
       "tools": [],
       "verified": false,
       "what": "A MCP (Model Context Protocol) server for interacting with dbt."

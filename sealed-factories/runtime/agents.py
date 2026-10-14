@@ -29,6 +29,8 @@ TOOL_GROUPS = {
     "net": ("net.fetch", "net.http"),
     "state": ("memory.store", "memory.recall", "plan.write", "plan.update", "sqlite.query"),
     "model": ("model.ask",),
+    "github": ("github.repo", "github.file", "github.search", "github.issues", "github.commits",
+               "github.pr", "github.probe"),
 }
 
 TOPOLOGIES = {
@@ -148,7 +150,13 @@ CORE_ROLES: tuple[Role, ...] = (
                                                "release"}},
          ), checks=({"tool": "memory.recall", "args": {"key": "release"}},), topology="workflow"),
     Role("researcher", "Researcher", "Read the outside world when the network allows it.",
-         _tool_calls("read", "net", "state"), offline=(
+         _tool_calls("read", "net", "state", "github"), offline=(
+             # The GitHub API tools are declared for this role, so an agent driving it with a model
+             # can reach GitHub: repository metadata, files, search, issues, commits and pull
+             # requests. The offline path calls only `github.probe`, which reports reachability and
+             # never raises - a fetch here would fail the step on every machine without a network,
+             # and a belt that only passes where GitHub is up is not a belt that works offline.
+             {"tool": "github.probe", "args": {}},
              {"tool": "memory.recall", "args": {"query": "architecture"}},),
          checks=({"tool": "time.now", "args": {}},), topology="squad"),
     Role("critic", "Critic", "Attack the strongest claim in the artefact.",
