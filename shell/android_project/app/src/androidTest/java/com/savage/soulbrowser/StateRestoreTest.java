@@ -40,8 +40,10 @@ public class StateRestoreTest {
     public void currentUrlSurvivesRecreation() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
             TestSupport.navigateForReal(scenario, PAGE);
-            TestSupport.waitUntil("the page to load", () -> PAGE.equals(url(scenario)),
-                    () -> TestSupport.describeBrowser(scenario));
+            // The page has to be *committed* before the state is saved: WebView.saveState() stores
+            // the current entry of the page history, so a load that is still in flight is not in the
+            // state that a recreation restores, and the browser comes back on the page before it.
+            TestSupport.waitForSettledNavigation(scenario, PAGE);
 
             scenario.recreate();
 
@@ -57,8 +59,7 @@ public class StateRestoreTest {
     public void tabsSurviveRecreation() {
         try (ActivityScenario<MainActivity> scenario = TestSupport.launchBrowser()) {
             TestSupport.navigateForReal(scenario, PAGE);
-            TestSupport.waitUntil("the first tab to load", () -> PAGE.equals(url(scenario)),
-                    () -> TestSupport.describeBrowser(scenario));
+            TestSupport.waitForSettledNavigation(scenario, PAGE);
 
             // Open a second tab through the same dialog the user would use.
             TestSupport.on(scenario, activity -> activity.findViewById(R.id.btn_nav_tabs).performClick());

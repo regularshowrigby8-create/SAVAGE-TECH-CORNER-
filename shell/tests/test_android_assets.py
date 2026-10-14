@@ -475,6 +475,39 @@ class AndroidWorkflowTest(unittest.TestCase):
         self.assertIn("onPageStarted(", navigation)
         self.assertIn("onPageFinished(", navigation)
 
+    def test_a_page_the_browser_has_left_cannot_rewrite_the_tab(self):
+        """Chromium reports the end of a load after the browser has moved on.
+
+        The home page's load reports its failure right after the browser was told to open another
+        address. Acting on that callback set the active tab's address, title, history entry and failure
+        state back to the old page - which across an Activity recreation is the page the user was on
+        being replaced by the page before it (the CI failure this pins). The client therefore drops the
+        callbacks for an address the WebView is no longer on, and keeps the TLS refusal unguarded: a
+        refused connection aborts the load, so the WebView's own address legitimately stays the
+        previous page, and hiding a refusal is the one thing this browser must never do.
+        """
+        client = read(JAVA / "browser" / "SavageWebViewClient.java")
+        self.assertIn("private static boolean stillCurrent(", client)
+        self.assertEqual(2, client.count("stillCurrent(view, url)"),
+                         "the finished and error callbacks are guarded")
+        self.assertIn("if (!stillCurrent(view, url))", client,
+                      "a failed load is dropped unless it is still the current one")
+        # onPageStarted stays unguarded: the framework documents that the current page may not have
+        # changed yet although a load has begun, so its address can still name the previous page and a
+        # dropped callback would leave a real load invisible to the toolbar.
+        started = client[client.index("public void onPageStarted"):client.index(
+            "public void onPageFinished")]
+        self.assertIn("host.onPageStarted(url);", started)
+        self.assertNotIn("stillCurrent", started,
+                         "the started callback may not be dropped on an address comparison")
+        self.assertIn("may not have changed", client)
+        self.assertIn("onReceivedSslError", client)
+        self.assertNotIn("stillCurrent(view, error", client,
+                         "a TLS refusal must never be dropped")
+        # Comparing against the WebView's own address, not against a remembered target, is what a
+        # redirect survives.
+        self.assertIn("view.getUrl()", client)
+
     def test_no_workflow_masks_a_failure(self):
         """No workflow may turn a failure into a pass; the belt and the reviewers must be honest."""
         for path in sorted((REPO_ROOT / ".github" / "workflows").glob("*.yml")):
