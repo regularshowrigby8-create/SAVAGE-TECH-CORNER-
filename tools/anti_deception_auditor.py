@@ -55,6 +55,7 @@ ALLOWED_FORBIDDEN_TOKEN_FILES = {
     "tools/anti_deception_auditor.py",
     "factory-3/tests/test_browser_app_rules.py",
     "factories/factory-3/tests/test_browser_app_rules.py",
+    "shell/tests/test_imported_factories.py",
     "factories/factory-3/tools/browser_app_rules.py",
     "factory-3/tools/browser_app_rules.py",
     ".claude/scripts/gates.sh",
