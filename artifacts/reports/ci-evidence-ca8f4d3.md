@@ -1,6 +1,6 @@
 <!-- Recorded from the GitHub Actions API of this repository; see the run links below. -->
 
-# CI evidence — Savage Browser 3.0.0 (5), commit `ca8f4d3`
+# CI evidence — Savage Browser 3.0.0 (5), commits `ca8f4d3` and `2943074`
 
 This is the AC-047 evidence: the green run of this commit on GitHub-hosted runners, i.e. from a clean checkout with no local state. Every value below was read from this repository's own workflow, job and annotation records through the GitHub API; nothing in this file was produced anywhere else, and nothing about a run that failed is omitted (the runs of the earlier commits on this branch, and what they failed on, are named at the bottom).
 
@@ -12,6 +12,26 @@ This is the AC-047 evidence: the green run of this commit on GitHub-hosted runne
 | Comprehensive Quality Conveyor Belt  | [38518749624](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38518749624) | `success`  | 2026-10-14T05:49:55Z | 2026-10-14T05:53:34Z |
 | AI PR Code Reviewers (Dual Fallback) | [38518749631](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38518749631) | `success`  | 2026-10-14T05:49:55Z | 2026-10-14T05:53:12Z |
 | Factory 2 — Single Debug Job         | [38518749713](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38518749713) | `success`  | 2026-10-14T05:49:55Z | 2026-10-14T05:55:23Z |
+
+## The same checks on the current tip
+
+`2943074` (the documentation commit that added this file) ran the identical four workflows on a clean
+checkout of the same application sources, and all four are green again: Android pipeline
+[38520485065](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38520485065)
+(build job `115708810752`, emulator job `115709536339`, release job skipped), belt
+`38520485008`, reviewers `38520485049`, Factory 2 `38520485031`.
+
+Its APK is _not_ byte-identical to the one above, and the reason is worth stating rather than hiding:
+size 5,795,656 bytes (one byte fewer) and SHA-256
+`a838fc4741e4d6ddf37b4fd50d04dc014b83c82b6aaaab951d43e6d1db682f0f`, with the debug certificate SHA-256
+`20ee01c451f367cc01d4994b7685aa257ad702dae2315de9cba8f0bb3db7301c`. Every GitHub-hosted runner starts
+with no `~/.android/debug.keystore`, so AGP generates a fresh debug key for each build, and the
+signature blocks that key produces are part of the file. What is reproduced is the build: the same
+variant, `package=com.savage.soulbrowser`, `versionName=3.0.0`, `versionCode=5`, `min_sdk=26`,
+`target_sdk=35`, the same three declared permissions, the same launcher activity and the same v1+v2+v3
+signing scheme. A byte-identical APK can only come from a pinned signing key, which is exactly the key
+material this repository refuses to commit (A11); the release variant, which is the one meant to carry
+an operator's key, is reported unsigned instead.
 
 ## The Android pipeline, step by step
 
@@ -91,6 +111,9 @@ That is the documented state of this build (A11: no signing credentials are inve
 ## Known limitations of this evidence
 
 - The release APK is unsigned in CI (above); `Publish signed release APK` is skipped on branches by design and only runs when the repository supplies a keystore.
+- The debug-signed APK differs byte for byte between runs because each runner generates its own
+  debug keystore (see above); `tools/reproducible_build_verifier.py` therefore checks the APK's
+  identity, version, permissions, launcher and signing scheme, not a fixed hash.
 - The APK artifact itself is not downloadable from the sandbox this report was written in (`gh api .../artifacts/<id>/zip` returns an empty file and the storage redirect fails), so the identity, size, hash, certificate and permission values above come from the build job's own annotation rather than from re-hashing the file here. The emulator job hashed the bytes it installed through `SHA256SUMS.txt`.
 
 ## The runs that preceded this one

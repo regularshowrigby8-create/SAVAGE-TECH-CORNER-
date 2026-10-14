@@ -500,10 +500,16 @@ from the repository's own authoritative documents instead of being invented:
 - **Feature**: F-13
 - **Given**: a fresh clone of this branch at the built commit
 - **When**: the documented commands run (`gradle :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`)
-- **Then**: they complete successfully and produce a functionally equivalent APK
+- **Then**: they complete successfully and produce a functionally equivalent APK (the same
+  variant, identity, version, permission set, launcher activity and v1+v2+v3 signing scheme - a
+  byte-identical file needs a pinned signing key, which this repository does not commit: see A11,
+  and the two green runs recorded in `artifacts/reports/ci-evidence-ca8f4d3.md`, whose debug keys
+  therefore differ)
 - **Test method**: `.github/workflows/android-build.yml` (clean checkout on GitHub-hosted runners), plus
   the committed Gradle wrapper pin (`gradle-8.11.1`, AGP `8.7.3`)
-- **Evidence required**: CI run URL + job log summary committed to `artifacts/reports/`
+- **Evidence required**: CI run URL + job log summary committed to `artifacts/reports/` (`artifacts/reports/ci-evidence-ca8f4d3.md` holds the two green runs of this branch, their job
+  and step conclusions, the build job's APK annotation verbatim, and the runs before them with
+  what they failed on)
 
 ---
 
