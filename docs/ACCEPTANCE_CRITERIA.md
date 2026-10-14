@@ -470,7 +470,7 @@ from the repository's own authoritative documents instead of being invented:
 ### AC-044 — Release APK installs and launches
 
 - **Feature**: F-13
-- **Given**: the built debug-signed APK (`artifacts/debug/SavageBrowser-debug.apk`)
+- **Given**: the debug-signed APK this checkout builds - the build output `app/build/outputs/apk/debug/app-debug.apk` of `shell/android_project/`, published as the `savage-browser-apk` artifact together with `SHA256SUMS.txt` (a build output is not a repository file; the copy under `artifacts/debug/` is a stale prebuilt file and is never build evidence - see A2, A13)
 - **When**: it is installed on a clean emulator (`adb install -r`) and launched
 - **Then**: installation succeeds, `MainActivity` is the launcher activity, the process starts and
   `am start -W` reports `Status: ok` without crash
@@ -489,10 +489,9 @@ from the repository's own authoritative documents instead of being invented:
 ### AC-046 — The APK is signed and provenance matches its hash
 
 - **Feature**: F-13
-- **Given**: the built APK and `artifacts/manifests/RELEASE_MANIFEST.json`
+- **Given**: the APK this checkout builds and the evidence published next to it (`SHA256SUMS.txt`, `apk-evidence.json`, `apksigner-debug.txt`; `artifacts/manifests/RELEASE_MANIFEST.json` is the _factory_ certification record, not an APK hash manifest)
 - **When**: `apksigner verify` runs and the SHA-256 is recomputed
-- **Then**: v1+v2 signing verify, the signer is the Android debug key (intentional for this build),
-  and the recorded SHA-256 equals the recomputed SHA-256 of the file
+- **Then**: v1+v2+v3 signing verify, the signer is the Android debug key (intentional for this build), and the SHA-256 recorded by the build job equals the SHA-256 of the bytes the emulator job installs (`sha256sum -c SHA256SUMS.txt` before installing)
 - **Test method**: `tools/reproducible_build_verifier.py --apk <apk>` (SHA-256 + certificate identity in `apk-evidence.json`), `shell/tests/test_apk_gate.py#FailClosedExitCodeTest` (fails closed, exits non-zero, never claims a pre-built APK as provenance) and the CI step `apksigner verify --print-certs`
 - **Evidence required**: apksigner output + `sha256sum` output in the evidence bundle
 
