@@ -248,6 +248,13 @@ The GitHub tools are registered in this run and never called by it: a run on a m
 is not a failure, which is the behaviour `test_an_unreachable_api_is_refused_with_the_reason_not_an_empty_result`
 pins.
 
+One figure in that block needs a note so it is not read as a regression. It says **28** bindable here;
+a re-run on the same machine later in this round says **21**, because the sandbox lost `uv`/`uvx`
+between sessions (`uvx is not installed here`, `which uvx` empty), and the eleven `uvx`-launched
+servers moved from "bindable" to "not bindable". That is the machine's toolchain changing, not the
+component: `SEALED_NO_NETWORK=1` leaves the count at 21 either way - the switch stops calls, it does not
+change what is installed. Only the `npx`-launched servers are still bindable here.
+
 ### 2.5 The belt still runs the sealed set first, with GitHub tooling inside it
 
 ```
@@ -263,12 +270,12 @@ $ node scripts/conveyor_belt.js
 
 ```
 $ python3 -m unittest discover -s shell/tests
-Ran 195 tests in 81.373s
+Ran 205 tests in 88.000s
 
 OK
 ```
 
-That is 16 more than round 12's 179: thirteen in `GitHubToolTest`, one in
+That is 26 more than round 12's 179: thirteen in `GitHubToolTest`, ten in `test_airgap_judge.py`, one in
 `test_androidtest_failure_report.py` (`test_the_stage_wakes_the_screen_before_it_runs_the_suite`) and one in `test_android_assets.py`
 (`test_the_hierarchy_dump_is_retried_without_softening_its_assertion`).
 `shell/tests/test_sealed_environment.py` now runs 50 tests, `test_sealed_factory_runtime.py` 23
@@ -354,6 +361,49 @@ download fails with `EOF` from GitHub's log receiver — so the emulator leg's o
 pre-flight's) cannot be quoted here. The emulator job emitted no pre-flight warning annotation, which
 is what the stage does when the screen did come up awake and focused; the conclusions above are what
 was retrievable, and nothing more is claimed.
+
+### 2.8b The offline path, proven by a run in CI rather than only by tests
+
+The switch and the researcher's offline path are covered by tests, and tests are not a run. So the
+whole sealed environment now runs in CI with networking switched off, as its own job on a machine that
+installs **nothing**: no `npm ci`, no `pip install`. The sealed runtime is standard-library only, and a
+job that installs nothing is a job that can prove a component runs where no registry is reachable.
+
+```
+$ bash tools/ci/airgap_run.sh
+=== air-gapped run: SEALED_NO_NETWORK=1 ===
+[SEAL] OK 1.0.0: 137 factories, 1870829 payload bytes, 115 licence texts, root 0ece777b6fee553f…
+[SEALED] swarm: 159 agent instances of a 159-instance plan in 1.2s, 163 tool steps, 159/159 checks passed
+[SEALED] 0 factories ran against a model, 97 ran in plan mode, 0 model calls failed, 0 unreadable
+air-gapped evidence: …/workspace/.sealed/swarm/<run>/artefacts/researcher-0000013.json
+                     github.probe -> available=False; status=0; reason=network calls are disabled: SEALED_NO_NETWORK is set
+air-gapped run: 159/159 checks, 163 tool steps ok, 159 agents offline, 0 model calls
+air-gapped sealed run: PASS
+```
+
+`tools/ci/airgap_judge.py` decides that. It reads only what the run produced - the report's swarm
+counts and a role's own artefact - and refuses the run unless every check passed, no step failed, no
+model call was made or claimed, and the probe's summary names the switch. That last clause is the one
+that matters: **a run that quietly reached the network is rejected**, not accepted as "offline". The
+judge lives in its own file precisely so it can be tested against the runs that must fail, and
+`shell/tests/test_airgap_judge.py` does exactly that - a probe that answered `available=True`, a
+missing probe, a failed probe, failed checks, a failed step, a claimed model call, a report that is not
+JSON, a report with no counts - ten tests, one of which pins that the CI job installs no npm or pip
+dependencies and never grows a `continue-on-error`. The judge also clears the previous run's artefacts
+before the run it judges, so a stale artefact carrying the switch cannot satisfy the gate on its own.
+
+The job, in `.github/workflows/quality-conveyor-belt.yml`:
+
+```yaml
+airgapped_sealed_run:
+  name: Air-gapped sealed run (SEALED_NO_NETWORK=1)
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with: { python-version: "3.11" }
+    - run: bash tools/ci/airgap_run.sh
+```
 
 ### 2.9 The Android leg failed on `0e7547f`, and why
 
@@ -452,8 +502,9 @@ signal that the screen did come up awake and focused - only the three runner dep
 | --------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------- |
 | AC-060    | GitHub capability is inside the seal, exercised by the environment every run; the problems it was brought in for carry evidence | `GitHubToolTest` (11 tests), `test_the_seal_carries_the_mcp_and_ai_groups_too`, `test_the_stage_wakes_the_screen_before_it_runs_the_suite` | §2.1, §2.1b–§2.3, §2.7 |
 | AC-061    | The belt runs the sealed set first, with the GitHub tooling inside it, offline                                                  | `scripts/conveyor_belt.js` station 0, `test_sealed_factory_runtime.py`                                                                     | §2.5                   |
+| AC-051    | The environment works with no model, no keys and no network - now with a run behind it, not only tests                          | `test_airgap_judge.py` (10 tests), `test_sealed_environment.py`, the `Air-gapped sealed run` CI job                                        | §2.1c, §2.8b, §2.10    |
 
-The criterion text is in `docs/ACCEPTANCE_CRITERIA.md` (AC-060, AC-061).
+The criterion text is in `docs/ACCEPTANCE_CRITERIA.md` (AC-051, AC-060, AC-061).
 
 ## 4. What is not claimed
 

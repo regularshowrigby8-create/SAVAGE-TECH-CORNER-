@@ -137,3 +137,28 @@ jobs:
           if [ "$found" -eq 0 ]; then
             echo "::error title=conveyor belt::no captured output - the failure happened before any check ran"
           fi
+
+  # The offline path, proven by a run rather than only by tests. This job deliberately installs no
+  # npm dependencies and sets up nothing but Python: the sealed runtime is standard-library only, and
+  # a job that needs nothing from a registry is a job that can prove a machine with no registry can
+  # run the component. SEALED_NO_NETWORK=1 switches the component's own outbound calls off, and
+  # tools/ci/airgap_judge.py rejects the run unless a role's own artefact records the switch - so a
+  # run that quietly reached the network fails here instead of passing as "offline".
+  airgapped_sealed_run:
+    name: Air-gapped sealed run (SEALED_NO_NETWORK=1)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run the sealed environment with networking switched off
+        run: |
+          set -euo pipefail
+          bash tools/ci/airgap_run.sh 2>&1 | tee "${RUNNER_TEMP}/airgap.log"

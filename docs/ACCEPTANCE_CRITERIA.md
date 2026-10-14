@@ -589,19 +589,31 @@ from the repository's own authoritative documents instead of being invented:
 
 - **Feature**: F-14
 - **Given**: the sealed component on a machine with no model server, no API key in the environment
-  and no reachable network
+  and no reachable network - and, for the run below, `SEALED_NO_NETWORK=1`, which switches the
+  component's own outbound calls off so the offline path is the path actually taken
 - **When**: the runtime is run (`sealed_factory_runtime.py run --max-model-calls 0` or
   `cli.py run --model-calls 0`)
 - **Then**: the run executes every planned agent instance, each one making real tool calls that touch
   the workspace, every check passes, 0 model calls are made and none are claimed, `model.ask` refuses
   with a message naming what it looked for instead of inventing an answer, the network tools fail with
   a reason, and the report records `OFFLINE` for those agents - a machine without a model still gets a
-  working factory, and nothing in the run pretends otherwise
+  working factory, and nothing in the run pretends otherwise. With the switch on, the whole
+  environment runs in CI as its own job: `tools/ci/airgap_run.sh` verifies the seal, runs the sealed
+  set with networking switched off, and `tools/ci/airgap_judge.py` accepts the run only when the
+  report's own counts show every check passed, no step failed, no model call was made or claimed, and
+  a role's own artefact records the switch as the reason its GitHub probe was unavailable - so a run
+  that quietly reached the network is rejected rather than accepted as "offline"
 - **Test method**: `shell/tests/test_sealed_environment.py` (`test_a_run_with_no_model_says_so_and_never_invents_one`,
   `test_model_ask_refuses_without_a_gateway`, `test_offline_network_tools_fail_with_a_reason`), plus
-  `shell/tests/test_sealed_factory_runtime.py`
+  `shell/tests/test_sealed_factory_runtime.py`, plus `shell/tests/test_airgap_judge.py` (ten tests),
+  which reject the runs that must not count - a probe that reached the network, a missing or failed
+  probe, failed checks, a failed step, a claimed model call - and pin that the CI job installs no npm
+  or pip dependencies
 - **Evidence required**: the sealed-run line (`0 factories ran against a model, 96 ran in plan mode,
-0 model calls failed`) and the per-run reports under `sealed-factories/manifest/`
+0 model calls failed`), the per-run reports under `sealed-factories/manifest/`, and the
+  `Air-gapped sealed run (SEALED_NO_NETWORK=1)` job's own output - the judge's line naming the
+  researcher artefact and the probe summary `available=False; status=0; reason=network calls are
+disabled: SEALED_NO_NETWORK is set`, or an `AIR-GAP FAIL` line saying which of those did not hold
 
 ### AC-052 — The swarm plans a million agents, executes what it is told to, and says what it did not do
 
