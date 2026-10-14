@@ -129,8 +129,22 @@ def seal() -> int:
     LICENSES.mkdir(parents=True, exist_ok=True)
 
     factories = []
+    stripped = 0
     for record_path in sorted(VENDOR.glob("*.json")):
         record = json.loads(record_path.read_text(encoding="utf-8"))
+        if not content_may_be_copied(record):
+            # The policy lives here, not in the vendoring pass: whatever the vendoring script
+            # recorded, a factory without a permissive licence leaves this component carrying its
+            # structure only. The records are rewritten so the tree itself cannot hold the bytes.
+            removed = False
+            for entry in record.get("vendored_files", []):
+                if "_content" in entry:
+                    del entry["_content"]
+                    removed = True
+            if removed:
+                record["content_redistributed"] = False
+                record_path.write_text(json.dumps(record, indent=1) + "\n", encoding="utf-8")
+                stripped += 1
         payload = build_payload(record)
         payload_path = PAYLOADS / f'{record["id"]}.tar.gz'
         payload_path.write_bytes(payload)
@@ -213,6 +227,8 @@ def seal() -> int:
     print(f"seal root sha256={root}")
     print(f"payload bytes={seal_document['contents']['payload_bytes']} "
           f"licences={seal_document['contents']['with_license_text']}")
+    if stripped:
+        print(f"stripped content from {stripped} vendor record(s) whose licence does not permit it")
     return 0
 
 

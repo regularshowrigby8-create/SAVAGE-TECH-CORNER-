@@ -115,6 +115,11 @@
    "sha256": "4ee01c8a3e004f466d92754d002895642f3df1dba271618a528272e1c1e67bd6"
   },
   {
+   "path": "claude.md",
+   "bytes": 5969,
+   "sha256": "b4218e0301d16fd49f4928669dc8878708aae22a352fa3b982ea412af8d6b6a7"
+  },
+  {
    "path": "README.md",
    "bytes": 8442,
    "sha256": "b87d5d5fe5f215386c73ad07fa5056b29f95acdf4cd394432f361e0a2b32c9bb"
@@ -135,7 +140,7 @@
  ],
  "notes": [],
  "vendored_at": "2026-10-14",
- "vendored_files_count": 22,
- "vendored_bytes": 143273,
+ "vendored_files_count": 23,
+ "vendored_bytes": 149242,
  "content_redistributed": false
 }

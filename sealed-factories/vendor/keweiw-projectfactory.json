@@ -10,6 +10,11 @@
  "commit": "3ad45f96421d39c925686e557b52588f40e71d79",
  "vendored_files": [
   {
+   "path": ".agents/skills/web-design-guidelines/SKILL.md",
+   "bytes": 1231,
+   "sha256": "f4647ca866a3accf763777f83e7682954f0187cd6bea7eea0399796652414e8f"
+  },
+  {
    "path": "roles/design-agent.md",
    "bytes": 2041,
    "sha256": "906cb46e8f6fe0473e7ffe51a6bc7b5f4a837cffb164b060e7cacd3c36ad950a"
@@ -40,6 +45,16 @@
    "sha256": "0056e264dc409c8313ed08cd9b83e2c9a0190d22f41072cdd18ebdac51dd5675"
   },
   {
+   "path": ".agents/skills/game-feel/references/feedback-recipes.md",
+   "bytes": 5519,
+   "sha256": "5b0e78820cf02b51dc0d2927445f464183934b29a28f21696236872b280dff30"
+  },
+  {
+   "path": ".agents/skills/game-feel/SKILL.md",
+   "bytes": 9270,
+   "sha256": "89dc36afaeb46c9d03dbd8e87a14a04d1ce15f8da3b0ef1dc79314e876a8d72a"
+  },
+  {
    "path": "project/tickread/AGENTS.md",
    "bytes": 4409,
    "sha256": "d11b4aac6c50f2604bf6286ab962729a07fbaaaa2a847e8999839be226d907bc"
@@ -68,7 +83,7 @@
  "runtime": [],
  "notes": [],
  "vendored_at": "2026-10-14",
- "vendored_files_count": 9,
- "vendored_bytes": 32250,
+ "vendored_files_count": 12,
+ "vendored_bytes": 48270,
  "content_redistributed": false
 }

@@ -10,6 +10,21 @@
  "commit": "6e9ca4218b734d46189d02deaaf2aa4b0c44c55a",
  "vendored_files": [
   {
+   "path": ".claude/skills/coord/memory_scan.sh",
+   "bytes": 2973,
+   "sha256": "eb7a881bfce5794f5d9e05cc8deda8680b77cec96555b7725c97527c368ebc8e"
+  },
+  {
+   "path": ".claude/skills/coord/SKILL.md",
+   "bytes": 4765,
+   "sha256": "e1669917699332fe875b8dc094116a44af57ac1276c0c367048586e96da152f8"
+  },
+  {
+   "path": "docs/WORKFLOW.md",
+   "bytes": 16450,
+   "sha256": "0f49bed8cdcda40d4490e101f1a39139c5934c323805295219d8a44385dcc51b"
+  },
+  {
    "path": "docs/AGENTS.md",
    "bytes": 18387,
    "sha256": "5f47cda12818e167d7d7595752af119b7b55f23a40359a816635fed89add203b"
@@ -27,14 +42,18 @@
   "tree_entries": 35
  },
  "providers": [
-  "anthropic"
+  "anthropic",
+  "openai",
+  "google"
  ],
  "entrypoints": [],
- "runtime": [],
+ "runtime": [
+  "shell"
+ ],
  "notes": [],
  "_license_bytes": "TUlUIExpY2Vuc2UKCkNvcHlyaWdodCAoYykgMjAyNiBUcmFuc2Nvbm5lY3RvbWUgTGFiIChTTlUgQ29ubmVjdG9tZSBMYWIpCmh0dHBzOi8vZ2l0aHViLmNvbS9UcmFuc2Nvbm5lY3RvbWUKClBlcm1pc3Npb24gaXMgaGVyZWJ5IGdyYW50ZWQsIGZyZWUgb2YgY2hhcmdlLCB0byBhbnkgcGVyc29uIG9idGFpbmluZyBhIGNvcHkKb2YgdGhpcyBzb2Z0d2FyZSBhbmQgYXNzb2NpYXRlZCBkb2N1bWVudGF0aW9uIGZpbGVzICh0aGUgIlNvZnR3YXJlIiksIHRvIGRlYWwKaW4gdGhlIFNvZnR3YXJlIHdpdGhvdXQgcmVzdHJpY3Rpb24sIGluY2x1ZGluZyB3aXRob3V0IGxpbWl0YXRpb24gdGhlIHJpZ2h0cwp0byB1c2UsIGNvcHksIG1vZGlmeSwgbWVyZ2UsIHB1Ymxpc2gsIGRpc3RyaWJ1dGUsIHN1YmxpY2Vuc2UsIGFuZC9vciBzZWxsCmNvcGllcyBvZiB0aGUgU29mdHdhcmUsIGFuZCB0byBwZXJtaXQgcGVyc29ucyB0byB3aG9tIHRoZSBTb2Z0d2FyZSBpcwpmdXJuaXNoZWQgdG8gZG8gc28sIHN1YmplY3QgdG8gdGhlIGZvbGxvd2luZyBjb25kaXRpb25zOgoKVGhlIGFib3ZlIGNvcHlyaWdodCBub3RpY2UgYW5kIHRoaXMgcGVybWlzc2lvbiBub3RpY2Ugc2hhbGwgYmUgaW5jbHVkZWQgaW4gYWxsCmNvcGllcyBvciBzdWJzdGFudGlhbCBwb3J0aW9ucyBvZiB0aGUgU29mdHdhcmUuCgpUSEUgU09GVFdBUkUgSVMgUFJPVklERUQgIkFTIElTIiwgV0lUSE9VVCBXQVJSQU5UWSBPRiBBTlkgS0lORCwgRVhQUkVTUyBPUgpJTVBMSUVELCBJTkNMVURJTkcgQlVUIE5PVCBMSU1JVEVEIFRPIFRIRSBXQVJSQU5USUVTIE9GIE1FUkNIQU5UQUJJTElUWSwKRklUTkVTUyBGT1IgQSBQQVJUSUNVTEFSIFBVUlBPU0UgQU5EIE5PTklORlJJTkdFTUVOVC4gSU4gTk8gRVZFTlQgU0hBTEwgVEhFCkFVVEhPUlMgT1IgQ09QWVJJR0hUIEhPTERFUlMgQkUgTElBQkxFIEZPUiBBTlkgQ0xBSU0sIERBTUFHRVMgT1IgT1RIRVIKTElBQklMSVRZLCBXSEVUSEVSIElOIEFOIEFDVElPTiBPRiBDT05UUkFDVCwgVE9SVCBPUiBPVEhFUldJU0UsIEFSSVNJTkcgRlJPTSwKT1VUIE9GIE9SIElOIENPTk5FQ1RJT04gV0lUSCBUSEUgU09GVFdBUkUgT1IgVEhFIFVTRSBPUiBPVEhFUiBERUFMSU5HUyBJTiBUSEUKU09GVFdBUkUuCg==",
  "vendored_at": "2026-10-14",
- "vendored_files_count": 2,
- "vendored_bytes": 33196,
+ "vendored_files_count": 5,
+ "vendored_bytes": 57384,
  "content_redistributed": false
 }

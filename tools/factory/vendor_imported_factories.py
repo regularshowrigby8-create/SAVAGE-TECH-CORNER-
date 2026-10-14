@@ -38,6 +38,10 @@ SLICE_PATTERNS = [
     (9, re.compile(r"(^|/)(workers?|agents?|roles?|personas?|crews?|swarms?)/", re.I)),
     (9, re.compile(r"(^|/)(stages?|steps?|phases?|pipeline|pipelines|orchestrat\w*|conductors?|"
                    r"coordinators?)/", re.I)),
+    # Agent skill trees: `.agent/`, `skills/`, `capabilities/` are where several of the catalogued
+    # factories keep their workers, and two repositories vendored nothing at all until these were
+    # matched (AshishYesale7/LGFlutterStarterKit, whose 33 skills are the factory).
+    (9, re.compile(r"(^|/)(\.agent|skills?|capabilities?|rules?|standards?)/", re.I)),
     (8, re.compile(r"(^|/)(factory|factory_definition|fabric|foundry)\.(py|js|ts|mjs|cjs|json|ya?ml|"
                    r"toml)$", re.I)),
     (8, re.compile(r"(^|/)(pipeline|orchestrator|conductor|coordinator|runner|main|cli|worker|agent)"
@@ -46,7 +50,9 @@ SLICE_PATTERNS = [
                    r"\.(json|ya?ml|toml|ini)$", re.I)),
     (7, re.compile(r"(^|/)(gate|gates|verify\w*|review\w*|critic\w*|check\w*)\.(py|js|ts|mjs|cjs)$",
                    re.I)),
-    (6, re.compile(r"(^|/)(agents?|workers?|stages?|pipeline|factory)\.(md|ya?ml|json|toml)$", re.I)),
+    (7, re.compile(r"(^|/)(buildspecs?|ci|cd|delivery|deploy\w*)/.*\.(ya?ml|json|sh)$", re.I)),
+    (6, re.compile(r"(^|/)(agents?|workers?|stages?|pipeline|factory|skill|workflow|rules?|gemini|"
+                   r"claude)\.(md|ya?ml|json|toml)$", re.I)),
     (4, re.compile(r"^README\.(md|rst)$", re.I)),
 ]
 
@@ -231,6 +237,9 @@ def main() -> int:
     parser.add_argument("--registry", default=str(DEFAULT_REGISTRY))
     parser.add_argument("--out", default=str(DEFAULT_OUT))
     parser.add_argument("--only", default="")
+    parser.add_argument("--refresh", action="store_true",
+                        help="re-take every slice instead of skipping records that already exist; "
+                             "use after the slice patterns change")
     args = parser.parse_args()
 
     registry = json.loads(Path(args.registry).read_text(encoding="utf-8"))
@@ -243,7 +252,7 @@ def main() -> int:
     results = []
     for index, entry in enumerate(registry, start=1):
         target = out / f'{entry["id"]}.json'
-        if target.is_file():
+        if target.is_file() and not args.refresh:
             stored = json.loads(target.read_text(encoding="utf-8"))
             if stored.get("vendored_files"):
                 print(f"[{index}/{len(registry)}] {entry['id']}: already vendored, skipping")

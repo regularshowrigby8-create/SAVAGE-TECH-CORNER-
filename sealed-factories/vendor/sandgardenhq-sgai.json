@@ -10,14 +10,104 @@
  "commit": "9efbb7b3811e862a22659ed2424e4da834fdf0ba",
  "vendored_files": [
   {
+   "path": "cmd/sgai/skel/.sgai/skills/product-design/brainstorming/ABOUT.md",
+   "bytes": 31,
+   "sha256": "2c5ca486ae880d261f4d9b7b391c9d2dd2b915807570dddbf3d728369c6d14c1"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/skills/frontend-design/ABOUT.md",
+   "bytes": 79,
+   "sha256": "aff6f2cfd29707974b6150fe2a0ef8498b5d99057ab18021b47ff81f52b1e19e"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/skills/product-design/antifragility-framework/ABOUT.md",
+   "bytes": 125,
+   "sha256": "fbb3eed34d979e51b8fc1a8525b946a665859ca9ec039b1880f670336939843e"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/skills/markdown-navigation/markdown-viewer.sh",
+   "bytes": 1626,
+   "sha256": "1f7d88bdfc5ef9b61aabd4778955a563dea94a962613843d9f09fca82da55367"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/skills/problem-solving/ABOUT.md",
+   "bytes": 1651,
+   "sha256": "ceca7bccfd6e9b4331155c0c45a369b3169e46adfe2fe25896e53d9afcfe1404"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/skills/how-to-use-code-snippets/SKILL.md",
+   "bytes": 1956,
+   "sha256": "26e0a3e7b4135247308434c3318599d37aa4771a36c1ba5acf863cabc5485550"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/skills/problem-solving/meta-pattern-recognition/SKILL.md",
+   "bytes": 2076,
+   "sha256": "603f7265c92695d3d83e252d2c303840d044d9307d601a533bf3419c2a5b7665"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/skills/problem-solving/inversion-exercise/SKILL.md",
+   "bytes": 2087,
+   "sha256": "26da44e5ba0b484ba4392537109ca910f36a9596fecae9fe2772334ef3c511bd"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/skills/markdown-navigation/SKILL.md",
+   "bytes": 2149,
+   "sha256": "aa6ab2d5ee0b75e75da0178fac66ae44733db48d8bd39c1106a55aaecb22c3b8"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/skills/problem-solving/collision-zone-thinking/SKILL.md",
+   "bytes": 2280,
+   "sha256": "5b6108600203ac847fed1747aebe5e55d2516507fb849b0617979d076353c204"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/skills/problem-solving/scale-game/SKILL.md",
+   "bytes": 2327,
+   "sha256": "dbf0d73dc3e7bccd89eb0e0e07a5a18bcf6ab89b0cbb66d1b5bbe4535e472c5b"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/skills/subagent-return-protocol/SKILL.md",
+   "bytes": 2415,
+   "sha256": "7dd4ae21ceccbb3e81e4d755b0c19ae672c664bd099ca0dc644534ea89135366"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/skills/product-design/goal-md-composer/SKILL.md",
+   "bytes": 2580,
+   "sha256": "1b1fbd97893b46aa3df078b39d2eff1dd4c933600d025143bfa00c2a268e31be"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/skills/product-design/goal-md-composer/REFERENCE.md",
+   "bytes": 2596,
+   "sha256": "0a336fae6be5a51485d727468cc005080073c15dfb68a1d45bea76407fb59d0e"
+  },
+  {
    "path": "cmd/sgai/skel/.sgai/agent/webmaster-reviewer.md",
    "bytes": 2809,
    "sha256": "c2d8de783799a574b66cf968329b4f4a88e9141d0447e7fce2fbd65a4ebf3fa6"
   },
   {
+   "path": "cmd/sgai/skel/.sgai/skills/problem-solving/simplification-cascades/SKILL.md",
+   "bytes": 2897,
+   "sha256": "8ebd97b1a4c0e18f2c924745b3a32af09e5e51363228de3455afce2965870c98"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/skills/subagent-delegation-protocol/SKILL.md",
+   "bytes": 2962,
+   "sha256": "2e4ab752a4678aab9bd045d705049ec761c8ff4fa04b98b944066f66cb2240d6"
+  },
+  {
    "path": "cmd/sgai/skel/.sgai/agent/shell-script-developer.md",
    "bytes": 3176,
    "sha256": "ddabaa5e5d70a9898ccbdf1034427c673974e594e4db17c519be607806e5f616"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/skills/incorporate-snippets/SKILL.md",
+   "bytes": 3230,
+   "sha256": "6b3ec86b6cf9d6ccb98ff7a930f79c7ae15d833a4fcf62afdc96c62f709f3720"
+  },
+  {
+   "path": "cmd/sgai/skel/.sgai/skills/requesting-code-review/SKILL.md",
+   "bytes": 3421,
+   "sha256": "b8aa4324313267e0919fdcb6ca1df1efced330e0bf68b2d1ae829ef2599e710c"
   },
   {
    "path": "cmd/sgai/skel/.sgai/agent/project-critic-sibling-evaluator.md",
@@ -30,99 +120,19 @@
    "sha256": "812a04ec8dde0f8aca111f725ffcbc42ecbfe97a723dfbda0374587cad1cc50b"
   },
   {
-   "path": "cmd/sgai/skel/.sgai/agent/shell-script-reviewer.md",
-   "bytes": 3920,
-   "sha256": "e41575be12ad084bb217fddfe6c7e99175a5f25a428e7d27f99c1392878e71c3"
+   "path": "cmd/sgai/skel/.sgai/skills/product-design/antifragility-framework/SKILL.md",
+   "bytes": 3740,
+   "sha256": "9d085873f4f49cb08d22bd36be4d10b02f44883638014af979620507d002d0b8"
   },
   {
-   "path": "cmd/sgai/skel/.sgai/agent/go.md",
-   "bytes": 5305,
-   "sha256": "9c0cb8627e350de520deca12dbe345e0fd8cd8de1ad7d89c53f58cbca957e96a"
+   "path": "cmd/sgai/skel/.sgai/skills/condition-based-waiting/SKILL.md",
+   "bytes": 3748,
+   "sha256": "11037d1d2d42f0c09b907b7e03097708d13eac0f4719b4c1c03e10dcc0e7b72a"
   },
   {
-   "path": "cmd/sgai/skel/.sgai/agent/react.md",
-   "bytes": 5559,
-   "sha256": "762f85b8d721ec820d23df519144678c1ff81541446d810fb7e0355b2f04b431"
-  },
-  {
-   "path": "cmd/sgai/skel/.sgai/agent/shell-script.md",
-   "bytes": 5602,
-   "sha256": "edee315d2dca7a3c8c55d13b6809e2a8b1b7d044d825b84fa34bf236cd53cc72"
-  },
-  {
-   "path": "cmd/sgai/skel/.sgai/agent/htmx-picocss.md",
-   "bytes": 5825,
-   "sha256": "1b458de3d3b2ba629f3a1bbfbc243ad239e06696650eaecffe26f6e7d8738dc6"
-  },
-  {
-   "path": "cmd/sgai/skel/.sgai/agent/webmaster.md",
-   "bytes": 5828,
-   "sha256": "d8847406d5d84e521e7a930ffedd7c74996744dd33a22a49b0988f746c4aa683"
-  },
-  {
-   "path": "cmd/sgai/skel/.sgai/agent/agent-sdk-verifier-py.md",
-   "bytes": 6198,
-   "sha256": "8106f15624a8da854aef19cbe7a7255b3bd091d4f8c124041c7a852a8a6ae9a4"
-  },
-  {
-   "path": "cmd/sgai/skel/.sgai/agent/agent-sdk-verifier-ts.md",
-   "bytes": 6437,
-   "sha256": "cde7c583815af78856a97aa607bd87da58a9b8bf79146fe30f7f292b4f124ca2"
-  },
-  {
-   "path": "cmd/sgai/skel/.sgai/agent/snippet-writer.md",
-   "bytes": 6826,
-   "sha256": "5f9e3764a69ce500989f3a64cc4e339484cc39e1b5111fd0c5612e2374333a58"
-  },
-  {
-   "path": "cmd/sgai/skel/.sgai/agent/openai-sdk-verifier-ts.md",
-   "bytes": 6969,
-   "sha256": "88d055c446aed7f00e1db79ee82e47b215bd71a40e50d2b20146273023ca4f77"
-  },
-  {
-   "path": "cmd/sgai/skel/.sgai/agent/vercel-deployer.md",
-   "bytes": 6996,
-   "sha256": "306393bd04c464e3e7256b46336a441cfe49b47bf1939e169eedfa2f3dfea679"
-  },
-  {
-   "path": "cmd/sgai/skel/.sgai/agent/skill-writer.md",
-   "bytes": 7339,
-   "sha256": "f03cb6bb8d8f14d3ad78e07e2ba70f0ac3bab42e1ee257c167d560d849da9af0"
-  },
-  {
-   "path": "cmd/sgai/skel/.sgai/agent/project-critic.md",
-   "bytes": 8077,
-   "sha256": "d371704c0f944103ef98233d5e53e59af7a97dc0c9e7fbc68996a088487e5f99"
-  },
-  {
-   "path": "cmd/sgai/skel/.sgai/agent/exe-dev-deployer.md",
-   "bytes": 8383,
-   "sha256": "2af6cc17c361c00f20fa5fcc73bdfaa0a59cff87a19c070267916c1a6f66c3b3"
-  },
-  {
-   "path": "cmd/sgai/skel/.sgai/agent/cloudflare-worker-deployer.md",
-   "bytes": 8669,
-   "sha256": "4d765a3375b6b98cc4c8452e23e6211c50d6bcc3139fc5aaceccb3bb1b14e69a"
-  },
-  {
-   "path": "cmd/sgai/skel/.sgai/agent/openai-sdk-verifier-py.md",
-   "bytes": 8922,
-   "sha256": "366a7bc8e5e13ae76d2f74dbef94a122012f17ce3ee548cd0c7bccbfbb923824"
-  },
-  {
-   "path": "cmd/sgai/skel/.sgai/agent/cli-output-style-adjuster.md",
-   "bytes": 10429,
-   "sha256": "699505ae029298e2e8df297a1d7966ba70fa945ce3f2af2e8656aaef0cd21989"
-  },
-  {
-   "path": "cmd/sgai/skel/.sgai/agent/webmaster-developer.md",
-   "bytes": 11126,
-   "sha256": "6320034ade3400fe4e9f03276b664f47f037c1f7dc80b973392d312a239b5533"
-  },
-  {
-   "path": "AGENTS.md",
-   "bytes": 6474,
-   "sha256": "b12d857a59f8c254b222f3f87861ec5ebab91512783531ece4e60f0fdeb72780"
+   "path": "cmd/sgai/skel/.sgai/skills/defense-in-depth/SKILL.md",
+   "bytes": 3882,
+   "sha256": "4a7e027620f74f7fc99a8fea4166250b2cc97565f639af70dbc7c2a6c1dfe805"
   }
  ],
  "skipped": {
@@ -136,11 +146,13 @@
   "openai"
  ],
  "entrypoints": [],
- "runtime": [],
+ "runtime": [
+  "shell"
+ ],
  "notes": [],
  "_license_bytes": "Q29weXJpZ2h0IMKpIDIwMjYsIFNhbmRnYXJkZW4uY29tLgoKUGVybWlzc2lvbiBpcyBoZXJlYnkgZ3JhbnRlZCwgZnJlZSBvZiBjaGFyZ2UsIHRvIGFueSBwZXJzb24gb2J0YWluaW5nIGEgY29weSBvZiB0aGlzIHNvZnR3YXJlIGFuZCBhc3NvY2lhdGVkIGRvY3VtZW50YXRpb24gZmlsZXMgKHRoZSDigJxTb2Z0d2FyZeKAnSksIHRvIGRlYWwgaW4gdGhlIFNvZnR3YXJlIHdpdGhvdXQgcmVzdHJpY3Rpb24sIGluY2x1ZGluZyB3aXRob3V0IGxpbWl0YXRpb24gdGhlIHJpZ2h0cyB0byB1c2UsIGNvcHksIG1vZGlmeSwgbWVyZ2UsIHB1Ymxpc2gsIGRpc3RyaWJ1dGUsIHN1YmxpY2Vuc2UsIGFuZC9vciBzZWxsIGNvcGllcyBvZiB0aGUgU29mdHdhcmUsIGFuZCB0byBwZXJtaXQgcGVyc29ucyB0byB3aG9tIHRoZSBTb2Z0d2FyZSBpcyBmdXJuaXNoZWQgdG8gZG8gc28sIHN1YmplY3QgdG8gdGhlIGZvbGxvd2luZyBjb25kaXRpb25zOgoKVGhlIGFib3ZlIGNvcHlyaWdodCBub3RpY2UgYW5kIHRoaXMgcGVybWlzc2lvbiBub3RpY2Ugc2hhbGwgYmUgaW5jbHVkZWQgaW4gYWxsIGNvcGllcyBvciBzdWJzdGFudGlhbCBwb3J0aW9ucyBvZiB0aGUgU29mdHdhcmUuCk5vIGxpY2Vuc2VlIG9yIGRvd25zdHJlYW0gcmVjaXBpZW50IG1heSB1c2UgdGhlIFNvZnR3YXJlIChpbmNsdWRpbmcgYW55IG1vZGlmaWVkIG9yIGRlcml2YXRpdmUgdmVyc2lvbnMpIHRvIGRpcmVjdGx5IGNvbXBldGUgd2l0aCB0aGUgb3JpZ2luYWwgTGljZW5zb3IgYnkgb2ZmZXJpbmcgaXQgdG8gdGhpcmQgcGFydGllcyBhcyBhIGhvc3RlZCwgbWFuYWdlZCwgb3IgU29mdHdhcmUtYXMtYS1TZXJ2aWNlIChTYWFTKSBwcm9kdWN0IG9yIGNsb3VkIHNlcnZpY2Ugd2hlcmUgdGhlIHByaW1hcnkgdmFsdWUgb2YgdGhlIHNlcnZpY2UgaXMgdGhlIGZ1bmN0aW9uYWxpdHkgb2YgdGhlIFNvZnR3YXJlIGl0c2VsZi4KClRIRSBTT0ZUV0FSRSBJUyBQUk9WSURFRCDigJxBUyBJU+KAnSwgV0lUSE9VVCBXQVJSQU5UWSBPRiBBTlkgS0lORCwgRVhQUkVTUyBPUiBJTVBMSUVELCBJTkNMVURJTkcgQlVUIE5PVCBMSU1JVEVEIFRPIFRIRSBXQVJSQU5USUVTIE9GIE1FUkNIQU5UQUJJTElUWSwgRklUTkVTUyBGT1IgQSBQQVJUSUNVTEFSIFBVUlBPU0UgQU5EIE5PTklORlJJTkdFTUVOVC4gSU4gTk8gRVZFTlQgU0hBTEwgVEhFIEFVVEhPUlMgT1IgQ09QWVJJR0hUIEhPTERFUlMgQkUgTElBQkxFIEZPUiBBTlkgQ0xBSU0sIERBTUFHRVMgT1IgT1RIRVIgTElBQklMSVRZLCBXSEVUSEVSIElOIEFOIEFDVElPTiBPRiBDT05UUkFDVCwgVE9SVCBPUiBPVEhFUldJU0UsIEFSSVNJTkcgRlJPTSwgT1VUIE9GIE9SIElOIENPTk5FQ1RJT04gV0lUSCBUSEUgU09GVFdBUkUgT1IgVEhFIFVTRSBPUiBPVEhFUiBERUFMSU5HUyBJTiBUSEUgU09GVFdBUkUuCg==",
  "vendored_at": "2026-10-14",
- "vendored_files_count": 23,
- "vendored_bytes": 147823,
+ "vendored_files_count": 25,
+ "vendored_bytes": 60797,
  "content_redistributed": false
 }

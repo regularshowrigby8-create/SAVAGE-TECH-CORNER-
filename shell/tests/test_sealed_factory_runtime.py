@@ -149,9 +149,23 @@ class SealedComponentTest(unittest.TestCase):
             if entry["status"] == "MODEL-FAILED":
                 self.assertTrue(entry.get("error"), f"{entry['id']}: failure without a reason")
 
+    def test_the_factories_that_cannot_run_are_exactly_the_ones_whose_content_is_not_carried(
+            self) -> None:
+        """NO-STRUCTURE and blueprint-only are the same set: a slice with content always runs."""
+        report = runtime_report()
+        if report["capabilities"]["model_available"]:
+            self.skipTest("this machine has a model, so blueprint-only slices may still be called")
+        no_structure = {e["id"] for e in report["factories"] if e["status"] == "NO-STRUCTURE"}
+        blueprint_only = {f["id"] for f in seal()["factories"] if not f["content_redistributed"]}
+        self.assertEqual(no_structure, blueprint_only,
+                         "every factory whose content this component carries must run")
+        self.assertEqual(len(report["factories"]) - len(no_structure),
+                         report["summary"]["operational_plan"])
+
     def test_a_factory_is_never_reported_as_run_when_its_slice_holds_nothing(self) -> None:
         for entry in runtime_report()["factories"]:
-            has_definitions = any(entry.get(kind) for kind in ("stages", "roles", "gates", "prompts"))
+            has_definitions = any(entry.get(kind) > 0
+                                  for kind in ("stages", "roles", "gates", "prompts", "headings"))
             if not has_definitions:
                 self.assertEqual(entry["status"], "NO-STRUCTURE",
                                  f"{entry['id']}: reported {entry['status']} without definitions")
@@ -189,6 +203,131 @@ class SealedComponentTest(unittest.TestCase):
                 "sys.exit(seal_factories.verify())" % (REPO_ROOT / "tools" / "factory", copy))],
                 capture_output=True, text=True, cwd=REPO_ROOT, timeout=600, env=environment)
             self.assertEqual(done.returncode, 1, done.stdout + done.stderr)
+
+
+class OnlineModelPathTest(unittest.TestCase):
+    """The online path, exercised against a local server that speaks the same API.
+
+    This proves the wiring - detection, request, response, artefact on disk - and nothing more: the
+    server is a stub, so the test asserts the recorded provider and that the artefact equals exactly
+    what the server answered, which is precisely the honesty this component is supposed to have.
+    """
+
+    ANSWER = "STUB MODEL ANSWER: stage 1 intake, stage 2 verify, no result was computed."
+
+    @staticmethod
+    def _handler_for(kind: str):
+        import http.server
+
+        answer = OnlineModelPathTest.ANSWER
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_POST(self):  # noqa: N802 - the interface of BaseHTTPRequestHandler
+                length = int(self.headers.get("Content-Length", "0"))
+                payload = json.loads(self.rfile.read(length) or b"{}")
+                assert payload.get("messages") or payload.get("prompt")
+                if kind == "ollama":
+                    body = {"response": answer}
+                else:
+                    body = {"choices": [{"message": {"role": "assistant", "content": answer}}]}
+                encoded = json.dumps(body).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(encoded)))
+                self.end_headers()
+                self.wfile.write(encoded)
+
+            def log_message(self, *args):  # keep the test output clean
+                return
+
+        return Handler
+
+    def test_a_reachable_local_model_makes_a_factory_run_against_it(self) -> None:
+        import http.server
+        import threading
+
+        candidate = None
+        for name, host, port, _url in sealed_factory_runtime.LOCAL_ENDPOINTS:
+            try:
+                server = http.server.ThreadingHTTPServer((host, port), self._handler_for(name))
+            except OSError:
+                continue
+            candidate = (name, server)
+            break
+        if candidate is None:
+            self.skipTest("every local model port is already taken on this machine")
+
+        name, server = candidate
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            report = subprocess.run([sys.executable, str(RUNTIME), "run", "--max-model-calls", "1"],
+                                    capture_output=True, text=True, cwd=REPO_ROOT, timeout=900)
+            self.assertEqual(report.returncode, 0, report.stdout + report.stderr)
+            run_report = json.loads((SEALED / "manifest" / "RUN-REPORT.json")
+                                    .read_text(encoding="utf-8"))
+            self.assertTrue(run_report["capabilities"]["model_available"])
+            self.assertEqual(run_report["model_calls"], 1)
+            answered = [entry for entry in run_report["factories"]
+                        if entry["status"] == "OPERATIONAL-MODEL"]
+            self.assertEqual(len(answered), 1, "exactly the factories that were called must report it")
+            entry = answered[0]
+            self.assertEqual(entry["provider"], name)
+            artefact = REPO_ROOT / entry["artifacts"][-1]
+            self.assertEqual(artefact.read_text(encoding="utf-8"), self.ANSWER,
+                             "the artefact must be what the model answered, byte for byte")
+            others = [e for e in run_report["factories"] if e["id"] != entry["id"]]
+            for other in others:
+                self.assertNotEqual(other["status"], "OPERATIONAL-MODEL")
+                self.assertNotIn("model-output.md", " ".join(other.get("artifacts", [])))
+        finally:
+            server.shutdown()
+            server.server_close()
+
+    def test_a_refusing_provider_is_recorded_as_a_failure_not_a_success(self) -> None:
+        import http.server
+        import threading
+
+        class Refusing(http.server.BaseHTTPRequestHandler):
+            def do_POST(self):  # noqa: N802 - the interface of BaseHTTPRequestHandler
+                body = b'{"error": {"message": "quota exhausted"}}'
+                self.send_response(429)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *args):
+                return
+
+        candidate = None
+        for name, host, port, _url in sealed_factory_runtime.LOCAL_ENDPOINTS:
+            try:
+                server = http.server.ThreadingHTTPServer((host, port), Refusing)
+            except OSError:
+                continue
+            candidate = (name, server)
+            break
+        if candidate is None:
+            self.skipTest("every local model port is already taken on this machine")
+
+        _name, server = candidate
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        try:
+            done = subprocess.run([sys.executable, str(RUNTIME), "run", "--max-model-calls", "1"],
+                                  capture_output=True, text=True, cwd=REPO_ROOT, timeout=900)
+            self.assertEqual(done.returncode, 0, "a refused call is reported, not fatal")
+            run_report = json.loads((SEALED / "manifest" / "RUN-REPORT.json")
+                                    .read_text(encoding="utf-8"))
+            failed = [e for e in run_report["factories"] if e["status"] == "MODEL-FAILED"]
+            self.assertEqual(len(failed), 1)
+            self.assertIn("429", failed[0]["error"])
+            self.assertIn("quota exhausted", failed[0]["error"],
+                          "the provider's own words must reach the report")
+            self.assertEqual(run_report["summary"]["operational_model"], 0)
+        finally:
+            server.shutdown()
+            server.server_close()
 
 
 class RemovabilityTest(unittest.TestCase):

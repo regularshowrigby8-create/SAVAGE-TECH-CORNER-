@@ -10,6 +10,51 @@
  "commit": "e56c942c548a07c8ad35fce9b730522ec4db9d2d",
  "vendored_files": [
   {
+   "path": "skills/dispatch/references/proactive-recovery.md",
+   "bytes": 731,
+   "sha256": "1e5d3f7db5c53a277100c41364733e884cccd5718abd914498546df21d4b9439"
+  },
+  {
+   "path": "skills/dispatch/references/config-modification.md",
+   "bytes": 1162,
+   "sha256": "fd3068a0e68bf1f091022f6f4d77db68cc2e03af484ddba9fa61cf6ca455554d"
+  },
+  {
+   "path": "skills/dispatch/references/ipc-protocol.md",
+   "bytes": 1798,
+   "sha256": "bd891884cf7969e698730296b0c684f44ac84e0d4e58b38c40f2be4342e09684"
+  },
+  {
+   "path": "skills/dispatch/references/config-example.yaml",
+   "bytes": 3027,
+   "sha256": "1a66861d5d8dbcc07302b1a4234c912dfeaa851603d4f3db7b762f1310af379b"
+  },
+  {
+   "path": "skills/dispatch/README.md",
+   "bytes": 5097,
+   "sha256": "0b542e29c1c6b21966b722f350ac36bb5f42f0a49b47e418378ca323e17d7a30"
+  },
+  {
+   "path": "skills/dispatch/references/first-run-setup.md",
+   "bytes": 5305,
+   "sha256": "1fc7bc3b3517829d4cdb8e4b6ca2901c68688330f566ce8ace761d6da0f6758e"
+  },
+  {
+   "path": ".agents/skills/dispatch/SKILL.md",
+   "bytes": 16235,
+   "sha256": "d6a55fda75997fb6e5873f1ca550585f4768ed0a58cb0206ac784d8eeccd27ff"
+  },
+  {
+   "path": "skills/dispatch/SKILL.md",
+   "bytes": 24228,
+   "sha256": "ac01fcc53c3664b10422febd13814582e14a31a522f57951cfc32a9e5c48140b"
+  },
+  {
+   "path": "CLAUDE.md",
+   "bytes": 2764,
+   "sha256": "76ae7330c38b5feac63278b63e107542e03a1b51f5c8e8a10ddbbad0cd47bfaf"
+  },
+  {
    "path": "README.md",
    "bytes": 9060,
    "sha256": "e9785f8e40c094dca394f032d7b9cbde37df627231d9596fecdbe4f3826b3c48"
@@ -22,15 +67,15 @@
   "tree_entries": 23
  },
  "providers": [
-  "openai",
   "anthropic",
+  "openai",
   "google"
  ],
  "entrypoints": [],
  "runtime": [],
  "notes": [],
  "vendored_at": "2026-10-14",
- "vendored_files_count": 1,
- "vendored_bytes": 9060,
+ "vendored_files_count": 10,
+ "vendored_bytes": 69407,
  "content_redistributed": false
 }

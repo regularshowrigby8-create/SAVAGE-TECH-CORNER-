@@ -10,9 +10,29 @@
  "commit": "2fadf6d1c690df898bf99056a3053b82bc625913",
  "vendored_files": [
   {
+   "path": "skills/blog-writing/references/reference-blogs.md",
+   "bytes": 2207,
+   "sha256": "44a45495b7f463c4d22ae576aa21ecb4639e869628806ccd1605e973ef705828"
+  },
+  {
+   "path": "skills/tier-classification/references/tier-criteria.md",
+   "bytes": 3597,
+   "sha256": "525132b7c81414647645caf2eacd64f0632ba149100a4a931a3611ad26f21fb0"
+  },
+  {
+   "path": "skills/tier-classification/SKILL.md",
+   "bytes": 3821,
+   "sha256": "f0594e73565acd9ba5841a8e65d6dc1944fb83152c772ecc122aa66ab3a66d62"
+  },
+  {
    "path": "agents/question-generator.md",
    "bytes": 4571,
    "sha256": "50597a0e7ace67cfb692cc5f933177994085b474a5a1cb62e574f1903a68d3fa"
+  },
+  {
+   "path": "skills/story-mining/SKILL.md",
+   "bytes": 4657,
+   "sha256": "acd3dfd46cbe6d85fc5e0b329224106afe0f6a2a99cc7340237ba6bbc2a471c7"
   },
   {
    "path": "agents/story-signal-fetcher.md",
@@ -35,6 +55,11 @@
    "sha256": "8d187bc94e07db0b65ab81abee10c5254fc203525b62e1f4b97917bc3fabb4e1"
   },
   {
+   "path": "skills/distribution-briefing/SKILL.md",
+   "bytes": 7299,
+   "sha256": "2d62c572e78a7cedb4d8eb5d6387505e2c60c77386796175a04ba2009c9aedea"
+  },
+  {
    "path": "agents/story-intelligence.md",
    "bytes": 7392,
    "sha256": "2755c05a1ba5e68e5ac10cdff714d415f4ea68d34c14dfd943c0bf22bc8b11d0"
@@ -45,14 +70,34 @@
    "sha256": "023f8ff149f997e1038fba68c087bd646dd64fdbcd52797ac24c0e2591fbff17"
   },
   {
+   "path": "skills/distribution-briefing/references/social-post-understanding.md",
+   "bytes": 9745,
+   "sha256": "bcd76a8ee901841c0b032a18cdb1378296cbac9d3f5c88bb27ac54c86e013c8b"
+  },
+  {
    "path": "agents/design-agent.md",
    "bytes": 9791,
    "sha256": "0b976c223e4548f637c46f157f745264c9eff8b7b383fc029c908dd7a58b6365"
   },
   {
+   "path": "skills/distribution-briefing/references/channel-templates.md",
+   "bytes": 10572,
+   "sha256": "3b6744fd5b3d1cc1e88fb90ee9aed81b61e58d0b0e3e12278044dbb1b5fcd03d"
+  },
+  {
+   "path": "skills/story-mining/references/signal-patterns.md",
+   "bytes": 10986,
+   "sha256": "f12beba4886ab759cd5693d31e076cc0b64f2b3578877d88cd67df558871b64d"
+  },
+  {
    "path": "agents/content-reviewer.md",
    "bytes": 13360,
    "sha256": "7ebb593449af1df5586a24ea5c7672242cb19748dc4ba7cc35f081d3ebacdb13"
+  },
+  {
+   "path": "skills/blog-writing/SKILL.md",
+   "bytes": 14301,
+   "sha256": "4b03d8c6df800f0100c72f4785cd335c806c1c8c33eea62260cad2ff42807b5c"
   },
   {
    "path": "README.md",
@@ -73,7 +118,7 @@
  "runtime": [],
  "notes": [],
  "vendored_at": "2026-10-14",
- "vendored_files_count": 10,
- "vendored_bytes": 75706,
+ "vendored_files_count": 19,
+ "vendored_bytes": 142891,
  "content_redistributed": false
 }

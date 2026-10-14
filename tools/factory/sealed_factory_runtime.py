@@ -93,12 +93,23 @@ GATE_PATTERN = re.compile(r"^\s*(?:#{1,4}|[-*\d.]+)\s*(gate|check|verification|r
 
 #: Declarative keys that hold a factory's stages, workers or checks as a list.
 LIST_KEYS = {
-    "stages": ("stages", "steps", "phases", "pipeline", "pipelines", "workflow", "workflows"),
+    "stages": ("stages", "steps", "phases", "pipeline", "pipelines", "workflow", "workflows",
+               "jobs", "tasks", "sequence"),
     "roles": ("workers", "agents", "roles", "personas", "crew", "crews", "swarm", "swarms",
-              "team", "teams", "members"),
-    "gates": ("gates", "checks", "verifications", "reviews", "critics", "criteria", "assertions"),
+              "team", "teams", "members", "nodes", "specialists"),
+    "gates": ("gates", "checks", "verifications", "reviews", "critics", "criteria", "assertions",
+              "validations"),
     "prompts": ("prompts", "instructions", "templates"),
 }
+
+#: Container keys whose *children* are the stages - AWS buildspecs write `phases:` with `install:`
+#: and `build:` beneath it, which is a stage list written as a mapping rather than a sequence.
+CONTAINER_KEYS = ("phases", "stages", "steps", "jobs", "tasks", "pipeline")
+
+#: A definition file's own headings name its stages: "## 1. Intake", "## Agent 3 - Verify".
+HEADING_PATTERN = re.compile(r"^#{1,4}\s+(\S.{2,78})$", re.M)
+DEFINITION_FILE = re.compile(r"(readme|agents?|workers?|stages?|pipeline|factory|skill|roles?|"
+                             r"workflow|process)", re.I)
 
 
 def sha256_file(path: Path) -> str:
@@ -165,7 +176,7 @@ def read_factory(document: dict, factory: dict) -> dict:
     derived = {"id": factory["id"], "full_name": factory["full_name"], "url": factory["url"],
                "license": factory["license"], "content_redistributed":
                factory["content_redistributed"], "files": [], "stages": [], "roles": [],
-               "gates": [], "prompts": [], "texts": 0}
+               "gates": [], "prompts": [], "headings": [], "texts": 0}
     with tarfile.open(payload, "r:gz") as archive:
         for member in archive.getmembers():
             if not member.isfile():
@@ -205,14 +216,36 @@ def read_factory(document: dict, factory: dict) -> dict:
                                         derived[kind].append((f"json:{key}", str(label)[:80]))
             elif member.name.lower().endswith((".yaml", ".yml")) and len(text) < 40_000:
                 current = None
+                container = None
+                container_indent = 0
                 for line in text.splitlines():
+                    if not line.strip() or line.lstrip().startswith("#"):
+                        continue
+                    indent = len(line) - len(line.lstrip())
+                    key = re.match(r"^([\w.-]+):\s*(.*)$", line.strip())
                     stripped = line.strip()
-                    if re.match(r"^[\w-]+:", stripped):
-                        current = stripped.split(":", 1)[0].strip().lower()
+                    if key and indent == 0:
+                        current = key.group(1).strip().lower()
+                        container = current if current in CONTAINER_KEYS else None
+                        container_indent = 0
+                    elif key and container and indent > container_indent:
+                        # A named child of a stage container is a stage: `install:`, `build:`.
+                        label = key.group(1).strip()
+                        if len(label) > 2:
+                            derived["stages"].append((f"yaml:{container}", label[:80]))
+                        current = label.lower()
                     elif stripped.startswith("- ") and current:
                         for kind, keys in LIST_KEYS.items():
                             if current in keys:
                                 derived[kind].append((f"yaml:{current}", stripped[2:].strip()[:80]))
+
+            # 4. A definition file's own headings, for slices that carry prose rather than config.
+            if DEFINITION_FILE.search(member.name):
+                for match in HEADING_PATTERN.finditer(text):
+                    label = match.group(1).strip()
+                    if not STAGE_PATTERN.match(match.group(0)) and not ROLE_PATTERN.match(
+                            match.group(0)) and not GATE_PATTERN.match(match.group(0)):
+                        derived["headings"].append(("heading", label))
 
             # 3. What the text itself calls a stage, worker or check.
             derived["stages"] += [(m.group(1).lower(), m.group(2).strip()[:80])
@@ -222,7 +255,7 @@ def read_factory(document: dict, factory: dict) -> dict:
             derived["gates"] += [(m.group(1).lower(), m.group(2).strip()[:80])
                                  for m in GATE_PATTERN.finditer(text)]
     derived["totals"] = {}
-    for kind in ("stages", "roles", "gates", "prompts"):
+    for kind in ("stages", "roles", "gates", "prompts", "headings"):
         # De-duplicate while keeping the order the factory itself uses.
         seen = set()
         unique = []
@@ -234,7 +267,8 @@ def read_factory(document: dict, factory: dict) -> dict:
         # The count the factory really defines, then the list this report carries (kept small).
         derived["totals"][kind] = len(unique)
         derived[kind] = unique[:24]
-    derived["structure_found"] = any(derived[kind] for kind in ("stages", "roles", "gates", "prompts"))
+    derived["structure_found"] = any(derived[kind] for kind in ("stages", "roles", "gates",
+                                                                "prompts", "headings"))
     return derived
 
 
@@ -269,6 +303,10 @@ def compose_prompt(derived: dict, factory: dict, brief: str) -> str:
     if derived["prompts"]:
         lines += ["## Prompt assets this factory ships", ""]
         lines += [f"- {name}" for _source, name in derived["prompts"]]
+        lines += [""]
+    if derived["headings"]:
+        lines += ["## What its own definition files describe", ""]
+        lines += [f"- {name}" for _source, name in derived["headings"]]
         lines += [""]
     lines += [
         "## Deliverable",
@@ -401,6 +439,7 @@ def run(brief: str, max_model_calls: int, require_model: bool) -> int:
 
         entry.update({
             "stages": derived["totals"]["stages"],
+            "headings": derived["totals"]["headings"],
             "roles": derived["totals"]["roles"],
             "gates": derived["totals"]["gates"],
             "prompts": derived["totals"]["prompts"],
@@ -409,7 +448,15 @@ def run(brief: str, max_model_calls: int, require_model: bool) -> int:
                           str((target / "prompt.md").relative_to(REPO_ROOT))],
         })
 
-        if capabilities["model_available"] and model_calls < max_model_calls:
+        if not derived["structure_found"]:
+            # The slice holds no definitions (see below): there is nothing for a model to run, so a
+            # call would buy a generic answer and a misleading status.
+            entry["status"] = "NO-STRUCTURE"
+            entry["note"] = ("the sealed slice of this factory holds no stage, worker or prompt "
+                             "definitions to run" +
+                             ("" if factory["content_redistributed"] else
+                              "; its content is not redistributed (blueprint only)"))
+        elif capabilities["model_available"] and model_calls < max_model_calls:
             model_calls += 1
             started = time.time()
             answer = call_model(capabilities, prompt)
@@ -423,15 +470,6 @@ def run(brief: str, max_model_calls: int, require_model: bool) -> int:
             else:
                 entry.update({"status": "MODEL-FAILED", "provider": answer["provider"],
                               "error": answer["error"]})
-        elif not derived["structure_found"]:
-            # The slice held no worker/stage/prompt definitions - typically a blueprint-only factory
-            # whose definitions are code this component does not redistribute. Said plainly, because
-            # "ran in plan mode" would overstate what happened.
-            entry["status"] = "NO-STRUCTURE"
-            entry["note"] = ("the sealed slice of this factory holds no stage, worker or prompt "
-                             "definitions to run" +
-                             ("" if factory["content_redistributed"] else
-                              "; its content is not redistributed (blueprint only)"))
         elif capabilities["model_available"]:
             entry["status"] = "OPERATIONAL-PLAN"
             entry["note"] = f"model calls capped at {max_model_calls}"
@@ -448,6 +486,7 @@ def run(brief: str, max_model_calls: int, require_model: bool) -> int:
         "model_failed": sum(1 for r in results if r["status"] == "MODEL-FAILED"),
         "unreadable": sum(1 for r in results if r["status"] == "UNREADABLE"),
         "stages_defined": sum(r.get("stages", 0) for r in results),
+        "sections_defined": sum(r.get("headings", 0) for r in results),
         "workers_defined": sum(r.get("roles", 0) for r in results),
         "checks_defined": sum(r.get("gates", 0) for r in results),
         "prompts_defined": sum(r.get("prompts", 0) for r in results),
@@ -485,7 +524,8 @@ def run(brief: str, max_model_calls: int, require_model: bool) -> int:
           f"{summary['model_failed']} model calls failed, {summary['unreadable']} unreadable")
     print(f"[SEALED] definitions read from the sealed set: {summary['stages_defined']} stages, "
           f"{summary['workers_defined']} workers, {summary['checks_defined']} checks, "
-          f"{summary['prompts_defined']} prompt assets")
+          f"{summary['prompts_defined']} prompt assets, {summary['sections_defined']} sections of "
+          f"prose their definition files publish")
     print(f"[SEALED] report: "
           f"{(SEALED / 'manifest' / 'RUN-REPORT.json').relative_to(REPO_ROOT)}")
 

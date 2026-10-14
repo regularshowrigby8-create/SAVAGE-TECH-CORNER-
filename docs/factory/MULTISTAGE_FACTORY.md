@@ -64,21 +64,21 @@ stage, in plan mode, and says so.
 
 ### The three statuses a factory can end a run with
 
-| Status              | Meaning                                                                                                                                                                       |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `OPERATIONAL-MODEL` | Its plan and prompt were produced **and** a model answered; the answer is on disk                                                                                             |
-| `OPERATIONAL-PLAN`  | Its definitions were read and its plan and prompt were produced; no model was reachable or the call budget was spent                                                          |
-| `NO-STRUCTURE`      | The sealed slice holds no stage, worker or prompt definitions — usually a blueprint-only factory whose definitions are code this component deliberately does not redistribute |
+| Status              | Meaning                                                                                                                                                                                                                                                                                               |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OPERATIONAL-MODEL` | Its plan and prompt were produced **and** a model answered; the answer is on disk                                                                                                                                                                                                                     |
+| `OPERATIONAL-PLAN`  | Its definitions were read and its plan and prompt were produced; no model was reachable or the call budget was spent                                                                                                                                                                                  |
+| `NO-STRUCTURE`      | The sealed slice holds no stage, worker or prompt definitions — the blueprint-only factories, whose definitions are code this component deliberately does not redistribute. No model call is made for these: there would be nothing for it to run, and a generic answer would be reported as progress |
 
 Two more statuses exist for failures and are never softened: `MODEL-FAILED` (a provider was reached
 and refused, with its own error text recorded) and `UNREADABLE` (a payload could not be opened, which
 fails the stage). There is no status for "worked" — a run that did not happen says so.
 
-The last run of this set, on this checkout: **204 stages, 269 workers, 68 checks and 150 prompt assets
-read from 34 factories**; 38 slices held no definitions; 0 unreadable; 0 invented. The factories doing
-the heaviest lifting are `parthalon025/autonomous-coding-toolkit` (33 stages), `hadamrd/titan` (38
-stages), `sufficientdaikon/sdd-copilot-agents` (38 stages) and `fabro-sh/fabro` (22 stages, 23 prompt
-assets).
+The last run of this set, on this checkout: **372 stages, 252 workers, 93 checks, 450 prompt assets
+and 2 429 published sections read from 43 factories**; 29 slices held no definitions; 0 unreadable; 0
+invented. The 43 that ran and the 29 that did not are not a coincidence and not a threshold: the 29
+are exactly the blueprint-only factories, the ones whose content this component may not carry. Every
+factory whose content can be carried runs.
 
 ### Sealed and removable
 
@@ -114,6 +114,12 @@ absence. That asymmetry is the whole design: sealed plastic can be cut open or t
 cannot be quietly resealed with something else inside.
 
 ## What the imported factories contributed
+
+Two of the 72 — `AshishYesale7/LGFlutterStarterKit` and
+`sch0penheimer/AWS-DevSecOps-Hybrid-Software-Factory` — vendored nothing at all until the slice
+patterns learned where their definitions live (`skills/` and `.agent/` trees; `buildspecs/` phase
+files), which is exactly the plug-and-work bar: a factory that cannot describe itself is not a factory
+this pipeline can run. Both now carry slices, and all 72 do.
 
 The 72 factories were catalogued in `docs/factory/IMPORTED_FACTORY_CATALOG.md`: 12 GitHub searches,
 869 repositories seen, 90 verified by reading their tree and README, 72 kept because they matched at

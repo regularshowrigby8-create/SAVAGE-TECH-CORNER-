@@ -10,9 +10,74 @@
  "commit": "8f42211b0e82d9eec1a9cc6d5e92d0281f8bc0f6",
  "vendored_files": [
   {
+   "path": "skills/speckit-taskstoissues/SKILL.md",
+   "bytes": 1350,
+   "sha256": "3d9bffdf29af422821c28f91b2732caa8d8713d15b292641ef6567cf52c86c60"
+  },
+  {
+   "path": "skills/migration-backlog/scan.sh",
+   "bytes": 1435,
+   "sha256": "a7f8e947c7d93bd26f040855e29f323d0c8e15573eeef4ff0ba5d85d6c83decc"
+  },
+  {
+   "path": "skills/deploy-monitor/SKILL.md",
+   "bytes": 3210,
+   "sha256": "3cde12a7ca27293cf91bfca2ce700193a468364c414c77eb1b98cf905764452e"
+  },
+  {
+   "path": "skills/migration-backlog/SKILL.md",
+   "bytes": 5879,
+   "sha256": "660a1be8da70ffa0351fe4b8c0373eb6212d0decf909a454d78775ccd7fc89bd"
+  },
+  {
+   "path": "skills/speckit-constitution/SKILL.md",
+   "bytes": 6641,
+   "sha256": "23edb4ca1cfdbb241fd2720effdf067562b9389080a5dabf33a60cdde3357046"
+  },
+  {
    "path": "agents/speckit-workflow.md",
    "bytes": 10693,
    "sha256": "ed187c55eb8de93d096270a45690ba7d0202df2de9f4634911dc7c8ff304be5f"
+  },
+  {
+   "path": "skills/speckit-deploy/SKILL.md",
+   "bytes": 10738,
+   "sha256": "8cb550130dc4b103016e0eb0e00eafe5eae978b5e7f3c0ac585998b7a47b2880"
+  },
+  {
+   "path": "skills/speckit-claim/SKILL.md",
+   "bytes": 11037,
+   "sha256": "e05c9e8f30bb972394686aa1fcd456ecf449049f24d0c03812cc1a5985fa744d"
+  },
+  {
+   "path": "skills/speckit-analyze/SKILL.md",
+   "bytes": 11294,
+   "sha256": "1d81b415b50dfd3c7d25a149c2c2363def96e0ec18013624d94c0e45e53ba6bc"
+  },
+  {
+   "path": "skills/speckit-plan/SKILL.md",
+   "bytes": 12298,
+   "sha256": "d747d2f7417f6d76a6b9336ef98c857f8754d25e703a9dfdffdb1e7053672d9d"
+  },
+  {
+   "path": "skills/speckit-tasks/SKILL.md",
+   "bytes": 13193,
+   "sha256": "928dd81f37553ff79b9972fb3c4a57905a673783406bcc5816afd6a7eefc65ac"
+  },
+  {
+   "path": "skills/speckit-clarify/SKILL.md",
+   "bytes": 13458,
+   "sha256": "4c6a50fc542f5d48fd19ad6690cbb73dba85cd0aafbff55b01bf67ff7aa8da7f"
+  },
+  {
+   "path": "skills/speckit-specify/SKILL.md",
+   "bytes": 17081,
+   "sha256": "8e30776b29641ba3ded2314a5fdc2c5a42982354b0c4ba9b4005c96eb178ce6c"
+  },
+  {
+   "path": "skills/build-order/SKILL.md",
+   "bytes": 20121,
+   "sha256": "0a5822a11467021995000e3124bbd73477e2600dd018e6b6a9e8ca9a917b750d"
   },
   {
    "path": "README.md",
@@ -21,7 +86,7 @@
   }
  ],
  "skipped": {
-  "budget": false,
+  "budget": true,
   "forbidden_token": [],
   "skipped_path": [],
   "tree_entries": 22
@@ -30,10 +95,12 @@
   "anthropic"
  ],
  "entrypoints": [],
- "runtime": [],
+ "runtime": [
+  "shell"
+ ],
  "notes": [],
  "vendored_at": "2026-10-14",
- "vendored_files_count": 2,
- "vendored_bytes": 12122,
+ "vendored_files_count": 15,
+ "vendored_bytes": 139857,
  "content_redistributed": false
 }

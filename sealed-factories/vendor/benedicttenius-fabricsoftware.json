@@ -65,6 +65,11 @@
    "sha256": "1c88cd29f167bec9c78a100f482ebe78f64bb1de471ca835bfc80bc966f5304c"
   },
   {
+   "path": ".factory/memory/RULES.md",
+   "bytes": 429,
+   "sha256": "374f81604d8224b9d4858d02e2904fcb311fd0c6e5b8fe92ece67633cf1d0141"
+  },
+  {
    "path": "README.md",
    "bytes": 14497,
    "sha256": "4921459982ffc46eef4ecce27fd5840722eb5c42d59dddf344cc7d6bb8fbe5a4"
@@ -88,7 +93,7 @@
  ],
  "notes": [],
  "vendored_at": "2026-10-14",
- "vendored_files_count": 12,
- "vendored_bytes": 40859,
+ "vendored_files_count": 13,
+ "vendored_bytes": 41288,
  "content_redistributed": false
 }
