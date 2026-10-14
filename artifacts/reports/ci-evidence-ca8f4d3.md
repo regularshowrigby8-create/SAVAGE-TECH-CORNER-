@@ -13,25 +13,32 @@ This is the AC-047 evidence: the green run of this commit on GitHub-hosted runne
 | AI PR Code Reviewers (Dual Fallback) | [38518749631](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38518749631) | `success`  | 2026-10-14T05:49:55Z | 2026-10-14T05:53:12Z |
 | Factory 2 — Single Debug Job         | [38518749713](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38518749713) | `success`  | 2026-10-14T05:49:55Z | 2026-10-14T05:55:23Z |
 
-## The same checks on the current tip
+## The runs recorded here, and the ones after them (state as of 2026-10-14)
 
-`2943074` (the documentation commit that added this file) ran the identical four workflows on a clean
-checkout of the same application sources, and all four are green again: Android pipeline
-[38520485065](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38520485065)
-(build job `115708810752`, emulator job `115709536339`, release job skipped), belt
-`38520485008`, reviewers `38520485049`, Factory 2 `38520485031`.
+This file is a point-in-time record, so it names the runs it describes and nothing is rewritten when a
+later commit runs again:
 
-Its APK is _not_ byte-identical to the one above, and the reason is worth stating rather than hiding:
-size 5,795,656 bytes (one byte fewer) and SHA-256
-`a838fc4741e4d6ddf37b4fd50d04dc014b83c82b6aaaab951d43e6d1db682f0f`, with the debug certificate SHA-256
-`20ee01c451f367cc01d4994b7685aa257ad702dae2315de9cba8f0bb3db7301c`. Every GitHub-hosted runner starts
-with no `~/.android/debug.keystore`, so AGP generates a fresh debug key for each build, and the
-signature blocks that key produces are part of the file. What is reproduced is the build: the same
-variant, `package=com.savage.soulbrowser`, `versionName=3.0.0`, `versionCode=5`, `min_sdk=26`,
-`target_sdk=35`, the same three declared permissions, the same launcher activity and the same v1+v2+v3
-signing scheme. A byte-identical APK can only come from a pinned signing key, which is exactly the key
-material this repository refuses to commit (A11); the release variant, which is the one meant to carry
-an operator's key, is reported unsigned instead.
+- `ca8f4d3` - the first fully green tip, detailed in the tables below.
+- `2943074` - the same four workflows on a clean checkout, all green: Android pipeline
+  [38520485065](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38520485065)
+  (build job `115708810752`, emulator job `115709536339`, release job skipped), belt `38520485008`,
+  reviewers `38520485049`, Factory 2 `38520485031`.
+- `268dfbe` - the same four workflows, all green again: Android pipeline
+  [38521338224](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38521338224)
+  (build job `115711482131`, emulator job `115712402004`, release job skipped), belt `38521337958`,
+  reviewers `38521338163`, Factory 2 `38521338389`.
+
+The three runs' APKs are not byte-identical to each other, and the reason is worth stating rather than
+hiding: for `2943074` the size is 5,795,656 bytes (one byte fewer than `ca8f4d3`) with SHA-256
+`a838fc4741e4d6ddf37b4fd50d04dc014b83c82b6aaaab951d43e6d1db682f0f` and debug-certificate SHA-256
+`20ee01c451f367cc01d4994b7685aa257ad702dae2315de9cba8f0bb3db7301c`. A GitHub-hosted runner starts with
+no `~/.android/debug.keystore`, so AGP generates a fresh debug key for every build, and the signature
+blocks that key produces are part of the file. What is reproduced is the build: the same variant,
+`package=com.savage.soulbrowser`, `versionName=3.0.0`, `versionCode=5`, `min_sdk=26`, `target_sdk=35`,
+the same three declared permissions, the same launcher activity and the same v1+v2+v3 signing scheme. A
+byte-identical APK can only come from a pinned signing key, which is exactly the key material this
+repository refuses to commit (A11); the release variant, which is the one meant to carry an operator's
+key, is reported unsigned instead.
 
 ## The Android pipeline, step by step
 
