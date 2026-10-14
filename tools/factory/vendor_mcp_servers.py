@@ -83,7 +83,7 @@ def vendor(kind: str, only: set[str], refresh: bool) -> dict:
                                     "verified": entry.get("verified_servers", []),
                                     "launch_verified": entry.get("launch_verified", False)}
                 record["what"] = entry.get("description", "")
-            target.write_text(json.dumps(record, indent=1) + "\n", encoding="utf-8")
+            target.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
             written += 1
             files = len(record["vendored_files"])
             total_bytes += record.get("vendored_bytes", 0)
@@ -114,11 +114,17 @@ def write_catalogue() -> dict:
                 "verified_total_servers": payload.get("verified_total_servers", 0),
                 "verified_total_tools": payload.get("verified_total_tools", 0),
                 "method": payload["method"]}
-    CATALOGUE.write_text(json.dumps(document, indent=1) + "\n", encoding="utf-8")
+    CATALOGUE.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
     return {"catalogue": str(CATALOGUE.relative_to(REPO_ROOT)), "servers": len(servers),
             "verified": sum(1 for s in servers if s["verified"])}
 
 
+#: Records and the catalogue are committed files, and CI runs `npm run format:check` over them, so
+#: after a pass the committed copy is normalised with `npm run format` before it is committed.
+#: Prettier is not available to this script (and must not become a dependency of a tool that has to
+#: run on a bare interpreter), so the writer gets as close as it can - two-space indent, trailing
+#: newline - and the formatter finishes the job. Prettier collapses short arrays that fit the print
+#: width, which no plain `json.dumps` writes.
 def main() -> int:
     parser = argparse.ArgumentParser(description="Vendor the MCP servers and AI factories")
     parser.add_argument("--kind", default="both", choices=("mcp", "ai", "both"))

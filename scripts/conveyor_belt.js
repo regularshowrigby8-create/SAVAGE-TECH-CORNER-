@@ -102,7 +102,7 @@ pipelineReport.push(
       `swarm ran ${env.swarm.plan.executed} instances in ${env.swarm.seconds}s with ` +
       `${env.swarm.counts.steps_ok} tool steps and ` +
       `${env.swarm.counts.checks_passed}/${env.swarm.counts.checks_passed + env.swarm.counts.checks_failed} ` +
-      `checks passed`
+      "checks passed"
     );
   }),
 );
