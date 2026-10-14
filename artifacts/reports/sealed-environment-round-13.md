@@ -431,6 +431,21 @@ hardening validated by simulation**: the SIGKILL was not reproduced locally, so 
 stage's behaviour under the three stub scenarios above, not that the retry is what makes the emulator
 leg green.
 
+### 2.10 Continuous integration on the air-gap and pre-flight commit
+
+All six workflows are green on `cc83878`:
+
+| Workflow                                      | Run                                                                                                     | Result  |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------- |
+| Android Build, Test and Release               | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38620147666                | success |
+| Comprehensive Quality Conveyor Belt (push/PR) | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38620135897, …/38620147891 | success |
+| Factory 2 — Single Debug Job (push/PR)        | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38620136519, …/38620147811 | success |
+| AI PR Code Reviewers (Dual Fallback)          | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38620147730                | success |
+
+That run is also the test of the pre-flight refactor, since the emulator stage's code changed in this
+commit: its emulator job carries no `FAIL:` annotation and no pre-flight `::warning` - the stage's own
+signal that the screen did come up awake and focused - only the three runner deprecation notices.
+
 ## 3. Acceptance criteria covered
 
 | Criterion | What it asserts                                                                                                                 | Test                                                                                                                                       | Evidence               |
