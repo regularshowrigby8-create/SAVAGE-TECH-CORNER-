@@ -362,6 +362,33 @@ imitates the device:
 | both mechanisms killed three times                 | `FAIL: uiautomator produced no view hierarchy after 3 attempts` plus the last real error, exit 1 |
 | hierarchy dumped, `btn_nav_tabs` genuinely missing | `FAIL: the launched browser is missing btn_nav_tabs`, exit 1                                     |
 
+The fix is on `429fdc1` and the same job is green there — all six workflows, the Android leg
+included:
+
+| Workflow                                      | Run                                                                                                     | Result  |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------- |
+| Android Build, Test and Release               | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38614139157                | success |
+| Comprehensive Quality Conveyor Belt (push/PR) | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38614130143, …/38614139310 | success |
+| Factory 2 — Single Debug Job (push/PR)        | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38614129944, …/38614139063 | success |
+| AI PR Code Reviewers (Dual Fallback)          | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38614138982                | success |
+
+That run's emulator job carries no `FAIL:` and no logcat-tail annotation — the stage's own signals for
+a failure — so step 8 and the eleven steps after it completed. The APK built on that commit:
+
+```
+apk=…/app-debug.apk  size_bytes=5795659
+sha256=1f5d6fc2af2e4f68041bfe917f4b515fca9ac425aa952595c1999879dd9bb276
+package=com.savage.soulbrowser versionName=3.0.0 versionCode=5   min_sdk=26 target_sdk=35
+permissions=[ACCESS_NETWORK_STATE, INTERNET, DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION]
+signed v1=True v2=True v3=True
+certificate=Common Name: Android Debug, Organization: Android, Country: US sha256=824d146b…
+launcher=com.savage.soulbrowser.ui.MainActivity
+```
+
+One clarification that belongs with that: the debug certificate's hash differs run to run (round 12
+recorded `111de1d1…` for its own run, this one is `824d146b…`) because CI generates the debug keystore
+fresh each time. CN `Android Debug` is what is stable; no fingerprint is claimed as an identity.
+
 Two limits, stated rather than implied. **The failed job could not be re-run from here**: `gh run
 rerun` answers `run 38611269153 cannot be rerun; its workflow file may be broken` and the API answers
 `403 Resource not accessible by integration` — this sandbox's credential has no `actions:write` — so
