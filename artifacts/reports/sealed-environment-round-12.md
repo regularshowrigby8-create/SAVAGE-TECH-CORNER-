@@ -143,7 +143,19 @@ model endpoints, reads whatever keys are in the environment, builds the environm
 the environment is not functional — fewer than 30 tools, fewer than 20 roles, or any failed check or
 step — station 0 fails rather than sealing it.
 
-### 2.6 The gate suite
+### 2.6 Continuous integration on this round's commits
+
+The round's first two pushes went red and the third is green; all three are recorded, with causes, in
+`artifacts/reports/ci-evidence-804571e.md`:
+
+| Commit    | Result                                                                                                                                                |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `9c4c1b1` | red — eslint and prettier (fixed in `2621e37`)                                                                                                        |
+| `2621e37` | red — factory-2's security agent: two `shell=True` call sites and a test fixture it read as a leaked key (fixed in `6c904cc`)                         |
+| `6c904cc` | red — the seal could not verify in a clean checkout (fixed in `804571e`)                                                                              |
+| `804571e` | **green** — six workflows, including the emulator leg and both belt runs; APK 5,795,660 bytes, `sha256=629baeb6…`, `com.savage.soulbrowser`, v1+v2+v3 |
+
+### 2.7 The gate suite
 
 ```
 $ python3 -m unittest discover -s shell/tests
