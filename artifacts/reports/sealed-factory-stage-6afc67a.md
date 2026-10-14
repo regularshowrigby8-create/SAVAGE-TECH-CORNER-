@@ -1,6 +1,6 @@
 # Evidence — the sealed factory stage (AC-048)
 
-Commit `6afc67a` and later on `arena/5223ef6f-savage-tech-corner`. Every line below is copied from a
+Commits `6afc67a`, `226b71c` and `d7e87bd` on on `arena/5223ef6f-savage-tech-corner`. Every line below is copied from a
 command that was actually run; nothing here is reconstructed.
 
 ## 1. The seal verifies, and a tampered payload does not pass
@@ -90,7 +90,25 @@ Artifacts from that run:
 success on the same commit, and `Factory 2 — Single Debug Job` succeeded on the successor commits.
 The belt workflow runs station 0 on a clean checkout, which is the reproducibility claim AC-047 makes.
 
-## 6. What is not claimed
+## 6. Runs after this one, including one that failed
+
+| Commit                                                                  | Workflow                                                      | Conclusion                                                    |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------- |
+| `226b71c` (AC-048 in `docs/ACCEPTANCE_CRITERIA.md`, documentation only) | Comprehensive Quality Conveyor Belt                           | success                                                       |
+| `226b71c`                                                               | Build, unit tests and lint                                    | success                                                       |
+| `226b71c`                                                               | Emulator instrumented tests and install smoke test            | **failure** at "Run instrumented tests on an API 35 emulator" |
+| `226b71c`                                                               | Factory 2 — Single Debug Job                                  | success                                                       |
+| `d7e87bd` (this evidence file)                                          | Build / Conveyor Belt / Emulator / Dual Reviewers / Factory 2 | success (all five jobs)                                       |
+
+The single failure is recorded rather than smoothed over. It was not root-caused: the run's logs are
+not reachable from this environment (`gh run view --log-failed` fails at the log download), and GitHub
+refuses to re-run that run ("cannot be rerun"). What is known: it is the emulator leg of the
+instrumented tests; the identical workflow passed on `6afc67a` before it and on `d7e87bd` after it;
+`226b71c` changed one documentation file; and the failure is not in the sealed stage, whose own
+workflow passed on that same commit. The APK evidence quoted above is from `d7e87bd`, where every job
+is green.
+
+## 7. What is not claimed
 
 - No signed **release** APK exists for this branch: `Publish signed release APK` is skipped because
   the repository deliberately does not commit a keystore (A11). The APK above is the debug-signed
