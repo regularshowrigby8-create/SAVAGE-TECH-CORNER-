@@ -23,6 +23,7 @@ RUNTIME = REPO_ROOT / "tools" / "factory" / "sealed_factory_runtime.py"
 BELT = REPO_ROOT / "scripts" / "conveyor_belt.js"
 
 sys.path.insert(0, str(REPO_ROOT / "tools" / "factory"))
+import seal_factories  # noqa: E402
 import sealed_factory_runtime  # noqa: E402
 
 
@@ -85,6 +86,32 @@ class SealedComponentTest(unittest.TestCase):
                          sum(f["payload_bytes"] for f in document["factories"]))
         self.assertEqual(contents["with_payload"], len(document["factories"]))
         self.assertGreaterEqual(contents["ai_worker_factories"], 25)
+
+    def test_sealing_an_unchanged_tree_would_reproduce_it_exactly(self) -> None:
+        """The sealer's own promise: same records, same bytes.
+
+        Two failure modes this catches, both of which have happened: a container that stamps the
+        clock (the gzip header did) so every re-seal rewrites every payload, and a manifest that is
+        committed while its payloads are not, which leaves a clean checkout unable to verify.
+        """
+        document = seal()
+        record_paths = sorted(path for directory in seal_factories.GROUP_DIRS
+                              for path in (SEALED / directory).glob("*.json"))
+        self.assertGreaterEqual(len(record_paths), 130, "the groups must hold the sealed records")
+        for record_path in record_paths:
+            record = json.loads(record_path.read_text(encoding="utf-8"))
+            payload = SEALED / "payloads" / f'{record["id"]}.tar.gz'
+            self.assertTrue(payload.is_file(), f'{record_path.name}: payload missing')
+            rebuilt = seal_factories.build_payload(record)
+            self.assertEqual(len(rebuilt), payload.stat().st_size,
+                             f'{record["id"]}: a re-seal would write a different number of bytes')
+            self.assertEqual(hashlib.sha256(rebuilt).hexdigest(), digest(payload),
+                             f'{record["id"]}: a re-seal would write different bytes than the ones '
+                             f'this seal records - the committed payloads\' and SEAL.json are out of '
+                             f'step')
+            recorded = next(f for f in document["factories"] if f["id"] == record["id"])
+            self.assertEqual(recorded["payload_sha256"], digest(payload),
+                             f'{record["id"]}: SEAL.json does not describe the committed payload')
 
     def test_the_seal_pins_the_code_that_runs_it(self) -> None:
         """The payloads are the factories; the runtime is the machinery that runs them.

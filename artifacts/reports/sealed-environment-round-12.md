@@ -20,7 +20,7 @@ and its cause are recorded instead.
 | AI-focused factories | 23 (AutoGen, Semantic Kernel, CrewAI, LangGraph, LangChain, MetaGPT, OpenHands, SWE-agent, pydantic-ai, agno, llama_index, haystack, …)    | `sealed-factories/vendor-ai/`                      |
 | Runtime              | 9 modules: toolkit (41 tools), MCP tool server, gateway, agents, language packs, swarm, MCP link, sealcheck, CLI                           | `sealed-factories/runtime/`                        |
 | Licences carried     | 115 licence texts                                                                                                                          | `sealed-factories/licenses/`                       |
-| Seal                 | 137 factories, 1,849,160 payload bytes, 10 component files pinned, root `fda43a0242166e8828dbe214f2c0f93b0f86e51eec02c26cb51f4dbc721fd73b` | `sealed-factories/SEAL.json`                       |
+| Seal                 | 137 factories, 1,849,160 payload bytes, 10 component files pinned, root `32bf92d31bef3f13bbfa5352f7ea8ca9d1040838c12f282c2491739ca1c165e0` | `sealed-factories/SEAL.json`                       |
 
 Groups, as the manifest itself counts them: 72 imported factories, 42 MCP tool servers, 23
 AI-focused factories. 98 records carry redistributed content; 39 are blueprint-only: the sealer
@@ -36,11 +36,11 @@ verifiable structure - file names, sizes and hashes - with their licence text an
 $ python3 tools/factory/seal_factories.py seal
 sealed 137 factories -> sealed-factories/SEAL.json
 component files pinned=10
-seal root sha256=fda43a0242166e8828dbe214f2c0f93b0f86e51eec02c26cb51f4dbc721fd73b
+seal root sha256=32bf92d31bef3f13bbfa5352f7ea8ca9d1040838c12f282c2491739ca1c165e0
 payload bytes=1849160 licences=115
 
 $ python3 tools/factory/sealed_factory_runtime.py verify
-[SEAL] OK 1.0.0: 137 factories, 1849160 payload bytes, 115 licence texts, root fda43a0242166e88…
+[SEAL] OK 1.0.0: 137 factories, 1849160 payload bytes, 115 licence texts, root 32bf92d31bef3f13…
 ```
 
 The component's own verifier, run from a copy of `sealed-factories/` inside a different repository
@@ -48,7 +48,7 @@ The component's own verifier, run from a copy of `sealed-factories/` inside a di
 
 ```
 $ python3 /tmp/foreign2/component/runtime/cli.py verify
-[SEAL] OK 1.0.0: 137 factories, 1849160 payload bytes, 115 licence texts, root fda43a0242166e88…
+[SEAL] OK 1.0.0: 137 factories, 1849160 payload bytes, 115 licence texts, root 32bf92d31bef3f13…
 
 $ python3 /tmp/foreign2/component/runtime/cli.py run --root /tmp/foreign2/other-repo --limit 30 --model-calls 0
 [swarm] 159 roles, plan of 159 agent instances, executed 30 in 0.1s
@@ -147,7 +147,7 @@ step — station 0 fails rather than sealing it.
 
 ```
 $ python3 -m unittest discover -s shell/tests
-Ran 178 tests in 29.697s
+Ran 179 tests in 31.300s
 
 OK
 
@@ -158,8 +158,9 @@ $ python3 tools/duplication_auditor.py
 [DUPLICATION-AUDITOR] PASS: All mirrors synchronized without unapproved drift.
 ```
 
-39 of those tests are new this round (`shell/tests/test_sealed_environment.py`), including five that
-run the component in a foreign repository.
+39 of those tests are new this round in `shell/tests/test_sealed_environment.py` (five of them run
+the component in a foreign repository) and one is new in `shell/tests/test_sealed_factory_runtime.py`
+(re-sealing reproduces every payload byte for byte).
 
 ## 3. Acceptance criteria covered
 
@@ -172,6 +173,7 @@ run the component in a foreign repository.
 | AC-053    | Multi-agent coverage, AI-focused factories among the roles           | `test_the_environment_is_reported_with_every_part`, `test_the_seal_carries_the_mcp_and_ai_groups_too`                                                 | §2.1, §2.2                         |
 | AC-054    | "Any language" as far as the machine honestly goes                   | `LanguagePackTest`, `init --check`                                                                                                                    | §2.1 (7 available, 8 missing)      |
 | AC-058    | Programs run without a shell anywhere in the environment             | `test_the_program_runner_uses_no_shell_at_all`, `test_the_syntax_tool_could_and_could_not_check`, factory-2's security agent                          | §4                                 |
+| AC-059    | Sealing is reproducible, and a clean checkout can verify             | `test_sealing_an_unchanged_tree_would_reproduce_it_exactly`                                                                                           | §4                                 |
 | AC-055    | A copy works in another repository                                   | `PortabilityTest` (5 tests)                                                                                                                           | §2.1                               |
 | AC-056    | The seal covers the code that runs it                                | `test_the_seal_pins_the_code_that_runs_it`                                                                                                            | §2.1 (`component files pinned=10`) |
 | AC-057    | Plug and work, no user intervention                                  | `conveyor_belt.js` station 0, removal tests                                                                                                           | §2.5                               |
@@ -192,6 +194,8 @@ The full criterion text is in `docs/ACCEPTANCE_CRITERIA.md` (AC-049 … AC-057).
 | `proc.run` executed through a shell | A tool server that hands out a shell is how a path jail stops being a jail, and this repository's own security agent flagged both call sites | the command line is split and programs run directly: `&&` chains them, and pipes, redirects, substitutions and background jobs are refused with the reason; `git.command` refuses chaining as well. The new `code.syntax` tool (the 41st) replaced the one role that used a pipeline |
 | A language role probed the pack's name instead of its binary | `language-javascript` ran `javascript --version` on every run; the shell's 127 hid it, and a role for a language with no toolchain made the same promise | each role probes the binary the machine reported (`node`, `cc`, `bash`, `npx`), a language with no program gets no specialist role, and a program that is not installed is a named failure rather than a quiet 127 |
 | A fixture credential tripped the repository's own scanner | factory-2's security agent read a realistic `sk-…` literal in the new tests as a leaked key, the critic blocked on it, and CI went red at the gate step | the fixture is credential-shaped but not entropic: the detector still matches it, and the scanner no longer reads the test file as a leak |
+
+| Sealing was not reproducible, and a manifest could be committed without its payloads | `tarfile`'s gzip wrapper stamped the current time into the gzip header, so every re-seal rewrote all 137 payloads byte-for-byte differently while keeping their sizes - invisible in a `git diff --stat`. That is how a pushed commit came to carry an updated `SEAL.json` beside payloads from an earlier seal: the clean checkout could not verify it, and CI's belt stopped at station 0 as it should | the gzip stream is written with `mtime=0` and no filename, and a test rebuilds every payload from its record and requires the bytes on disk to match, so re-sealing an unchanged tree is a no-op and manifest/payload drift fails locally instead of in CI |
 
 ## 5. What is not claimed
 

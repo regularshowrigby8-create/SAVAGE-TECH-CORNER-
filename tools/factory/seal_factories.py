@@ -28,6 +28,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
 import io
 import json
@@ -87,10 +88,22 @@ def build_payload(record: dict) -> bytes:
 
     A blueprint-only factory (see PERMISSIVE_LICENCES) gets its structure - the file list with sizes
     and hashes, which is what makes the blueprint verifiable - and none of its content.
+
+    Determinism includes the container: `tarfile`'s gzip wrapper stamps the current time into the
+    gzip header, which made every payload a different byte string on every seal and turned a
+    re-seal into a whole-component diff. The gzip stream is written here with `mtime=0` and no
+    filename, so re-sealing an unchanged tree reproduces the same bytes.
     """
     copy_content = content_may_be_copied(record)
     buffer = io.BytesIO()
-    with tarfile.open(fileobj=buffer, mode="w:gz", format=tarfile.GNU_FORMAT) as archive:
+    with gzip.GzipFile(filename="", mode="wb", fileobj=buffer, mtime=0) as compressed:
+        build_tar(record, copy_content, compressed)
+    return buffer.getvalue()
+
+
+def build_tar(record: dict, copy_content: bool, stream) -> None:
+    """Writes the archive entries into `stream` in a fixed order with fixed metadata."""
+    with tarfile.open(fileobj=stream, mode="w|", format=tarfile.GNU_FORMAT) as archive:
         info = tarfile.TarInfo(name="FACTORY.json")
         meta = json.dumps({
             "id": record["id"],
@@ -128,7 +141,6 @@ def build_payload(record: dict) -> bytes:
             file_info.uid = file_info.gid = 0
             file_info.uname = file_info.gname = ""
             archive.addfile(file_info, io.BytesIO(data))
-    return buffer.getvalue()
 
 
 def component_files() -> list[dict]:

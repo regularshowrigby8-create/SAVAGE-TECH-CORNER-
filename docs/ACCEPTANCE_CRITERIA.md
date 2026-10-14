@@ -729,6 +729,22 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: the absence of `shell=True` in `sealed-factories/runtime/`, the refusal
   messages for each refused operator, and a `run_all.sh` result of `FACTORY 2 RESULT: PASS`
 
+### AC-059 — Sealing is reproducible, so a clean checkout can verify what it clones
+
+- **Feature**: F-13, F-14
+- **Given**: the sealer `tools/factory/seal_factories.py` and the committed component
+- **When**: the same records are sealed again, and the committed tree is verified
+- **Then**: a re-seal of an unchanged tree writes byte-identical payloads - the archive container
+  carries no clock (the gzip header is written with `mtime=0` and no filename) and no ownership or
+  mode from the machine that ran it - so re-sealing is a no-op; the payloads on disk rebuild exactly
+  from the records, and `SEAL.json`'s hash for each factory is the hash of the payload beside it, so
+  a manifest committed without its payloads fails here rather than in a clean checkout
+- **Test method**: `shell/tests/test_sealed_factory_runtime.py`
+  (`test_sealing_an_unchanged_tree_would_reproduce_it_exactly`, which rebuilds all 137 payloads from
+  their records), plus `test_every_payload_hash_in_the_seal_matches_the_file`
+- **Evidence required**: the rebuild-and-compare run over every record, and the `[SEAL] OK` line from
+  a clone of the pushed branch (not from the checkout that sealed it)
+
 ## 2. Traceability summary
 
 | Requirement category (Phase 2 checklist)  | Criteria                        |
@@ -762,6 +778,7 @@ from the repository's own authoritative documents instead of being invented:
 | the seal covers the runtime               | AC-056                          |
 | no user intervention                      | AC-057                          |
 | no shell anywhere in the environment      | AC-058                          |
+| reproducible sealing                      | AC-059                          |
 
 ## 3. Test-method notes (no test is weakened to pass)
 
