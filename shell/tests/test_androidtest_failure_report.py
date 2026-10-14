@@ -149,6 +149,27 @@ class WiringTest(unittest.TestCase):
         self.assertIn("connectedDebugAndroidTest", stage)
         self.assertIn("android_apk_smoke.sh", stage)
 
+    def test_the_stage_wakes_the_screen_before_it_runs_the_suite(self):
+        """The focus-dependent failures on 226b71c were an uninteractive screen, not a code fault.
+
+        Espresso matches the root view that has window focus, so a headless emulator whose screen is
+        off and whose keyguard is showing fails every focus-dependent assertion at once. The stage
+        must therefore wake the device, dismiss the keyguard and *check* what it observed before the
+        suite runs - and it must not claim the screen is ready when it is not.
+        """
+        stage = io.open(REPO_ROOT / "tools" / "ci" / "android_emulator_run.sh",
+                        encoding="utf-8").read()
+        self.assertIn("KEYCODE_WAKEUP", stage)
+        self.assertIn("wm dismiss-keyguard", stage)
+        self.assertIn("mWakefulness=", stage)
+        self.assertIn("mCurrentFocus=", stage)
+        # The wake call happens before the suite itself (not merely before the mention of it in the
+        # header comment), so the state the suite sees is the checked one.
+        self.assertLess(stage.index("KEYCODE_WAKEUP"),
+                        stage.index("gradlew connectedDebugAndroidTest"))
+        # And a screen that never came up is reported rather than silently assumed.
+        self.assertIn("::warning title=emulator pre-flight::", stage)
+
     def test_the_workflow_never_suppresses_the_test_command(self):
         workflow = io.open(REPO_ROOT / ".github" / "workflows" / "android-build.yml",
                            encoding="utf-8").read()

@@ -56,6 +56,33 @@ def entries(kind: str) -> list[dict]:
     return payload.get("servers" if kind == "mcp" else "factories", [])
 
 
+def refresh_launch(kind: str) -> dict:
+    """Re-reads the launch block of every MCP record from the registry, without re-cloning.
+
+    The slices do not change when a repository's documented command does, and re-cloning forty
+    repositories to record a new command line would put the network in the path of a bookkeeping
+    update. Only the fields the registry owns are written here, in the same shape `vendor()` writes
+    them, so there is still one definition of what a record's launch block is.
+    """
+    out = MCP_OUT
+    updated = 0
+    for entry in entries("mcp"):
+        target = out / f'{entry["id"]}.json'
+        if not target.is_file():
+            continue
+        record = json.loads(target.read_text(encoding="utf-8"))
+        record["launch"] = {"command": entry.get("command") or [],
+                            "requires": entry.get("requires", ""),
+                            "verified": entry.get("verified_servers", []),
+                            "launch_verified": entry.get("launch_verified", False),
+                            "command_source": entry.get("command_source", ""),
+                            "launch_note": entry.get("launch_note", "")}
+        record["what"] = entry.get("description", "")
+        target.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+        updated += 1
+    return {"kind": "mcp-launch", "records": updated}
+
+
 def vendor(kind: str, only: set[str], refresh: bool) -> dict:
     out = MCP_OUT if kind == "mcp" else AI_OUT
     out.mkdir(parents=True, exist_ok=True)
@@ -130,13 +157,20 @@ def main() -> int:
     parser.add_argument("--kind", default="both", choices=("mcp", "ai", "both"))
     parser.add_argument("--only", default="")
     parser.add_argument("--refresh", action="store_true")
+    parser.add_argument("--launch-only", action="store_true",
+                        help="rewrite each MCP record's launch block from the registry and stop")
     args = parser.parse_args()
 
-    only = {part.strip() for part in args.only.split(",") if part.strip()}
-    kinds = ("mcp", "ai") if args.kind == "both" else (args.kind,)
-    summary = {"kinds": []}
-    for kind in kinds:
-        summary["kinds"].append(vendor(kind, only, args.refresh))
+    if not args.launch_only:
+        only = {part.strip() for part in args.only.split(",") if part.strip()}
+        kinds = ("mcp", "ai") if args.kind == "both" else (args.kind,)
+        summary = {"kinds": []}
+        for kind in kinds:
+            summary["kinds"].append(vendor(kind, only, args.refresh))
+    else:
+        summary = {"kinds": []}
+    if args.launch_only or args.kind in ("mcp", "both"):
+        summary["kinds"].append(refresh_launch("mcp"))
     summary.update(write_catalogue())
     print(json.dumps(summary, indent=1))
     return 0

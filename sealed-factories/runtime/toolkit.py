@@ -37,6 +37,7 @@ import tarfile
 import time
 import unicodedata
 import urllib.error
+import urllib.parse
 import urllib.request
 import zipfile
 from datetime import datetime, timezone
@@ -693,6 +694,169 @@ def net_http(url: str, method: str = "GET", headers: dict | None = None, body: s
         raise ToolError(f"the network is not reachable from here: {problem.reason}") from problem
 
 
+# --------------------------------------------------------------------------- github
+
+#: Where the GitHub REST API lives. `SEALED_GITHUB_API` points the tools at an enterprise instance,
+#: which is the same API under a different host.
+GITHUB_API = os.environ.get("SEALED_GITHUB_API", "https://api.github.com")
+GITHUB_TOKEN_VARS = ("GITHUB_TOKEN", "GH_TOKEN", "GITHUB_PERSONAL_ACCESS_TOKEN")
+
+
+def github_token() -> str:
+    """The token this environment can use, or an empty string. Never logged, never returned."""
+    for name in GITHUB_TOKEN_VARS:
+        value = os.environ.get(name, "").strip()
+        if value:
+            return value
+    return ""
+
+
+def github_call(path: str, method: str = "GET", body: dict | None = None, timeout: int = 30,
+                raw: bool = False) -> dict:
+    """One GitHub REST call. The API's own answer is what comes back, including its errors.
+
+    A request without a token is still made: GitHub serves public data unauthenticated and answers
+    with the rate limit it applied, which is reported rather than guessed at. A 401/403 is reported
+    with GitHub's own message and the reason this environment could not authenticate, never as an
+    empty result that looks like "nothing found".
+    """
+    if not re.match(r"^[\w./?=&%:-]+$", path):
+        raise ToolError(f"that is not a GitHub API path: {path!r}")
+    url = path if path.startswith("http") else f"{GITHUB_API}/{path.lstrip('/')}"
+    headers = {"User-Agent": "sealed-factory-runtime/1.0",
+               "Accept": "application/vnd.github.raw" if raw else "application/vnd.github+json",
+               "X-GitHub-Api-Version": "2022-11-28"}
+    token = github_token()
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    data = json.dumps(body).encode() if body is not None else None
+    request = urllib.request.Request(url, data=data, method=method.upper(), headers=headers)
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            payload = response.read(MAX_HTTP_BYTES)
+            used = {"status": response.status, "authenticated": bool(token),
+                    "rate_limit_remaining": response.headers.get("X-RateLimit-Remaining"),
+                    "rate_limit": response.headers.get("X-RateLimit-Limit")}
+    except urllib.error.HTTPError as problem:
+        detail = problem.read(4096).decode("utf-8", "replace")
+        hint = ""
+        if problem.code in (401, 403):
+            hint = (f"; this environment has {'a token' if token else 'no token'} - set "
+                    f"GITHUB_TOKEN (or GH_TOKEN) to raise the limit or to see private data")
+        raise ToolError(f"GitHub answered HTTP {problem.code} for {url}: {detail[:300]}{hint}") \
+            from problem
+    except urllib.error.URLError as problem:
+        raise ToolError(f"GitHub is not reachable from here: {problem.reason}") from problem
+    if raw:
+        return {**used, "url": url, "text": payload.decode("utf-8", "replace")}
+    try:
+        return {**used, "url": url, "json": json.loads(payload.decode("utf-8", "replace"))}
+    except ValueError as problem:
+        raise ToolError(f"GitHub answered something that is not JSON for {url}") from problem
+
+
+def github_repo(repository: str) -> dict:
+    """Repository metadata: what it is, its licence, its default branch, when it last moved."""
+    if repository.count("/") != 1:
+        raise ToolError("name a repository as owner/name")
+    answer = github_call(f"repos/{repository}")
+    data = answer["json"]
+    return {**{k: v for k, v in answer.items() if k != "json"},
+            "full_name": data.get("full_name"), "description": data.get("description"),
+            "language": data.get("language"), "stars": data.get("stargazers_count"),
+            "forks": data.get("forks_count"), "open_issues": data.get("open_issues_count"),
+            "default_branch": data.get("default_branch"), "archived": data.get("archived"),
+            "pushed_at": data.get("pushed_at"), "created_at": data.get("created_at"),
+            "license": (data.get("license") or {}).get("spdx_id"),
+            "topics": data.get("topics", []), "homepage": data.get("homepage")}
+
+
+def github_file(repository: str, path: str, ref: str = "") -> dict:
+    """One file's text at a ref (default branch when no ref is given)."""
+    if repository.count("/") != 1:
+        raise ToolError("name a repository as owner/name")
+    suffix = f"?ref={urllib.parse.quote(ref)}" if ref else ""
+    answer = github_call(f"repos/{repository}/contents/{urllib.parse.quote(path)}{suffix}",
+                         raw=True)
+    return {k: v for k, v in answer.items() if k != "text"} | {
+        "repository": repository, "path": path, "text": answer["text"],
+        "bytes": len(answer["text"].encode())}
+
+
+def github_search(kind: str, query: str, limit: int = 10) -> dict:
+    """GitHub's own search: repositories, code, issues or commits."""
+    if kind not in ("repositories", "code", "issues", "commits"):
+        raise ToolError("kind must be one of: repositories, code, issues, commits")
+    answer = github_call(f"search/{kind}?q={urllib.parse.quote(query)}"
+                         f"&per_page={max(1, min(limit, 50))}")
+    data = answer["json"]
+    items = []
+    for item in (data.get("items") or [])[:limit]:
+        if kind == "repositories":
+            items.append({"full_name": item.get("full_name"), "stars": item.get("stargazers_count"),
+                          "description": item.get("description"),
+                          "license": (item.get("license") or {}).get("spdx_id"),
+                          "pushed_at": item.get("pushed_at")})
+        else:
+            items.append({"title": item.get("title") or item.get("name") or item.get("sha"),
+                          "repository": (item.get("repository") or {}).get("full_name"),
+                          "path": item.get("path"), "state": item.get("state"),
+                          "html_url": item.get("html_url")})
+    return {"query": query, "kind": kind, "total": data.get("total_count"), "returned": len(items),
+            "items": items, "authenticated": answer["authenticated"],
+            "rate_limit_remaining": answer["rate_limit_remaining"]}
+
+
+def github_issues(repository: str, state: str = "open", limit: int = 10) -> dict:
+    """Issues and pull requests, as GitHub returns them."""
+    if repository.count("/") != 1:
+        raise ToolError("name a repository as owner/name")
+    answer = github_call(f"repos/{repository}/issues?state={state}&per_page={max(1, min(limit, 50))}")
+    items = [{"number": item.get("number"), "title": item.get("title"), "state": item.get("state"),
+              "is_pull_request": "pull_request" in item, "user": (item.get("user") or {}).get("login"),
+              "created_at": item.get("created_at")}
+             for item in (answer["json"] if isinstance(answer["json"], list) else [])[:limit]]
+    return {"repository": repository, "state": state, "returned": len(items), "items": items,
+            "authenticated": answer["authenticated"],
+            "rate_limit_remaining": answer["rate_limit_remaining"]}
+
+
+def github_commits(repository: str, limit: int = 10, branch: str = "") -> dict:
+    """The most recent commits, with the message each one was made with."""
+    if repository.count("/") != 1:
+        raise ToolError("name a repository as owner/name")
+    suffix = f"&sha={urllib.parse.quote(branch)}" if branch else ""
+    answer = github_call(f"repos/{repository}/commits?per_page={max(1, min(limit, 50))}{suffix}")
+    listed = answer["json"] if isinstance(answer["json"], list) else []
+    items = [{"sha": (item.get("sha") or "")[:12],
+              "message": (item.get("commit", {}).get("message") or "").splitlines()[0][:160],
+              "author": (item.get("commit", {}).get("author") or {}).get("name"),
+              "date": (item.get("commit", {}).get("author") or {}).get("date")}
+             for item in listed[:limit]]
+    return {"repository": repository, "returned": len(items), "items": items,
+            "authenticated": answer["authenticated"],
+            "rate_limit_remaining": answer["rate_limit_remaining"]}
+
+
+def github_pr(repository: str, number: int) -> dict:
+    """One pull request: its state, mergeability and the files it touches."""
+    if repository.count("/") != 1:
+        raise ToolError("name a repository as owner/name")
+    answer = github_call(f"repos/{repository}/pulls/{int(number)}")
+    data = answer["json"]
+    files = github_call(f"repos/{repository}/pulls/{int(number)}/files?per_page=100")
+    return {"number": data.get("number"), "title": data.get("title"), "state": data.get("state"),
+            "merged": data.get("merged"), "mergeable": data.get("mergeable"),
+            "mergeable_state": data.get("mergeable_state"), "additions": data.get("additions"),
+            "deletions": data.get("deletions"), "changed_files": data.get("changed_files"),
+            "head": ((data.get("head") or {}).get("sha") or "")[:12],
+            "base": (data.get("base") or {}).get("ref"),
+            "files": [{"filename": f.get("filename"), "status": f.get("status"),
+                       "additions": f.get("additions"), "deletions": f.get("deletions")}
+                      for f in (files["json"] if isinstance(files["json"], list) else [])],
+            "authenticated": answer["authenticated"]}
+
+
 # --------------------------------------------------------------------------- state and data stores
 
 
@@ -1052,6 +1216,33 @@ def build_registry(workspace: Workspace, gateway_url: str = "") -> dict:
         "git.command": {"fn": lambda arguments, timeout=60: git_command(workspace, arguments, timeout),
                         "description": "Run a git command in the workspace and report its output.",
                         "schema": _schema({"arguments": _STR, "timeout": _INT}, ["arguments"])},
+        "github.repo": {"fn": github_repo,
+                        "description": "Repository metadata from the GitHub REST API: licence, "
+                                       "default branch, stars, last push. Uses GITHUB_TOKEN when "
+                                       "the environment has one.",
+                        "schema": _schema({"repository": _STR}, ["repository"])},
+        "github.file": {"fn": lambda repository, path, ref="": github_file(repository, path, ref),
+                        "description": "One file's text from a GitHub repository at a ref.",
+                        "schema": _schema({"repository": _STR, "path": _STR, "ref": _STR},
+                                          ["repository", "path"])},
+        "github.search": {"fn": lambda kind, query, limit=10: github_search(kind, query, limit),
+                          "description": "GitHub search over repositories, code, issues or commits.",
+                          "schema": _schema({"kind": _STR, "query": _STR, "limit": _INT},
+                                            ["kind", "query"])},
+        "github.issues": {"fn": lambda repository, state="open", limit=10:
+                          github_issues(repository, state, limit),
+                          "description": "Issues and pull requests of a repository.",
+                          "schema": _schema({"repository": _STR, "state": _STR, "limit": _INT},
+                                            ["repository"])},
+        "github.commits": {"fn": lambda repository, limit=10, branch="":
+                           github_commits(repository, limit, branch),
+                           "description": "The most recent commits of a repository or branch.",
+                           "schema": _schema({"repository": _STR, "limit": _INT, "branch": _STR},
+                                             ["repository"])},
+        "github.pr": {"fn": lambda repository, number: github_pr(repository, number),
+                      "description": "One pull request, its mergeability and the files it touches.",
+                      "schema": _schema({"repository": _STR, "number": _INT},
+                                        ["repository", "number"])},
         "net.fetch": {"fn": lambda url, timeout=30: net_fetch(url, timeout),
                       "description": "Fetch a URL. Offline this fails with the reason, never a fake "
                                      "body.",

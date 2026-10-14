@@ -1,6 +1,6 @@
 # Sealed factory set
 
-One component, sealed. 137 imported software factories - 103
+One component, sealed. 137 imported software factories - 104
 of them showing AI-worker evidence in the slice sealed here, the other 19 design-stage factories -
 vendored as bounded slices, hash-sealed, and run as station 0 of this repository's pipeline before
 anything else.

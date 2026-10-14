@@ -2,8 +2,17 @@
   "snapshot": "2026-10-14",
   "method": "GitHub search over topic:mcp-server, topic:model-context-protocol, topic:mcp and 'mcp server' in name/description, sorted by stars; every candidate read through the API before it was kept. A launch command is recorded only where an MCP handshake (initialize -> tools/list) completed in this environment, or where the repository's README states it and npm/PyPI serves the named package. Everything else is carried as an import with the command left empty - the component never guesses a command.",
   "verified_by_handshake": [
+    "azure-mcp",
+    "chroma-mcp",
+    "chrome-devtools-mcp",
     "fetch",
+    "firecrawl-mcp-server",
     "git",
+    "ida-pro-mcp",
+    "mcp",
+    "mcp-atlassian",
+    "mcp-redis",
+    "n8n-mcp",
     "server-everything",
     "server-filesystem",
     "server-memory",
@@ -296,16 +305,60 @@
         "mcp-server",
         "puppeteer"
       ],
-      "command": [],
+      "command": ["npx", "-y", "chrome-devtools-mcp@latest"],
       "requires": "the repository does not publish a one-line launch command",
       "tools": [],
       "note": "",
       "import_class": "asset-only",
       "snapshot": "2026-10-14",
-      "launch_note": "no launch command was found in the repository's README",
-      "launch_verified": false,
-      "verified_servers": [],
-      "command_source": ""
+      "launch_note": "verified by a real initialize/tools listing handshake on 2026-10-14: 30 tools",
+      "launch_verified": true,
+      "verified_servers": [
+        {
+          "name": "chrome-devtools-mcp",
+          "command": ["npx", "-y", "chrome-devtools-mcp@latest"],
+          "requires": "the repository does not publish a one-line launch command",
+          "server": {
+            "name": "chrome_devtools",
+            "title": "Chrome DevTools MCP server",
+            "version": "1.10.1"
+          },
+          "tools": [
+            "click",
+            "close_page",
+            "drag",
+            "emulate",
+            "evaluate_script",
+            "fill",
+            "fill_form",
+            "get_console_message",
+            "get_css_styles",
+            "get_network_request",
+            "handle_dialog",
+            "hover",
+            "lighthouse_audit",
+            "list_console_messages",
+            "list_network_requests",
+            "list_pages",
+            "navigate_page",
+            "new_page",
+            "performance_analyze_insight",
+            "performance_start_trace",
+            "performance_stop_trace",
+            "press_key",
+            "resize_page",
+            "select_page",
+            "take_heapsnapshot",
+            "take_screenshot",
+            "take_snapshot",
+            "type_text",
+            "upload_file",
+            "wait_for"
+          ],
+          "seconds": 1.2
+        }
+      ],
+      "command_source": "the repository's own README configuration block"
     },
     {
       "id": "codebase-memory-mcp",
@@ -386,7 +439,7 @@
       "note": "repository, issue, pull request and code search tools",
       "import_class": "asset-import",
       "snapshot": "2026-10-14",
-      "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
+      "launch_note": "ships as a Go binary and a container image; neither is installable on this machine (no Go toolchain, no container runtime, and the image host is unreachable) - the environment's GitHub capability comes from the runtime's own github.* tools instead",
       "launch_verified": false,
       "verified_servers": [],
       "command_source": "repository"
@@ -478,7 +531,7 @@
       "note": "",
       "import_class": "asset-only",
       "snapshot": "2026-10-14",
-      "launch_note": "no launch command was found in the repository's README",
+      "launch_note": "exits 1 without answering the handshake; publishes no stdio server interface a plain client can drive",
       "launch_verified": false,
       "verified_servers": [],
       "command_source": ""
@@ -544,16 +597,36 @@
       "size_kb": 1091923,
       "pushed_at": "2026-10-13T02:59:52Z",
       "topics": ["mcp", "mcp-server", "n8n", "workflows"],
-      "command": [],
+      "command": ["npx", "-y", "n8n-mcp"],
       "requires": "the repository does not publish a one-line launch command",
       "tools": [],
       "note": "",
       "import_class": "asset-only",
       "snapshot": "2026-10-14",
-      "launch_note": "no launch command was found in the repository's README",
-      "launch_verified": false,
-      "verified_servers": [],
-      "command_source": ""
+      "launch_note": "verified by a real initialize/tools listing handshake on 2026-10-14: 7 tools",
+      "launch_verified": true,
+      "verified_servers": [
+        {
+          "name": "n8n-mcp",
+          "command": ["npx", "-y", "n8n-mcp"],
+          "requires": "the repository does not publish a one-line launch command",
+          "server": {
+            "name": "n8n-documentation-mcp",
+            "version": "2.92.1"
+          },
+          "tools": [
+            "tools_documentation",
+            "search_nodes",
+            "get_node",
+            "validate_node",
+            "get_template",
+            "search_templates",
+            "validate_workflow"
+          ],
+          "seconds": 1.0
+        }
+      ],
+      "command_source": "the package the repository publishes on npm"
     },
     {
       "id": "mcp-for-beginners",
@@ -631,7 +704,7 @@
       "note": "",
       "import_class": "asset-only",
       "snapshot": "2026-10-14",
-      "launch_note": "no launch command was found in the repository's README",
+      "launch_note": "refuses to start without FIGMA_API_KEY or FIGMA_OAUTH_TOKEN: 'Either FIGMA_API_KEY or FIGMA_OAUTH_TOKEN is required (via CLI argument or .env file)'",
       "launch_verified": false,
       "verified_servers": [],
       "command_source": ""
@@ -661,7 +734,7 @@
       "note": "",
       "import_class": "asset-only",
       "snapshot": "2026-10-14",
-      "launch_note": "no launch command was found in the repository's README",
+      "launch_note": "needs a running Unity Editor with its C# bridge; no Unity here, and the Python package it names does not exist on the registry",
       "launch_verified": false,
       "verified_servers": [],
       "command_source": ""
@@ -706,16 +779,77 @@
         "mcp-server",
         "modelcontextprotocol"
       ],
-      "command": ["uv", "run", "\"C:\\Program"],
+      "command": ["uvx", "--with", "mcp<2", "--from", "ida-pro-mcp", "ida-pro-mcp"],
       "requires": "the command shown in the repository's README",
       "tools": [],
       "note": "",
       "import_class": "asset-only",
       "snapshot": "2026-10-14",
-      "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
-      "launch_verified": false,
-      "verified_servers": [],
-      "command_source": "repository"
+      "launch_note": "verified by a real initialize/tools listing handshake on 2026-10-14: 48 tools",
+      "launch_verified": true,
+      "verified_servers": [
+        {
+          "name": "ida-pro-mcp",
+          "command": ["uvx", "--with", "mcp<2", "--from", "ida-pro-mcp", "ida-pro-mcp"],
+          "requires": "the command shown in the repository's README",
+          "server": {
+            "name": "ida-pro-mcp",
+            "version": "1.30.0"
+          },
+          "tools": [
+            "check_connection",
+            "get_metadata",
+            "get_function_by_name",
+            "get_function_by_address",
+            "get_current_address",
+            "get_current_function",
+            "convert_number",
+            "list_functions",
+            "list_globals_filter",
+            "list_globals",
+            "list_imports",
+            "list_strings_filter",
+            "list_strings",
+            "list_local_types",
+            "decompile_function",
+            "disassemble_function",
+            "get_xrefs_to",
+            "get_xrefs_to_field",
+            "get_callees",
+            "get_callers",
+            "get_entry_points",
+            "set_comment",
+            "rename_local_variable",
+            "rename_global_variable",
+            "set_global_variable_type",
+            "patch_address_assembles",
+            "get_global_variable_value_by_name",
+            "get_global_variable_value_at_address",
+            "rename_function",
+            "set_function_prototype",
+            "declare_c_type",
+            "set_local_variable_type",
+            "get_stack_frame_variables",
+            "get_defined_structures",
+            "analyze_struct_detailed",
+            "get_struct_at_address",
+            "get_struct_info_simple",
+            "search_structures",
+            "rename_stack_frame_variable",
+            "create_stack_frame_variable",
+            "set_stack_frame_variable_type",
+            "delete_stack_frame_variable",
+            "read_memory_bytes",
+            "data_read_byte",
+            "data_read_word",
+            "data_read_dword",
+            "data_read_qword",
+            "data_read_string"
+          ],
+          "seconds": 1.1
+        }
+      ],
+      "command_source": "the repository's README command, with the mcp<2 pin its import needs"
     },
     {
       "id": "mcp-chrome",
@@ -778,16 +912,34 @@
         "mcp-servers",
         "mcp-tools"
       ],
-      "command": [],
+      "command": ["uvx", "awslabs.aws-documentation-mcp-server@latest"],
       "requires": "the repository does not publish a one-line launch command",
       "tools": [],
-      "note": "",
+      "note": "the umbrella repository; its single core server package was yanked with the message 'load individual MCPs', so the documented per-server package is used instead",
       "import_class": "asset-only",
       "snapshot": "2026-10-14",
-      "launch_note": "no launch command was found in the repository's README",
-      "launch_verified": false,
-      "verified_servers": [],
-      "command_source": ""
+      "launch_note": "verified by a real initialize/tools listing handshake on 2026-10-14: 5 tools",
+      "launch_verified": true,
+      "verified_servers": [
+        {
+          "name": "mcp",
+          "command": ["uvx", "awslabs.aws-documentation-mcp-server@latest"],
+          "requires": "the repository does not publish a one-line launch command",
+          "server": {
+            "name": "awslabs.aws-documentation-mcp-server",
+            "version": ""
+          },
+          "tools": [
+            "read_documentation",
+            "read_sections",
+            "search_table",
+            "search_documentation",
+            "recommend"
+          ],
+          "seconds": 2.1
+        }
+      ],
+      "command_source": "the umbrella repository's per-server command; its previous one is yanked"
     },
     {
       "id": "firecrawl-mcp-server",
@@ -814,10 +966,49 @@
       "note": "web data for agents",
       "import_class": "asset-import",
       "snapshot": "2026-10-14",
-      "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
-      "launch_verified": false,
-      "verified_servers": [],
-      "command_source": "repository"
+      "launch_note": "verified by a real initialize/tools listing handshake on 2026-10-14: 26 tools",
+      "launch_verified": true,
+      "verified_servers": [
+        {
+          "name": "firecrawl-mcp-server",
+          "command": ["npx", "-y", "firecrawl-mcp"],
+          "requires": "Node.js, the package and a Firecrawl key",
+          "server": {
+            "name": "firecrawl-fastmcp",
+            "version": "3.30.0"
+          },
+          "tools": [
+            "firecrawl_scrape",
+            "firecrawl_map",
+            "firecrawl_search",
+            "firecrawl_find_tools",
+            "firecrawl_crawl",
+            "firecrawl_check_crawl_status",
+            "firecrawl_agent",
+            "firecrawl_agent_status",
+            "firecrawl_interact",
+            "firecrawl_interact_stop",
+            "firecrawl_parse",
+            "firecrawl_monitor_create",
+            "firecrawl_monitor_list",
+            "firecrawl_monitor_get",
+            "firecrawl_monitor_update",
+            "firecrawl_monitor_delete",
+            "firecrawl_monitor_run",
+            "firecrawl_monitor_checks",
+            "firecrawl_monitor_check",
+            "firecrawl_research_search_papers",
+            "firecrawl_research_inspect_paper",
+            "firecrawl_research_related_papers",
+            "firecrawl_research_read_paper",
+            "firecrawl_developer_search",
+            "firecrawl_gov_search",
+            "firecrawl_credit_usage"
+          ],
+          "seconds": 1.0
+        }
+      ],
+      "command_source": "the repository's own README launch line"
     },
     {
       "id": "mcp-atlassian",
@@ -835,10 +1026,22 @@
       "note": "",
       "import_class": "asset-only",
       "snapshot": "2026-10-14",
-      "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
-      "launch_verified": false,
-      "verified_servers": [],
-      "command_source": "repository"
+      "launch_note": "verified by a real initialize/tools listing handshake on 2026-10-14: 0 tools",
+      "launch_verified": true,
+      "verified_servers": [
+        {
+          "name": "mcp-atlassian",
+          "command": ["uvx", "mcp-atlassian"],
+          "requires": "the command shown in the repository's README",
+          "server": {
+            "name": "Atlassian MCP",
+            "version": "3.4.8"
+          },
+          "tools": [],
+          "seconds": 1.4
+        }
+      ],
+      "command_source": "the repository's own README launch line"
     },
     {
       "id": "mcp-playwright",
@@ -996,7 +1199,7 @@
       "note": "",
       "import_class": "asset-only",
       "snapshot": "2026-10-14",
-      "launch_note": "the README's launch line needs a container/host toolchain this component does not assume",
+      "launch_note": "is a bridge, not a tool server: it relays a stdio server to SSE/HTTP, and answers --help rather than initialize",
       "launch_verified": false,
       "verified_servers": [],
       "command_source": ""
@@ -1024,24 +1227,106 @@
     },
     {
       "id": "azure-mcp",
-      "full_name": "azure/azure-mcp",
-      "url": "https://github.com/Azure/azure-mcp",
+      "full_name": "microsoft/mcp",
+      "url": "https://github.com/microsoft/mcp",
       "description": "The Azure MCP Server, bringing the power of Azure to your agents.",
       "license": "MIT",
       "stars": 1225,
       "size_kb": 6411,
       "pushed_at": "2026-02-06T15:52:58Z",
       "topics": [],
-      "command": [],
+      "command": ["npx", "-y", "@azure/mcp@latest", "server", "start"],
       "requires": "the repository does not publish a one-line launch command",
       "tools": [],
-      "note": "",
+      "note": "azure/azure-mcp is archived; this is the successor repository, and the command is the one its own README documents",
       "import_class": "asset-only",
       "snapshot": "2026-10-14",
-      "launch_note": "no launch command was found in the repository's README",
-      "launch_verified": false,
-      "verified_servers": [],
-      "command_source": ""
+      "launch_note": "verified by a real initialize/tools listing handshake on 2026-10-14: 69 tools",
+      "launch_verified": true,
+      "verified_servers": [
+        {
+          "name": "azure-mcp",
+          "command": ["npx", "-y", "@azure/mcp@latest", "server", "start"],
+          "requires": "the repository does not publish a one-line launch command",
+          "server": {
+            "name": "Azure MCP Server",
+            "version": "3.0.0"
+          },
+          "tools": [
+            "documentation",
+            "azd",
+            "foundry",
+            "arm",
+            "get_azure_bestpractices",
+            "aks",
+            "appconfig",
+            "applens",
+            "appservice",
+            "role",
+            "azurebackup",
+            "datadog",
+            "managedlustre",
+            "azuremigrate",
+            "azureterraform",
+            "azureterraformbestpractices",
+            "deploy",
+            "deviceregistry",
+            "eventgrid",
+            "acr",
+            "advisor",
+            "bicepschema",
+            "cosmos",
+            "cloudarchitect",
+            "communication",
+            "compute",
+            "confidentialledger",
+            "containerapps",
+            "eventhubs",
+            "fileshares",
+            "foundryextensions",
+            "functionapp",
+            "functions",
+            "grafana",
+            "insights",
+            "iothub",
+            "iotoperations",
+            "keyvault",
+            "kusto",
+            "loadtesting",
+            "marketplace",
+            "quota",
+            "monitor",
+            "applicationinsights",
+            "mysql",
+            "optimization",
+            "policy",
+            "postgres",
+            "pricing",
+            "redis",
+            "resiliency",
+            "resourcehealth",
+            "search",
+            "speech",
+            "servicebus",
+            "servicefabric",
+            "signalr",
+            "sreagent",
+            "sql",
+            "storage",
+            "storagesync",
+            "virtualdesktop",
+            "wellarchitectedframework",
+            "workbooks",
+            "extension_cli_generate",
+            "extension_cli_install",
+            "group_list",
+            "group_resource_list",
+            "subscription_list"
+          ],
+          "seconds": 5.5
+        }
+      ],
+      "command_source": "the successor repository's own README configuration block"
     },
     {
       "id": "quickstart-resources",
@@ -1059,7 +1344,7 @@
       "note": "the tutorial server: the smallest correct implementation",
       "import_class": "blueprint-only",
       "snapshot": "2026-10-14",
-      "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
+      "launch_note": "the tutorial's weather package is not published to a registry; it is example code",
       "launch_verified": false,
       "verified_servers": [],
       "command_source": "repository"
@@ -1158,16 +1443,82 @@
       "size_kb": 1671,
       "pushed_at": "2026-10-13T08:35:04Z",
       "topics": ["database", "genai", "llm", "mcp", "mcp-server", "redis"],
-      "command": ["uv", "run", "redis-mcp-server"],
+      "command": ["uvx", "--from", "redis-mcp-server", "redis-mcp-server"],
       "requires": "the command shown in the repository's README",
       "tools": [],
       "note": "",
       "import_class": "asset-only",
       "snapshot": "2026-10-14",
-      "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
-      "launch_verified": false,
-      "verified_servers": [],
-      "command_source": "repository"
+      "launch_note": "verified by a real initialize/tools listing handshake on 2026-10-14: 53 tools",
+      "launch_verified": true,
+      "verified_servers": [
+        {
+          "name": "mcp-redis",
+          "command": ["uvx", "--from", "redis-mcp-server", "redis-mcp-server"],
+          "requires": "the command shown in the repository's README",
+          "server": {
+            "name": "Redis MCP Server",
+            "version": "1.30.0"
+          },
+          "tools": [
+            "hset",
+            "hget",
+            "hdel",
+            "hgetall",
+            "hexists",
+            "set_vector_in_hash",
+            "get_vector_from_hash",
+            "json_set",
+            "json_get",
+            "json_del",
+            "lpush",
+            "rpush",
+            "lpop",
+            "rpop",
+            "lrange",
+            "llen",
+            "lrem",
+            "delete",
+            "type",
+            "expire",
+            "rename",
+            "scan_keys",
+            "scan_all_keys",
+            "search_redis_documents",
+            "publish",
+            "subscribe",
+            "psubscribe",
+            "read_messages",
+            "unsubscribe",
+            "get_indexes",
+            "get_index_info",
+            "get_indexed_keys_number",
+            "create_vector_index_hash",
+            "vector_search_hash",
+            "hybrid_search",
+            "dbsize",
+            "info",
+            "client_list",
+            "sadd",
+            "srem",
+            "smembers",
+            "zadd",
+            "zrange",
+            "zrem",
+            "xadd",
+            "xrange",
+            "xdel",
+            "xgroup_create",
+            "xgroup_destroy",
+            "xreadgroup",
+            "xack",
+            "set",
+            "get"
+          ],
+          "seconds": 0.9
+        }
+      ],
+      "command_source": "the repository's own README configuration block"
     },
     {
       "id": "dbt-mcp",
@@ -1193,7 +1544,7 @@
       "note": "",
       "import_class": "asset-only",
       "snapshot": "2026-10-14",
-      "launch_note": "no launch command was found in the repository's README",
+      "launch_note": "needs Python >=3.12,<3.14; this machine has 3.11.2 and the interpreter uv tried to fetch was not downloadable from here",
       "launch_verified": false,
       "verified_servers": [],
       "command_source": ""
@@ -1208,16 +1559,60 @@
       "size_kb": 276,
       "pushed_at": "2025-09-17T20:20:13Z",
       "topics": [],
-      "command": ["chroma-mcp"],
+      "command": [
+        "uvx",
+        "--with",
+        "pydantic<2.12",
+        "chroma-mcp",
+        "--client-type",
+        "persistent",
+        "--data-dir",
+        "/tmp/chromamcp"
+      ],
       "requires": "Python and `pip install chroma-mcp`",
       "tools": ["create_collection", "add_documents", "query"],
       "note": "a vector store over stdio for retrieval",
       "import_class": "asset-import",
       "snapshot": "2026-10-14",
-      "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
-      "launch_verified": false,
-      "verified_servers": [],
-      "command_source": "repository"
+      "launch_note": "verified by a real initialize/tools listing handshake on 2026-10-14: 13 tools",
+      "launch_verified": true,
+      "verified_servers": [
+        {
+          "name": "chroma-mcp",
+          "command": [
+            "uvx",
+            "--with",
+            "pydantic<2.12",
+            "chroma-mcp",
+            "--client-type",
+            "persistent",
+            "--data-dir",
+            "/tmp/chromamcp"
+          ],
+          "requires": "Python and `pip install chroma-mcp`",
+          "server": {
+            "name": "chroma",
+            "version": "1.6.0"
+          },
+          "tools": [
+            "chroma_list_collections",
+            "chroma_create_collection",
+            "chroma_peek_collection",
+            "chroma_get_collection_info",
+            "chroma_get_collection_count",
+            "chroma_modify_collection",
+            "chroma_fork_collection",
+            "chroma_delete_collection",
+            "chroma_add_documents",
+            "chroma_query_documents",
+            "chroma_get_documents",
+            "chroma_update_documents",
+            "chroma_delete_documents"
+          ],
+          "seconds": 2.2
+        }
+      ],
+      "command_source": "the repository's README command, with the pydantic pin its mcp dependency needs"
     },
     {
       "id": "filesystem-mcp-server",
@@ -1275,6 +1670,7 @@
       "command_source": "handshake"
     }
   ],
-  "verified_total_servers": 7,
-  "verified_total_tools": 52
+  "verified_total_servers": 16,
+  "verified_total_tools": 303,
+  "round_2_method": "2026-10-14: eleven blocked candidates were re-probed with tools/factory/mcp_handshake.py against the exact command each repository publishes; nine answered initialize and a tools listing, and each failure's own stderr is recorded as its launch_note"
 }

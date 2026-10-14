@@ -289,6 +289,165 @@ class McpServerTest(unittest.TestCase):
         self.assertRegex(done.stdout, r"\n4[0-9] tools\n")
 
 
+class GitHubToolTest(unittest.TestCase):
+    """The github.* tools, driven against a local server that answers the API's own shape.
+
+    The real api.github.com is not required - and must not be required, because a test that only
+    passes on a network is a test that hides a broken parser. A stub stands in for it, and the
+    refusal paths are asserted separately: neither one reaches out.
+    """
+
+    class _Stub:
+        """A local server answering the handful of GitHub shapes the tools read."""
+
+        def __init__(self) -> None:
+            import http.server
+
+            #: Every request line the stub served, in order. Silencing a handler must not mean
+            #: throwing its output away: this keeps it, so a test can assert which API path the tool
+            #: actually asked for instead of assuming it.
+            self.requests: list[str] = []
+
+            class Handler(http.server.BaseHTTPRequestHandler):
+                def log_message(self, fmt, *args):
+                    self.server.requests.append(fmt % args)
+
+                def _send(self, payload: dict, status: int = 200) -> None:
+                    body = json.dumps(payload).encode()
+                    self.send_response(status)
+                    self.send_header("Content-Type", "application/json")
+                    self.send_header("X-RateLimit-Remaining", "4999")
+                    self.end_headers()
+                    self.wfile.write(body)
+
+                def do_GET(self):  # noqa: N802 - the handler's own name
+                    if self.path == "/repos/owner/name":
+                        self._send({"full_name": "owner/name", "description": "a stub",
+                                    "language": "Python", "stargazers_count": 7, "forks_count": 1,
+                                    "open_issues_count": 2, "default_branch": "main",
+                                    "archived": False, "pushed_at": "2026-10-14T00:00:00Z",
+                                    "created_at": "2020-01-01T00:00:00Z",
+                                    "license": {"spdx_id": "MIT"}, "topics": ["stub"]})
+                    elif self.path.startswith("/search/repositories"):
+                        self._send({"total_count": 1, "items": [
+                            {"full_name": "owner/name", "stargazers_count": 7,
+                             "description": "a stub", "license": {"spdx_id": "MIT"},
+                             "pushed_at": "2026-10-14T00:00:00Z"}]})
+                    elif self.path.startswith("/repos/owner/name/commits"):
+                        self._send([{"sha": "a" * 40, "commit": {"message": "the first line\n\nbody",
+                                                                 "author": {"name": "someone",
+                                                                            "date": "2026-10-14"}}}])
+                    elif self.path.startswith("/repos/owner/name/issues"):
+                        self._send([{"number": 3, "title": "an issue", "state": "open",
+                                     "user": {"login": "someone"}, "created_at": "2026-10-14"}])
+                    elif self.path == "/repos/owner/name/pulls/17":
+                        self._send({"number": 17, "title": "a pull request", "state": "open",
+                                    "merged": False, "mergeable": True,
+                                    "mergeable_state": "clean", "additions": 5, "deletions": 1,
+                                    "changed_files": 1, "head": {"sha": "b" * 40},
+                                    "base": {"ref": "main"}})
+                    elif self.path.startswith("/repos/owner/name/pulls/17/files"):
+                        self._send([{"filename": "README.md", "status": "modified",
+                                     "additions": 5, "deletions": 1}])
+                    else:
+                        self._send({"message": "no such route: " + self.path}, status=404)
+
+                def do_PUT(self):  # noqa: N802
+                    self._send({"message": "not supported here"}, status=405)
+
+            self.server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+            self.server.requests = self.requests
+            self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+            self.thread.start()
+            self.url = f"http://127.0.0.1:{self.server.server_address[1]}"
+
+        def stop(self) -> None:
+            self.server.shutdown()
+            self.server.server_close()
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.stub = self._Stub()
+        self.addCleanup(self.stub.stop)
+        original = dict(os.environ)
+        self.addCleanup(lambda: (os.environ.clear(), os.environ.update(original)))
+        os.environ["GITHUB_TOKEN"] = "ghp_" + "0" * 38
+        self.api = toolkit.GITHUB_API
+        toolkit.GITHUB_API = self.stub.url
+        self.addCleanup(lambda: setattr(toolkit, "GITHUB_API", self.api))
+        self.registry = toolkit.build_registry(toolkit.Workspace(Path(self._tmp.name)), "")
+
+    def _call(self, name: str, **arguments):
+        return self.registry[name]["fn"](**arguments)
+
+    def test_the_six_github_tools_are_registered_and_callable(self) -> None:
+        self.assertEqual(sorted(n for n in self.registry if n.startswith("github.")),
+                         ["github.commits", "github.file", "github.issues", "github.pr",
+                          "github.repo", "github.search"])
+
+    def test_repository_metadata_comes_from_the_answer_not_from_guesswork(self) -> None:
+        answer = self._call("github.repo", repository="owner/name")
+        self.assertEqual(answer["license"], "MIT")
+        self.assertEqual(answer["default_branch"], "main")
+        self.assertEqual(answer["stars"], 7)
+        self.assertEqual(answer["status"], 200)
+        self.assertTrue(answer["authenticated"])
+        self.assertIn("GET /repos/owner/name", self.stub.requests[-1])
+
+    def test_commits_and_issues_report_the_first_line_and_the_count(self) -> None:
+        commits = self._call("github.commits", repository="owner/name", limit=5)
+        self.assertEqual(commits["items"][0]["message"], "the first line")
+        self.assertEqual(commits["returned"], 1)
+        issues = self._call("github.issues", repository="owner/name")
+        self.assertEqual(issues["items"][0]["number"], 3)
+        self.assertFalse(issues["items"][0]["is_pull_request"])
+
+    def test_a_pull_request_reports_its_files_and_mergeability(self) -> None:
+        answer = self._call("github.pr", repository="owner/name", number=17)
+        self.assertEqual(answer["mergeable_state"], "clean")
+        self.assertEqual(answer["files"][0]["filename"], "README.md")
+
+    def test_search_returns_the_items_it_was_given(self) -> None:
+        answer = self._call("github.search", kind="repositories", query="stub in:name", limit=5)
+        self.assertEqual(answer["total"], 1)
+        self.assertEqual(answer["items"][0]["full_name"], "owner/name")
+
+    def test_a_bad_request_is_refused_before_any_call_is_made(self) -> None:
+        with self.assertRaises(toolkit.ToolError):
+            self._call("github.repo", repository="not-a-repo")
+        with self.assertRaises(toolkit.ToolError):
+            self._call("github.search", kind="gists", query="anything")
+        with self.assertRaises(toolkit.ToolError):
+            toolkit.github_call("repos/owner/name; rm -rf /")
+
+    def test_the_token_is_used_and_never_returned(self) -> None:
+        self.assertTrue(toolkit.github_token())
+        answer = self._call("github.repo", repository="owner/name")
+        self.assertNotIn("0" * 38, json.dumps(answer))
+        empty = dict(os.environ)
+        os.environ.pop("GITHUB_TOKEN", None)
+        for name in toolkit.GITHUB_TOKEN_VARS[1:]:
+            os.environ.pop(name, None)
+        self.assertEqual(toolkit.github_token(), "")
+        anonymous = self._call("github.repo", repository="owner/name")
+        self.assertFalse(anonymous["authenticated"])
+        os.environ.clear()
+        os.environ.update(empty)
+
+    def test_an_unreachable_api_is_refused_with_the_reason_not_an_empty_result(self) -> None:
+        """Offline is a normal state for this component, and it must say so."""
+        toolkit.GITHUB_API = "http://127.0.0.1:9"  # discard port: accepted by nothing
+        with self.assertRaises(toolkit.ToolError) as raised:
+            self._call("github.repo", repository="owner/name")
+        self.assertIn("not reachable", str(raised.exception))
+
+    def test_an_api_error_is_reported_with_the_api_s_message(self) -> None:
+        with self.assertRaises(toolkit.ToolError) as raised:
+            toolkit.github_call("repos/owner/name/nonexistent")
+        self.assertIn("HTTP 404", str(raised.exception))
+
+
 class GatewayTest(unittest.TestCase):
     ANSWER = "STUB: the gateway reached a model."
 
@@ -539,8 +698,22 @@ class SealedEnvironmentReportTest(unittest.TestCase):
         self.assertGreaterEqual(groups["MCP tool server"], 30)
         catalogue = json.loads((SEALED / "mcp-servers.json").read_text(encoding="utf-8"))
         self.assertGreaterEqual(len(catalogue["servers"]), 30)
-        self.assertGreaterEqual(catalogue["verified_total_servers"], 5,
-                                "at least the servers whose handshake was run here must be recorded")
+        # Every server this component records as verified has to have been driven through a real
+        # initialize/tools listing: the count is the evidence, not a target.
+        self.assertGreaterEqual(catalogue["verified_total_servers"], 10,
+                                "the servers whose handshake was run here must be recorded")
+        self.assertGreaterEqual(catalogue["verified_total_tools"], 200)
+        verified = [server for server in catalogue["servers"] if server["verified"]]
+        self.assertTrue(all(server["command"] for server in verified),
+                        "a server marked verified must carry the command that was verified")
+        self.assertTrue(all(server["tools"] for server in verified
+                            if server["name"] != "mcp-atlassian"),
+                        "a verified server lists the tools the handshake saw")
+        import json as _json
+        registry = _json.loads((REPO_ROOT / "tools" / "factory" /
+                                "imported_mcp_servers.json").read_text(encoding="utf-8"))
+        self.assertEqual(registry["verified_total_servers"], catalogue["verified_total_servers"])
+        self.assertEqual(registry["verified_total_tools"], catalogue["verified_total_tools"])
 
 
 class PortabilityTest(unittest.TestCase):

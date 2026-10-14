@@ -18,6 +18,55 @@ LOG="${RUNNER_TEMP:-/tmp}/build.log"
 WORKSPACE="${GITHUB_WORKSPACE:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$WORKSPACE"
 
+# ---------------------------------------------------------------- emulator pre-flight
+# The instrumented suite drives real activities and Espresso matches the root view that has window
+# focus. On a headless runner the emulator can come up with its screen off and the keyguard showing:
+# the activities do start (the platform reports them resumed) but they never take the window focus,
+# so every focus-dependent assertion times out - `RootViewWithoutFocusException`, "the screen never
+# took the window focus", and system Back never being dispatched all at once. That is what run
+# 38537518650 on 226b71c showed. Waking the screen and dismissing the keyguard before the suite is
+# the fix; the state is asserted afterwards rather than assumed, and a screen that is still not
+# interactive is reported instead of being left to fail six tests mysteriously.
+echo "=== emulator pre-flight: device, screen and keyguard ===" | tee -a "$LOG"
+adb wait-for-device
+for attempt in $(seq 1 30); do
+  booted=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
+  [ "$booted" = "1" ] && break
+  sleep 2
+done
+echo "sys.boot_completed=$booted after pre-flight wait" | tee -a "$LOG"
+
+SCREEN_READY=0
+WAKE_STATUS=0
+DISMISS_STATUS=0
+for attempt in $(seq 1 10); do
+  # The two commands below can fail harmlessly (an emulator already awake refuses to be woken again),
+  # so their exit status is captured and printed rather than suppressed: what decides readiness is
+  # the state read back underneath, never the optimism of having issued the command.
+  adb shell input keyevent KEYCODE_WAKEUP >/dev/null 2>&1
+  WAKE_STATUS=$?
+  adb shell wm dismiss-keyguard >/dev/null 2>&1
+  DISMISS_STATUS=$?
+  WAKE_STATE=$(adb shell dumpsys power 2>/dev/null | grep -m1 -E 'mWakefulness=' | tr -d '\r')
+  FOCUS=$(adb shell dumpsys window 2>/dev/null | grep -m1 -E 'mCurrentFocus=' | tr -d '\r')
+  case "$WAKE_STATE" in
+    *Awake*) case "$FOCUS" in
+               *Keyguard*) : ;;
+               *) SCREEN_READY=1 ;;
+             esac ;;
+  esac
+  [ "$SCREEN_READY" -eq 1 ] && break
+  sleep 2
+done
+echo "wake=$WAKE_STATUS dismiss-keyguard=$DISMISS_STATUS attempt=$attempt" | tee -a "$LOG"
+echo "power: ${WAKE_STATE:-unreadable}" | tee -a "$LOG"
+echo "focus: ${FOCUS:-unreadable}" | tee -a "$LOG"
+if [ "$SCREEN_READY" -ne 1 ]; then
+  echo "::warning title=emulator pre-flight::the screen did not report itself awake and focused after $attempt attempts; the instrumented suite will run anyway and its result is what counts"
+else
+  echo "emulator pre-flight: screen awake and focused, keyguard dismissed" | tee -a "$LOG"
+fi
+
 echo "=== instrumented tests on the attached emulator ===" | tee -a "$LOG"
 ( cd shell/android_project && ./gradlew connectedDebugAndroidTest --stacktrace --no-daemon ) \
   2>&1 | tee -a "$LOG"

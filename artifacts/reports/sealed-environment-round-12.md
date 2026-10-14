@@ -9,6 +9,15 @@ Everything below was produced by commands in this checkout on 2026-10-14. Nothin
 another run, and nothing is projected: where a thing could not be done on this machine, the failure
 and its cause are recorded instead.
 
+> **Superseded in part by round 13** (`artifacts/reports/sealed-environment-round-13.md`). The
+> figures below are this round's state and are kept as they were recorded. Since then the seal root
+> has moved (the runtime gained the six `github.*` tools, so the pinned `runtime/toolkit.py` changed),
+> the tool count is 47 rather than 41, the catalogue's verified servers are 16 with 303 tools rather
+> than 7 with 52, and **14** of the 42 catalogued MCP servers cannot be started here rather than 24 —
+> the rest were re-verified through a real handshake and the commands corrected in
+> `tools/factory/imported_mcp_servers.json`. The current seal root is `822ed687…`, 1,870,829 payload
+> bytes.
+
 ---
 
 ## 1. What the sealed component contains now
@@ -220,7 +229,9 @@ The full criterion text is in `docs/ACCEPTANCE_CRITERIA.md` (AC-049 … AC-057).
   and no slice.
 - **24 of the 42 MCP servers cannot be started on this machine** — their packages are not installed
   and this sandbox cannot reach the registries they need. They are catalogued, named and reasoned
-  about; they are not described as running.
+  about; they are not described as running. _(Corrected in round 13: after the launch commands were
+  re-verified by handshake, 14 of the 42 are not installed here and 7 more start but refuse for a
+  named reason; see `sealed-environment-round-13.md` §2.2 and §4.)_
 - **8 of the 15 declared languages have no toolchain here** (go, rust, java, kotlin, csharp, ruby,
   php, sql). Their packs carry a scaffold and a build/test command, but nothing claims they build on
   this machine; `--check` would fail loudly for them.

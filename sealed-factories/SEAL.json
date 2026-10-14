@@ -1,6 +1,6 @@
 {
  "seal_version": "1.0.0",
- "sealed_at": "2026-10-14T15:02:53Z",
+ "sealed_at": "2026-10-14T17:16:30Z",
  "component": "sealed-factories",
  "description": "The imported factory set. Dropped in or removed as one unit; runs before the repository's own factories and feeds them.",
  "contents": {
@@ -9,13 +9,13 @@
   "content_redistributed": 98,
   "blueprint_only": 39,
   "with_license_text": 115,
-  "ai_worker_factories": 103,
+  "ai_worker_factories": 104,
   "by_group": {
    "AI-focused factory": 23,
    "MCP tool server": 42,
    "imported factory": 72
   },
-  "payload_bytes": 1849160,
+  "payload_bytes": 1870829,
   "component_files": 10
  },
  "pipeline_position": {
@@ -101,8 +101,8 @@
   },
   {
    "path": "runtime/toolkit.py",
-   "bytes": 56793,
-   "sha256": "96c70a9707a63a7f4485e5d5957fed26b69d4f513c6aafefcc2c4e74a4c18b33"
+   "bytes": 68413,
+   "sha256": "32183f5012b8554262b2a26ccf52ab32980ecad38c979faee7e89e1bc1abd3b3"
   },
   {
    "path": "runtime/toolserver.py",
@@ -111,8 +111,8 @@
   },
   {
    "path": "mcp-servers.json",
-   "bytes": 19373,
-   "sha256": "ae565d766a94a9ff53b05587f900e8a7274dba0cf105794e0d08e52ba4796ae3"
+   "bytes": 28404,
+   "sha256": "5c92147abf467a25f5bbbea0c15898b37099c91b2a6952f39099452bb7bc606a"
   }
  ],
  "factories": [
@@ -432,24 +432,27 @@
   {
    "group": "MCP tool server",
    "id": "azure-mcp",
-   "full_name": "azure/azure-mcp",
-   "url": "https://github.com/Azure/azure-mcp",
+   "full_name": "microsoft/mcp",
+   "url": "https://github.com/microsoft/mcp",
    "license": "MIT",
    "license_present": true,
    "license_file": "azure-mcp-LICENSE",
    "import_class": "asset-only",
-   "commit": "54f04ab1ade20b4adc4955cffea0833788307596",
+   "commit": "5b7cde21db880a3dbc23b39e1ef0eda8237b8db3",
    "snapshot": "2026-10-14",
    "files": 25,
    "bytes": 0,
    "content_redistributed": true,
    "payload": "payloads/azure-mcp.tar.gz",
-   "payload_sha256": "180dc7703f3f3f08f8ecc8ea1c4da6af01c5671b67a59179dabbcf834722ada6",
-   "payload_bytes": 6502,
-   "providers": [],
+   "payload_sha256": "8b96cab8da73d15099dcbbfc2f75b30420c0a17a0504f97d54dac0e19f3e6a3e",
+   "payload_bytes": 28171,
+   "providers": [
+    "openai",
+    "azure-openai"
+   ],
    "runtime": [],
    "entrypoints": [],
-   "ai_workers": false
+   "ai_workers": true
   },
   {
    "group": "imported factory",

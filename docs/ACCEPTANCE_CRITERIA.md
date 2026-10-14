@@ -745,6 +745,59 @@ from the repository's own authoritative documents instead of being invented:
 - **Evidence required**: the rebuild-and-compare run over every record, and the `[SEAL] OK` line from
   a clone of the pushed branch (not from the checkout that sealed it)
 
+### AC-060 — GitHub capability is inside the seal, and every problem it was brought in to close is closed with evidence
+
+- **Feature**: F-14 (the environment inside the seal)
+- **Given**: the problems recorded at the end of round 12 - MCP servers that could not start, the
+  instrumented-test failures on the emulator, and toolchains that are absent with no way to reason
+  about them - and the sealed environment described in AC-049 and AC-056
+- **When**: the sealed component is built and its tool registry is used
+- **Then**: the registry carries six GitHub tools - `github.repo`, `github.file`, `github.search`,
+  `github.issues`, `github.commits`, `github.pr` - that call the GitHub REST API with the credential
+  in `GITHUB_TOKEN`/`GH_TOKEN`/`GITHUB_PERSONAL_ACCESS_TOKEN` when one exists and anonymously when
+  none does; the credential is never returned in any reply, and the rate limit and whether the call
+  was authenticated are reported instead; an API error surfaces GitHub's own message; a repository
+  name or search kind that is not valid is refused before any call is made; every MCP launch that
+  could not be completed is recorded in `tools/factory/imported_mcp_servers.json` with the machine's
+  own diagnosis in `launch_note`, and every launch that was completed records the exact command and
+  the tools list the handshake returned, so the catalogue's counts are the number of servers actually
+  driven through an `initialize` handshake and a tool listing; and the emulator stage proves the screen is awake and
+  focused before the instrumented suite runs, reporting a warning when it is not
+- **Test method**: `shell/tests/test_sealed_environment.py` (`GitHubToolTest`, which runs the tools
+  against a local server answering the API's own shapes and asserts the refusal paths separately),
+  `test_the_seal_carries_the_mcp_and_ai_groups_too` (which requires every count in the sealed
+  catalogue to equal the registry's, and every server marked verified to carry a command and a tool
+  list), `shell/tests/test_androidtest_failure_report.py`
+  (`test_the_stage_wakes_the_screen_before_it_runs_the_suite`), and the handshake harness
+  `tools/factory/mcp_handshake.py` whose output those counts come from
+- **Evidence required**: the sealed run's tool count, the handshake transcripts for the servers
+  recorded as verified, the diagnosed `launch_note` for each server that refused, and the pre-flight
+  `::warning` annotation from a run where the device did not come up
+- **Honest limitation**: a server that completes the handshake but publishes no tools
+  (`mcp-atlassian`, 0 tools) is counted as verified because the handshake is what was measured; it is
+  named here rather than rounded up, and the report says the same; the catalogue's "verified here"
+  figure counts catalogue entries (11) while the registry counts server names (16), and both are
+  published rather than one standing in for the other; the rate-limit tier observed on this machine
+  is the sandbox's own egress tier - an anonymous `curl` here is answered as an authenticated client -
+  so it is not evidence about an unauthenticated client elsewhere, and all the tool claims about
+  credentials are about whether the process sent a token. The emulator pre-flight is reliability
+  hardening: the failing run `226b71c` was not reproduced, so the change is not claimed as a proven
+  fix
+
+### AC-061 — The belt still runs the sealed set first, with GitHub tooling inside it
+
+- **Feature**: F-14 and F-13 (the pipeline)
+- **Given**: `scripts/conveyor_belt.js`, station 0, which runs the sealed set before the current
+  factories (AC-057)
+- **When**: the belt is run on a machine with no model, no key and no network
+- **Then**: station 0 runs the sealed environment to completion with the GitHub tools registered but
+  never called, reports the tool count it observed, and the six following stations pass; a GitHub
+  call is not attempted, so an offline machine is not a failure
+- **Test method**: `scripts/conveyor_belt.js` station 0 and
+  `shell/tests/test_sealed_factory_runtime.py`
+- **Evidence required**: the belt banner `SEALED SET RAN + ALL 6 CONNECTED STAGES PASSED` and the
+  station 0 line stating the tool count
+
 ## 2. Traceability summary
 
 | Requirement category (Phase 2 checklist)  | Criteria                        |
@@ -779,6 +832,7 @@ from the repository's own authoritative documents instead of being invented:
 | no user intervention                      | AC-057                          |
 | no shell anywhere in the environment      | AC-058                          |
 | reproducible sealing                      | AC-059                          |
+| GitHub capability inside the seal         | AC-060, AC-061                  |
 
 ## 3. Test-method notes (no test is weakened to pass)
 
