@@ -143,7 +143,9 @@
       "launch_note": "no launch command was found in the repository's README",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": ""
+      "command_source": "",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "servers",
@@ -263,7 +265,9 @@
           ]
         }
       ],
-      "command_source": "handshake"
+      "command_source": "handshake",
+      "license_path": "LICENSE",
+      "license_note": "blocked: mixed-with-docs-licence"
     },
     {
       "id": "context7",
@@ -284,7 +288,9 @@
       "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": "repository"
+      "command_source": "repository",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "chrome-devtools-mcp",
@@ -358,13 +364,15 @@
           "seconds": 1.2
         }
       ],
-      "command_source": "the repository's own README configuration block"
+      "command_source": "the repository's own README configuration block",
+      "license_evidence": "Apache License, Version 2.0",
+      "license_path": "LICENSE"
     },
     {
       "id": "codebase-memory-mcp",
       "full_name": "DeusData/codebase-memory-mcp",
       "url": "https://github.com/DeusData/codebase-memory-mcp",
-      "description": "High-performance code intelligence MCP server. Indexes codebases into a persistent knowledge graph — average repo in milliseconds. 158 languages, sub-ms queries, 99% fewer tokens. Single static binary",
+      "description": "High-performance code intelligence MCP server. Indexes codebases into a persistent knowledge graph \u2014 average repo in milliseconds. 158 languages, sub-ms queries, 99% fewer tokens. Single static binary",
       "license": "MIT",
       "stars": 46555,
       "size_kb": 339214,
@@ -388,7 +396,9 @@
       "launch_note": "no launch command was found in the repository's README",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": ""
+      "command_source": "",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "playwright-mcp",
@@ -415,7 +425,9 @@
       "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": "repository"
+      "command_source": "repository",
+      "license_evidence": "Apache License, Version 2.0",
+      "license_path": "LICENSE"
     },
     {
       "id": "github-mcp-server",
@@ -442,7 +454,9 @@
       "launch_note": "ships as a Go binary and a container image; neither is installable on this machine (no Go toolchain, no container runtime, and the image host is unreachable) - the environment's GitHub capability comes from the runtime's own github.* tools instead",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": "repository"
+      "command_source": "repository",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "mcp-for-blender",
@@ -472,7 +486,9 @@
       "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": "repository"
+      "command_source": "repository",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "serena",
@@ -504,7 +520,9 @@
       "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": "repository"
+      "command_source": "repository",
+      "license_path": "LICENSE",
+      "license_note": "blocked: GPL-3.0"
     },
     {
       "id": "context-mode",
@@ -534,13 +552,15 @@
       "launch_note": "exits 1 without answering the handshake; publishes no stdio server interface a plain client can drive",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": ""
+      "command_source": "",
+      "license_path": "LICENSE",
+      "license_note": "blocked: Elastic-2.0"
     },
     {
       "id": "fastmcp",
       "full_name": "jlowin/fastmcp",
       "url": "https://github.com/PrefectHQ/fastmcp",
-      "description": "🚀 The fast, Pythonic way to build MCP servers and clients.",
+      "description": "\ud83d\ude80 The fast, Pythonic way to build MCP servers and clients.",
       "license": "Apache-2.0",
       "stars": 28070,
       "size_kb": 60334,
@@ -564,7 +584,9 @@
       "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": "repository"
+      "command_source": "repository",
+      "license_evidence": "Apache License, Version 2.0",
+      "license_path": "LICENSE"
     },
     {
       "id": "python-sdk",
@@ -585,7 +607,9 @@
       "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": "repository"
+      "command_source": "repository",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "n8n-mcp",
@@ -626,7 +650,9 @@
           "seconds": 1.0
         }
       ],
-      "command_source": "the package the repository publishes on npm"
+      "command_source": "the package the repository publishes on npm",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "mcp-for-beginners",
@@ -656,7 +682,9 @@
       "launch_note": "no launch command was found in the repository's README",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": ""
+      "command_source": "",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "mcp-toolbox",
@@ -686,7 +714,9 @@
       "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": "repository"
+      "command_source": "repository",
+      "license_evidence": "Apache License, Version 2.0",
+      "license_path": "LICENSE"
     },
     {
       "id": "figma-context-mcp",
@@ -707,7 +737,9 @@
       "launch_note": "refuses to start without FIGMA_API_KEY or FIGMA_OAUTH_TOKEN: 'Either FIGMA_API_KEY or FIGMA_OAUTH_TOKEN is required (via CLI argument or .env file)'",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": ""
+      "command_source": "",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "unity-mcp",
@@ -737,7 +769,9 @@
       "launch_note": "needs a running Unity Editor with its C# bridge; no Unity here, and the Python package it names does not exist on the registry",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": ""
+      "command_source": "",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "typescript-sdk",
@@ -758,7 +792,9 @@
       "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": "repository"
+      "command_source": "repository",
+      "license_path": "LICENSE",
+      "license_note": "blocked: mixed-with-docs-licence"
     },
     {
       "id": "ida-pro-mcp",
@@ -849,7 +885,9 @@
           "seconds": 1.1
         }
       ],
-      "command_source": "the repository's README command, with the mcp<2 pin its import needs"
+      "command_source": "the repository's README command, with the mcp<2 pin its import needs",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "mcp-chrome",
@@ -870,7 +908,9 @@
       "launch_note": "no launch command was found in the repository's README",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": ""
+      "command_source": "",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "inspector",
@@ -891,7 +931,9 @@
       "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": "repository"
+      "command_source": "repository",
+      "license_path": "LICENSE",
+      "license_note": "blocked: mixed-with-docs-licence"
     },
     {
       "id": "mcp",
@@ -939,13 +981,15 @@
           "seconds": 2.1
         }
       ],
-      "command_source": "the umbrella repository's per-server command; its previous one is yanked"
+      "command_source": "the umbrella repository's per-server command; its previous one is yanked",
+      "license_evidence": "Apache License, Version 2.0",
+      "license_path": "LICENSE"
     },
     {
       "id": "firecrawl-mcp-server",
       "full_name": "mendableai/firecrawl-mcp-server",
       "url": "https://github.com/firecrawl/firecrawl-mcp-server",
-      "description": "🔥 Official Firecrawl MCP Server - Adds powerful web scraping and search to Cursor, Claude and any other LLM clients.",
+      "description": "\ud83d\udd25 Official Firecrawl MCP Server - Adds powerful web scraping and search to Cursor, Claude and any other LLM clients.",
       "license": "MIT",
       "stars": 7597,
       "size_kb": 6307,
@@ -1008,7 +1052,9 @@
           "seconds": 1.0
         }
       ],
-      "command_source": "the repository's own README launch line"
+      "command_source": "the repository's own README launch line",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "mcp-atlassian",
@@ -1041,13 +1087,15 @@
           "seconds": 1.4
         }
       ],
-      "command_source": "the repository's own README launch line"
+      "command_source": "the repository's own README launch line",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "mcp-playwright",
       "full_name": "executeautomation/mcp-playwright",
       "url": "https://github.com/executeautomation/mcp-playwright",
-      "description": "Playwright Model Context Protocol Server - Tool to automate Browsers and APIs in Claude Desktop, Cline, Cursor IDE and More 🔌",
+      "description": "Playwright Model Context Protocol Server - Tool to automate Browsers and APIs in Claude Desktop, Cline, Cursor IDE and More \ud83d\udd0c",
       "license": "MIT",
       "stars": 5665,
       "size_kb": 29283,
@@ -1067,7 +1115,9 @@
       "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": "repository"
+      "command_source": "repository",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "exa-mcp-server",
@@ -1097,7 +1147,9 @@
       "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": "repository"
+      "command_source": "repository",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "notion-mcp-server",
@@ -1118,13 +1170,15 @@
       "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": "repository"
+      "command_source": "repository",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "mcp-server-chart",
       "full_name": "antvis/mcp-server-chart",
       "url": "https://github.com/antvis/mcp-server-chart",
-      "description": "🤖 A visualization mcp & skills contains 25+ visual charts using @antvis. Using for chart generation and data analysis.",
+      "description": "\ud83e\udd16 A visualization mcp & skills contains 25+ visual charts using @antvis. Using for chart generation and data analysis.",
       "license": "MIT",
       "stars": 4397,
       "size_kb": 376,
@@ -1139,7 +1193,9 @@
       "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": "repository"
+      "command_source": "repository",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "mcp-server-cloudflare",
@@ -1160,7 +1216,9 @@
       "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": "repository"
+      "command_source": "repository",
+      "license_evidence": "Apache License, Version 2.0",
+      "license_path": "LICENSE"
     },
     {
       "id": "supabase-mcp",
@@ -1181,7 +1239,9 @@
       "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": "repository"
+      "command_source": "repository",
+      "license_evidence": "Apache License, Version 2.0",
+      "license_path": "LICENSE"
     },
     {
       "id": "mcp-proxy",
@@ -1202,7 +1262,9 @@
       "launch_note": "is a bridge, not a tool server: it relays a stdio server to SSE/HTTP, and answers --help rather than initialize",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": ""
+      "command_source": "",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "tavily-mcp",
@@ -1223,7 +1285,9 @@
       "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": "repository"
+      "command_source": "repository",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENCE"
     },
     {
       "id": "azure-mcp",
@@ -1326,7 +1390,9 @@
           "seconds": 5.5
         }
       ],
-      "command_source": "the successor repository's own README configuration block"
+      "command_source": "the successor repository's own README configuration block",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "quickstart-resources",
@@ -1347,7 +1413,9 @@
       "launch_note": "the tutorial's weather package is not published to a registry; it is example code",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": "repository"
+      "command_source": "repository",
+      "license_path": "LICENSE",
+      "license_note": "blocked: mixed-with-docs-licence"
     },
     {
       "id": "gmail-mcp-server",
@@ -1368,7 +1436,9 @@
       "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": "repository"
+      "command_source": "repository",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "sentry-mcp",
@@ -1389,7 +1459,9 @@
       "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": "repository"
+      "command_source": "repository",
+      "license_path": "LICENSE.md",
+      "license_note": "blocked: non-commercial"
     },
     {
       "id": "mcp-server-elasticsearch",
@@ -1410,7 +1482,9 @@
       "launch_note": "the README's launch line needs a container/host toolchain this component does not assume",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": ""
+      "command_source": "",
+      "license_evidence": "Apache License, Version 2.0",
+      "license_path": "LICENSE"
     },
     {
       "id": "mcp-server-neon",
@@ -1431,7 +1505,9 @@
       "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": "repository"
+      "command_source": "repository",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "mcp-redis",
@@ -1518,7 +1594,9 @@
           "seconds": 0.9
         }
       ],
-      "command_source": "the repository's own README configuration block"
+      "command_source": "the repository's own README configuration block",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "dbt-mcp",
@@ -1547,7 +1625,9 @@
       "launch_note": "refused here: dbt-mcp 2.7.0 declares requires-python <3.14,>=3.12 and this machine's newest interpreter is 3.11.2; uv's interpreter download fails on GitHub release assets (`Failed to download https://github.com/astral-sh/python-build-standalone/releases/download/20261013/cpython-3.12.15%2B20261013-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz`: tls handshake eof, with UV_NATIVE_TLS=1 as well), and no CPython 3.12 distribution is obtainable from the hosts reachable from this sandbox (PyPI carries no interpreter package: python3.12, python-3.12 and python-standalone are all 404; the npm package cpython 0.10.1 is a 2.7-era node-gyp binding that clones CPython itself)",
       "launch_verified": false,
       "verified_servers": [],
-      "command_source": ""
+      "command_source": "",
+      "license_evidence": "Apache License, Version 2.0",
+      "license_path": "LICENSE"
     },
     {
       "id": "chroma-mcp",
@@ -1612,7 +1692,9 @@
           "seconds": 2.2
         }
       ],
-      "command_source": "the repository's README command, with the pydantic pin its mcp dependency needs"
+      "command_source": "the repository's README command, with the pydantic pin its mcp dependency needs",
+      "license_evidence": "Apache License, Version 2.0",
+      "license_path": "LICENSE"
     },
     {
       "id": "filesystem-mcp-server",
@@ -1667,7 +1749,9 @@
           ]
         }
       ],
-      "command_source": "handshake"
+      "command_source": "handshake",
+      "license_evidence": "Apache License, Version 2.0",
+      "license_path": "LICENSE"
     }
   ],
   "verified_total_servers": 16,

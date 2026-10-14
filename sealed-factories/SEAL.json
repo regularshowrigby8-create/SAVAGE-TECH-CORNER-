@@ -1,21 +1,21 @@
 {
  "seal_version": "1.0.0",
- "sealed_at": "2026-10-14T18:57:08Z",
+ "sealed_at": "2026-10-14T20:56:09Z",
  "component": "sealed-factories",
  "description": "The imported factory set. Dropped in or removed as one unit; runs before the repository's own factories and feeds them.",
  "contents": {
-  "factories": 137,
-  "with_payload": 137,
-  "content_redistributed": 98,
-  "blueprint_only": 39,
-  "with_license_text": 115,
-  "ai_worker_factories": 104,
+  "factories": 149,
+  "with_payload": 149,
+  "content_redistributed": 113,
+  "blueprint_only": 36,
+  "with_license_text": 127,
+  "ai_worker_factories": 112,
   "by_group": {
    "AI-focused factory": 23,
    "MCP tool server": 42,
-   "imported factory": 72
+   "imported factory": 84
   },
-  "payload_bytes": 1870829,
+  "payload_bytes": 2225134,
   "component_files": 10
  },
  "pipeline_position": {
@@ -46,7 +46,9 @@
   "tests": [
    "shell/tests/test_sealed_factory_runtime.py",
    "shell/tests/test_sealed_environment.py",
-   "shell/tests/test_imported_factories.py"
+   "shell/tests/test_imported_factories.py",
+   "shell/tests/test_license_rescan.py",
+   "shell/tests/test_factory_discovery.py"
   ],
   "docs": [
    "docs/factory/MULTISTAGE_FACTORY.md"
@@ -144,6 +146,32 @@
    "entrypoints": [
     "src/lib/agent/orchestrator.ts"
    ],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
+   "id": "addyosmani-agent-skills",
+   "full_name": "addyosmani/agent-skills",
+   "url": "https://github.com/addyosmani/agent-skills",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "addyosmani-agent-skills-LICENSE",
+   "import_class": "asset-import",
+   "commit": "aeac41d4d005999432bb7312f7ff06383a91d59d",
+   "snapshot": "2026-10-14",
+   "files": 20,
+   "bytes": 149326,
+   "content_redistributed": true,
+   "payload": "payloads/addyosmani-agent-skills.tar.gz",
+   "payload_sha256": "b1042a7d11790f4ccc66f193daacbc31c04b7ac140f6fd4967d54424d8bed461",
+   "payload_bytes": 57203,
+   "providers": [
+    "anthropic"
+   ],
+   "runtime": [
+    "shell"
+   ],
+   "entrypoints": [],
    "ai_workers": true
   },
   {
@@ -305,6 +333,34 @@
    "entrypoints": [
     "libs/agno/agno/agent/factory.py"
    ],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
+   "id": "alirezarezvani-claude-skills",
+   "full_name": "alirezarezvani/claude-skills",
+   "url": "https://github.com/alirezarezvani/claude-skills",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "alirezarezvani-claude-skills-LICENSE",
+   "import_class": "asset-import",
+   "commit": "19392f7a08264ed00486a251f5b2098321771f94",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 67567,
+   "content_redistributed": true,
+   "payload": "payloads/alirezarezvani-claude-skills.tar.gz",
+   "payload_sha256": "1c6e8e445a9e8e880e3d689c967ed10d7e2ace28ecf414f0e42df56c994a018a",
+   "payload_bytes": 25877,
+   "providers": [
+    "anthropic",
+    "google",
+    "mistral"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
    "ai_workers": true
   },
   {
@@ -485,7 +541,7 @@
    "id": "bastani-inc-atomic",
    "full_name": "bastani-inc/atomic",
    "url": "https://github.com/bastani-inc/atomic",
-   "license": "NOASSERTION",
+   "license": "MIT",
    "license_present": true,
    "license_file": "bastani-inc-atomic-LICENSE",
    "import_class": "blueprint-only",
@@ -493,10 +549,10 @@
    "snapshot": "2026-10-14",
    "files": 25,
    "bytes": 25430,
-   "content_redistributed": false,
+   "content_redistributed": true,
    "payload": "payloads/bastani-inc-atomic.tar.gz",
-   "payload_sha256": "08f8bd869de315a656ecd95c4912027803c470d3e768f64deeb6a4d042215e4f",
-   "payload_bytes": 1787,
+   "payload_sha256": "07cb9878b86bf2b114178a1c3c5695eab7cfd94e31d186ef432b4b5e7bf44d9a",
+   "payload_bytes": 10935,
    "providers": [
     "anthropic"
    ],
@@ -1029,7 +1085,7 @@
    "url": "https://github.com/fabro-sh/fabro",
    "license": "MIT",
    "license_present": true,
-   "license_file": "fabro-sh-fabro-LICENSE.md",
+   "license_file": "fabro-sh-fabro-LICENSE",
    "import_class": "asset-import",
    "commit": "de7ad06de5307012fc568df6b7d90a9a938d6f6c",
    "snapshot": "2026-10-14",
@@ -1272,6 +1328,37 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
+   "id": "github-codeql",
+   "full_name": "github/codeql",
+   "url": "https://github.com/github/codeql",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "github-codeql-LICENSE",
+   "import_class": "asset-import",
+   "commit": "dd4405c2c2a8cd5ee7d200e7230ab8dd52e13dc6",
+   "snapshot": "2026-10-14",
+   "files": 22,
+   "bytes": 128492,
+   "content_redistributed": true,
+   "payload": "payloads/github-codeql.tar.gz",
+   "payload_sha256": "8abd8843f60164e42626aa12d6a590b219afa6c858110cf44d7925df5ca70bd7",
+   "payload_bytes": 36011,
+   "providers": [],
+   "runtime": [
+    "python",
+    "node"
+   ],
+   "entrypoints": [
+    "python/ql/integration-tests/subst/code/main.py",
+    "javascript/ql/integration-tests/subst/code/main.js",
+    "python/extractor/cli-integration-test/extract-stdlib/repo_dir/main.py",
+    "python/extractor/semmle/worker.py",
+    "javascript/extractor/lib/typescript/src/main.ts"
+   ],
+   "ai_workers": true
+  },
+  {
    "group": "MCP tool server",
    "id": "github-mcp-server",
    "full_name": "github/github-mcp-server",
@@ -1410,7 +1497,7 @@
    "url": "https://github.com/hadamrd/titan",
    "license": "MIT",
    "license_present": true,
-   "license_file": "hadamrd-titan-LICENSE.md",
+   "license_file": "hadamrd-titan-LICENSE",
    "import_class": "asset-import",
    "commit": "ee8c783d751401f1c1dddbfaf6e81a4e5c98ee7d",
    "snapshot": "2026-10-14",
@@ -1474,11 +1561,37 @@
    "ai_workers": false
   },
   {
+   "group": "imported factory",
+   "id": "hkuds-nanobot",
+   "full_name": "HKUDS/nanobot",
+   "url": "https://github.com/HKUDS/nanobot",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "hkuds-nanobot-LICENSE",
+   "import_class": "asset-import",
+   "commit": "3a28b9e6ce5e514d4dee9d964056d876a69a6cdc",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 16915,
+   "content_redistributed": true,
+   "payload": "payloads/hkuds-nanobot.tar.gz",
+   "payload_sha256": "f3fcc8f7f88e7c50e936e91ee49b1c247d84c4add8166e071552be2a0a613b84",
+   "payload_bytes": 9269,
+   "providers": [
+    "openai"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
    "group": "AI-focused factory",
    "id": "humanlayer",
    "full_name": "humanlayer/humanlayer",
    "url": "https://github.com/humanlayer/humanlayer",
-   "license": "NOASSERTION",
+   "license": "Apache-2.0",
    "license_present": true,
    "license_file": "humanlayer-LICENSE",
    "import_class": "blueprint-only",
@@ -1486,10 +1599,10 @@
    "snapshot": "2026-10-14",
    "files": 18,
    "bytes": 0,
-   "content_redistributed": false,
+   "content_redistributed": true,
    "payload": "payloads/humanlayer.tar.gz",
-   "payload_sha256": "d7a428046d59a7025b46bd51cb33e207f9822072b6179cad1f3a56e03c681e81",
-   "payload_bytes": 1364,
+   "payload_sha256": "452dbe7de196ebbd76a49ba7df996e45be87246485a5a8426a6ce91935d4a194",
+   "payload_bytes": 19478,
    "providers": [
     "anthropic"
    ],
@@ -1616,6 +1729,30 @@
     "src/ai_agent_platform/api/main.py"
    ],
    "ai_workers": true
+  },
+  {
+   "group": "imported factory",
+   "id": "k-dense-ai-scientific-agent-skills",
+   "full_name": "K-Dense-AI/scientific-agent-skills",
+   "url": "https://github.com/K-Dense-AI/scientific-agent-skills",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "k-dense-ai-scientific-agent-skills-LICENSE",
+   "import_class": "asset-import",
+   "commit": "a1043ef544e3a100c28e70a736b6cf32554d0677",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 2790,
+   "content_redistributed": true,
+   "payload": "payloads/k-dense-ai-scientific-agent-skills.tar.gz",
+   "payload_sha256": "694b56239af6db61447e9811205d366302f62a6ff3da69b17353bd044db8e7ed",
+   "payload_bytes": 3885,
+   "providers": [],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": false
   },
   {
    "group": "imported factory",
@@ -1781,6 +1918,30 @@
     "libs/cli/langgraph_cli/cli.py"
    ],
    "ai_workers": true
+  },
+  {
+   "group": "imported factory",
+   "id": "larksuite-cli",
+   "full_name": "larksuite/cli",
+   "url": "https://github.com/larksuite/cli",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "larksuite-cli-LICENSE",
+   "import_class": "asset-import",
+   "commit": "017b19a793ad71794a02887ede04757f3d82e10d",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 6228,
+   "content_redistributed": true,
+   "payload": "payloads/larksuite-cli.tar.gz",
+   "payload_sha256": "94c9d13957f682132ff9ada21d2127acdc553e4f7cce06967fb2d605524c3cbb",
+   "payload_bytes": 4217,
+   "providers": [],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": false
   },
   {
    "group": "AI-focused factory",
@@ -2254,6 +2415,31 @@
   },
   {
    "group": "imported factory",
+   "id": "mobile-dev-inc-maestro",
+   "full_name": "mobile-dev-inc/Maestro",
+   "url": "https://github.com/mobile-dev-inc/Maestro",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "mobile-dev-inc-maestro-LICENSE",
+   "import_class": "asset-import",
+   "commit": "df40dea5dee0b8639aade6e80b558950e982e8a2",
+   "snapshot": "2026-10-14",
+   "files": 7,
+   "bytes": 90932,
+   "content_redistributed": true,
+   "payload": "payloads/mobile-dev-inc-maestro.tar.gz",
+   "payload_sha256": "2d54f281126b50d10a3e5bb1762326e1619480d4231de78fbfe810a98634741b",
+   "payload_bytes": 27525,
+   "providers": [
+    "anthropic",
+    "google"
+   ],
+   "runtime": [],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
    "id": "mohammedabdelshafy-clipops-studio",
    "full_name": "MohammedAbdelshafy/clipops-studio",
    "url": "https://github.com/MohammedAbdelshafy/clipops-studio",
@@ -2273,6 +2459,33 @@
     "google"
    ],
    "runtime": [],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
+   "id": "muratcankoylan-agent-skills-for-context-engineering",
+   "full_name": "muratcankoylan/Agent-Skills-for-Context-Engineering",
+   "url": "https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "muratcankoylan-agent-skills-for-context-engineering-LICENSE",
+   "import_class": "asset-import",
+   "commit": "9ff0c99108b36d3b886defd825d8ac1f47dba374",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 63119,
+   "content_redistributed": true,
+   "payload": "payloads/muratcankoylan-agent-skills-for-context-engineering.tar.gz",
+   "payload_sha256": "939237f664bf87007b34fcf50f9fd40110cb0549b0b6dd04fdee4104aae3f0d5",
+   "payload_bytes": 24982,
+   "providers": [
+    "openai"
+   ],
+   "runtime": [
+    "node",
+    "shell"
+   ],
    "entrypoints": [],
    "ai_workers": true
   },
@@ -2305,6 +2518,36 @@
     "app/main.py",
     "app/pipeline.py"
    ],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
+   "id": "mvanhorn-last30days-skill",
+   "full_name": "mvanhorn/last30days-skill",
+   "url": "https://github.com/mvanhorn/last30days-skill",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "mvanhorn-last30days-skill-LICENSE",
+   "import_class": "asset-import",
+   "commit": "f4dff26b3b14d3c55c5a9dedfc4c7c8c5df2f84a",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 62358,
+   "content_redistributed": true,
+   "payload": "payloads/mvanhorn-last30days-skill.tar.gz",
+   "payload_sha256": "7bd1cb9963008a4432538de92c4123221d9c28666eb5c3703753177aee6dd8cb",
+   "payload_bytes": 24768,
+   "providers": [
+    "anthropic",
+    "openai",
+    "google",
+    "mistral"
+   ],
+   "runtime": [
+    "python",
+    "shell"
+   ],
+   "entrypoints": [],
    "ai_workers": true
   },
   {
@@ -2405,6 +2648,32 @@
    "payload": "payloads/openai-agents-python.tar.gz",
    "payload_sha256": "141542184ac45f47646349718d46dbfac39cb16ed7e564e9f1cbfd7081b2a3c6",
    "payload_bytes": 36612,
+   "providers": [
+    "openai"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
+   "id": "openai-openai-agents-python",
+   "full_name": "openai/openai-agents-python",
+   "url": "https://github.com/openai/openai-agents-python",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "openai-openai-agents-python-LICENSE",
+   "import_class": "asset-import",
+   "commit": "24ebf1cb0f4b3107d5350b13a1308637d3dec9ca",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 99752,
+   "content_redistributed": true,
+   "payload": "payloads/openai-openai-agents-python.tar.gz",
+   "payload_sha256": "e14c90ab69d554791a78126bdb0622f06328a831d3d46e352679a970eb795c00",
+   "payload_bytes": 36611,
    "providers": [
     "openai"
    ],
@@ -2809,6 +3078,30 @@
   },
   {
    "group": "imported factory",
+   "id": "renovatebot-renovate",
+   "full_name": "renovatebot/renovate",
+   "url": "https://github.com/renovatebot/renovate",
+   "license": "AGPL-3.0",
+   "license_present": true,
+   "license_file": "renovatebot-renovate-LICENSE",
+   "import_class": "blueprint-only",
+   "commit": "135919fed8b4010bcf73afd7e1bae728c8df2c21",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 2951,
+   "content_redistributed": false,
+   "payload": "payloads/renovatebot-renovate.tar.gz",
+   "payload_sha256": "7fa2d990b7bed05a9b99cb067854664ffaa4befb7eb593ff4046677d9a7e99bd",
+   "payload_bytes": 1668,
+   "providers": [],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [],
+   "ai_workers": false
+  },
+  {
+   "group": "imported factory",
    "id": "rocketride-org-rocketride-server",
    "full_name": "rocketride-org/rocketride-server",
    "url": "https://github.com/rocketride-org/rocketride-server",
@@ -2951,7 +3244,7 @@
    "id": "sandgardenhq-sgai",
    "full_name": "sandgardenhq/sgai",
    "url": "https://github.com/sandgardenhq/sgai",
-   "license": "NOASSERTION",
+   "license": "MIT",
    "license_present": true,
    "license_file": "sandgardenhq-sgai-LICENSE",
    "import_class": "blueprint-only",
@@ -2959,10 +3252,10 @@
    "snapshot": "2026-10-14",
    "files": 25,
    "bytes": 60797,
-   "content_redistributed": false,
+   "content_redistributed": true,
    "payload": "payloads/sandgardenhq-sgai.tar.gz",
-   "payload_sha256": "22ea54958968349ecbe1402820758bd86b775ac61a625770f1037c31236354f3",
-   "payload_bytes": 2058,
+   "payload_sha256": "02b6de465e6087e072eb1722927ad8475459348f4c0df203062d064b7ee98369",
+   "payload_bytes": 23856,
    "providers": [
     "anthropic",
     "openai"
@@ -3110,7 +3403,7 @@
    "url": "https://github.com/getsentry/toolkit",
    "license": "NOASSERTION",
    "license_present": true,
-   "license_file": "sentry-mcp-LICENSE.md",
+   "license_file": "sentry-mcp-LICENSE",
    "import_class": "asset-only",
    "commit": "6c7d57a50c3bd3368e26a344b1a9fc07dadfc2df",
    "snapshot": "2026-10-14",
@@ -3430,7 +3723,7 @@
    "url": "https://github.com/tavily-ai/tavily-mcp",
    "license": "MIT",
    "license_present": true,
-   "license_file": "tavily-mcp-LICENCE",
+   "license_file": "tavily-mcp-LICENSE",
    "import_class": "asset-import",
    "commit": "1c1d54c2a619afe52544f775c8d82a56ac6d8bb5",
    "snapshot": "2026-10-14",
@@ -3528,7 +3821,7 @@
    "id": "transconnectome-claude-code-coord",
    "full_name": "Transconnectome/claude-code-coord",
    "url": "https://github.com/Transconnectome/claude-code-coord",
-   "license": "NOASSERTION",
+   "license": "MIT",
    "license_present": true,
    "license_file": "transconnectome-claude-code-coord-LICENSE",
    "import_class": "blueprint-only",
@@ -3536,10 +3829,10 @@
    "snapshot": "2026-10-14",
    "files": 5,
    "bytes": 57384,
-   "content_redistributed": false,
+   "content_redistributed": true,
    "payload": "payloads/transconnectome-claude-code-coord.tar.gz",
-   "payload_sha256": "75a58995d0b051ce0d4515335632482d7a0cd563c45c679b9a970a773dbd5b49",
-   "payload_bytes": 812,
+   "payload_sha256": "02d9c24e897cd997d4cd050045f8c5423edd64784e0f78a0ffc4c0932141fe32",
+   "payload_bytes": 21778,
    "providers": [
     "anthropic",
     "openai",
@@ -3578,6 +3871,30 @@
     "src/orchestrator.js"
    ],
    "ai_workers": true
+  },
+  {
+   "group": "imported factory",
+   "id": "tt-a1i-archify",
+   "full_name": "tt-a1i/archify",
+   "url": "https://github.com/tt-a1i/archify",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "tt-a1i-archify-LICENSE",
+   "import_class": "asset-import",
+   "commit": "d0c8c7e9f4e06f303389f804208d387f27019ef5",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 81310,
+   "content_redistributed": true,
+   "payload": "payloads/tt-a1i-archify.tar.gz",
+   "payload_sha256": "a04a857bd8b945fa33c80c88a7e242b48267a13fe71fd39462bf7136df231144",
+   "payload_bytes": 32263,
+   "providers": [],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [],
+   "ai_workers": false
   },
   {
    "group": "MCP tool server",

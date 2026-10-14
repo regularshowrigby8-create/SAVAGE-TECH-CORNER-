@@ -516,8 +516,8 @@ from the repository's own authoritative documents instead of being invented:
 ### AC-048 — The sealed factory set runs before the pipeline's own factories, and is removable
 
 - **Feature**: F-13 (the pipeline that produces the release)
-- **Given**: the sealed component `sealed-factories/` (72 imported factories with their licences,
-  hash-sealed) and the pipeline that uses it (`scripts/conveyor_belt.js` station 0, then the four
+- **Given**: the sealed component `sealed-factories/` (149 records - 84 imported factories, 23
+  AI-focused factories and 42 MCP servers - with the 127 licences they publish, hash-sealed) and the pipeline that uses it (`scripts/conveyor_belt.js` station 0, then the four
   current factories, as documented in `docs/factory/MULTISTAGE_FACTORY.md`)
 - **When**: the seal is verified and the set is run, then the pipeline runs again with the directory
   deleted
@@ -752,7 +752,7 @@ disabled: SEALED_NO_NETWORK is set`, or an `AIR-GAP FAIL` line saying which of t
   from the records, and `SEAL.json`'s hash for each factory is the hash of the payload beside it, so
   a manifest committed without its payloads fails here rather than in a clean checkout
 - **Test method**: `shell/tests/test_sealed_factory_runtime.py`
-  (`test_sealing_an_unchanged_tree_would_reproduce_it_exactly`, which rebuilds all 137 payloads from
+  (`test_sealing_an_unchanged_tree_would_reproduce_it_exactly`, which rebuilds all 149 payloads from
   their records), plus `test_every_payload_hash_in_the_seal_matches_the_file`
 - **Evidence required**: the rebuild-and-compare run over every record, and the `[SEAL] OK` line from
   a clone of the pushed branch (not from the checkout that sealed it)
@@ -825,6 +825,36 @@ status=0; reason=GitHub is not reachable from here: ...` when the API is pointed
   `shell/tests/test_sealed_factory_runtime.py`
 - **Evidence required**: the belt banner `SEALED SET RAN + ALL 6 CONNECTED STAGES PASSED` and the
   station 0 line stating the tool count
+
+### AC-062 — The set is grown by importing from many repositories, inside a licence wall that is never worked around
+
+- **Feature**: F-14 (the sealed factory set) and F-01 (provenance)
+- **Given**: `tools/factory/imported_factories.json`, `tools/factory/repositories.json` (whose
+  `planned` list named nine repositories that had never been imported), the licence files under
+  `sealed-factories/licenses/` and the classifier `tools/factory/license_text.py`
+- **When**: each catalogued repository's own published licence text is re-read
+  (`tools/factory/license_rescan.py`), further repositories are imported from GitHub
+  (`tools/factory/discover_factories.py`), the plan is executed and the set is re-sealed and run
+- **Then**: a licence is _widened_ only where the registry recorded none (GitHub answers
+  `NOASSERTION` for a plain MIT text that lost its title) and a text that contradicts a recorded
+  licence is escalated as `disagrees`, never silently overwritten; a repository whose text is
+  copyleft, source-available, mixed with a documentation licence or absent altogether stays
+  blueprint-only with no content carried, and that is stated rather than worked around; content is
+  carried only under a licence the seal accepts; every repository the plan names has a recorded
+  outcome in `tools/factory/plan_import.json` - imported, or refused with the reason (not on
+  github.com, or no definition path in its own tree: CI configuration alone is not a factory); no
+  repository enters twice, whatever the case of its name; and `RUN-REPORT.json` counts what is
+  operational against what is not, including slices that carry content but define nothing
+- **Test method**: `shell/tests/test_license_rescan.py` (the classifier's must-fail cases, the
+  widen-only-from-nothing rule, escape from a disagreement, and every carried factory's licence text
+  re-classified offline), `shell/tests/test_factory_discovery.py` (the factory-shape bar, CI-only
+  trees refused, canonical licence names, every planned repository accounted for) and
+  `shell/tests/test_imported_factories.py` (the registry's own contract)
+- **Evidence required**: the re-scan summary (4 widened, 98 confirmed, 12 blocked, 22 with no
+  licence, 1 withheld, 0 disagreements), the plan outcome table, the seal root
+  `3b7d58ab1ae274ef63a3a5a2aabe0c2039d658d89de8c311e1a9420736ce7bea` and the `RUN-REPORT.json`
+  counts from the run that followed it (112 `OPERATIONAL-PLAN`, 37 `NO-STRUCTURE`, 2 of those
+  carrying content without definitions)
 
 ## 2. Traceability summary
 

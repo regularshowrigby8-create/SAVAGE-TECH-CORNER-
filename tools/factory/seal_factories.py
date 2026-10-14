@@ -165,9 +165,11 @@ def seal() -> int:
         return 2
     PAYLOADS.mkdir(parents=True, exist_ok=True)
     LICENSES.mkdir(parents=True, exist_ok=True)
+    pruned = 0
 
     factories = []
     stripped = 0
+    expected_licences: set[Path] = set()
     record_paths = []
     for directory in GROUP_DIRS:
         record_paths.extend(sorted((SEALED / directory).glob("*.json")))
@@ -198,9 +200,13 @@ def seal() -> int:
         if encoded:
             import base64
             text = base64.b64decode(encoded)
-            license_path = LICENSES / f'{record["id"]}-{record.get("license_file") or "LICENSE"}'
+            # Canonical name, always: `{id}-LICENSE`. Upstream files are named LICENSE, LICENSE.md,
+            # COPYING, license_mit, ... and the copy that travels with the payload should be
+            # predictable regardless. The upstream name stays recorded in the vendoring record.
+            license_path = LICENSES / f'{record["id"]}-LICENSE'
             license_path.write_bytes(text)
             license_file = license_path.name
+            expected_licences.add(license_path)
 
         factories.append({
             "group": GROUP_DIRS.get(record_path.parent.name, "imported factory"),
@@ -262,7 +268,9 @@ def seal() -> int:
                             "tools/factory/imported_ai_factories.json"],
             "tests": ["shell/tests/test_sealed_factory_runtime.py",
                       "shell/tests/test_sealed_environment.py",
-                      "shell/tests/test_imported_factories.py"],
+                      "shell/tests/test_imported_factories.py",
+                      "shell/tests/test_license_rescan.py",
+                      "shell/tests/test_factory_discovery.py"],
             "docs": ["docs/factory/MULTISTAGE_FACTORY.md"],
             "belt_station": "the Stage 0 block in scripts/conveyor_belt.js, which reports ABSENT "
                             "without it",
@@ -278,6 +286,15 @@ def seal() -> int:
     write_attribution(seal_document)
     root = sha256_file(SEAL_FILE)
     SEAL_HASH.write_text(f"{root}  SEAL.json\n", encoding="utf-8")
+    # Prune by *expected set*, never by a prefix glob: catalogue ids collide by prefix (`mcp` is a
+    # prefix of `mcp-agent`, `mcp-atlassian`, ...), and a `{id}-*` glob happily deletes thirteen other
+    # factories' licence copies. That happened here; this is the fix.
+    for stale in sorted(LICENSES.glob("*")):
+        if stale.is_file() and stale not in expected_licences:
+            stale.unlink()
+            pruned += 1
+    if pruned:
+        print(f"removed {pruned} licence file(s) with no factory in this seal")
     print(f"sealed {len(factories)} factories -> {SEAL_FILE.relative_to(REPO_ROOT)}")
     print(f"component files pinned={seal_document['contents']['component_files']}")
     print(f"seal root sha256={root}")

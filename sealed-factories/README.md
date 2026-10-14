@@ -1,6 +1,6 @@
 # Sealed factory set
 
-One component, sealed. 137 imported software factories - 104
+One component, sealed. 149 imported software factories - 112
 of them showing AI-worker evidence in the slice sealed here, the other 19 design-stage factories -
 vendored as bounded slices, hash-sealed, and run as station 0 of this repository's pipeline before
 anything else.
@@ -13,7 +13,7 @@ anything else.
 | `SEAL.sha256` | The hash of `SEAL.json`, so the manifest cannot be edited quietly |
 | `payloads/<id>.tar.gz` | One deterministic archive per factory (fixed mtime, mode, order) |
 | `vendor/<id>.json` | The vendoring record: files, sizes, hashes. No content for blueprint-only factories |
-| `licenses/` | 115 licence texts, one per factory that publishes one |
+| `licenses/` | 127 licence texts, one per factory that publishes one |
 | `ATTRIBUTION.md` | Who each factory is, and the basis it is included on |
 | `manifest/RUN-REPORT.json` | What the last run did (written at run time, not committed) |
 | `runs/<timestamp>/<id>/` | The artefacts each factory produced: plan, prompt, model answer |
@@ -41,7 +41,7 @@ or `factory-3/` reads it; station 0 of `scripts/conveyor_belt.js` reports
     sealed component ABSENT - the belt continues with this repository's own factories
 
 and the belt passes exactly as before. The full removal list - this directory, 7
-tooling files, 3 test file and one document - is recorded in
+tooling files, 5 test file and one document - is recorded in
 `SEAL.json` under `removal`, and `shell/tests/test_sealed_factory_runtime.py` proves that list matches
 the files that exist, including a test that runs the runtime in an empty tree and checks that absence
 is reported, exits zero, and creates nothing.

@@ -20,17 +20,18 @@ own refusal is quoted instead of a summary of it.
 | MCP servers verified by handshake | 7 servers, 52 tools                                                      | **16 servers, 303 tools**, each with the command that was verified                                                                                                                                | `tools/factory/imported_mcp_servers.json` |
 | MCP servers that cannot start     | 24 of 42                                                                 | **14 of 42** not installed here; 7 more start but refuse for a named reason (see §2.2)                                                                                                            | catalogue + `cli.py mcp-probe`            |
 | Emulator stage                    | ran `connectedDebugAndroidTest` against whatever state the device was in | wakes the screen, dismisses the keyguard, and asserts `Awake` + a non-keyguard focus before the suite                                                                                             | `tools/ci/android_emulator_run.sh`        |
-| Seal root                         | `32bf92d3…`, 1,849,160 payload bytes                                     | **`0ece777b…`**, 1,870,829 payload bytes, 137 factories, 10 component files pinned                                                                                                                | `sealed-factories/SEAL.json`              |
+| Seal root                         | `32bf92d3…`, 1,849,160 payload bytes                                     | **`3b7d58ab…`**, 2,225,134 payload bytes, 149 factories (112 operational), 127 licence texts, 10 component files pinned — see §2.8d                                                               | `sealed-factories/SEAL.json`              |
 
 The seal root changed for one reason: `runtime/toolkit.py` gained the GitHub section and `runtime/agents.py`
 gave the researcher role the GitHub tool group, and the seal pins every runtime module by hash
-(AC-056). The payloads, the licence texts and the 137 records are
-otherwise the same set.
+(AC-056). The payloads and the licence texts committed with this report are the 149-record set described in §2.8d;
+the 137-record figures quoted in this report's own evidence blocks are the runs that produced them, and are left verbatim.
 
 The root is `sha256(SEAL.json)`, and that document records when it was sealed (`sealed_at`), so the
 root moves on every re-seal even when nothing else does. What does not move is the content: two
 consecutive seals of this tree produced **137 identical payload hashes and identical factory records**,
-differing only in that timestamp. That is the property round 12 fixed and this round re-measured - a
+differing only in that timestamp - and the same property is re-measured for the grown 149-record set by
+`test_sealing_an_unchanged_tree_would_reproduce_it_exactly`, which rebuilds every payload from its record. That is the property round 12 fixed and this round re-measured - a
 re-seal of an unchanged tree rewrites no payload byte - and it is the property claimed below, not the
 stability of the root itself, which is not claimed anywhere.
 
@@ -428,6 +429,113 @@ not reach GitHub. `gh run view --log` still cannot be read from here (the raw lo
 `EOF`), so the job conclusions and annotations above are what was retrievable, and the local run in
 §2.8b is the verbatim output.
 
+### 2.8d Growing the set by importing from many repositories, without moving the licence wall
+
+The follow-up directive was to "fix that sealed factory set until it's fully operational by importing
+from multiple repos". Importing is the method that was used; the licence rule from the round before it
+still applies, so this section states both what the set gained and what it cannot gain.
+
+**Where the growth came from**
+
+1. **The licences were re-read from each repository's own text.** GitHub's detector answers
+   `NOASSERTION` for a plain MIT text whose title was replaced or absent, and four catalogued
+   factories were sitting as blueprints because of it. `tools/factory/license_rescan.py` walks every
+   catalogued repository, finds the licence file at the root under any name, classifies its text
+   (`tools/factory/license_text.py`) and decides:
+
+   ```
+   widened 4:  bastani-inc-atomic, sandgardenhq-sgai, transconnectome-claude-code-coord -> MIT
+               humanlayer -> Apache-2.0
+   confirmed 98   blocked 12   no licence 22   withheld 1   disagrees 0
+   ```
+
+   The four widened records were then re-vendored, and their slices now carry real definitions -
+   `.claude/agents/*.md`, `skills/*/SKILL.md`, `cmd/sgai/skel/.sgai/skills/...` - so four records that
+   defined nothing at the start of this work define stages, workers, gates and prompts now. A text
+   that contradicts a recorded licence is escalated, never written over; this run produced none.
+
+2. **Ten further factories were imported from GitHub search** (`tools/factory/discover_factories.py`):
+   each candidate's own tree is scored against the six characteristics the catalog was built on, and
+   from this pass onward it must also show at least one _definition_ path. Nine of the ten read as
+   `OPERATIONAL-PLAN`; the tenth (`teng-lin/notebooklm-py`) matched the word list through a utility
+   module and a test directory, was sealed, and defined nothing - it was removed and the reason is in
+   `tools/factory/plan_import.json`'s sibling record and in the catalogue's own history.
+
+3. **The nine repositories a plan had named and never imported are now accounted for**, one line each
+   in `tools/factory/plan_import.json`: CodeQL, Maestro and Renovate imported; Schemathesis,
+   Roborazzi, OWASP ZAP and k6 refused because their own trees publish no definition path at all (CI
+   configuration alone is not a factory); Macrobenchmark and Perfetto refused because they live on
+   android.googlesource.com and the registry - and the test that pins it - addresses records as
+   `https://github.com/<full_name>`.
+
+4. **Four defects were found by the tests written alongside, and fixed rather than papered over**: a
+   BSD-3 text matched BSD-2's marker as well and was withheld as ambiguous (the more specific grant
+   now wins); GitHub's upper-cased `APACHE-2.0` did not string-match the permissive set, which had
+   recorded Maestro - genuinely Apache-2.0 - as a blueprint; `full_name` was compared case-sensitively,
+   which put the same repository (`mobile-dev-inc/Maestro`) into the registry four times; and the
+   catalogue's rows were being appended into the class table above the factory table. The catalogue
+   table is now rebuilt from the registry on every run, so it cannot drift or duplicate at all.
+
+**The set, measured after the growth** (verbatim, same machine, one after the other):
+
+```
+sealed 149 factories -> sealed-factories/SEAL.json
+component files pinned=10
+seal root sha256=3b7d58ab1ae274ef63a3a5a2aabe0c2039d658d89de8c311e1a9420736ce7bea
+payload bytes=2225134 licences=127
+[SEAL] OK 1.0.0: 149 factories, 2225134 payload bytes, 127 licence texts, root 3b7d58ab1ae274ef…
+
+[SEALED] 0 factories ran against a model, 112 ran in plan mode, 37 had no definitions in their sealed slice, 0 model calls failed, 0 unreadable
+[SEALED] 2 slice(s) carry content but define nothing this runtime reads as stages, workers or tools
+[SEALED] definitions read from the sealed set: 592 stages, 579 workers, 221 checks, 1087 prompt assets, 5107 sections of prose their definition files publish
+```
+
+| Measure                       | Before this directive | Now                                                          |
+| ----------------------------- | --------------------- | ------------------------------------------------------------ |
+| sealed factories              | 137                   | **149**                                                      |
+| `OPERATIONAL-PLAN`            | 97                    | **112**                                                      |
+| `NO-STRUCTURE`                | 40                    | **37**                                                       |
+| carrying content              | 98                    | **113**                                                      |
+| licence texts in the seal     | 115                   | **127**                                                      |
+| definitions the runtime reads | 464 stages/workers…   | **592 stages, 579 workers, 221 checks, 1,087 prompt assets** |
+| tests                         | 205                   | **242**                                                      |
+
+**What "fully operational" cannot mean, said plainly**
+
+- **35 of the 37 records that define nothing publish no licence this component may carry.** 22 publish
+  no licence file at all, under any of the names a licence takes, at any depth (checked through the
+  tree API, not guessed from the README); 12 publish one that is blocked - AGPL/GPL, Elastic-2.0,
+  PolyForm, the Business Source License, an enterprise-edition carve-out, or MCP's split of
+  Apache-2.0 code with CC-BY-4.0 prose. Under the standing rule - non-permissive or licence-less
+  repositories stay blueprint-only - **no amount of importing can make these 35 operational**, because
+  what they lack is permission, not structure. Only an upstream repository publishing a licence would
+  change it, and that is not something this side can choose. So a fully operational _count_ of 149 is
+  not achievable here, and reporting one would be a lie of arithmetic.
+- **2 records carry content and still define nothing**: `awesome-mcp-servers` (a list, no launch
+  command - the runtime says so itself) and `github-mcp-server` (MIT text carried, but its Go binary
+  could not be fetched, so nothing of it runs). Their texts may travel; their structure is a README.
+- **The honest target is therefore not a count.** It is: every one of the 149 records either reads as
+  operational in `RUN-REPORT.json`, or is blueprint-only with its reason on the record. That is where
+  the set stands: 112 operational, 37 not, every one of the 37 accounted for above, and 113 of the 149
+  carrying content under a licence that grants it. The remaining distance to "all" is set by licences
+  on other people's repositories, and the set says so rather than hiding it.
+
+**Removed, with the reason recorded** (rule 2, no silent deletions): the four records above
+(`teng-lin-notebooklm-py`, `schemathesis-schemathesis`, `zaproxy-zaproxy`, `grafana-k6`) and their
+payloads/licence copies, because their trees publish no factory definition; three duplicate
+`mobile-dev-inc/Maestro` rows; 13 licence copies that a `{id}-*` prune glob had deleted from other
+factories (they are back: the prune is by expected set now, and `mcp` is a prefix of `mcp-agent`,
+`mcp-atlassian` and eleven more).
+
+**Tests added**: `shell/tests/test_license_rescan.py` (23) and `shell/tests/test_factory_discovery.py`
+(14) - the classifier's must-fail cases (GPL/AGPL, Elastic, PolyForm, BSL, Apache-plus-CC-BY docs, a
+dual-licence text), the rule that a licence may be widened only where the registry recorded none, that
+a disagreement is escalated rather than written over, that every carried factory's licence text
+re-classifies to the licence the registry claims (offline, from the bytes the seal ships), that a
+CI-only tree is not a factory, and that each of the nine planned repositories has an outcome. The
+suite goes from 205 to 242 tests, all passing, and the seal-sensitive and air-gapped jobs are
+unaffected.
+
 ### 2.9 The Android leg failed on `0e7547f`, and why
 
 The commit that wired GitHub into the run went red on one leg — and it is recorded here because a
@@ -526,8 +634,9 @@ signal that the screen did come up awake and focused - only the three runner dep
 | AC-060    | GitHub capability is inside the seal, exercised by the environment every run; the problems it was brought in for carry evidence | `GitHubToolTest` (11 tests), `test_the_seal_carries_the_mcp_and_ai_groups_too`, `test_the_stage_wakes_the_screen_before_it_runs_the_suite` | §2.1, §2.1b–§2.3, §2.7 |
 | AC-061    | The belt runs the sealed set first, with the GitHub tooling inside it, offline                                                  | `scripts/conveyor_belt.js` station 0, `test_sealed_factory_runtime.py`                                                                     | §2.5                   |
 | AC-051    | The environment works with no model, no keys and no network - now with a run behind it, not only tests                          | `test_airgap_judge.py` (10 tests), `test_sealed_environment.py`, the `Air-gapped sealed run` CI job                                        | §2.1c, §2.8b, §2.10    |
+| AC-062    | The set is grown by importing from many repositories, with the licence wall kept rather than worked around                      | `test_license_rescan.py` (23 tests), `test_factory_discovery.py` (14 tests), `test_imported_factories.py`                                  | §2.8d                  |
 
-The criterion text is in `docs/ACCEPTANCE_CRITERIA.md` (AC-051, AC-060, AC-061).
+The criterion text is in `docs/ACCEPTANCE_CRITERIA.md` (AC-051, AC-060, AC-061, AC-062).
 
 ## 4. What is not claimed
 
@@ -558,9 +667,11 @@ The criterion text is in `docs/ACCEPTANCE_CRITERIA.md` (AC-051, AC-060, AC-061).
 - **The emulator pre-flight is hardening, not a demonstrated fix.** Run `226b71c` was not reproduced
   and the later runs passed without the pre-flight, so what is claimed is what the stage now checks
   before the suite — not that the change is what makes the suite pass.
-- **The 39 blueprint-only factories still have no content in the seal**, and 2 carried slices still
-  define nothing this runtime reads (`github-mcp-server`, `awesome-mcp-servers`); the run counts them
-  and names them instead of counting them as workers.
+- **36 of the 149 sealed records carry no content**, and 2 carried slices still define nothing this
+  runtime reads (`github-mcp-server`, `awesome-mcp-servers`); the run counts them and names them
+  instead of counting them as workers. 35 of the 36 are held back by a licence this component may not
+  carry (22 with no licence published at all, 12 blocked, one withheld as unclassifiable), and §2.8d
+  states plainly why importing cannot change that: what they lack is permission, not structure.
 - **No APK is claimed by this round.** It changes the sealed component, its tooling and the emulator
   stage, not the Android app. CI's own APK and emulator evidence is in
   `artifacts/reports/ci-evidence-804571e.md`.

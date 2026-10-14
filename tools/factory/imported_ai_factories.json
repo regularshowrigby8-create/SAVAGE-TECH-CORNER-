@@ -23,7 +23,9 @@
         "llama-api"
       ],
       "import_class": "blueprint-only",
-      "snapshot": "2026-10-14"
+      "snapshot": "2026-10-14",
+      "license_path": "LICENSE",
+      "license_note": "blocked: Polyform"
     },
     {
       "id": "langchain",
@@ -46,7 +48,9 @@
         "framework"
       ],
       "import_class": "asset-import",
-      "snapshot": "2026-10-14"
+      "snapshot": "2026-10-14",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "openhands",
@@ -69,7 +73,9 @@
         "llm"
       ],
       "import_class": "asset-import",
-      "snapshot": "2026-10-14"
+      "snapshot": "2026-10-14",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "metagpt",
@@ -83,7 +89,9 @@
       "pushed_at": "2026-01-21T10:12:33Z",
       "topics": ["agent", "gpt", "llm", "metagpt", "multi-agent"],
       "import_class": "asset-import",
-      "snapshot": "2026-10-14"
+      "snapshot": "2026-10-14",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "autogen",
@@ -106,7 +114,8 @@
         "framework"
       ],
       "import_class": "asset-import",
-      "snapshot": "2026-10-14"
+      "snapshot": "2026-10-14",
+      "license_path": "LICENSE"
     },
     {
       "id": "crewai",
@@ -120,7 +129,9 @@
       "pushed_at": "2026-10-14T10:28:41Z",
       "topics": ["agents", "ai", "ai-agents", "aiagentframework", "llms"],
       "import_class": "asset-import",
-      "snapshot": "2026-10-14"
+      "snapshot": "2026-10-14",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "llama-index",
@@ -143,7 +154,9 @@
         "multi-agents"
       ],
       "import_class": "asset-import",
-      "snapshot": "2026-10-14"
+      "snapshot": "2026-10-14",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "langgraph",
@@ -166,7 +179,9 @@
         "gemini"
       ],
       "import_class": "asset-import",
-      "snapshot": "2026-10-14"
+      "snapshot": "2026-10-14",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "agno",
@@ -180,7 +195,9 @@
       "pushed_at": "2026-10-14T10:26:44Z",
       "topics": ["agents", "ai", "ai-agents", "developer-tools", "python"],
       "import_class": "asset-import",
-      "snapshot": "2026-10-14"
+      "snapshot": "2026-10-14",
+      "license_evidence": "Apache License, Version 2.0",
+      "license_path": "LICENSE"
     },
     {
       "id": "openai-agents-python",
@@ -194,7 +211,9 @@
       "pushed_at": "2026-10-14T01:04:35Z",
       "topics": ["agents", "ai", "framework", "harness", "llm", "openai", "python"],
       "import_class": "asset-import",
-      "snapshot": "2026-10-14"
+      "snapshot": "2026-10-14",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "semantic-kernel",
@@ -208,7 +227,9 @@
       "pushed_at": "2026-10-14T07:08:28Z",
       "topics": ["ai", "artificial-intelligence", "llm", "openai", "sdk"],
       "import_class": "asset-import",
-      "snapshot": "2026-10-14"
+      "snapshot": "2026-10-14",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "haystack",
@@ -231,7 +252,9 @@
         "framework"
       ],
       "import_class": "asset-import",
-      "snapshot": "2026-10-14"
+      "snapshot": "2026-10-14",
+      "license_evidence": "Apache License, Version 2.0",
+      "license_path": "LICENSE"
     },
     {
       "id": "swarm",
@@ -245,7 +268,9 @@
       "pushed_at": "2026-04-15T17:10:28Z",
       "topics": [],
       "import_class": "asset-import",
-      "snapshot": "2026-10-14"
+      "snapshot": "2026-10-14",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "adk-python",
@@ -268,7 +293,9 @@
         "aiagentframework"
       ],
       "import_class": "asset-import",
-      "snapshot": "2026-10-14"
+      "snapshot": "2026-10-14",
+      "license_evidence": "Apache License, Version 2.0",
+      "license_path": "LICENSE"
     },
     {
       "id": "pydantic-ai",
@@ -290,7 +317,9 @@
         "python"
       ],
       "import_class": "asset-import",
-      "snapshot": "2026-10-14"
+      "snapshot": "2026-10-14",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "swe-agent",
@@ -312,7 +341,9 @@
         "lms"
       ],
       "import_class": "asset-import",
-      "snapshot": "2026-10-14"
+      "snapshot": "2026-10-14",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "deep-research",
@@ -326,7 +357,9 @@
       "pushed_at": "2026-04-11T23:58:25Z",
       "topics": ["agent", "ai", "gpt", "o3-mini", "research"],
       "import_class": "asset-import",
-      "snapshot": "2026-10-14"
+      "snapshot": "2026-10-14",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "camel",
@@ -349,7 +382,9 @@
         "multi-agent-systems"
       ],
       "import_class": "asset-import",
-      "snapshot": "2026-10-14"
+      "snapshot": "2026-10-14",
+      "license_evidence": "Apache License, Version 2.0",
+      "license_path": "LICENSE"
     },
     {
       "id": "agent-framework",
@@ -372,7 +407,9 @@
         "python"
       ],
       "import_class": "asset-import",
-      "snapshot": "2026-10-14"
+      "snapshot": "2026-10-14",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     },
     {
       "id": "humanlayer",
@@ -380,7 +417,7 @@
       "url": "https://github.com/humanlayer/humanlayer",
       "title": "HumanLayer",
       "what": "putting a human in front of the risky step",
-      "license": "NOASSERTION",
+      "license": "Apache-2.0",
       "stars": 11692,
       "size_kb": 32128,
       "pushed_at": "2026-06-19T03:27:53Z",
@@ -394,8 +431,12 @@
         "humanlayer",
         "llm"
       ],
-      "import_class": "blueprint-only",
-      "snapshot": "2026-10-14"
+      "import_class": "asset-import",
+      "snapshot": "2026-10-14",
+      "license_detected": "NOASSERTION",
+      "license_source": "text",
+      "license_evidence": "Apache License, Version 2.0",
+      "license_path": "LICENSE"
     },
     {
       "id": "mcp-agent",
@@ -418,7 +459,9 @@
         "python"
       ],
       "import_class": "asset-import",
-      "snapshot": "2026-10-14"
+      "snapshot": "2026-10-14",
+      "license_evidence": "Apache License, Version 2.0",
+      "license_path": "LICENSE"
     },
     {
       "id": "agent-squad",
@@ -441,7 +484,9 @@
         "aws-bedrock"
       ],
       "import_class": "asset-import",
-      "snapshot": "2026-10-14"
+      "snapshot": "2026-10-14",
+      "license_evidence": "Apache License, Version 2.0",
+      "license_path": "LICENSE"
     },
     {
       "id": "openai-agents-js",
@@ -455,7 +500,9 @@
       "pushed_at": "2026-10-10T00:09:37Z",
       "topics": ["agents", "openai", "openai-api", "realtime-api", "typescript"],
       "import_class": "asset-import",
-      "snapshot": "2026-10-14"
+      "snapshot": "2026-10-14",
+      "license_evidence": "Permission is hereby granted, free of charge",
+      "license_path": "LICENSE"
     }
   ]
 }

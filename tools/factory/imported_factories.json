@@ -68,7 +68,9 @@
     "license_file_needed": false,
     "id": "fabro-sh-fabro",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE.md"
   },
   {
     "full_name": "Runfusion/Fusion",
@@ -137,7 +139,9 @@
     "license_file_needed": false,
     "id": "runfusion-fusion",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "vercel-labs/eve-software-factory-template",
@@ -185,7 +189,9 @@
     "license_file_needed": false,
     "id": "vercel-labs-eve-software-factory-template",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "owainlewis/machinist",
@@ -257,7 +263,9 @@
     "license_file_needed": false,
     "id": "owainlewis-machinist",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "addyosmani/factory",
@@ -306,7 +314,9 @@
     "license_file_needed": false,
     "id": "addyosmani-factory",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "iusztinpaul/squid",
@@ -351,7 +361,9 @@
     "license_file_needed": false,
     "id": "iusztinpaul-squid",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Apache License, Version 2.0",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "mitkox/esf",
@@ -433,7 +445,9 @@
     "license_file_needed": false,
     "id": "mitkox-esf",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "sandgardenhq/sgai",
@@ -445,7 +459,7 @@
     "size_kb": 7080,
     "pushed_at": "2026-09-21T01:45:09Z",
     "created_at": "2026-01-23T20:40:39Z",
-    "license": "NOASSERTION",
+    "license": "MIT",
     "topics": [],
     "archived": false,
     "open_issues": 9,
@@ -484,10 +498,14 @@
     ],
     "evidence_count": 6,
     "ai_worker_evidence": true,
-    "license_file_needed": true,
+    "license_file_needed": false,
     "id": "sandgardenhq-sgai",
-    "import_class": "blueprint-only",
-    "snapshot": "2026-10-14"
+    "import_class": "asset-import",
+    "snapshot": "2026-10-14",
+    "license_detected": "NOASSERTION",
+    "license_source": "text",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "os-factory/har",
@@ -576,7 +594,9 @@
     "license_file_needed": false,
     "id": "os-factory-har",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Apache License, Version 2.0",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "parthalon025/autonomous-coding-toolkit",
@@ -656,7 +676,9 @@
     "license_file_needed": false,
     "id": "parthalon025-autonomous-coding-toolkit",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "vaibhav07772/Autonomous-AI-Software-Factory",
@@ -801,7 +823,9 @@
     "license_file_needed": false,
     "id": "disler-inkwell-agent-sandboxes-and-software-factory",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "jabbala10-bit/ai-agent-platform",
@@ -946,7 +970,9 @@
     "license_file_needed": false,
     "id": "othmanadi-planning-with-files",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "superplanehq/superplane",
@@ -1028,7 +1054,9 @@
     "license_file_needed": true,
     "id": "superplanehq-superplane",
     "import_class": "blueprint-only",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_path": "LICENSE",
+    "license_note": "blocked: enterprise-edition"
   },
   {
     "full_name": "sbhooley/ainativelang",
@@ -1119,7 +1147,9 @@
     "license_file_needed": false,
     "id": "sbhooley-ainativelang",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Apache License, Version 2.0",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "Agent-Field/CodeAF",
@@ -1207,7 +1237,9 @@
     "license_file_needed": false,
     "id": "agent-field-codeaf",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Apache License, Version 2.0",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "konflux-ci/konflux-ci",
@@ -1290,7 +1322,9 @@
     "license_file_needed": false,
     "id": "konflux-ci-konflux-ci",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Apache License, Version 2.0",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "gethuman-sh/human",
@@ -1380,7 +1414,9 @@
     "license_file_needed": false,
     "id": "gethuman-sh-human",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "curie-eng/curie",
@@ -1466,7 +1502,9 @@
     "license_file_needed": false,
     "id": "curie-eng-curie",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Apache License, Version 2.0",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "watt-mind/factory",
@@ -1552,7 +1590,9 @@
     "license_file_needed": false,
     "id": "watt-mind-factory",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Apache License, Version 2.0",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "BenedictTenius/FabricSoftware",
@@ -1635,7 +1675,9 @@
     "license_file_needed": false,
     "id": "salmanmohsen-synapse",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "shenwell/ai-software-factory-pipeline",
@@ -1677,7 +1719,9 @@
     "license_file_needed": false,
     "id": "shenwell-ai-software-factory-pipeline",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "bawfng04/Chaos-MoA-Pipeline",
@@ -1771,7 +1815,9 @@
     "license_file_needed": false,
     "id": "ashishyesale7-lgflutterstarterkit",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "AngelMsger/jenkins-cli",
@@ -1825,7 +1871,9 @@
     "license_file_needed": false,
     "id": "angelmsger-jenkins-cli",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "udoschneider/workflow-pipeline",
@@ -1873,7 +1921,9 @@
     "license_file_needed": false,
     "id": "udoschneider-workflow-pipeline",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "brahmpreetsingh-oss/content-engine",
@@ -2015,7 +2065,9 @@
     "license_file_needed": false,
     "id": "frankiezheng110-superteam",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "TanayDeo24/MedAgent",
@@ -2147,7 +2199,9 @@
     "license_file_needed": false,
     "id": "tikalk-adlc-team-skills",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "AbhinavPabbaraju/nexus-deep-research-agent",
@@ -2282,7 +2336,9 @@
     "license_file_needed": false,
     "id": "shuanbao0-agent-factory",
     "import_class": "blueprint-only",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_path": "LICENSE",
+    "license_note": "blocked: AGPL-3.0"
   },
   {
     "full_name": "bjwanneng/Veriflow-agent",
@@ -2358,7 +2414,9 @@
     "license_file_needed": false,
     "id": "rukenzilan-4-agent-software-development-pipeline",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "shawncsx/AutoSCI",
@@ -2406,7 +2464,9 @@
     "license_file_needed": false,
     "id": "shawncsx-autosci",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "oraphadev/ai-workflow",
@@ -2437,7 +2497,9 @@
     "license_file_needed": false,
     "id": "oraphadev-ai-workflow",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "grimgrimberg/daily-movers-agent",
@@ -2506,7 +2568,9 @@
     "license_file_needed": false,
     "id": "grimgrimberg-daily-movers-agent",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "finchello/tetra",
@@ -2567,7 +2631,9 @@
     "license_file_needed": false,
     "id": "finchello-tetra",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "praneethaneelapareddigari/agentic-ai-workflow-copilot",
@@ -2760,7 +2826,7 @@
     "size_kb": 22313,
     "pushed_at": "2026-06-24T12:30:29Z",
     "created_at": "2026-05-08T04:30:35Z",
-    "license": "NOASSERTION",
+    "license": "MIT",
     "topics": [],
     "archived": false,
     "open_issues": 0,
@@ -2800,10 +2866,14 @@
     ],
     "evidence_count": 5,
     "ai_worker_evidence": false,
-    "license_file_needed": true,
+    "license_file_needed": false,
     "id": "transconnectome-claude-code-coord",
-    "import_class": "blueprint-only",
-    "snapshot": "2026-10-14"
+    "import_class": "asset-import",
+    "snapshot": "2026-10-14",
+    "license_detected": "NOASSERTION",
+    "license_source": "text",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "rocketride-org/rocketride-server",
@@ -2878,7 +2948,9 @@
     "license_file_needed": false,
     "id": "rocketride-org-rocketride-server",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "cloudflare/moltworker",
@@ -2927,7 +2999,9 @@
     "license_file_needed": false,
     "id": "cloudflare-moltworker",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Apache License, Version 2.0",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "bastani-inc/atomic",
@@ -2939,7 +3013,7 @@
     "size_kb": 136866,
     "pushed_at": "2026-10-14T00:54:46Z",
     "created_at": "2025-10-23T04:24:21Z",
-    "license": "NOASSERTION",
+    "license": "MIT",
     "topics": [],
     "archived": false,
     "open_issues": 42,
@@ -2988,10 +3062,14 @@
     "evidence": ["worker/agent code", "stages", "verification/review", "build/test/ship steps"],
     "evidence_count": 4,
     "ai_worker_evidence": true,
-    "license_file_needed": true,
+    "license_file_needed": false,
     "id": "bastani-inc-atomic",
-    "import_class": "blueprint-only",
-    "snapshot": "2026-10-14"
+    "import_class": "asset-import",
+    "snapshot": "2026-10-14",
+    "license_detected": "NOASSERTION",
+    "license_source": "text",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "thruwire/foreman",
@@ -3043,7 +3121,9 @@
     "license_file_needed": false,
     "id": "thruwire-foreman",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "seanoliver/audioflare",
@@ -3088,7 +3168,9 @@
     "license_file_needed": false,
     "id": "seanoliver-audioflare",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "professorpalmer/Puppetmaster",
@@ -3157,7 +3239,9 @@
     "license_file_needed": false,
     "id": "professorpalmer-puppetmaster",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "bassimeledath/dispatch",
@@ -3292,7 +3376,9 @@
     "license_file_needed": false,
     "id": "orbi-build-orbi",
     "import_class": "blueprint-only",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_path": "LICENSE",
+    "license_note": "blocked: AGPL-3.0"
   },
   {
     "full_name": "kingdoja/ai-comic-drama-platform",
@@ -3426,7 +3512,9 @@
     "license_file_needed": false,
     "id": "roxabi-roxabi-factory",
     "import_class": "blueprint-only",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_path": "LICENSE",
+    "license_note": "blocked: AGPL-3.0"
   },
   {
     "full_name": "Charlyhno-eng/jev-codex-pilot",
@@ -3478,7 +3566,9 @@
     "license_file_needed": false,
     "id": "charlyhno-eng-jev-codex-pilot",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "SufficientDaikon/sdd-copilot-agents",
@@ -3521,7 +3611,9 @@
     "license_file_needed": false,
     "id": "sufficientdaikon-sdd-copilot-agents",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "bryce-murphy/amas-framework",
@@ -3572,7 +3664,9 @@
     "license_file_needed": false,
     "id": "bryce-murphy-amas-framework",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "hadamrd/titan",
@@ -3653,7 +3747,9 @@
     "license_file_needed": false,
     "id": "hadamrd-titan",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE.md"
   },
   {
     "full_name": "cleanwk/agent-pipeline-example",
@@ -3693,7 +3789,9 @@
     "license_file_needed": false,
     "id": "cleanwk-agent-pipeline-example",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Apache License, Version 2.0",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "GratefulJinx77/speckit-claude",
@@ -3814,7 +3912,9 @@
     "license_file_needed": false,
     "id": "getcrew44-crew44",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "finna/Finn-loop",
@@ -3851,7 +3951,9 @@
     "license_file_needed": false,
     "id": "finna-finn-loop",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "kunchenguid/grok-ship",
@@ -3892,7 +3994,9 @@
     "license_file_needed": false,
     "id": "kunchenguid-grok-ship",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "sch0penheimer/AWS-DevSecOps-Hybrid-Software-Factory",
@@ -3952,7 +4056,9 @@
     "license_file_needed": false,
     "id": "sch0penheimer-aws-devsecops-hybrid-software-factory",
     "import_class": "asset-import",
-    "snapshot": "2026-10-14"
+    "snapshot": "2026-10-14",
+    "license_evidence": "CC0 1.0 Universal",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "TheAlanWang/native-to-agentic-rag",
@@ -4047,5 +4153,728 @@
     "id": "seif410-ai-marketing-agent-pipeline",
     "import_class": "blueprint-only",
     "snapshot": "2026-10-14"
+  },
+  {
+    "full_name": "addyosmani/agent-skills",
+    "url": "https://github.com/addyosmani/agent-skills",
+    "description": "Production-grade engineering skills for AI coding agents.",
+    "stars": 106635,
+    "forks": 11095,
+    "language": "JavaScript",
+    "size_kb": 1780,
+    "pushed_at": "2026-10-13T20:24:07Z",
+    "created_at": "2026-02-15T20:20:26Z",
+    "license": "MIT",
+    "topics": ["agent-skills", "antigravity", "claude-code", "codex", "cursor", "skills"],
+    "archived": false,
+    "open_issues": 118,
+    "queries": ["\"agent skills\" in:name,description"],
+    "dirs": [
+      ".agents",
+      ".claude",
+      ".claude-plugin",
+      ".codex-plugin",
+      ".gemini",
+      ".github",
+      ".opencode",
+      "agents",
+      "commands",
+      "docs",
+      "evals",
+      "hooks",
+      "references",
+      "scripts",
+      "skills"
+    ],
+    "entry_names": [
+      "agents/code-reviewer.md",
+      "agents/test-engineer.md",
+      "agents/security-auditor.md"
+    ],
+    "evidence": [
+      "worker/agent code",
+      "stages",
+      "orchestration",
+      "verification/review",
+      "build/test/ship steps"
+    ],
+    "evidence_count": 5,
+    "ai_worker_evidence": true,
+    "license_file_needed": false,
+    "id": "addyosmani-agent-skills",
+    "import_class": "asset-import",
+    "snapshot": "2026-10-14",
+    "license_source": "api"
+  },
+  {
+    "full_name": "tt-a1i/archify",
+    "url": "https://github.com/tt-a1i/archify",
+    "description": "Turn any idea, plan, or codebase into a beautiful interactive diagram. An agent skill for Claude Code, Codex, and more.",
+    "stars": 83478,
+    "forks": 5647,
+    "language": "JavaScript",
+    "size_kb": 727006,
+    "pushed_at": "2026-10-14T16:11:23Z",
+    "created_at": "2026-04-15T05:27:37Z",
+    "license": "MIT",
+    "topics": [
+      "agent-skills",
+      "ai-agents",
+      "architecture-diagram",
+      "claude-code",
+      "claude-skills",
+      "codex",
+      "coding-agents",
+      "deepseek-harness",
+      "developer-tools",
+      "diagrams",
+      "diagrams-as-code",
+      "dsh-plugin",
+      "flowchart",
+      "llm",
+      "mermaid",
+      "opencode",
+      "sequence-diagram",
+      "software-architecture",
+      "system-design",
+      "visualization"
+    ],
+    "archived": false,
+    "open_issues": 292,
+    "queries": ["\"agent skills\" in:name,description"],
+    "dirs": [
+      ".agents",
+      ".github",
+      "archify",
+      "benchmarks",
+      "community",
+      "docs",
+      "examples",
+      "experiments",
+      "integrations",
+      "journal",
+      "scripts",
+      "test",
+      "tools",
+      "viewer",
+      "website"
+    ],
+    "entry_names": [
+      ".github/workflows/ci.yml",
+      ".github/workflows/dsh.yml",
+      ".github/workflows/release.yml"
+    ],
+    "evidence": [
+      "worker/agent code",
+      "stages",
+      "orchestration",
+      "verification/review",
+      "build/test/ship steps"
+    ],
+    "evidence_count": 5,
+    "ai_worker_evidence": true,
+    "license_file_needed": false,
+    "id": "tt-a1i-archify",
+    "import_class": "asset-import",
+    "snapshot": "2026-10-14",
+    "license_source": "api"
+  },
+  {
+    "full_name": "mvanhorn/last30days-skill",
+    "url": "https://github.com/mvanhorn/last30days-skill",
+    "description": "AI agent skill that researches any topic across Reddit, X, YouTube, HN, Polymarket, and the web - then synthesizes a grounded summary",
+    "stars": 64255,
+    "forks": 5610,
+    "language": "Python",
+    "size_kb": 53836,
+    "pushed_at": "2026-10-13T18:06:09Z",
+    "created_at": "2026-01-23T20:37:37Z",
+    "license": "MIT",
+    "topics": [
+      "ai-prompts",
+      "ai-skill",
+      "bluesky",
+      "claude",
+      "claude-code",
+      "clawhub",
+      "deep-research",
+      "hackernews",
+      "instagram",
+      "openclaw",
+      "polymarket",
+      "recency",
+      "reddit",
+      "research",
+      "social-media",
+      "tiktok",
+      "trends",
+      "twitter",
+      "web-search",
+      "youtube"
+    ],
+    "archived": false,
+    "open_issues": 28,
+    "queries": ["\"agent skills\" in:name,description"],
+    "dirs": [
+      ".agents",
+      ".claude-plugin",
+      ".codex-plugin",
+      ".github",
+      ".grok-plugin",
+      "changelog.d",
+      "docs",
+      "fixtures",
+      "mcp",
+      "media",
+      "skills",
+      "tests"
+    ],
+    "entry_names": [
+      "skills/last30days/SKILL.md",
+      ".github/workflows/zizmor.yml",
+      ".github/workflows/release.yml"
+    ],
+    "evidence": ["worker/agent code", "stages", "verification/review", "build/test/ship steps"],
+    "evidence_count": 4,
+    "ai_worker_evidence": true,
+    "license_file_needed": false,
+    "id": "mvanhorn-last30days-skill",
+    "import_class": "asset-import",
+    "snapshot": "2026-10-14",
+    "license_source": "api"
+  },
+  {
+    "full_name": "K-Dense-AI/scientific-agent-skills",
+    "url": "https://github.com/K-Dense-AI/scientific-agent-skills",
+    "description": "Turn any AI agent into an AI Scientist. The #1 Agent Skills library for science, used by 250,000+ scientists worldwide. 177 ready-to-use validated skills plus 100+ scientific databases covering biology, chemistry, medicine, and drug discove",
+    "stars": 49207,
+    "forks": 4414,
+    "language": "Python",
+    "size_kb": 474003,
+    "pushed_at": "2026-10-12T09:43:31Z",
+    "created_at": "2025-10-19T20:54:15Z",
+    "license": "MIT",
+    "topics": [
+      "agent-skills",
+      "ai-scientist",
+      "bioinformatics",
+      "chemoinformatics",
+      "claude",
+      "claude-skills",
+      "claudecode",
+      "clinical-research",
+      "computational-biology",
+      "data-analysis",
+      "drug-discovery",
+      "genomics",
+      "materials-science",
+      "metabolomics",
+      "proteomics",
+      "scientific-computing",
+      "scientific-visualization"
+    ],
+    "archived": false,
+    "open_issues": 30,
+    "queries": ["\"agent skills\" in:name,description"],
+    "dirs": [".github", "docs", "scripts", "skills", "tests"],
+    "entry_names": ["skills/esm/SKILL.md", "skills/aeon/SKILL.md", "skills/bids/SKILL.md"],
+    "evidence": ["stages", "orchestration", "verification/review", "build/test/ship steps"],
+    "evidence_count": 4,
+    "ai_worker_evidence": true,
+    "license_file_needed": false,
+    "id": "k-dense-ai-scientific-agent-skills",
+    "import_class": "asset-import",
+    "snapshot": "2026-10-14",
+    "license_source": "api"
+  },
+  {
+    "full_name": "alirezarezvani/claude-skills",
+    "url": "https://github.com/alirezarezvani/claude-skills",
+    "description": "380 Claude Code skills & agent skills & plugins (30+ Agents, 70+ custom commands, 380+ skills, customizable references, scripts)for Claude Code, Codex, Gemini CLI, Cursor, and 8 more coding agents \u2014 engineering, marketing, product, complian",
+    "stars": 28192,
+    "forks": 3957,
+    "language": "Python",
+    "size_kb": 22632,
+    "pushed_at": "2026-08-30T09:46:16Z",
+    "created_at": "2025-10-19T04:04:05Z",
+    "license": "MIT",
+    "topics": [
+      "agent-plugins",
+      "agent-skills",
+      "agentic-ai",
+      "ai-coding-agent",
+      "anthropic-claude",
+      "claude-ai",
+      "claude-code",
+      "claude-code-plugins",
+      "claude-code-skills",
+      "claude-skills",
+      "codex-skills",
+      "coding-agent-plugins",
+      "cursor-skills",
+      "developer-tools",
+      "gemini-cli-skills",
+      "openai-codex",
+      "openclaw",
+      "openclaw-plugins",
+      "openclaw-skills",
+      "prompt-engineering"
+    ],
+    "archived": false,
+    "open_issues": 33,
+    "queries": ["\"agent skills\" in:name,description"],
+    "dirs": [
+      ".claude",
+      ".claude-plugin",
+      ".codex",
+      ".codex-plugin",
+      ".gemini",
+      ".github",
+      ".hermes",
+      ".vibe",
+      "agent-launcher",
+      "agents",
+      "assets",
+      "audit",
+      "business-growth",
+      "business-operations",
+      "c-level-advisor",
+      "c-level-agents",
+      "commands",
+      "commercial",
+      "compliance-os",
+      "custom-gpt",
+      "docs",
+      "engineering",
+      "engineering-team",
+      "finance"
+    ],
+    "entry_names": ["agents/CLAUDE.md", ".claude/settings.json", ".codex/skills/pw"],
+    "evidence": [
+      "worker/agent code",
+      "stages",
+      "orchestration",
+      "verification/review",
+      "build/test/ship steps"
+    ],
+    "evidence_count": 5,
+    "ai_worker_evidence": true,
+    "license_file_needed": false,
+    "id": "alirezarezvani-claude-skills",
+    "import_class": "asset-import",
+    "snapshot": "2026-10-14",
+    "license_source": "api"
+  },
+  {
+    "full_name": "muratcankoylan/Agent-Skills-for-Context-Engineering",
+    "url": "https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering",
+    "description": "A comprehensive collection of Agent Skills for context engineering, multi-agent architectures, and production agent systems. Use when building, optimizing, or debugging agent systems that require effective context management.",
+    "stars": 18133,
+    "forks": 1498,
+    "language": "Python",
+    "size_kb": 37156,
+    "pushed_at": "2026-10-12T02:06:40Z",
+    "created_at": "2025-12-21T02:43:42Z",
+    "license": "MIT",
+    "topics": [],
+    "archived": false,
+    "open_issues": 58,
+    "queries": ["\"agent skills\" in:name,description"],
+    "dirs": [
+      ".claude-plugin",
+      ".github",
+      ".plugin",
+      "assets",
+      "docs",
+      "examples",
+      "governance",
+      "researcher",
+      "skills",
+      "template"
+    ],
+    "entry_names": [
+      "skills/evaluation/SKILL.md",
+      "skills/tool-design/SKILL.md",
+      "skills/hosted-agents/SKILL.md"
+    ],
+    "evidence": [
+      "worker/agent code",
+      "stages",
+      "orchestration",
+      "verification/review",
+      "build/test/ship steps"
+    ],
+    "evidence_count": 5,
+    "ai_worker_evidence": true,
+    "license_file_needed": false,
+    "id": "muratcankoylan-agent-skills-for-context-engineering",
+    "import_class": "asset-import",
+    "snapshot": "2026-10-14",
+    "license_source": "api"
+  },
+  {
+    "full_name": "larksuite/cli",
+    "url": "https://github.com/larksuite/cli",
+    "description": "The official Lark/\u98de\u4e66 CLI tool, maintained by the larksuite team \u2014 built for humans and AI Agents. Covers core business domains including Messenger, Docs, Base, Sheets, Calendar, Mail, Tasks, Meetings, and more, with 200+ commands and 20+ AI",
+    "stars": 17679,
+    "forks": 1389,
+    "language": "Go",
+    "size_kb": 144685,
+    "pushed_at": "2026-10-14T19:54:45Z",
+    "created_at": "2026-03-25T07:13:30Z",
+    "license": "MIT",
+    "topics": [],
+    "archived": false,
+    "open_issues": 688,
+    "queries": ["\"agent skills\" in:name,description"],
+    "dirs": [
+      ".github",
+      "affordance",
+      "cmd",
+      "errs",
+      "events",
+      "extension",
+      "internal",
+      "isolated-skills",
+      "lint",
+      "scripts",
+      "shortcuts",
+      "sidecar",
+      "skill-template",
+      "skills",
+      "tests"
+    ],
+    "entry_names": ["cmd/skill/skill.go", "cmd/skill/skill_test.go", "skills/lark-im/SKILL.md"],
+    "evidence": [
+      "worker/agent code",
+      "stages",
+      "orchestration",
+      "factory naming",
+      "verification/review",
+      "build/test/ship steps"
+    ],
+    "evidence_count": 6,
+    "ai_worker_evidence": true,
+    "license_file_needed": false,
+    "id": "larksuite-cli",
+    "import_class": "asset-import",
+    "snapshot": "2026-10-14",
+    "license_source": "api"
+  },
+  {
+    "full_name": "HKUDS/nanobot",
+    "url": "https://github.com/HKUDS/nanobot",
+    "description": "Ultra-lightweight, open-source, self-hosted personal AI agent framework in Python with WebUI, tools, memory, MCP, multi-agent workflows, automation, and chat apps",
+    "stars": 49034,
+    "forks": 8629,
+    "language": "Python",
+    "size_kb": 76450,
+    "pushed_at": "2026-10-14T18:43:26Z",
+    "created_at": "2026-02-01T07:16:15Z",
+    "license": "MIT",
+    "topics": [
+      "agent-framework",
+      "ai-agent",
+      "ai-agents",
+      "chatbot",
+      "chatops",
+      "discord-bot",
+      "llm-agents",
+      "llms",
+      "local-llm",
+      "mcp",
+      "model-context-protocol",
+      "multi-agent",
+      "openai-compatible",
+      "openclaw",
+      "personal-ai-assistant",
+      "python",
+      "self-hosted",
+      "telegram-bot-ai-assistant",
+      "webui",
+      "workflow-automation"
+    ],
+    "archived": false,
+    "open_issues": 864,
+    "queries": ["\"agent workflows\" in:name,description"],
+    "dirs": [
+      ".agent",
+      ".github",
+      "docs",
+      "images",
+      "nanobot",
+      "packages",
+      "scripts",
+      "tests",
+      "tui",
+      "webui"
+    ],
+    "entry_names": [".agent/design.md", ".agent/gotchas.md", ".agent/security.md"],
+    "evidence": [
+      "worker/agent code",
+      "stages",
+      "orchestration",
+      "factory naming",
+      "verification/review",
+      "build/test/ship steps"
+    ],
+    "evidence_count": 6,
+    "ai_worker_evidence": true,
+    "license_file_needed": false,
+    "id": "hkuds-nanobot",
+    "import_class": "asset-import",
+    "snapshot": "2026-10-14",
+    "license_source": "api"
+  },
+  {
+    "full_name": "openai/openai-agents-python",
+    "url": "https://github.com/openai/openai-agents-python",
+    "description": "A lightweight, powerful framework for multi-agent workflows",
+    "stars": 30038,
+    "forks": 4895,
+    "language": "Python",
+    "size_kb": 79568,
+    "pushed_at": "2026-10-14T20:40:13Z",
+    "created_at": "2025-03-11T03:42:36Z",
+    "license": "MIT",
+    "topics": ["agents", "ai", "framework", "harness", "llm", "openai", "python"],
+    "archived": false,
+    "open_issues": 8,
+    "queries": ["\"agent workflows\" in:name,description"],
+    "dirs": [
+      ".agents",
+      ".github",
+      ".vscode",
+      "docs",
+      "examples",
+      "integration_tests",
+      "src",
+      "tests"
+    ],
+    "entry_names": ["src/agents/run.py", "src/agents/repl.py", "src/agents/tool.py"],
+    "evidence": [
+      "worker/agent code",
+      "stages",
+      "orchestration",
+      "factory naming",
+      "verification/review",
+      "build/test/ship steps"
+    ],
+    "evidence_count": 6,
+    "ai_worker_evidence": true,
+    "license_file_needed": false,
+    "id": "openai-openai-agents-python",
+    "import_class": "asset-import",
+    "snapshot": "2026-10-14",
+    "license_source": "api"
+  },
+  {
+    "full_name": "github/codeql",
+    "url": "https://github.com/github/codeql",
+    "description": "CodeQL: the libraries and queries that power security researchers around the world, as well as code scanning in GitHub Advanced Security",
+    "stars": 10200,
+    "forks": 2122,
+    "language": "CodeQL",
+    "size_kb": 534412,
+    "pushed_at": "2026-10-14T18:27:06Z",
+    "created_at": "2018-07-31T16:35:51Z",
+    "license": "MIT",
+    "topics": [
+      "codeql",
+      "github-advanced-security",
+      "github-security-lab",
+      "semmle-ql",
+      "works-with-codespaces"
+    ],
+    "archived": false,
+    "open_issues": 1481,
+    "queries": ["planned:CodeQL"],
+    "dirs": [
+      ".devcontainer",
+      ".github",
+      ".vscode",
+      "actions",
+      "change-notes",
+      "config",
+      "cpp",
+      "csharp",
+      "docs",
+      "go",
+      "java",
+      "javascript",
+      "misc",
+      "python"
+    ],
+    "entry_names": [
+      ".github/workflows/rust.yml",
+      ".github/workflows/swift.yml",
+      ".github/workflows/labeler.yml"
+    ],
+    "evidence": [
+      "worker/agent code",
+      "stages",
+      "orchestration",
+      "factory naming",
+      "verification/review",
+      "build/test/ship steps"
+    ],
+    "evidence_count": 6,
+    "ai_worker_evidence": true,
+    "license_file_needed": false,
+    "id": "github-codeql",
+    "import_class": "asset-import",
+    "snapshot": "2026-10-14",
+    "license_source": "api",
+    "planned_tool": "CodeQL",
+    "handles": "Interprocedural Kotlin/Java/Python/JS security analysis",
+    "plan_gap": "Build extraction, query scope, policy and resource budget; not enabled"
+  },
+  {
+    "full_name": "mobile-dev-inc/Maestro",
+    "url": "https://github.com/mobile-dev-inc/Maestro",
+    "description": "Painless E2E Automation for Mobile and Web",
+    "stars": 16060,
+    "forks": 988,
+    "language": "Kotlin",
+    "size_kb": 1065407,
+    "pushed_at": "2026-10-14T10:37:08Z",
+    "created_at": "2022-03-31T18:17:40Z",
+    "license": "Apache-2.0",
+    "topics": ["android", "blackbox-testing", "ios", "ui-automation"],
+    "archived": false,
+    "open_issues": 500,
+    "queries": ["planned:Maestro"],
+    "dirs": [
+      ".claude",
+      ".github",
+      ".idea",
+      ".run",
+      "assets",
+      "docs",
+      "e2e",
+      "gradle",
+      "maestro-ai",
+      "maestro-android",
+      "maestro-cli",
+      "maestro-client",
+      "maestro-ios",
+      "maestro-ios-driver",
+      "maestro-ios-xctest-runner",
+      "maestro-orchestra",
+      "maestro-orchestra-models",
+      "maestro-proto",
+      "maestro-test",
+      "maestro-utils",
+      "maestro-web",
+      "scripts"
+    ],
+    "entry_names": [
+      ".claude",
+      ".editorconfig",
+      ".gitattributes",
+      ".github",
+      ".gitignore",
+      ".idea",
+      ".nvmrc",
+      ".run",
+      "AGENTS.md",
+      "CHANGELOG.md",
+      "CLAUDE.md",
+      "CONTRIBUTING.md",
+      "LICENSE",
+      "README.md",
+      "RELEASING.md",
+      "assets",
+      "build.gradle.kts",
+      "debug.keystore",
+      "detekt-guard.yml",
+      "detekt.yml",
+      "docs",
+      "e2e",
+      "gradle",
+      "gradle.properties"
+    ],
+    "definition_paths": [
+      ".claude/agents/diagnose-maestro-failure.md",
+      ".claude/settings.json",
+      ".claude/skills/bump-android-version/SKILL.md"
+    ],
+    "evidence": [
+      "worker/agent code",
+      "stages",
+      "orchestration",
+      "factory naming",
+      "verification/review",
+      "build/test/ship steps"
+    ],
+    "evidence_count": 6,
+    "ai_worker_evidence": true,
+    "license_file_needed": false,
+    "id": "mobile-dev-inc-maestro",
+    "import_class": "asset-import",
+    "snapshot": "2026-10-14",
+    "license_source": "api",
+    "planned_tool": "Maestro",
+    "handles": "Device start/stop/save/navigation journeys",
+    "plan_gap": "Real test APK/emulator, semantic selectors and durable-state assertions"
+  },
+  {
+    "full_name": "renovatebot/renovate",
+    "url": "https://github.com/renovatebot/renovate",
+    "description": "Home of the Renovate CLI: Cross-platform Dependency Automation by Mend.io",
+    "stars": 22751,
+    "forks": 3368,
+    "language": "TypeScript",
+    "size_kb": 165848,
+    "pushed_at": "2026-10-14T20:35:44Z",
+    "created_at": "2016-12-17T16:21:21Z",
+    "license": "AGPL-3.0",
+    "topics": [
+      "azure-devops",
+      "bitbucket",
+      "dependencies",
+      "dependencies-checking",
+      "dependency-manager",
+      "github",
+      "gitlab",
+      "npm",
+      "package-management"
+    ],
+    "archived": false,
+    "open_issues": 1475,
+    "queries": ["planned:Renovate"],
+    "dirs": [
+      ".claude",
+      ".devcontainer",
+      ".github",
+      ".husky",
+      ".vscode",
+      "__mocks__",
+      "data",
+      "docs",
+      "lib",
+      "patches",
+      "test",
+      "tools"
+    ],
+    "entry_names": [".claude/settings.json", "lib/workers/types.ts", ".github/workflows/lock.yml"],
+    "evidence": [
+      "worker/agent code",
+      "stages",
+      "orchestration",
+      "factory naming",
+      "verification/review",
+      "build/test/ship steps"
+    ],
+    "evidence_count": 6,
+    "ai_worker_evidence": true,
+    "license_file_needed": true,
+    "id": "renovatebot-renovate",
+    "import_class": "blueprint-only",
+    "snapshot": "2026-10-14",
+    "license_source": "api",
+    "planned_tool": "Renovate",
+    "handles": "Reviewed dependency update proposals",
+    "plan_gap": "Maintainer GitHub App authorization and PR policy; no activation or auto-merge"
   }
 ]
