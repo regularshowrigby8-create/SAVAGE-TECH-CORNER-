@@ -236,6 +236,41 @@ focus. The stage now, before the suite:
 The exit statuses of the two `adb` commands are captured and printed rather than suppressed; what
 decides readiness is the state read back underneath, never the optimism of having issued a command.
 
+### 2.8 Continuous integration on this round's commit
+
+All six workflows are green on `6815828`, the commit that carries the sealed component and its tests:
+
+| Workflow                                   | Run                                                                                      | Result  |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------- | ------- |
+| Comprehensive Quality Conveyor Belt (push) | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38605661549 | success |
+| Comprehensive Quality Conveyor Belt (PR)   | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38605670001 | success |
+| Android Build, Test and Release            | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38605670221 | success |
+| Factory 2 — Single Debug Job (push)        | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38605661605 | success |
+| Factory 2 — Single Debug Job (PR)          | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38605670252 | success |
+| AI PR Code Reviewers (Dual Fallback)       | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38605670510 | success |
+
+The Android workflow's three jobs report `Build, unit tests and lint: success`,
+`Emulator instrumented tests and install smoke test: success`, `Publish signed release APK: skipped`
+(no `keystore.properties` in the CI environment, so no release APK is claimed). The build job's
+evidence annotation for this commit:
+
+```
+apk=…/shell/android_project/app/build/outputs/apk/debug/app-debug.apk
+size_bytes=5795661
+sha256=a784c44dcba2ac90359b3614b507209bfdc6c1b62e4313229087f8d5f060d813
+package=com.savage.soulbrowser versionName=3.0.0 versionCode=5
+min_sdk=26 target_sdk=35
+permissions=['android.permission.ACCESS_NETWORK_STATE', 'android.permission.INTERNET',
+             'com.savage.soulbrowser.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION']
+signed v1=True v2=True v3=True
+```
+
+One limit on that evidence: `gh run view --log` cannot be read from this sandbox — the raw log
+download fails with `EOF` from GitHub's log receiver — so the emulator leg's own lines (including the
+pre-flight's) cannot be quoted here. The emulator job emitted no pre-flight warning annotation, which
+is what the stage does when the screen did come up awake and focused; the conclusions above are what
+was retrievable, and nothing more is claimed.
+
 ## 3. Acceptance criteria covered
 
 | Criterion | What it asserts                                                                         | Test                                                                                                                                      | Evidence        |
