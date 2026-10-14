@@ -117,7 +117,7 @@ That is the documented state of this build (A11: no signing credentials are inve
 
 ## Known limitations of this evidence
 
-- The release APK is unsigned in CI (above); `Publish signed release APK` is skipped on branches by design and only runs when the repository supplies a keystore.
+- The release APK is unsigned in CI (above); `Publish signed release APK` is skipped on branches by design and only runs when the repository supplies a keystore. It has never been installed on a device in this environment, so the device evidence is for the debug-signed debug APK, and a release install remains to be proven once an operator supplies a key.
 - The debug-signed APK differs byte for byte between runs because each runner generates its own
   debug keystore (see above); `tools/reproducible_build_verifier.py` therefore checks the APK's
   identity, version, permissions, launcher and signing scheme, not a fixed hash.
