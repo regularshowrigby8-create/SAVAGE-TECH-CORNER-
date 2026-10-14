@@ -7,6 +7,7 @@ when a file is missing, because a missing file is reported as a failure.
 """
 
 import re
+import subprocess
 import os
 import unittest
 from pathlib import Path
@@ -507,6 +508,53 @@ class AndroidWorkflowTest(unittest.TestCase):
         # Comparing against the WebView's own address, not against a remembered target, is what a
         # redirect survives.
         self.assertIn("view.getUrl()", client)
+
+    def test_a_prebuilt_apk_is_never_evidence(self):
+        """The APKs that ship inside the repository are declared, and nothing treats them as a build.
+
+        Four prebuilt APKs live in this repository (the factory's published copy, the shell's, the
+        asset and the artifact folder); they are the 1.0.0-savage build, not this checkout's. They are
+        never evidence: the APK a gate verifies is the one CI built under the Gradle project's build
+        directory, and the smoke test installs the artifact the build job published. This pins both
+        halves - the files are declared here, and no workflow, script or gate may name them.
+        """
+        declared_prebuilt = {
+            "artifacts/debug/SavageBrowser-debug.apk",
+            "assets/SavageBrowser-v2.0.0.apk",
+            "factories/final-product/SavageBrowser-debug.apk",
+            "shell/final-product/SavageBrowser-debug.apk",
+        }
+        tracked = set()
+        for entry in subprocess.run(["git", "ls-files", "*.apk"], cwd=REPO_ROOT,
+                                    capture_output=True, text=True, check=True).stdout.split():
+            tracked.add(entry)
+        self.assertEqual(sorted(declared_prebuilt), sorted(tracked),
+                         "every prebuilt APK must be declared, and no new one may appear unnoticed")
+        for relative in sorted(declared_prebuilt):
+            self.assertTrue((REPO_ROOT / relative).is_file(), relative)
+
+        # Nothing that judges a build may name one of them.
+        consumers = [
+            REPO_ROOT / "tools" / "reproducible_build_verifier.py",
+            REPO_ROOT / "tools" / "android_apk_smoke.sh",
+            REPO_ROOT / "tools" / "ci" / "android_emulator_run.sh",
+            REPO_ROOT / ".github" / "workflows" / "android-build.yml",
+            REPO_ROOT / ".github" / "workflows" / "quality-conveyor-belt.yml",
+        ]
+        for consumer in consumers:
+            text = read(consumer)
+            for prebuilt in declared_prebuilt:
+                self.assertNotIn(prebuilt, text,
+                                 f"{consumer.relative_to(REPO_ROOT)} must not treat a prebuilt APK "
+                                 f"as a build artifact")
+
+        # The pipeline the belt runs may only certify an APK whose provenance record matches it.
+        pipeline = read(REPO_ROOT / "factories" / "run_factories.py")
+        self.assertIn("no provenance record next to", pipeline)
+        self.assertIn("provenance mismatch for", pipeline)
+        builder = read(REPO_ROOT / "factories" / "factory-3" / "tools" / "apk_builder.py")
+        self.assertIn(".apk.sha256", builder,
+                      "the build stage has to publish the hash of what it published")
 
     def test_no_workflow_masks_a_failure(self):
         """No workflow may turn a failure into a pass; the belt and the reviewers must be honest."""
