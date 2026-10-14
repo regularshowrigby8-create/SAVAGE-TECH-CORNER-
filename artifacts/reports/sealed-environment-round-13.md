@@ -238,13 +238,14 @@ $ node scripts/conveyor_belt.js
 
 ```
 $ python3 -m unittest discover -s shell/tests
-Ran 191 tests in 66.441s
+Ran 192 tests in 71.310s
 
 OK
 ```
 
-That is 12 more than round 12's 179: eleven in `GitHubToolTest` and one more in
-`test_androidtest_failure_report.py` (`test_the_stage_wakes_the_screen_before_it_runs_the_suite`).
+That is 13 more than round 12's 179: eleven in `GitHubToolTest`, one in
+`test_androidtest_failure_report.py` (`test_the_stage_wakes_the_screen_before_it_runs_the_suite`) and one in `test_android_assets.py`
+(`test_the_hierarchy_dump_is_retried_without_softening_its_assertion`).
 `shell/tests/test_sealed_environment.py` now runs 50 tests, `test_sealed_factory_runtime.py` 23
 (including the payload rebuild-and-compare). The rest of the gates, on the same tree:
 
@@ -320,6 +321,55 @@ pre-flight's) cannot be quoted here. The emulator job emitted no pre-flight warn
 is what the stage does when the screen did come up awake and focused; the conclusions above are what
 was retrievable, and nothing more is claimed.
 
+### 2.9 The Android leg failed on `0e7547f`, and why
+
+The commit that wired GitHub into the run went red on one leg — and it is recorded here because a
+failure that is quietly re-run away is exactly what this repository's gates exist to prevent:
+
+| Workflow                                      | Run                                                                                                     | Result      |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ----------- |
+| Comprehensive Quality Conveyor Belt (push/PR) | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38611261062, …/38611269166 | success     |
+| Factory 2 — Single Debug Job (push/PR)        | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38611261152, …/38611269069 | success     |
+| AI PR Code Reviewers (Dual Fallback)          | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38611269086                | success     |
+| Android Build, Test and Release               | https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/38611269153                | **failure** |
+
+Its jobs: `Build, unit tests and lint: success`, `Emulator instrumented tests and install smoke test:
+failure` at the step `Run instrumented tests on an API 35 emulator`, `Publish signed release APK:
+skipped`. The job's own annotations say where it stopped and where it did not:
+
+```
+instrumented tests exit=0, smoke test exit=137, report exit=0
+FAIL: the smoke test stopped during [8/12] the browser chrome is on screen (view hierarchy dump) (exit 137)
+```
+
+So the 52 instrumented tests passed (the progress annotation reads `32/52 completed. (0 skipped)
+(0 failed)`), the Android app is untouched by this commit, the emulator pre-flight emitted no warning
+(this is the stage's own annotation when the screen did come up awake and focused), and the failure is
+the _mechanism_ of step 8: `adb shell uiautomator dump` was killed with SIGKILL (137) on the device
+before it wrote anything. Nothing in this commit can cause that; what it can do is stop treating a
+killed dump as a failed claim.
+
+`tools/android_apk_smoke.sh` step 8 now retries the dump through two mechanisms
+(`uiautomator dump <file>` and `exec-out uiautomator dump /dev/tty`) up to three times, prints the
+last attempt's own error when none produces a hierarchy, and fails the step in that case. The
+assertion is untouched: the four chrome element ids are still checked one by one against whatever
+hierarchy was produced. All three behaviours were verified here against a stub `adb` on the PATH that
+imitates the device:
+
+| Stub device behaviour                              | Result                                                                                           |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| first mechanism killed, second works               | `hierarchy read via uiautomator dump /dev/tty`, all four ids found, exit 0                       |
+| both mechanisms killed three times                 | `FAIL: uiautomator produced no view hierarchy after 3 attempts` plus the last real error, exit 1 |
+| hierarchy dumped, `btn_nav_tabs` genuinely missing | `FAIL: the launched browser is missing btn_nav_tabs`, exit 1                                     |
+
+Two limits, stated rather than implied. **The failed job could not be re-run from here**: `gh run
+rerun` answers `run 38611269153 cannot be rerun; its workflow file may be broken` and the API answers
+`403 Resource not accessible by integration` — this sandbox's credential has no `actions:write` — so
+the re-test is the next push's run of the same job, and its result is the evidence. And **the retry is
+hardening validated by simulation**: the SIGKILL was not reproduced locally, so what is claimed is the
+stage's behaviour under the three stub scenarios above, not that the retry is what makes the emulator
+leg green.
+
 ## 3. Acceptance criteria covered
 
 | Criterion | What it asserts                                                                                                                 | Test                                                                                                                                       | Evidence               |
@@ -353,6 +403,8 @@ The criterion text is in `docs/ACCEPTANCE_CRITERIA.md` (AC-060, AC-061).
 - **14 of the 42 catalogued servers are not installed here** (their `npx`/`uvx` packages are absent or
   the machine's Python cannot run them) and 10 of the installed entries have no verified launch
   command. They are catalogued, named and reasoned about; they are not described as running.
+- **The step-8 dump retry is hardening too**, validated against a stub `adb` rather than by
+  reproducing the SIGKILL (§2.9), and the failed Android leg could not be re-run from here.
 - **The emulator pre-flight is hardening, not a demonstrated fix.** Run `226b71c` was not reproduced
   and the later runs passed without the pre-flight, so what is claimed is what the stage now checks
   before the suite — not that the change is what makes the suite pass.

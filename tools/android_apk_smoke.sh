@@ -156,8 +156,38 @@ fi
 
 STEP="[8/12] the browser chrome is on screen (view hierarchy dump)"
 echo "${STEP}"
-adb shell uiautomator dump /sdcard/savage_ui.xml >/dev/null
-adb shell cat /sdcard/savage_ui.xml > /tmp/savage_ui.xml
+# The dump is the mechanism; the assertion is the four ids below. The emulator's uiautomator process is
+# occasionally SIGKILLed while the device is loaded - on 0e7547f this step exited 137 while all 52
+# instrumented tests had passed - so the dump is retried through two mechanisms, and the last failure's
+# own words are printed when none of them works. The assertion itself is not softened: a browser whose
+# chrome is genuinely missing still fails here.
+DUMPED=""
+DUMP_ERROR=""
+for attempt in 1 2 3; do
+    if DUMP_ERROR=$(adb shell uiautomator dump /sdcard/savage_ui.xml 2>&1 >/dev/null); then
+        if adb shell cat /sdcard/savage_ui.xml > /tmp/savage_ui.xml 2>/dev/null \
+           && [ -s /tmp/savage_ui.xml ]; then
+            DUMPED="uiautomator dump"
+            break
+        fi
+        DUMP_ERROR="the dump file was empty or unreadable"
+    fi
+    if DUMP_ERROR=$(adb exec-out uiautomator dump /dev/tty 2>&1 >/tmp/savage_ui.xml); then
+        if [ -s /tmp/savage_ui.xml ]; then
+            DUMPED="uiautomator dump /dev/tty"
+            break
+        fi
+        DUMP_ERROR="the /dev/tty dump was empty"
+    fi
+    echo "       attempt ${attempt} produced no hierarchy; retrying" >&2
+    sleep 3
+done
+if [ -z "${DUMPED}" ]; then
+    echo "FAIL: uiautomator produced no view hierarchy after 3 attempts" >&2
+    echo "      last error: ${DUMP_ERROR}" >&2
+    exit 1
+fi
+echo "       hierarchy read via ${DUMPED}"
 for expected in "edit_omnibox" "btn_nav_back" "btn_nav_tabs" "btn_action_bookmark"; do
     grep -q "resource-id=\"$PACKAGE:id/$expected\"" /tmp/savage_ui.xml || {
         echo "FAIL: the launched browser is missing $expected" >&2

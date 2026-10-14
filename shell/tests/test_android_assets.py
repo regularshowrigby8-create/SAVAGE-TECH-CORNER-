@@ -416,6 +416,31 @@ class AndroidWorkflowTest(unittest.TestCase):
                      if "am force-stop" in line and not line.startswith("if ! FORCE_STOP_OUTPUT=")]
         self.assertEqual([], unguarded)
 
+    def test_the_hierarchy_dump_is_retried_without_softening_its_assertion(self):
+        """The device's uiautomator process can be killed; the assertion about the chrome cannot bend.
+
+        On 0e7547f step 8 exited 137 - the emulator SIGKILLed `uiautomator dump` while all 52
+        instrumented tests passed - and the job went red on the mechanism rather than on the claim.
+        The step now retries the dump through two mechanisms and prints the last error when none
+        works, while the four element ids are still asserted one by one against whatever hierarchy
+        was produced.
+        """
+        script = read(REPO_ROOT / "tools" / "android_apk_smoke.sh")
+        self.assertIn("adb exec-out uiautomator dump /dev/tty", script,
+                      "the second mechanism must exist for a device that kills the first")
+        self.assertIn("uiautomator produced no view hierarchy after 3 attempts", script,
+                      "exhausting the retries must fail the step with its own words")
+        self.assertIn("last error: ${DUMP_ERROR}", script)
+        self.assertNotIn("|| true", script)
+        # The assertion itself is unchanged: each id is checked with grep against the dumped file and
+        # a miss exits 1.
+        step = script.split('STEP="[8/12]')[1].split('STEP="[9/12]')[0]
+        for expected in ("edit_omnibox", "btn_nav_back", "btn_nav_tabs", "btn_action_bookmark"):
+            self.assertIn(f'"{expected}"', step)
+        self.assertIn('grep -q "resource-id=\\"$PACKAGE:id/$expected\\"', step)
+        self.assertIn("exit 1", step)
+        self.assertIn("for attempt in 1 2 3", step)
+
     def test_the_process_read_never_aborts_the_smoke_test(self):
         """Reading the process list must not be able to end the run without a reason.
 
