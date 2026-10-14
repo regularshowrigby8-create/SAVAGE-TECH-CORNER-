@@ -81,10 +81,12 @@ Run `38537245267` for commit `6afc67a` (`Android Build, Test and Release`), all 
 
 Artifacts from that run:
 
-| Artifact             | Size            | Digest                                                                    |
-| -------------------- | --------------- | ------------------------------------------------------------------------- |
-| `savage-browser-apk` | 5,793,251 bytes | `sha256:d4e8190ac3aad1273820789649fd29e8172a764cdce5d14a71e448fb8bacb14c` |
-| `emulator-evidence`  | 543,852 bytes   | `sha256:f6efd71092fa286d7f2a82d08a39d5d916b485065c7041eb250163da2c98517a` |
+| Artifact                               | Size            | Digest                                                                    |
+| -------------------------------------- | --------------- | ------------------------------------------------------------------------- |
+| `savage-browser-apk` (run 38537245267) | 5,793,251 bytes | `sha256:d4e8190ac3aad1273820789649fd29e8172a764cdce5d14a71e448fb8bacb14c` |
+| `emulator-evidence` (run 38537245267)  | 543,852 bytes   | `sha256:f6efd71092fa286d7f2a82d08a39d5d916b485065c7041eb250163da2c98517a` |
+| `savage-browser-apk` (run 38538386756) | 5,793,182 bytes | `sha256:cc61ad17f5f0b980e3e4bef1bae90e339ce1ada62d0c75da89a2257ecb824569` |
+| `emulator-evidence` (run 38538386756)  | 466,670 bytes   | `sha256:60f30a8ed2c309fc47faa36ffec2cb19f35407d7880d133b48d82c9311bb43b5` |
 
 `Comprehensive Quality Conveyor Belt` and `AI PR Code Reviewers (Dual Fallback)` both concluded
 success on the same commit, and `Factory 2 — Single Debug Job` succeeded on the successor commits.
