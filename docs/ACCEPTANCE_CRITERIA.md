@@ -513,30 +513,54 @@ from the repository's own authoritative documents instead of being invented:
   and step conclusions, the build job's APK annotation verbatim, and the runs before them with
   what they failed on)
 
+### AC-048 — The sealed factory set runs before the pipeline's own factories, and is removable
+
+- **Feature**: F-13 (the pipeline that produces the release)
+- **Given**: the sealed component `sealed-factories/` (72 imported factories with their licences,
+  hash-sealed) and the pipeline that uses it (`scripts/conveyor_belt.js` station 0, then the four
+  current factories, as documented in `docs/factory/MULTISTAGE_FACTORY.md`)
+- **When**: the seal is verified and the set is run, then the pipeline runs again with the directory
+  deleted
+- **Then**: every payload hash matches `SEAL.json` and a mismatch stops the run; every factory is
+  accounted for in `RUN-REPORT.json` as `OPERATIONAL-MODEL` (a model answered, and the answer is on
+  disk), `OPERATIONAL-PLAN` (its own stages and workers were read and its plan written) or
+  `NO-STRUCTURE` (its slice carries no definitions - exactly the blueprint-only factories whose
+  content the licence forbids carrying); a provider that refuses is recorded as `MODEL-FAILED` with
+  its own error text and never as a success; with the directory deleted, station 0 reports `ABSENT`,
+  the banner says so, the remaining six stations pass, and nothing outside `sealed-factories/`,
+  its three tooling files, its one test and its one document is required to change
+- **Test method**: `shell/tests/test_sealed_factory_runtime.py` (every payload hash recomputed, the
+  licence policy, no invented model output, the online path driven against a local server speaking
+  the providers' own API, and removal proven by running the runtime in an empty tree), plus the
+  station itself in `scripts/conveyor_belt.js`
+- **Evidence required**: the `[SEAL] OK` verification line and the station 0 line from a belt run
+  with the component present and from one with it absent
+
 ---
 
 ## 2. Traceability summary
 
-| Requirement category (Phase 2 checklist) | Criteria                        |
-| ---------------------------------------- | ------------------------------- |
-| clean first launch                       | AC-001                          |
-| normal navigation                        | AC-002, AC-003                  |
-| core user journeys                       | AC-004 – AC-009                 |
-| invalid input                            | AC-013, AC-014, AC-015          |
-| empty state                              | AC-016 – AC-018                 |
-| loading state                            | AC-019                          |
-| error state                              | AC-020                          |
-| offline behaviour                        | AC-009, AC-021                  |
-| persistence after restart                | AC-023 – AC-025                 |
-| configuration changes / rotation         | AC-026, AC-027, AC-010          |
-| permission denial                        | AC-028, AC-029                  |
-| back navigation                          | AC-030, AC-031                  |
-| accessibility labels                     | AC-032, AC-033                  |
-| duplicate actions                        | AC-034 – AC-036                 |
-| process restart                          | AC-037                          |
-| corrupted / missing local data           | AC-038, AC-039                  |
-| release APK installation and launch      | AC-044 – AC-047                 |
-| security invariants                      | AC-021, AC-022, AC-040 – AC-043 |
+| Requirement category (Phase 2 checklist)  | Criteria                        |
+| ----------------------------------------- | ------------------------------- |
+| clean first launch                        | AC-001                          |
+| normal navigation                         | AC-002, AC-003                  |
+| core user journeys                        | AC-004 – AC-009                 |
+| invalid input                             | AC-013, AC-014, AC-015          |
+| empty state                               | AC-016 – AC-018                 |
+| loading state                             | AC-019                          |
+| error state                               | AC-020                          |
+| offline behaviour                         | AC-009, AC-021                  |
+| persistence after restart                 | AC-023 – AC-025                 |
+| configuration changes / rotation          | AC-026, AC-027, AC-010          |
+| permission denial                         | AC-028, AC-029                  |
+| back navigation                           | AC-030, AC-031                  |
+| accessibility labels                      | AC-032, AC-033                  |
+| duplicate actions                         | AC-034 – AC-036                 |
+| process restart                           | AC-037                          |
+| corrupted / missing local data            | AC-038, AC-039                  |
+| release APK installation and launch       | AC-044 – AC-047                 |
+| imported factories (sealed, pre-pipeline) | AC-048                          |
+| security invariants                       | AC-021, AC-022, AC-040 – AC-043 |
 
 ## 3. Test-method notes (no test is weakened to pass)
 
