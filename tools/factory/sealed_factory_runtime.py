@@ -51,6 +51,9 @@ RUNS = SEALED / "runs"
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import seal_factories  # noqa: E402  (same directory, the component's own tooling)
 
+#: The environment that lives inside the seal: tools, agent roles, language packs, MCP binding.
+sys.path.insert(0, str(SEALED / "runtime"))
+
 #: Local model servers, tried on their default ports. Probing is a sub-second TCP connect, so a
 #: machine without any of them pays ~0.3 s once - and a machine that already runs one needs no setup.
 LOCAL_ENDPOINTS = (
@@ -174,9 +177,25 @@ def read_factory(document: dict, factory: dict) -> dict:
     """Reads one sealed payload and derives what the factory is made of."""
     payload = SEALED / factory["payload"]
     derived = {"id": factory["id"], "full_name": factory["full_name"], "url": factory["url"],
+               "group": factory.get("group", "imported factory"),
                "license": factory["license"], "content_redistributed":
                factory["content_redistributed"], "files": [], "stages": [], "roles": [],
-               "gates": [], "prompts": [], "headings": [], "texts": 0}
+               "gates": [], "prompts": [], "headings": [], "mcp_tools": [], "texts": 0}
+    if derived["group"] == "MCP tool server":
+        # An MCP server's structure is the tool list it publishes. Where a real handshake observed
+        # that list, it is what the server defines; where none was run, the list stays empty and the
+        # record is reported as having no definitions rather than assumed to have them.
+        record_path = SEALED / "mcp-vendor" / f'{factory["id"]}.json'
+        if record_path.is_file():
+            try:
+                record = json.loads(record_path.read_text(encoding="utf-8"))
+                launch = record.get("launch") or {}
+                derived["mcp_tools"] = [f"{server.get('name')}:{tool}"
+                                        for server in (launch.get("verified") or [])
+                                        for tool in server.get("tools", [])]
+                derived["launch_command"] = " ".join(launch.get("command") or [])
+            except (OSError, ValueError):
+                derived["mcp_tools"] = []
     with tarfile.open(payload, "r:gz") as archive:
         for member in archive.getmembers():
             if not member.isfile():
@@ -255,6 +274,7 @@ def read_factory(document: dict, factory: dict) -> dict:
             derived["gates"] += [(m.group(1).lower(), m.group(2).strip()[:80])
                                  for m in GATE_PATTERN.finditer(text)]
     derived["totals"] = {}
+    derived["totals"]["mcp_tools"] = len(derived["mcp_tools"])
     for kind in ("stages", "roles", "gates", "prompts", "headings"):
         # De-duplicate while keeping the order the factory itself uses.
         seen = set()
@@ -267,8 +287,8 @@ def read_factory(document: dict, factory: dict) -> dict:
         # The count the factory really defines, then the list this report carries (kept small).
         derived["totals"][kind] = len(unique)
         derived[kind] = unique[:24]
-    derived["structure_found"] = any(derived[kind] for kind in ("stages", "roles", "gates",
-                                                                "prompts", "headings"))
+    derived["structure_found"] = bool(derived["mcp_tools"]) or any(
+        derived[kind] for kind in ("stages", "roles", "gates", "prompts", "headings"))
     return derived
 
 
@@ -395,7 +415,9 @@ def _extract_text(payload: dict) -> str:
 # --------------------------------------------------------------------------- run
 
 
-def run(brief: str, max_model_calls: int, require_model: bool) -> int:
+def run(brief: str, max_model_calls: int, require_model: bool, env_agents: int = 1,
+        env_limit: int = 200, env: bool = True, env_workspace: str = "",
+        env_with_mcp: bool = False) -> int:
     try:
         document = open_seal()
     except (FileNotFoundError, RuntimeError) as problem:
@@ -443,6 +465,8 @@ def run(brief: str, max_model_calls: int, require_model: bool) -> int:
             "roles": derived["totals"]["roles"],
             "gates": derived["totals"]["gates"],
             "prompts": derived["totals"]["prompts"],
+            "mcp_tools": derived["totals"]["mcp_tools"],
+            "group": derived["group"],
             "files": len(derived["files"]),
             "artifacts": [str((target / "plan.json").relative_to(REPO_ROOT)),
                           str((target / "prompt.md").relative_to(REPO_ROOT))],
@@ -490,6 +514,12 @@ def run(brief: str, max_model_calls: int, require_model: bool) -> int:
         "workers_defined": sum(r.get("roles", 0) for r in results),
         "checks_defined": sum(r.get("gates", 0) for r in results),
         "prompts_defined": sum(r.get("prompts", 0) for r in results),
+        "mcp_tools_verified": sum(r.get("mcp_tools", 0) for r in results),
+        "carried_without_definitions": sum(1 for r in results
+                                            if r["status"] == "NO-STRUCTURE"
+                                            and r.get("content_redistributed")),
+        "by_group": {group: sum(1 for r in results if r.get("group") == group)
+                     for group in sorted({r.get("group", "") for r in results})},
     }
     stage_groups = [
         {"group": "sealed.open", "what": f'{document["contents"]["factories"]} imported factories, '
@@ -503,8 +533,19 @@ def run(brief: str, max_model_calls: int, require_model: bool) -> int:
                                          f'reachable for the rest' if not capabilities["model_available"]
                                           else f'{model_calls} model call(s) made'},
     ]
+    environment_report = None
+    if env:
+        try:
+            environment_report = environment(agents=env_agents, limit=env_limit,
+                                              workspace=env_workspace, with_mcp=env_with_mcp)
+        except Exception as problem:  # the environment is part of the component; a bug is a failure
+            print(f"[SEALED] FAIL: the sealed environment could not run: "
+                  f"{type(problem).__name__}: {problem}", file=sys.stderr)
+            return 1
+
     report = {
         "status": "RUN",
+        "environment": environment_report,
         "sealed_at": document["sealed_at"],
         "seal_version": document["seal_version"],
         "run_dir": str(run_dir.relative_to(REPO_ROOT)),
@@ -522,6 +563,12 @@ def run(brief: str, max_model_calls: int, require_model: bool) -> int:
           f"{summary['operational_plan']} ran in plan mode, "
           f"{summary['no_structure']} had no definitions in their sealed slice, "
           f"{summary['model_failed']} model calls failed, {summary['unreadable']} unreadable")
+    if summary["carried_without_definitions"]:
+        print(f"[SEALED] {summary['carried_without_definitions']} slice(s) carry content but define "
+              f"nothing this runtime reads as stages, workers or tools")
+    if summary["mcp_tools_verified"]:
+        print(f"[SEALED] MCP servers: {summary['by_group'].get('MCP tool server', 0)} catalogued, "
+              f"{summary['mcp_tools_verified']} tools observed by handshake")
     print(f"[SEALED] definitions read from the sealed set: {summary['stages_defined']} stages, "
           f"{summary['workers_defined']} workers, {summary['checks_defined']} checks, "
           f"{summary['prompts_defined']} prompt assets, {summary['sections_defined']} sections of "
@@ -538,6 +585,90 @@ def run(brief: str, max_model_calls: int, require_model: bool) -> int:
         return 1
     _ = failed
     return 0
+
+
+SAMPLE_MODULE = ("\"\"\"A file for the agent swarm to read and measure.\"\"\"\n\n\ndef add(left: int, right: int) -> int:\n"
+                "    \"\"\"Add two numbers.\"\"\"\n    return left + right\n")
+
+
+def environment(agents: int = 1, limit: int = 200, gateway_url: str = "", with_mcp: bool = False,
+                workspace: str = "") -> dict:
+    """Runs the sealed environment itself: its tools, its agent roles and a real swarm pass.
+
+    This is the part of stage 0 that does not depend on the imported factories at all - it is the
+    component's own force, and it is what makes the seal portable to any repository.
+    """
+    import agents as agent_catalogue
+    import langkit
+    import mcplink
+    import swarm
+    from toolkit import Workspace, build_registry
+
+    # The swarm's default workspace is the component's own scratch tree: it is real (the tools read
+    # and write actual files), it is fast, and pointing it at a whole repository is an explicit
+    # choice (`--env-workspace`) because a full sweep of a big tree costs minutes, not seconds.
+    root = Path(workspace) if workspace else SEALED / "manifest" / "workspace"
+    root.mkdir(parents=True, exist_ok=True)
+    starter = root / "README.md"
+    if not starter.exists():
+        starter.write_text("# Sealed environment workspace\n\nThe agent swarm works here when no "
+                           "other workspace is given.\n", encoding="utf-8")
+    (root / "src").mkdir(exist_ok=True)
+    sample = root / "src" / "sample.py"
+    if not sample.exists():
+        sample.write_text(SAMPLE_MODULE, encoding="utf-8")
+    registry = build_registry(Workspace(root), gateway_url)
+    native_tools = len(registry)
+    catalogue = mcplink.load_catalogue()
+    states = [mcplink.availability(entry) for entry in catalogue]
+    link = {"tools": {}, "skipped": []}
+    if with_mcp:
+        link = mcplink.connect(cwd=str(root))
+        registry.update(link["tools"])
+
+    languages = langkit.detect()
+    roles = agent_catalogue.catalogue(swarm._imported_records(), languages["available"])
+    run_report = swarm.run(str(root), "Stage 0: take this repository's product one stage further.",
+                           instances=agents, workers=16, execute_limit=limit,
+                           model_calls=4 if gateway_url else 0, gateway_url=gateway_url)
+
+    summary = {
+        "tools": {"native": native_tools, "mcp_bound": len(link["tools"]),
+                  "total": len(registry), "names": sorted(registry)[:80]},
+        "mcp": {"catalogue": len(catalogue),
+                "verified_by_handshake": sum(1 for entry in catalogue if entry.get("verified")),
+                "bindable_here": sum(1 for state in states if state["available"]),
+                "bound": sorted({name.split(".")[1] for name in link["tools"]}),
+                "not_bindable": [{"name": state["name"], "why": state["why_not"]}
+                                 for state in states if not state["available"]][:12]},
+        "agents": {"roles": len(roles),
+                   "by_source": {source: sum(1 for r in roles if r.source == source)
+                                 for source in sorted({r.source for r in roles})},
+                   "topologies": sorted({r.topology for r in roles}),
+                   "capacity": swarm.MAX_AGENTS},
+        "languages": {"available": languages["available"], "missing": languages["missing"]},
+        "swarm": {"plan": run_report["plan"], "counts": run_report["counts"],
+                  "seconds": run_report["seconds"], "run_dir": run_report["run_dir"],
+                  "per_role": run_report["per_role"]},
+    }
+    print(f"[SEALED] environment: {summary['tools']['total']} tools "
+          f"({summary['tools']['native']} native, {len(link['tools'])} bound from MCP), "
+          f"MCP catalogue {summary['mcp']['catalogue']} servers "
+          f"({summary['mcp']['verified_by_handshake']} verified here, "
+          f"{summary['mcp']['bindable_here']} bindable on this machine), "
+          f"{summary['agents']['roles']} agent roles, "
+          f"{len(languages['available'])} language packs available "
+          f"({', '.join(languages['missing'][:6])} missing)")
+    print(f"[SEALED] swarm: {run_report['plan']['executed']} agent instances of a "
+          f"{run_report['plan']['instances']}-instance plan in {run_report['seconds']}s, "
+          f"{run_report['counts']['steps_ok']} tool steps, "
+          f"{run_report['counts']['checks_passed']}/"
+          f"{run_report['counts']['checks_passed'] + run_report['counts']['checks_failed']} checks "
+          f"passed")
+    target = SEALED / "manifest"
+    target.mkdir(parents=True, exist_ok=True)
+    (target / "ENVIRONMENT.json").write_text(json.dumps(summary, indent=1), encoding="utf-8")
+    return summary
 
 
 def write_report(report: dict) -> None:
@@ -569,6 +700,17 @@ def main() -> int:
                         help="cap on model calls per run (cost control); 0 disables model calls")
     parser.add_argument("--require-model", action="store_true",
                         help="fail when no factory reached a model")
+    parser.add_argument("--env-agents", type=int, default=1,
+                        help="agent instances per role in the sealed environment")
+    parser.add_argument("--env-limit", type=int, default=200,
+                        help="how many agent instances the environment executes")
+    parser.add_argument("--no-env", action="store_true",
+                        help="run the imported factories only, skipping the sealed environment")
+    parser.add_argument("--with-mcp", action="store_true",
+                        help="also bind every MCP server this machine can start into the tool set")
+    parser.add_argument("--env-workspace", default="",
+                        help="directory the agent swarm works in (default: the component's own "
+                             "scratch workspace; point it at a repository for a full sweep)")
     args = parser.parse_args()
 
     if args.action == "verify":
@@ -583,7 +725,8 @@ def main() -> int:
         brief = ("Take this repository's product (the Savage Browser Android app and its factories) "
                  "one stage further: name the stage you would add, the artefacts it produces, and the "
                  "checks that would fail it.")
-    return run(brief, args.max_model_calls, args.require_model)
+    return run(brief, args.max_model_calls, args.require_model, args.env_agents, args.env_limit,
+               not args.no_env, args.env_workspace, args.with_mcp)
 
 
 if __name__ == "__main__":

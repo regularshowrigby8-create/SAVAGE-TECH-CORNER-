@@ -86,6 +86,27 @@ class SealedComponentTest(unittest.TestCase):
         self.assertEqual(contents["with_payload"], len(document["factories"]))
         self.assertGreaterEqual(contents["ai_worker_factories"], 25)
 
+    def test_the_seal_pins_the_code_that_runs_it(self) -> None:
+        """The payloads are the factories; the runtime is the machinery that runs them.
+
+        A component whose own code can be swapped without the seal noticing is not sealed, so every
+        runtime module and every data file the runtime reads is hashed into the manifest.
+        """
+        document = seal()
+        records = {record["path"]: record for record in document["component_files"]}
+        runtime = sorted(path for path in (SEALED / "runtime").rglob("*.py")
+                         if "__pycache__" not in path.parts)
+        self.assertGreaterEqual(len(runtime), 8, "the component's runtime modules must be sealed")
+        for path in runtime:
+            key = str(path.relative_to(SEALED))
+            self.assertIn(key, records, f"{key} runs but is not sealed")
+            self.assertEqual(records[key]["sha256"], digest(path), f"{key} changed since sealing")
+        self.assertIn("mcp-servers.json", records,
+                      "the catalogue the runtime binds from must be sealed")
+        for key in records:
+            self.assertTrue((SEALED / key).is_file(), f"{key} is sealed but missing")
+        self.assertEqual(document["contents"]["component_files"], len(records))
+
     def test_every_record_carries_the_provenance_of_the_factory(self) -> None:
         for factory in seal()["factories"]:
             for field in ("id", "full_name", "url", "license", "commit", "payload",
@@ -104,8 +125,11 @@ class SealedComponentTest(unittest.TestCase):
                               .PERMISSIVE_LICENCES,
                               f"{factory['id']}: {factory['license']} may not be redistributed")
             else:
-                record = json.loads((SEALED / "vendor" / f"{factory['id']}.json")
-                                    .read_text(encoding="utf-8"))
+                record_path = next((SEALED / group / f"{factory['id']}.json"
+                                    for group in ("vendor", "vendor-ai", "mcp-vendor")
+                                    if (SEALED / group / f"{factory['id']}.json").is_file()), None)
+                self.assertIsNotNone(record_path, f"{factory['id']}: no vendoring record")
+                record = json.loads(record_path.read_text(encoding="utf-8"))
                 for entry in record["vendored_files"]:
                     self.assertNotIn("_content", entry,
                                      f"{factory['id']}: content redistributed without a licence")
@@ -149,23 +173,68 @@ class SealedComponentTest(unittest.TestCase):
             if entry["status"] == "MODEL-FAILED":
                 self.assertTrue(entry.get("error"), f"{entry['id']}: failure without a reason")
 
-    def test_the_factories_that_cannot_run_are_exactly_the_ones_whose_content_is_not_carried(
-            self) -> None:
-        """NO-STRUCTURE and blueprint-only are the same set: a slice with content always runs."""
+    def test_only_a_record_with_no_definitions_is_reported_as_no_structure(self) -> None:
+        """Three conditions, checked against the seal itself, not against a count.
+
+        A slice this component carries content for and that holds definitions must run. A record is
+        reported NO-STRUCTURE only when it defines nothing this runtime can read - no stages, no
+        workers, no checks, no prompt assets and no handshake-verified MCP tool list. Blueprint-only
+        records are expected to be in that set unless a real handshake observed their tools (which is
+        the case for the reference MCP servers: their tool list is their structure, and that list is
+        recorded in the seal even though their content is not redistributed).
+        """
         report = runtime_report()
         if report["capabilities"]["model_available"]:
             self.skipTest("this machine has a model, so blueprint-only slices may still be called")
+        seal_factories_by_id = {f["id"]: f for f in seal()["factories"]}
         no_structure = {e["id"] for e in report["factories"] if e["status"] == "NO-STRUCTURE"}
-        blueprint_only = {f["id"] for f in seal()["factories"] if not f["content_redistributed"]}
-        self.assertEqual(no_structure, blueprint_only,
-                         "every factory whose content this component carries must run")
-        self.assertEqual(len(report["factories"]) - len(no_structure),
-                         report["summary"]["operational_plan"])
+
+        for entry in report["factories"]:
+            defines_something = entry.get("mcp_tools", 0) > 0 or any(
+                entry.get(kind) > 0 for kind in ("stages", "roles", "gates", "prompts", "headings"))
+            if entry["status"] == "NO-STRUCTURE":
+                self.assertFalse(defines_something,
+                                 f'{entry["id"]} reports NO-STRUCTURE but defines something')
+            else:
+                self.assertTrue(defines_something,
+                                f'{entry["id"]} reports {entry["status"]} without definitions')
+
+        blueprint_without_tools = {f["id"] for f in seal()["factories"]
+                                   if not f["content_redistributed"]
+                                   and not any(e.get("mcp_tools", 0) for e in report["factories"]
+                                               if e["id"] == f["id"])}
+        self.assertTrue(blueprint_without_tools <= no_structure,
+                        f"blueprint-only records with no observed tools that did not report "
+                        f"NO-STRUCTURE: {blueprint_without_tools - no_structure}")
+
+        # A carried slice can still describe nothing this runtime can read as definitions - a Go
+        # server whose tool names only exist inside its source, for instance. That is reported, not
+        # hidden: the slice was read (files > 0) and the report says it held no definitions.
+        carried_without_structure = {f["id"] for f in seal()["factories"]
+                                     if f["content_redistributed"]} & no_structure
+        for identifier in carried_without_structure:
+            record = seal_factories_by_id[identifier]
+            if record["files"] == 0:
+                # An empty slice is only acceptable for an entry that is a reference rather than a
+                # runnable thing: no launch command was verified and no handshake observed tools
+                # (an "awesome list", for instance). Anything else with an empty slice is a gap.
+                entry = next(e for e in report["factories"] if e["id"] == identifier)
+                self.assertEqual(entry.get("mcp_tools", 0), 0)
+                catalogue = json.loads((SEALED / "mcp-servers.json").read_text(encoding="utf-8"))
+                published = next((s for s in catalogue["servers"] if s["name"] == identifier), None)
+                self.assertTrue(published is None or not published["command"],
+                                f"{identifier}: empty slice for an entry with a launch command: "
+                                f"{published and published['command']}")
+        summary = report["summary"]
+        self.assertEqual(summary.get("carried_without_definitions"),
+                         len(carried_without_structure),
+                         "the report must count the carried slices it could not read definitions "
+                         "from")
 
     def test_a_factory_is_never_reported_as_run_when_its_slice_holds_nothing(self) -> None:
         for entry in runtime_report()["factories"]:
-            has_definitions = any(entry.get(kind) > 0
-                                  for kind in ("stages", "roles", "gates", "prompts", "headings"))
+            has_definitions = entry.get("mcp_tools", 0) > 0 or any(
+                entry.get(kind) > 0 for kind in ("stages", "roles", "gates", "prompts", "headings"))
             if not has_definitions:
                 self.assertEqual(entry["status"], "NO-STRUCTURE",
                                  f"{entry['id']}: reported {entry['status']} without definitions")

@@ -538,6 +538,177 @@ from the repository's own authoritative documents instead of being invented:
 
 ---
 
+### AC-049 — MCP servers are imported into the sealed environment and are functional there
+
+- **Feature**: F-14 (the environment inside the seal)
+- **Given**: the sealed component with its MCP group (`sealed-factories/mcp-vendor/`, the catalogue
+  `sealed-factories/mcp-servers.json`, 42 servers) and the runtime's MCP client (`mcplink.py`,
+  `toolserver.py`)
+- **When**: the catalogue is probed (`cli.py mcp-probe`) and the servers this machine can start are
+  bound into the tool registry (`--with-mcp`)
+- **Then**: every catalogued server is listed with its repository, its launch command and where that
+  command came from; a server is recorded as handshake-verified only after a real
+  `initialize` handshake followed by a tool listing drove it (7 servers, 52 tools, evidence kept in
+  `tools/factory/imported_mcp_servers.json`); a `python3 -m` server counts as bindable only when its
+  module actually imports, and an npm server only when its launcher resolves; a server that cannot be
+  started is named with the reason (missing binary, no published launch command, exited before
+  answering) and never silently dropped; the tools `toolserver.py` serves over MCP speak the protocol
+  a client expects, and every capability of the seven verified servers is also native in `toolkit.py`,
+  so the environment is complete without any package manager
+- **Test method**: `shell/tests/test_sealed_environment.py` (`ToolServerTest` drives an
+  `initialize` handshake, a tool listing, a real tool call, an unknown tool and a path-escape
+  refusal over stdio;
+  `test_the_registry_holds_a_full_tool_set`; the availability assertions), plus
+  `shell/tests/test_imported_factories.py` for the registry records, plus the live `mcp-probe` run
+- **Evidence required**: the `mcp-probe` summary line (42 catalogued / 18 installed / 24 not
+  bindable) and the servers that answered a handshake on this machine (this round: `servers` 13
+  tools, `context7` 2, `playwright-mcp` 25)
+
+### AC-050 — One gateway serves every model and holds every key the environment has
+
+- **Feature**: F-14
+- **Given**: `sealed-factories/runtime/gateway.py`, a stdlib HTTP server over 13 providers (local:
+  llama.cpp, LM Studio, Ollama, vLLM; keyed: OpenAI, Anthropic, Groq, Mistral, DeepSeek, Together,
+  OpenRouter, xAI, Google)
+- **When**: a client asks `GET /healthz`, `GET /v1/models`, `GET /v1/keys` or
+  `POST /v1/chat/completions`
+- **Then**: `/healthz` and `/v1/models` report only providers that actually answered; `/v1/keys`
+  reports which keys are configured and never a key value; chat completions route to any reachable
+  provider, `key:auto`/`model:auto` pick one, multiple keys for one provider are used in turn, the
+  Anthropic wire format is built correctly where the provider needs it, an upstream error is
+  returned as that provider's error rather than a fabricated answer, and with nothing reachable the
+  gateway answers **503** naming every endpoint it looked at; a provider that accepts the connection
+  and never replies is cut off after `SEALED_GATEWAY_TIMEOUT` (60 s) and reported as **504**
+- **Test method**: `shell/tests/test_sealed_environment.py` (`GatewayTest`: routing to a local stub
+  on the provider's own port, the honest 503, key rotation, redaction, the Anthropic payload, the
+  timeout path), and `toolkit.model.ask` refusing with no gateway
+- **Evidence required**: the stub run's `/healthz`, `/v1/models` and `/v1/chat/completions` output and
+  the 503 body listing `llamacpp:8080, lmstudio:1234, ollama:11434, vllm:8000`
+
+### AC-051 — The environment works with no model, no keys and no network
+
+- **Feature**: F-14
+- **Given**: the sealed component on a machine with no model server, no API key in the environment
+  and no reachable network
+- **When**: the runtime is run (`sealed_factory_runtime.py run --max-model-calls 0` or
+  `cli.py run --model-calls 0`)
+- **Then**: the run executes every planned agent instance, each one making real tool calls that touch
+  the workspace, every check passes, 0 model calls are made and none are claimed, `model.ask` refuses
+  with a message naming what it looked for instead of inventing an answer, the network tools fail with
+  a reason, and the report records `OFFLINE` for those agents - a machine without a model still gets a
+  working factory, and nothing in the run pretends otherwise
+- **Test method**: `shell/tests/test_sealed_environment.py` (`test_a_run_with_no_model_says_so_and_never_invents_one`,
+  `test_model_ask_refuses_without_a_gateway`, `test_offline_network_tools_fail_with_a_reason`), plus
+  `shell/tests/test_sealed_factory_runtime.py`
+- **Evidence required**: the sealed-run line (`0 factories ran against a model, 96 ran in plan mode,
+0 model calls failed`) and the per-run reports under `sealed-factories/manifest/`
+
+### AC-052 — The swarm plans a million agents, executes what it is told to, and says what it did not do
+
+- **Feature**: F-14
+- **Given**: `sealed-factories/runtime/swarm.py` and the agent catalogue the seal defines
+- **When**: capacity is asked for, and a run is executed with a limit
+- **Then**: `capacity_report()` reports the 1,000,000-instance ceiling and refuses to plan more; a run
+  executes **exactly** the limit it was given (a hard cap, not a minimum), instantiates agents lazily
+  so a million-instance plan costs no memory, names in the same report the roles that got no instance,
+  writes one artefact per executed instance plus a `RUN.json`, gives every run its own directory (two
+  runs in the same second do not share one), runs each role's checks once against the workspace the
+  makers touched, and records each instance as `MODEL`, `OFFLINE` or `MODEL-FAILED` - never as a
+  success it did not have
+- **Test method**: `shell/tests/test_sealed_environment.py` (`SwarmTest`: the million-instance plan,
+  the hard cap, the artefacts on disk, the report's own path), and `cli.py capacity`
+- **Evidence required**: the `capacity` output (159 roles, capacity 1,000,000, 6,289 instances per
+  role) and the sealed run's swarm line (159 instances / 162 tool steps / 159 checks passed)
+
+### AC-053 — Multi-agent coverage, including the AI-focused factories
+
+- **Feature**: F-14
+- **Given**: the three imported groups inside the seal (72 imported factories, 42 MCP tool servers,
+  23 AI-focused factory projects) and their slices
+- **When**: the runtime builds its agent catalogue
+- **Then**: every sealed factory that defines stages, roles, gates or prompts becomes agent roles, and
+  every MCP server becomes an `mcp-<id>` role, so the swarm's roles are derived from the sealed slices
+  rather than from a hand-written list (this round: 159 roles - 15 core, 7 language, 95 imported, 2
+  handshake-verified MCP servers, 40 catalogued MCP servers); a factory whose slice defines nothing is
+  present in the report as having no definitions and is never counted as a worker; the AI group
+  (AutoGen, Semantic Kernel, CrewAI, LangGraph, MetaGPT, OpenHands, SWE-agent, …) is carried with its
+  licence text and, where the licence permits, its content
+- **Test method**: `shell/tests/test_sealed_environment.py`
+  (`test_the_environment_is_reported_with_every_part`, `test_the_seal_carries_the_mcp_and_ai_groups_too`),
+  `shell/tests/test_sealed_factory_runtime.py`, `tools/factory/imported_ai_factories.json` records
+- **Evidence required**: the environment line (`159 agent roles`) and `capacity`'s `roles_by_source`
+
+### AC-054 — "Any language" means the languages this machine can really build
+
+- **Feature**: F-14
+- **Given**: `sealed-factories/runtime/langkit.py`, which declares the toolchain each language needs
+  (python, javascript, typescript, c, cpp, shell, web, go, rust, java, kotlin, csharp, ruby, php, sql)
+- **When**: capabilities are asked for, and a project is scaffolded (`cli.py init --language … --check`)
+- **Then**: every declared language carries a real scaffold with source, a build command and a test
+  command; a scaffold is reported as verified only after its own build and tests were run and passed
+  (`--check` → `verified: true`); a language whose toolchain is not installed is reported as missing
+  with the binary it wanted and no version, and scaffolding it fails loudly rather than emitting a
+  project that cannot build; nothing is claimed available that is not installed (this machine: 7
+  available, 8 missing)
+- **Test method**: `shell/tests/test_sealed_environment.py` (`LanguagePackTest`: every pack declares
+  what it needs, the python scaffold builds and tests, a missing toolchain is reported and not faked,
+  an installed toolchain reports its version)
+- **Evidence required**: `init --language python --check` → `"verified": true`, and the capabilities
+  list of available and missing languages
+
+### AC-055 — A copy of the component works in another repository, with nothing from this one
+
+- **Feature**: F-14
+- **Given**: `sealed-factories/` copied into a foreign repository, with no file from this repository
+  reachable
+- **When**: the copy is asked to verify itself, list its tools and run its agents
+- **Then**: `cli.py verify` verifies the copy's own seal through `runtime/sealcheck.py` (the
+  component's own verifier, which imports nothing from outside the directory), `toolserver.py --list`
+  serves the tools, and `cli.py run --root <that repository>` executes agents, writes its artefacts
+  and its report into that repository's `.sealed/` state directory and passes every check; the
+  control surface accepts its global options before or after the command, so it can be driven the
+  obvious way; the sealer's verifier and the component's agree on the same bytes, including on a
+  tampered payload
+- **Test method**: `shell/tests/test_sealed_environment.py` (`PortabilityTest`: verify, run, changed
+  module, added module, verifier agreement)
+- **Evidence required**: this round's foreign-copy run (`[SEAL] OK … root efd960c1…` from
+  `/tmp/foreign/component`, and `159 roles … executed 30 … 0 failed … 30/30 checks passed`)
+
+### AC-056 — The seal covers the code that runs it, not only the payloads
+
+- **Feature**: F-14
+- **Given**: the manifest `sealed-factories/SEAL.json`, which records every payload hash and now also
+  every runtime module and data file the runtime reads (`component_files`, 10 entries: nine runtime
+  modules and `mcp-servers.json`)
+- **When**: verification runs, before any run
+- **Then**: a runtime module changed after sealing fails verification, a module added under
+  `runtime/` that is not in the seal fails verification, a missing component file fails verification,
+  and a run refuses to start when verification fails - so the component cannot be half-updated and
+  still call itself sealed
+- **Test method**: `shell/tests/test_sealed_factory_runtime.py`
+  (`test_the_seal_pins_the_code_that_runs_it`), `shell/tests/test_sealed_environment.py`
+  (the changed-module and added-module cases in `PortabilityTest`)
+- **Evidence required**: the sealer's line (`component files pinned=10`) and the failure output of a
+  deliberately modified copy
+
+### AC-057 — Plug and work: no user intervention between the seal and the result
+
+- **Feature**: F-14 and F-13 (the pipeline)
+- **Given**: the sealed component in place and the pipeline that runs it
+- **When**: `node scripts/conveyor_belt.js` runs, with no configuration step and no prompt
+- **Then**: station 0 verifies the seal, detects the machine's models by probing their default
+  endpoints, reads any API keys that happen to be in the environment, builds the environment (tools,
+  MCP catalogue, agent roles, language packs), runs the swarm and asserts the result; with no model
+  and no key it still passes; if the environment is not functional (too few tools, too few roles,
+  a failed check or a failed step) station 0 fails instead of sealing it; removing the directory
+  makes station 0 report `ABSENT` and the remaining six stations still pass
+- **Test method**: `scripts/conveyor_belt.js` station 0, and
+  `shell/tests/test_sealed_factory_runtime.py`
+  (`test_the_component_runs_before_the_current_factories`,
+  `test_the_belt_runs_the_sealed_set_first_and_survives_its_absence`)
+- **Evidence required**: the belt's station 0 output and the run banner from a machine with nothing
+  configured
+
 ## 2. Traceability summary
 
 | Requirement category (Phase 2 checklist)  | Criteria                        |
@@ -561,6 +732,15 @@ from the repository's own authoritative documents instead of being invented:
 | release APK installation and launch       | AC-044 – AC-047                 |
 | imported factories (sealed, pre-pipeline) | AC-048                          |
 | security invariants                       | AC-021, AC-022, AC-040 – AC-043 |
+| MCP servers inside the seal               | AC-049                          |
+| one gateway for models and keys           | AC-050                          |
+| offline-only operation                    | AC-051                          |
+| swarm scale and honest limits             | AC-052                          |
+| multi-agent coverage, AI factories        | AC-053                          |
+| language coverage                         | AC-054                          |
+| portability and self-sufficiency          | AC-055                          |
+| the seal covers the runtime               | AC-056                          |
+| no user intervention                      | AC-057                          |
 
 ## 3. Test-method notes (no test is weakened to pass)
 

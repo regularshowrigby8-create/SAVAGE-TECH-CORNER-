@@ -1,0 +1,631 @@
+{
+ "snapshot": "2026-10-14",
+ "servers": [
+  {
+   "name": "awesome-mcp-servers",
+   "repository": "punkpeye/awesome-mcp-servers",
+   "url": "https://github.com/punkpeye/awesome-mcp-servers",
+   "license": "MIT",
+   "command": [],
+   "requires": "the repository does not publish a one-line launch command",
+   "tools": [],
+   "verified": false,
+   "what": "A collection of MCP servers."
+  },
+  {
+   "name": "servers",
+   "repository": "modelcontextprotocol/servers",
+   "url": "https://github.com/modelcontextprotocol/servers",
+   "license": "NOASSERTION",
+   "command": [
+    "npx",
+    "-y",
+    "@modelcontextprotocol/server-everything"
+   ],
+   "requires": "Node.js and the package from npm (network on first run)",
+   "tools": [
+    "echo",
+    "get-annotated-message",
+    "get-env",
+    "get-resource-links",
+    "get-resource-reference",
+    "get-structured-content",
+    "get-sum",
+    "get-tiny-image",
+    "gzip-file-as-resource",
+    "toggle-simulated-logging",
+    "toggle-subscriber-updates",
+    "trigger-long-running-operation",
+    "simulate-research-query",
+    "create_entities",
+    "create_relations",
+    "add_observations",
+    "delete_entities",
+    "delete_observations",
+    "delete_relations",
+    "read_graph",
+    "search_nodes",
+    "open_nodes",
+    "sequentialthinking",
+    "fetch",
+    "get_current_time",
+    "convert_time",
+    "git_status",
+    "git_diff_unstaged",
+    "git_diff_staged",
+    "git_diff",
+    "git_commit",
+    "git_add",
+    "git_reset",
+    "git_log",
+    "git_create_branch",
+    "git_checkout",
+    "git_show",
+    "git_branch"
+   ],
+   "verified": true,
+   "what": "Model Context Protocol Servers"
+  },
+  {
+   "name": "context7",
+   "repository": "upstash/context7",
+   "url": "https://github.com/upstash/context7",
+   "license": "MIT",
+   "command": [
+    "npx",
+    "-y",
+    "@upstash/context7-mcp"
+   ],
+   "requires": "Node.js and the package from npm",
+   "tools": [],
+   "verified": false,
+   "what": "Context7 Platform -- Up-to-date code documentation for LLMs and AI code editors"
+  },
+  {
+   "name": "chrome-devtools-mcp",
+   "repository": "ChromeDevTools/chrome-devtools-mcp",
+   "url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
+   "license": "Apache-2.0",
+   "command": [],
+   "requires": "the repository does not publish a one-line launch command",
+   "tools": [],
+   "verified": false,
+   "what": "Chrome DevTools for coding agents"
+  },
+  {
+   "name": "codebase-memory-mcp",
+   "repository": "DeusData/codebase-memory-mcp",
+   "url": "https://github.com/DeusData/codebase-memory-mcp",
+   "license": "MIT",
+   "command": [],
+   "requires": "the repository does not publish a one-line launch command",
+   "tools": [],
+   "verified": false,
+   "what": "High-performance code intelligence MCP server. Indexes codebases into a persistent knowledge graph \u2014 average repo in milliseconds. 158 languages, sub-ms queries, 99% fewer tokens. Single static binary"
+  },
+  {
+   "name": "playwright-mcp",
+   "repository": "microsoft/playwright-mcp",
+   "url": "https://github.com/microsoft/playwright-mcp",
+   "license": "Apache-2.0",
+   "command": [
+    "npx",
+    "@playwright/mcp@latest"
+   ],
+   "requires": "Node.js, the package, and browsers",
+   "tools": [],
+   "verified": false,
+   "what": "Playwright MCP server"
+  },
+  {
+   "name": "github-mcp-server",
+   "repository": "github/github-mcp-server",
+   "url": "https://github.com/github/github-mcp-server",
+   "license": "MIT",
+   "command": [
+    "github-mcp-server",
+    "stdio"
+   ],
+   "requires": "the github-mcp-server binary and a GITHUB_TOKEN",
+   "tools": [],
+   "verified": false,
+   "what": "GitHub's official MCP Server"
+  },
+  {
+   "name": "mcp-for-blender",
+   "repository": "ahujasid/mcp-for-blender",
+   "url": "https://github.com/ahujasid/mcp-for-blender",
+   "license": "MIT",
+   "command": [
+    "uvx",
+    "mcp-for-blender",
+    "install-addon"
+   ],
+   "requires": "the command shown in the repository's README",
+   "tools": [],
+   "verified": false,
+   "what": "Community plugin to control Blender 3D with any LLM of your choice. Not affiliated with the official Blender Foundation."
+  },
+  {
+   "name": "serena",
+   "repository": "oraios/serena",
+   "url": "https://github.com/oraios/serena",
+   "license": "NOASSERTION",
+   "command": [
+    "uvx",
+    "--from",
+    "git+https://github.com/oraios/serena",
+    "serena",
+    "start-mcp-server"
+   ],
+   "requires": "uv and network access on first run",
+   "tools": [],
+   "verified": false,
+   "what": "A powerful MCP toolkit for coding, providing semantic retrieval and editing capabilities  - the IDE for your agent"
+  },
+  {
+   "name": "context-mode",
+   "repository": "mksglu/context-mode",
+   "url": "https://github.com/mksglu/context-mode",
+   "license": "NOASSERTION",
+   "command": [],
+   "requires": "the repository does not publish a one-line launch command",
+   "tools": [],
+   "verified": false,
+   "what": "Context window optimization for AI coding agents. Sandboxes tool output (98% reduction), persists session memory, and   enforces routing across 17 platforms via MCP + hooks."
+  },
+  {
+   "name": "fastmcp",
+   "repository": "jlowin/fastmcp",
+   "url": "https://github.com/PrefectHQ/fastmcp",
+   "license": "Apache-2.0",
+   "command": [
+    "fastmcp",
+    "run",
+    "server.py"
+   ],
+   "requires": "Python 3.10+ and `pip install fastmcp`",
+   "tools": [],
+   "verified": false,
+   "what": "\ud83d\ude80 The fast, Pythonic way to build MCP servers and clients."
+  },
+  {
+   "name": "python-sdk",
+   "repository": "modelcontextprotocol/python-sdk",
+   "url": "https://github.com/modelcontextprotocol/python-sdk",
+   "license": "MIT",
+   "command": [
+    "python3",
+    "-m",
+    "mcp.server.fastmcp"
+   ],
+   "requires": "Python 3.10+ and `pip install mcp`",
+   "tools": [],
+   "verified": false,
+   "what": "The official Python SDK for Model Context Protocol servers and clients"
+  },
+  {
+   "name": "n8n-mcp",
+   "repository": "czlonkowski/n8n-mcp",
+   "url": "https://github.com/czlonkowski/n8n-mcp",
+   "license": "MIT",
+   "command": [],
+   "requires": "the repository does not publish a one-line launch command",
+   "tools": [],
+   "verified": false,
+   "what": "A MCP for Claude Desktop / Claude Code / Windsurf / Cursor to build n8n workflows for you "
+  },
+  {
+   "name": "mcp-for-beginners",
+   "repository": "microsoft/mcp-for-beginners",
+   "url": "https://github.com/microsoft/mcp-for-beginners",
+   "license": "MIT",
+   "command": [],
+   "requires": "the repository does not publish a one-line launch command",
+   "tools": [],
+   "verified": false,
+   "what": "This open-source curriculum introduces the fundamentals of Model Context Protocol (MCP) through real-world, cross-language examples in .NET, Java, TypeScript, JavaScript, Rust and Python. Designed for"
+  },
+  {
+   "name": "mcp-toolbox",
+   "repository": "googleapis/mcp-toolbox",
+   "url": "https://github.com/googleapis/mcp-toolbox",
+   "license": "Apache-2.0",
+   "command": [
+    "npx",
+    "-y",
+    "@toolbox-sdk/server"
+   ],
+   "requires": "Node.js and the package from npm (fetched on first run)",
+   "tools": [],
+   "verified": false,
+   "what": "MCP Toolbox for Databases is an open source MCP server for databases."
+  },
+  {
+   "name": "figma-context-mcp",
+   "repository": "GLips/Figma-Context-MCP",
+   "url": "https://github.com/GLips/Figma-Context-MCP",
+   "license": "MIT",
+   "command": [],
+   "requires": "the repository does not publish a one-line launch command",
+   "tools": [],
+   "verified": false,
+   "what": "MCP server to provide Figma layout information to AI coding agents like Cursor"
+  },
+  {
+   "name": "unity-mcp",
+   "repository": "CoplayDev/unity-mcp",
+   "url": "https://github.com/CoplayDev/unity-mcp",
+   "license": "MIT",
+   "command": [],
+   "requires": "the repository does not publish a one-line launch command",
+   "tools": [],
+   "verified": false,
+   "what": "Unity MCP acts as a bridge between AI assistants and your Unity Editor. Give your LLM tools to manage assets, control scenes, edit scripts, and automate tasks within Unity."
+  },
+  {
+   "name": "typescript-sdk",
+   "repository": "modelcontextprotocol/typescript-sdk",
+   "url": "https://github.com/modelcontextprotocol/typescript-sdk",
+   "license": "NOASSERTION",
+   "command": [
+    "npx",
+    "@modelcontextprotocol/sdk"
+   ],
+   "requires": "Node.js and the package from npm",
+   "tools": [],
+   "verified": false,
+   "what": "The official TypeScript SDK for Model Context Protocol servers and clients"
+  },
+  {
+   "name": "ida-pro-mcp",
+   "repository": "mrexodia/ida-pro-mcp",
+   "url": "https://github.com/mrexodia/ida-pro-mcp",
+   "license": "MIT",
+   "command": [
+    "uv",
+    "run",
+    "\"C:\\Program"
+   ],
+   "requires": "the command shown in the repository's README",
+   "tools": [],
+   "verified": false,
+   "what": "AI-powered reverse engineering assistant that bridges IDA Pro with language models through MCP."
+  },
+  {
+   "name": "mcp-chrome",
+   "repository": "hangwin/mcp-chrome",
+   "url": "https://github.com/hangwin/mcp-chrome",
+   "license": "MIT",
+   "command": [],
+   "requires": "the repository does not publish a one-line launch command",
+   "tools": [],
+   "verified": false,
+   "what": "Chrome MCP Server is a Chrome extension-based Model Context Protocol (MCP) server that exposes your Chrome browser functionality to AI assistants like Claude, enabling complex browser automation, cont"
+  },
+  {
+   "name": "inspector",
+   "repository": "modelcontextprotocol/inspector",
+   "url": "https://github.com/modelcontextprotocol/inspector",
+   "license": "NOASSERTION",
+   "command": [
+    "npx",
+    "@modelcontextprotocol/inspector"
+   ],
+   "requires": "Node.js and the package from npm (opens a browser UI)",
+   "tools": [],
+   "verified": false,
+   "what": "Visual testing tool for MCP servers"
+  },
+  {
+   "name": "mcp",
+   "repository": "awslabs/mcp",
+   "url": "https://github.com/awslabs/mcp",
+   "license": "Apache-2.0",
+   "command": [],
+   "requires": "the repository does not publish a one-line launch command",
+   "tools": [],
+   "verified": false,
+   "what": "Open source MCP Servers for AWS"
+  },
+  {
+   "name": "firecrawl-mcp-server",
+   "repository": "mendableai/firecrawl-mcp-server",
+   "url": "https://github.com/firecrawl/firecrawl-mcp-server",
+   "license": "MIT",
+   "command": [
+    "npx",
+    "-y",
+    "firecrawl-mcp"
+   ],
+   "requires": "Node.js, the package and a Firecrawl key",
+   "tools": [],
+   "verified": false,
+   "what": "\ud83d\udd25 Official Firecrawl MCP Server - Adds powerful web scraping and search to Cursor, Claude and any other LLM clients."
+  },
+  {
+   "name": "mcp-atlassian",
+   "repository": "sooperset/mcp-atlassian",
+   "url": "https://github.com/sooperset/mcp-atlassian",
+   "license": "MIT",
+   "command": [
+    "uvx",
+    "mcp-atlassian"
+   ],
+   "requires": "the command shown in the repository's README",
+   "tools": [],
+   "verified": false,
+   "what": "MCP server for Atlassian tools (Confluence, Jira)"
+  },
+  {
+   "name": "mcp-playwright",
+   "repository": "executeautomation/mcp-playwright",
+   "url": "https://github.com/executeautomation/mcp-playwright",
+   "license": "MIT",
+   "command": [
+    "npx",
+    "-y",
+    "@executeautomation/playwright-mcp-server"
+   ],
+   "requires": "Node.js and the package from npm",
+   "tools": [],
+   "verified": false,
+   "what": "Playwright Model Context Protocol Server - Tool to automate Browsers and APIs in Claude Desktop, Cline, Cursor IDE and More \ud83d\udd0c"
+  },
+  {
+   "name": "exa-mcp-server",
+   "repository": "exa-labs/exa-mcp-server",
+   "url": "https://github.com/exa-labs/exa-mcp-server",
+   "license": "MIT",
+   "command": [
+    "npx",
+    "-y",
+    "exa-mcp-server"
+   ],
+   "requires": "Node.js, the package and an Exa key",
+   "tools": [],
+   "verified": false,
+   "what": "Exa MCP for web search and web crawling!"
+  },
+  {
+   "name": "notion-mcp-server",
+   "repository": "makenotion/notion-mcp-server",
+   "url": "https://github.com/makenotion/notion-mcp-server",
+   "license": "MIT",
+   "command": [
+    "npx",
+    "-y",
+    "@notionhq/notion-mcp-server"
+   ],
+   "requires": "Node.js and the package from npm (fetched on first run)",
+   "tools": [],
+   "verified": false,
+   "what": "Official Notion MCP Server"
+  },
+  {
+   "name": "mcp-server-chart",
+   "repository": "antvis/mcp-server-chart",
+   "url": "https://github.com/antvis/mcp-server-chart",
+   "license": "MIT",
+   "command": [
+    "npx",
+    "-y",
+    "skills"
+   ],
+   "requires": "Node.js and the package from npm (fetched on first run)",
+   "tools": [],
+   "verified": false,
+   "what": "\ud83e\udd16 A visualization mcp & skills contains 25+ visual charts using @antvis. Using for chart generation and data analysis."
+  },
+  {
+   "name": "mcp-server-cloudflare",
+   "repository": "cloudflare/mcp-server-cloudflare",
+   "url": "https://github.com/cloudflare/mcp-server-cloudflare",
+   "license": "Apache-2.0",
+   "command": [
+    "npx",
+    "-y",
+    "@cloudflare/mcp-server-cloudflare"
+   ],
+   "requires": "Node.js, the package and a Cloudflare account",
+   "tools": [],
+   "verified": false,
+   "what": ""
+  },
+  {
+   "name": "supabase-mcp",
+   "repository": "supabase-community/supabase-mcp",
+   "url": "https://github.com/supabase/mcp",
+   "license": "Apache-2.0",
+   "command": [
+    "npx",
+    "-y",
+    "@supabase/mcp-server-supabase"
+   ],
+   "requires": "Node.js, the package and a Supabase project",
+   "tools": [],
+   "verified": false,
+   "what": "Connect Supabase to your AI assistants"
+  },
+  {
+   "name": "mcp-proxy",
+   "repository": "sparfenyuk/mcp-proxy",
+   "url": "https://github.com/sparfenyuk/mcp-proxy",
+   "license": "MIT",
+   "command": [],
+   "requires": "the command shown in the repository's README",
+   "tools": [],
+   "verified": false,
+   "what": "A bridge between Streamable HTTP and stdio MCP transports"
+  },
+  {
+   "name": "tavily-mcp",
+   "repository": "tavily-ai/tavily-mcp",
+   "url": "https://github.com/tavily-ai/tavily-mcp",
+   "license": "MIT",
+   "command": [
+    "npx",
+    "-y",
+    "tavily-mcp"
+   ],
+   "requires": "Node.js, the package and a Tavily key",
+   "tools": [],
+   "verified": false,
+   "what": "Production ready MCP server with real-time search, extract, map & crawl."
+  },
+  {
+   "name": "azure-mcp",
+   "repository": "azure/azure-mcp",
+   "url": "https://github.com/Azure/azure-mcp",
+   "license": "MIT",
+   "command": [],
+   "requires": "the repository does not publish a one-line launch command",
+   "tools": [],
+   "verified": false,
+   "what": "The Azure MCP Server, bringing the power of Azure to your agents."
+  },
+  {
+   "name": "quickstart-resources",
+   "repository": "modelcontextprotocol/quickstart-resources",
+   "url": "https://github.com/modelcontextprotocol/quickstart-resources",
+   "license": "NOASSERTION",
+   "command": [
+    "python3",
+    "-m",
+    "weather"
+   ],
+   "requires": "Python and the tutorial's weather package",
+   "tools": [],
+   "verified": false,
+   "what": "A repository of servers and clients from the Model Context Protocol tutorials"
+  },
+  {
+   "name": "gmail-mcp-server",
+   "repository": "GongRzhe/Gmail-MCP-Server",
+   "url": "https://github.com/GongRzhe/Gmail-MCP-Server",
+   "license": "MIT",
+   "command": [
+    "npx",
+    "-y",
+    "@gongrzhe/server-gmail-autoauth-mcp"
+   ],
+   "requires": "Node.js, the package and Gmail credentials",
+   "tools": [],
+   "verified": false,
+   "what": "A Model Context Protocol (MCP) server for Gmail integration in Claude Desktop with auto authentication support. This server enables AI assistants to manage Gmail through natural language interactions."
+  },
+  {
+   "name": "sentry-mcp",
+   "repository": "getsentry/sentry-mcp",
+   "url": "https://github.com/getsentry/toolkit",
+   "license": "NOASSERTION",
+   "command": [
+    "npx",
+    "-y",
+    "@sentry/mcp-server"
+   ],
+   "requires": "Node.js and the package from npm (fetched on first run)",
+   "tools": [],
+   "verified": false,
+   "what": "Agentic tooling for Sentry"
+  },
+  {
+   "name": "mcp-server-elasticsearch",
+   "repository": "elastic/mcp-server-elasticsearch",
+   "url": "https://github.com/elastic/mcp-server-elasticsearch",
+   "license": "Apache-2.0",
+   "command": [],
+   "requires": "the command shown in the repository's README",
+   "tools": [],
+   "verified": false,
+   "what": ""
+  },
+  {
+   "name": "mcp-server-neon",
+   "repository": "neondatabase-labs/mcp-server-neon",
+   "url": "https://github.com/neondatabase/mcp-server-neon",
+   "license": "MIT",
+   "command": [
+    "npx",
+    "-y",
+    "neon"
+   ],
+   "requires": "Node.js and the package from npm (fetched on first run)",
+   "tools": [],
+   "verified": false,
+   "what": "MCP server for interacting with Neon Management API and databases"
+  },
+  {
+   "name": "mcp-redis",
+   "repository": "redis/mcp-redis",
+   "url": "https://github.com/redis/mcp-redis",
+   "license": "MIT",
+   "command": [
+    "uv",
+    "run",
+    "redis-mcp-server"
+   ],
+   "requires": "the command shown in the repository's README",
+   "tools": [],
+   "verified": false,
+   "what": "The official Redis MCP Server is a natural language interface designed for agentic applications to manage and search data in Redis efficiently"
+  },
+  {
+   "name": "dbt-mcp",
+   "repository": "dbt-labs/dbt-mcp",
+   "url": "https://github.com/dbt-labs/dbt-mcp",
+   "license": "Apache-2.0",
+   "command": [],
+   "requires": "the repository does not publish a one-line launch command",
+   "tools": [],
+   "verified": false,
+   "what": "A MCP (Model Context Protocol) server for interacting with dbt."
+  },
+  {
+   "name": "chroma-mcp",
+   "repository": "chroma-core/chroma-mcp",
+   "url": "https://github.com/chroma-core/chroma-mcp",
+   "license": "Apache-2.0",
+   "command": [
+    "chroma-mcp"
+   ],
+   "requires": "Python and `pip install chroma-mcp`",
+   "tools": [],
+   "verified": false,
+   "what": "A Model Context Protocol (MCP) server implementation that provides database capabilities for Chroma"
+  },
+  {
+   "name": "filesystem-mcp-server",
+   "repository": "cyanheads/filesystem-mcp-server",
+   "url": "https://github.com/cyanheads/filesystem-mcp-server",
+   "license": "Apache-2.0",
+   "command": [
+    "npx",
+    "-y",
+    "@cyanheads/filesystem-mcp-server"
+   ],
+   "requires": "Node.js and the package from npm",
+   "tools": [
+    "read_file",
+    "read_text_file",
+    "read_media_file",
+    "read_multiple_files",
+    "write_file",
+    "edit_file",
+    "create_directory",
+    "list_directory",
+    "list_directory_with_sizes",
+    "directory_tree",
+    "move_file",
+    "search_files",
+    "get_file_info",
+    "list_allowed_directories"
+   ],
+   "verified": true,
+   "what": "A Model Context Protocol (MCP) server for platform-agnostic file capabilities, including advanced search/replace and directory tree traversal"
+  }
+ ],
+ "verified_total_servers": 7,
+ "verified_total_tools": 52,
+ "method": "GitHub search over topic:mcp-server, topic:model-context-protocol, topic:mcp and 'mcp server' in name/description, sorted by stars; every candidate read through the API before it was kept. A launch command is recorded only where an MCP handshake (initialize -> tools/list) completed in this environment, or where the repository's README states it and npm/PyPI serves the named package. Everything else is carried as an import with the command left empty - the component never guesses a command."
+}

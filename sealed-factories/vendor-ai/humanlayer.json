@@ -1,0 +1,122 @@
+{
+ "id": "humanlayer",
+ "full_name": "humanlayer/humanlayer",
+ "url": "https://github.com/humanlayer/humanlayer",
+ "license": "NOASSERTION",
+ "license_file": "LICENSE",
+ "license_text_sha256": "a22be4045580cf9fd55278e4a42f015aaaa828a859cef7ea19733d25da11755e",
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "99abe673498cf8bdcd5f989aebe9406a27185b3b",
+ "vendored_files": [
+  {
+   "path": "humanlayer-wui/src-tauri/capabilities/default.json",
+   "bytes": 1083,
+   "sha256": "6f3be0b462bc1dd6da3197c5e302d93449a0018794978c182d9485f4391d0722"
+  },
+  {
+   "path": ".claude/agents/codebase-locator.md",
+   "bytes": 4821,
+   "sha256": "2c18e95968d1c82608047ff035050081fd7c6e3206dcc19a8a2ef5c991001308"
+  },
+  {
+   "path": ".claude/agents/web-search-researcher.md",
+   "bytes": 5005,
+   "sha256": "45fa633d81e131b87072cdb987affb89ce3c00c7132a6808bf17f20b314aa7fd"
+  },
+  {
+   "path": ".claude/agents/thoughts-locator.md",
+   "bytes": 5061,
+   "sha256": "f2fa6703f17277d23b21a5cbd0ae5d610c3d443337e30f0d041824d718d2b82b"
+  },
+  {
+   "path": ".claude/agents/thoughts-analyzer.md",
+   "bytes": 5203,
+   "sha256": "1262d56c45929725a9dbf7da6188249b15f48b59a7d7a290ff606b2f0e1674fe"
+  },
+  {
+   "path": ".claude/agents/codebase-analyzer.md",
+   "bytes": 5659,
+   "sha256": "a5ec9eaea935b4adb6cd62a1771be3c489ad24f484f69fa807476e9fdef78388"
+  },
+  {
+   "path": ".claude/agents/codebase-pattern-finder.md",
+   "bytes": 6939,
+   "sha256": "0a8d7abf879cfe71026f494df71221d440e5a8d7ac71d213cec726b1c3ee6fe2"
+  },
+  {
+   "path": "humanlayer-wui/.storybook/main.ts",
+   "bytes": 828,
+   "sha256": "5c83ffa908bb94686edf8915aae80814a68b2f6241522f154566de88bb0cf957"
+  },
+  {
+   "path": "hld/sdk/typescript/src/generated/models/Agent.ts",
+   "bytes": 2545,
+   "sha256": "a57fe34755921261bc7f8d1e4b8f11be1197803c1bb32358a82e7200fabe9b44"
+  },
+  {
+   "path": "hld/CLAUDE.md",
+   "bytes": 1942,
+   "sha256": "01ee275406fe20643a7a9f523416f8e99c791be47a010623a4ffe86bbcc2801d"
+  },
+  {
+   "path": "scripts/CLAUDE.md",
+   "bytes": 2455,
+   "sha256": "cac90f5821a0d1e823052d884d54341e827f9859179cfcc1a7799e1a7846591f"
+  },
+  {
+   "path": "packages/database/CLAUDE.md",
+   "bytes": 2455,
+   "sha256": "cac90f5821a0d1e823052d884d54341e827f9859179cfcc1a7799e1a7846591f"
+  },
+  {
+   "path": "packages/contracts/CLAUDE.md",
+   "bytes": 2455,
+   "sha256": "cac90f5821a0d1e823052d884d54341e827f9859179cfcc1a7799e1a7846591f"
+  },
+  {
+   "path": "apps/react/CLAUDE.md",
+   "bytes": 2455,
+   "sha256": "cac90f5821a0d1e823052d884d54341e827f9859179cfcc1a7799e1a7846591f"
+  },
+  {
+   "path": "apps/daemon/CLAUDE.md",
+   "bytes": 2455,
+   "sha256": "cac90f5821a0d1e823052d884d54341e827f9859179cfcc1a7799e1a7846591f"
+  },
+  {
+   "path": "CLAUDE.md",
+   "bytes": 3176,
+   "sha256": "691b0125049b38f4f79aaf5ade216b3e34d5d46cd59e840f2214c47721c52b61"
+  },
+  {
+   "path": "humanlayer-wui/CLAUDE.md",
+   "bytes": 3805,
+   "sha256": "a6ea74346ed8a45f8035de494e18dee304e7ae333e78fb4356f1e99c19bedcf2"
+  },
+  {
+   "path": "README.md",
+   "bytes": 197,
+   "sha256": "026a6c9e137288f29334b8923ce3994ae1ab3b96d5b80e1770b8a03b5876d9f0"
+  }
+ ],
+ "skipped": {
+  "budget": false,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 794
+ },
+ "providers": [
+  "anthropic"
+ ],
+ "entrypoints": [
+  "humanlayer-wui/.storybook/main.ts",
+  "hld/sdk/typescript/src/generated/models/Agent.ts"
+ ],
+ "runtime": [
+  "node"
+ ],
+ "notes": [],
+ "_license_bytes": "QXBhY2hlIFNvZnR3YXJlIExpY2Vuc2UgMi4wCgpDb3B5cmlnaHQgKGMpIDIwMjQsIGh1bWFubGF5ZXIgQXV0aG9ycwoKTGljZW5zZWQgdW5kZXIgdGhlIEFwYWNoZSBMaWNlbnNlLCBWZXJzaW9uIDIuMCAodGhlICJMaWNlbnNlIik7CnlvdSBtYXkgbm90IHVzZSB0aGlzIGZpbGUgZXhjZXB0IGluIGNvbXBsaWFuY2Ugd2l0aCB0aGUgTGljZW5zZS4KWW91IG1heSBvYnRhaW4gYSBjb3B5IG9mIHRoZSBMaWNlbnNlIGF0CgpodHRwOi8vd3d3LmFwYWNoZS5vcmcvbGljZW5zZXMvTElDRU5TRS0yLjAKClVubGVzcyByZXF1aXJlZCBieSBhcHBsaWNhYmxlIGxhdyBvciBhZ3JlZWQgdG8gaW4gd3JpdGluZywgc29mdHdhcmUKZGlzdHJpYnV0ZWQgdW5kZXIgdGhlIExpY2Vuc2UgaXMgZGlzdHJpYnV0ZWQgb24gYW4gIkFTIElTIiBCQVNJUywKV0lUSE9VVCBXQVJSQU5USUVTIE9SIENPTkRJVElPTlMgT0YgQU5ZIEtJTkQsIGVpdGhlciBleHByZXNzIG9yIGltcGxpZWQuClNlZSB0aGUgTGljZW5zZSBmb3IgdGhlIHNwZWNpZmljIGxhbmd1YWdlIGdvdmVybmluZyBwZXJtaXNzaW9ucyBhbmQKbGltaXRhdGlvbnMgdW5kZXIgdGhlIExpY2Vuc2UuCg==",
+ "content_redistributed": false
+}

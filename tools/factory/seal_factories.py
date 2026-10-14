@@ -39,6 +39,12 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SEALED = REPO_ROOT / "sealed-factories"
+GROUP_DIRS = {
+    # directory -> how the group is described in the seal
+    "vendor": "imported factory",
+    "vendor-ai": "AI-focused factory",
+    "mcp-vendor": "MCP tool server",
+}
 VENDOR = SEALED / "vendor"
 PAYLOADS = SEALED / "payloads"
 LICENSES = SEALED / "licenses"
@@ -46,6 +52,10 @@ SEAL_FILE = SEALED / "SEAL.json"
 SEAL_HASH = SEALED / "SEAL.sha256"
 
 SEAL_VERSION = "1.0.0"
+
+#: Data the runtime reads at run time, hashed into the seal alongside the runtime's own code.
+COMPONENT_DATA = ("mcp-servers.json",)
+RUNTIME = SEALED / "runtime"
 
 
 def sha256_bytes(data: bytes) -> str:
@@ -121,6 +131,22 @@ def build_payload(record: dict) -> bytes:
     return buffer.getvalue()
 
 
+def component_files() -> list[dict]:
+    """The component's own machinery, hashed into the seal.
+
+    The payloads are the factories; these are the programs that run them. Pinning both means a
+    tampered or half-updated runtime is a verification failure instead of something the seal cannot
+    see. A file that appears in `runtime/` without being recorded here also fails verification.
+    """
+    paths = sorted(path for path in RUNTIME.rglob("*.py") if "__pycache__" not in path.parts)
+    paths += [SEALED / name for name in COMPONENT_DATA if (SEALED / name).is_file()]
+    records = []
+    for path in paths:
+        records.append({"path": str(path.relative_to(SEALED)), "bytes": path.stat().st_size,
+                        "sha256": sha256_file(path)})
+    return records
+
+
 def seal() -> int:
     if not VENDOR.is_dir():
         print(f"nothing to seal: {VENDOR} does not exist", file=sys.stderr)
@@ -130,7 +156,13 @@ def seal() -> int:
 
     factories = []
     stripped = 0
-    for record_path in sorted(VENDOR.glob("*.json")):
+    record_paths = []
+    for directory in GROUP_DIRS:
+        record_paths.extend(sorted((SEALED / directory).glob("*.json")))
+    if not record_paths:
+        print(f"nothing to seal: no group directory under {SEALED} holds records", file=sys.stderr)
+        return 2
+    for record_path in record_paths:
         record = json.loads(record_path.read_text(encoding="utf-8"))
         if not content_may_be_copied(record):
             # The policy lives here, not in the vendoring pass: whatever the vendoring script
@@ -159,6 +191,7 @@ def seal() -> int:
             license_file = license_path.name
 
         factories.append({
+            "group": GROUP_DIRS.get(record_path.parent.name, "imported factory"),
             "id": record["id"],
             "full_name": record["full_name"],
             "url": record["url"],
@@ -194,7 +227,10 @@ def seal() -> int:
             "blueprint_only": sum(1 for f in factories if not f["content_redistributed"]),
             "with_license_text": sum(1 for f in factories if f["license_present"]),
             "ai_worker_factories": sum(1 for f in factories if f["ai_workers"]),
+            "by_group": {group: sum(1 for f in factories if f["group"] == group)
+                         for group in sorted(set(GROUP_DIRS.values()))},
             "payload_bytes": sum(f["payload_bytes"] for f in factories),
+            "component_files": len(component_files()),
         },
         "pipeline_position": {
             "order": 0,
@@ -207,8 +243,14 @@ def seal() -> int:
             "delete": "sealed-factories/",
             "also_remove": ["tools/factory/seal_factories.py",
                             "tools/factory/sealed_factory_runtime.py",
-                            "tools/factory/vendor_imported_factories.py"],
-            "tests": ["shell/tests/test_sealed_factory_runtime.py"],
+                            "tools/factory/vendor_imported_factories.py",
+                            "tools/factory/vendor_mcp_servers.py",
+                            "tools/factory/imported_factories.json",
+                            "tools/factory/imported_mcp_servers.json",
+                            "tools/factory/imported_ai_factories.json"],
+            "tests": ["shell/tests/test_sealed_factory_runtime.py",
+                      "shell/tests/test_sealed_environment.py",
+                      "shell/tests/test_imported_factories.py"],
             "docs": ["docs/factory/MULTISTAGE_FACTORY.md"],
             "belt_station": "the Stage 0 block in scripts/conveyor_belt.js, which reports ABSENT "
                             "without it",
@@ -217,6 +259,7 @@ def seal() -> int:
             "note": ("Nothing outside sealed-factories/ imports it; the belt reports it as ABSENT and "
                      "continues with the existing factories."),
         },
+        "component_files": component_files(),
         "factories": factories,
     }
     SEAL_FILE.write_text(json.dumps(seal_document, indent=1) + "\n", encoding="utf-8")
@@ -224,6 +267,7 @@ def seal() -> int:
     root = sha256_file(SEAL_FILE)
     SEAL_HASH.write_text(f"{root}  SEAL.json\n", encoding="utf-8")
     print(f"sealed {len(factories)} factories -> {SEAL_FILE.relative_to(REPO_ROOT)}")
+    print(f"component files pinned={seal_document['contents']['component_files']}")
     print(f"seal root sha256={root}")
     print(f"payload bytes={seal_document['contents']['payload_bytes']} "
           f"licences={seal_document['contents']['with_license_text']}")
@@ -361,6 +405,19 @@ def verify(quiet: bool = False) -> int:
             license_path = SEALED / "licenses" / factory["license_file"]
             if not license_path.is_file():
                 problems.append(f'{factory["id"]}: licence file missing')
+    for record in document.get("component_files", []):
+        path = SEALED / record["path"]
+        if not path.is_file():
+            problems.append(f'component file missing: {record["path"]}')
+        elif sha256_file(path) != record["sha256"]:
+            problems.append(f'component file modified: {record["path"]}')
+    recorded_paths = {record["path"] for record in document.get("component_files", [])}
+    present_paths = {str(path.relative_to(SEALED))
+                     for path in RUNTIME.rglob("*.py") if "__pycache__" not in path.parts}
+    present_paths |= {name for name in COMPONENT_DATA if (SEALED / name).is_file()}
+    for extra in sorted(present_paths - recorded_paths):
+        problems.append(f"component file not in the seal: {extra}")
+
     if problems:
         print("[SEAL] FAIL:")
         for problem in problems:

@@ -95,6 +95,90 @@ and continue. The exact removal list is recorded inside `SEAL.json` under `remov
 a test that copies the runtime into an empty tree and checks that absence is reported, exits zero,
 and creates nothing.
 
+## Inside the seal: the environment that runs itself
+
+The 72 imported factories are the front of the component. Behind them, and sealed with them, is the
+part that makes the whole thing portable: a runtime that works in any repository, in any language it
+finds a toolchain for, with or without a model.
+
+| Piece           | File                                     | What it is                                                                                 |
+| --------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Tools           | `sealed-factories/runtime/toolkit.py`    | 40 tools, standard library only, no install                                                |
+| MCP server      | `sealed-factories/runtime/toolserver.py` | every tool over MCP (stdio JSON-RPC) for any AI client                                     |
+| Gateway         | `sealed-factories/runtime/gateway.py`    | one endpoint, every provider key, OpenAI-compatible                                        |
+| Agents          | `sealed-factories/runtime/agents.py`     | 120 roles: 15 core, one per installed language, 72 imported factories, 26 MCP tool servers |
+| Swarm           | `sealed-factories/runtime/swarm.py`      | plans up to 1,000,000 instances, executes what it is told, checks everything it made       |
+| Language packs  | `sealed-factories/runtime/langkit.py`    | 14 scaffolds, probed against the machine, build+test on request                            |
+| MCP binding     | `sealed-factories/runtime/mcplink.py`    | binds installed MCP servers as `mcp.<server>.<tool>`                                       |
+| Control surface | `sealed-factories/runtime/cli.py`        | one command for all of it                                                                  |
+
+### Tools
+
+Forty tools, all implemented here and all working offline: filesystem (list, read, write, search,
+hash, copy, move, delete), text (diff, patch, JSON, TOML, CSV, regex, HTML, normalise), code
+(metrics, structure with a real Python AST, unfinished-work markers, secret scan), processes (run a
+command and report its exit code, git), network (fetch, HTTP - fail with a reason when offline),
+state (memory, task plan, SQLite), archives (list and create), data (statistics, deterministic
+sampling), environment (what is installed here) and models (`model.ask`, through the gateway).
+
+Two rules hold everywhere: a path that escapes the workspace raises, and nothing is invented - a
+tool that cannot do its job says why.
+
+    python3 sealed-factories/runtime/cli.py tools          # the directory
+    python3 sealed-factories/runtime/cli.py call fs.list --arguments '{"path": ".", "depth": 2}'
+
+### MCP: the same tools for any AI client
+
+`toolserver.py` speaks the Model Context Protocol over stdio: `initialize`, `tools/list`,
+`tools/call`, `ping`, plus `resources/list` and `prompts/list`. Point any MCP host at it and the
+whole directory appears as that client's tools:
+
+    {"mcpServers": {"sealed-factory-tools": {"command": "python3",
+      "args": ["sealed-factories/runtime/toolserver.py", "--root", "."]}}}
+
+Alongside the native tools, the catalogue carries 42 imported MCP **servers** (filesystem, git,
+fetch, time, memory, sequential thinking, Playwright, Chrome DevTools, GitHub, Sentry, Notion,
+Atlassian, Redis, Elastic and the rest). Seven of them were verified here by completing a real MCP
+handshake - 52 tools observed - and `mcplink.py` binds any of the others the moment their command
+exists on the machine, as `mcp.<server>.<tool>`, with the schemas the server itself publishes.
+Nothing is installed by this component: an MCP server is an extension, never a dependency, and every
+capability the seven verified servers provide is implemented natively in `toolkit.py` as well.
+
+### The gateway
+
+    python3 sealed-factories/runtime/cli.py gateway --port 8787
+
+One endpoint for every model. `GET /healthz` reports which providers are reachable; `GET /v1/models`
+lists what can be served; `GET /v1/keys` reports how many keys each provider holds - never a key.
+`POST /v1/chat/completions` is OpenAI-compatible: `provider/model` targets one provider, a bare name
+searches all of them, `auto` takes the first reachable in preference order (Ollama, LM Studio, vLLM,
+llama.cpp, then the hosted providers). Keys are read from the environment, rotated round-robin per
+provider, and never logged: the request path prints the provider, never the credential. With nothing
+reachable the gateway answers HTTP 503 naming exactly what it looked for.
+
+### The swarm
+
+An agent instance is a role reference and a sequence number, so a plan of a million instances costs
+nothing to hold (`capacity`). Execution is bounded on purpose (`--limit`) and always in two passes:
+each instance does its role's work - through a model when the gateway has one, through the role's
+declared offline tool calls otherwise - and every role's checks then run against the workspace, plus
+each instance's artefact is verified. The report carries both numbers, always: what was planned and
+what actually ran.
+
+    python3 sealed-factories/runtime/cli.py run --task "..." --agents 3 --limit 300
+    python3 sealed-factories/runtime/cli.py capacity
+
+### Language packs
+
+Fourteen packs: Python, JavaScript, TypeScript, Go, Rust, Java, Kotlin, C, C++, C#, Ruby, PHP, shell
+SQL and static web. Each declares its build, test and run command and carries a real scaffold whose
+tests pass with the toolchain that is present:
+
+    python3 sealed-factories/runtime/cli.py init --language go --name thing --into out/ --check
+
+`--check` runs the build and the tests and reports the exit codes. Packs whose toolchain is not
+installed are reported as missing by `capabilities` - never silently faked.
+
 ## The conveyor belt, its seven stations
 
 `scripts/conveyor_belt.js`, run by `node scripts/conveyor_belt.js`, `make conveyor` or the CI workflow:

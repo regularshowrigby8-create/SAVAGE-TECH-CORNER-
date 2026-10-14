@@ -1,16 +1,22 @@
 {
  "seal_version": "1.0.0",
- "sealed_at": "2026-10-14T08:44:48Z",
+ "sealed_at": "2026-10-14T12:03:36Z",
  "component": "sealed-factories",
  "description": "The imported factory set. Dropped in or removed as one unit; runs before the repository's own factories and feeds them.",
  "contents": {
-  "factories": 72,
-  "with_payload": 72,
-  "content_redistributed": 43,
-  "blueprint_only": 29,
-  "with_license_text": 50,
-  "ai_worker_factories": 53,
-  "payload_bytes": 938767
+  "factories": 137,
+  "with_payload": 137,
+  "content_redistributed": 98,
+  "blueprint_only": 39,
+  "with_license_text": 115,
+  "ai_worker_factories": 103,
+  "by_group": {
+   "AI-focused factory": 23,
+   "MCP tool server": 42,
+   "imported factory": 72
+  },
+  "payload_bytes": 1849160,
+  "component_files": 10
  },
  "pipeline_position": {
   "order": 0,
@@ -31,10 +37,16 @@
   "also_remove": [
    "tools/factory/seal_factories.py",
    "tools/factory/sealed_factory_runtime.py",
-   "tools/factory/vendor_imported_factories.py"
+   "tools/factory/vendor_imported_factories.py",
+   "tools/factory/vendor_mcp_servers.py",
+   "tools/factory/imported_factories.json",
+   "tools/factory/imported_mcp_servers.json",
+   "tools/factory/imported_ai_factories.json"
   ],
   "tests": [
-   "shell/tests/test_sealed_factory_runtime.py"
+   "shell/tests/test_sealed_factory_runtime.py",
+   "shell/tests/test_sealed_environment.py",
+   "shell/tests/test_imported_factories.py"
   ],
   "docs": [
    "docs/factory/MULTISTAGE_FACTORY.md"
@@ -51,8 +63,61 @@
   ],
   "note": "Nothing outside sealed-factories/ imports it; the belt reports it as ABSENT and continues with the existing factories."
  },
+ "component_files": [
+  {
+   "path": "runtime/agents.py",
+   "bytes": 14121,
+   "sha256": "28a7a514b4eaf4592a9accf485f9c968b25a7bdfbf59cc279a69bf979c328b62"
+  },
+  {
+   "path": "runtime/cli.py",
+   "bytes": 12647,
+   "sha256": "def1111353415dc1ef9d45fb0355d891ba3d15e0906c1c066dc170386fa9a0e2"
+  },
+  {
+   "path": "runtime/gateway.py",
+   "bytes": 17351,
+   "sha256": "0a9fc75851a8dffa98a7f1cc5c323e77d4a9f69d20aead274a7a6359c9215852"
+  },
+  {
+   "path": "runtime/langkit.py",
+   "bytes": 11916,
+   "sha256": "9881499ab9c545cc07700d23549c940c6f48ef78e955a988f90032488158d8bd"
+  },
+  {
+   "path": "runtime/mcplink.py",
+   "bytes": 8891,
+   "sha256": "74c9b3397a99f456a075e901d0414bfdfb652da6e76d8b814846bf7a5be7f1e7"
+  },
+  {
+   "path": "runtime/sealcheck.py",
+   "bytes": 6536,
+   "sha256": "51d21fef9a784610b040b9e226f64451c416d0ee3c2d83ade088a485205d0dc7"
+  },
+  {
+   "path": "runtime/swarm.py",
+   "bytes": 14817,
+   "sha256": "06e7a42a9503b34a64d586f46e682f9178cec7a0942defeb646268d298e6c909"
+  },
+  {
+   "path": "runtime/toolkit.py",
+   "bytes": 51299,
+   "sha256": "7a87001eecda98c830e0b49d6fa1705d8fdf677614568bf8d0351b63350a898b"
+  },
+  {
+   "path": "runtime/toolserver.py",
+   "bytes": 6974,
+   "sha256": "673c0a5b59e1491ac8fbee6f971f74e08ea726008aea0fc3cb5898c2bc419bf1"
+  },
+  {
+   "path": "mcp-servers.json",
+   "bytes": 19373,
+   "sha256": "ae565d766a94a9ff53b05587f900e8a7274dba0cf105794e0d08e52ba4796ae3"
+  }
+ ],
  "factories": [
   {
+   "group": "imported factory",
    "id": "abhinavpabbaraju-nexus-deep-research-agent",
    "full_name": "AbhinavPabbaraju/nexus-deep-research-agent",
    "url": "https://github.com/AbhinavPabbaraju/nexus-deep-research-agent",
@@ -66,7 +131,7 @@
    "bytes": 97816,
    "content_redistributed": false,
    "payload": "payloads/abhinavpabbaraju-nexus-deep-research-agent.tar.gz",
-   "payload_sha256": "5b9b3ce2d46c12c164a9c42954240d8380012e003b8b91bcfe64c1c3eb070e29",
+   "payload_sha256": "769df9a5d2d567db2876fdba444b41fa2798b49cf59b31c95c95421bb44f5ab0",
    "payload_bytes": 1140,
    "providers": [
     "openai",
@@ -82,6 +147,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "addyosmani-factory",
    "full_name": "addyosmani/factory",
    "url": "https://github.com/addyosmani/factory",
@@ -95,7 +161,7 @@
    "bytes": 62144,
    "content_redistributed": true,
    "payload": "payloads/addyosmani-factory.tar.gz",
-   "payload_sha256": "7a02cd2b87af64185f9ea2e1590002dc27146897d1ed2d71696e0a1e57efe8f4",
+   "payload_sha256": "4797b6ffe4e0fc01b235cb9367149755ce860bf2de4fa154d01652853867afac",
    "payload_bytes": 25110,
    "providers": [
     "anthropic",
@@ -106,6 +172,35 @@
    "ai_workers": true
   },
   {
+   "group": "AI-focused factory",
+   "id": "adk-python",
+   "full_name": "google/adk-python",
+   "url": "https://github.com/google/adk-python",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "adk-python-LICENSE",
+   "import_class": "asset-import",
+   "commit": "0798b2c94c4f5bf83693de9850e451cb17701306",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/adk-python.tar.gz",
+   "payload_sha256": "b4318aa18c39863de7bffcd92f3af9ff33d7d3bf13153f6648fa18547b4b0b87",
+   "payload_bytes": 9993,
+   "providers": [
+    "local-llama",
+    "google"
+   ],
+   "runtime": [
+    "python",
+    "shell"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
    "id": "agent-field-codeaf",
    "full_name": "Agent-Field/CodeAF",
    "url": "https://github.com/Agent-Field/CodeAF",
@@ -119,7 +214,7 @@
    "bytes": 14870,
    "content_redistributed": true,
    "payload": "payloads/agent-field-codeaf.tar.gz",
-   "payload_sha256": "dd5a27c2318c4bd4c5628b257bb30035574501e97a467b3ba2b1edeb751a8d92",
+   "payload_sha256": "8e6e99e048f5c275d3b1677e85b40f61a5c1212ab56f9ca585fc88f0d9a7011a",
    "payload_bytes": 7691,
    "providers": [],
    "runtime": [],
@@ -127,6 +222,93 @@
    "ai_workers": false
   },
   {
+   "group": "AI-focused factory",
+   "id": "agent-framework",
+   "full_name": "microsoft/agent-framework",
+   "url": "https://github.com/microsoft/agent-framework",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "agent-framework-LICENSE",
+   "import_class": "asset-import",
+   "commit": "8ec38c481d5460ed7bd09c59aee5c25864483498",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/agent-framework.tar.gz",
+   "payload_sha256": "ac99c4c4464233d369cbc41e649db62e25e92e60ff7f7d699de17c8677dd1c68",
+   "payload_bytes": 3697,
+   "providers": [
+    "openai"
+   ],
+   "runtime": [
+    "node",
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "AI-focused factory",
+   "id": "agent-squad",
+   "full_name": "awslabs/agent-squad",
+   "url": "https://github.com/2FastLabs/agent-squad",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "agent-squad-LICENSE",
+   "import_class": "asset-import",
+   "commit": "729d5f52869c8280f599a9fa5cf27fc1df445602",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/agent-squad.tar.gz",
+   "payload_sha256": "14c48aa8ce79dd374d26a18245c24c668c51fa484ab5999c8656b236ec486aae",
+   "payload_bytes": 31586,
+   "providers": [
+    "openai",
+    "anthropic",
+    "bedrock"
+   ],
+   "runtime": [
+    "python",
+    "node"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "AI-focused factory",
+   "id": "agno",
+   "full_name": "agno-agi/agno",
+   "url": "https://github.com/agno-agi/agno",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "agno-LICENSE",
+   "import_class": "asset-import",
+   "commit": "00497422d4a386d93ab3b45c1a11faf42fcc932f",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/agno.tar.gz",
+   "payload_sha256": "04822a6e1bd66555f90c2ca2c0fc272a3aff578c7f1ffff779fc66dae05e34dd",
+   "payload_bytes": 6180,
+   "providers": [
+    "anthropic",
+    "mistral",
+    "openai"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [
+    "libs/agno/agno/agent/factory.py"
+   ],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
    "id": "angelmsger-jenkins-cli",
    "full_name": "AngelMsger/jenkins-cli",
    "url": "https://github.com/AngelMsger/jenkins-cli",
@@ -140,7 +322,7 @@
    "bytes": 55399,
    "content_redistributed": true,
    "payload": "payloads/angelmsger-jenkins-cli.tar.gz",
-   "payload_sha256": "e99e89762991ea79d848d659fb6cdd8a2b3529243efd3ae3b6b6fbff881637f3",
+   "payload_sha256": "b78e8d4c62619960343797c50674472233c7e794c5a16d921d936d5027b35ff4",
    "payload_bytes": 21502,
    "providers": [
     "anthropic",
@@ -151,6 +333,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "ashishyesale7-lgflutterstarterkit",
    "full_name": "AshishYesale7/LGFlutterStarterKit",
    "url": "https://github.com/AshishYesale7/LGFlutterStarterKit",
@@ -164,7 +347,7 @@
    "bytes": 124310,
    "content_redistributed": true,
    "payload": "payloads/ashishyesale7-lgflutterstarterkit.tar.gz",
-   "payload_sha256": "506f7206b9e4142dba7316676050f2b4fd5051a3074113a161d1cd1313214627",
+   "payload_sha256": "68628d33c4b5d36c8b69d89d805c54ae9a3833be01f1f51a413dc5e2f1ac9abb",
    "payload_bytes": 44403,
    "providers": [
     "google"
@@ -174,6 +357,102 @@
    "ai_workers": true
   },
   {
+   "group": "AI-focused factory",
+   "id": "autogen",
+   "full_name": "microsoft/autogen",
+   "url": "https://github.com/microsoft/autogen",
+   "license": "CC-BY-4.0",
+   "license_present": true,
+   "license_file": "autogen-LICENSE",
+   "import_class": "asset-import",
+   "commit": "027ecf0a379bcc1d09956d46d12d44a3ad9cee14",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": false,
+   "payload": "payloads/autogen.tar.gz",
+   "payload_sha256": "cbebabf412ff009e3eb6c2205db80126432f4ea2668e16a881308f7bb8d6aef0",
+   "payload_bytes": 2019,
+   "providers": [
+    "openai"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "AI-focused factory",
+   "id": "autogpt",
+   "full_name": "significant-gravitas/AutoGPT",
+   "url": "https://github.com/Significant-Gravitas/AutoGPT",
+   "license": "NOASSERTION",
+   "license_present": true,
+   "license_file": "autogpt-LICENSE",
+   "import_class": "blueprint-only",
+   "commit": "0edeafc5902fb07c89bb6ebd8c5374621b5c6bf6",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": false,
+   "payload": "payloads/autogpt.tar.gz",
+   "payload_sha256": "ebcd52a89c6813ce9364c10c4e3f24879d2451b170f6818b54f34eb9f0b86745",
+   "payload_bytes": 2011,
+   "providers": [],
+   "runtime": [
+    "node",
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": false
+  },
+  {
+   "group": "MCP tool server",
+   "id": "awesome-mcp-servers",
+   "full_name": "punkpeye/awesome-mcp-servers",
+   "url": "https://github.com/punkpeye/awesome-mcp-servers",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "awesome-mcp-servers-LICENSE",
+   "import_class": "asset-only",
+   "commit": "cc7f1f42c3fa8ced6fd5c0e02ea366ef7ed8cf1b",
+   "snapshot": "2026-10-14",
+   "files": 0,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/awesome-mcp-servers.tar.gz",
+   "payload_sha256": "3a712af830af91b1e645f3be0f9bad6f1a251b043ea3ea5f8c6b89be644fcd48",
+   "payload_bytes": 371,
+   "providers": [],
+   "runtime": [],
+   "entrypoints": [],
+   "ai_workers": false
+  },
+  {
+   "group": "MCP tool server",
+   "id": "azure-mcp",
+   "full_name": "azure/azure-mcp",
+   "url": "https://github.com/Azure/azure-mcp",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "azure-mcp-LICENSE",
+   "import_class": "asset-only",
+   "commit": "54f04ab1ade20b4adc4955cffea0833788307596",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/azure-mcp.tar.gz",
+   "payload_sha256": "1f12f53d115b28ba26932300bff31daa7f2957ca6eecbfcff1c409dbb509a2df",
+   "payload_bytes": 6502,
+   "providers": [],
+   "runtime": [],
+   "entrypoints": [],
+   "ai_workers": false
+  },
+  {
+   "group": "imported factory",
    "id": "bassimeledath-dispatch",
    "full_name": "bassimeledath/dispatch",
    "url": "https://github.com/bassimeledath/dispatch",
@@ -187,7 +466,7 @@
    "bytes": 69407,
    "content_redistributed": false,
    "payload": "payloads/bassimeledath-dispatch.tar.gz",
-   "payload_sha256": "6b298c54d3ec9139af7500339396845407d3c58e620be72e1f5df6a7082bae45",
+   "payload_sha256": "9f28e2e750f78951805fa121b37e12fa4005d5d951441fb5e9ffe05b1f73e176",
    "payload_bytes": 1087,
    "providers": [
     "anthropic",
@@ -199,6 +478,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "bastani-inc-atomic",
    "full_name": "bastani-inc/atomic",
    "url": "https://github.com/bastani-inc/atomic",
@@ -212,7 +492,7 @@
    "bytes": 25430,
    "content_redistributed": false,
    "payload": "payloads/bastani-inc-atomic.tar.gz",
-   "payload_sha256": "269da60d0ac5f1432c8ee318cc2911bef2912ce434068d5c407f5ae5b805261d",
+   "payload_sha256": "2d6cbaf1e89327f935d8f199bf9d762c6f7c9e70042b0f4f19094e888fae5d8c",
    "payload_bytes": 1787,
    "providers": [
     "anthropic"
@@ -225,6 +505,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "bawfng04-chaos-moa-pipeline",
    "full_name": "bawfng04/Chaos-MoA-Pipeline",
    "url": "https://github.com/bawfng04/Chaos-MoA-Pipeline",
@@ -238,7 +519,7 @@
    "bytes": 7045,
    "content_redistributed": false,
    "payload": "payloads/bawfng04-chaos-moa-pipeline.tar.gz",
-   "payload_sha256": "4ff14ebdd0d1cc2057217411512c348b5454c54699ed37e9bb320a487e68a0ee",
+   "payload_sha256": "9297d7ec793c8272d8852df0cce770b710519d88216c0559904ebe5289cf3260",
    "payload_bytes": 520,
    "providers": [],
    "runtime": [],
@@ -246,6 +527,7 @@
    "ai_workers": false
   },
   {
+   "group": "imported factory",
    "id": "benedicttenius-fabricsoftware",
    "full_name": "BenedictTenius/FabricSoftware",
    "url": "https://github.com/BenedictTenius/FabricSoftware",
@@ -259,7 +541,7 @@
    "bytes": 41288,
    "content_redistributed": false,
    "payload": "payloads/benedicttenius-fabricsoftware.tar.gz",
-   "payload_sha256": "40d6c9c82bf61f25ef9faa473cfcf44153997dcb99e94f19fea0584747d3f127",
+   "payload_sha256": "e809f0229e320b527bd1bdc2074b04afd272b79be449d34027cf975a54c4bbb3",
    "payload_bytes": 1267,
    "providers": [
     "anthropic"
@@ -274,6 +556,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "bjwanneng-veriflow-agent",
    "full_name": "bjwanneng/Veriflow-agent",
    "url": "https://github.com/bjwanneng/Veriflow-agent",
@@ -287,7 +570,7 @@
    "bytes": 149242,
    "content_redistributed": false,
    "payload": "payloads/bjwanneng-veriflow-agent.tar.gz",
-   "payload_sha256": "3365ab4abdcf5922fa3fa577d7e11e2fd213a2fc61824b2b3fde49f556135da7",
+   "payload_sha256": "9eab1daee25e4f5f2d8bfb0d86ac542a86b6ff71e8307311cd20624e1c79f14e",
    "payload_bytes": 1776,
    "providers": [
     "anthropic"
@@ -299,6 +582,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "brahmpreetsingh-oss-content-engine",
    "full_name": "brahmpreetsingh-oss/content-engine",
    "url": "https://github.com/brahmpreetsingh-oss/content-engine",
@@ -312,7 +596,7 @@
    "bytes": 142891,
    "content_redistributed": false,
    "payload": "payloads/brahmpreetsingh-oss-content-engine.tar.gz",
-   "payload_sha256": "810321ece49aff5bb69a2295afe3e190aca69175308e2a5b8b80dea03fc9fbe9",
+   "payload_sha256": "ac89e11dcb6f71a482fa4dc3e61588278db173275a10c2a2eec917fbd339396c",
    "payload_bytes": 1609,
    "providers": [
     "anthropic"
@@ -322,6 +606,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "bryce-murphy-amas-framework",
    "full_name": "bryce-murphy/amas-framework",
    "url": "https://github.com/bryce-murphy/amas-framework",
@@ -335,7 +620,7 @@
    "bytes": 121611,
    "content_redistributed": true,
    "payload": "payloads/bryce-murphy-amas-framework.tar.gz",
-   "payload_sha256": "703e680df7131c8bcba074df6ea7f0a393397cb963615901c3e51067cbc017c2",
+   "payload_sha256": "8392f3fd31fd6970d2ea750d845cf6b3ded524b6fafbc6e4457ced8ad95d08fb",
    "payload_bytes": 32256,
    "providers": [
     "anthropic",
@@ -347,6 +632,33 @@
    "ai_workers": true
   },
   {
+   "group": "AI-focused factory",
+   "id": "camel",
+   "full_name": "camel-ai/camel",
+   "url": "https://github.com/camel-ai/camel",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "camel-LICENSE",
+   "import_class": "asset-import",
+   "commit": "e5e55256e9446f744bf7309c478b084587dbf985",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/camel.tar.gz",
+   "payload_sha256": "b72b84e7abf423bd1cb1751df0aff3023439497d6384390b50d84801f473e6e4",
+   "payload_bytes": 14618,
+   "providers": [
+    "openai"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
    "id": "charlyhno-eng-jev-codex-pilot",
    "full_name": "Charlyhno-eng/jev-codex-pilot",
    "url": "https://github.com/Charlyhno-eng/jev-codex-pilot",
@@ -360,7 +672,7 @@
    "bytes": 29461,
    "content_redistributed": true,
    "payload": "payloads/charlyhno-eng-jev-codex-pilot.tar.gz",
-   "payload_sha256": "af8f706c6af1582eef4519c6274fa90e18475b60888088e0d88415f9e17d34a0",
+   "payload_sha256": "fb1969aa98f48c81db6d0be9a8d400b5c389471ea68ff4e631b5a217cd8e0f86",
    "payload_bytes": 9225,
    "providers": [
     "anthropic"
@@ -370,6 +682,64 @@
    "ai_workers": true
   },
   {
+   "group": "MCP tool server",
+   "id": "chroma-mcp",
+   "full_name": "chroma-core/chroma-mcp",
+   "url": "https://github.com/chroma-core/chroma-mcp",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "chroma-mcp-LICENSE",
+   "import_class": "asset-import",
+   "commit": "98ff67589bdcc31b730a5415ff9529433f949077",
+   "snapshot": "2026-10-14",
+   "files": 3,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/chroma-mcp.tar.gz",
+   "payload_sha256": "6d695b4fa49610e4062b50dfd41484bbd42fba54554b61a813bef1c0e0d2719c",
+   "payload_bytes": 8698,
+   "providers": [
+    "openai",
+    "ollama",
+    "anthropic"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "MCP tool server",
+   "id": "chrome-devtools-mcp",
+   "full_name": "ChromeDevTools/chrome-devtools-mcp",
+   "url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "chrome-devtools-mcp-LICENSE",
+   "import_class": "asset-only",
+   "commit": "28fb230dde70926a7167ce7d5057473453053bf8",
+   "snapshot": "2026-10-14",
+   "files": 19,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/chrome-devtools-mcp.tar.gz",
+   "payload_sha256": "806a17610ca09137c3489acc451f4c317261060d193d011350f6b7886f338d4f",
+   "payload_bytes": 30868,
+   "providers": [
+    "anthropic",
+    "google"
+   ],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [
+    "src/telemetry/watchdog/main.ts"
+   ],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
    "id": "cleanwk-agent-pipeline-example",
    "full_name": "cleanwk/agent-pipeline-example",
    "url": "https://github.com/cleanwk/agent-pipeline-example",
@@ -383,7 +753,7 @@
    "bytes": 5338,
    "content_redistributed": true,
    "payload": "payloads/cleanwk-agent-pipeline-example.tar.gz",
-   "payload_sha256": "715e23cd528288fbd90bae5be2d930f47ab90f3c1e2896e19383ebe5f7e0793e",
+   "payload_sha256": "c763316e58b9decf5ed6c0ac4e5f0f551140383e29286d3b89fd847f7f686846",
    "payload_bytes": 3424,
    "providers": [],
    "runtime": [],
@@ -391,6 +761,7 @@
    "ai_workers": false
   },
   {
+   "group": "imported factory",
    "id": "cloudflare-moltworker",
    "full_name": "cloudflare/moltworker",
    "url": "https://github.com/cloudflare/moltworker",
@@ -404,7 +775,7 @@
    "bytes": 47988,
    "content_redistributed": true,
    "payload": "payloads/cloudflare-moltworker.tar.gz",
-   "payload_sha256": "e3430fc111903f2b39046fe1cc70ea244de80af7cb443e9d2bdd7182c77abb20",
+   "payload_sha256": "311978ff3c09f1ed37a873798b8bb74a8d2f2ec0015e77265b1fbc06a7b21307",
    "payload_bytes": 15568,
    "providers": [
     "openai",
@@ -418,6 +789,109 @@
    "ai_workers": true
   },
   {
+   "group": "MCP tool server",
+   "id": "codebase-memory-mcp",
+   "full_name": "DeusData/codebase-memory-mcp",
+   "url": "https://github.com/DeusData/codebase-memory-mcp",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "codebase-memory-mcp-LICENSE",
+   "import_class": "asset-only",
+   "commit": "0ca6e7d4d8c84f33bca6942615bed63642abab10",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/codebase-memory-mcp.tar.gz",
+   "payload_sha256": "a5694fc5650d255d801e4c595dd10d0da777bfc1e3f21419d9a9928ce8bea3de",
+   "payload_bytes": 30475,
+   "providers": [],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [],
+   "ai_workers": false
+  },
+  {
+   "group": "MCP tool server",
+   "id": "context-mode",
+   "full_name": "mksglu/context-mode",
+   "url": "https://github.com/mksglu/context-mode",
+   "license": "NOASSERTION",
+   "license_present": true,
+   "license_file": "context-mode-LICENSE",
+   "import_class": "asset-only",
+   "commit": "dbec9809d83172a2fa3edd69cc9b95000c3b9859",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": false,
+   "payload": "payloads/context-mode.tar.gz",
+   "payload_sha256": "4a5099c80307f2915290004a6d65ba4058381264c59c092e48b0f77c288992a9",
+   "payload_bytes": 1919,
+   "providers": [
+    "google",
+    "anthropic"
+   ],
+   "runtime": [],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "MCP tool server",
+   "id": "context7",
+   "full_name": "upstash/context7",
+   "url": "https://github.com/upstash/context7",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "context7-LICENSE",
+   "import_class": "asset-import",
+   "commit": "3131245817e9e40626d8f43ce85dabab09d4ff35",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/context7.tar.gz",
+   "payload_sha256": "90a1fb8f4526b790f135010afe8fee68411c3ab9e6e0bde90b53c339ad76a4aa",
+   "payload_bytes": 14498,
+   "providers": [
+    "anthropic"
+   ],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "AI-focused factory",
+   "id": "crewai",
+   "full_name": "crewAIInc/crewAI",
+   "url": "https://github.com/crewAIInc/crewAI",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "crewai-LICENSE",
+   "import_class": "asset-import",
+   "commit": "eb15c66cef12073d8d06d6942eecc35e7fd6c783",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/crewai.tar.gz",
+   "payload_sha256": "24fb202d3b33685feb18f0a143966d719c50327944692f7d7911dd6140ed73d2",
+   "payload_bytes": 7764,
+   "providers": [
+    "openai",
+    "bedrock"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
    "id": "curie-eng-curie",
    "full_name": "curie-eng/curie",
    "url": "https://github.com/curie-eng/curie",
@@ -431,7 +905,7 @@
    "bytes": 37250,
    "content_redistributed": true,
    "payload": "payloads/curie-eng-curie.tar.gz",
-   "payload_sha256": "f57cd7956779c1a3a108ed27ca65d541c04f7f4382fcb6d59a7b24afea631064",
+   "payload_sha256": "cd2e582ff970fc195e539db7ed2ab3018d950216ee92eedfbc69c3625c91a8cb",
    "payload_bytes": 16474,
    "providers": [],
    "runtime": [
@@ -441,6 +915,56 @@
    "ai_workers": false
   },
   {
+   "group": "MCP tool server",
+   "id": "dbt-mcp",
+   "full_name": "dbt-labs/dbt-mcp",
+   "url": "https://github.com/dbt-labs/dbt-mcp",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "dbt-mcp-LICENSE",
+   "import_class": "asset-only",
+   "commit": "a9db3f0826f8cf2ed12fe787ef65d3204c57f251",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/dbt-mcp.tar.gz",
+   "payload_sha256": "2d093bd8c8c0e9e209461d975c69dda4c53b5c83aa7e320edfb154f74a661d9c",
+   "payload_bytes": 3415,
+   "providers": [],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": false
+  },
+  {
+   "group": "AI-focused factory",
+   "id": "deep-research",
+   "full_name": "dzhng/deep-research",
+   "url": "https://github.com/dzhng/deep-research",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "deep-research-LICENSE",
+   "import_class": "asset-import",
+   "commit": "1f8f3e285bbc23e80b98a66a64effab9069f3ad4",
+   "snapshot": "2026-10-14",
+   "files": 1,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/deep-research.tar.gz",
+   "payload_sha256": "25e564ed0e35eba88e929dcca98c4de8d8b603b05846b003602800307f1005cd",
+   "payload_bytes": 3100,
+   "providers": [
+    "openai",
+    "google"
+   ],
+   "runtime": [],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
    "id": "disler-inkwell-agent-sandboxes-and-software-factory",
    "full_name": "disler/inkwell-agent-sandboxes-and-software-factory",
    "url": "https://github.com/disler/inkwell-agent-sandboxes-and-software-factory",
@@ -454,7 +978,7 @@
    "bytes": 31896,
    "content_redistributed": true,
    "payload": "payloads/disler-inkwell-agent-sandboxes-and-software-factory.tar.gz",
-   "payload_sha256": "8fc8afc70c725e4a5dd8e90a375cdd550758ebe446fc2edbffda063226d003e7",
+   "payload_sha256": "92af28de551d28a25bcaafab4ebd3a2d5a73187cab45875599a12bf22b1fac57",
    "payload_bytes": 15789,
    "providers": [
     "anthropic"
@@ -469,6 +993,34 @@
    "ai_workers": true
   },
   {
+   "group": "MCP tool server",
+   "id": "exa-mcp-server",
+   "full_name": "exa-labs/exa-mcp-server",
+   "url": "https://github.com/exa-labs/exa-mcp-server",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "exa-mcp-server-LICENSE",
+   "import_class": "asset-import",
+   "commit": "e9c3b0126a3373eb1aeaca162e84d0791ff4c7f7",
+   "snapshot": "2026-10-14",
+   "files": 17,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/exa-mcp-server.tar.gz",
+   "payload_sha256": "2b96b1c953cbcb55717adc221fc938d7f42117378275a4ce2461c81ff4e177f4",
+   "payload_bytes": 23054,
+   "providers": [
+    "local-llama",
+    "openai",
+    "anthropic",
+    "google"
+   ],
+   "runtime": [],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
    "id": "fabro-sh-fabro",
    "full_name": "fabro-sh/fabro",
    "url": "https://github.com/fabro-sh/fabro",
@@ -482,7 +1034,7 @@
    "bytes": 58898,
    "content_redistributed": true,
    "payload": "payloads/fabro-sh-fabro.tar.gz",
-   "payload_sha256": "a861f7bb451f5cdd8c9a7f28738a93545b418fd81e3d4e8ec5abbf2ee47c8a95",
+   "payload_sha256": "bf14814401591063c05f567ceaab391bf62258ae77ee2f139510f64ef78c362e",
    "payload_bytes": 23695,
    "providers": [
     "anthropic"
@@ -492,6 +1044,87 @@
    "ai_workers": true
   },
   {
+   "group": "MCP tool server",
+   "id": "fastmcp",
+   "full_name": "jlowin/fastmcp",
+   "url": "https://github.com/PrefectHQ/fastmcp",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "fastmcp-LICENSE",
+   "import_class": "asset-import",
+   "commit": "e2fcc412001ff7414095c5dc282f94c70299a612",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/fastmcp.tar.gz",
+   "payload_sha256": "e00ebd8cb6ea5d839a5d0f96691e3be31ec3d678da92bcdcf8ccb63762e26c6b",
+   "payload_bytes": 30080,
+   "providers": [
+    "anthropic",
+    "google"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "MCP tool server",
+   "id": "figma-context-mcp",
+   "full_name": "GLips/Figma-Context-MCP",
+   "url": "https://github.com/GLips/Figma-Context-MCP",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "figma-context-mcp-LICENSE",
+   "import_class": "asset-only",
+   "commit": "c083d65c7e002923e7cb98f4e3bdafb105e90f6d",
+   "snapshot": "2026-10-14",
+   "files": 8,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/figma-context-mcp.tar.gz",
+   "payload_sha256": "208ad465cb4ef27eed577361add9d568fc7da495654f6f0eb99ced4c49a91a2e",
+   "payload_bytes": 10799,
+   "providers": [
+    "local-llama"
+   ],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "MCP tool server",
+   "id": "filesystem-mcp-server",
+   "full_name": "cyanheads/filesystem-mcp-server",
+   "url": "https://github.com/cyanheads/filesystem-mcp-server",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "filesystem-mcp-server-LICENSE",
+   "import_class": "asset-import",
+   "commit": "513ec49313dd83a7e960ba2f73e431e53410d457",
+   "snapshot": "2026-10-14",
+   "files": 16,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/filesystem-mcp-server.tar.gz",
+   "payload_sha256": "935c6d0ec1b833e4c78345a998361da1110409db71253119b3a7a33b86994e00",
+   "payload_bytes": 15720,
+   "providers": [
+    "google",
+    "openai"
+   ],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
    "id": "finchello-tetra",
    "full_name": "finchello/tetra",
    "url": "https://github.com/finchello/tetra",
@@ -505,7 +1138,7 @@
    "bytes": 34826,
    "content_redistributed": true,
    "payload": "payloads/finchello-tetra.tar.gz",
-   "payload_sha256": "1fb3a181eb7754749a48d53049235f6f45fdf80931a9149c6babf3a352d2fa43",
+   "payload_sha256": "69e78142794d8131d94a23fe6ca7a9bfd32019ed33de75f9a4cdf5db13543292",
    "payload_bytes": 13191,
    "providers": [
     "anthropic"
@@ -520,6 +1153,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "finna-finn-loop",
    "full_name": "finna/Finn-loop",
    "url": "https://github.com/finna/Finn-loop",
@@ -533,7 +1167,7 @@
    "bytes": 30740,
    "content_redistributed": true,
    "payload": "payloads/finna-finn-loop.tar.gz",
-   "payload_sha256": "485128b0198572ad9a026395f8a4a294dee1bad8a24598801413a844a83d7ce8",
+   "payload_sha256": "c413cb65ee6effdf09356644cf10937a2b1a06669276c6e4016c37d53f8e3cba",
    "payload_bytes": 12779,
    "providers": [
     "anthropic"
@@ -543,6 +1177,31 @@
    "ai_workers": true
   },
   {
+   "group": "MCP tool server",
+   "id": "firecrawl-mcp-server",
+   "full_name": "mendableai/firecrawl-mcp-server",
+   "url": "https://github.com/firecrawl/firecrawl-mcp-server",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "firecrawl-mcp-server-LICENSE",
+   "import_class": "asset-import",
+   "commit": "83f7e6a74446d82eb219f6a0691e167c9722cf86",
+   "snapshot": "2026-10-14",
+   "files": 4,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/firecrawl-mcp-server.tar.gz",
+   "payload_sha256": "d5b1bf94ba0b2ed04a921cb3038707fe7e49351ac5bddc89761e6188902c8467",
+   "payload_bytes": 3588,
+   "providers": [],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [],
+   "ai_workers": false
+  },
+  {
+   "group": "imported factory",
    "id": "frankiezheng110-superteam",
    "full_name": "frankiezheng110/superteam",
    "url": "https://github.com/frankiezheng110/superteam",
@@ -556,7 +1215,7 @@
    "bytes": 13021,
    "content_redistributed": true,
    "payload": "payloads/frankiezheng110-superteam.tar.gz",
-   "payload_sha256": "ee9cdffe35bb90dd06a553bfdbcc3d68ff7de3a7b4825972c6a35f6d19304491",
+   "payload_sha256": "665cdbfc9bc66af4ed81c46d84c14aaee00bf32f6794d3c62d2d0d8256fc94ca",
    "payload_bytes": 2334,
    "providers": [],
    "runtime": [],
@@ -564,6 +1223,7 @@
    "ai_workers": false
   },
   {
+   "group": "imported factory",
    "id": "getcrew44-crew44",
    "full_name": "getcrew44/crew44",
    "url": "https://github.com/getcrew44/crew44",
@@ -577,7 +1237,7 @@
    "bytes": 55471,
    "content_redistributed": true,
    "payload": "payloads/getcrew44-crew44.tar.gz",
-   "payload_sha256": "1e6591cfcac1a07c07e60e4b62c52ad944899d15fa089b855a62502ac5854a0f",
+   "payload_sha256": "1b2a87e7eae97cbb98944df8d98d06300d0710df55c1d3813c874d4fbafac1ab",
    "payload_bytes": 20047,
    "providers": [],
    "runtime": [],
@@ -585,6 +1245,7 @@
    "ai_workers": false
   },
   {
+   "group": "imported factory",
    "id": "gethuman-sh-human",
    "full_name": "gethuman-sh/human",
    "url": "https://github.com/gethuman-sh/human",
@@ -598,7 +1259,7 @@
    "bytes": 137628,
    "content_redistributed": true,
    "payload": "payloads/gethuman-sh-human.tar.gz",
-   "payload_sha256": "fdf0540e28011ce3575f3f8e57c9d1f41899c42e270039a619a62047e847b5f0",
+   "payload_sha256": "b5979363230bd7c1bb46684b08d10d2a5c6f82e9b1144e8dc495944c3bebf00e",
    "payload_bytes": 41808,
    "providers": [
     "anthropic"
@@ -608,6 +1269,54 @@
    "ai_workers": true
   },
   {
+   "group": "MCP tool server",
+   "id": "github-mcp-server",
+   "full_name": "github/github-mcp-server",
+   "url": "https://github.com/github/github-mcp-server",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "github-mcp-server-LICENSE",
+   "import_class": "asset-import",
+   "commit": "c59e8c199efbf14467211861de44afaeeb6873e3",
+   "snapshot": "2026-10-14",
+   "files": 3,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/github-mcp-server.tar.gz",
+   "payload_sha256": "1744818d200c22959e0a48f670a7f7fdb47c281d40da013e186b010df092778d",
+   "payload_bytes": 2729,
+   "providers": [],
+   "runtime": [],
+   "entrypoints": [],
+   "ai_workers": false
+  },
+  {
+   "group": "MCP tool server",
+   "id": "gmail-mcp-server",
+   "full_name": "GongRzhe/Gmail-MCP-Server",
+   "url": "https://github.com/GongRzhe/Gmail-MCP-Server",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "gmail-mcp-server-LICENSE",
+   "import_class": "asset-import",
+   "commit": "a890d19189bbc1325b8728fab830fc278cfd8804",
+   "snapshot": "2026-10-14",
+   "files": 3,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/gmail-mcp-server.tar.gz",
+   "payload_sha256": "d9f512348be4a0d4f581e541d0a624fad53855205f49c5e6f56ef7fcc678015a",
+   "payload_bytes": 8491,
+   "providers": [
+    "anthropic",
+    "openai"
+   ],
+   "runtime": [],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
    "id": "gratefuljinx77-speckit-claude",
    "full_name": "GratefulJinx77/speckit-claude",
    "url": "https://github.com/GratefulJinx77/speckit-claude",
@@ -621,7 +1330,7 @@
    "bytes": 139857,
    "content_redistributed": false,
    "payload": "payloads/gratefuljinx77-speckit-claude.tar.gz",
-   "payload_sha256": "7b31b83af5bb08f676b1b9405fbab0ffe2f264f1d06308c9b81781510ec48e36",
+   "payload_sha256": "bc480ea238380dee09f7a44e5f62d95c4f6cea0d745a3ddea727c8bba9b94a30",
    "payload_bytes": 1347,
    "providers": [
     "anthropic"
@@ -633,6 +1342,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "gregoryjing-agentflow",
    "full_name": "gregoryjing/agentflow",
    "url": "https://github.com/gregoryjing/agentflow",
@@ -646,7 +1356,7 @@
    "bytes": 68515,
    "content_redistributed": false,
    "payload": "payloads/gregoryjing-agentflow.tar.gz",
-   "payload_sha256": "a26d8bfb9c7e84990763132595856535f60535c920fb338edfffc6006690b487",
+   "payload_sha256": "c220b5830cf798a6a421d7035fe61674d326cc594d7febc1d206bf016b503db9",
    "payload_bytes": 1160,
    "providers": [
     "openai",
@@ -661,6 +1371,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "grimgrimberg-daily-movers-agent",
    "full_name": "grimgrimberg/daily-movers-agent",
    "url": "https://github.com/grimgrimberg/daily-movers-agent",
@@ -674,7 +1385,7 @@
    "bytes": 80448,
    "content_redistributed": true,
    "payload": "payloads/grimgrimberg-daily-movers-agent.tar.gz",
-   "payload_sha256": "b4d8ca8b671de1c8545361ad59763b310f5dfaec04eb1ebce6d64fd4b4a6cc59",
+   "payload_sha256": "e3391663e1e47e64fe871b05cc6e3a522552ee13c607f6fe816ea10147d0affb",
    "payload_bytes": 20845,
    "providers": [
     "openai"
@@ -690,6 +1401,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "hadamrd-titan",
    "full_name": "hadamrd/titan",
    "url": "https://github.com/hadamrd/titan",
@@ -703,7 +1415,7 @@
    "bytes": 24158,
    "content_redistributed": true,
    "payload": "payloads/hadamrd-titan.tar.gz",
-   "payload_sha256": "ff74b7e3395960d3f905ee03f24e4ba83d154c0fda57496632bfc4af2e09d969",
+   "payload_sha256": "92db1d1187cdd14ce203432225a10cf76594d28360d688fb9aec498fbc8b98dc",
    "payload_bytes": 11727,
    "providers": [],
    "runtime": [
@@ -713,6 +1425,31 @@
    "ai_workers": false
   },
   {
+   "group": "AI-focused factory",
+   "id": "haystack",
+   "full_name": "deepset-ai/haystack",
+   "url": "https://github.com/deepset-ai/haystack",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "haystack-LICENSE",
+   "import_class": "asset-import",
+   "commit": "0a89f8be70cd4dd81a1fa1e877fbf5a04e8f31de",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/haystack.tar.gz",
+   "payload_sha256": "97e823f9271b1a24f0c3e0ce7988435e5c706c8e630c191db5f5987b698cf66f",
+   "payload_bytes": 6442,
+   "providers": [],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": false
+  },
+  {
+   "group": "imported factory",
    "id": "hdale85-openclaw-agent-workflow",
    "full_name": "Hdale85/openclaw-agent-workflow",
    "url": "https://github.com/Hdale85/openclaw-agent-workflow",
@@ -726,7 +1463,7 @@
    "bytes": 2933,
    "content_redistributed": false,
    "payload": "payloads/hdale85-openclaw-agent-workflow.tar.gz",
-   "payload_sha256": "89b2d19a548cb359083a2c65f2cae6a195818441c1d00457c43dd3783b828980",
+   "payload_sha256": "0e1347952d24398459f4d091cad1e3c222321a3d64aa483f02bdaada341df0c5",
    "payload_bytes": 522,
    "providers": [],
    "runtime": [],
@@ -734,6 +1471,90 @@
    "ai_workers": false
   },
   {
+   "group": "AI-focused factory",
+   "id": "humanlayer",
+   "full_name": "humanlayer/humanlayer",
+   "url": "https://github.com/humanlayer/humanlayer",
+   "license": "NOASSERTION",
+   "license_present": true,
+   "license_file": "humanlayer-LICENSE",
+   "import_class": "blueprint-only",
+   "commit": "99abe673498cf8bdcd5f989aebe9406a27185b3b",
+   "snapshot": "2026-10-14",
+   "files": 18,
+   "bytes": 0,
+   "content_redistributed": false,
+   "payload": "payloads/humanlayer.tar.gz",
+   "payload_sha256": "f12181eee89f9d4b84ba2a8a26726d9a17155f0a3db2d4c48ace6b80dc040fa7",
+   "payload_bytes": 1364,
+   "providers": [
+    "anthropic"
+   ],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [
+    "humanlayer-wui/.storybook/main.ts",
+    "hld/sdk/typescript/src/generated/models/Agent.ts"
+   ],
+   "ai_workers": true
+  },
+  {
+   "group": "MCP tool server",
+   "id": "ida-pro-mcp",
+   "full_name": "mrexodia/ida-pro-mcp",
+   "url": "https://github.com/mrexodia/ida-pro-mcp",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "ida-pro-mcp-LICENSE",
+   "import_class": "asset-only",
+   "commit": "c133c3853faa111a9b00ee615c013b720d0c4acd",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/ida-pro-mcp.tar.gz",
+   "payload_sha256": "5336d6711dba862531bb90b6fd90d971df6b8885f3be9a0ed8466f5e3312a837",
+   "payload_bytes": 14845,
+   "providers": [
+    "anthropic"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "MCP tool server",
+   "id": "inspector",
+   "full_name": "modelcontextprotocol/inspector",
+   "url": "https://github.com/modelcontextprotocol/inspector",
+   "license": "NOASSERTION",
+   "license_present": true,
+   "license_file": "inspector-LICENSE",
+   "import_class": "blueprint-only",
+   "commit": "074b8108f340590268f2900741403755e923a11c",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": false,
+   "payload": "payloads/inspector.tar.gz",
+   "payload_sha256": "29bd1894253810967c4dab1529d8c8536178364693c6c80da95a7e4d357508bc",
+   "payload_bytes": 1885,
+   "providers": [
+    "anthropic"
+   ],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [
+    "clients/web/.storybook/main.ts"
+   ],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
    "id": "iusztinpaul-squid",
    "full_name": "iusztinpaul/squid",
    "url": "https://github.com/iusztinpaul/squid",
@@ -747,7 +1568,7 @@
    "bytes": 139845,
    "content_redistributed": true,
    "payload": "payloads/iusztinpaul-squid.tar.gz",
-   "payload_sha256": "32a94e5cba915c27075ed6f25b1390d5ca1d3c829b0c4dcced4faaf05d44822f",
+   "payload_sha256": "005589927fb1596d16c505ac7839adaad2478f2ac2c7191f1858a8114e8665a6",
    "payload_bytes": 53217,
    "providers": [
     "anthropic",
@@ -760,6 +1581,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "jabbala10-bit-ai-agent-platform",
    "full_name": "jabbala10-bit/ai-agent-platform",
    "url": "https://github.com/jabbala10-bit/ai-agent-platform",
@@ -773,7 +1595,7 @@
    "bytes": 47772,
    "content_redistributed": false,
    "payload": "payloads/jabbala10-bit-ai-agent-platform.tar.gz",
-   "payload_sha256": "7bf0fc4740c05b1fdcb303c65bc05ffeecc5833b4de7c7ac13c3c6d8672c4d19",
+   "payload_sha256": "793cbf0888915cad0f18337d4a17ba754d8bb8d6637a6df2e0fbb54254127f02",
    "payload_bytes": 869,
    "providers": [
     "openai",
@@ -793,6 +1615,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "keweiw-projectfactory",
    "full_name": "keweiw/ProjectFactory",
    "url": "https://github.com/keweiw/ProjectFactory",
@@ -806,7 +1629,7 @@
    "bytes": 48270,
    "content_redistributed": false,
    "payload": "payloads/keweiw-projectfactory.tar.gz",
-   "payload_sha256": "ccf1c61c3dd9f971048dc36470e6e6f1a8ba1a7ebac53d1464f88c3ae3c7cbb8",
+   "payload_sha256": "c5a5cc2d179e5d9b98fdacf0b5987b8e949c61ff7d136dcf4a6e064243494fa7",
    "payload_bytes": 1184,
    "providers": [
     "anthropic"
@@ -816,6 +1639,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "kingdoja-ai-comic-drama-platform",
    "full_name": "kingdoja/ai-comic-drama-platform",
    "url": "https://github.com/kingdoja/ai-comic-drama-platform",
@@ -829,7 +1653,7 @@
    "bytes": 143038,
    "content_redistributed": false,
    "payload": "payloads/kingdoja-ai-comic-drama-platform.tar.gz",
-   "payload_sha256": "ab9348e3deb02494f7e812acd0bf9f1090bd0d2fcfce5248f67b73440f612a6d",
+   "payload_sha256": "629177c4e26be2fe603918f30d64520419dc140b0da3e228806422f2f833dc67",
    "payload_bytes": 1955,
    "providers": [
     "openai",
@@ -847,6 +1671,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "konflux-ci-konflux-ci",
    "full_name": "konflux-ci/konflux-ci",
    "url": "https://github.com/konflux-ci/konflux-ci",
@@ -860,7 +1685,7 @@
    "bytes": 128377,
    "content_redistributed": true,
    "payload": "payloads/konflux-ci-konflux-ci.tar.gz",
-   "payload_sha256": "3353fa1aa233eb93d37b3de4130d9221c37f400cebf2351755a01db802535f8b",
+   "payload_sha256": "e0387e1562a2d5211d4fdc194a714e8b43d3f2c3947569c937a21acdb9c546d7",
    "payload_bytes": 41791,
    "providers": [],
    "runtime": [
@@ -870,6 +1695,7 @@
    "ai_workers": false
   },
   {
+   "group": "imported factory",
    "id": "kunchenguid-grok-ship",
    "full_name": "kunchenguid/grok-ship",
    "url": "https://github.com/kunchenguid/grok-ship",
@@ -883,7 +1709,7 @@
    "bytes": 75560,
    "content_redistributed": true,
    "payload": "payloads/kunchenguid-grok-ship.tar.gz",
-   "payload_sha256": "26d49354458e67dace3192462b9c13af7c3e486b808e7ae0252a64fe0747c20a",
+   "payload_sha256": "1c49982d5742f0c79bd9c80afe63088d79eac19d658cd3a0b133387bfafe9dc6",
    "payload_bytes": 22994,
    "providers": [],
    "runtime": [
@@ -893,6 +1719,506 @@
    "ai_workers": false
   },
   {
+   "group": "AI-focused factory",
+   "id": "langchain",
+   "full_name": "langchain-ai/langchain",
+   "url": "https://github.com/langchain-ai/langchain",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "langchain-LICENSE",
+   "import_class": "asset-import",
+   "commit": "8ace87e7a6493d41d4c61bb41a637052367b27f3",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/langchain.tar.gz",
+   "payload_sha256": "f98982174b93a6b7e6749e3901ef985a0cab97582f573a8f1cbda2b4a8ff1a46",
+   "payload_bytes": 11301,
+   "providers": [
+    "openai"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "AI-focused factory",
+   "id": "langgraph",
+   "full_name": "langchain-ai/langgraph",
+   "url": "https://github.com/langchain-ai/langgraph",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "langgraph-LICENSE",
+   "import_class": "asset-import",
+   "commit": "ccb851effb7b4c6255add86dbeed577061475aff",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/langgraph.tar.gz",
+   "payload_sha256": "f73523e712e3080b57c84b247e4b4fae93c0efdd969118f9b5b5bdedf08a4b92",
+   "payload_bytes": 19631,
+   "providers": [
+    "openai",
+    "anthropic"
+   ],
+   "runtime": [
+    "python",
+    "node"
+   ],
+   "entrypoints": [
+    "libs/cli/examples/graph_prerelease_reqs/agent.py",
+    "libs/cli/examples/graph_prerelease_reqs_fail/agent.py",
+    "libs/cli/examples/graphs/agent.py",
+    "libs/cli/examples/graphs_reqs_a/graphs_submod/agent.py",
+    "libs/cli/examples/graphs_reqs_b/graphs_submod/agent.py",
+    "libs/cli/langgraph_cli/cli.py"
+   ],
+   "ai_workers": true
+  },
+  {
+   "group": "AI-focused factory",
+   "id": "llama-index",
+   "full_name": "run-llama/llama_index",
+   "url": "https://github.com/run-llama/llama_index",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "llama-index-LICENSE",
+   "import_class": "asset-import",
+   "commit": "5b7b6e323e1da3edd787a2104a89257c14f026d0",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/llama-index.tar.gz",
+   "payload_sha256": "3dca8876887b6bf0a7066ef4d4e0ee12a28487426a470a24bf9d7d6cec4a5914",
+   "payload_bytes": 30420,
+   "providers": [
+    "openai"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "MCP tool server",
+   "id": "mcp",
+   "full_name": "awslabs/mcp",
+   "url": "https://github.com/awslabs/mcp",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "mcp-LICENSE",
+   "import_class": "asset-only",
+   "commit": "8840003820a78dd018561d55c7ab12fcdd708464",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/mcp.tar.gz",
+   "payload_sha256": "dcb7ac6d987d1d376bc7fe3ed2b11ae678719dca9cc5e00b950e760e2a83a41d",
+   "payload_bytes": 28714,
+   "providers": [],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": false
+  },
+  {
+   "group": "AI-focused factory",
+   "id": "mcp-agent",
+   "full_name": "lastmile-ai/mcp-agent",
+   "url": "https://github.com/lastmile-ai/mcp-agent",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "mcp-agent-LICENSE",
+   "import_class": "asset-import",
+   "commit": "f62d849350816588b1c6294e7914bbe4d8b84072",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/mcp-agent.tar.gz",
+   "payload_sha256": "298f66ab277e844fe2818d08d39f81117a40aaa27e8a731fa2053a246cbd075f",
+   "payload_bytes": 17765,
+   "providers": [
+    "openai",
+    "anthropic"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [
+    "examples/tracing/agent/main.py",
+    "src/mcp_agent/workflows/orchestrator/orchestrator.py",
+    "examples/temporal/main.py",
+    "examples/tracing/temporal/main.py",
+    "examples/oauth/pre_authorize/worker.py",
+    "examples/mcp/mcp_elicitation/temporal/worker.py",
+    "examples/human_input/temporal/worker.py",
+    "examples/mcp/mcp_sse/main.py",
+    "src/mcp_agent/cli/cloud/commands/auth/logout/main.py",
+    "examples/tracing/mcp/main.py",
+    "examples/basic/agent_factory/main.py",
+    "src/mcp_agent/data/examples/cloud/hello_world/main.py",
+    "examples/cloud/hello_world/main.py",
+    "examples/langchain/main.py",
+    "examples/mcp/mcp_elicitation/main.py"
+   ],
+   "ai_workers": true
+  },
+  {
+   "group": "MCP tool server",
+   "id": "mcp-atlassian",
+   "full_name": "sooperset/mcp-atlassian",
+   "url": "https://github.com/sooperset/mcp-atlassian",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "mcp-atlassian-LICENSE",
+   "import_class": "asset-only",
+   "commit": "0a5d2427144d72f5aade07d4fabd385421cec401",
+   "snapshot": "2026-10-14",
+   "files": 5,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/mcp-atlassian.tar.gz",
+   "payload_sha256": "bb60edf222ef9ea2cc20b675d10b60b0cdd037475aa8dcc9d8d75200ca38f4ae",
+   "payload_bytes": 15329,
+   "providers": [
+    "openai",
+    "anthropic"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [
+    "src/mcp_atlassian/servers/main.py"
+   ],
+   "ai_workers": true
+  },
+  {
+   "group": "MCP tool server",
+   "id": "mcp-chrome",
+   "full_name": "hangwin/mcp-chrome",
+   "url": "https://github.com/hangwin/mcp-chrome",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "mcp-chrome-LICENSE",
+   "import_class": "asset-only",
+   "commit": "f48e71751e00bc09725c7e173423cff4f2ccd12a",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/mcp-chrome.tar.gz",
+   "payload_sha256": "07a1205d5fb0b121a4442aa91b18988dfab4761183f0ba325e76636e1e522cfc",
+   "payload_bytes": 28598,
+   "providers": [
+    "anthropic"
+   ],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "MCP tool server",
+   "id": "mcp-for-beginners",
+   "full_name": "microsoft/mcp-for-beginners",
+   "url": "https://github.com/microsoft/mcp-for-beginners",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "mcp-for-beginners-LICENSE",
+   "import_class": "asset-only",
+   "commit": "988d27caf01c030d028215544cd52a94fb52f61b",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/mcp-for-beginners.tar.gz",
+   "payload_sha256": "cc4ba2435fe07d967a50fd2d2b5ed27abc8be9789914993ac8437b0b6ff05f24",
+   "payload_bytes": 14498,
+   "providers": [
+    "openai",
+    "azure-openai"
+   ],
+   "runtime": [
+    "node",
+    "python"
+   ],
+   "entrypoints": [
+    "03-GettingStarted/15-mcp-apps/code/typescript/my-app/main.ts",
+    "10-StreamliningAIWorkflowsBuildingAnMCPServerWithAIToolkit/lab2/code/agent.py"
+   ],
+   "ai_workers": true
+  },
+  {
+   "group": "MCP tool server",
+   "id": "mcp-for-blender",
+   "full_name": "ahujasid/mcp-for-blender",
+   "url": "https://github.com/ahujasid/mcp-for-blender",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "mcp-for-blender-LICENSE",
+   "import_class": "asset-only",
+   "commit": "7a0373ec9199183cb460068c4f96aed9c579fb4f",
+   "snapshot": "2026-10-14",
+   "files": 3,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/mcp-for-blender.tar.gz",
+   "payload_sha256": "4ef480fbcfb313e742cda6897440fe125928ebefd206add3af304e0995b32c64",
+   "payload_bytes": 14094,
+   "providers": [
+    "openai",
+    "anthropic"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [
+    "main.py"
+   ],
+   "ai_workers": true
+  },
+  {
+   "group": "MCP tool server",
+   "id": "mcp-playwright",
+   "full_name": "executeautomation/mcp-playwright",
+   "url": "https://github.com/executeautomation/mcp-playwright",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "mcp-playwright-LICENSE",
+   "import_class": "asset-import",
+   "commit": "2349c2891e7c499c8c07b7d78c7f3fb4c797a1da",
+   "snapshot": "2026-10-14",
+   "files": 13,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/mcp-playwright.tar.gz",
+   "payload_sha256": "c89caeebf27a4d306112c37bdbdc345c966f0335811730eb01f412231cfc6e09",
+   "payload_bytes": 9284,
+   "providers": [
+    "anthropic",
+    "openai"
+   ],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "MCP tool server",
+   "id": "mcp-proxy",
+   "full_name": "sparfenyuk/mcp-proxy",
+   "url": "https://github.com/sparfenyuk/mcp-proxy",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "mcp-proxy-LICENSE",
+   "import_class": "asset-only",
+   "commit": "70dccbd5fc46c3bae3358e4e36fd82e6c8f0e6f4",
+   "snapshot": "2026-10-14",
+   "files": 2,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/mcp-proxy.tar.gz",
+   "payload_sha256": "c6d7ba3e940c5ab870a6f0ab1469bf61e7b6d54dc239b8cd8028be78c2c732ce",
+   "payload_bytes": 7009,
+   "providers": [
+    "anthropic"
+   ],
+   "runtime": [],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "MCP tool server",
+   "id": "mcp-redis",
+   "full_name": "redis/mcp-redis",
+   "url": "https://github.com/redis/mcp-redis",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "mcp-redis-LICENSE",
+   "import_class": "asset-only",
+   "commit": "f6182f5c7273a7654103dde66b2234097074f79c",
+   "snapshot": "2026-10-14",
+   "files": 6,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/mcp-redis.tar.gz",
+   "payload_sha256": "cece0748c69c97b38b38910f07fa2769517773b11bc06808e9ae3e4615e24e75",
+   "payload_bytes": 13117,
+   "providers": [
+    "google",
+    "openai",
+    "anthropic"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [
+    "src/main.py"
+   ],
+   "ai_workers": true
+  },
+  {
+   "group": "MCP tool server",
+   "id": "mcp-server-chart",
+   "full_name": "antvis/mcp-server-chart",
+   "url": "https://github.com/antvis/mcp-server-chart",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "mcp-server-chart-LICENSE",
+   "import_class": "asset-only",
+   "commit": "e2a8fb7c185e17c75c067817ff1a2acfddf49aa1",
+   "snapshot": "2026-10-14",
+   "files": 9,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/mcp-server-chart.tar.gz",
+   "payload_sha256": "13732c93642de7dec623d0ee24c306a74402cf9bd8d790553ae01901417f8e81",
+   "payload_bytes": 7864,
+   "providers": [
+    "anthropic"
+   ],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "MCP tool server",
+   "id": "mcp-server-cloudflare",
+   "full_name": "cloudflare/mcp-server-cloudflare",
+   "url": "https://github.com/cloudflare/mcp-server-cloudflare",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "mcp-server-cloudflare-LICENSE",
+   "import_class": "asset-import",
+   "commit": "e4cf085520ea7286af77abf938d645c610ef1580",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/mcp-server-cloudflare.tar.gz",
+   "payload_sha256": "568547ac3b3d2bade087c0c6657b46adc8131a9ee51a47160955b81de2c8ae60",
+   "payload_bytes": 4570,
+   "providers": [],
+   "runtime": [],
+   "entrypoints": [],
+   "ai_workers": false
+  },
+  {
+   "group": "MCP tool server",
+   "id": "mcp-server-elasticsearch",
+   "full_name": "elastic/mcp-server-elasticsearch",
+   "url": "https://github.com/elastic/mcp-server-elasticsearch",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "mcp-server-elasticsearch-LICENSE",
+   "import_class": "asset-only",
+   "commit": "9e64b842f22269eb214793e1a4885128dc4a8fd8",
+   "snapshot": "2026-10-14",
+   "files": 3,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/mcp-server-elasticsearch.tar.gz",
+   "payload_sha256": "0ad69430d71c80ee718c7ddd6211bd2e465c20cb37213a96204cdab27332d9b4",
+   "payload_bytes": 5254,
+   "providers": [
+    "anthropic"
+   ],
+   "runtime": [],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "MCP tool server",
+   "id": "mcp-server-neon",
+   "full_name": "neondatabase-labs/mcp-server-neon",
+   "url": "https://github.com/neondatabase/mcp-server-neon",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "mcp-server-neon-LICENSE",
+   "import_class": "asset-only",
+   "commit": "c79875ec44eb0817eb98e86cd44cac3fa45315ae",
+   "snapshot": "2026-10-14",
+   "files": 10,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/mcp-server-neon.tar.gz",
+   "payload_sha256": "11ed804c86c6b2bc4c101ad9d65f9d322ff9b8ceb486bf9b06561b67ffed1284",
+   "payload_bytes": 34164,
+   "providers": [
+    "anthropic"
+   ],
+   "runtime": [],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "MCP tool server",
+   "id": "mcp-toolbox",
+   "full_name": "googleapis/mcp-toolbox",
+   "url": "https://github.com/googleapis/mcp-toolbox",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "mcp-toolbox-LICENSE",
+   "import_class": "asset-only",
+   "commit": "aaf88413e117856f80f646da7f1dbc63ebaedea3",
+   "snapshot": "2026-10-14",
+   "files": 23,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/mcp-toolbox.tar.gz",
+   "payload_sha256": "446448e9499a8eb9026b4d00d51ab646292ff927ac915e97f324c5611a5b31ff",
+   "payload_bytes": 48687,
+   "providers": [
+    "google",
+    "anthropic"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [
+    "pypi/src/toolbox_server/main.py"
+   ],
+   "ai_workers": true
+  },
+  {
+   "group": "AI-focused factory",
+   "id": "metagpt",
+   "full_name": "geekan/MetaGPT",
+   "url": "https://github.com/FoundationAgents/MetaGPT",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "metagpt-LICENSE",
+   "import_class": "asset-import",
+   "commit": "11cdf466d042aece04fc6cfd13b28e1a70341b1f",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/metagpt.tar.gz",
+   "payload_sha256": "abd33124e9df9f71e537475212dbbece8073b0fbf511c8cafe5ab0e67a14ad2a",
+   "payload_bytes": 5696,
+   "providers": [],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": false
+  },
+  {
+   "group": "imported factory",
    "id": "mitkox-esf",
    "full_name": "mitkox/esf",
    "url": "https://github.com/mitkox/esf",
@@ -906,7 +2232,7 @@
    "bytes": 88163,
    "content_redistributed": true,
    "payload": "payloads/mitkox-esf.tar.gz",
-   "payload_sha256": "bc7b634c111fba95ecdfff316a45d9aea0b1968ed8b9df9676a390ff9ef046f9",
+   "payload_sha256": "1aa83e2b4f5d5614cef955f30ef031d3aa2a1a73fafbc1313d8e7ecbf205288c",
    "payload_bytes": 31093,
    "providers": [
     "openai",
@@ -924,6 +2250,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "mohammedabdelshafy-clipops-studio",
    "full_name": "MohammedAbdelshafy/clipops-studio",
    "url": "https://github.com/MohammedAbdelshafy/clipops-studio",
@@ -937,7 +2264,7 @@
    "bytes": 8183,
    "content_redistributed": false,
    "payload": "payloads/mohammedabdelshafy-clipops-studio.tar.gz",
-   "payload_sha256": "ee9b5f52609d59972976887d41776d24a32bc9cf4cd1ddad5e37de82b7326693",
+   "payload_sha256": "4da2581527a40d9aa32f643d06182e129529eb4aae13c81ad9908e1f9021d9e6",
    "payload_bytes": 532,
    "providers": [
     "google"
@@ -947,6 +2274,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "muskansoni0214-ai-agent-orchestration-pipeline",
    "full_name": "MuskanSoni0214/ai-agent-orchestration-pipeline",
    "url": "https://github.com/MuskanSoni0214/ai-agent-orchestration-pipeline",
@@ -960,7 +2288,7 @@
    "bytes": 45714,
    "content_redistributed": false,
    "payload": "payloads/muskansoni0214-ai-agent-orchestration-pipeline.tar.gz",
-   "payload_sha256": "b5502d7a838f07128e7f93194b3dcaabad23b96512b8d655a543544f1dcdca95",
+   "payload_sha256": "289811052aea6f4fd3de38406dd76ac70c5f8ea22394b4f21e5a191de21c9bde",
    "payload_bytes": 1295,
    "providers": [
     "openai",
@@ -977,6 +2305,114 @@
    "ai_workers": true
   },
   {
+   "group": "MCP tool server",
+   "id": "n8n-mcp",
+   "full_name": "czlonkowski/n8n-mcp",
+   "url": "https://github.com/czlonkowski/n8n-mcp",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "n8n-mcp-LICENSE",
+   "import_class": "asset-only",
+   "commit": "64c8093ad6a12c596eb24a44c1ddf84bddd9c209",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/n8n-mcp.tar.gz",
+   "payload_sha256": "880b6ae8a30d7890c8a0e763d99ca471fbed6e3bd97fa3a139d29e83a48dc5e3",
+   "payload_bytes": 30363,
+   "providers": [
+    "anthropic",
+    "openai"
+   ],
+   "runtime": [
+    "node",
+    "shell"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "MCP tool server",
+   "id": "notion-mcp-server",
+   "full_name": "makenotion/notion-mcp-server",
+   "url": "https://github.com/makenotion/notion-mcp-server",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "notion-mcp-server-LICENSE",
+   "import_class": "asset-only",
+   "commit": "730ae781ba28beeaf0865025a3f2ed4c25ea2387",
+   "snapshot": "2026-10-14",
+   "files": 6,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/notion-mcp-server.tar.gz",
+   "payload_sha256": "874d19986e5f02a997bef882fdd5163dbb2b68b99c1c8e7ca242c2d127569882",
+   "payload_bytes": 9664,
+   "providers": [
+    "anthropic"
+   ],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "AI-focused factory",
+   "id": "openai-agents-js",
+   "full_name": "openai/openai-agents-js",
+   "url": "https://github.com/openai/openai-agents-js",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "openai-agents-js-LICENSE",
+   "import_class": "asset-import",
+   "commit": "89a9ddf1e241e75f2e0ad4c15d89de9e215ebac6",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/openai-agents-js.tar.gz",
+   "payload_sha256": "c82fdc23eaaeb688afa6f4942bf73eee794d8ba129cc045f56e35fa31c3968f9",
+   "payload_bytes": 4365,
+   "providers": [
+    "openai"
+   ],
+   "runtime": [
+    "node",
+    "shell"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "AI-focused factory",
+   "id": "openai-agents-python",
+   "full_name": "openai/openai-agents-python",
+   "url": "https://github.com/openai/openai-agents-python",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "openai-agents-python-LICENSE",
+   "import_class": "asset-import",
+   "commit": "1c1a28df92f359dded4eed83976301c2f9850e89",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/openai-agents-python.tar.gz",
+   "payload_sha256": "5cc9e1b7d749b4184c9bf5188bd90c595ad8530578a87eb0d92fa0f4d7029071",
+   "payload_bytes": 36612,
+   "providers": [
+    "openai"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
    "id": "opencharly-plugin-pipeline",
    "full_name": "opencharly/plugin-pipeline",
    "url": "https://github.com/opencharly/plugin-pipeline",
@@ -990,7 +2426,7 @@
    "bytes": 9112,
    "content_redistributed": false,
    "payload": "payloads/opencharly-plugin-pipeline.tar.gz",
-   "payload_sha256": "306efa3cd0c2a1c701ab3bea75033a7755e17891b5e59bb7b0f73005c42638bf",
+   "payload_sha256": "9535932a64a1020ee8de8d45d1a661769f0d6240ee06ffd406f8f6de193b5346",
    "payload_bytes": 578,
    "providers": [],
    "runtime": [],
@@ -998,6 +2434,31 @@
    "ai_workers": false
   },
   {
+   "group": "AI-focused factory",
+   "id": "openhands",
+   "full_name": "All-Hands-AI/OpenHands",
+   "url": "https://github.com/OpenHands/OpenHands",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "openhands-LICENSE",
+   "import_class": "asset-import",
+   "commit": "bf483c12efbfae5c0ab586293d8bbc92f712bbed",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/openhands.tar.gz",
+   "payload_sha256": "eb3a7c029630046be937c198aa57fcd78c63ca3137eac046ef3267ba79f7d246",
+   "payload_bytes": 14415,
+   "providers": [],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [],
+   "ai_workers": false
+  },
+  {
+   "group": "imported factory",
    "id": "oraphadev-ai-workflow",
    "full_name": "oraphadev/ai-workflow",
    "url": "https://github.com/oraphadev/ai-workflow",
@@ -1011,7 +2472,7 @@
    "bytes": 32470,
    "content_redistributed": true,
    "payload": "payloads/oraphadev-ai-workflow.tar.gz",
-   "payload_sha256": "05fbbab5b81b2dd64ed0ae316ac0aec0371a4a63272d61b1f4d60c4fe4fa9840",
+   "payload_sha256": "e2abb5ebff55a93377c1c4762da6e7e78112fed1f236b9ffb6d5420a2d658a3b",
    "payload_bytes": 14752,
    "providers": [
     "anthropic"
@@ -1021,6 +2482,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "orbi-build-orbi",
    "full_name": "orbi-build/orbi",
    "url": "https://github.com/orbi-build/orbi",
@@ -1034,7 +2496,7 @@
    "bytes": 133028,
    "content_redistributed": false,
    "payload": "payloads/orbi-build-orbi.tar.gz",
-   "payload_sha256": "4add7a16de3ca5b81d7db421f3bc1078c355e381b8beb1ca6a61ffa35abcf307",
+   "payload_sha256": "dc9d959f10a738b9c583788f046105e8ca24082e5adbca39f22b77b4d9574e49",
    "payload_bytes": 1163,
    "providers": [
     "anthropic",
@@ -1049,6 +2511,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "os-factory-har",
    "full_name": "os-factory/har",
    "url": "https://github.com/os-factory/har",
@@ -1062,7 +2525,7 @@
    "bytes": 20065,
    "content_redistributed": true,
    "payload": "payloads/os-factory-har.tar.gz",
-   "payload_sha256": "609ffddc47e419c739e785bc39c54b41877e92bf23275f1f6fb118ef85d6c979",
+   "payload_sha256": "5ad7224278c84c22d1bdfa1eeb9ff50a13ce319b73f623143dc35a3074ec603e",
    "payload_bytes": 8312,
    "providers": [
     "anthropic"
@@ -1074,6 +2537,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "othmanadi-planning-with-files",
    "full_name": "OthmanAdi/planning-with-files",
    "url": "https://github.com/OthmanAdi/planning-with-files",
@@ -1087,7 +2551,7 @@
    "bytes": 24736,
    "content_redistributed": true,
    "payload": "payloads/othmanadi-planning-with-files.tar.gz",
-   "payload_sha256": "c9ec94c59791e189b07f4cf709729e6a65ad2cd57482467534a321bc0740578f",
+   "payload_sha256": "7fe7bfe769a71ed2b000d9026aabe42b95758ae52a7e18f489220b6a5d999076",
    "payload_bytes": 7530,
    "providers": [],
    "runtime": [
@@ -1098,6 +2562,7 @@
    "ai_workers": false
   },
   {
+   "group": "imported factory",
    "id": "owainlewis-machinist",
    "full_name": "owainlewis/machinist",
    "url": "https://github.com/owainlewis/machinist",
@@ -1111,7 +2576,7 @@
    "bytes": 60411,
    "content_redistributed": true,
    "payload": "payloads/owainlewis-machinist.tar.gz",
-   "payload_sha256": "4fbe7cdb13a7a2eaf428d4dd6a73fefe54d3af414aabbc278b829b2952ece900",
+   "payload_sha256": "c3c89151c37d4457151790b2b6297a2157c8149e6b11ff20379051a94ff708ba",
    "payload_bytes": 20844,
    "providers": [
     "openai",
@@ -1127,6 +2592,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "parthalon025-autonomous-coding-toolkit",
    "full_name": "parthalon025/autonomous-coding-toolkit",
    "url": "https://github.com/parthalon025/autonomous-coding-toolkit",
@@ -1140,7 +2606,7 @@
    "bytes": 59985,
    "content_redistributed": true,
    "payload": "payloads/parthalon025-autonomous-coding-toolkit.tar.gz",
-   "payload_sha256": "0685d895b8d0cf3e3876c9d6aa0cebb16e6f8a4ab830a6bef9df8ce9ba657b5d",
+   "payload_sha256": "0f2738f2b71410f7aea96bd16511ffe7465d94d35f7f8d6a92037be359d95aba",
    "payload_bytes": 26141,
    "providers": [
     "anthropic"
@@ -1150,6 +2616,35 @@
    "ai_workers": true
   },
   {
+   "group": "MCP tool server",
+   "id": "playwright-mcp",
+   "full_name": "microsoft/playwright-mcp",
+   "url": "https://github.com/microsoft/playwright-mcp",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "playwright-mcp-LICENSE",
+   "import_class": "asset-import",
+   "commit": "b8b4183e099f136cbec0388a6088d4aa2f6b9685",
+   "snapshot": "2026-10-14",
+   "files": 6,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/playwright-mcp.tar.gz",
+   "payload_sha256": "39246857e51ebedbd49ffcae8f807fb5d93a6c37a6ab41209b5204529e69ab7f",
+   "payload_bytes": 6478,
+   "providers": [
+    "anthropic"
+   ],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [
+    "cli.js"
+   ],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
    "id": "praneethaneelapareddigari-agentic-ai-workflow-copilot",
    "full_name": "praneethaneelapareddigari/agentic-ai-workflow-copilot",
    "url": "https://github.com/praneethaneelapareddigari/agentic-ai-workflow-copilot",
@@ -1163,7 +2658,7 @@
    "bytes": 36961,
    "content_redistributed": false,
    "payload": "payloads/praneethaneelapareddigari-agentic-ai-workflow-copilot.tar.gz",
-   "payload_sha256": "a948d03fd2afc6f8036abbc930a0930663de34c51cccf4f50af1cbaf88f42d9e",
+   "payload_sha256": "1bcff1f243f6a5edaf6ddc4754c9272b48110a70d89a5e1ebbdfcac042e96904",
    "payload_bytes": 876,
    "providers": [
     "openai"
@@ -1179,6 +2674,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "professorpalmer-puppetmaster",
    "full_name": "professorpalmer/Puppetmaster",
    "url": "https://github.com/professorpalmer/Puppetmaster",
@@ -1192,7 +2688,7 @@
    "bytes": 136806,
    "content_redistributed": true,
    "payload": "payloads/professorpalmer-puppetmaster.tar.gz",
-   "payload_sha256": "ef6a427c2674ce195a3a8ee7bce1396b437b78fae16b4cf8f568c4412250d1a0",
+   "payload_sha256": "403c10d5f28e424112710018cf3934385c1b2d6875249b2323b23da51516bd98",
    "payload_bytes": 47448,
    "providers": [
     "anthropic",
@@ -1206,6 +2702,82 @@
    "ai_workers": true
   },
   {
+   "group": "AI-focused factory",
+   "id": "pydantic-ai",
+   "full_name": "pydantic/pydantic-ai",
+   "url": "https://github.com/pydantic/pydantic-ai",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "pydantic-ai-LICENSE",
+   "import_class": "asset-import",
+   "commit": "17423c0592f3a9beb648c7989a59b7652c45bae4",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/pydantic-ai.tar.gz",
+   "payload_sha256": "1a27e54b31668b23167f2fcde0fbe1127aca61a1c43dd4b33f3ffdc6ad44cd72",
+   "payload_bytes": 39671,
+   "providers": [
+    "anthropic",
+    "openai"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "MCP tool server",
+   "id": "python-sdk",
+   "full_name": "modelcontextprotocol/python-sdk",
+   "url": "https://github.com/modelcontextprotocol/python-sdk",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "python-sdk-LICENSE",
+   "import_class": "asset-import",
+   "commit": "754254c08fe1c3eda18b69da3d336106fe8d72d6",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/python-sdk.tar.gz",
+   "payload_sha256": "feefd25ff935f3c960aa9b015aaab35114dcc08f909707e8210483d63fe73897",
+   "payload_bytes": 18203,
+   "providers": [],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": false
+  },
+  {
+   "group": "MCP tool server",
+   "id": "quickstart-resources",
+   "full_name": "modelcontextprotocol/quickstart-resources",
+   "url": "https://github.com/modelcontextprotocol/quickstart-resources",
+   "license": "NOASSERTION",
+   "license_present": true,
+   "license_file": "quickstart-resources-LICENSE",
+   "import_class": "blueprint-only",
+   "commit": "a4681cff0003f06aa8c403aec44391b8ded566fa",
+   "snapshot": "2026-10-14",
+   "files": 3,
+   "bytes": 0,
+   "content_redistributed": false,
+   "payload": "payloads/quickstart-resources.tar.gz",
+   "payload_sha256": "1c44edc3a53aa4dad3543cfcf70ce0c96db08f5c831d4867ad077fbad5154e16",
+   "payload_bytes": 673,
+   "providers": [
+    "anthropic"
+   ],
+   "runtime": [],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
    "id": "rabya89-cv-evaluator",
    "full_name": "rabya89/cv_evaluator",
    "url": "https://github.com/rabya89/cv_evaluator",
@@ -1219,7 +2791,7 @@
    "bytes": 56620,
    "content_redistributed": false,
    "payload": "payloads/rabya89-cv-evaluator.tar.gz",
-   "payload_sha256": "56acbf9537cd54f8d208ff89cc3fde4e5cbe4777f17d4323de0a34998c678e8a",
+   "payload_sha256": "c62da7307e6e5bfcd9ace5975c30fc61c9e8a24fcb63f3c7ac00a4c9bdd62f5d",
    "payload_bytes": 1161,
    "providers": [
     "anthropic"
@@ -1233,6 +2805,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "rocketride-org-rocketride-server",
    "full_name": "rocketride-org/rocketride-server",
    "url": "https://github.com/rocketride-org/rocketride-server",
@@ -1246,7 +2819,7 @@
    "bytes": 55156,
    "content_redistributed": true,
    "payload": "payloads/rocketride-org-rocketride-server.tar.gz",
-   "payload_sha256": "a5bbc27d9ed3dbbb1a5095d7be735d504401fbe749c9a2b73e8de055511e427d",
+   "payload_sha256": "f46a6c89666baafead09d229f5dd3c936b68fe42e4ad8da2d2560f5b79e071dc",
    "payload_bytes": 16722,
    "providers": [
     "anthropic",
@@ -1260,6 +2833,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "roxabi-roxabi-factory",
    "full_name": "Roxabi/roxabi-factory",
    "url": "https://github.com/Roxabi/roxabi-factory",
@@ -1273,7 +2847,7 @@
    "bytes": 39508,
    "content_redistributed": false,
    "payload": "payloads/roxabi-roxabi-factory.tar.gz",
-   "payload_sha256": "c2184c0a547f4662d421c6f75569bf5a6e2acf43c4d4cd89272d4619acdb08d4",
+   "payload_sha256": "6e19cca94263c17c1d762be5a0630e7053fb4cd409808ad61e0b8988da4e3fa2",
    "payload_bytes": 1922,
    "providers": [
     "anthropic"
@@ -1286,6 +2860,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "rukenzilan-4-agent-software-development-pipeline",
    "full_name": "RUKENZILAN/4-Agent-Software-Development-Pipeline",
    "url": "https://github.com/RUKENZILAN/4-Agent-Software-Development-Pipeline",
@@ -1299,7 +2874,7 @@
    "bytes": 4308,
    "content_redistributed": true,
    "payload": "payloads/rukenzilan-4-agent-software-development-pipeline.tar.gz",
-   "payload_sha256": "71175c4b7098dc677a872e8909354bcdc402214cedcdf4f2f66d39d798e32c7d",
+   "payload_sha256": "b09e28b888c09682eb48f4e76a7468bfd264ba6fc7e6b88eea519c53d5b44714",
    "payload_bytes": 2617,
    "providers": [
     "anthropic"
@@ -1309,6 +2884,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "runfusion-fusion",
    "full_name": "Runfusion/Fusion",
    "url": "https://github.com/Runfusion/Fusion",
@@ -1322,7 +2898,7 @@
    "bytes": 35754,
    "content_redistributed": true,
    "payload": "payloads/runfusion-fusion.tar.gz",
-   "payload_sha256": "246dbbe7c75c08dc2c8f898768e0e6d18894742f907e24e902bcb0de8733b583",
+   "payload_sha256": "e6aab61f7ce7744e852528e82010a479a0f81b05a6403cde7ca61c45006c3b54",
    "payload_bytes": 16084,
    "providers": [],
    "runtime": [
@@ -1332,6 +2908,7 @@
    "ai_workers": false
   },
   {
+   "group": "imported factory",
    "id": "salmanmohsen-synapse",
    "full_name": "SalmanMohsen/Synapse",
    "url": "https://github.com/SalmanMohsen/Synapse",
@@ -1345,7 +2922,7 @@
    "bytes": 131943,
    "content_redistributed": true,
    "payload": "payloads/salmanmohsen-synapse.tar.gz",
-   "payload_sha256": "0b22f0632e2e4a5c22f59079513cc2c8e93ab4f6440a4801e86cca0daf81e007",
+   "payload_sha256": "e3dba295256f0d2b34e2f5338f5c91c11cfb4151d064ce4efcdcad30cc0f19e8",
    "payload_bytes": 36527,
    "providers": [
     "local-llama",
@@ -1367,6 +2944,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "sandgardenhq-sgai",
    "full_name": "sandgardenhq/sgai",
    "url": "https://github.com/sandgardenhq/sgai",
@@ -1380,7 +2958,7 @@
    "bytes": 60797,
    "content_redistributed": false,
    "payload": "payloads/sandgardenhq-sgai.tar.gz",
-   "payload_sha256": "c6729b793319f1ceff7db02651839f6f0d6e3dc106c8660ac2649ef76a0c215e",
+   "payload_sha256": "75ebd2fdb68011ce0f9c990076f8b27d8aa9812acf33e5eb8f7228555f55d79c",
    "payload_bytes": 2058,
    "providers": [
     "anthropic",
@@ -1393,6 +2971,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "sbhooley-ainativelang",
    "full_name": "sbhooley/ainativelang",
    "url": "https://github.com/sbhooley/ainativelang",
@@ -1406,7 +2985,7 @@
    "bytes": 34383,
    "content_redistributed": true,
    "payload": "payloads/sbhooley-ainativelang.tar.gz",
-   "payload_sha256": "400ac38020326fcffd858b415be45a0fc0c63f177a572baf79706362ed619b29",
+   "payload_sha256": "ab37445094c27462096eb4ae849abc4523f3bc52b75388ee385102d79f7ab022",
    "payload_bytes": 15242,
    "providers": [
     "openai",
@@ -1420,6 +2999,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "sch0penheimer-aws-devsecops-hybrid-software-factory",
    "full_name": "sch0penheimer/AWS-DevSecOps-Hybrid-Software-Factory",
    "url": "https://github.com/sch0penheimer/AWS-DevSecOps-Hybrid-Software-Factory",
@@ -1433,7 +3013,7 @@
    "bytes": 38162,
    "content_redistributed": true,
    "payload": "payloads/sch0penheimer-aws-devsecops-hybrid-software-factory.tar.gz",
-   "payload_sha256": "0ffbd1ec9c5ed09764efdaa235d072a2200fde898cfff840cbe05ee205363f3e",
+   "payload_sha256": "c3b51b2cba1f3b26c1d1dcc7775a7e9e6abb6aed5fc1b23ddab17e76190f9249",
    "payload_bytes": 8525,
    "providers": [],
    "runtime": [],
@@ -1441,6 +3021,7 @@
    "ai_workers": false
   },
   {
+   "group": "imported factory",
    "id": "seanoliver-audioflare",
    "full_name": "seanoliver/audioflare",
    "url": "https://github.com/seanoliver/audioflare",
@@ -1454,7 +3035,7 @@
    "bytes": 9809,
    "content_redistributed": true,
    "payload": "payloads/seanoliver-audioflare.tar.gz",
-   "payload_sha256": "58075bba8c81cd1c2aa8bb4fd016117b05a8b34607218063615850ef68c4592b",
+   "payload_sha256": "9fb11d240f46162ceaa0be141b7b93028168f89926cbdb581d4dd917a84a6762",
    "payload_bytes": 3870,
    "providers": [
     "openai"
@@ -1464,6 +3045,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "seif410-ai-marketing-agent-pipeline",
    "full_name": "seif410/ai-marketing-agent-pipeline",
    "url": "https://github.com/seif410/ai-marketing-agent-pipeline",
@@ -1477,7 +3059,7 @@
    "bytes": 7547,
    "content_redistributed": false,
    "payload": "payloads/seif410-ai-marketing-agent-pipeline.tar.gz",
-   "payload_sha256": "63edd2e62c8c65a12abef5191b7f480a74318a19a3570b67653f625054646e72",
+   "payload_sha256": "80b73d811b509910c5c063122bd508816ad633dc52dcfaf69a4675484c403512",
    "payload_bytes": 676,
    "providers": [
     "google"
@@ -1492,6 +3074,111 @@
    "ai_workers": true
   },
   {
+   "group": "AI-focused factory",
+   "id": "semantic-kernel",
+   "full_name": "microsoft/semantic-kernel",
+   "url": "https://github.com/microsoft/semantic-kernel",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "semantic-kernel-LICENSE",
+   "import_class": "asset-import",
+   "commit": "5b4a3269a6803f7832568e66313c31d714a1f009",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/semantic-kernel.tar.gz",
+   "payload_sha256": "d53404d03accbd3d72ced3a036e13e002ba797b273c39710f72172ac2a88de65",
+   "payload_bytes": 13406,
+   "providers": [
+    "openai",
+    "azure-openai"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "MCP tool server",
+   "id": "sentry-mcp",
+   "full_name": "getsentry/sentry-mcp",
+   "url": "https://github.com/getsentry/toolkit",
+   "license": "NOASSERTION",
+   "license_present": true,
+   "license_file": "sentry-mcp-LICENSE.md",
+   "import_class": "asset-only",
+   "commit": "6c7d57a50c3bd3368e26a344b1a9fc07dadfc2df",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": false,
+   "payload": "payloads/sentry-mcp.tar.gz",
+   "payload_sha256": "0831750e5946273b75431e733dad0ed8e1015b4e86cc4539dbd2fa68fd6ddb58",
+   "payload_bytes": 1873,
+   "providers": [],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [],
+   "ai_workers": false
+  },
+  {
+   "group": "MCP tool server",
+   "id": "serena",
+   "full_name": "oraios/serena",
+   "url": "https://github.com/oraios/serena",
+   "license": "NOASSERTION",
+   "license_present": true,
+   "license_file": "serena-LICENSE",
+   "import_class": "blueprint-only",
+   "commit": "f9972a32c67359dd4c4a5ab597688bb10d21d1f3",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": false,
+   "payload": "payloads/serena.tar.gz",
+   "payload_sha256": "3ca8b67c2e1d69fcf09b57987ee7080f7ee1f24e2f85f9375c224839da9338b9",
+   "payload_bytes": 1815,
+   "providers": [
+    "anthropic",
+    "openai"
+   ],
+   "runtime": [],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "MCP tool server",
+   "id": "servers",
+   "full_name": "modelcontextprotocol/servers",
+   "url": "https://github.com/modelcontextprotocol/servers",
+   "license": "NOASSERTION",
+   "license_present": true,
+   "license_file": "servers-LICENSE",
+   "import_class": "blueprint-only",
+   "commit": "bbb701e7ac1e57f3edd1c2836b94c5457eaf7b9c",
+   "snapshot": "2026-10-14",
+   "files": 25,
+   "bytes": 0,
+   "content_redistributed": false,
+   "payload": "payloads/servers.tar.gz",
+   "payload_sha256": "5db7ac0410b9829dbdf5d28d00fd82759336933917253b3c8b60a8028db14a25",
+   "payload_bytes": 1909,
+   "providers": [
+    "google",
+    "anthropic"
+   ],
+   "runtime": [
+    "node",
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
    "id": "shawncsx-autosci",
    "full_name": "shawncsx/AutoSCI",
    "url": "https://github.com/shawncsx/AutoSCI",
@@ -1505,7 +3192,7 @@
    "bytes": 63084,
    "content_redistributed": true,
    "payload": "payloads/shawncsx-autosci.tar.gz",
-   "payload_sha256": "9aadccc9b18471ca26a030ee5629e54163efb4bac9a32d0a98710546d499c27e",
+   "payload_sha256": "4b0a346e5d780361c9ebf75b1d52e8d9526494e709dc7a3cee9338e410f1e5d6",
    "payload_bytes": 22257,
    "providers": [
     "openai",
@@ -1520,6 +3207,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "shenwell-ai-software-factory-pipeline",
    "full_name": "shenwell/ai-software-factory-pipeline",
    "url": "https://github.com/shenwell/ai-software-factory-pipeline",
@@ -1533,7 +3221,7 @@
    "bytes": 138052,
    "content_redistributed": true,
    "payload": "payloads/shenwell-ai-software-factory-pipeline.tar.gz",
-   "payload_sha256": "aa5a1cef30685823da05e5784ad7a986b4e1e4d015dcf1dfc83397833d192777",
+   "payload_sha256": "9b23cd96955e27f265808e54cacb4790490ffc8c12f262e9ed6dc31ff36b659f",
    "payload_bytes": 51988,
    "providers": [
     "anthropic"
@@ -1545,6 +3233,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "shuanbao0-agent-factory",
    "full_name": "shuanbao0/agent-factory",
    "url": "https://github.com/shuanbao0/agent-factory",
@@ -1558,7 +3247,7 @@
    "bytes": 1955,
    "content_redistributed": false,
    "payload": "payloads/shuanbao0-agent-factory.tar.gz",
-   "payload_sha256": "4954783c8192e82bac48d9f953d65e14d15d3732e27c23a0bc5c98f22aef3a8a",
+   "payload_sha256": "d7f20f63e1b0918d1c371f266063e67e7a6f0916596bd6c2c212243576f3a850",
    "payload_bytes": 1787,
    "providers": [],
    "runtime": [
@@ -1568,6 +3257,7 @@
    "ai_workers": false
   },
   {
+   "group": "imported factory",
    "id": "sufficientdaikon-sdd-copilot-agents",
    "full_name": "SufficientDaikon/sdd-copilot-agents",
    "url": "https://github.com/SufficientDaikon/sdd-copilot-agents",
@@ -1581,7 +3271,7 @@
    "bytes": 138323,
    "content_redistributed": true,
    "payload": "payloads/sufficientdaikon-sdd-copilot-agents.tar.gz",
-   "payload_sha256": "bbf5ae5598f12267578993932e123383c6a05491d25588394a8a2bdfdda2e65d",
+   "payload_sha256": "180c1457690080f53a7dc503d279dcdc616297acead0c670a4b11df89a0148ca",
    "payload_bytes": 42495,
    "providers": [],
    "runtime": [
@@ -1591,6 +3281,35 @@
    "ai_workers": false
   },
   {
+   "group": "MCP tool server",
+   "id": "supabase-mcp",
+   "full_name": "supabase-community/supabase-mcp",
+   "url": "https://github.com/supabase/mcp",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "supabase-mcp-LICENSE",
+   "import_class": "asset-import",
+   "commit": "4595698ced4b14080c2c2d4d958d8678387f3694",
+   "snapshot": "2026-10-14",
+   "files": 17,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/supabase-mcp.tar.gz",
+   "payload_sha256": "8c8ba962a535da3bde0165f58fdf7156f8ae21d7905c50aa9a0ead0c62639309",
+   "payload_bytes": 12391,
+   "providers": [
+    "anthropic"
+   ],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [
+    "packages/mcp-server-supabase/src/cli.ts"
+   ],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
    "id": "superplanehq-superplane",
    "full_name": "superplanehq/superplane",
    "url": "https://github.com/superplanehq/superplane",
@@ -1604,7 +3323,7 @@
    "bytes": 18288,
    "content_redistributed": false,
    "payload": "payloads/superplanehq-superplane.tar.gz",
-   "payload_sha256": "611fb18c28fbb5035b1a7009d913c6acad206df2dec5674c424c2a6a95ca8485",
+   "payload_sha256": "ea8179388bdb2acebeee2e10531aeb90a23de632672d11af9ea4cfc95eba631e",
    "payload_bytes": 1964,
    "providers": [],
    "runtime": [
@@ -1614,6 +3333,65 @@
    "ai_workers": false
   },
   {
+   "group": "AI-focused factory",
+   "id": "swarm",
+   "full_name": "openai/swarm",
+   "url": "https://github.com/openai/swarm",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "swarm-LICENSE",
+   "import_class": "asset-import",
+   "commit": "6af0b4caf37dca4526dfd98e9fbd8ce36e7eeb22",
+   "snapshot": "2026-10-14",
+   "files": 23,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/swarm.tar.gz",
+   "payload_sha256": "999cff2fac77e5778462789f102f36762cec8e7def254453e74b1cb27642fb9e",
+   "payload_bytes": 23617,
+   "providers": [
+    "openai"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [
+    "examples/airline/main.py",
+    "examples/customer_service_streaming/main.py",
+    "examples/support_bot/main.py",
+    "examples/personal_shopper/main.py"
+   ],
+   "ai_workers": true
+  },
+  {
+   "group": "AI-focused factory",
+   "id": "swe-agent",
+   "full_name": "SWE-agent/SWE-agent",
+   "url": "https://github.com/SWE-agent/SWE-agent",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "swe-agent-LICENSE",
+   "import_class": "asset-import",
+   "commit": "3ea751c087f32b16e039a2233dd6eefecef325d5",
+   "snapshot": "2026-10-14",
+   "files": 23,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/swe-agent.tar.gz",
+   "payload_sha256": "ad0074ad805728e7fb92baced8610f76356cb0cac944befc793a4acd8acf4781",
+   "payload_bytes": 31465,
+   "providers": [
+    "anthropic",
+    "openai"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
    "id": "tanaydeo24-medagent",
    "full_name": "TanayDeo24/MedAgent",
    "url": "https://github.com/TanayDeo24/MedAgent",
@@ -1627,7 +3405,7 @@
    "bytes": 144305,
    "content_redistributed": false,
    "payload": "payloads/tanaydeo24-medagent.tar.gz",
-   "payload_sha256": "cebc1c11007b1ab3c913ac64fd1b64bf767e7fef288b2ff318ba3a29361308ff",
+   "payload_sha256": "f4fb6ef471b1ed2abfedcd47f56807c60d9af2d76c2da8b462cb8f34c59310d3",
    "payload_bytes": 1361,
    "providers": [
     "openai"
@@ -1643,6 +3421,31 @@
    "ai_workers": true
   },
   {
+   "group": "MCP tool server",
+   "id": "tavily-mcp",
+   "full_name": "tavily-ai/tavily-mcp",
+   "url": "https://github.com/tavily-ai/tavily-mcp",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "tavily-mcp-LICENCE",
+   "import_class": "asset-import",
+   "commit": "1c1d54c2a619afe52544f775c8d82a56ac6d8bb5",
+   "snapshot": "2026-10-14",
+   "files": 3,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/tavily-mcp.tar.gz",
+   "payload_sha256": "3718a7d41bb3485e1a3f39deca3ba5dab46365fc87750e4c1f9687eeb47bd8dd",
+   "payload_bytes": 4863,
+   "providers": [
+    "anthropic"
+   ],
+   "runtime": [],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
    "id": "thealanwang-native-to-agentic-rag",
    "full_name": "TheAlanWang/native-to-agentic-rag",
    "url": "https://github.com/TheAlanWang/native-to-agentic-rag",
@@ -1656,7 +3459,7 @@
    "bytes": 11845,
    "content_redistributed": false,
    "payload": "payloads/thealanwang-native-to-agentic-rag.tar.gz",
-   "payload_sha256": "7aa27accd707226977c825fdf9451faf8916fd52f07e60c0e2d46f60b347b13c",
+   "payload_sha256": "479cd5cded514f70ed2a2634a06e3bf011f7ff9ba98f2e89e9a1ef40abb5f252",
    "payload_bytes": 537,
    "providers": [
     "ollama"
@@ -1666,6 +3469,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "thruwire-foreman",
    "full_name": "thruwire/foreman",
    "url": "https://github.com/thruwire/foreman",
@@ -1679,7 +3483,7 @@
    "bytes": 119531,
    "content_redistributed": true,
    "payload": "payloads/thruwire-foreman.tar.gz",
-   "payload_sha256": "4b44ebcb9678378111103557659fbaaa15bf3652569b71ec0673098143f4c7d2",
+   "payload_sha256": "864ffc14236f98270b526d9ebffe56bc87635f9a38384d49c523e4e671fea686",
    "payload_bytes": 30749,
    "providers": [],
    "runtime": [
@@ -1693,6 +3497,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "tikalk-adlc-team-skills",
    "full_name": "tikalk/adlc-team-skills",
    "url": "https://github.com/tikalk/adlc-team-skills",
@@ -1706,7 +3511,7 @@
    "bytes": 26716,
    "content_redistributed": true,
    "payload": "payloads/tikalk-adlc-team-skills.tar.gz",
-   "payload_sha256": "bb8087e35b73e2f821532fcd5ffb8553f9ec18587aa93a55e2594f08fea5c95d",
+   "payload_sha256": "b24e04ede970bb8cd66fec8fa9e9fee9ea6fe617058e1b6b9efc353e8dfbc8d0",
    "payload_bytes": 8893,
    "providers": [],
    "runtime": [
@@ -1716,6 +3521,7 @@
    "ai_workers": false
   },
   {
+   "group": "imported factory",
    "id": "transconnectome-claude-code-coord",
    "full_name": "Transconnectome/claude-code-coord",
    "url": "https://github.com/Transconnectome/claude-code-coord",
@@ -1729,7 +3535,7 @@
    "bytes": 57384,
    "content_redistributed": false,
    "payload": "payloads/transconnectome-claude-code-coord.tar.gz",
-   "payload_sha256": "78d1fd243cebb8bd48059e50160d63a0d4189aa89645d41458f0ae08bad454ca",
+   "payload_sha256": "2edfa9b94394b9127e50b8142a75b0f5a3744544f3b79e363a45f669034723ac",
    "payload_bytes": 812,
    "providers": [
     "anthropic",
@@ -1743,6 +3549,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "trutzzi-agentic-photo-flow",
    "full_name": "trutzzi/agentic-photo-flow",
    "url": "https://github.com/trutzzi/agentic-photo-flow",
@@ -1756,7 +3563,7 @@
    "bytes": 7567,
    "content_redistributed": false,
    "payload": "payloads/trutzzi-agentic-photo-flow.tar.gz",
-   "payload_sha256": "861c109b4b7e760c457c4f3ef20b08cc8554e6e0b40cf7d72063644820425b14",
+   "payload_sha256": "5722d3ff5c3621d51837f61330abf92fe1eefc8ce39c2113c63585a7d44bed77",
    "payload_bytes": 603,
    "providers": [
     "ollama"
@@ -1770,6 +3577,31 @@
    "ai_workers": true
   },
   {
+   "group": "MCP tool server",
+   "id": "typescript-sdk",
+   "full_name": "modelcontextprotocol/typescript-sdk",
+   "url": "https://github.com/modelcontextprotocol/typescript-sdk",
+   "license": "NOASSERTION",
+   "license_present": true,
+   "license_file": "typescript-sdk-LICENSE",
+   "import_class": "blueprint-only",
+   "commit": "9bc40e903fde15534ec06ff4c1347d47000dbe16",
+   "snapshot": "2026-10-14",
+   "files": 20,
+   "bytes": 0,
+   "content_redistributed": false,
+   "payload": "payloads/typescript-sdk.tar.gz",
+   "payload_sha256": "a282e838c701d222d65a80ca5dd86a6472486222267b4735785d848faeca3f4d",
+   "payload_bytes": 1676,
+   "providers": [],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [],
+   "ai_workers": false
+  },
+  {
+   "group": "imported factory",
    "id": "udoschneider-workflow-pipeline",
    "full_name": "udoschneider/workflow-pipeline",
    "url": "https://github.com/udoschneider/workflow-pipeline",
@@ -1783,7 +3615,7 @@
    "bytes": 73122,
    "content_redistributed": true,
    "payload": "payloads/udoschneider-workflow-pipeline.tar.gz",
-   "payload_sha256": "298185fa5bb926126958692936f519dea2d85eb39335fd54947fa391237b47fe",
+   "payload_sha256": "6045e02192d51f9a2839adb760e99a820a071a48d5ae3d98f31d282c28162731",
    "payload_bytes": 25579,
    "providers": [
     "anthropic"
@@ -1793,6 +3625,37 @@
    "ai_workers": true
   },
   {
+   "group": "MCP tool server",
+   "id": "unity-mcp",
+   "full_name": "CoplayDev/unity-mcp",
+   "url": "https://github.com/CoplayDev/unity-mcp",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "unity-mcp-LICENSE",
+   "import_class": "asset-only",
+   "commit": "142ea0af4890337f0ff6658df61db23982313717",
+   "snapshot": "2026-10-14",
+   "files": 17,
+   "bytes": 0,
+   "content_redistributed": true,
+   "payload": "payloads/unity-mcp.tar.gz",
+   "payload_sha256": "e488de954101da0ffeadd22df343dd26b65faf4c8f79d0b95a0932893c07b4af",
+   "payload_bytes": 44228,
+   "providers": [
+    "anthropic"
+   ],
+   "runtime": [
+    "node",
+    "python"
+   ],
+   "entrypoints": [
+    "Server/src/cli/main.py",
+    "Server/src/main.py"
+   ],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
    "id": "vaibhav07772-autonomous-ai-software-factory",
    "full_name": "vaibhav07772/Autonomous-AI-Software-Factory",
    "url": "https://github.com/vaibhav07772/Autonomous-AI-Software-Factory",
@@ -1806,7 +3669,7 @@
    "bytes": 10482,
    "content_redistributed": false,
    "payload": "payloads/vaibhav07772-autonomous-ai-software-factory.tar.gz",
-   "payload_sha256": "3e94faf99b6fac43948143748655e1f103ff16875016d04f2570c07edae80666",
+   "payload_sha256": "843107441d1201b8fd800bc1e89803c80bb81898519b36d646b6c682a2de9966",
    "payload_bytes": 764,
    "providers": [
     "openai",
@@ -1822,6 +3685,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "vercel-labs-eve-software-factory-template",
    "full_name": "vercel-labs/eve-software-factory-template",
    "url": "https://github.com/vercel-labs/eve-software-factory-template",
@@ -1835,7 +3699,7 @@
    "bytes": 11942,
    "content_redistributed": true,
    "payload": "payloads/vercel-labs-eve-software-factory-template.tar.gz",
-   "payload_sha256": "3ff6e35f34926c4ad7e23b8196dc22ffeb470572ab253d0325b4cdc66ee7f984",
+   "payload_sha256": "b5dc987e863dab2c1777409cd5e5b217fa99c2116620d5924161a6659e5edd9f",
    "payload_bytes": 6050,
    "providers": [
     "openai",
@@ -1851,6 +3715,7 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
    "id": "watt-mind-factory",
    "full_name": "watt-mind/factory",
    "url": "https://github.com/watt-mind/factory",
@@ -1864,7 +3729,7 @@
    "bytes": 9945,
    "content_redistributed": true,
    "payload": "payloads/watt-mind-factory.tar.gz",
-   "payload_sha256": "602135fd167e92014a1ab20e3d32642ed11d23b480c1d6385d3388aa9f636805",
+   "payload_sha256": "deda058558eaa77bae60a31519ea125aff5dc89a1507e358b0e6de933d2cbbea",
    "payload_bytes": 4867,
    "providers": [],
    "runtime": [],

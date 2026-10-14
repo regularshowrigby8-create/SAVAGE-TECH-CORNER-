@@ -70,11 +70,39 @@ pipelineReport.push(
       );
     }
     if (report.summary.unreadable > 0) throw new Error("sealed payloads were unreadable");
+
+    // The environment inside the seal: its tools, its agent roles and a real swarm pass. The stage
+    // fails when the component cannot run itself - that is the whole claim being made.
+    const env = report.environment;
+    if (!env) throw new Error("the sealed run produced no environment report");
+    if (!env.tools || env.tools.total < 30) {
+      throw new Error(`the sealed environment exposes ${env.tools?.total ?? 0} tools`);
+    }
+    if (!env.agents || env.agents.roles < 20) {
+      throw new Error(`the sealed environment holds ${env.agents?.roles ?? 0} agent roles`);
+    }
+    if (!env.swarm || env.swarm.plan.executed < env.agents.roles) {
+      throw new Error("the swarm did not execute at least one instance of every role");
+    }
+    if (env.swarm.counts.checks_failed > 0) {
+      throw new Error(`${env.swarm.counts.checks_failed} swarm check(s) failed`);
+    }
+    if (env.swarm.counts.steps_failed > 0) {
+      throw new Error(`${env.swarm.counts.steps_failed} agent tool step(s) failed`);
+    }
+
     return (
       `${report.factories.length} sealed factories: ${ran} ran ` +
       `(${report.summary.operational_model} against a model, ${report.summary.operational_plan} from ` +
       `their own definitions), ${report.summary.no_structure} had no definitions in their slice; ` +
-      `${report.summary.stages_defined} stages and ${report.summary.workers_defined} workers read`
+      `${report.summary.stages_defined} stages and ${report.summary.workers_defined} workers read. ` +
+      `Environment: ${env.tools.total} tools (${env.tools.native} native, ` +
+      `${env.tools.mcp_bound} bound from MCP), ${env.agents.roles} agent roles, ` +
+      `${env.agents.capacity} instance capacity, ${env.languages.available.length} language packs; ` +
+      `swarm ran ${env.swarm.plan.executed} instances in ${env.swarm.seconds}s with ` +
+      `${env.swarm.counts.steps_ok} tool steps and ` +
+      `${env.swarm.counts.checks_passed}/${env.swarm.counts.checks_passed + env.swarm.counts.checks_failed} ` +
+      `checks passed`
     );
   }),
 );
