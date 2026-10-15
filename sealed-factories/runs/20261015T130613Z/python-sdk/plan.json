@@ -1,0 +1,155 @@
+{
+ "id": "python-sdk",
+ "full_name": "modelcontextprotocol/python-sdk",
+ "url": "https://github.com/modelcontextprotocol/python-sdk",
+ "group": "MCP tool server",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  "docs_src/prompts/tutorial001.py",
+  "docs_src/prompts/tutorial002.py",
+  "docs_src/prompts/tutorial003.py",
+  "docs_src/prompts/tutorial004.py",
+  "docs_src/prompts/tutorial005.py",
+  "docs_src/prompts/tutorial006.py",
+  "docs_src/skills/tutorial001_client.py",
+  "examples/servers/everything-server/pyproject.toml",
+  "examples/servers/simple-auth/pyproject.toml",
+  "examples/servers/simple-prompt/pyproject.toml",
+  "examples/servers/simple-resource/pyproject.toml",
+  "examples/servers/simple-streamablehttp-stateless/pyproject.toml",
+  "examples/servers/simple-streamablehttp/pyproject.toml",
+  "examples/servers/simple-tool/pyproject.toml",
+  "examples/servers/sse-polling-demo/pyproject.toml",
+  "examples/servers/structured-output-lowlevel/pyproject.toml",
+  "examples/stories/prompts/README.md",
+  "examples/stories/prompts/client.py",
+  "examples/stories/prompts/server.py",
+  "examples/stories/prompts/server_lowlevel.py",
+  "examples/stories/skills/README.md",
+  "src/mcp/server/lowlevel/server.py",
+  "src/mcp/server/mcpserver/prompts/__init__.py",
+  "src/mcp/server/mcpserver/prompts/base.py",
+  "src/mcp/server/mcpserver/prompts/manager.py"
+ ],
+ "stages": [],
+ "roles": [],
+ "gates": [
+  [
+   "check",
+   "for duplicates"
+  ]
+ ],
+ "prompts": [
+  [
+   "path",
+   "docs_src/prompts/tutorial001.py"
+  ],
+  [
+   "path",
+   "docs_src/prompts/tutorial002.py"
+  ],
+  [
+   "path",
+   "docs_src/prompts/tutorial003.py"
+  ],
+  [
+   "path",
+   "docs_src/prompts/tutorial004.py"
+  ],
+  [
+   "path",
+   "docs_src/prompts/tutorial005.py"
+  ],
+  [
+   "path",
+   "docs_src/prompts/tutorial006.py"
+  ],
+  [
+   "path",
+   "docs_src/skills/tutorial001_client.py"
+  ],
+  [
+   "path",
+   "examples/stories/prompts/README.md"
+  ],
+  [
+   "path",
+   "examples/stories/prompts/client.py"
+  ],
+  [
+   "path",
+   "examples/stories/prompts/server.py"
+  ],
+  [
+   "path",
+   "examples/stories/prompts/server_lowlevel.py"
+  ],
+  [
+   "path",
+   "examples/stories/skills/README.md"
+  ],
+  [
+   "path",
+   "src/mcp/server/mcpserver/prompts/__init__.py"
+  ],
+  [
+   "path",
+   "src/mcp/server/mcpserver/prompts/base.py"
+  ],
+  [
+   "path",
+   "src/mcp/server/mcpserver/prompts/manager.py"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "prompts"
+  ],
+  [
+   "heading",
+   "Run it"
+  ],
+  [
+   "heading",
+   "stdio (default \u2014 the client spawns the server as a subprocess)"
+  ],
+  [
+   "heading",
+   "same, against the lowlevel-API server variant"
+  ],
+  [
+   "heading",
+   "What to look at"
+  ],
+  [
+   "heading",
+   "Caveats"
+  ],
+  [
+   "heading",
+   "Spec"
+  ],
+  [
+   "heading",
+   "See also"
+  ],
+  [
+   "heading",
+   "skills"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "launch_command": "python3 -m mcp.server.fastmcp",
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 0,
+  "gates": 1,
+  "prompts": 15,
+  "headings": 9
+ },
+ "structure_found": true
+}

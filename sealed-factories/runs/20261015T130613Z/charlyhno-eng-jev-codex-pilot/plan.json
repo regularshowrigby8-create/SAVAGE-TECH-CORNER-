@@ -1,0 +1,209 @@
+{
+ "id": "charlyhno-eng-jev-codex-pilot",
+ "full_name": "Charlyhno-eng/jev-codex-pilot",
+ "url": "https://github.com/Charlyhno-eng/jev-codex-pilot",
+ "group": "imported factory",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  "skills/frontend-design/UPSTREAM.md",
+  "skills/gpui-kit-design-guides/UPSTREAM.md",
+  "skills/py-side6-gui-design/UPSTREAM.md",
+  "skills/python-design-patterns/LICENSE",
+  "skills/python-design-patterns/UPSTREAM.md",
+  "skills/python-performance-optimization/LICENSE",
+  "skills/python-performance-optimization/UPSTREAM.md",
+  "skills/python-project-structure/LICENSE",
+  "skills/python-project-structure/UPSTREAM.md",
+  "skills/qt-qml/LICENSE",
+  "skills/qt-qml/UPSTREAM.md",
+  "skills/rust-engineer/LICENSE",
+  "skills/rust-engineer/UPSTREAM.md",
+  "skills/rust-skills/LICENSE",
+  "skills/rust-skills/UPSTREAM.md",
+  "skills/rust-skills/rules/own-borrow-over-clone.md",
+  "skills/vercel-composition-patterns/UPSTREAM.md",
+  "skills/vercel-composition-patterns/rules/architecture-avoid-boolean-props.md",
+  "skills/vercel-composition-patterns/rules/architecture-compound-components.md",
+  "skills/vercel-composition-patterns/rules/patterns-children-over-render-props.md",
+  "skills/vercel-composition-patterns/rules/patterns-explicit-variants.md",
+  "skills/vercel-composition-patterns/rules/react19-no-forwardref.md",
+  "skills/vercel-composition-patterns/rules/state-decouple-implementation.md",
+  "skills/vercel-react-best-practices/UPSTREAM.md",
+  "skills/vercel-react-best-practices/rules/async-parallel.md"
+ ],
+ "stages": [],
+ "roles": [],
+ "gates": [],
+ "prompts": [
+  [
+   "path",
+   "skills/frontend-design/UPSTREAM.md"
+  ],
+  [
+   "path",
+   "skills/gpui-kit-design-guides/UPSTREAM.md"
+  ],
+  [
+   "path",
+   "skills/py-side6-gui-design/UPSTREAM.md"
+  ],
+  [
+   "path",
+   "skills/python-design-patterns/LICENSE"
+  ],
+  [
+   "path",
+   "skills/python-design-patterns/UPSTREAM.md"
+  ],
+  [
+   "path",
+   "skills/python-performance-optimization/LICENSE"
+  ],
+  [
+   "path",
+   "skills/python-performance-optimization/UPSTREAM.md"
+  ],
+  [
+   "path",
+   "skills/python-project-structure/LICENSE"
+  ],
+  [
+   "path",
+   "skills/python-project-structure/UPSTREAM.md"
+  ],
+  [
+   "path",
+   "skills/qt-qml/LICENSE"
+  ],
+  [
+   "path",
+   "skills/qt-qml/UPSTREAM.md"
+  ],
+  [
+   "path",
+   "skills/rust-engineer/LICENSE"
+  ],
+  [
+   "path",
+   "skills/rust-engineer/UPSTREAM.md"
+  ],
+  [
+   "path",
+   "skills/rust-skills/LICENSE"
+  ],
+  [
+   "path",
+   "skills/rust-skills/UPSTREAM.md"
+  ],
+  [
+   "path",
+   "skills/rust-skills/rules/own-borrow-over-clone.md"
+  ],
+  [
+   "path",
+   "skills/vercel-composition-patterns/UPSTREAM.md"
+  ],
+  [
+   "path",
+   "skills/vercel-composition-patterns/rules/architecture-avoid-boolean-props.md"
+  ],
+  [
+   "path",
+   "skills/vercel-composition-patterns/rules/architecture-compound-components.md"
+  ],
+  [
+   "path",
+   "skills/vercel-composition-patterns/rules/patterns-children-over-render-props.md"
+  ],
+  [
+   "path",
+   "skills/vercel-composition-patterns/rules/patterns-explicit-variants.md"
+  ],
+  [
+   "path",
+   "skills/vercel-composition-patterns/rules/react19-no-forwardref.md"
+  ],
+  [
+   "path",
+   "skills/vercel-composition-patterns/rules/state-decouple-implementation.md"
+  ],
+  [
+   "path",
+   "skills/vercel-react-best-practices/UPSTREAM.md"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Upstream provenance"
+  ],
+  [
+   "heading",
+   "own-borrow-over-clone"
+  ],
+  [
+   "heading",
+   "Why It Matters"
+  ],
+  [
+   "heading",
+   "Bad"
+  ],
+  [
+   "heading",
+   "Good"
+  ],
+  [
+   "heading",
+   "When Clone Is Acceptable"
+  ],
+  [
+   "heading",
+   "Evidence"
+  ],
+  [
+   "heading",
+   "See Also"
+  ],
+  [
+   "heading",
+   "Avoid Boolean Prop Proliferation"
+  ],
+  [
+   "heading",
+   "Use Compound Components"
+  ],
+  [
+   "heading",
+   "Prefer Children Over Render Props"
+  ],
+  [
+   "heading",
+   "Create Explicit Component Variants"
+  ],
+  [
+   "heading",
+   "React 19 API Changes"
+  ],
+  [
+   "heading",
+   "Decouple State Management from UI"
+  ],
+  [
+   "heading",
+   "Promise.all() for Independent Operations"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 0,
+  "gates": 0,
+  "prompts": 25,
+  "headings": 15
+ },
+ "structure_found": true
+}

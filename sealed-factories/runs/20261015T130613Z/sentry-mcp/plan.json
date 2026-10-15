@@ -1,0 +1,26 @@
+{
+ "id": "sentry-mcp",
+ "full_name": "getsentry/sentry-mcp",
+ "url": "https://github.com/getsentry/toolkit",
+ "group": "MCP tool server",
+ "license": "NOASSERTION",
+ "content_redistributed": false,
+ "files": [],
+ "stages": [],
+ "roles": [],
+ "gates": [],
+ "prompts": [],
+ "headings": [],
+ "mcp_tools": [],
+ "texts": 0,
+ "launch_command": "npx -y @sentry/mcp-server",
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 0,
+  "gates": 0,
+  "prompts": 0,
+  "headings": 0
+ },
+ "structure_found": false
+}

@@ -1,0 +1,258 @@
+{
+ "id": "sbhooley-ainativelang",
+ "full_name": "sbhooley/ainativelang",
+ "url": "https://github.com/sbhooley/ainativelang",
+ "group": "imported factory",
+ "license": "Apache-2.0",
+ "content_redistributed": true,
+ "files": [
+  "apollo-x-bot/prompts/README.md",
+  "apollo-x-bot/prompts/classify_instruction.txt",
+  "apollo-x-bot/prompts/classify_system.txt",
+  "apollo-x-bot/prompts/daily_post_system.txt",
+  "apollo-x-bot/prompts/daily_post_user_suffix.txt",
+  "apollo-x-bot/prompts/discovery_user_instruction.txt",
+  "apollo-x-bot/prompts/reply_system.txt",
+  "docs/agents/INDEX.md",
+  "docs/agents/openclaw-overview.md",
+  "prompts/meta-agent/README.md",
+  "prompts/meta-agent/generate_safe_workflow.md",
+  "prompts/meta-agent/mutate_with_ir_diff.md",
+  "prompts/meta-agent/repair_from_diagnostics.md",
+  "skills/ainl/install.sh",
+  "skills/hermes/README.md",
+  "skills/hermes/SKILL.md",
+  "skills/hermes/a2a.example.json",
+  "skills/hermes/ainl_hermes_bridge.py",
+  "skills/hermes/armaraos-a2a-bridge/README.md",
+  "skills/hermes/armaraos-a2a-bridge/hermes_chat_delegate.py",
+  "skills/hermes/armaraos-a2a-bridge/smoke_test_a2a_bridge.sh",
+  "skills/hermes/example_ainl_to_hermes_skill.ainl",
+  "skills/hermes/install.sh",
+  "skills/hermes/install_armaraos_a2a_bridge.sh",
+  "skills/openclaw/install.sh"
+ ],
+ "stages": [],
+ "roles": [
+  [
+   "path",
+   "docs/agents/INDEX.md"
+  ],
+  [
+   "agent",
+   "guides \u2014 index"
+  ],
+  [
+   "path",
+   "docs/agents/openclaw-overview.md"
+  ],
+  [
+   "agent",
+   "instructions"
+  ]
+ ],
+ "gates": [],
+ "prompts": [
+  [
+   "path",
+   "apollo-x-bot/prompts/README.md"
+  ],
+  [
+   "path",
+   "apollo-x-bot/prompts/classify_instruction.txt"
+  ],
+  [
+   "path",
+   "apollo-x-bot/prompts/classify_system.txt"
+  ],
+  [
+   "path",
+   "apollo-x-bot/prompts/daily_post_system.txt"
+  ],
+  [
+   "path",
+   "apollo-x-bot/prompts/daily_post_user_suffix.txt"
+  ],
+  [
+   "path",
+   "apollo-x-bot/prompts/discovery_user_instruction.txt"
+  ],
+  [
+   "path",
+   "apollo-x-bot/prompts/reply_system.txt"
+  ],
+  [
+   "path",
+   "prompts/meta-agent/README.md"
+  ],
+  [
+   "path",
+   "prompts/meta-agent/generate_safe_workflow.md"
+  ],
+  [
+   "path",
+   "prompts/meta-agent/mutate_with_ir_diff.md"
+  ],
+  [
+   "path",
+   "prompts/meta-agent/repair_from_diagnostics.md"
+  ],
+  [
+   "path",
+   "skills/ainl/install.sh"
+  ],
+  [
+   "path",
+   "skills/hermes/README.md"
+  ],
+  [
+   "path",
+   "skills/hermes/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/hermes/a2a.example.json"
+  ],
+  [
+   "path",
+   "skills/hermes/ainl_hermes_bridge.py"
+  ],
+  [
+   "path",
+   "skills/hermes/armaraos-a2a-bridge/README.md"
+  ],
+  [
+   "path",
+   "skills/hermes/armaraos-a2a-bridge/hermes_chat_delegate.py"
+  ],
+  [
+   "path",
+   "skills/hermes/armaraos-a2a-bridge/smoke_test_a2a_bridge.sh"
+  ],
+  [
+   "path",
+   "skills/hermes/example_ainl_to_hermes_skill.ainl"
+  ],
+  [
+   "path",
+   "skills/hermes/install.sh"
+  ],
+  [
+   "path",
+   "skills/hermes/install_armaraos_a2a_bridge.sh"
+  ],
+  [
+   "path",
+   "skills/openclaw/install.sh"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Promoter LLM prompts (text files)"
+  ],
+  [
+   "heading",
+   "Index"
+  ],
+  [
+   "heading",
+   "Where to find install-time info"
+  ],
+  [
+   "heading",
+   "Migration notes"
+  ],
+  [
+   "heading",
+   "Meta-Agent Prompt Library"
+  ],
+  [
+   "heading",
+   "Bootstrap AINL for restricted environments (PEP 668 safe) + MCP host setup."
+  ],
+  [
+   "heading",
+   "AINL + Hermes Agent Skills Pack"
+  ],
+  [
+   "heading",
+   "Quick usage"
+  ],
+  [
+   "heading",
+   "ArmaraOS A2A bridge (optional)"
+  ],
+  [
+   "heading",
+   "What this pack installs"
+  ],
+  [
+   "heading",
+   "Install"
+  ],
+  [
+   "heading",
+   "Files"
+  ],
+  [
+   "heading",
+   "Upstream"
+  ],
+  [
+   "heading",
+   "AINL for Hermes Agent"
+  ],
+  [
+   "heading",
+   "When to use this skill"
+  ],
+  [
+   "heading",
+   "Install (pick one)"
+  ],
+  [
+   "heading",
+   "After install \u2014 prompt suggestion"
+  ],
+  [
+   "heading",
+   "MCP"
+  ],
+  [
+   "heading",
+   "Bridge (optional)"
+  ],
+  [
+   "heading",
+   "ArmaraOS-compatible A2A bridge (Hermes `~/.hermes`)"
+  ],
+  [
+   "heading",
+   "Install into `~/.hermes`"
+  ],
+  [
+   "heading",
+   "Run"
+  ],
+  [
+   "heading",
+   "Verify (smoke test)"
+  ],
+  [
+   "heading",
+   "ArmaraOS side"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 4,
+  "gates": 0,
+  "prompts": 23,
+  "headings": 28
+ },
+ "structure_found": true
+}

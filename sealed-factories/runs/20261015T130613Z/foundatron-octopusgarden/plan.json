@@ -1,0 +1,172 @@
+{
+ "id": "foundatron-octopusgarden",
+ "full_name": "foundatron/octopusgarden",
+ "url": "https://github.com/foundatron/octopusgarden",
+ "group": "imported factory",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  ".claude/agents/go-architect.md",
+  ".claude/skills/generate-examples.md",
+  ".claude/skills/update-docs/SKILL.md",
+  "CLAUDE.md",
+  "README.md"
+ ],
+ "stages": [
+  [
+   "step",
+   "1 -- Gather context"
+  ],
+  [
+   "step",
+   "2 -- Read current docs"
+  ],
+  [
+   "step",
+   "3 -- Determine what needs updating"
+  ],
+  [
+   "step",
+   "4 -- Make changes"
+  ],
+  [
+   "step",
+   "5 -- Verify"
+  ],
+  [
+   "step",
+   "6 -- Stage"
+  ]
+ ],
+ "roles": [
+  [
+   "path",
+   ".claude/agents/go-architect.md"
+  ]
+ ],
+ "gates": [
+  [
+   "review",
+   "Checklist"
+  ]
+ ],
+ "prompts": [
+  [
+   "path",
+   ".claude/skills/generate-examples.md"
+  ],
+  [
+   "path",
+   ".claude/skills/update-docs/SKILL.md"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Output Format"
+  ],
+  [
+   "heading",
+   "Findings"
+  ],
+  [
+   "heading",
+   "Summary"
+  ],
+  [
+   "heading",
+   "After Review"
+  ],
+  [
+   "heading",
+   "Generate Examples"
+  ],
+  [
+   "heading",
+   "Instructions"
+  ],
+  [
+   "heading",
+   "Notes"
+  ],
+  [
+   "heading",
+   "OctopusGarden"
+  ],
+  [
+   "heading",
+   "What Is This?"
+  ],
+  [
+   "heading",
+   "Prior Art"
+  ],
+  [
+   "heading",
+   "How It Works"
+  ],
+  [
+   "heading",
+   "Quick Start"
+  ],
+  [
+   "heading",
+   "Homebrew (macOS/Linux)"
+  ],
+  [
+   "heading",
+   "Or build from source"
+  ],
+  [
+   "heading",
+   "Interactive setup (recommended)"
+  ],
+  [
+   "heading",
+   "Or set an env var"
+  ],
+  [
+   "heading",
+   "Conversational spec-drafting (outputs spec.md by default)"
+  ],
+  [
+   "heading",
+   "Also generate holdout scenario YAML files alongside the spec"
+  ],
+  [
+   "heading",
+   "Improve an existing spec through targeted questions"
+  ],
+  [
+   "heading",
+   "Items REST API"
+  ],
+  [
+   "heading",
+   "Todo app with auth"
+  ],
+  [
+   "heading",
+   "TUI timer board (terminal UI with PTY interaction)"
+  ],
+  [
+   "heading",
+   "TUI runbook runner (markdown execution, themes, overlays)"
+  ],
+  [
+   "heading",
+   "Validate a running service independently"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 5,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 6,
+  "roles": 1,
+  "gates": 1,
+  "prompts": 2,
+  "headings": 28
+ },
+ "structure_found": true
+}

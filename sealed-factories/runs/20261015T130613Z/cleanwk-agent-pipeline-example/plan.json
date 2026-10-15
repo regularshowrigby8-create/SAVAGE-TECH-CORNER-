@@ -1,0 +1,101 @@
+{
+ "id": "cleanwk-agent-pipeline-example",
+ "full_name": "cleanwk/agent-pipeline-example",
+ "url": "https://github.com/cleanwk/agent-pipeline-example",
+ "group": "imported factory",
+ "license": "Apache-2.0",
+ "content_redistributed": true,
+ "files": [
+  "README.md",
+  "pipelines/product-delivery.yaml",
+  "prompts/grill.md",
+  "prompts/implement.md",
+  "prompts/review.md",
+  "prompts/smoke.md",
+  "prompts/spec.md"
+ ],
+ "stages": [
+  [
+   "path",
+   "pipelines/product-delivery.yaml"
+  ]
+ ],
+ "roles": [
+  [
+   "agent",
+   "Pipeline Example"
+  ],
+  [
+   "yaml:nodes",
+   "id: grill"
+  ],
+  [
+   "yaml:nodes",
+   "id: ticket"
+  ],
+  [
+   "yaml:nodes",
+   "id: spec"
+  ],
+  [
+   "yaml:nodes",
+   "id: implement"
+  ],
+  [
+   "yaml:nodes",
+   "id: review"
+  ],
+  [
+   "yaml:nodes",
+   "id: deploy"
+  ],
+  [
+   "yaml:nodes",
+   "id: smoke"
+  ]
+ ],
+ "gates": [],
+ "prompts": [
+  [
+   "path",
+   "prompts/grill.md"
+  ],
+  [
+   "path",
+   "prompts/implement.md"
+  ],
+  [
+   "path",
+   "prompts/review.md"
+  ],
+  [
+   "path",
+   "prompts/smoke.md"
+  ],
+  [
+   "path",
+   "prompts/spec.md"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Layout"
+  ],
+  [
+   "heading",
+   "Install"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 7,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 1,
+  "roles": 8,
+  "gates": 0,
+  "prompts": 5,
+  "headings": 2
+ },
+ "structure_found": true
+}

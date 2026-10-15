@@ -1,0 +1,196 @@
+{
+ "id": "yzhao062-pyod",
+ "full_name": "yzhao062/pyod",
+ "url": "https://github.com/yzhao062/pyod",
+ "group": "imported factory",
+ "license": "BSD-2-Clause",
+ "content_redistributed": true,
+ "files": [
+  "pyod/cli.py",
+  "pyod/skills/__init__.py",
+  "pyod/skills/od_expert/SKILL.md",
+  "pyod/skills/od_expert/__init__.py",
+  "pyod/skills/od_expert/references/graph.md",
+  "pyod/skills/od_expert/references/pitfalls.md",
+  "pyod/skills/od_expert/references/tabular.md",
+  "pyod/skills/od_expert/references/text_image.md",
+  "pyod/skills/od_expert/references/time_series.md",
+  "pyod/skills/od_expert/references/workflow.md"
+ ],
+ "stages": [
+  [
+   "phase",
+   "1: Preprocessing"
+  ],
+  [
+   "phase",
+   "2: Detection"
+  ],
+  [
+   "phase",
+   "3: Analysis"
+  ],
+  [
+   "phase",
+   "4: Reporting"
+  ],
+  [
+   "phase",
+   "5: Iteration"
+  ]
+ ],
+ "roles": [
+  [
+   "agent",
+   "flow"
+  ]
+ ],
+ "gates": [],
+ "prompts": [
+  [
+   "path",
+   "pyod/skills/__init__.py"
+  ],
+  [
+   "path",
+   "pyod/skills/od_expert/SKILL.md"
+  ],
+  [
+   "path",
+   "pyod/skills/od_expert/__init__.py"
+  ],
+  [
+   "path",
+   "pyod/skills/od_expert/references/graph.md"
+  ],
+  [
+   "path",
+   "pyod/skills/od_expert/references/pitfalls.md"
+  ],
+  [
+   "path",
+   "pyod/skills/od_expert/references/tabular.md"
+  ],
+  [
+   "path",
+   "pyod/skills/od_expert/references/text_image.md"
+  ],
+  [
+   "path",
+   "pyod/skills/od_expert/references/time_series.md"
+  ],
+  [
+   "path",
+   "pyod/skills/od_expert/references/workflow.md"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Python-package-name \u2192 Claude-Code-install-dirname mapping."
+  ],
+  [
+   "heading",
+   "Python package names cannot contain hyphens, but Claude Code's skill"
+  ],
+  [
+   "heading",
+   "directory convention uses the hyphenated skill identifier from the"
+  ],
+  [
+   "heading",
+   "SKILL.md frontmatter. When the two forms differ, record the mapping"
+  ],
+  [
+   "heading",
+   "here so the installer writes to the canonical Claude Code directory."
+  ],
+  [
+   "heading",
+   "When to activate"
+  ],
+  [
+   "heading",
+   "What you have access to"
+  ],
+  [
+   "heading",
+   "or step-by-step:"
+  ],
+  [
+   "heading",
+   "Master decision tree"
+  ],
+  [
+   "heading",
+   "Top-10 critical pitfalls"
+  ],
+  [
+   "heading",
+   "Adaptive escalation triggers"
+  ],
+  [
+   "heading",
+   "References for depth"
+  ],
+  [
+   "heading",
+   "Always cite your reasoning"
+  ],
+  [
+   "heading",
+   "Graph anomaly detection reference"
+  ],
+  [
+   "heading",
+   "Decision table by graph type (expert heuristics)"
+  ],
+  [
+   "heading",
+   "Detectors available in PyOD (KB-derived)"
+  ],
+  [
+   "heading",
+   "PyG installation check"
+  ],
+  [
+   "heading",
+   "Graph data format expected by ADEngine"
+  ],
+  [
+   "heading",
+   "Either a torch_geometric Data object:"
+  ],
+  [
+   "heading",
+   "state.profile['data_type'] == 'graph'"
+  ],
+  [
+   "heading",
+   "Worked example: small social-network anomaly"
+  ],
+  [
+   "heading",
+   "Setup"
+  ],
+  [
+   "heading",
+   "Load into a Data object (assume node_features and edges are already arrays)"
+  ],
+  [
+   "heading",
+   "state.profile: {'data_type': 'graph', 'n_nodes': 10000,"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 10,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 5,
+  "roles": 1,
+  "gates": 0,
+  "prompts": 9,
+  "headings": 177
+ },
+ "structure_found": true
+}

@@ -1,0 +1,228 @@
+{
+ "id": "adk-python",
+ "full_name": "google/adk-python",
+ "url": "https://github.com/google/adk-python",
+ "group": "AI-focused factory",
+ "license": "Apache-2.0",
+ "content_redistributed": true,
+ "files": [
+  ".agents/skills/adk-architecture/references/architecture-runner-roles.md",
+  "contributing/samples/environment_and_skills/e2b_env_skill_toolset/skills/calc-skill/SKILL.md",
+  "contributing/samples/environment_and_skills/e2b_env_skill_toolset/skills/text-skill/SKILL.md",
+  "contributing/samples/environment_and_skills/e2b_env_skill_toolset/skills/text-skill/scripts/format.sh",
+  "contributing/samples/environment_and_skills/local_env_skill_toolset/skills/calc-skill/SKILL.md",
+  "contributing/samples/environment_and_skills/local_env_skill_toolset/skills/text-skill/SKILL.md",
+  "contributing/samples/environment_and_skills/local_env_skill_toolset/skills/text-skill/scripts/format.sh",
+  "contributing/samples/environment_and_skills/local_environment_skill/skills/weather-skill/SKILL.md",
+  "contributing/samples/environment_and_skills/local_environment_skill/skills/weather-skill/references/weather_info.md",
+  "contributing/samples/environment_and_skills/skills/__init__.py",
+  "contributing/samples/environment_and_skills/skills/skills/weather-skill/SKILL.md",
+  "contributing/samples/environment_and_skills/skills/skills/weather-skill/references/weather_info.md",
+  "contributing/samples/environment_and_skills/skills_agent/skills/weather-skill/SKILL.md",
+  "contributing/samples/environment_and_skills/skills_agent/skills/weather-skill/references/weather_info.md",
+  "src/google/adk/a2a/agent/interceptors/__init__.py",
+  "src/google/adk/agents/callback_context.py",
+  "src/google/adk/agents/llm/__init__.py",
+  "src/google/adk/agents/llm/task/__init__.py",
+  "src/google/adk/flows/llm_flows/prompt/__init__.py",
+  "src/google/adk/flows/llm_flows/prompt/_dynamic_instructions.py",
+  "src/google/adk/flows/llm_flows/prompt/_identity.py",
+  "src/google/adk/flows/llm_flows/prompt/_instructions.py",
+  "src/google/adk/flows/llm_flows/prompt/_instructions_utils.py",
+  "src/google/adk/flows/llm_flows/prompt/_schema.py",
+  "src/google/adk/skills/README.md"
+ ],
+ "stages": [
+  [
+   "step",
+   "1: Check 'references/weather_info.md' for the current weather."
+  ]
+ ],
+ "roles": [
+  [
+   "path",
+   "src/google/adk/a2a/agent/interceptors/__init__.py"
+  ],
+  [
+   "path",
+   "src/google/adk/agents/callback_context.py"
+  ],
+  [
+   "path",
+   "src/google/adk/agents/llm/__init__.py"
+  ],
+  [
+   "path",
+   "src/google/adk/agents/llm/task/__init__.py"
+  ]
+ ],
+ "gates": [
+  [
+   "check",
+   "if we need the processor: output_schema + tools + cannot use output"
+  ]
+ ],
+ "prompts": [
+  [
+   "path",
+   ".agents/skills/adk-architecture/references/architecture-runner-roles.md"
+  ],
+  [
+   "path",
+   "contributing/samples/environment_and_skills/e2b_env_skill_toolset/skills/calc-skill/SKILL.md"
+  ],
+  [
+   "path",
+   "contributing/samples/environment_and_skills/e2b_env_skill_toolset/skills/text-skill/SKILL.md"
+  ],
+  [
+   "path",
+   "contributing/samples/environment_and_skills/e2b_env_skill_toolset/skills/text-skill/scripts/format.sh"
+  ],
+  [
+   "path",
+   "contributing/samples/environment_and_skills/local_env_skill_toolset/skills/calc-skill/SKILL.md"
+  ],
+  [
+   "path",
+   "contributing/samples/environment_and_skills/local_env_skill_toolset/skills/text-skill/SKILL.md"
+  ],
+  [
+   "path",
+   "contributing/samples/environment_and_skills/local_env_skill_toolset/skills/text-skill/scripts/format.sh"
+  ],
+  [
+   "path",
+   "contributing/samples/environment_and_skills/local_environment_skill/skills/weather-skill/SKILL.md"
+  ],
+  [
+   "path",
+   "contributing/samples/environment_and_skills/local_environment_skill/skills/weather-skill/references/weather_info.md"
+  ],
+  [
+   "path",
+   "contributing/samples/environment_and_skills/skills/__init__.py"
+  ],
+  [
+   "path",
+   "contributing/samples/environment_and_skills/skills/skills/weather-skill/SKILL.md"
+  ],
+  [
+   "path",
+   "contributing/samples/environment_and_skills/skills/skills/weather-skill/references/weather_info.md"
+  ],
+  [
+   "path",
+   "contributing/samples/environment_and_skills/skills_agent/skills/weather-skill/SKILL.md"
+  ],
+  [
+   "path",
+   "contributing/samples/environment_and_skills/skills_agent/skills/weather-skill/references/weather_info.md"
+  ],
+  [
+   "path",
+   "src/google/adk/flows/llm_flows/prompt/__init__.py"
+  ],
+  [
+   "path",
+   "src/google/adk/flows/llm_flows/prompt/_dynamic_instructions.py"
+  ],
+  [
+   "path",
+   "src/google/adk/flows/llm_flows/prompt/_identity.py"
+  ],
+  [
+   "path",
+   "src/google/adk/flows/llm_flows/prompt/_instructions.py"
+  ],
+  [
+   "path",
+   "src/google/adk/flows/llm_flows/prompt/_instructions_utils.py"
+  ],
+  [
+   "path",
+   "src/google/adk/flows/llm_flows/prompt/_schema.py"
+  ],
+  [
+   "path",
+   "src/google/adk/skills/README.md"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Runner vs NodeRunner vs Workflow"
+  ],
+  [
+   "heading",
+   "Copyright 2026 Google LLC"
+  ],
+  [
+   "heading",
+   "# Licensed under the Apache License, Version 2.0 (the \"License\");"
+  ],
+  [
+   "heading",
+   "you may not use this file except in compliance with the License."
+  ],
+  [
+   "heading",
+   "You may obtain a copy of the License at"
+  ],
+  [
+   "heading",
+   "#     http://www.apache.org/licenses/LICENSE-2.0"
+  ],
+  [
+   "heading",
+   "# Unless required by applicable law or agreed to in writing, software"
+  ],
+  [
+   "heading",
+   "distributed under the License is distributed on an \"AS IS\" BASIS,"
+  ],
+  [
+   "heading",
+   "WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied."
+  ],
+  [
+   "heading",
+   "See the License for the specific language governing permissions and"
+  ],
+  [
+   "heading",
+   "limitations under the License."
+  ],
+  [
+   "heading",
+   "Weather Information"
+  ],
+  [
+   "heading",
+   "Keep ReadonlyContext for backward compatibility"
+  ],
+  [
+   "heading",
+   "CallbackContext is unified into Context"
+  ],
+  [
+   "heading",
+   "ADK Skills"
+  ],
+  [
+   "heading",
+   "Overview"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 1,
+  "roles": 4,
+  "gates": 1,
+  "prompts": 21,
+  "headings": 16
+ },
+ "structure_found": true
+}

@@ -1,0 +1,250 @@
+{
+ "id": "curie-eng-curie",
+ "full_name": "curie-eng/curie",
+ "url": "https://github.com/curie-eng/curie",
+ "group": "imported factory",
+ "license": "Apache-2.0",
+ "content_redistributed": true,
+ "files": [
+  "apps/worker/Dockerfile.dockerignore",
+  "apps/worker/pyproject.toml",
+  "apps/worker/schema/eval-cases.example.json",
+  "apps/worker/schema/trajectory.schema.json",
+  "apps/worker/src/curie_connector_proxy/__init__.py",
+  "apps/worker/src/curie_connector_proxy/__main__.py",
+  "apps/worker/src/curie_worker/__init__.py",
+  "apps/worker/src/curie_worker/__main__.py",
+  "apps/worker/src/curie_worker/action_wording.py",
+  "apps/worker/src/curie_worker/api_retry.py",
+  "apps/worker/src/curie_worker/caller_token.py",
+  "apps/worker/src/curie_worker/connector_grant.py",
+  "apps/worker/src/curie_worker/dead_letter_alert.py",
+  "apps/worker/src/curie_worker/eval/__init__.py",
+  "apps/worker/src/curie_worker/eval/__main__.py",
+  "apps/worker/src/curie_worker/eval/trajectory.py",
+  "apps/worker/src/curie_worker/heartbeat.py",
+  "apps/worker/src/curie_worker/mrkdwn.py",
+  "apps/worker/src/curie_worker/sandbox/__init__.py",
+  "apps/worker/src/curie_worker/schema_startup.py",
+  "apps/worker/src/curie_worker/slack_tokens.py",
+  "docs/adr/evidence/0143-custom-connector-spike/bundle/skills/stubfin/SKILL.md",
+  "examples/github-issues/skills/github-issues/SKILL.md",
+  "examples/text-stats-engine/skills/text-stats/SKILL.md",
+  "examples/weather/skills/weather/SKILL.md"
+ ],
+ "stages": [],
+ "roles": [
+  [
+   "path",
+   "apps/worker/Dockerfile.dockerignore"
+  ],
+  [
+   "path",
+   "apps/worker/pyproject.toml"
+  ],
+  [
+   "path",
+   "apps/worker/schema/eval-cases.example.json"
+  ],
+  [
+   "path",
+   "apps/worker/schema/trajectory.schema.json"
+  ],
+  [
+   "path",
+   "apps/worker/src/curie_connector_proxy/__init__.py"
+  ],
+  [
+   "path",
+   "apps/worker/src/curie_connector_proxy/__main__.py"
+  ],
+  [
+   "path",
+   "apps/worker/src/curie_worker/__init__.py"
+  ],
+  [
+   "path",
+   "apps/worker/src/curie_worker/__main__.py"
+  ],
+  [
+   "path",
+   "apps/worker/src/curie_worker/action_wording.py"
+  ],
+  [
+   "path",
+   "apps/worker/src/curie_worker/api_retry.py"
+  ],
+  [
+   "path",
+   "apps/worker/src/curie_worker/caller_token.py"
+  ],
+  [
+   "path",
+   "apps/worker/src/curie_worker/connector_grant.py"
+  ],
+  [
+   "path",
+   "apps/worker/src/curie_worker/dead_letter_alert.py"
+  ],
+  [
+   "path",
+   "apps/worker/src/curie_worker/eval/__init__.py"
+  ],
+  [
+   "path",
+   "apps/worker/src/curie_worker/eval/__main__.py"
+  ],
+  [
+   "path",
+   "apps/worker/src/curie_worker/eval/trajectory.py"
+  ],
+  [
+   "path",
+   "apps/worker/src/curie_worker/heartbeat.py"
+  ],
+  [
+   "path",
+   "apps/worker/src/curie_worker/mrkdwn.py"
+  ],
+  [
+   "path",
+   "apps/worker/src/curie_worker/sandbox/__init__.py"
+  ],
+  [
+   "path",
+   "apps/worker/src/curie_worker/schema_startup.py"
+  ],
+  [
+   "path",
+   "apps/worker/src/curie_worker/slack_tokens.py"
+  ]
+ ],
+ "gates": [],
+ "prompts": [
+  [
+   "path",
+   "docs/adr/evidence/0143-custom-connector-spike/bundle/skills/stubfin/SKILL.md"
+  ],
+  [
+   "path",
+   "examples/github-issues/skills/github-issues/SKILL.md"
+  ],
+  [
+   "path",
+   "examples/text-stats-engine/skills/text-stats/SKILL.md"
+  ],
+  [
+   "path",
+   "examples/weather/skills/weather/SKILL.md"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Per-Dockerfile ignore (BuildKit honors <dockerfile>.dockerignore over the"
+  ],
+  [
+   "heading",
+   "context-root .dockerignore). These app images build from the REPO ROOT to"
+  ],
+  [
+   "heading",
+   "reach the uv workspace, so this trims the root context to what the Python"
+  ],
+  [
+   "heading",
+   "build needs -- the uv.lock, member pyproject.tomls, and Python sources stay;"
+  ],
+  [
+   "heading",
+   "the heavy non-Python trees are dropped."
+  ],
+  [
+   "heading",
+   "A filename or path containing an identifier is content, not a tool reference."
+  ],
+  [
+   "heading",
+   "A period followed by whitespace, closing punctuation or end is sentence prose."
+  ],
+  [
+   "heading",
+   "ADR 0178 decision 1: lowercase hyphenated UUID text, one spelling."
+  ],
+  [
+   "heading",
+   "Fenced code blocks (```...```) are copied verbatim. Captured so re.split keeps"
+  ],
+  [
+   "heading",
+   "the fences in the output stream."
+  ],
+  [
+   "heading",
+   "Inline code spans (`...`) within a non-fenced segment, likewise protected."
+  ],
+  [
+   "heading",
+   "**bold** -> *bold* (Slack bold is a single asterisk)."
+  ],
+  [
+   "heading",
+   "[text](url) -> <url|text>."
+  ],
+  [
+   "heading",
+   "ATX headings (# .. ######) -> a bold line; Slack has no heading syntax."
+  ],
+  [
+   "heading",
+   "List bullets (- item / * item) -> the bullet character; Slack mrkdwn has no"
+  ],
+  [
+   "heading",
+   "list syntax. Leading whitespace is preserved so nested bullets stay indented."
+  ],
+  [
+   "heading",
+   "The trailing space is required, which excludes *italic* (no space after *)."
+  ],
+  [
+   "heading",
+   "Invoices"
+  ],
+  [
+   "heading",
+   "How to answer"
+  ],
+  [
+   "heading",
+   "GitHub issue triage"
+  ],
+  [
+   "heading",
+   "When to run"
+  ],
+  [
+   "heading",
+   "Notes"
+  ],
+  [
+   "heading",
+   "Text statistics"
+  ],
+  [
+   "heading",
+   "Weather"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 21,
+  "gates": 0,
+  "prompts": 4,
+  "headings": 25
+ },
+ "structure_found": true
+}

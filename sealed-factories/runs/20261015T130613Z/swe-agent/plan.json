@@ -1,0 +1,133 @@
+{
+ "id": "swe-agent",
+ "full_name": "SWE-agent/SWE-agent",
+ "url": "https://github.com/SWE-agent/SWE-agent",
+ "group": "AI-focused factory",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  ".cursor/rules/general.mdc",
+  ".cursor/rules/project-overview.mdc",
+  "config/benchmarks/250225_anthropic_filemap_simple_review.yaml",
+  "config/benchmarks/250522_anthropic_filemap_simple_review.yaml",
+  "config/benchmarks/250526_anthropic_filemap_simple_review_sbl.yaml",
+  "config/benchmarks/anthropic_filemap_multilingual.yaml",
+  "config/default.yaml",
+  "config/default_backticks.yaml",
+  "config/demo/default.yaml",
+  "config/demo/no_instructions.yaml",
+  "config/demo/only_bash.yaml",
+  "config/exotic/default_shell.yaml",
+  "config/human/human.yaml",
+  "config/human/human_demo.yaml",
+  "docs/reference/agent.md",
+  "sweagent/agent/action_sampler.py",
+  "sweagent/agent/extra/shell_agent.py",
+  "sweagent/agent/history_processors.py",
+  "sweagent/agent/hooks/abstract.py",
+  "sweagent/agent/hooks/status.py",
+  "sweagent/agent/models.py",
+  "sweagent/agent/problem_statement.py",
+  "sweagent/agent/reviewer.py"
+ ],
+ "stages": [
+  [
+   "step",
+   ","
+  ]
+ ],
+ "roles": [
+  [
+   "path",
+   "sweagent/agent/action_sampler.py"
+  ],
+  [
+   "path",
+   "sweagent/agent/extra/shell_agent.py"
+  ],
+  [
+   "path",
+   "sweagent/agent/history_processors.py"
+  ],
+  [
+   "path",
+   "sweagent/agent/hooks/abstract.py"
+  ],
+  [
+   "path",
+   "sweagent/agent/hooks/status.py"
+  ],
+  [
+   "path",
+   "sweagent/agent/models.py"
+  ],
+  [
+   "path",
+   "sweagent/agent/problem_statement.py"
+  ],
+  [
+   "path",
+   "sweagent/agent/reviewer.py"
+  ]
+ ],
+ "gates": [
+  [
+   "check",
+   "whether total cost or instance cost limits have been exceeded"
+  ]
+ ],
+ "prompts": [],
+ "headings": [
+  [
+   "heading",
+   "The agent class"
+  ],
+  [
+   "heading",
+   "Utility functions"
+  ],
+  [
+   "heading",
+   "-----------------"
+  ],
+  [
+   "heading",
+   "History processors"
+  ],
+  [
+   "heading",
+   "------------------"
+  ],
+  [
+   "heading",
+   "Constants for image processing"
+  ],
+  [
+   "heading",
+   "--- INTERFACES ---"
+  ],
+  [
+   "heading",
+   "--- CONFIGS ---"
+  ],
+  [
+   "heading",
+   "--- IMPLEMENTATIONS ---"
+  ],
+  [
+   "heading",
+   "todo: Couldn't I just replace the whole thing with Jinja templates?"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 23,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 1,
+  "roles": 8,
+  "gates": 1,
+  "prompts": 0,
+  "headings": 10
+ },
+ "structure_found": true
+}

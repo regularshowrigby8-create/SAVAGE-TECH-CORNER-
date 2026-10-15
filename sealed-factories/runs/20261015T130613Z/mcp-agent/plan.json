@@ -1,0 +1,142 @@
+{
+ "id": "mcp-agent",
+ "full_name": "lastmile-ai/mcp-agent",
+ "url": "https://github.com/lastmile-ai/mcp-agent",
+ "group": "AI-focused factory",
+ "license": "Apache-2.0",
+ "content_redistributed": true,
+ "files": [
+  "examples/basic/agent_factory/main.py",
+  "examples/cloud/hello_world/main.py",
+  "examples/human_input/temporal/worker.py",
+  "examples/langchain/main.py",
+  "examples/mcp/mcp_elicitation/main.py",
+  "examples/mcp/mcp_elicitation/temporal/worker.py",
+  "examples/mcp/mcp_sse/main.py",
+  "examples/oauth/pre_authorize/worker.py",
+  "examples/temporal/main.py",
+  "examples/tracing/agent/README.md",
+  "examples/tracing/agent/main.py",
+  "examples/tracing/agent/mcp_agent.config.yaml",
+  "examples/tracing/agent/mcp_agent.secrets.yaml.example",
+  "examples/tracing/agent/requirements.txt",
+  "examples/tracing/mcp/main.py",
+  "examples/tracing/temporal/main.py",
+  "src/mcp_agent/agents/agent_spec.py",
+  "src/mcp_agent/cli/cloud/commands/auth/logout/main.py",
+  "src/mcp_agent/data/examples/cloud/hello_world/main.py",
+  "src/mcp_agent/workflows/orchestrator/orchestrator.py",
+  "src/mcp_agent/workflows/orchestrator/orchestrator_models.py",
+  "src/mcp_agent/workflows/orchestrator/orchestrator_prompts.py",
+  "src/mcp_agent/workflows/swarm/swarm.py",
+  "src/mcp_agent/workflows/swarm/swarm_anthropic.py",
+  "src/mcp_agent/workflows/swarm/swarm_openai.py"
+ ],
+ "stages": [
+  [
+   "path",
+   "src/mcp_agent/workflows/orchestrator/orchestrator.py"
+  ],
+  [
+   "path",
+   "src/mcp_agent/workflows/orchestrator/orchestrator_models.py"
+  ],
+  [
+   "path",
+   "src/mcp_agent/workflows/orchestrator/orchestrator_prompts.py"
+  ],
+  [
+   "path",
+   "src/mcp_agent/workflows/swarm/swarm.py"
+  ],
+  [
+   "path",
+   "src/mcp_agent/workflows/swarm/swarm_anthropic.py"
+  ],
+  [
+   "path",
+   "src/mcp_agent/workflows/swarm/swarm_openai.py"
+  ]
+ ],
+ "roles": [
+  [
+   "path",
+   "examples/tracing/agent/README.md"
+  ],
+  [
+   "path",
+   "examples/tracing/agent/main.py"
+  ],
+  [
+   "path",
+   "examples/tracing/agent/mcp_agent.config.yaml"
+  ],
+  [
+   "path",
+   "examples/tracing/agent/mcp_agent.secrets.yaml.example"
+  ],
+  [
+   "path",
+   "examples/tracing/agent/requirements.txt"
+  ],
+  [
+   "path",
+   "src/mcp_agent/agents/agent_spec.py"
+  ],
+  [
+   "agent",
+   "=Agent("
+  ],
+  [
+   "path",
+   "src/mcp_agent/workflows/swarm/swarm.py"
+  ],
+  [
+   "path",
+   "src/mcp_agent/workflows/swarm/swarm_anthropic.py"
+  ],
+  [
+   "path",
+   "src/mcp_agent/workflows/swarm/swarm_openai.py"
+  ]
+ ],
+ "gates": [],
+ "prompts": [],
+ "headings": [
+  [
+   "heading",
+   "Initialize logging"
+  ],
+  [
+   "heading",
+   "MCP Agent example"
+  ],
+  [
+   "heading",
+   "Exporting to Collector"
+  ],
+  [
+   "heading",
+   "Settings loaded from mcp_agent.config.yaml/mcp_agent.secrets.yaml"
+  ],
+  [
+   "heading",
+   "Core framework dependency"
+  ],
+  [
+   "heading",
+   "Additional dependencies specific to this example"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 6,
+  "roles": 10,
+  "gates": 0,
+  "prompts": 0,
+  "headings": 6
+ },
+ "structure_found": true
+}
