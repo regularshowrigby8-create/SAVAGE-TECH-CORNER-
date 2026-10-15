@@ -119,13 +119,13 @@ jobs:
             echo "pushed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          # The body is one line on purpose: a continuation line that starts at column 0 would end the
+          # block scalar this script lives in, and the workflow file would stop being valid YAML (that
+          # is exactly how this file was rejected the first time it was pushed).
           git -c user.name="github-actions[bot]" \
               -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
               commit -m "chore(factory): grow the sealed set from GitHub" \
-              -m "Produced by the Factory Growth workflow from the live API: licences re-read from each
-repository's own text, further factories imported, the changed slices re-vendored, the set
-re-sealed and run in plan mode, and the result judged against the ledger the committed set
-already reached. Every step and every test ran in the job that made this commit."
+              -m "Produced by the Factory Growth workflow from the live API: licences re-read from each repository's own text, further factories imported, the changed slices re-vendored, the set re-sealed and run in plan mode, and the result judged against the ledger the committed set already reached. Every step and every test ran in the job that made this commit."
           git push origin "HEAD:${BRANCH}"
           echo "pushed=true" >> "$GITHUB_OUTPUT"
           echo "head=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
