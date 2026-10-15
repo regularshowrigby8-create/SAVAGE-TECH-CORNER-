@@ -7,7 +7,7 @@ Two kinds of entry, and the difference matters:
 * **content redistributed** — the licence permits it (MIT, Apache-2.0, BSD, ISC, CC0, Unlicense, 0BSD) and the licence text is included in `licenses/`. The vendored files are in `payloads/<id>.tar.gz`, hash-sealed and never merged into this product's source tree.
 * **blueprint only** — no licence was published, or the licence is one this repository cannot redistribute (AGPL, GPL) or that GitHub could not identify. **Not one byte of their content is redistributed**: the component records the commit, the file structure and the hashes, and re-implements the factory's design here. Their licence text is included when one exists, because attribution is the point.
 
-Sealed: 2026-10-14T20:56:09Z · component version 1.0.0 · 149 factories · 113 with redistributed content · 36 blueprint-only
+Sealed: 2026-10-15T07:33:09Z · component version 1.0.0 · 155 factories · 119 with redistributed content · 36 blueprint-only
 
 | factory | repository | licence | commit | files | bytes | redistribution |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -47,6 +47,7 @@ Sealed: 2026-10-14T20:56:09Z · component version 1.0.0 · 149 factories · 113 
 | `dbt-mcp` | [dbt-labs/dbt-mcp](https://github.com/dbt-labs/dbt-mcp) | Apache-2.0 | `a9db3f0826f8` | 25 | 0 | content redistributed |
 | `deep-research` | [dzhng/deep-research](https://github.com/dzhng/deep-research) | MIT | `1f8f3e285bbc` | 1 | 0 | content redistributed |
 | `disler-inkwell-agent-sandboxes-and-software-factory` | [disler/inkwell-agent-sandboxes-and-software-factory](https://github.com/disler/inkwell-agent-sandboxes-and-software-factory) | MIT | `92f170181099` | 25 | 31896 | content redistributed |
+| `disler-super-simple-software-factory` | [disler/super-simple-software-factory](https://github.com/disler/super-simple-software-factory) | MIT | `de31374882e7` | 25 | 23993 | content redistributed |
 | `exa-mcp-server` | [exa-labs/exa-mcp-server](https://github.com/exa-labs/exa-mcp-server) | MIT | `e9c3b0126a33` | 17 | 0 | content redistributed |
 | `fabro-sh-fabro` | [fabro-sh/fabro](https://github.com/fabro-sh/fabro) | MIT | `de7ad06de530` | 25 | 58898 | content redistributed |
 | `fastmcp` | [jlowin/fastmcp](https://github.com/PrefectHQ/fastmcp) | Apache-2.0 | `e2fcc412001f` | 25 | 0 | content redistributed |
@@ -55,12 +56,14 @@ Sealed: 2026-10-14T20:56:09Z · component version 1.0.0 · 149 factories · 113 
 | `finchello-tetra` | [finchello/tetra](https://github.com/finchello/tetra) | MIT | `6e3b1f3dea76` | 5 | 34826 | content redistributed |
 | `finna-finn-loop` | [finna/Finn-loop](https://github.com/finna/Finn-loop) | MIT | `7941b62c9461` | 4 | 30740 | content redistributed |
 | `firecrawl-mcp-server` | [mendableai/firecrawl-mcp-server](https://github.com/firecrawl/firecrawl-mcp-server) | MIT | `83f7e6a74446` | 4 | 0 | content redistributed |
+| `foundatron-octopusgarden` | [foundatron/octopusgarden](https://github.com/foundatron/octopusgarden) | MIT | `1414be0be9b9` | 5 | 19491 | content redistributed |
 | `frankiezheng110-superteam` | [frankiezheng110/superteam](https://github.com/frankiezheng110/superteam) | MIT | `41b14b173a27` | 25 | 13021 | content redistributed |
 | `getcrew44-crew44` | [getcrew44/crew44](https://github.com/getcrew44/crew44) | MIT | `cfcf1e74d9a2` | 25 | 55471 | content redistributed |
 | `gethuman-sh-human` | [gethuman-sh/human](https://github.com/gethuman-sh/human) | MIT | `11be4294a815` | 25 | 137628 | content redistributed |
 | `github-codeql` | [github/codeql](https://github.com/github/codeql) | MIT | `dd4405c2c2a8` | 22 | 128492 | content redistributed |
 | `github-mcp-server` | [github/github-mcp-server](https://github.com/github/github-mcp-server) | MIT | `c59e8c199efb` | 3 | 0 | content redistributed |
 | `gmail-mcp-server` | [GongRzhe/Gmail-MCP-Server](https://github.com/GongRzhe/Gmail-MCP-Server) | MIT | `a890d19189bb` | 3 | 0 | content redistributed |
+| `googleworkspace-cli` | [googleworkspace/cli](https://github.com/googleworkspace/cli) | Apache-2.0 | `a3768d0e82ad` | 25 | 21316 | content redistributed |
 | `gratefuljinx77-speckit-claude` | [GratefulJinx77/speckit-claude](https://github.com/GratefulJinx77/speckit-claude) | NOASSERTION | `8f42211b0e82` | 15 | 139857 | blueprint only |
 | `gregoryjing-agentflow` | [gregoryjing/agentflow](https://github.com/gregoryjing/agentflow) | NOASSERTION | `e2c1011ab4fe` | 12 | 68515 | blueprint only |
 | `grimgrimberg-daily-movers-agent` | [grimgrimberg/daily-movers-agent](https://github.com/grimgrimberg/daily-movers-agent) | MIT | `a8d927cf899f` | 8 | 80448 | content redistributed |
@@ -105,6 +108,7 @@ Sealed: 2026-10-14T20:56:09Z · component version 1.0.0 · 149 factories · 113 
 | `mvanhorn-last30days-skill` | [mvanhorn/last30days-skill](https://github.com/mvanhorn/last30days-skill) | MIT | `f4dff26b3b14` | 25 | 62358 | content redistributed |
 | `n8n-mcp` | [czlonkowski/n8n-mcp](https://github.com/czlonkowski/n8n-mcp) | MIT | `64c8093ad6a1` | 25 | 0 | content redistributed |
 | `notion-mcp-server` | [makenotion/notion-mcp-server](https://github.com/makenotion/notion-mcp-server) | MIT | `730ae781ba28` | 6 | 0 | content redistributed |
+| `nvidia-skillspector` | [NVIDIA/SkillSpector](https://github.com/NVIDIA/SkillSpector) | Apache-2.0 | `240421219409` | 3 | 96997 | content redistributed |
 | `openai-agents-js` | [openai/openai-agents-js](https://github.com/openai/openai-agents-js) | MIT | `89a9ddf1e241` | 25 | 0 | content redistributed |
 | `openai-agents-python` | [openai/openai-agents-python](https://github.com/openai/openai-agents-python) | MIT | `1c1a28df92f3` | 25 | 0 | content redistributed |
 | `openai-openai-agents-python` | [openai/openai-agents-python](https://github.com/openai/openai-agents-python) | MIT | `24ebf1cb0f4b` | 25 | 99752 | content redistributed |
@@ -124,6 +128,7 @@ Sealed: 2026-10-14T20:56:09Z · component version 1.0.0 · 149 factories · 113 
 | `quickstart-resources` | [modelcontextprotocol/quickstart-resources](https://github.com/modelcontextprotocol/quickstart-resources) | NOASSERTION | `a4681cff0003` | 3 | 0 | blueprint only |
 | `rabya89-cv-evaluator` | [rabya89/cv_evaluator](https://github.com/rabya89/cv_evaluator) | NOASSERTION | `54b1a835282a` | 12 | 56620 | blueprint only |
 | `renovatebot-renovate` | [renovatebot/renovate](https://github.com/renovatebot/renovate) | AGPL-3.0 | `135919fed8b4` | 25 | 2951 | blueprint only |
+| `renseiai-donmai-libraries` | [RenseiAI/donmai-libraries](https://github.com/RenseiAI/donmai-libraries) | MIT | `ff0b52fe1771` | 25 | 61737 | content redistributed |
 | `rocketride-org-rocketride-server` | [rocketride-org/rocketride-server](https://github.com/rocketride-org/rocketride-server) | MIT | `bd9b6fb000d4` | 25 | 55156 | content redistributed |
 | `roxabi-roxabi-factory` | [Roxabi/roxabi-factory](https://github.com/Roxabi/roxabi-factory) | AGPL-3.0 | `86257722e49d` | 25 | 39508 | blueprint only |
 | `rukenzilan-4-agent-software-development-pipeline` | [RUKENZILAN/4-Agent-Software-Development-Pipeline](https://github.com/RUKENZILAN/4-Agent-Software-Development-Pipeline) | MIT | `8ed05d015d7a` | 1 | 4308 | content redistributed |
@@ -160,6 +165,7 @@ Sealed: 2026-10-14T20:56:09Z · component version 1.0.0 · 149 factories · 113 
 | `vaibhav07772-autonomous-ai-software-factory` | [vaibhav07772/Autonomous-AI-Software-Factory](https://github.com/vaibhav07772/Autonomous-AI-Software-Factory) | NOASSERTION | `399f7cfb7dfc` | 4 | 10482 | blueprint only |
 | `vercel-labs-eve-software-factory-template` | [vercel-labs/eve-software-factory-template](https://github.com/vercel-labs/eve-software-factory-template) | MIT | `6bc5febab95d` | 25 | 11942 | content redistributed |
 | `watt-mind-factory` | [watt-mind/factory](https://github.com/watt-mind/factory) | Apache-2.0 | `d57be4bfbfc4` | 25 | 9945 | content redistributed |
+| `wheresryan22-anatomy` | [wheresryan22/anatomy](https://github.com/wheresryan22/anatomy) | MIT | `bc943e40c599` | 3 | 56602 | content redistributed |
 
 ## What this component is not
 

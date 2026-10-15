@@ -1,21 +1,21 @@
 {
  "seal_version": "1.0.0",
- "sealed_at": "2026-10-14T20:56:09Z",
+ "sealed_at": "2026-10-15T07:33:09Z",
  "component": "sealed-factories",
  "description": "The imported factory set. Dropped in or removed as one unit; runs before the repository's own factories and feeds them.",
  "contents": {
-  "factories": 149,
-  "with_payload": 149,
-  "content_redistributed": 113,
+  "factories": 155,
+  "with_payload": 155,
+  "content_redistributed": 119,
   "blueprint_only": 36,
-  "with_license_text": 127,
-  "ai_worker_factories": 112,
+  "with_license_text": 133,
+  "ai_worker_factories": 117,
   "by_group": {
    "AI-focused factory": 23,
    "MCP tool server": 42,
-   "imported factory": 84
+   "imported factory": 90
   },
-  "payload_bytes": 2225134,
+  "payload_bytes": 2321327,
   "component_files": 10
  },
  "pipeline_position": {
@@ -39,16 +39,23 @@
    "tools/factory/sealed_factory_runtime.py",
    "tools/factory/vendor_imported_factories.py",
    "tools/factory/vendor_mcp_servers.py",
+   "tools/factory/vendor_needed.py",
    "tools/factory/imported_factories.json",
    "tools/factory/imported_mcp_servers.json",
-   "tools/factory/imported_ai_factories.json"
+   "tools/factory/imported_ai_factories.json",
+   "tools/ci/factory_growth.sh",
+   "tools/ci/factory_growth_judge.py"
   ],
   "tests": [
    "shell/tests/test_sealed_factory_runtime.py",
    "shell/tests/test_sealed_environment.py",
    "shell/tests/test_imported_factories.py",
    "shell/tests/test_license_rescan.py",
-   "shell/tests/test_factory_discovery.py"
+   "shell/tests/test_factory_discovery.py",
+   "shell/tests/test_factory_growth.py"
+  ],
+  "workflows": [
+   ".github/workflows/factory-growth.yml"
   ],
   "docs": [
    "docs/factory/MULTISTAGE_FACTORY.md"
@@ -63,7 +70,7 @@
    ".github/",
    ".claude/"
   ],
-  "note": "Nothing outside sealed-factories/ imports it; the belt reports it as ABSENT and continues with the existing factories."
+  "note": "The growth pipeline and the tooling above exist only to grow and serve this set, so they are removed with it; nothing in shell/, factories/, factory-2/ or factory-3/ reads it, and the belt reports it as ABSENT and continues with the existing factories."
  },
  "component_files": [
   {
@@ -1052,6 +1059,37 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
+   "id": "disler-super-simple-software-factory",
+   "full_name": "disler/super-simple-software-factory",
+   "url": "https://github.com/disler/super-simple-software-factory",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "disler-super-simple-software-factory-LICENSE",
+   "import_class": "asset-import",
+   "commit": "de31374882e7a4e3e5b7bb9bd09e69dc2f779356",
+   "snapshot": "2026-10-15",
+   "files": 25,
+   "bytes": 23993,
+   "content_redistributed": true,
+   "payload": "payloads/disler-super-simple-software-factory.tar.gz",
+   "payload_sha256": "4c84ee0f98bef9663e1556db07a541a5563c70d53e551f75671ae3b30e5cd7df",
+   "payload_bytes": 11607,
+   "providers": [
+    "anthropic",
+    "openai",
+    "google"
+   ],
+   "runtime": [
+    "node",
+    "python"
+   ],
+   "entrypoints": [
+    ".claude/skills/sssf/apps/visualizer/src/main.ts"
+   ],
+   "ai_workers": true
+  },
+  {
    "group": "MCP tool server",
    "id": "exa-mcp-server",
    "full_name": "exa-labs/exa-mcp-server",
@@ -1261,6 +1299,32 @@
   },
   {
    "group": "imported factory",
+   "id": "foundatron-octopusgarden",
+   "full_name": "foundatron/octopusgarden",
+   "url": "https://github.com/foundatron/octopusgarden",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "foundatron-octopusgarden-LICENSE",
+   "import_class": "asset-import",
+   "commit": "1414be0be9b9dfd1af80cd1a80f056255b91695c",
+   "snapshot": "2026-10-15",
+   "files": 5,
+   "bytes": 19491,
+   "content_redistributed": true,
+   "payload": "payloads/foundatron-octopusgarden.tar.gz",
+   "payload_sha256": "56a5d14ea3120cc218baf37a0156a914fa531627028f07b3f337ffbc3ad8e080",
+   "payload_bytes": 8872,
+   "providers": [
+    "openai",
+    "anthropic",
+    "ollama"
+   ],
+   "runtime": [],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
    "id": "frankiezheng110-superteam",
    "full_name": "frankiezheng110/superteam",
    "url": "https://github.com/frankiezheng110/superteam",
@@ -1404,6 +1468,28 @@
    "runtime": [],
    "entrypoints": [],
    "ai_workers": true
+  },
+  {
+   "group": "imported factory",
+   "id": "googleworkspace-cli",
+   "full_name": "googleworkspace/cli",
+   "url": "https://github.com/googleworkspace/cli",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "googleworkspace-cli-LICENSE",
+   "import_class": "asset-import",
+   "commit": "a3768d0e82ad83cca2da97724e46bea4ff0e6dbd",
+   "snapshot": "2026-10-15",
+   "files": 25,
+   "bytes": 21316,
+   "content_redistributed": true,
+   "payload": "payloads/googleworkspace-cli.tar.gz",
+   "payload_sha256": "c27b76fe27429e8541b632e3b01cdf70cf87bb6935494f6adc82ecee8baa383d",
+   "payload_bytes": 7330,
+   "providers": [],
+   "runtime": [],
+   "entrypoints": [],
+   "ai_workers": false
   },
   {
    "group": "imported factory",
@@ -2605,6 +2691,39 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
+   "id": "nvidia-skillspector",
+   "full_name": "NVIDIA/SkillSpector",
+   "url": "https://github.com/NVIDIA/SkillSpector",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "nvidia-skillspector-LICENSE",
+   "import_class": "asset-import",
+   "commit": "240421219409dc0bafef9f618a10d80c2d7e83a3",
+   "snapshot": "2026-10-15",
+   "files": 3,
+   "bytes": 96997,
+   "content_redistributed": true,
+   "payload": "payloads/nvidia-skillspector.tar.gz",
+   "payload_sha256": "037356bbbf68d1c7072f266f4d57578aad911e490f6bd601a42ea77505e6f7e4",
+   "payload_bytes": 32680,
+   "providers": [
+    "openai",
+    "anthropic",
+    "ollama",
+    "google",
+    "azure-openai",
+    "bedrock",
+    "groq",
+    "vllm"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
    "group": "AI-focused factory",
    "id": "openai-agents-js",
    "full_name": "openai/openai-agents-js",
@@ -3099,6 +3218,33 @@
    ],
    "entrypoints": [],
    "ai_workers": false
+  },
+  {
+   "group": "imported factory",
+   "id": "renseiai-donmai-libraries",
+   "full_name": "RenseiAI/donmai-libraries",
+   "url": "https://github.com/RenseiAI/donmai-libraries",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "renseiai-donmai-libraries-LICENSE",
+   "import_class": "asset-import",
+   "commit": "ff0b52fe1771b42582258d3e7e1502555bfedbe0",
+   "snapshot": "2026-10-15",
+   "files": 25,
+   "bytes": 61737,
+   "content_redistributed": true,
+   "payload": "payloads/renseiai-donmai-libraries.tar.gz",
+   "payload_sha256": "33d10d0ef2d5b637dc998070bf3e5c8913daa1e412890919943ae21372289f0d",
+   "payload_bytes": 14630,
+   "providers": [
+    "anthropic"
+   ],
+   "runtime": [
+    "node",
+    "shell"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
   },
   {
    "group": "imported factory",
@@ -4055,6 +4201,32 @@
    "runtime": [],
    "entrypoints": [],
    "ai_workers": false
+  },
+  {
+   "group": "imported factory",
+   "id": "wheresryan22-anatomy",
+   "full_name": "wheresryan22/anatomy",
+   "url": "https://github.com/wheresryan22/anatomy",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "wheresryan22-anatomy-LICENSE",
+   "import_class": "asset-import",
+   "commit": "bc943e40c59998be5da61f9d39c6a983b1116099",
+   "snapshot": "2026-10-15",
+   "files": 3,
+   "bytes": 56602,
+   "content_redistributed": true,
+   "payload": "payloads/wheresryan22-anatomy.tar.gz",
+   "payload_sha256": "b1202bda0653a6874b93d6c98ea0b9174782eb357f84ced13b3204f2697639b4",
+   "payload_bytes": 21074,
+   "providers": [
+    "anthropic",
+    "openai",
+    "google"
+   ],
+   "runtime": [],
+   "entrypoints": [],
+   "ai_workers": true
   }
  ]
 }

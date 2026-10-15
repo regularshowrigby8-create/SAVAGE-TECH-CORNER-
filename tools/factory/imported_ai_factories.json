@@ -115,7 +115,8 @@
       ],
       "import_class": "asset-import",
       "snapshot": "2026-10-14",
-      "license_path": "LICENSE"
+      "license_path": "LICENSE",
+      "license_note": "blocked: mixed-with-docs-licence"
     },
     {
       "id": "crewai",

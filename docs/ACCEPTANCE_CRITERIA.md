@@ -886,7 +886,7 @@ status=0; reason=GitHub is not reachable from here: ...` when the API is pointed
   own ordering), and the workflow file itself
 - **Evidence required**: the workflow run URL of the `Factory Growth (GitHub-native)` workflow with a
   green `Grow and verify the sealed factory set` job on the branch, the judge's `factory growth judge:
-  PASS` line in that job's log, and the commit the job pushed
+PASS` line in that job's log, and the commit the job pushed
 
 ## 2. Traceability summary
 

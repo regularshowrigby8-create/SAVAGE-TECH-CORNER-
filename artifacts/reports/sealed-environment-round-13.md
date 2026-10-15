@@ -658,8 +658,8 @@ signal that the screen did come up awake and focused - only the three runner dep
 
 ### 2.11 Growth runs on GitHub now, not in a sandbox
 
-The directive that closed this round was short: *stop running things in the sandbox; everything happens
-on GitHub*. That is not only a working preference — it is the right place for this particular job. The
+The directive that closed this round was short: _stop running things in the sandbox; everything happens
+on GitHub_. That is not only a working preference — it is the right place for this particular job. The
 growth of the sealed set needs the live API, the network, a machine that can hold a long job, and a
 record of what it did; a development sandbox offers none of those reliably, and every run there that
 died mid-way had to be repeated. So the pipeline that grew the set to 149 records is now a workflow:
