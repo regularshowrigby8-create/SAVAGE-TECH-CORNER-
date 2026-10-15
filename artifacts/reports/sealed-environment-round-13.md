@@ -956,6 +956,18 @@ was read after the log holding it was removed. The belt's formatter refused the 
 heading that had lost the blank line before it. Both are fixed in `f7a6723`, and the commit that
 followed quotes its judge and passes.
 
+One failure in this stretch is not the pipeline's and is not fixed. The Android leg went red on
+`8d6d247`, the documentation-only commit that records this section: four of the fifteen instrumented
+tests failed, each of them a 45-second timeout waiting for a screen to take the window focus. The job's
+annotations carry both the summary line (`emulator-5554 - 15 Tests 27/52 completed. (0 skipped) (4
+failed)`) and the reason, verbatim: `timed out after 45000 ms waiting for the HistoryActivity screen to
+come to the front; observed: the screen never took the window focus`. The same job passed on `a23d790`
+minutes earlier with identical application code, and this commit changed one paragraph of a report, so
+what failed is the emulator's window focus - the same behaviour section 2.9 records as hardening rather
+than as a demonstrated fix. It is reported here rather than re-run away: the API refuses a rerun of this
+workflow (`run 38753059564 cannot be rerun; its workflow file may be broken`), so the record is the run
+and what it says.
+
 ## 3. Acceptance criteria covered
 
 | Criterion | What it asserts                                                                                                                 | Test                                                                                                                                       | Evidence               |
