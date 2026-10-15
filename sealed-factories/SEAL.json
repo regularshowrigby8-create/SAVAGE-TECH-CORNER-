@@ -1,21 +1,21 @@
 {
  "seal_version": "1.0.0",
- "sealed_at": "2026-10-15T07:33:09Z",
+ "sealed_at": "2026-10-15T08:03:18Z",
  "component": "sealed-factories",
  "description": "The imported factory set. Dropped in or removed as one unit; runs before the repository's own factories and feeds them.",
  "contents": {
-  "factories": 155,
-  "with_payload": 155,
-  "content_redistributed": 119,
+  "factories": 161,
+  "with_payload": 161,
+  "content_redistributed": 125,
   "blueprint_only": 36,
-  "with_license_text": 133,
-  "ai_worker_factories": 117,
+  "with_license_text": 139,
+  "ai_worker_factories": 121,
   "by_group": {
    "AI-focused factory": 23,
    "MCP tool server": 42,
-   "imported factory": 90
+   "imported factory": 96
   },
-  "payload_bytes": 2321327,
+  "payload_bytes": 2399136,
   "component_files": 10
  },
  "pipeline_position": {
@@ -879,6 +879,57 @@
    "ai_workers": false
   },
   {
+   "group": "imported factory",
+   "id": "comet-ml-opik",
+   "full_name": "comet-ml/opik",
+   "url": "https://github.com/comet-ml/opik",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "comet-ml-opik-LICENSE",
+   "import_class": "asset-import",
+   "commit": "b4b8a0604fcc4f0e8848e4b7250483d7666d9c44",
+   "snapshot": "2026-10-15",
+   "files": 25,
+   "bytes": 4255,
+   "content_redistributed": true,
+   "payload": "payloads/comet-ml-opik.tar.gz",
+   "payload_sha256": "dcda6f6dcb408138549e0f2e632363952f3cd1aabe82bc4ada1fdb0f3ba46eee",
+   "payload_bytes": 3294,
+   "providers": [],
+   "runtime": [
+    "node",
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": false
+  },
+  {
+   "group": "imported factory",
+   "id": "conductor-oss-conductor",
+   "full_name": "conductor-oss/conductor",
+   "url": "https://github.com/conductor-oss/conductor",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "conductor-oss-conductor-LICENSE",
+   "import_class": "asset-import",
+   "commit": "c52919afd0ec2ffde0196afbab10762d2d48ed28",
+   "snapshot": "2026-10-15",
+   "files": 25,
+   "bytes": 16236,
+   "content_redistributed": true,
+   "payload": "payloads/conductor-oss-conductor.tar.gz",
+   "payload_sha256": "81781d334b874338689e9a87f96c93eca793cda9073d8634e473e3989c2b84c7",
+   "payload_bytes": 5955,
+   "providers": [
+    "openai"
+   ],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
    "group": "MCP tool server",
    "id": "context-mode",
    "full_name": "mksglu/context-mode",
@@ -1028,6 +1079,30 @@
    "runtime": [],
    "entrypoints": [],
    "ai_workers": true
+  },
+  {
+   "group": "imported factory",
+   "id": "deepset-ai-haystack",
+   "full_name": "deepset-ai/haystack",
+   "url": "https://github.com/deepset-ai/haystack",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "deepset-ai-haystack-LICENSE",
+   "import_class": "asset-import",
+   "commit": "a05907726aea7dfd1da0bf7428a9eae5f3e49a8e",
+   "snapshot": "2026-10-15",
+   "files": 25,
+   "bytes": 68545,
+   "content_redistributed": true,
+   "payload": "payloads/deepset-ai-haystack.tar.gz",
+   "payload_sha256": "0b0dc7d260ec0552421a5c48fc7dff9db8293c3ca561a4f63b4ecb077a2fdf1d",
+   "payload_bytes": 6458,
+   "providers": [],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": false
   },
   {
    "group": "imported factory",
@@ -2469,6 +2544,33 @@
   },
   {
    "group": "imported factory",
+   "id": "microsoft-agent-framework",
+   "full_name": "microsoft/agent-framework",
+   "url": "https://github.com/microsoft/agent-framework",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "microsoft-agent-framework-LICENSE",
+   "import_class": "asset-import",
+   "commit": "abeed6c62a8cc70e796334a5b490c8e94621f89d",
+   "snapshot": "2026-10-15",
+   "files": 25,
+   "bytes": 9506,
+   "content_redistributed": true,
+   "payload": "payloads/microsoft-agent-framework.tar.gz",
+   "payload_sha256": "3de253b9920b0d21557cba780f57bbd26d7b6067bd8b50aa39fef254eb7d9be6",
+   "payload_bytes": 3697,
+   "providers": [
+    "openai"
+   ],
+   "runtime": [
+    "node",
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
    "id": "mitkox-esf",
    "full_name": "mitkox/esf",
    "url": "https://github.com/mitkox/esf",
@@ -2662,6 +2764,32 @@
     "shell"
    ],
    "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
+   "id": "nanobrowser-nanobrowser",
+   "full_name": "nanobrowser/nanobrowser",
+   "url": "https://github.com/nanobrowser/nanobrowser",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "nanobrowser-nanobrowser-LICENSE",
+   "import_class": "asset-import",
+   "commit": "0296ffa67227a966d1af9c67cbb0aede8adcbda1",
+   "snapshot": "2026-10-15",
+   "files": 21,
+   "bytes": 143409,
+   "content_redistributed": true,
+   "payload": "payloads/nanobrowser-nanobrowser.tar.gz",
+   "payload_sha256": "d2d3cf3ade0a01f2b412e6eb4b9430d1915c62c29cf24d4445eef5e388652aea",
+   "payload_bytes": 43804,
+   "providers": [],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [
+    "entrypoints/offscreen/main.ts"
+   ],
    "ai_workers": true
   },
   {
@@ -4225,6 +4353,34 @@
     "google"
    ],
    "runtime": [],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
+   "id": "yizhiyanhua-ai-fireworks-tech-graph",
+   "full_name": "yizhiyanhua-ai/fireworks-tech-graph",
+   "url": "https://github.com/yizhiyanhua-ai/fireworks-tech-graph",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "yizhiyanhua-ai-fireworks-tech-graph-LICENSE",
+   "import_class": "asset-import",
+   "commit": "31fea364eda5f1852b1175f3d9e29ea31d22dcb4",
+   "snapshot": "2026-10-15",
+   "files": 25,
+   "bytes": 33804,
+   "content_redistributed": true,
+   "payload": "payloads/yizhiyanhua-ai-fireworks-tech-graph.tar.gz",
+   "payload_sha256": "a2ad921cb78a14a854ec844ff788182942dbe92ec0f5431f939a191f3b8c1c6f",
+   "payload_bytes": 14601,
+   "providers": [
+    "openai",
+    "anthropic"
+   ],
+   "runtime": [
+    "python",
+    "node"
+   ],
    "entrypoints": [],
    "ai_workers": true
   }

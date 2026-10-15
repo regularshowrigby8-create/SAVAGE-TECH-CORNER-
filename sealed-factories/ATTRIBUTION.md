@@ -7,7 +7,7 @@ Two kinds of entry, and the difference matters:
 * **content redistributed** — the licence permits it (MIT, Apache-2.0, BSD, ISC, CC0, Unlicense, 0BSD) and the licence text is included in `licenses/`. The vendored files are in `payloads/<id>.tar.gz`, hash-sealed and never merged into this product's source tree.
 * **blueprint only** — no licence was published, or the licence is one this repository cannot redistribute (AGPL, GPL) or that GitHub could not identify. **Not one byte of their content is redistributed**: the component records the commit, the file structure and the hashes, and re-implements the factory's design here. Their licence text is included when one exists, because attribution is the point.
 
-Sealed: 2026-10-15T07:33:09Z · component version 1.0.0 · 155 factories · 119 with redistributed content · 36 blueprint-only
+Sealed: 2026-10-15T08:03:18Z · component version 1.0.0 · 161 factories · 125 with redistributed content · 36 blueprint-only
 
 | factory | repository | licence | commit | files | bytes | redistribution |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -40,12 +40,15 @@ Sealed: 2026-10-15T07:33:09Z · component version 1.0.0 · 155 factories · 119 
 | `cleanwk-agent-pipeline-example` | [cleanwk/agent-pipeline-example](https://github.com/cleanwk/agent-pipeline-example) | Apache-2.0 | `0af8c6cb46f3` | 7 | 5338 | content redistributed |
 | `cloudflare-moltworker` | [cloudflare/moltworker](https://github.com/cloudflare/moltworker) | Apache-2.0 | `7b00c1d72921` | 6 | 47988 | content redistributed |
 | `codebase-memory-mcp` | [DeusData/codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp) | MIT | `0ca6e7d4d8c8` | 25 | 0 | content redistributed |
+| `comet-ml-opik` | [comet-ml/opik](https://github.com/comet-ml/opik) | Apache-2.0 | `b4b8a0604fcc` | 25 | 4255 | content redistributed |
+| `conductor-oss-conductor` | [conductor-oss/conductor](https://github.com/conductor-oss/conductor) | Apache-2.0 | `c52919afd0ec` | 25 | 16236 | content redistributed |
 | `context-mode` | [mksglu/context-mode](https://github.com/mksglu/context-mode) | NOASSERTION | `dbec9809d831` | 25 | 0 | blueprint only |
 | `context7` | [upstash/context7](https://github.com/upstash/context7) | MIT | `3131245817e9` | 25 | 0 | content redistributed |
 | `crewai` | [crewAIInc/crewAI](https://github.com/crewAIInc/crewAI) | MIT | `eb15c66cef12` | 25 | 0 | content redistributed |
 | `curie-eng-curie` | [curie-eng/curie](https://github.com/curie-eng/curie) | Apache-2.0 | `e6c501fda532` | 25 | 37250 | content redistributed |
 | `dbt-mcp` | [dbt-labs/dbt-mcp](https://github.com/dbt-labs/dbt-mcp) | Apache-2.0 | `a9db3f0826f8` | 25 | 0 | content redistributed |
 | `deep-research` | [dzhng/deep-research](https://github.com/dzhng/deep-research) | MIT | `1f8f3e285bbc` | 1 | 0 | content redistributed |
+| `deepset-ai-haystack` | [deepset-ai/haystack](https://github.com/deepset-ai/haystack) | Apache-2.0 | `a05907726aea` | 25 | 68545 | content redistributed |
 | `disler-inkwell-agent-sandboxes-and-software-factory` | [disler/inkwell-agent-sandboxes-and-software-factory](https://github.com/disler/inkwell-agent-sandboxes-and-software-factory) | MIT | `92f170181099` | 25 | 31896 | content redistributed |
 | `disler-super-simple-software-factory` | [disler/super-simple-software-factory](https://github.com/disler/super-simple-software-factory) | MIT | `de31374882e7` | 25 | 23993 | content redistributed |
 | `exa-mcp-server` | [exa-labs/exa-mcp-server](https://github.com/exa-labs/exa-mcp-server) | MIT | `e9c3b0126a33` | 17 | 0 | content redistributed |
@@ -100,6 +103,7 @@ Sealed: 2026-10-15T07:33:09Z · component version 1.0.0 · 155 factories · 119 
 | `mcp-server-neon` | [neondatabase-labs/mcp-server-neon](https://github.com/neondatabase/mcp-server-neon) | MIT | `c79875ec44eb` | 10 | 0 | content redistributed |
 | `mcp-toolbox` | [googleapis/mcp-toolbox](https://github.com/googleapis/mcp-toolbox) | Apache-2.0 | `aaf88413e117` | 23 | 0 | content redistributed |
 | `metagpt` | [geekan/MetaGPT](https://github.com/FoundationAgents/MetaGPT) | MIT | `11cdf466d042` | 25 | 0 | content redistributed |
+| `microsoft-agent-framework` | [microsoft/agent-framework](https://github.com/microsoft/agent-framework) | MIT | `abeed6c62a8c` | 25 | 9506 | content redistributed |
 | `mitkox-esf` | [mitkox/esf](https://github.com/mitkox/esf) | MIT | `0ef8e23484b2` | 25 | 88163 | content redistributed |
 | `mobile-dev-inc-maestro` | [mobile-dev-inc/Maestro](https://github.com/mobile-dev-inc/Maestro) | Apache-2.0 | `df40dea5dee0` | 7 | 90932 | content redistributed |
 | `mohammedabdelshafy-clipops-studio` | [MohammedAbdelshafy/clipops-studio](https://github.com/MohammedAbdelshafy/clipops-studio) | NOASSERTION | `257b3ba28adc` | 1 | 8183 | blueprint only |
@@ -107,6 +111,7 @@ Sealed: 2026-10-15T07:33:09Z · component version 1.0.0 · 155 factories · 119 
 | `muskansoni0214-ai-agent-orchestration-pipeline` | [MuskanSoni0214/ai-agent-orchestration-pipeline](https://github.com/MuskanSoni0214/ai-agent-orchestration-pipeline) | NOASSERTION | `a2ab8b822216` | 14 | 45714 | blueprint only |
 | `mvanhorn-last30days-skill` | [mvanhorn/last30days-skill](https://github.com/mvanhorn/last30days-skill) | MIT | `f4dff26b3b14` | 25 | 62358 | content redistributed |
 | `n8n-mcp` | [czlonkowski/n8n-mcp](https://github.com/czlonkowski/n8n-mcp) | MIT | `64c8093ad6a1` | 25 | 0 | content redistributed |
+| `nanobrowser-nanobrowser` | [nanobrowser/nanobrowser](https://github.com/nanobrowser/nanobrowser) | Apache-2.0 | `0296ffa67227` | 21 | 143409 | content redistributed |
 | `notion-mcp-server` | [makenotion/notion-mcp-server](https://github.com/makenotion/notion-mcp-server) | MIT | `730ae781ba28` | 6 | 0 | content redistributed |
 | `nvidia-skillspector` | [NVIDIA/SkillSpector](https://github.com/NVIDIA/SkillSpector) | Apache-2.0 | `240421219409` | 3 | 96997 | content redistributed |
 | `openai-agents-js` | [openai/openai-agents-js](https://github.com/openai/openai-agents-js) | MIT | `89a9ddf1e241` | 25 | 0 | content redistributed |
@@ -166,6 +171,7 @@ Sealed: 2026-10-15T07:33:09Z · component version 1.0.0 · 155 factories · 119 
 | `vercel-labs-eve-software-factory-template` | [vercel-labs/eve-software-factory-template](https://github.com/vercel-labs/eve-software-factory-template) | MIT | `6bc5febab95d` | 25 | 11942 | content redistributed |
 | `watt-mind-factory` | [watt-mind/factory](https://github.com/watt-mind/factory) | Apache-2.0 | `d57be4bfbfc4` | 25 | 9945 | content redistributed |
 | `wheresryan22-anatomy` | [wheresryan22/anatomy](https://github.com/wheresryan22/anatomy) | MIT | `bc943e40c599` | 3 | 56602 | content redistributed |
+| `yizhiyanhua-ai-fireworks-tech-graph` | [yizhiyanhua-ai/fireworks-tech-graph](https://github.com/yizhiyanhua-ai/fireworks-tech-graph) | MIT | `31fea364eda5` | 25 | 33804 | content redistributed |
 
 ## What this component is not
 
