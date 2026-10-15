@@ -862,6 +862,15 @@ component is proposed for `main` only once this branch's evidence says it is fun
   instances - one per role - with 201 checks passed and no failed step. The gate that demanded one
   instance of every role is what caught the environment's execution cap when the set outgrew it.
 
+Since those runs the loop closes without anyone asking: growth run `38735135387` re-sealed the set,
+pushed the commit, dispatched the belt and then dispatched the publish (step 12), and publish run
+`38735965140` - triggered by that dispatch, not by a push - passed every gate and published the
+branch at `ae9d7c1`, from `78afd64`, seal root `e229a474…`, the same 171 records and the same
+verdict. The dispatch is there because a push made with `GITHUB_TOKEN` triggers no workflow at all:
+the publish workflow watches the sealed set for pushes made by anything else, and the growth job
+asks for the publish by name for its own commits, which is the only way a component that re-seals
+itself can get itself published.
+
 The first publish is part of this evidence rather than a missing entry. `222ff34` was written to the
 branch by a run that then reported nothing had been written, and named a gate its own notice says
 passed: the script captured its commit sha inside a subshell and died on the next line, and the failure
