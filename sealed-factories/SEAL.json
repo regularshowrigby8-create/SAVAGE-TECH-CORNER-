@@ -1,6 +1,6 @@
 {
  "seal_version": "1.0.0",
- "sealed_at": "2026-10-15T13:31:31Z",
+ "sealed_at": "2026-10-15T14:14:13Z",
  "component": "sealed-factories",
  "description": "The imported factory set. Dropped in or removed as one unit; runs before the repository's own factories and feeds them.",
  "contents": {
