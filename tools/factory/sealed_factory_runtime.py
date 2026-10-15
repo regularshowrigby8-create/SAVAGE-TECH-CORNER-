@@ -48,6 +48,12 @@ SEALED = REPO_ROOT / "sealed-factories"
 SEAL_FILE = SEALED / "SEAL.json"
 RUNS = SEALED / "runs"
 
+#: How many agent instances one environment run may execute. The cap is a cost control and never a way
+#: to test part of the set - a run that executes some roles and not others proves those roles and says
+#: nothing about the rest - so it defaults above any role count this component carries, and the belt, the
+#: growth job and the air-gapped run all take the number from here instead of passing one of their own.
+DEFAULT_ENV_LIMIT = 10000
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import seal_factories  # noqa: E402  (same directory, the component's own tooling)
 
@@ -416,7 +422,7 @@ def _extract_text(payload: dict) -> str:
 
 
 def run(brief: str, max_model_calls: int, require_model: bool, env_agents: int = 1,
-        env_limit: int = 200, env: bool = True, env_workspace: str = "",
+        env_limit: int = DEFAULT_ENV_LIMIT, env: bool = True, env_workspace: str = "",
         env_with_mcp: bool = False) -> int:
     try:
         document = open_seal()
@@ -702,7 +708,7 @@ def main() -> int:
                         help="fail when no factory reached a model")
     parser.add_argument("--env-agents", type=int, default=1,
                         help="agent instances per role in the sealed environment")
-    parser.add_argument("--env-limit", type=int, default=10000,
+    parser.add_argument("--env-limit", type=int, default=DEFAULT_ENV_LIMIT,
                         help="how many agent instances the environment executes; the cap is a cost "
                              "control, and it defaults above any role count this set has so that a "
                              "default run executes one instance of every role rather than part of "

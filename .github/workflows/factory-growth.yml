@@ -164,6 +164,13 @@ jobs:
           #
           # Every continuation line is indented: a line at column 0 would end the block scalar this
           # script lives in and the workflow file would stop parsing (how this file was rejected once).
+          # The judge's own line about the set, quoted rather than paraphrased: the growth run wrote it
+          # beside the report it judged, and a run that cannot quote its judge commits nothing.
+          if [ ! -s "${RUNNER_TEMP}/factory-growth-evidence.txt" ]; then
+            echo "::error title=Factory growth::the judge's evidence line is missing, so nothing is committed"
+            exit 1
+          fi
+          JUDGE_LINES="$(fold -s -w 92 < "${RUNNER_TEMP}/factory-growth-evidence.txt")"
           if output=$(git -c user.name="github-actions[bot]" \
                           -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
                           commit \
@@ -173,7 +180,9 @@ jobs:
                           -m "factories are imported, the changed slices re-vendored, the set" \
                           -m "re-sealed and run in plan mode, and the result judged against" \
                           -m "the ledger the committed set already reached." \
-                          -m "Every step and every test ran in the job that made this commit." 2>&1); then
+                          -m "Every step and every test ran in the job that made this commit." \
+                          -m "What the judge measured on the set this commit carries:" \
+                          -m "$JUDGE_LINES" 2>&1); then
             printf '%s\n' "$output"
           else
             echo "::error title=Factory growth::the growth commit was refused by the repository"
