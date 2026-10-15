@@ -129,24 +129,61 @@ jobs:
           git add sealed-factories tools/factory docs artifacts
           if git diff --cached --quiet; then
             echo "nothing changed: the set is already what this run produced"
-            echo "pushed=false" >> "$GITHUB_OUTPUT"
+            echo "committed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          # The body is one line on purpose: a continuation line that starts at column 0 would end the
-          # block scalar this script lives in, and the workflow file would stop being valid YAML (that
-          # is exactly how this file was rejected the first time it was pushed).
-          git -c user.name="github-actions[bot]" \
-              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-              commit -m "chore(factory): grow the sealed set from GitHub" \
-              -m "Produced by the Factory Growth workflow from the live API: licences re-read from each repository's own text, further factories imported, the changed slices re-vendored, the set re-sealed and run in plan mode, and the result judged against the ledger the committed set already reached. Every step and every test ran in the job that made this commit."
-          git push origin "HEAD:${BRANCH}"
-          echo "pushed=true" >> "$GITHUB_OUTPUT"
+          # The message obeys the repository's commitlint rules, which run here exactly as they run for a
+          # person: `npm ci` installs husky, so `git commit` goes through the commit-msg hook, and
+          # config-conventional refuses a body line longer than 100 characters. The first version of
+          # this step wrote the body as one 370-character paragraph and the hook refused the commit -
+          # one short `-m` per line, and the hook is satisfied without being skipped.
+          #
+          # Every continuation line is indented: a line at column 0 would end the block scalar this
+          # script lives in and the workflow file would stop parsing (how this file was rejected once).
+          if output=$(git -c user.name="github-actions[bot]" \
+                          -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+                          commit \
+                          -m "chore(factory): grow the sealed set from GitHub" \
+                          -m "Produced by the Factory Growth workflow against the live API." \
+                          -m "Licences are re-read from each repository's own text, further" \
+                          -m "factories are imported, the changed slices re-vendored, the set" \
+                          -m "re-sealed and run in plan mode, and the result judged against" \
+                          -m "the ledger the committed set already reached." \
+                          -m "Every step and every test ran in the job that made this commit." 2>&1); then
+            printf '%s\n' "$output"
+          else
+            echo "::error title=Factory growth::the growth commit was refused by the repository"
+            printf '%s\n' "$output" | tail -20 | while read -r line; do
+              echo "::error title=Factory growth::- ${line}"
+            done
+            exit 1
+          fi
           echo "head=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+
+      # The push is its own step so that a refusal says why: the first version of this pipeline pushed
+      # from the commit step, and a failure there reached the repository as an exit code and nothing
+      # else - the same opacity the belt's failure step had.
+      - name: Push the growth commit, and say why if it cannot be pushed
+        if: steps.commit.outputs.committed == 'true'
+        id: push
+        run: |
+          set -uo pipefail
+          if output=$(git push origin "HEAD:${BRANCH}" 2>&1); then
+            printf '%s\n' "$output"
+            echo "pushed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "::error title=Factory growth::the growth commit could not be pushed to ${BRANCH}"
+          printf '%s\n' "$output" | tail -20 | while read -r line; do
+            echo "::error title=Factory growth::- ${line}"
+          done
+          exit 1
 
       # The commit above is invisible to other workflows, so the belt is asked for explicitly. It runs
       # the same sealed set this job just judged, plus the six stations after it.
       - name: Dispatch the belt on the commit this job pushed
-        if: steps.commit.outputs.pushed == 'true'
+        if: steps.push.outputs.pushed == 'true'
         run: |
           set -euo pipefail
           gh workflow run quality-conveyor-belt.yml --ref "${BRANCH}"

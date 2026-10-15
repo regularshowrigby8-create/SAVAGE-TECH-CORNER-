@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -326,6 +327,29 @@ class WiringTest(unittest.TestCase):
         workflow = WORKFLOW.read_text(encoding="utf-8")
         self.assertNotIn("airgap_run.sh", workflow)
         self.assertNotIn("SEALED_NO_NETWORK", workflow)
+
+    def test_the_machine_commit_obeys_the_repository_commit_message_rules(self) -> None:
+        """The bot goes through the same hook a person does, and commitlint refuses a long body line."""
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        block = workflow.split("Commit what the growth changed", 1)[1].split(
+            "Push the growth commit", 1)[0]
+        messages = re.findall(r'-m "([^"]*)"', block)
+        self.assertGreaterEqual(len(messages), 2, "the commit needs a subject and a body")
+        for line in messages:
+            self.assertLessEqual(len(line), 100,
+                                 f"commitlint refuses a body line over 100 characters: {line!r}")
+        # The type has to be one the repository's conventional-commit config allows.
+        config = (REPO_ROOT / "commitlint.config.js").read_text(encoding="utf-8")
+        self.assertIn("config-conventional", config)
+        commit_type = messages[0].split(":", 1)[0].split("(", 1)[0]
+        self.assertIn(commit_type, ("build", "chore", "ci", "docs", "feat", "fix", "perf",
+                                    "refactor", "revert", "style", "test"))
+        # A commit or a push that is refused says why: the first version of this step failed into the
+        # job log on its own, and the reason never reached the repository.
+        self.assertIn("the growth commit was refused by the repository", workflow)
+        self.assertIn("could not be pushed", workflow)
+        self.assertIn("steps.commit.outputs.committed == 'true'", workflow)
+        self.assertIn("steps.push.outputs.pushed == 'true'", workflow)
 
     def test_the_commit_stage_is_limited_to_what_the_growth_owns(self) -> None:
         """A machine commit that stages everything is a machine commit that can commit anything."""
