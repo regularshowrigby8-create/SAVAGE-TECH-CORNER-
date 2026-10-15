@@ -180,7 +180,7 @@ def _index_current(index_path: Path, store: Path) -> bool:
     return recorded.get("index_sha256") == license_manager.build_index(store)["index_sha256"]
 
 
-def survey(document: dict, *, structures=_UNSET, store: Path = STORE,
+def survey(document: dict, *, structures=_UNSET, sealed_root: Path = SEALED, store: Path = STORE,
            index_path: Path = INDEX, offline_now: bool | None = None) -> dict:
     """Every way the set fails to be fit, and every state that is not a defect.
 
@@ -223,7 +223,9 @@ def survey(document: dict, *, structures=_UNSET, store: Path = STORE,
         seal_factories = None
     for factory in factories:
         identifier = factory.get("id", "?")
-        payload = SEALED / str(factory.get("payload", ""))
+        # Resolved against the component being surveyed, not against this file's own directory: a test
+        # hands the survey its own tree, and the published copy surveys itself where it stands.
+        payload = sealed_root / str(factory.get("payload", ""))
         if not payload.is_file():
             findings.append({"code": "payload-missing", "record": identifier, "repairable": True,
                              "blocks": True, "detail": f"{factory.get('payload')} is not in the seal"})
@@ -289,7 +291,7 @@ def survey(document: dict, *, structures=_UNSET, store: Path = STORE,
     # have made the check silent, which is worse.
     recorded = {entry.get("path") for entry in document.get("component_files", [])
                 if isinstance(entry, dict)}
-    for path in sorted((SEALED / "runtime").glob("*.py")):
+    for path in sorted((sealed_root / "runtime").glob("*.py")):
         relative = str(path.relative_to(SEALED))
         if relative not in recorded:
             findings.append({"code": "component-file-unpinned", "record": "-", "repairable": True,
@@ -437,8 +439,8 @@ def repair(finding: dict, *, runner=None, offline_now: bool | None = None) -> di
 
 
 def run(*, do_repair: bool = False, require_functional: bool = False, workspace: Path | None = None,
-        store: Path = STORE, index_path: Path = INDEX, runner=None, document: dict | None = None,
-        offline_now: bool | None = None) -> dict:
+        sealed_root: Path = SEALED, store: Path = STORE, index_path: Path = INDEX, runner=None,
+        document: dict | None = None, offline_now: bool | None = None) -> dict:
     """Survey, optionally repair, survey again, and decide. Returns the report it also writes out."""
     if offline_now is None:
         offline_now = offline()
@@ -447,7 +449,8 @@ def run(*, do_repair: bool = False, require_functional: bool = False, workspace:
     if document is None:
         return {"verdict": "NO-SEAL", "findings": [], "states": [], "repairs": []}
 
-    first = survey(document, store=store, index_path=index_path, offline_now=offline_now)
+    first = survey(document, sealed_root=sealed_root, store=store, index_path=index_path,
+                   offline_now=offline_now)
     structures = read_structures(document, load_reader())
     for finding in first["findings"]:
         finding.update(assign(finding, structures))
@@ -459,14 +462,15 @@ def run(*, do_repair: bool = False, require_functional: bool = False, workspace:
                 continue
             repairs.append(repair(finding, runner=runner, offline_now=offline_now))
 
-    after = survey(document, store=store, index_path=index_path, offline_now=offline_now)
+    after = survey(document, sealed_root=sealed_root, store=store, index_path=index_path,
+                   offline_now=offline_now)
     after_structures = read_structures(document, load_reader())
     for finding in after["findings"]:
         finding.update(assign(finding, after_structures))
 
     blocking = [finding for finding in after["findings"] if finding.get("blocks")]
     verdict = "FUNCTIONAL" if not blocking else "NOT FUNCTIONAL"
-    report = {"verdict": verdict, "seal_root": _seal_root(), "records": after["records"],
+    report = {"verdict": verdict, "seal_root": _seal_root(sealed_root), "records": after["records"],
               "carried": after["carried"], "licence_texts": after["licence_texts"],
               "store_texts": after["store_texts"], "reader_used": after["reader"],
               "offline": offline_now, "blocking": blocking, "states": after["states"],
@@ -478,8 +482,8 @@ def run(*, do_repair: bool = False, require_functional: bool = False, workspace:
     return report
 
 
-def _seal_root() -> str:
-    hash_file = SEALED / "SEAL.sha256"
+def _seal_root(sealed_root: Path = SEALED) -> str:
+    hash_file = sealed_root / "SEAL.sha256"
     if not hash_file.is_file():
         return ""
     return hash_file.read_text(encoding="utf-8").split()[0]

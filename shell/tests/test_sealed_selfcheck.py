@@ -76,8 +76,12 @@ class SelfCheckCase(unittest.TestCase):
     def survey(self, records: list[dict], structures: dict | None = None,
                contents: dict | None = None) -> dict:
         document = {"factories": records, "contents": contents or {}}
-        return selfcheck.survey(document, structures=structures or {}, store=self.store,
-                                index_path=self.sealed / "LICENSES.json", offline_now=True)
+        # `sealed_root` is this test's own tree: without it the survey resolved payloads against the
+        # repository's real sealed set and reported every fixture payload as missing - a test that
+        # failed for the fixture's sake rather than the code's.
+        return selfcheck.survey(document, structures=structures or {}, sealed_root=self.sealed,
+                                store=self.store, index_path=self.sealed / "LICENSES.json",
+                                offline_now=True)
 
 
 class FindingTest(SelfCheckCase):
@@ -113,8 +117,18 @@ class FindingTest(SelfCheckCase):
                              contents={"factories": 9, "content_redistributed": 0})
         codes = [finding["code"] for finding in survey["findings"]]
         self.assertIn("seal-count-disagreement", codes)
-        self.assertIn("component-file-unpinned", codes,
-                      "the runtime ships in this tree and no seal record pins it")
+
+    def test_a_module_in_the_surveyed_tree_that_the_seal_does_not_pin_blocks(self) -> None:
+        """The check runs against the tree being surveyed - which is why it is a parameter."""
+        record = self.record("alpha")
+        (self.sealed / "runtime").mkdir(exist_ok=True)
+        (self.sealed / "runtime" / "extra.py").write_text("VALUE = 1\n", encoding="utf-8")
+        survey = self.survey([record], {"alpha": {"structure_found": True, "labels": []}})
+        unpinned = [finding for finding in survey["findings"]
+                    if finding["code"] == "component-file-unpinned"]
+        self.assertTrue(unpinned, [finding["code"] for finding in survey["findings"]])
+        self.assertIn("runtime/extra.py", unpinned[0]["detail"])
+        self.assertTrue(unpinned[0]["blocks"])
 
     def test_an_unreadable_slice_blocks_rather_than_being_called_empty(self) -> None:
         record = self.record("alpha")
@@ -258,7 +272,7 @@ class RepairTest(SelfCheckCase):
 
 class VerdictTest(SelfCheckCase):
     def test_no_seal_is_its_own_verdict_and_not_a_pass(self) -> None:
-        report = selfcheck.run(document=None, store=self.store,
+        report = selfcheck.run(document=None, sealed_root=self.sealed, store=self.store,
                                index_path=self.sealed / "LICENSES.json", offline_now=True)
         self.assertEqual("NO-SEAL", report["verdict"])
         self.assertNotEqual("FUNCTIONAL", report["verdict"])
@@ -273,9 +287,9 @@ class VerdictTest(SelfCheckCase):
             stderr = "the slice could not be fetched"
 
         document = {"factories": [record], "contents": {}}
-        report = selfcheck.run(do_repair=True, document=document, store=self.store,
-                               index_path=self.sealed / "LICENSES.json", offline_now=True,
-                               runner=lambda argv, **_kwargs: Failed())
+        report = selfcheck.run(do_repair=True, document=document, sealed_root=self.sealed,
+                               store=self.store, index_path=self.sealed / "LICENSES.json",
+                               offline_now=True, runner=lambda argv, **_kwargs: Failed())
         self.assertEqual("NOT FUNCTIONAL", report["verdict"])
         self.assertTrue(report["blocking"])
         self.assertEqual(record["id"], report["blocking"][0]["record"])
