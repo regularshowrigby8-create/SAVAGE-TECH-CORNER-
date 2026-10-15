@@ -234,12 +234,10 @@ fi
 # 7. The run: plan mode, no model calls, and the environment it reads is the seal written above.
 step "sealed run (plan mode, no model)"
 rm -f "$REPORT"
-# One agent instance per role, and a limit above any role count this set has: the cap exists so a
-# million-instance plan is not executed, not so that part of the set goes untested. At a limit the role
-# count can reach, roles simply get no instance - and the component's own test that every role ran would
-# be measuring the limit instead of the set. If the set ever outgrows this number the summary names the
-# roles that got none and that test fails loudly, which is the failure worth having.
-python3 tools/factory/sealed_factory_runtime.py run --max-model-calls 0 --env-limit 10000
+# No limit of its own: the environment's default is one instance of every role, which is what the test
+# that every role ran is measuring. If the set ever outgrows that default the summary names the roles
+# that got none and that test fails loudly, which is the failure worth having.
+python3 tools/factory/sealed_factory_runtime.py run --max-model-calls 0
 RUN_STATUS=$?
 if [ "$RUN_STATUS" -ne 0 ]; then
     echo "::error title=Factory growth::the sealed run exited ${RUN_STATUS}"

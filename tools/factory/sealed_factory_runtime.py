@@ -702,8 +702,11 @@ def main() -> int:
                         help="fail when no factory reached a model")
     parser.add_argument("--env-agents", type=int, default=1,
                         help="agent instances per role in the sealed environment")
-    parser.add_argument("--env-limit", type=int, default=200,
-                        help="how many agent instances the environment executes")
+    parser.add_argument("--env-limit", type=int, default=10000,
+                        help="how many agent instances the environment executes; the cap is a cost "
+                             "control, and it defaults above any role count this set has so that a "
+                             "default run executes one instance of every role rather than part of "
+                             "the set")
     parser.add_argument("--no-env", action="store_true",
                         help="run the imported factories only, skipping the sealed environment")
     parser.add_argument("--with-mcp", action="store_true",

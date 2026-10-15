@@ -43,6 +43,15 @@ def judge(report_path: pathlib.Path, swarm_root: pathlib.Path) -> tuple[list[str
             problems.append("no check passed, which is not a run")
         if counts.get("model") or counts.get("model_failed"):
             problems.append("a model call was made or claimed on a run asked for 0 model calls")
+        environment = report.get("environment") or {}
+        plan = (environment.get("swarm") or {}).get("plan") or {}
+        roles = (environment.get("agents") or {}).get("roles")
+        if isinstance(roles, int) and plan.get("executed") is not None \
+                and plan["executed"] < roles:
+            # The belt makes this same claim online; a run that executes part of the set proves the
+            # air-gapped path for that part and says nothing about the rest.
+            problems.append(f"the swarm executed {plan['executed']} of {roles} roles with networking "
+                            f"switched off; the air-gapped path has to hold for the whole set")
     if report.get("model_calls"):
         problems.append(f'report records {report["model_calls"]} model call(s)')
 

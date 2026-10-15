@@ -37,7 +37,10 @@ fi
 # stale researcher artefact carrying the switch could otherwise satisfy the gate on its own.
 rm -f "$REPORT"
 rm -rf "$SWARM_ROOT/.sealed/swarm"
-python3 tools/factory/sealed_factory_runtime.py run --max-model-calls 0 --env-limit 200 2>&1 | tee -a "$LOG"
+# No limit of its own: this is the same run the belt and the growth run make, with the environment's
+# default - one instance of every role - so the air-gapped path is proven for the whole set and not for
+# the part of it a smaller cap would have executed.
+python3 tools/factory/sealed_factory_runtime.py run --max-model-calls 0 2>&1 | tee -a "$LOG"
 RUN_STATUS=${PIPESTATUS[0]}
 if [ "$RUN_STATUS" -ne 0 ]; then
     echo "::error title=air-gapped run::the sealed environment exited ${RUN_STATUS} with networking switched off"
