@@ -288,8 +288,26 @@ SWARM_PY
 fi
 
 step "judging the grown set"
-python3 tools/ci/factory_growth_judge.py "$REPORT" "$SEAL" "$REGISTRY"
+# The judge's verdict and the ledger comparison it made belong beside the self-check's, in the summary:
+# "the set grew" is a claim about a floor, and the floor is only meaningful next to what was measured.
+JUDGE_LOG="$(mktemp)"
+python3 tools/ci/factory_growth_judge.py "$REPORT" "$SEAL" "$REGISTRY" > "$JUDGE_LOG" 2>&1
 JUDGE_STATUS=$?
+cat "$JUDGE_LOG"
+if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+    {
+        if [ "$JUDGE_STATUS" -eq 0 ]; then
+            echo "## Factory growth judge: the set grew"
+        else
+            echo "## Factory growth judge: the set was refused"
+        fi
+        echo
+        echo '```'
+        tail -30 "$JUDGE_LOG"
+        echo '```'
+    } >> "$GITHUB_STEP_SUMMARY"
+fi
+rm -f "$JUDGE_LOG"
 if [ "$JUDGE_STATUS" -ne 0 ]; then
     echo "::error title=Factory growth::the set grew but the judge refused it; see FACTORY GROWTH FAIL above"
     exit 1

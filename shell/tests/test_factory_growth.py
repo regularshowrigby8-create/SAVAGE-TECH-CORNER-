@@ -37,20 +37,30 @@ VENDOR_NEEDED = _load(VENDOR_NEEDED_PATH, "vendor_needed_under_test")
 
 #: The committed set, as SEAL.json and the run that followed it report it (2026-10-15). Every fixture
 #: below is this, with exactly one thing changed.
-SEAL_COUNT = 149
-CARRIED = 113
-LICENCE_TEXTS = 127
-OPERATIONAL = 112
-NO_STRUCTURE = 37
-IMPORTED = 84
+#: The fixture is built *from* the ledger instead of from numbers copied out of it. These tests are about
+#: the rule - a floor the set may not fall below, a warning that is not a failure, a growth that has to be
+#: visible - and a fixture re-typed every time the ledger moves is one that gets re-typed wrongly. Raising
+#: the ledger without touching this file is what proved that: the fixtures were a set of 149 records and the
+#: rule they were testing was the rule for 171.
 REFERENCES = ("awesome-mcp-servers", "github-mcp-server")
+LEDGER = JUDGE.LEDGER
+SEAL_COUNT = LEDGER["records"]
+CARRIED = LEDGER["carried_content"]
+LICENCE_TEXTS = LEDGER["licence_texts"]
+OPERATIONAL = LEDGER["operational_plan"]
+IMPORTED = LEDGER["imported_records"]
+NO_STRUCTURE = SEAL_COUNT - OPERATIONAL
 
 
 def baseline() -> tuple[dict, dict, list]:
     """A seal, a run report and a registry shaped exactly like the committed ones."""
-    carried_operational = [f"factory-{index:03d}" for index in range(111)]
+    # The pieces add up to the ledger exactly: the carried records, the one blueprint record that defines
+    # stages, the blueprint records that define nothing, and the two reference records.
+    carried_operational = [f"factory-{index:03d}"
+                           for index in range(CARRIED - len(REFERENCES))]
     operational_blueprint = ["servers"]                        # defines stages, carries no content
-    blueprint_empty = [f"blueprint-{index:03d}" for index in range(35)]
+    blueprint_empty = [f"blueprint-{index:03d}"
+                       for index in range(NO_STRUCTURE - len(REFERENCES))]
     references = list(REFERENCES)
 
     seal_factories = []
@@ -68,12 +78,14 @@ def baseline() -> tuple[dict, dict, list]:
                                  "status": "OPERATIONAL-PLAN" if operational else "NO-STRUCTURE"})
     seal = {"contents": {"factories": SEAL_COUNT, "content_redistributed": CARRIED,
                          "with_license_text": LICENCE_TEXTS,
-                         "by_group": {"AI-focused factory": 23, "MCP tool server": 42,
+                         "by_group": {"AI-focused factory": LEDGER["ai_records"],
+                                      "MCP tool server": LEDGER["mcp_records"],
                                       "imported factory": IMPORTED}},
             "factories": seal_factories}
     report = {"summary": {"operational_plan": OPERATIONAL, "no_structure": NO_STRUCTURE,
-                          "carried_without_definitions": 2, "stages_defined": 592,
-                          "workers_defined": 579},
+                          "carried_without_definitions": len(REFERENCES),
+                          "stages_defined": LEDGER["stages_defined"],
+                          "workers_defined": LEDGER["workers_defined"]},
               "factories": report_factories}
     registry = [{"id": f"imported-{index:03d}", "license": "MIT"} for index in range(IMPORTED)]
     return seal, report, registry
@@ -100,8 +112,10 @@ class JudgeTest(unittest.TestCase):
         problems, warnings, evidence = self.judge()
         self.assertEqual([], problems)
         self.assertEqual([], warnings)
-        self.assertIn("149 records (112 operational, 37 without definitions)", evidence[0])
-        self.assertIn("ledger floor: 149 records, 112 operational, 84 imported", evidence[1])
+        self.assertIn(f"{SEAL_COUNT} records ({OPERATIONAL} operational, "
+                      f"{NO_STRUCTURE} without definitions)", evidence[0])
+        self.assertIn(f"ledger floor: {SEAL_COUNT} records, {OPERATIONAL} operational, "
+                      f"{IMPORTED} imported", evidence[1])
 
     def test_a_set_that_shrank_is_rejected(self) -> None:
         seal, report, registry = baseline()
@@ -109,7 +123,7 @@ class JudgeTest(unittest.TestCase):
         seal["contents"]["factories"] = SEAL_COUNT - 1
         seal["contents"]["by_group"]["imported factory"] = IMPORTED - 1
         problems, _, _ = self.judge(seal=seal, report=report, registry=registry)
-        self.assertTrue(any("below the 149" in problem for problem in problems), problems)
+        self.assertTrue(any(f"below the {SEAL_COUNT}" in problem for problem in problems), problems)
 
     def test_operational_falling_below_the_ledger_is_rejected(self) -> None:
         """Losing a definition upstream is not growth, and must not be reportable as success."""
@@ -120,7 +134,7 @@ class JudgeTest(unittest.TestCase):
         report["summary"]["operational_plan"] = OPERATIONAL - 1
         report["summary"]["no_structure"] = NO_STRUCTURE + 1
         problems, _, _ = self.judge(seal=seal, report=report, registry=registry)
-        self.assertTrue(any("below the 112" in problem for problem in problems), problems)
+        self.assertTrue(any(f"below the {OPERATIONAL}" in problem for problem in problems), problems)
 
     def test_content_stripped_from_a_record_is_rejected(self) -> None:
         """A relicence upstream can strip content the set used to carry; that is not a grown set."""
@@ -135,7 +149,7 @@ class JudgeTest(unittest.TestCase):
                 factory["content_redistributed"] = False
                 factory["license"] = "NOASSERTION"
         problems, _, _ = self.judge(seal=seal, report=report, registry=registry)
-        self.assertTrue(any("below the 113" in problem for problem in problems), problems)
+        self.assertTrue(any(f"below the {CARRIED}" in problem for problem in problems), problems)
 
     def test_a_missing_licence_text_warns_without_failing(self) -> None:
         seal, report, registry = baseline()
@@ -211,7 +225,7 @@ class JudgeTest(unittest.TestCase):
 
     def test_a_run_that_defined_fewer_stages_warns_without_failing(self) -> None:
         seal, report, registry = baseline()
-        report["summary"]["stages_defined"] = 591
+        report["summary"]["stages_defined"] = LEDGER["stages_defined"] - 1
         problems, warnings, _ = self.judge(seal=seal, report=report, registry=registry)
         self.assertEqual([], problems)
         self.assertTrue(any("591" in warning and "stages" in warning for warning in warnings), warnings)
