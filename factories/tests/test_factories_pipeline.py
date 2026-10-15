@@ -3,6 +3,7 @@
 import json
 import shutil
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -34,13 +35,42 @@ class TestMultiFactoryAndModels(unittest.TestCase):
             self.assertIn("benchmark", m)
 
     def test_pipeline_execution(self) -> None:
-        log = run_factory_pipeline(input_source="shell")
-        self.assertEqual(log["stages"]["factory_1_intake"], "SUCCESS")
-        self.assertEqual(log["stages"]["factory_2_agents"]["verdict"], "SHIP")
-        self.assertEqual(log["stages"]["factory_3_android_tools"]["certification"]["status"], "CERTIFIED")
+        """The pipeline either certifies a freshly built APK, or it fails and builds nothing.
+
+        The APK stage runs the real Gradle build (tools/apk_builder.py), so this assertion is about
+        provenance rather than about a file existing: a stale APK that a previous run left behind
+        must never be presented as the output of this run.
+        """
         final_product_dir = FACTORIES_DIR / "final-product"
-        self.assertTrue((final_product_dir / "browser_shell.py").exists())
-        self.assertTrue((final_product_dir / "RELEASE_MANIFEST.json").exists())
+        apk_path = final_product_dir / "SavageBrowser-debug.apk"
+        started = time.time()
+        failure = None
+        try:
+            log = run_factory_pipeline(input_source="shell")
+        except Exception as error:  # no Android toolchain in this environment
+            failure = error
+            log = json.loads(
+                (final_product_dir / "RELEASE_MANIFEST.json").read_text(encoding="utf-8"))
+
+        apk_is_fresh = apk_path.exists() and apk_path.stat().st_mtime >= started
+
+        if failure is None:
+            self.assertEqual(log["stages"]["factory_1_intake"], "SUCCESS")
+            self.assertEqual(log["stages"]["factory_2_agents"]["verdict"], "SHIP")
+            self.assertEqual(
+                log["stages"]["factory_3_android_tools"]["certification"]["status"], "CERTIFIED")
+            self.assertEqual(log["status"], "CERTIFIED")
+            self.assertTrue((final_product_dir / "browser_shell.py").exists())
+            self.assertTrue((final_product_dir / "RELEASE_MANIFEST.json").exists())
+            self.assertTrue(apk_is_fresh,
+                            "a certified run must publish the APK this run produced")
+        else:
+            # The build refused to publish an APK, which is the only acceptable failure mode: the
+            # manifest records FAILED and the APK on disk is not this run's output.
+            self.assertEqual(log.get("status"), "FAILED", log)
+            self.assertIn("Gradle build failed", str(failure))
+            self.assertFalse(apk_is_fresh,
+                             "a failed run must not leave a fresh APK that looks like its output")
 
 
 if __name__ == "__main__":

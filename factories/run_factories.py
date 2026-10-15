@@ -125,10 +125,29 @@ def run_factory_pipeline(input_source: str = "shell") -> dict[str, object]:
 
         # Build and Package Android APK
         print("[STAGE 3] Factory 3: Building and signing Savage Browser Android APK...")
-        from apk_builder import create_signed_apk
+        from apk_builder import create_signed_apk, sha256_of
         apk_output = FINAL_PRODUCT_DIR / "SavageBrowser-debug.apk"
         create_signed_apk(apk_output)
         print(f"[STAGE 3] Savage Browser APK successfully assembled: {apk_output.name} ({apk_output.stat().st_size / 1024:.2f} KB)")
+
+        # Provenance gate: the build stage records the SHA-256 of what it published, so the gates
+        # below can only ever be judging this run's APK. Without this, a stale file that happens to
+        # sit at the same path (the repository ships prebuilt APKs under other names, see A2/A20)
+        # could be certified in place of the build - the failure mode that made an earlier version of
+        # this pipeline "verify" an artifact it had not produced.
+        recorded_sha = apk_output.with_suffix(".apk.sha256")
+        if not recorded_sha.is_file():
+            raise RuntimeError(
+                f"no provenance record next to {apk_output.name}: the build stage must publish "
+                f"{recorded_sha.name} together with the APK, so nothing here can certify an APK that "
+                f"this run did not build")
+        record = recorded_sha.read_text(encoding="utf-8").split()
+        actual_sha = sha256_of(apk_output)
+        if not record or record[0] != actual_sha:
+            raise RuntimeError(
+                f"provenance mismatch for {apk_output.name}: {recorded_sha.name} records "
+                f"{record[0] if record else '(nothing)'} but the file hashes to {actual_sha}")
+        print(f"[STAGE 3] APK provenance: {apk_output.name} sha256={actual_sha}")
 
         # Stage 3 Audit Gate: Fail closed if broker flagged critical findings
         broker_clean = broker_result.get("clean", False)

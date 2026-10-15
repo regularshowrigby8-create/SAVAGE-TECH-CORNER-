@@ -1,0 +1,235 @@
+name: Factory Growth (GitHub-native)
+
+# The sealed factory set is grown here, on GitHub, against the live API: what this job finds is
+# committed to the branch, and the commit is verified before it is committed rather than after.
+#
+# Why this job exists at all: the work that grew the set to 149 records was run by hand in a
+# development sandbox, which is neither repeatable nor where the network and the tools live. The same
+# three tools now run on a runner, in a fixed order, with the resulting set judged against the ledger
+# the committed set has already reached (tools/ci/factory_growth_judge.py).
+#
+# A push made with GITHUB_TOKEN does not trigger other workflows - that is GitHub's rule, not a choice
+# here - so this job runs the decisive test suites itself before committing and then dispatches the
+# belt on the commit it pushed. Nothing about the resulting commit is unverified.
+
+# It runs when the pipeline that grows the set changes, and it can be asked to run by hand. Not on a
+# schedule yet, and not by a push from its own commit: a scheduled run fires on the repository's default
+# branch, where this component does not live until the branch under review is merged, and a push made
+# with GITHUB_TOKEN - which is what the commit step below does - triggers no workflow at all. The
+# schedule belongs here once the branch this job grows is the default branch.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - production
+      - arena/**
+    paths:
+      - ".github/workflows/factory-growth.yml"
+      - "tools/ci/factory_growth.sh"
+      - "tools/ci/factory_growth_judge.py"
+      - "tools/factory/vendor_needed.py"
+      # The tools this job runs are part of the pipeline too: a change to the sealer, to the licence
+      # re-scan or to a vendoring tool is a reason to run the growth against the live API again.
+      - "tools/factory/seal_factories.py"
+      - "tools/factory/license_rescan.py"
+      - "tools/factory/vendor_imported_factories.py"
+      - "tools/factory/vendor_mcp_servers.py"
+      - "tools/factory/license_manager.py"
+      # The component's own runtime: a change to what runs inside the seal is a reason to re-seal it and
+      # recheck it, not to wait for the next import to happen to touch this pipeline.
+      - "sealed-factories/runtime/**"
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: factory-growth
+  cancel-in-progress: false
+
+jobs:
+  grow:
+    name: Grow and verify the sealed factory set
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BRANCH: ${{ github.ref_name }}
+    steps:
+      - name: Checkout the branch this growth belongs to
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Node Dependencies
+        run: |
+          set -euo pipefail
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            echo "no package-lock.json in this repository; falling back to npm install"
+            npm install
+          fi
+
+      # Re-reads every licence from the repository's own text, imports further factories, re-vendors
+      # what changed, re-seals the set, runs it in plan mode, and judges the result. Every step fails
+      # the job; none of them reports a partial result as a complete one.
+      - name: Grow the set from GitHub
+        run: |
+          set -euo pipefail
+          bash tools/ci/factory_growth.sh 2>&1 | tee "${RUNNER_TEMP}/factory-growth.log"
+
+      # The repository's own formatter, run where node exists: `npm run format` is exactly what a
+      # person runs before committing, and this job cannot rely on one having run it by hand. Whatever
+      # it rewrites inside the paths this job commits is committed with the growth; anything outside
+      # them is still checked below, and named if it fails.
+      - name: Format, then check the style
+        run: |
+          set -euo pipefail
+          # Which files the formatter rewrote - compared against what was already dirty, so a file the
+          # growth itself changed is not reported as the formatter's work - and whether this job is
+          # allowed to keep the rewrite: a file it rewrote outside its committed paths stays
+          # unformatted on the branch and the belt's style gate will fail on that push, which is worth
+          # an annotation here, where the reason is visible. (A file that was dirty before the
+          # formatter ran and dirty afterwards is not attributed; what matters is the file the pipeline
+          # does not own.)
+          git diff --name-only | sort > "${RUNNER_TEMP}/dirty-before-format.txt"
+          npm run format
+          git diff --name-only | sort > "${RUNNER_TEMP}/dirty-after-format.txt"
+          comm -13 "${RUNNER_TEMP}/dirty-before-format.txt" "${RUNNER_TEMP}/dirty-after-format.txt" \
+            > "${RUNNER_TEMP}/formatted-by-this-step.txt"
+          while read -r path; do
+            [ -n "$path" ] || continue
+            case "$path" in
+              sealed-factories/*|tools/factory/*|docs/*|artifacts/*)
+                echo "::notice title=Factory growth::the formatter rewrote ${path}; this job commits it";;
+              *)
+                echo "::warning title=Factory growth::the formatter rewrote ${path}, which this job does not commit - the style gate will fail on the branch";;
+            esac
+          done < "${RUNNER_TEMP}/formatted-by-this-step.txt"
+          if ! npm run format:check; then
+            echo "::error title=Factory growth::format:check failed; Prettier would rewrite:"
+            npx prettier --list-different . | while read -r offender; do
+              echo "::error title=Factory growth::${offender} is not in the repository's Prettier style and is not a path this job commits"
+            done
+            exit 1
+          fi
+
+      # The suites the belt would run on this commit. They run here because GITHUB_TOKEN pushes do not
+      # trigger workflows, so this is the last chance to refuse a bad set before it is committed.
+      #
+      # Each suite's failure is annotated with the test lines that failed, for the same reason as above:
+      # the job log is not always readable afterwards, and a suite name alone does not say what broke.
+      - name: Verify the set the growth produced
+        run: |
+          set -euo pipefail
+          log="${RUNNER_TEMP}/shell-tests.log"
+          if python -m unittest discover -s shell/tests >"$log" 2>&1; then
+            tail -3 "$log"
+          else
+            echo "::error title=Factory growth::the shell test suite failed on the set this run produced"
+            grep -a -E '^(FAIL|ERROR):|^AssertionError|^Ran |^FAILED' "$log" | head -40 | \
+              while read -r line; do echo "::error title=Factory growth::- ${line}"; done
+            exit 1
+          fi
+
+      - name: Commit what the growth changed
+        id: commit
+        run: |
+          set -euo pipefail
+          # Only the set, the tooling that grows it, and the documents: the formatter may have touched
+          # more than that, and a machine commit that stages everything can commit anything.
+          git add sealed-factories tools/factory docs artifacts
+          if git diff --cached --quiet; then
+            echo "nothing changed: the set is already what this run produced"
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # The message obeys the repository's commitlint rules, which run here exactly as they run for a
+          # person: `npm ci` installs husky, so `git commit` goes through the commit-msg hook, and
+          # config-conventional refuses a body line longer than 100 characters. The first version of
+          # this step wrote the body as one 370-character paragraph and the hook refused the commit -
+          # one short `-m` per line, and the hook is satisfied without being skipped.
+          #
+          # Every continuation line is indented: a line at column 0 would end the block scalar this
+          # script lives in and the workflow file would stop parsing (how this file was rejected once).
+          # The judge's own line about the set, quoted rather than paraphrased: the growth run wrote it
+          # beside the report it judged, and a run that cannot quote its judge commits nothing.
+          if [ ! -s "${RUNNER_TEMP}/factory-growth-evidence.txt" ]; then
+            echo "::error title=Factory growth::the judge's evidence line is missing, so nothing is committed"
+            exit 1
+          fi
+          JUDGE_LINES="$(fold -s -w 92 < "${RUNNER_TEMP}/factory-growth-evidence.txt")"
+          if output=$(git -c user.name="github-actions[bot]" \
+                          -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+                          commit \
+                          -m "chore(factory): grow the sealed set from GitHub" \
+                          -m "Produced by the Factory Growth workflow against the live API." \
+                          -m "Licences are re-read from each repository's own text, further" \
+                          -m "factories are imported, the changed slices re-vendored, the set" \
+                          -m "re-sealed and run in plan mode, and the result judged against" \
+                          -m "the ledger the committed set already reached." \
+                          -m "Every step and every test ran in the job that made this commit." \
+                          -m "What the judge measured on the set this commit carries:" \
+                          -m "$JUDGE_LINES" 2>&1); then
+            printf '%s\n' "$output"
+          else
+            echo "::error title=Factory growth::the growth commit was refused by the repository"
+            printf '%s\n' "$output" | tail -20 | while read -r line; do
+              echo "::error title=Factory growth::- ${line}"
+            done
+            exit 1
+          fi
+          echo "head=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+
+      # The push is its own step so that a refusal says why: the first version of this pipeline pushed
+      # from the commit step, and a failure there reached the repository as an exit code and nothing
+      # else - the same opacity the belt's failure step had.
+      - name: Push the growth commit, and say why if it cannot be pushed
+        if: steps.commit.outputs.committed == 'true'
+        id: push
+        run: |
+          set -uo pipefail
+          if output=$(git push origin "HEAD:${BRANCH}" 2>&1); then
+            printf '%s\n' "$output"
+            echo "pushed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "::error title=Factory growth::the growth commit could not be pushed to ${BRANCH}"
+          printf '%s\n' "$output" | tail -20 | while read -r line; do
+            echo "::error title=Factory growth::- ${line}"
+          done
+          exit 1
+
+      # The commit above is invisible to other workflows, so the belt is asked for explicitly. It runs
+      # the same sealed set this job just judged, plus the six stations after it.
+      - name: Dispatch the belt on the commit this job pushed
+        if: steps.push.outputs.pushed == 'true'
+        run: |
+          set -euo pipefail
+          gh workflow run quality-conveyor-belt.yml --ref "${BRANCH}"
+          echo "dispatched the belt on ${BRANCH} at ${{ steps.commit.outputs.head }}"
+
+      # The component publishes itself, and this is what makes that true. The publish workflow watches
+      # the sealed set, but a push made here is made with GITHUB_TOKEN, and those trigger no workflow at
+      # all - GitHub's rule, stated at the top of this file. So the re-seal commit that this job just
+      # pushed is published by asking for it: the publish run checks out this branch, which is now at
+      # that commit, and every gate it has runs against the tree it is about to publish.
+      - name: Publish the component this job re-sealed
+        if: steps.push.outputs.pushed == 'true'
+        run: |
+          set -euo pipefail
+          gh workflow run publish-sealed-factory.yml --ref "${BRANCH}"
+          echo "dispatched the publish of ${BRANCH} at ${{ steps.commit.outputs.head }}"

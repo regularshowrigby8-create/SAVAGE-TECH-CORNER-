@@ -1,4 +1,8 @@
--r ../../../backend/requirements.txt
+# The backend's third-party requirements are not declared in this repository: a line that
+# included ../../../backend/requirements.txt pointed at a file that does not exist, so every
+# install of this file failed with "no such file or directory" - which the conveyor belt hid behind
+# `|| true`. The backend modules themselves import nothing outside the standard library, so nothing
+# is missing here until the backend grows a dependency of its own.
 coverage==7.16.2
 hypothesis==6.168.3
 pytest==9.1.1

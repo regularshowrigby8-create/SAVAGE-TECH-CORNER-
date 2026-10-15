@@ -14,3 +14,12 @@ build/
 .env.*.local
 node_modules/
 dist/
+
+# Written by tools/factory/sealed_factory_runtime.py on every run: plans, prompts, model
+# output, and the report. Committing them would mean committing a timestamped machine run.
+sealed-factories/runs/
+sealed-factories/manifest/
+
+# The state directory agent runs write into the workspace they are pointed at (plans, reports,
+# artefacts). It belongs to the run, not to the repository.
+.sealed/

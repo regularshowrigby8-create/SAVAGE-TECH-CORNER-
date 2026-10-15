@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# Runs the configured linters over exactly the staged files (see the "lint-staged" block in
+# package.json); a failure stops the commit instead of letting it through.
+npx lint-staged

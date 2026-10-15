@@ -1,0 +1,1349 @@
+{
+ "store": "licenses",
+ "texts": [
+  {
+   "file": "addyosmani-agent-skills-LICENSE",
+   "record": "addyosmani-agent-skills",
+   "bytes": 1068,
+   "sha256": "6f202f8bd568cd730dbb2b0d1f8e243bc74c2fa1f64dbce9b2c7ea08bd5c9fd7",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "addyosmani-factory-LICENSE",
+   "record": "addyosmani-factory",
+   "bytes": 1068,
+   "sha256": "c122223ac43e86421958e18623979942c21b642951e2e3736dcb63eff13587c3",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "adk-python-LICENSE",
+   "record": "adk-python",
+   "bytes": 11358,
+   "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "agent-field-codeaf-LICENSE",
+   "record": "agent-field-codeaf",
+   "bytes": 11357,
+   "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "agent-framework-LICENSE",
+   "record": "agent-framework",
+   "bytes": 1141,
+   "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "agent-squad-LICENSE",
+   "record": "agent-squad",
+   "bytes": 11358,
+   "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "agno-LICENSE",
+   "record": "agno",
+   "bytes": 11343,
+   "sha256": "7504bf0fe32a486487ec309d5ef30597ca87d2508450be380f6ef4772c3371ca",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "aipoch-open-science-LICENSE",
+   "record": "aipoch-open-science",
+   "bytes": 11336,
+   "sha256": "b038148f912bdd6e61e33e56214d02c4d8a9640f7a637e21dfcf939332816979",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "alirezarezvani-claude-skills-LICENSE",
+   "record": "alirezarezvani-claude-skills",
+   "bytes": 1072,
+   "sha256": "a20126646f93d32a8989c3cf4772d59194f405034f7babe7daebeac22b8ab151",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "angelmsger-jenkins-cli-LICENSE",
+   "record": "angelmsger-jenkins-cli",
+   "bytes": 1067,
+   "sha256": "a0284841143c0eafa33dd75c13c06a40ce56ad15939de197efafaf904dfd589f",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "ashishyesale7-lgflutterstarterkit-LICENSE",
+   "record": "ashishyesale7-lgflutterstarterkit",
+   "bytes": 1070,
+   "sha256": "1833268a67d24e0fec3f6c717f177c9e913f53ef4e80f30484e94ba121455f6c",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "autogen-LICENSE",
+   "record": "autogen",
+   "bytes": 18650,
+   "sha256": "7e7170e3cebf88a9f60c7b8421418323c09304da1af4d5e90f4da1dc1c8a2661",
+   "spdx": "",
+   "blocked_by": "mixed-with-docs-licence",
+   "note": "the text carries a mixed-with-docs-licence term, which limits redistribution"
+  },
+  {
+   "file": "autogpt-LICENSE",
+   "record": "autogpt",
+   "bytes": 8542,
+   "sha256": "aafc62ebf01092909ae72131b66f48c89ea7eaf4bd7e916f3f05f7960611799a",
+   "spdx": "",
+   "blocked_by": "Polyform",
+   "note": "the text carries a Polyform term, which limits redistribution"
+  },
+  {
+   "file": "awesome-mcp-servers-LICENSE",
+   "record": "awesome-mcp-servers",
+   "bytes": 1125,
+   "sha256": "8cb2c0a4c6590502ffb793005c0f1b440ca4db34dcc209bbe9cf34d3b52a7e07",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "azure-mcp-LICENSE",
+   "record": "azure-mcp",
+   "bytes": 1077,
+   "sha256": "8a5d8efb70942e65032f930c761d097feeb41a7517ebd04c9d2e4ec3764071c5",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "bastani-inc-atomic-LICENSE",
+   "record": "bastani-inc-atomic",
+   "bytes": 1263,
+   "sha256": "a1a5bc156dbcb71d4f572e6ca7f6cea546f14769719d7afbbaa8fc0c64c34302",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "bryce-murphy-amas-framework-LICENSE",
+   "record": "bryce-murphy-amas-framework",
+   "bytes": 1069,
+   "sha256": "2b9a9402a9a986123313ac117822e7d8af26c102fc8bc79202534a572a3c24df",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "camel-LICENSE",
+   "record": "camel",
+   "bytes": 11344,
+   "sha256": "950deb34b1341a0ac95236fae92fe247c318c3a83a62c9ebacbe1882530ab1f6",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "charlyhno-eng-jev-codex-pilot-LICENSE",
+   "record": "charlyhno-eng-jev-codex-pilot",
+   "bytes": 1066,
+   "sha256": "e8ef71c770d86f69b9eeea5ca411fb855ae268ecd683a2b5ce18dcf78ef64652",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "chroma-mcp-LICENSE",
+   "record": "chroma-mcp",
+   "bytes": 11357,
+   "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "chrome-devtools-mcp-LICENSE",
+   "record": "chrome-devtools-mcp",
+   "bytes": 11357,
+   "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "cleanwk-agent-pipeline-example-LICENSE",
+   "record": "cleanwk-agent-pipeline-example",
+   "bytes": 9724,
+   "sha256": "fd26644b0118c8ae84a8770bdbbe18f7db14387b5cc19d1de670ad2d98a7ad42",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "cloudflare-moltworker-LICENSE",
+   "record": "cloudflare-moltworker",
+   "bytes": 11357,
+   "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "codebase-memory-mcp-LICENSE",
+   "record": "codebase-memory-mcp",
+   "bytes": 1107,
+   "sha256": "1f58f9911dc5e3bcb96de28bb28e7b6bb7eb323952d29569c5d7214a152146bb",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "comet-ml-opik-LICENSE",
+   "record": "comet-ml-opik",
+   "bytes": 11391,
+   "sha256": "0236cf0195e033d15c120e610d44943e8e478ffed5d60fbba1b5a6b96e778a47",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "conductor-oss-conductor-LICENSE",
+   "record": "conductor-oss-conductor",
+   "bytes": 11309,
+   "sha256": "5a09b5eb8064615992192a13ffa6875568225d1e5bef991a48ca9d48ba3c0dc8",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "context-mode-LICENSE",
+   "record": "context-mode",
+   "bytes": 3840,
+   "sha256": "92f11a867c41c9e575ccb978ff205ae2011c244a14aa3c576e914e537105caa0",
+   "spdx": "",
+   "blocked_by": "Elastic-2.0",
+   "note": "the text carries a Elastic-2.0 term, which limits redistribution"
+  },
+  {
+   "file": "context7-LICENSE",
+   "record": "context7",
+   "bytes": 1079,
+   "sha256": "85cfb556dc2b22b55d2565674fcdaac82f3f2f6b7a928d27003132721bb6736c",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "crewai-LICENSE",
+   "record": "crewai",
+   "bytes": 1055,
+   "sha256": "28868731966f4aa37f02879839aabc797137e27ddde4e274ef9cf965f9a71774",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "curie-eng-curie-LICENSE",
+   "record": "curie-eng-curie",
+   "bytes": 11358,
+   "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "dbt-mcp-LICENSE",
+   "record": "dbt-mcp",
+   "bytes": 11338,
+   "sha256": "54b1f37562ff42698d6d917b36238ef44cfa0e7021be50d2c5494e13e603e6aa",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "deep-research-LICENSE",
+   "record": "deep-research",
+   "bytes": 1068,
+   "sha256": "81f62085ecd47a29852b2d214e690e880030058fd07514970d3ca96ccb595349",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "deepset-ai-haystack-LICENSE",
+   "record": "deepset-ai-haystack",
+   "bytes": 11343,
+   "sha256": "3f0a3af7e9b0f3b6358aaa3c7501ab522a67dc5483b870e9a8b3db41ea42e249",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "disler-inkwell-agent-sandboxes-and-software-factory-LICENSE",
+   "record": "disler-inkwell-agent-sandboxes-and-software-factory",
+   "bytes": 1068,
+   "sha256": "492a7adf0e53a04b545d9e196948af25204e497055b2b92f81c607219f64bbdc",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "disler-super-simple-software-factory-LICENSE",
+   "record": "disler-super-simple-software-factory",
+   "bytes": 1068,
+   "sha256": "492a7adf0e53a04b545d9e196948af25204e497055b2b92f81c607219f64bbdc",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "exa-mcp-server-LICENSE",
+   "record": "exa-mcp-server",
+   "bytes": 1065,
+   "sha256": "24be95467fdae5332e37b48b7479ff09920c3cc4202fdd02bee8d4e20944220e",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "fabro-sh-fabro-LICENSE",
+   "record": "fabro-sh-fabro",
+   "bytes": 1066,
+   "sha256": "9d8408208299ecc4a14d8ec82f7a263a47e0672360d8025b4394c45ed8e1cdbc",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "fastmcp-LICENSE",
+   "record": "fastmcp",
+   "bytes": 11356,
+   "sha256": "43070e2d4e532684de521b885f385d0841030efa2b1a20bafb76133a5e1379c1",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "figma-context-mcp-LICENSE",
+   "record": "figma-context-mcp",
+   "bytes": 1071,
+   "sha256": "0b4a760a1cb4ff1cd3dd173d5c66137196773689d35dcbb04ce1a7948f8e2c95",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "filesystem-mcp-server-LICENSE",
+   "record": "filesystem-mcp-server",
+   "bytes": 11317,
+   "sha256": "aa6cffdfcb3b0ff50d83b17ca11b1f3115d310ebb60733df57223ac6801eb4f5",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "finchello-tetra-LICENSE",
+   "record": "finchello-tetra",
+   "bytes": 1069,
+   "sha256": "211ba49b82667613a6ec65231a77e174a07ed66b8ac60558900ead28b2d7efd0",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "finna-finn-loop-LICENSE",
+   "record": "finna-finn-loop",
+   "bytes": 1066,
+   "sha256": "2457a22713fd368eace3421dfee1fbc9815417f51ca32c846010eb4853d0d8a5",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "firecrawl-mcp-server-LICENSE",
+   "record": "firecrawl-mcp-server",
+   "bytes": 1065,
+   "sha256": "9c12811442b47e27f690be7cf0252f6bf93ddee18476f13e0fc6b4badb09c22c",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "forward-future-loopy-LICENSE",
+   "record": "forward-future-loopy",
+   "bytes": 1071,
+   "sha256": "499ee96ced52e2f9829abc848119f1e5f2c6d2085a261d654968297839b628cc",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "foundatron-octopusgarden-LICENSE",
+   "record": "foundatron-octopusgarden",
+   "bytes": 1067,
+   "sha256": "cd041a29a5e84d53c4036818a61f3c0570c00faec30efe28ac11612b19900c72",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "frankiezheng110-superteam-LICENSE",
+   "record": "frankiezheng110-superteam",
+   "bytes": 1065,
+   "sha256": "2322bbb803587fb3a2dc5079dcbfdc3462dee913d0106c7c8518b638940490da",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "getcrew44-crew44-LICENSE",
+   "record": "getcrew44-crew44",
+   "bytes": 1066,
+   "sha256": "24e295ae9c5e4008aa6ea8da25e1362ed990ed52ee1daad9230b61b6d7177862",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "gethuman-sh-human-LICENSE",
+   "record": "gethuman-sh-human",
+   "bytes": 1072,
+   "sha256": "7996dcc9e4c4bb3d19eb9266edb694bfab5bb1b3b75de4ee323a8904a3fe2b3e",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "github-codeql-LICENSE",
+   "record": "github-codeql",
+   "bytes": 1074,
+   "sha256": "66056d06b874e3eb6a22f5fff297e1676a23dc43e8c8b81279c1ef33a6a270df",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "github-gh-aw-LICENSE",
+   "record": "github-gh-aw",
+   "bytes": 1060,
+   "sha256": "2510b446bc1f0cf9702453075d20cd88631e20e5642658edb7325d9c1eb534f7",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "github-mcp-server-LICENSE",
+   "record": "github-mcp-server",
+   "bytes": 1063,
+   "sha256": "9e48ecfa18e2b15169746a3c97beda4d1d6c6796097038498ca434ca7e0ccd44",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "gmail-mcp-server-LICENSE",
+   "record": "gmail-mcp-server",
+   "bytes": 1065,
+   "sha256": "971c514b8546b0bece416214268aec8ff7d086f0e17a07cf2ad8ea3bb4796844",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "googleworkspace-cli-LICENSE",
+   "record": "googleworkspace-cli",
+   "bytes": 11358,
+   "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "grimgrimberg-daily-movers-agent-LICENSE",
+   "record": "grimgrimberg-daily-movers-agent",
+   "bytes": 1071,
+   "sha256": "eb0ab56e0d74f1164cee6c385d965d808f36b3fd66ada5916e432c77952403f2",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "hadamrd-titan-LICENSE",
+   "record": "hadamrd-titan",
+   "bytes": 1055,
+   "sha256": "7efe9ced0936bdaf273ef987f74c9a74f4e06a6235448ce4d45c726e0f41a1ae",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "haystack-LICENSE",
+   "record": "haystack",
+   "bytes": 11343,
+   "sha256": "3f0a3af7e9b0f3b6358aaa3c7501ab522a67dc5483b870e9a8b3db41ea42e249",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "hkuds-nanobot-LICENSE",
+   "record": "hkuds-nanobot",
+   "bytes": 1102,
+   "sha256": "f69260cd9a0a4e074c3d5e7140989303042fa3626a7564d9bb6893043e0d4fce",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "humanlayer-LICENSE",
+   "record": "humanlayer",
+   "bytes": 589,
+   "sha256": "a22be4045580cf9fd55278e4a42f015aaaa828a859cef7ea19733d25da11755e",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "ida-pro-mcp-LICENSE",
+   "record": "ida-pro-mcp",
+   "bytes": 1071,
+   "sha256": "ee7e7d1886c4a567ba3b7a0d88abaaac57e7bfeee4402a24872effa78a2b6b6e",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "iflytek-astron-agent-LICENSE",
+   "record": "iflytek-astron-agent",
+   "bytes": 11347,
+   "sha256": "0a0bc9d837c53abfd178307b3cf3d41ed5131352c263927b00e09604dfddcb75",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "inspector-LICENSE",
+   "record": "inspector",
+   "bytes": 12227,
+   "sha256": "0382b0057770ca05e9c350a50aa3b1c1fea84da0bc81d723bf00b9aa841be58a",
+   "spdx": "",
+   "blocked_by": "mixed-with-docs-licence",
+   "note": "the text carries a mixed-with-docs-licence term, which limits redistribution"
+  },
+  {
+   "file": "iusztinpaul-squid-LICENSE",
+   "record": "iusztinpaul-squid",
+   "bytes": 11347,
+   "sha256": "ca6f9ffc296022566a905a7c9300874201977579382f4a193a9520cdb5db62e7",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "k-dense-ai-scientific-agent-skills-LICENSE",
+   "record": "k-dense-ai-scientific-agent-skills",
+   "bytes": 1068,
+   "sha256": "09b02a3c9df3053c55531d503357a9c7cde275970e6c3ceaa1ddf5f0e90b40c1",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "konflux-ci-konflux-ci-LICENSE",
+   "record": "konflux-ci-konflux-ci",
+   "bytes": 11357,
+   "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "kunchenguid-grok-ship-LICENSE",
+   "record": "kunchenguid-grok-ship",
+   "bytes": 1065,
+   "sha256": "945016bd37e1ba7211622ef60ee1d23ab727896ba7710edd21e8fbe983863969",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "langchain-LICENSE",
+   "record": "langchain",
+   "bytes": 1067,
+   "sha256": "4ec67e4ca6e6721dba849b2ca82261597c86a61ee214bbf21416006b7b2d0478",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "langgraph-LICENSE",
+   "record": "langgraph",
+   "bytes": 1072,
+   "sha256": "d9bb52f2e3540d60ff50d8f0f5b6ba649b7fd346948c4c3d086c8afb120763c7",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "larksuite-cli-LICENSE",
+   "record": "larksuite-cli",
+   "bytes": 1084,
+   "sha256": "c969fc7e3af68e6bf40b0d8dd9c3dcc377eb685a2139535b203b39fdcad739ee",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "llama-index-LICENSE",
+   "record": "llama-index",
+   "bytes": 1065,
+   "sha256": "24f40b5190fdacabc24ddbb5f76364d15e4f030925220ea300d8a2dd4993c8cb",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "mcp-LICENSE",
+   "record": "mcp",
+   "bytes": 10142,
+   "sha256": "09e8a9bcec8067104652c168685ab0931e7868f9c8284b66f5ae6edae5f1130b",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "mcp-agent-LICENSE",
+   "record": "mcp-agent",
+   "bytes": 11357,
+   "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "mcp-atlassian-LICENSE",
+   "record": "mcp-atlassian",
+   "bytes": 1069,
+   "sha256": "e990a8422c25876d76b9dce9ee720ff2b662d5ca10a842afb0f787a0573276db",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "mcp-chrome-LICENSE",
+   "record": "mcp-chrome",
+   "bytes": 1063,
+   "sha256": "d44b3734ef77a2bebb8508aa122ca1c40287d8ee288f0baf6437e6843e3bee00",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "mcp-for-beginners-LICENSE",
+   "record": "mcp-for-beginners",
+   "bytes": 1141,
+   "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "mcp-for-blender-LICENSE",
+   "record": "mcp-for-blender",
+   "bytes": 1071,
+   "sha256": "049501fd54d27852507853a5b88094ca1c6ff97404418a5032f3310eecc9cde6",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "mcp-playwright-LICENSE",
+   "record": "mcp-playwright",
+   "bytes": 1074,
+   "sha256": "b611f7feb097dac1235bc2901046f36ff85e753b075b741412b6a0447ab20390",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "mcp-proxy-LICENSE",
+   "record": "mcp-proxy",
+   "bytes": 1073,
+   "sha256": "201e4aab50c2fbab14f321a9fc7cefe925c1291ae549b61c2822cd91c88d0548",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "mcp-redis-LICENSE",
+   "record": "mcp-redis",
+   "bytes": 1069,
+   "sha256": "8fc61d1149298a3a21da6c56157008ce8a6212a4d75b1fddc29949a00537bef5",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "mcp-server-chart-LICENSE",
+   "record": "mcp-server-chart",
+   "bytes": 1080,
+   "sha256": "a6e512d52a66fcd88bebc7a62c7a348a7af70a17ca27f1d97943c56053712e48",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "mcp-server-cloudflare-LICENSE",
+   "record": "mcp-server-cloudflare",
+   "bytes": 9723,
+   "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "mcp-server-elasticsearch-LICENSE",
+   "record": "mcp-server-elasticsearch",
+   "bytes": 11357,
+   "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "mcp-server-neon-LICENSE",
+   "record": "mcp-server-neon",
+   "bytes": 1073,
+   "sha256": "c78e92b6ad00e83fb7e1d69aa0f6dcc13a97486ce2a22e74ffa3ad31eca3cc64",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "mcp-toolbox-LICENSE",
+   "record": "mcp-toolbox",
+   "bytes": 11357,
+   "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "metagpt-LICENSE",
+   "record": "metagpt",
+   "bytes": 1072,
+   "sha256": "74945da6216c3f6498159a55cd25c0564acc684b791c169f869117a095808b00",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "microsoft-agent-framework-LICENSE",
+   "record": "microsoft-agent-framework",
+   "bytes": 1141,
+   "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "mitkox-esf-LICENSE",
+   "record": "mitkox-esf",
+   "bytes": 1115,
+   "sha256": "bbff8983f1ba6ec0723c1566af28d2e1e2109ac478361bc8132302668ae2ce89",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "mobile-dev-inc-maestro-LICENSE",
+   "record": "mobile-dev-inc-maestro",
+   "bytes": 11357,
+   "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "muratcankoylan-agent-skills-for-context-engineering-LICENSE",
+   "record": "muratcankoylan-agent-skills-for-context-engineering",
+   "bytes": 1103,
+   "sha256": "65bc33b0759a48b980962833b12bcb820404da9f5256bff39c00e89471bcf209",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "mvanhorn-last30days-skill-LICENSE",
+   "record": "mvanhorn-last30days-skill",
+   "bytes": 1070,
+   "sha256": "31803213a789825dc419de43542381e1d570b4408cf2bcf2e8a9947a6d3fd2ab",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "n8n-mcp-LICENSE",
+   "record": "n8n-mcp",
+   "bytes": 1098,
+   "sha256": "8292ff05257b8f1ceae44382f0585abb0df9dc007d2ee2254c5a835c01920b35",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "nanobrowser-nanobrowser-LICENSE",
+   "record": "nanobrowser-nanobrowser",
+   "bytes": 11357,
+   "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "notion-mcp-server-LICENSE",
+   "record": "notion-mcp-server",
+   "bytes": 1060,
+   "sha256": "2fd3e5272a40483e9cc8140136b4438708a496ea2da2537b98f0f2bbb68148ee",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "nvidia-skillspector-LICENSE",
+   "record": "nvidia-skillspector",
+   "bytes": 10782,
+   "sha256": "9f8785b47596b2993a17a3fa8d747ae63126a2c5e80a9e77195a907273d71839",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "openai-agents-js-LICENSE",
+   "record": "openai-agents-js",
+   "bytes": 1062,
+   "sha256": "969d1c8178ad9a1ae2ff1e67534151d4cc58a2626274b272f918995bccd3a6ad",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "openai-agents-python-LICENSE",
+   "record": "openai-agents-python",
+   "bytes": 1063,
+   "sha256": "13df7812ca53ecaae1cb4a868844bb598373047ae1d580e4debfbef1dd5b6915",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "openai-openai-agents-js-LICENSE",
+   "record": "openai-openai-agents-js",
+   "bytes": 1062,
+   "sha256": "969d1c8178ad9a1ae2ff1e67534151d4cc58a2626274b272f918995bccd3a6ad",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "openai-openai-agents-python-LICENSE",
+   "record": "openai-openai-agents-python",
+   "bytes": 1063,
+   "sha256": "13df7812ca53ecaae1cb4a868844bb598373047ae1d580e4debfbef1dd5b6915",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "openhands-LICENSE",
+   "record": "openhands",
+   "bytes": 1096,
+   "sha256": "e1d1fa9f3a8d7bef24449d488fcd8f00f8f272cac297bb9bed161eb6175b876a",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "oraphadev-ai-workflow-LICENSE",
+   "record": "oraphadev-ai-workflow",
+   "bytes": 1066,
+   "sha256": "80bf1c422a3a438fecd6a1e25d4242c8a9ffdbbe81558cfadde9b1210968ff63",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "orbi-build-orbi-LICENSE",
+   "record": "orbi-build-orbi",
+   "bytes": 34523,
+   "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+   "spdx": "",
+   "blocked_by": "AGPL-3.0",
+   "note": "the text carries a AGPL-3.0 term, which limits redistribution"
+  },
+  {
+   "file": "os-factory-har-LICENSE",
+   "record": "os-factory-har",
+   "bytes": 11357,
+   "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "othmanadi-planning-with-files-LICENSE",
+   "record": "othmanadi-planning-with-files",
+   "bytes": 1066,
+   "sha256": "4f2e5ecfaa4e0833621cfe54c0bdc2f60f086c0925540d7bdc713517eafb3c84",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "owainlewis-machinist-LICENSE",
+   "record": "owainlewis-machinist",
+   "bytes": 1068,
+   "sha256": "e6a0144d74a677125e425b88d863d581ebc62a34fca09621070d2e089c9f041b",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "parthalon025-autonomous-coding-toolkit-LICENSE",
+   "record": "parthalon025-autonomous-coding-toolkit",
+   "bytes": 1073,
+   "sha256": "29c7a2174291feab95ceb3e1ff92edf994a22f2c1030b6dafd0537059f34bcdd",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "phyagentos-phyagentos-core-LICENSE",
+   "record": "phyagentos-phyagentos-core",
+   "bytes": 1079,
+   "sha256": "da8470824d766a8bb7a66827480d34700c662b62a965ab0d1a9e803ee5ef5303",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "playwright-mcp-LICENSE",
+   "record": "playwright-mcp",
+   "bytes": 11552,
+   "sha256": "9a7110fc2d2f964038e5dc49128f908f29f47a574c961cba16085914e879cbda",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "professorpalmer-puppetmaster-LICENSE",
+   "record": "professorpalmer-puppetmaster",
+   "bytes": 1061,
+   "sha256": "cfe79086ce9a661af8b3cfb325e7f18e19a921fb274c5ce72ad5da72cc3721c8",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "pydantic-ai-LICENSE",
+   "record": "pydantic-ai",
+   "bytes": 1100,
+   "sha256": "bc0e89738f36944c8106e1947c3d69631f9c33b8f1bcb60ec4f89d677d2dfcf4",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "pyspur-dev-pyspur-LICENSE",
+   "record": "pyspur-dev-pyspur",
+   "bytes": 11357,
+   "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "python-sdk-LICENSE",
+   "record": "python-sdk",
+   "bytes": 1071,
+   "sha256": "5e13dbbc1d120fc2a03cecde7c91424ae2d7de11b63d58ded2f4431e261ee50d",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "quickstart-resources-LICENSE",
+   "record": "quickstart-resources",
+   "bytes": 12227,
+   "sha256": "0382b0057770ca05e9c350a50aa3b1c1fea84da0bc81d723bf00b9aa841be58a",
+   "spdx": "",
+   "blocked_by": "mixed-with-docs-licence",
+   "note": "the text carries a mixed-with-docs-licence term, which limits redistribution"
+  },
+  {
+   "file": "renovatebot-renovate-LICENSE",
+   "record": "renovatebot-renovate",
+   "bytes": 34523,
+   "sha256": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
+   "spdx": "",
+   "blocked_by": "AGPL-3.0",
+   "note": "the text carries a AGPL-3.0 term, which limits redistribution"
+  },
+  {
+   "file": "renseiai-donmai-libraries-LICENSE",
+   "record": "renseiai-donmai-libraries",
+   "bytes": 1066,
+   "sha256": "b01e99f3b6b36681158ddd00ee2c2ab2f6ad553a42b0198f31643acd9b795213",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "rocketride-org-rocketride-server-LICENSE",
+   "record": "rocketride-org-rocketride-server",
+   "bytes": 1077,
+   "sha256": "8087969fe5d851dc86f7170744884108a184e041399bbe527a92572eac5c8691",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "roxabi-roxabi-factory-LICENSE",
+   "record": "roxabi-roxabi-factory",
+   "bytes": 34524,
+   "sha256": "8d56b405468aad11f87ab5763f901e276e08d9646ff5c8481b1762b6b789e9ed",
+   "spdx": "",
+   "blocked_by": "AGPL-3.0",
+   "note": "the text carries a AGPL-3.0 term, which limits redistribution"
+  },
+  {
+   "file": "rukenzilan-4-agent-software-development-pipeline-LICENSE",
+   "record": "rukenzilan-4-agent-software-development-pipeline",
+   "bytes": 1062,
+   "sha256": "48908b99960609dda004eac40dd5f532816281234a8fe39677ddede1a7437152",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "runfusion-fusion-LICENSE",
+   "record": "runfusion-fusion",
+   "bytes": 1066,
+   "sha256": "29b37bded87770a8397cad925598f6b7d9008879b45e293ab7a267e54b711c64",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "salmanmohsen-synapse-LICENSE",
+   "record": "salmanmohsen-synapse",
+   "bytes": 1070,
+   "sha256": "d090ef779ad6017ff1ad0d97dea6c29a501090c9fd4d05cb4167233e501db86c",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "sandgardenhq-sgai-LICENSE",
+   "record": "sandgardenhq-sgai",
+   "bytes": 1414,
+   "sha256": "8c145535036d3bba0f712926c19e790860595876f93d89020bea248bf1bf9160",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "sbhooley-ainativelang-LICENSE",
+   "record": "sbhooley-ainativelang",
+   "bytes": 10259,
+   "sha256": "6ab80ff706204352d605a826c6e8c070d62eaa52e01494c6a05dde85f91ccedf",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "sch0penheimer-aws-devsecops-hybrid-software-factory-LICENSE",
+   "record": "sch0penheimer-aws-devsecops-hybrid-software-factory",
+   "bytes": 7048,
+   "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+   "spdx": "CC0-1.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "seanoliver-audioflare-LICENSE",
+   "record": "seanoliver-audioflare",
+   "bytes": 1058,
+   "sha256": "55625db568ff082c9dbd83ded35d8eefeeb1f4c008a06c49ebc0cc1b5ca23c4e",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "semantic-kernel-LICENSE",
+   "record": "semantic-kernel",
+   "bytes": 1141,
+   "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "sentry-mcp-LICENSE",
+   "record": "sentry-mcp",
+   "bytes": 3785,
+   "sha256": "1f2a39da390f36830e83d88b17f7720527a7c95f8f137b16ebb68f283cbbfabc",
+   "spdx": "",
+   "blocked_by": "non-commercial",
+   "note": "the text carries a non-commercial term, which limits redistribution"
+  },
+  {
+   "file": "serena-LICENSE",
+   "record": "serena",
+   "bytes": 3470,
+   "sha256": "6239f4be78ccff409aedfbce88ac89b26f488f76aac7ab199fb6876dc7fdeb4c",
+   "spdx": "",
+   "blocked_by": "GPL-3.0",
+   "note": "the text carries a GPL-3.0 term, which limits redistribution"
+  },
+  {
+   "file": "servers-LICENSE",
+   "record": "servers",
+   "bytes": 12227,
+   "sha256": "0382b0057770ca05e9c350a50aa3b1c1fea84da0bc81d723bf00b9aa841be58a",
+   "spdx": "",
+   "blocked_by": "mixed-with-docs-licence",
+   "note": "the text carries a mixed-with-docs-licence term, which limits redistribution"
+  },
+  {
+   "file": "shawncsx-autosci-LICENSE",
+   "record": "shawncsx-autosci",
+   "bytes": 1072,
+   "sha256": "a1f132cbeb375a8ff4875f66b2ce67a9bef575714c77aa45b87f7c3e73bedee4",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "shenwell-ai-software-factory-pipeline-LICENSE",
+   "record": "shenwell-ai-software-factory-pipeline",
+   "bytes": 1064,
+   "sha256": "4d4f09ea966e7b411a6a9d8fcca2b66c29178fd63a0369033ffafd55c9fb78d3",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "shuanbao0-agent-factory-LICENSE",
+   "record": "shuanbao0-agent-factory",
+   "bytes": 35148,
+   "sha256": "8b1ba204bb69a0ade2bfcf65ef294a920f6bb361b317dba43c7ef29d96332b9b",
+   "spdx": "",
+   "blocked_by": "AGPL-3.0",
+   "note": "the text carries a AGPL-3.0 term, which limits redistribution"
+  },
+  {
+   "file": "sufficientdaikon-sdd-copilot-agents-LICENSE",
+   "record": "sufficientdaikon-sdd-copilot-agents",
+   "bytes": 1073,
+   "sha256": "fccf6d3fad36017f3487dae3951d0c5779d7c69fa079bd719a8310c70a8f8cbf",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "supabase-mcp-LICENSE",
+   "record": "supabase-mcp",
+   "bytes": 10928,
+   "sha256": "2709b46247ffa63d4ac07a9df00de1a47995d6fec89d1390e107d7543eee41fd",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "superplanehq-superplane-LICENSE",
+   "record": "superplanehq-superplane",
+   "bytes": 11474,
+   "sha256": "63c7d0cadba0cfdbb22dade78a7e450438c72f668be3ce27287c338850a94499",
+   "spdx": "",
+   "blocked_by": "enterprise-edition",
+   "note": "the text carries a enterprise-edition term, which limits redistribution"
+  },
+  {
+   "file": "swarm-LICENSE",
+   "record": "swarm",
+   "bytes": 1063,
+   "sha256": "d831db55645e47ca8e491c5a0e37f1ee744d7b10bf5aa8d50146c795ac0176c0",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "swe-agent-LICENSE",
+   "record": "swe-agent",
+   "bytes": 1147,
+   "sha256": "7610ed3916f6674e34b78417894abd57ff538b3cfdda3085e3643d82acbaf31f",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "tavily-mcp-LICENSE",
+   "record": "tavily-mcp",
+   "bytes": 1082,
+   "sha256": "fb93ba4424b3572bf1c60d2546a3aa39baddd2bc02e950315f55a734c57544da",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "thruwire-foreman-LICENSE",
+   "record": "thruwire-foreman",
+   "bytes": 1065,
+   "sha256": "7d173fa71020f1a220de90251f92abbaaf001567a2443747a0753ade1cb63f68",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "tikalk-adlc-team-skills-LICENSE",
+   "record": "tikalk-adlc-team-skills",
+   "bytes": 1072,
+   "sha256": "c6c7900ff9cb47823ca9fcc79ff890346d20ec256e8b660f1653379a775899d4",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "transconnectome-claude-code-coord-LICENSE",
+   "record": "transconnectome-claude-code-coord",
+   "bytes": 1132,
+   "sha256": "704103baf7e19bfacb82395f369941703790c4a6c49504dbe9479d7aea62814f",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "tt-a1i-archify-LICENSE",
+   "record": "tt-a1i-archify",
+   "bytes": 1102,
+   "sha256": "b799ab081703e7821ae5096d2c1abdf14bbdc75e8ea1c4045998c36ed6db9706",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "typescript-sdk-LICENSE",
+   "record": "typescript-sdk",
+   "bytes": 12227,
+   "sha256": "0382b0057770ca05e9c350a50aa3b1c1fea84da0bc81d723bf00b9aa841be58a",
+   "spdx": "",
+   "blocked_by": "mixed-with-docs-licence",
+   "note": "the text carries a mixed-with-docs-licence term, which limits redistribution"
+  },
+  {
+   "file": "udoschneider-workflow-pipeline-LICENSE",
+   "record": "udoschneider-workflow-pipeline",
+   "bytes": 1070,
+   "sha256": "e302ceb6b052aaa4c9bf7d5bf9d764072dd021c889fd09dc85dd58b0b2aa3419",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "unicomai-wanwu-LICENSE",
+   "record": "unicomai-wanwu",
+   "bytes": 11357,
+   "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "unity-mcp-LICENSE",
+   "record": "unity-mcp",
+   "bytes": 1066,
+   "sha256": "6efe650c965012ac418238dcd6b9116e4130a5220717ef0dfb539dd159c4245c",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "vercel-labs-eve-software-factory-template-LICENSE",
+   "record": "vercel-labs-eve-software-factory-template",
+   "bytes": 1076,
+   "sha256": "6e0e7d8720c5f1888a118ef3577d989a33049c6be088fc8ef1490e9a767226a9",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "watt-mind-factory-LICENSE",
+   "record": "watt-mind-factory",
+   "bytes": 11358,
+   "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+   "spdx": "Apache-2.0",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "wheresryan22-anatomy-LICENSE",
+   "record": "wheresryan22-anatomy",
+   "bytes": 1061,
+   "sha256": "87c078ab9d90a3044f359e6b563d4e6afea7aa060897cf4f21618687b3856796",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "xerrors-yuxi-LICENSE",
+   "record": "xerrors-yuxi",
+   "bytes": 1082,
+   "sha256": "93ae1dca19d82831cfd514eb0f148f326a27f8d2d757662e8e2703a48658543e",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "yizhiyanhua-ai-fireworks-tech-graph-LICENSE",
+   "record": "yizhiyanhua-ai-fireworks-tech-graph",
+   "bytes": 1090,
+   "sha256": "a71a3dde0999e54206cc012fd97f358e9407e030b1110bac31aaf83834ea2c6d",
+   "spdx": "MIT",
+   "blocked_by": "",
+   "note": ""
+  },
+  {
+   "file": "yzhao062-pyod-LICENSE",
+   "record": "yzhao062-pyod",
+   "bytes": 1313,
+   "sha256": "2aad003d1faca304e013f82e5088e8cb1c364470d4755e1e2175922a9872bf56",
+   "spdx": "BSD-2-Clause",
+   "blocked_by": "",
+   "note": ""
+  }
+ ],
+ "count": 149,
+ "bytes": 762821,
+ "index_sha256": "5164dae7707395443a111df88ea878784baf04803fa90e3f505b670047e4a4b0"
+}

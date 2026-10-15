@@ -1,0 +1,99 @@
+{
+ "id": "benedicttenius-fabricsoftware",
+ "full_name": "BenedictTenius/FabricSoftware",
+ "url": "https://github.com/BenedictTenius/FabricSoftware",
+ "license": "NOASSERTION",
+ "license_file": null,
+ "license_text_sha256": null,
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "9a5850b4e6cbfc9ffa1aeb51bb6a347ea8bbadcd",
+ "vendored_files": [
+  {
+   "path": ".factory/prompts/test_writer.md",
+   "bytes": 81,
+   "sha256": "f23792b5d1844fb78941a7ed3ea67ebb48a3d781eb5a456b0e5c96438a34f210"
+  },
+  {
+   "path": ".factory/prompts/security_reviewer.md",
+   "bytes": 98,
+   "sha256": "0bfa09fb18f6a40c1b637b37e2cdbe09eb5cbe57f104e6045eca1003c6a35f65"
+  },
+  {
+   "path": ".factory/prompts/reviewer.md",
+   "bytes": 107,
+   "sha256": "c41e24fc653fa2e76942292550dbf767a6fb06d224cd13e3f109e60c2c8a20f3"
+  },
+  {
+   "path": ".factory/prompts/builder.md",
+   "bytes": 113,
+   "sha256": "e44de79fc911ae1216b730365940b144a1d35fa31c7fbf0e2182c3436382dbd4"
+  },
+  {
+   "path": ".factory/prompts/integrator.md",
+   "bytes": 204,
+   "sha256": "320d114b64b7742e6ff951bfab73e2bd101dabaa6beafe03b938d9e7d6a6cf86"
+  },
+  {
+   "path": "src/agent_factory/agents/__init__.py",
+   "bytes": 1,
+   "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  {
+   "path": "src/agent_factory/agents/prompt.py",
+   "bytes": 3482,
+   "sha256": "492757df8056f3a6f8f4df93681c1c3cb2bbfd69109a9fa229af2aef07cf1006"
+  },
+  {
+   "path": "src/agent_factory/agents/runner.py",
+   "bytes": 6391,
+   "sha256": "8e0d3faa5173743865c790265a22817be9e63c7457a319043ba0d4d6c7acd4a7"
+  },
+  {
+   "path": "src/agent_factory/tasks/orchestrator.py",
+   "bytes": 2412,
+   "sha256": "143077010d7c544e95991b61ad0fd991820d79c9d1eef1e46b548490e45c7663"
+  },
+  {
+   "path": "src/agent_factory/tasks/worker.py",
+   "bytes": 5705,
+   "sha256": "2f3c3edebd1b8bb7cea9c3c8c7056b6579d2604b3e33b00aa60d3ffe1fbbab8a"
+  },
+  {
+   "path": "src/agent_factory/quality/gate.py",
+   "bytes": 7768,
+   "sha256": "1c88cd29f167bec9c78a100f482ebe78f64bb1de471ca835bfc80bc966f5304c"
+  },
+  {
+   "path": ".factory/memory/RULES.md",
+   "bytes": 429,
+   "sha256": "374f81604d8224b9d4858d02e2904fcb311fd0c6e5b8fe92ece67633cf1d0141"
+  },
+  {
+   "path": "README.md",
+   "bytes": 14497,
+   "sha256": "4921459982ffc46eef4ecce27fd5840722eb5c42d59dddf344cc7d6bb8fbe5a4"
+  }
+ ],
+ "skipped": {
+  "budget": false,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 71
+ },
+ "providers": [
+  "anthropic"
+ ],
+ "entrypoints": [
+  "src/agent_factory/tasks/orchestrator.py",
+  "src/agent_factory/tasks/worker.py"
+ ],
+ "runtime": [
+  "python"
+ ],
+ "notes": [],
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 13,
+ "vendored_bytes": 41288,
+ "content_redistributed": false
+}

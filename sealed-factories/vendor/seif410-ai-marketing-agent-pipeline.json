@@ -1,0 +1,49 @@
+{
+ "id": "seif410-ai-marketing-agent-pipeline",
+ "full_name": "seif410/ai-marketing-agent-pipeline",
+ "url": "https://github.com/seif410/ai-marketing-agent-pipeline",
+ "license": "NOASSERTION",
+ "license_file": null,
+ "license_text_sha256": null,
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "ec9b82a256485003aca86348564d2d7ba0bc7a80",
+ "vendored_files": [
+  {
+   "path": "app/main.py",
+   "bytes": 358,
+   "sha256": "2c8aacee1e31bb99438237bfababb2d0b8b8ef6c0768173e7b999976e5f01300"
+  },
+  {
+   "path": "app/services/pipeline.py",
+   "bytes": 2069,
+   "sha256": "12ab3223cc6ea093b9f08b4693960c4734bfefd34b9bd1923aa6405f9fad8312"
+  },
+  {
+   "path": "README.md",
+   "bytes": 5120,
+   "sha256": "99e4c3c46d2d36591c4f310e8a53699ea755635cc1b0dc922f68c6fa5a1d519d"
+  }
+ ],
+ "skipped": {
+  "budget": false,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 17
+ },
+ "providers": [
+  "google"
+ ],
+ "entrypoints": [
+  "app/main.py",
+  "app/services/pipeline.py"
+ ],
+ "runtime": [
+  "python"
+ ],
+ "notes": [],
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 3,
+ "vendored_bytes": 7547,
+ "content_redistributed": false
+}

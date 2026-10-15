@@ -2,12 +2,12 @@
 
 ## 1. Naming & Ecosystem Taxonomy
 
-| Term | Role & Definition |
-|---|---|
-| **Savage Tech Corner** | The parent organization, developer studio, and multi-factory software engineering platform. |
-| **Savage Browser** | The flagship Android application product (`com.savage.soulbrowser`). |
+| Term                   | Role & Definition                                                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **Savage Tech Corner** | The parent organization, developer studio, and multi-factory software engineering platform.                               |
+| **Savage Browser**     | The flagship Android application product (`com.savage.soulbrowser`).                                                      |
 | **Soul Browser Shell** | The ultra-lightweight, high-performance architectural shell design pattern powering the browser UI and WebView container. |
-| **The Factories** | Reusable autonomous multi-agent verification and refinement pipelines powering this and future applications. |
+| **The Factories**      | Reusable autonomous multi-agent verification and refinement pipelines powering this and future applications.              |
 
 ---
 
@@ -15,15 +15,15 @@
 
 Every module across the repository is categorized by a strict maturity classification:
 
-| Directory | Role | Maturity Status |
-|---|---|---|
-| `shell/android_project/` | Production native Android application (Gradle, Java, ResXML, Manifest) | **Working / Release-Ready** |
-| `shell/soul_browser/` | Python architectural model of browser shell and bridge | **Tested Prototype** |
-| `frontend/` | Browser frontend modules (UI, tabs, storage, engine) | **Architectural Prototype** |
-| `backend/` | Cloud backend services (Gateway, search orchestration, AI sync) | **Architectural Prototype** |
-| `factories/` | Canonical autonomous agent and verification pipeline | **Working / Tested** |
-| `docs/` | Formal specifications, security policies, and contracts | **Authoritative Specification** |
-| `artifacts/` | Build deliverables, APKs, test reports, and manifests | **Generated Artifacts (CI-managed)** |
+| Directory                | Role                                                                   | Maturity Status                      |
+| ------------------------ | ---------------------------------------------------------------------- | ------------------------------------ |
+| `shell/android_project/` | Production native Android application (Gradle, Java, ResXML, Manifest) | **Working / Release-Ready**          |
+| `shell/soul_browser/`    | Python architectural model of browser shell and bridge                 | **Tested Prototype**                 |
+| `frontend/`              | Browser frontend modules (UI, tabs, storage, engine)                   | **Architectural Prototype**          |
+| `backend/`               | Cloud backend services (Gateway, search orchestration, AI sync)        | **Architectural Prototype**          |
+| `factories/`             | Canonical autonomous agent and verification pipeline                   | **Working / Tested**                 |
+| `docs/`                  | Formal specifications, security policies, and contracts                | **Authoritative Specification**      |
+| `artifacts/`             | Build deliverables, APKs, test reports, and manifests                  | **Generated Artifacts (CI-managed)** |
 
 ---
 
@@ -67,6 +67,7 @@ Every module across the repository is categorized by a strict maturity classific
 ```
 
 ### Strict Dependency Direction:
+
 - **UI** depends on **Local Client Orchestrator**.
 - **Local Client Orchestrator** depends on **API Gateway**.
 - **API Gateway** dispatches to **Isolated Domain Microservices**.
@@ -80,6 +81,7 @@ Every module across the repository is categorized by a strict maturity classific
 
 - **Method**: `POST`
 - **Request Payload**:
+
 ```json
 {
   "query": "android 16kb page size alignment",
@@ -90,6 +92,7 @@ Every module across the repository is categorized by a strict maturity classific
 ```
 
 - **Response Payload**:
+
 ```json
 {
   "status": "success",
@@ -112,6 +115,7 @@ Every module across the repository is categorized by a strict maturity classific
 - **Method**: `PUT`
 - **Headers**: `Authorization: Bearer <token>`, `X-Request-ID: <uuid>`
 - **Request Payload**:
+
 ```json
 {
   "device_id": "dev_android_pix9_01",

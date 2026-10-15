@@ -1,14 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.SavageBrowser" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">#6366F1</item>
-        <item name="colorPrimaryVariant">#4F46E5</item>
-        <item name="colorOnPrimary">#FFFFFF</item>
-        <item name="colorSecondary">#10B981</item>
-        <item name="colorSecondaryVariant">#059669</item>
-        <item name="colorOnSecondary">#FFFFFF</item>
-        <item name="android:statusBarColor">#090D16</item>
-        <item name="android:navigationBarColor">#090D16</item>
-        <item name="android:windowBackground">#090D16</item>
+        <item name="colorPrimary">@color/accent_indigo</item>
+        <item name="colorPrimaryVariant">@color/accent_indigo_dark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/accent_teal</item>
+        <item name="colorSecondaryVariant">@color/accent_teal_dark</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorError">@color/danger</item>
+        <item name="android:colorBackground">@color/canvas</item>
+        <item name="android:statusBarColor">@color/canvas</item>
+        <item name="android:navigationBarColor">@color/canvas</item>
+        <item name="android:windowBackground">@color/canvas</item>
+    </style>
+
+    <!-- Secondary screens keep a real ActionBar so the up/back affordance is provided by the platform. -->
+    <style name="Theme.SavageBrowser.Screens" parent="Theme.MaterialComponents.DayNight">
+        <item name="colorPrimary">@color/surface_bar</item>
+        <item name="colorPrimaryVariant">@color/canvas</item>
+        <item name="colorOnPrimary">@color/text_primary</item>
+        <item name="colorSecondary">@color/accent_indigo</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorError">@color/danger</item>
+        <item name="android:colorBackground">@color/canvas</item>
+        <item name="android:statusBarColor">@color/canvas</item>
+        <item name="android:navigationBarColor">@color/canvas</item>
+        <item name="android:windowBackground">@color/canvas</item>
     </style>
 </resources>

@@ -20,6 +20,37 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Reviewer 1 runs the master gate, and the master gate ends in checks that need a real
+      # toolchain: GATE 7 measures coverage with the `coverage` module, GATE 8 verifies an APK this
+      # checkout built, GATE 9 runs the conveyor belt under node, and GATE 10 runs a factory
+      # pipeline in Python. Without the steps below the reviewer could only ever report REJECTED for
+      # reasons that have nothing to do with the change under review - which is what it did.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python Dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-gate.txt
+          python -m pip install -r tools/factory/requirements/qa.in
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Build the debug APK that GATE 8 verifies
+        run: bash tools/ci/prepare_android_gate_env.sh
+
       - name: Reviewer 1 - Primary Provenance & Strict Policy Auditor
         id: reviewer_primary
         run: |

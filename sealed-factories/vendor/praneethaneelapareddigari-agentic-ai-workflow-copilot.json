@@ -1,0 +1,65 @@
+{
+ "id": "praneethaneelapareddigari-agentic-ai-workflow-copilot",
+ "full_name": "praneethaneelapareddigari/agentic-ai-workflow-copilot",
+ "url": "https://github.com/praneethaneelapareddigari/agentic-ai-workflow-copilot",
+ "license": "NOASSERTION",
+ "license_file": null,
+ "license_text_sha256": null,
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "478906b19d69de8d6c2b7e38b4b6324635c74d85",
+ "vendored_files": [
+  {
+   "path": "backend/app/pipeline/stages.py",
+   "bytes": 657,
+   "sha256": "82699b0ab9fbff7bbdd2891683366c45827877bbbb18ca84a3d98862003d002f"
+  },
+  {
+   "path": "backend/app/pipeline/executor.py",
+   "bytes": 5876,
+   "sha256": "1c2947da68f42a15189879df0f3d00ce22e2563bba73856328445d1fac6e603e"
+  },
+  {
+   "path": "backend/app/pipeline/orchestrator.py",
+   "bytes": 12103,
+   "sha256": "a422d4b7172da1db0047eaf9083d26353eb983fe381dfd9bf874dbe2604c43c4"
+  },
+  {
+   "path": "backend/app/llm/factory.py",
+   "bytes": 752,
+   "sha256": "16c0622e2b5e5d4d1afb62eaecc7e05f3319ecccfda334553a4b3d937709130d"
+  },
+  {
+   "path": "backend/app/main.py",
+   "bytes": 1715,
+   "sha256": "9b6f86ae27f0eaa115e3b7b6c21f11a3299254e4abb28f289351bcf93e97a4ea"
+  },
+  {
+   "path": "README.md",
+   "bytes": 15858,
+   "sha256": "106fa6d39206286e46d7553da72ebb27b485ab7a7a4942b83e00a184dee27a34"
+  }
+ ],
+ "skipped": {
+  "budget": false,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 50
+ },
+ "providers": [
+  "openai"
+ ],
+ "entrypoints": [
+  "backend/app/pipeline/orchestrator.py",
+  "backend/app/llm/factory.py",
+  "backend/app/main.py"
+ ],
+ "runtime": [
+  "python"
+ ],
+ "notes": [],
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 6,
+ "vendored_bytes": 36961,
+ "content_redistributed": false
+}

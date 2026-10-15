@@ -8,6 +8,7 @@
 - Local commit: `daeb11c`.
 
 ## Unified Factory Consolidation
+
 - Merged factory-1 and factory-2 worktrees into unified multi-factory architecture.
 - Retained Factory 1 workspace, deterministic scanners, and behavioral tests.
 - Retained Factory 2 agent pipeline, manager guidance, and model debugging system.

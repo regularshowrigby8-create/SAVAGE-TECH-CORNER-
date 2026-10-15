@@ -2,8 +2,8 @@ name: Weekly Model Discovery Scan
 
 on:
   schedule:
-    - cron: '0 3 * * 1'  # Every Monday at 03:00 UTC
-  workflow_dispatch:      # Allows manual trigger
+    - cron: "0 3 * * 1" # Every Monday at 03:00 UTC
+  workflow_dispatch: # Allows manual trigger
 
 jobs:
   scan-models:
@@ -15,7 +15,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Run Model Finder
         run: |

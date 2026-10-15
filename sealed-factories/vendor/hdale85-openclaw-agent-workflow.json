@@ -1,0 +1,32 @@
+{
+ "id": "hdale85-openclaw-agent-workflow",
+ "full_name": "Hdale85/openclaw-agent-workflow",
+ "url": "https://github.com/Hdale85/openclaw-agent-workflow",
+ "license": "NOASSERTION",
+ "license_file": null,
+ "license_text_sha256": null,
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "85722891cbaa71f52e2179e2881ff1dafee52382",
+ "vendored_files": [
+  {
+   "path": "README.md",
+   "bytes": 2933,
+   "sha256": "d14e60a73b950df677c58e3c9d8bba9cd9a9ffbfa36434ad1b38b3c06018a863"
+  }
+ ],
+ "skipped": {
+  "budget": false,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 2
+ },
+ "providers": [],
+ "entrypoints": [],
+ "runtime": [],
+ "notes": [],
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 1,
+ "vendored_bytes": 2933,
+ "content_redistributed": false
+}

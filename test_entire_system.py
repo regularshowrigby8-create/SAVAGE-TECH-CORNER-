@@ -104,3 +104,10 @@ class FullSystemAudit(unittest.TestCase):
         print('[AUDIT] Master Deterministic Gates: PASS')
 
 
+
+if __name__ == "__main__":
+    # Without this entry point the module body only *defined* the audit: `python3
+    # test_entire_system.py` exited 0 without running a single test, which made GATE 11 of
+    # .claude/scripts/gates.sh vacuous. The audit now really executes; it invokes
+    # `gates.sh --subshell` internally, so there is no recursion.
+    unittest.main(verbosity=2)

@@ -1,0 +1,179 @@
+{
+ "id": "larksuite-cli",
+ "full_name": "larksuite/cli",
+ "url": "https://github.com/larksuite/cli",
+ "license": "MIT",
+ "license_file": "LICENSE",
+ "license_text_sha256": "c969fc7e3af68e6bf40b0d8dd9c3dcc377eb685a2139535b203b39fdcad739ee",
+ "import_class": "asset-import",
+ "snapshot": "2026-10-14",
+ "commit": "017b19a793ad71794a02887ede04757f3d82e10d",
+ "vendored_files": [
+  {
+   "path": "skills/lark-slides/references/iconpark.md",
+   "bytes": 173,
+   "sha256": "485d4b7cbfd13a661bab192174674ef2a1d96a269e2dc168318327e650bcb04e",
+   "_content": "IyBJY29uUGFyayDlm77moIfvvIjlhbzlrrnlhaXlj6PvvIkKCuacrOaWh+aho+W3sui/geenu+iHsyBbYHhtbC9pY29ucGFyay5tZGBdKHhtbC9pY29ucGFyay5tZCnjgIIKCuatpOaWh+S7tuS7heS/neeVmeaXp+i3r+W+hOWFvOWuueaAp++8m+WQjue7reW8leeUqOivt+S9v+eUqOaWsOi3r+W+hOOAggo="
+  },
+  {
+   "path": "skills/lark-slides/references/troubleshooting.md",
+   "bytes": 195,
+   "sha256": "014769ffe4a0cd80ecaed0c5b491bf03893d156aa1a8a60976c721146c80ff5f",
+   "_content": "IyBUcm91Ymxlc2hvb3RpbmfvvIjlhbzlrrnlhaXlj6PvvIkKCuacrOaWh+aho+W3sui/geenu+iHsyBbYHdvcmtmbG93L2Vycm9yLWhhbmRsaW5nLm1kYF0od29ya2Zsb3cvZXJyb3ItaGFuZGxpbmcubWQp44CCCgrmraTmlofku7bku4Xkv53nlZnml6fot6/lvoTlhbzlrrnmgKfvvJvlkI7nu63lvJXnlKjor7fkvb/nlKjmlrDot6/lvoTjgIIK"
+  },
+  {
+   "path": "skills/lark-slides/references/iconpark-index.json",
+   "bytes": 195,
+   "sha256": "dd0bf7068928601db6588478e1b29ad674f8260a5e0d67a827cef188cd953253",
+   "_content": "IyBJY29uUGFyayDlm77moIfntKLlvJXvvIjlhbzlrrnlhaXlj6PvvIkKCuacrOaWh+aho+W3sui/geenu+iHsyBbYHhtbC9pY29ucGFyay1pbmRleC5qc29uYF0oeG1sL2ljb25wYXJrLWluZGV4Lmpzb24p44CCCgrmraTmlofku7bku4Xkv53nlZnml6fot6/lvoTlhbzlrrnmgKfvvJvlkI7nu63lvJXnlKjor7fkvb/nlKjmlrDot6/lvoTjgIIK"
+  },
+  {
+   "path": "skills/lark-slides/references/validation-checklist.md",
+   "bytes": 200,
+   "sha256": "fac6de17786f6e0f4b01e56103c02cb6e07b3c928958c76fc0598c7b855beb85",
+   "_content": "IyBWYWxpZGF0aW9uIENoZWNrbGlzdO+8iOWFvOWuueWFpeWPo++8iQoK5pys5paH5qGj5bey6L+B56e76IezIFtgd29ya2Zsb3cvdmFsaWRhdGlvbi14bWwubWRgXSh3b3JrZmxvdy92YWxpZGF0aW9uLXhtbC5tZCnjgIIKCuatpOaWh+S7tuS7heS/neeVmeaXp+i3r+W+hOWFvOWuueaAp++8m+WQjue7reW8leeUqOivt+S9v+eUqOaWsOi3r+W+hOOAggo="
+  },
+  {
+   "path": "skills/lark-slides/references/slides_chart_demo.xml",
+   "bytes": 201,
+   "sha256": "503594a9f8d5df9c9b59907eab12ca7d3256507c3a229521657ef588aa20b97e",
+   "_content": "IyBTbGlkZXMg5Zu+6KGo56S65L6LIFhNTO+8iOWFvOWuueWFpeWPo++8iQoK5pys5paH5qGj5bey6L+B56e76IezIFtgeG1sL3NsaWRlc19jaGFydF9kZW1vLnhtbGBdKHhtbC9zbGlkZXNfY2hhcnRfZGVtby54bWwp44CCCgrmraTmlofku7bku4Xkv53nlZnml6fot6/lvoTlhbzlrrnmgKfvvJvlkI7nu63lvJXnlKjor7fkvb/nlKjmlrDot6/lvoTjgIIK"
+  },
+  {
+   "path": "skills/lark-slides/references/lark-slides-add-slide.md",
+   "bytes": 201,
+   "sha256": "ff5e6f9e45630250f05ee577bedde366e944ab624b984712398003def2cdef2e",
+   "_content": "IyBzbGlkZXMgK2FkZC1zbGlkZe+8iOWFvOWuueWFpeWPo++8iQoK5pys5paH5qGj5bey6L+B56e76IezIFtgY2xpL2xhcmstc2xpZGVzLWFkZC1zbGlkZS5tZGBdKGNsaS9sYXJrLXNsaWRlcy1hZGQtc2xpZGUubWQp44CCCgrmraTmlofku7bku4Xkv53nlZnml6fot6/lvoTlhbzlrrnmgKfvvJvlkI7nu63lvJXnlKjor7fkvb/nlKjmlrDot6/lvoTjgIIK"
+  },
+  {
+   "path": "skills/lark-slides/references/lark-slides-screenshot.md",
+   "bytes": 204,
+   "sha256": "c4189fc0ed816442b3e06f2c141daf5865e9265331a3bfadd6ea574fff8b2fde",
+   "_content": "IyBzbGlkZXMgK3NjcmVlbnNob3TvvIjlhbzlrrnlhaXlj6PvvIkKCuacrOaWh+aho+W3sui/geenu+iHsyBbYGNsaS9sYXJrLXNsaWRlcy1zY3JlZW5zaG90Lm1kYF0oY2xpL2xhcmstc2xpZGVzLXNjcmVlbnNob3QubWQp44CCCgrmraTmlofku7bku4Xkv53nlZnml6fot6/lvoTlhbzlrrnmgKfvvJvlkI7nu63lvJXnlKjor7fkvb/nlKjmlrDot6/lvoTjgIIK"
+  },
+  {
+   "path": "skills/lark-slides/references/xml-schema-quick-ref.md",
+   "bytes": 205,
+   "sha256": "90cc2c5c3150d55d2bc657da51c72fe0875f80f4812399cde93fecdc4cd71939",
+   "_content": "IyBYTUwgU2NoZW1hIOW/q+mAn+WPguiAg++8iOWFvOWuueWFpeWPo++8iQoK5pys5paH5qGj5bey6L+B56e76IezIFtgeG1sL3htbC1zY2hlbWEtcXVpY2stcmVmLm1kYF0oeG1sL3htbC1zY2hlbWEtcXVpY2stcmVmLm1kKeOAggoK5q2k5paH5Lu25LuF5L+d55WZ5pen6Lev5b6E5YW85a655oCn77yb5ZCO57ut5byV55So6K+35L2/55So5paw6Lev5b6E44CCCg=="
+  },
+  {
+   "path": "skills/lark-slides/references/lark-slides-media-upload.md",
+   "bytes": 210,
+   "sha256": "3785fae53e12530de0e502cad40ebd22ecbfd6da18c7d4393cdf3566fbd7676f",
+   "_content": "IyBzbGlkZXMgK21lZGlhLXVwbG9hZO+8iOWFvOWuueWFpeWPo++8iQoK5pys5paH5qGj5bey6L+B56e76IezIFtgY2xpL2xhcmstc2xpZGVzLW1lZGlhLXVwbG9hZC5tZGBdKGNsaS9sYXJrLXNsaWRlcy1tZWRpYS11cGxvYWQubWQp44CCCgrmraTmlofku7bku4Xkv53nlZnml6fot6/lvoTlhbzlrrnmgKfvvJvlkI7nu63lvJXnlKjor7fkvb/nlKjmlrDot6/lvoTjgIIK"
+  },
+  {
+   "path": "skills/lark-slides/references/lark-slides-delete-slide.md",
+   "bytes": 210,
+   "sha256": "ca8252cd16e65b4d7869f9f1aa2fb3731a84edcf86cd53409896caaffb9f03ac",
+   "_content": "IyBzbGlkZXMgK2RlbGV0ZS1zbGlkZe+8iOWFvOWuueWFpeWPo++8iQoK5pys5paH5qGj5bey6L+B56e76IezIFtgY2xpL2xhcmstc2xpZGVzLWRlbGV0ZS1zbGlkZS5tZGBdKGNsaS9sYXJrLXNsaWRlcy1kZWxldGUtc2xpZGUubWQp44CCCgrmraTmlofku7bku4Xkv53nlZnml6fot6/lvoTlhbzlrrnmgKfvvJvlkI7nu63lvJXnlKjor7fkvb/nlKjmlrDot6/lvoTjgIIK"
+  },
+  {
+   "path": "internal/qualitygate/skillscan/testdata/skills/lark-demo/SKILL.md",
+   "bytes": 210,
+   "sha256": "9a61649ba07582d6e36565da6cefffb5d1ba861feb1558e5b2bc05ef934b780b",
+   "_content": "LS0tCm5hbWU6IGxhcmstZGVtbwpkZXNjcmlwdGlvbjogRGVtbyBza2lsbAotLS0KCmBgYGJhc2gKIyBjb21tZW50CmxhcmstY2xpIGRvY3MgK2ZldGNoIC0tYXBpLXZlcnNpb24gdjIgLS1kb2MgQTNJamRlbW8KbGFyay1jbGkgaW0gbWVzc2FnZXMgbGlzdCBcCiAgLS1jb250YWluZXItaWQgb2NfeHh4IFwKICAtLXBhZ2Utc2l6ZSAyMApucHggb3RoZXItdG9vbApgYGAK"
+  },
+  {
+   "path": "skills/lark-slides/references/lark-slides-replace-slide.md",
+   "bytes": 213,
+   "sha256": "1bdbbc13d7d745cd4ca9539150ca0e063f07ed016c14417b3015249ce5e8effe",
+   "_content": "IyBzbGlkZXMgK3JlcGxhY2Utc2xpZGXvvIjlhbzlrrnlhaXlj6PvvIkKCuacrOaWh+aho+W3sui/geenu+iHsyBbYGNsaS9sYXJrLXNsaWRlcy1yZXBsYWNlLXNsaWRlLm1kYF0oY2xpL2xhcmstc2xpZGVzLXJlcGxhY2Utc2xpZGUubWQp44CCCgrmraTmlofku7bku4Xkv53nlZnml6fot6/lvoTlhbzlrrnmgKfvvJvlkI7nu63lvJXnlKjor7fkvb/nlKjmlrDot6/lvoTjgIIK"
+  },
+  {
+   "path": "skills/lark-slides/references/lark-slides-pptx-template-workflows.md",
+   "bytes": 215,
+   "sha256": "9c9a844b6d7f61022ec6aeed3d3b7fb1eaa572a2daa072d54924911ddabd4e34",
+   "_content": "IyBQUFQgVGVtcGxhdGUgUmV3cml0ZSBQcmluY2lwbGVz77yI5YW85a655YWl5Y+j77yJCgrmnKzmlofmoaPlt7Lov4Hnp7voh7MgW2B3b3JrZmxvdy90ZW1wbGF0ZS1lZGl0aW5nLm1kYF0od29ya2Zsb3cvdGVtcGxhdGUtZWRpdGluZy5tZCnjgIIKCuatpOaWh+S7tuS7heS/neeVmeaXp+i3r+W+hOWFvOWuueaAp++8m+WQjue7reW8leeUqOivt+S9v+eUqOaWsOi3r+W+hOOAggo="
+  },
+  {
+   "path": "skills/lark-slides/references/lark-slides-edit-workflows.md",
+   "bytes": 216,
+   "sha256": "17ae5a12839556b55344f3198cfe5d7993b5f0e51aa640a66197d2eab2fb439e",
+   "_content": "IyDnvJbovpHlt7LmnIkgUFBU77ya6K+7LeaUuS3lhpnpl63njq/vvIjlhbzlrrnlhaXlj6PvvIkKCuacrOaWh+aho+W3sui/geenu+iHsyBbYHdvcmtmbG93L3NsaWRlcy1lZGl0aW5nLm1kYF0od29ya2Zsb3cvc2xpZGVzLWVkaXRpbmcubWQp44CCCgrmraTmlofku7bku4Xkv53nlZnml6fot6/lvoTlhbzlrrnmgKfvvJvlkI7nu63lvJXnlKjor7fkvb/nlKjmlrDot6/lvoTjgIIK"
+  },
+  {
+   "path": "skills/lark-slides/references/lark-slides-create.md",
+   "bytes": 219,
+   "sha256": "0a00824c0d3c11e6cd4d59610ca9cc4f5479c75e54b7fdacb2fe6422d44ce64e",
+   "_content": "IyBzbGlkZXMgK2NyZWF0Ze+8iOWIm+W7uumjnuS5puW5u+eBr+eJh++8ie+8iOWFvOWuueWFpeWPo++8iQoK5pys5paH5qGj5bey6L+B56e76IezIFtgY2xpL2xhcmstc2xpZGVzLWNyZWF0ZS5tZGBdKGNsaS9sYXJrLXNsaWRlcy1jcmVhdGUubWQp44CCCgrmraTmlofku7bku4Xkv53nlZnml6fot6/lvoTlhbzlrrnmgKfvvJvlkI7nu63lvJXnlKjor7fkvb/nlKjmlrDot6/lvoTjgIIK"
+  },
+  {
+   "path": "skills/lark-slides/references/lark-slides-history.md",
+   "bytes": 221,
+   "sha256": "ebf4c8ec99cce28e7c5513c28511384a6531a3b1ef7dce2ea610446661257205",
+   "_content": "IyBzbGlkZXMgaGlzdG9yee+8iOWOhuWPsueJiOacrOS4juWbnua7mu+8ie+8iOWFvOWuueWFpeWPo++8iQoK5pys5paH5qGj5bey6L+B56e76IezIFtgY2xpL2xhcmstc2xpZGVzLWhpc3RvcnkubWRgXShjbGkvbGFyay1zbGlkZXMtaGlzdG9yeS5tZCnjgIIKCuatpOaWh+S7tuS7heS/neeVmeaXp+i3r+W+hOWFvOWuueaAp++8m+WQjue7reW8leeUqOivt+S9v+eUqOaWsOi3r+W+hOOAggo="
+  },
+  {
+   "path": "skills/lark-slides/references/slides_xml_schema_definition.xml",
+   "bytes": 224,
+   "sha256": "ea2b7d4f338bfd4c895952a799123693968d034ceb67a1346650039131cc7ebc",
+   "_content": "IyBTbGlkZXMgWE1MIFNjaGVtYSDlrprkuYnvvIjlhbzlrrnlhaXlj6PvvIkKCuacrOaWh+aho+W3sui/geenu+iHsyBbYHhtbC9zbGlkZXNfeG1sX3NjaGVtYV9kZWZpbml0aW9uLnhtbGBdKHhtbC9zbGlkZXNfeG1sX3NjaGVtYV9kZWZpbml0aW9uLnhtbCnjgIIKCuatpOaWh+S7tuS7heS/neeVmeaXp+i3r+W+hOWFvOWuueaAp++8m+WQjue7reW8leeUqOivt+S9v+eUqOaWsOi3r+W+hOOAggo="
+  },
+  {
+   "path": "skills/lark-slides/references/cli/lark-slides-xml-presentation-slide-get.md",
+   "bytes": 238,
+   "sha256": "21ad42224c7e9d33d6e3ebc6758679767e5179f72a6dcf8dc6d837d4df6d7f09",
+   "_content": "IyBzbGlkZXMgK3htbC1nZXTvvIjljZXpobXor7vlj5blhbzlrrnlhaXlj6PvvIkKCuacrOaWh+aho+W3suWQiOW5tuiHsyBbbGFyay1zbGlkZXMteG1sLXByZXNlbnRhdGlvbnMtZ2V0Lm1kXShsYXJrLXNsaWRlcy14bWwtcHJlc2VudGF0aW9ucy1nZXQubWQp44CCCgrmraTmlofku7bkv53nlZnlt7Llj5HluIPot6/lvoTlhbzlrrnmgKfvvJvlkI7nu63lvJXnlKjor7fkvb/nlKjor6XmraPlvI8gcmVmZXJlbmNl44CCCg=="
+  },
+  {
+   "path": "skills/lark-slides/references/lark-slides-xml-presentations-get.md",
+   "bytes": 241,
+   "sha256": "f9230b3fbfa277ac8bdf32d4c069062f49d3f6d928f06f5e8a04459e3729ce42",
+   "_content": "IyBzbGlkZXMgK3htbC1nZXTvvIjlhbzlrrnlhaXlj6PvvIkKCuacrOaWh+aho+W3sui/geenu+iHsyBbYGNsaS9sYXJrLXNsaWRlcy14bWwtcHJlc2VudGF0aW9ucy1nZXQubWRgXShjbGkvbGFyay1zbGlkZXMteG1sLXByZXNlbnRhdGlvbnMtZ2V0Lm1kKeOAggoK5q2k5paH5Lu25L+d55WZ5pen6Lev5b6E5YW85a655oCn77yb5ZCO57ut5byV55So6K+35L2/55SoIGBjbGkvYCDkuIvnmoTmraPlvI8gcmVmZXJlbmNl44CCCg=="
+  },
+  {
+   "path": "skills/lark-slides/references/lark-slides-xml-presentation-slide-get.md",
+   "bytes": 253,
+   "sha256": "0ff6ac70be15f45f5e729ea1df1c1ef9a6afa193041dadfe981bf79c51e92f03",
+   "_content": "IyBzbGlkZXMgK3htbC1nZXTvvIjljZXpobXor7vlj5blhbzlrrnlhaXlj6PvvIkKCuacrOaWh+aho+W3suWQiOW5tuiHsyBbYGNsaS9sYXJrLXNsaWRlcy14bWwtcHJlc2VudGF0aW9ucy1nZXQubWRgXShjbGkvbGFyay1zbGlkZXMteG1sLXByZXNlbnRhdGlvbnMtZ2V0Lm1kKeOAggoK5q2k5paH5Lu25L+d55WZ5pen6Lev5b6E5YW85a655oCn77yb5ZCO57ut5byV55So6K+35L2/55SoIGBjbGkvYCDkuIvnmoTmraPlvI8gcmVmZXJlbmNl44CCCg=="
+  },
+  {
+   "path": "skills/lark-slides/references/lark-slides-xml-presentation-slide-replace.md",
+   "bytes": 265,
+   "sha256": "8aec9ef6a72ba71e3276c0f616a17f1a7dbe32672c7a43ca81f3c9714bd9f7c5",
+   "_content": "IyBzbGlkZXMgK3JlcGxhY2Utc2xpZGXvvIjlhbzlrrnlhaXlj6PvvIkKCuacrOaWh+aho+W3sui/geenu+iHsyBbYGNsaS9sYXJrLXNsaWRlcy14bWwtcHJlc2VudGF0aW9uLXNsaWRlLXJlcGxhY2UubWRgXShjbGkvbGFyay1zbGlkZXMteG1sLXByZXNlbnRhdGlvbi1zbGlkZS1yZXBsYWNlLm1kKeOAggoK5q2k5paH5Lu25L+d55WZ5pen6Lev5b6E5YW85a655oCn77yb5ZCO57ut5byV55So6K+35L2/55SoIGBjbGkvYCDkuIvnmoTmraPlvI8gcmVmZXJlbmNl44CCCg=="
+  },
+  {
+   "path": "skills/lark-slides/scripts/xml_text_overlap_lint_test.py",
+   "bytes": 382,
+   "sha256": "9e6af04d8b16b09422fba80773b32e668aef50943187ecd66ccc9e232bb4d98a",
+   "_content": "IyEvdXNyL2Jpbi9lbnYgcHl0aG9uMwojIENvcHlyaWdodCAoYykgMjAyNiBMYXJrIFRlY2hub2xvZ2llcyBQdGUuIEx0ZC4KIyBTUERYLUxpY2Vuc2UtSWRlbnRpZmllcjogTUlUCiIiIkNvbXBhdGliaWxpdHkgZW50cnkgcG9pbnQgZm9yIHRoZSByZW5hbWVkIHhtbF9saW50X3Rlc3Qgc2NyaXB0LiIiIgoKaW1wb3J0IG9zCmltcG9ydCBzeXMKZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCgoKaWYgX19uYW1lX18gPT0gIl9fbWFpbl9fIjoKICAgIHRhcmdldCA9IFBhdGgoX19maWxlX18pLndpdGhfbmFtZSgieG1sX2xpbnRfdGVzdC5weSIpCiAgICBvcy5leGVjdihzeXMuZXhlY3V0YWJsZSwgW3N5cy5leGVjdXRhYmxlLCBzdHIodGFyZ2V0KSwgKnN5cy5hcmd2WzE6XV0pCg=="
+  },
+  {
+   "path": "skills/lark-im/references/card/components/hr.md",
+   "bytes": 425,
+   "sha256": "533d80148ed84dcbd1dab9e34f4176e17478df1ce904049c46c9c06f8e1e0033",
+   "_content": "IyDliIblibLnur8gYGhyYAoK5YiG6ZqU5Y2h54mH5YaF5a6555qE5rC05bmz57q/44CCKipDYXJkIDIuMCoq77yIMS4wIOWQjOWQjSBgaHJg77yJ44CCCgojIyDmnIDlsI/npLrkvosKCmBgYGpzb24KeyAidGFnIjogImhyIiB9CmBgYAoKIyMg5a2X5q61Cgp8IOWtl+autSB8IOW/heWhqyB8IOexu+WeiyB8IOm7mOiupCB8IOivtOaYjiB8CnwtLS18LS0tfC0tLXwtLS18LS0tfAp8IGB0YWdgIHwg5pivIHwgU3RyaW5nIHwgLyB8IOWbuuWumiBgaHJgIHwKfCBgbWFyZ2luYCB8IOWQpiB8IFN0cmluZyB8IDAgfCDlpJbovrnot53vvIzojIPlm7QgWy05OSw5OV1weO+8jOWmgiBgIjhweCAwImAgfAp8IGBlbGVtZW50X2lkYCB8IOWQpiB8IFN0cmluZyB8IC8gfCDnu4Tku7bllK/kuIDmoIfor4bvvIzlrZfmr43lvIDlpLTjgIHiiaQyMCDlrZfnrKYgfAo="
+  },
+  {
+   "path": "skills/lark-vc/SKILL.md",
+   "bytes": 454,
+   "sha256": "46b56963508d7a89ce291020993f9c22fb46f52db2632443f9e81495a5469123",
+   "_content": "LS0tCm5hbWU6IGxhcmstdmMKdmVyc2lvbjogMS4wLjAKZGVzY3JpcHRpb246ICLku4XlvZPnlKjmiLfmiJbkuIrmuLjphY3nva7mmL7lvI/mjIflrpogbGFyay12YyDml7bkvb/nlKjvvIznm7jlhbPor7fmsYLnu5/kuIDkuqTnlLEgbGFyay1tZWV0aW5nIOaKgOiDveWkhOeQhuOAgiIKbWV0YWRhdGE6CiAgcmVxdWlyZXM6CiAgICBiaW5zOiBbImxhcmstY2xpIl0KICAgIHNraWxsczogWyJsYXJrLW1lZXRpbmciXQotLS0KCiMgQ29tcGF0aWJpbGl0eSBlbnRyeQoK5pys5oqA6IO95Y+q55So5LqO5YW85a655pen5ZCN56ew77yM5LiN55u05o6l5aSE55CG5Lia5Yqh44CCCgoqKk1VU1Qg5a6M5pW06K+75Y+WIFtgLi4vbGFyay1tZWV0aW5nL1NLSUxMLm1kYF0oLi4vbGFyay1tZWV0aW5nL1NLSUxMLm1kKe+8jOW5tuaMieeFp+WFtuS4reeahOi3r+eUseWSjOihjOWKqOaMh+WNl+aJp+ihjOOAgioqCg=="
+  },
+  {
+   "path": "skills/lark-note/SKILL.md",
+   "bytes": 458,
+   "sha256": "4d55ad009f7475e55240ad9f6be7b25b73f2974553325be84db372dd3c08248b",
+   "_content": "LS0tCm5hbWU6IGxhcmstbm90ZQp2ZXJzaW9uOiAxLjAuMApkZXNjcmlwdGlvbjogIuS7heW9k+eUqOaIt+aIluS4iua4uOmFjee9ruaYvuW8j+aMh+WumiBsYXJrLW5vdGUg5pe25L2/55So77yM55u45YWz6K+35rGC57uf5LiA5Lqk55SxIGxhcmstbWVldGluZyDmioDog73lpITnkIbjgIIiCm1ldGFkYXRhOgogIHJlcXVpcmVzOgogICAgYmluczogWyJsYXJrLWNsaSJdCiAgICBza2lsbHM6IFsibGFyay1tZWV0aW5nIl0KLS0tCgojIENvbXBhdGliaWxpdHkgZW50cnkKCuacrOaKgOiDveWPqueUqOS6juWFvOWuueaXp+WQjeensO+8jOS4jeebtOaOpeWkhOeQhuS4muWKoeOAggoKKipNVVNUIOWujOaVtOivu+WPliBbYC4uL2xhcmstbWVldGluZy9TS0lMTC5tZGBdKC4uL2xhcmstbWVldGluZy9TS0lMTC5tZCnvvIzlubbmjInnhaflhbbkuK3nmoTot6/nlLHlkozooYzliqjmjIfljZfmiafooYzjgIIqKgo="
+  }
+ ],
+ "skipped": {
+  "budget": true,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 3355
+ },
+ "providers": [],
+ "entrypoints": [],
+ "runtime": [
+  "python"
+ ],
+ "notes": [],
+ "_license_bytes": "TUlUIExpY2Vuc2UKCkNvcHlyaWdodCAoYykgMjAyNiBMYXJrIFRlY2hub2xvZ2llcyBQdGUuIEx0ZC4KClBlcm1pc3Npb24gaXMgaGVyZWJ5IGdyYW50ZWQsIGZyZWUgb2YgY2hhcmdlLCB0byBhbnkgcGVyc29uIG9idGFpbmluZyBhIGNvcHkKb2YgdGhpcyBzb2Z0d2FyZSBhbmQgYXNzb2NpYXRlZCBkb2N1bWVudGF0aW9uIGZpbGVzICh0aGUgIlNvZnR3YXJlIiksIHRvIGRlYWwKaW4gdGhlIFNvZnR3YXJlIHdpdGhvdXQgcmVzdHJpY3Rpb24sIGluY2x1ZGluZyB3aXRob3V0IGxpbWl0YXRpb24gdGhlIHJpZ2h0cwp0byB1c2UsIGNvcHksIG1vZGlmeSwgbWVyZ2UsIHB1Ymxpc2gsIGRpc3RyaWJ1dGUsIHN1YmxpY2Vuc2UsIGFuZC9vciBzZWxsCmNvcGllcyBvZiB0aGUgU29mdHdhcmUsIGFuZCB0byBwZXJtaXQgcGVyc29ucyB0byB3aG9tIHRoZSBTb2Z0d2FyZSBpcwpmdXJuaXNoZWQgdG8gZG8gc28sIHN1YmplY3QgdG8gdGhlIGZvbGxvd2luZyBjb25kaXRpb25zOgoKVGhlIGFib3ZlIGNvcHlyaWdodCBub3RpY2UgYW5kIHRoaXMgcGVybWlzc2lvbiBub3RpY2Ugc2hhbGwgYmUgaW5jbHVkZWQgaW4gYWxsCmNvcGllcyBvciBzdWJzdGFudGlhbCBwb3J0aW9ucyBvZiB0aGUgU29mdHdhcmUuCgpUSEUgU09GVFdBUkUgSVMgUFJPVklERUQgIkFTIElTIiwgV0lUSE9VVCBXQVJSQU5UWSBPRiBBTlkgS0lORCwgRVhQUkVTUyBPUgpJTVBMSUVELCBJTkNMVURJTkcgQlVUIE5PVCBMSU1JVEVEIFRPIFRIRSBXQVJSQU5USUVTIE9GIE1FUkNIQU5UQUJJTElUWSwKRklUTkVTUyBGT1IgQSBQQVJUSUNVTEFSIFBVUlBPU0UgQU5EIE5PTklORlJJTkdFTUVOVC4gSU4gTk8gRVZFTlQgU0hBTEwgVEhFCkFVVEhPUlMgT1IgQ09QWVJJR0hUIEhPTERFUlMgQkUgTElBQkxFIEZPUiBBTlkgQ0xBSU0sIERBTUFHRVMgT1IgT1RIRVIKTElBQklMSVRZLCBXSEVUSEVSIElOIEFOIEFDVElPTiBPRiBDT05UUkFDVCwgVE9SVCBPUiBPVEhFUldJU0UsIEFSSVNJTkcgRlJPTSwKT1VUIE9GIE9SIElOIENPTk5FQ1RJT04gV0lUSCBUSEUgU09GVFdBUkUgT1IgVEhFIFVTRSBPUiBPVEhFUiBERUFMSU5HUyBJTiBUSEUKU09GVFdBUkUuCg==",
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 25,
+ "vendored_bytes": 6228
+}

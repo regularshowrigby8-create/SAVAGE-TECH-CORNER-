@@ -1,0 +1,90 @@
+{
+ "id": "abhinavpabbaraju-nexus-deep-research-agent",
+ "full_name": "AbhinavPabbaraju/nexus-deep-research-agent",
+ "url": "https://github.com/AbhinavPabbaraju/nexus-deep-research-agent",
+ "license": "NOASSERTION",
+ "license_file": null,
+ "license_text_sha256": null,
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "7a8d452dd3dd7fed5d9c118175e51817ebf374a5",
+ "vendored_files": [
+  {
+   "path": "src/app/api/agent/route.ts",
+   "bytes": 4319,
+   "sha256": "85d3db54783d9d2046d0ad0a6152db21b9b1840d7ab1c6d396379f471dd1f46f"
+  },
+  {
+   "path": "src/lib/agent/evaluator.ts",
+   "bytes": 5805,
+   "sha256": "ee2a9965a4862a557a4e4dcf6abff96a3ff8f12c726eb06dbdd98214750a9906"
+  },
+  {
+   "path": "src/lib/agent/dag/builder.ts",
+   "bytes": 6851,
+   "sha256": "9be3ccd30d3372a9ec1fd2f86cdc8738c211782fb3c08c85c994706160c0a635"
+  },
+  {
+   "path": "src/lib/agent/types.ts",
+   "bytes": 7199,
+   "sha256": "ab61bd95f69223e70aadcee73f98d5e18d0558336a87ee26e0a73dbcaabb86c2"
+  },
+  {
+   "path": "src/lib/agent/planner.ts",
+   "bytes": 7312,
+   "sha256": "74ed9964a2fe3aa89f8974417614647de448b0d2be431228d3d733647a151812"
+  },
+  {
+   "path": "src/lib/agent/types-v4.ts",
+   "bytes": 10131,
+   "sha256": "65fd257f158344e46b63fb7d5500bfab79b5529064cfbdd23e3263e6b795fb1f"
+  },
+  {
+   "path": "src/lib/agent/orchestrator.ts",
+   "bytes": 10173,
+   "sha256": "c72a5d1fb563300e6045a568c2a352f18e977afbbb09d954eb45a0298017d8f9"
+  },
+  {
+   "path": "src/lib/agent/executor.ts",
+   "bytes": 10468,
+   "sha256": "6c0fa0bbc71e602cf2abb524c89715b25e47b4bcdbbf6266bf48718ea50eafdc"
+  },
+  {
+   "path": "src/lib/agent/roles/agents.ts",
+   "bytes": 12520,
+   "sha256": "50662380fa82fb14900481a4238a56a862e07a01a528baad93755d0cb22d9ed5"
+  },
+  {
+   "path": "src/lib/agent/orchestrator-v4.ts",
+   "bytes": 14934,
+   "sha256": "2cbac05275ecbd8496da33e9bd4c423effcb6bc4b8c068e3e1206fd5277c996d"
+  },
+  {
+   "path": "README.md",
+   "bytes": 8104,
+   "sha256": "fbbb0ae8efaf310903a28f21f36700b167bcac1d84d0eec729da7bcdc478edeb"
+  }
+ ],
+ "skipped": {
+  "budget": false,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 48
+ },
+ "providers": [
+  "openai",
+  "anthropic",
+  "google"
+ ],
+ "entrypoints": [
+  "src/lib/agent/orchestrator.ts"
+ ],
+ "runtime": [
+  "node"
+ ],
+ "notes": [],
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 11,
+ "vendored_bytes": 97816,
+ "content_redistributed": false
+}

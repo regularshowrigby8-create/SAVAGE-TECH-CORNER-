@@ -1,0 +1,17 @@
+[
+  { "name": "chrome-devtools-mcp", "command": ["npx", "-y", "chrome-devtools-mcp@latest"] },
+  { "name": "figma-context-mcp", "command": ["npx", "-y", "figma-developer-mcp", "--stdio"] },
+  { "name": "context-mode", "command": ["npx", "-y", "context-mode"] },
+  { "name": "firecrawl-mcp-server", "command": ["npx", "-y", "firecrawl-mcp"] },
+  { "name": "n8n-mcp", "command": ["npx", "-y", "n8n-mcp"] },
+  {
+    "name": "chroma-mcp",
+    "command": ["uvx", "chroma-mcp", "--client-type", "persistent", "--data-dir", "/tmp/chromamcp"]
+  },
+  { "name": "mcp-atlassian", "command": ["uvx", "mcp-atlassian"] },
+  { "name": "mcp-redis", "command": ["uvx", "--from", "redis-mcp-server", "redis-mcp-server"] },
+  { "name": "ida-pro-mcp", "command": ["uvx", "--from", "ida-pro-mcp", "ida-pro-mcp"] },
+  { "name": "mcp", "command": ["uvx", "awslabs.core-mcp-server@latest"] },
+  { "name": "mcp-proxy", "command": ["uvx", "mcp-proxy", "uvx", "mcp-server-fetch"] },
+  { "name": "dbt-mcp", "command": ["uvx", "dbt-mcp"] }
+]

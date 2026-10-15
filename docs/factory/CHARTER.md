@@ -17,14 +17,14 @@ This charter applies to EVERYTHING in this repository, across ALL branches (incl
 
 ## Branch Rules
 
-| Branch | Purpose | Rules |
-|---|---|---|
-| `main` | Production release baseline | All 5 pillars; full strict charter enforcement; load-bearing paths only |
-| `production` | Certified releases | Only certified release artifacts, manifests, and verified APKs |
-| `shell` | Soul browser-style architecture | Shell components, WebViews, Android entry points |
-| `frontend` | Android browser frontend | Compose UI, controller, tabs, local storage, API client |
-| `backend` | Browser backend services | Gateway, search orchestration, AI services, caching, workers |
-| `pipeline` | CI automation & multi-factory | Multi-factory runners, model discovery workflows |
+| Branch       | Purpose                         | Rules                                                                   |
+| ------------ | ------------------------------- | ----------------------------------------------------------------------- |
+| `main`       | Production release baseline     | All 5 pillars; full strict charter enforcement; load-bearing paths only |
+| `production` | Certified releases              | Only certified release artifacts, manifests, and verified APKs          |
+| `shell`      | Soul browser-style architecture | Shell components, WebViews, Android entry points                        |
+| `frontend`   | Android browser frontend        | Compose UI, controller, tabs, local storage, API client                 |
+| `backend`    | Browser backend services        | Gateway, search orchestration, AI services, caching, workers            |
+| `pipeline`   | CI automation & multi-factory   | Multi-factory runners, model discovery workflows                        |
 
 ## Human-Owned Tier (Load-Bearing)
 

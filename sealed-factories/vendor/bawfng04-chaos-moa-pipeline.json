@@ -1,0 +1,32 @@
+{
+ "id": "bawfng04-chaos-moa-pipeline",
+ "full_name": "bawfng04/Chaos-MoA-Pipeline",
+ "url": "https://github.com/bawfng04/Chaos-MoA-Pipeline",
+ "license": "NOASSERTION",
+ "license_file": null,
+ "license_text_sha256": null,
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "6a26b7114df6538cff0a8b9d703af1a331952bcd",
+ "vendored_files": [
+  {
+   "path": "README.md",
+   "bytes": 7045,
+   "sha256": "8d8f4f17d27694fe286ab2d195026ba25194e32a7aa540b3435b7dd91e9a9ade"
+  }
+ ],
+ "skipped": {
+  "budget": false,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 11
+ },
+ "providers": [],
+ "entrypoints": [],
+ "runtime": [],
+ "notes": [],
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 1,
+ "vendored_bytes": 7045,
+ "content_redistributed": false
+}

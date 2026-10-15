@@ -1,0 +1,70 @@
+{
+  "method": "every repository the plan names is either imported into imported_factories.json or refused with the reason recorded here",
+  "checked": "2026-10-15",
+  "plan": "repositories.json",
+  "outcomes": [
+    {
+      "tool": "CodeQL",
+      "repository": "https://github.com/github/codeql",
+      "outcome": "imported",
+      "id": "github-codeql",
+      "license": "MIT",
+      "import_class": "asset-import",
+      "reason": "already in the registry from an earlier pass"
+    },
+    {
+      "tool": "Schemathesis",
+      "repository": "https://github.com/schemathesis/schemathesis",
+      "outcome": "refused",
+      "reason": "its own tree shows neither four of the six factory characteristics nor a single definition path (an agent, worker, prompt, skill, stage, step or pipeline) - CI configuration alone does not make a factory"
+    },
+    {
+      "tool": "Maestro",
+      "repository": "https://github.com/mobile-dev-inc/maestro",
+      "outcome": "imported",
+      "id": "mobile-dev-inc-maestro",
+      "license": "Apache-2.0",
+      "import_class": "asset-import",
+      "reason": "already in the registry from an earlier pass"
+    },
+    {
+      "tool": "Roborazzi",
+      "repository": "https://github.com/takahirom/roborazzi",
+      "outcome": "refused",
+      "reason": "its own tree shows neither four of the six factory characteristics nor a single definition path (an agent, worker, prompt, skill, stage, step or pipeline) - CI configuration alone does not make a factory"
+    },
+    {
+      "tool": "Macrobenchmark",
+      "repository": "https://android.googlesource.com/platform/frameworks/support/",
+      "outcome": "refused",
+      "reason": "host is not github.com (https://android.googlesource.com/platform/frameworks/support/); the registry and its tests address records as https://github.com/<full_name>"
+    },
+    {
+      "tool": "Perfetto",
+      "repository": "https://android.googlesource.com/platform/external/perfetto/",
+      "outcome": "refused",
+      "reason": "host is not github.com (https://android.googlesource.com/platform/external/perfetto/); the registry and its tests address records as https://github.com/<full_name>"
+    },
+    {
+      "tool": "OWASP ZAP",
+      "repository": "https://github.com/zaproxy/zaproxy",
+      "outcome": "refused",
+      "reason": "its own tree shows neither four of the six factory characteristics nor a single definition path (an agent, worker, prompt, skill, stage, step or pipeline) - CI configuration alone does not make a factory"
+    },
+    {
+      "tool": "k6",
+      "repository": "https://github.com/grafana/k6",
+      "outcome": "refused",
+      "reason": "its own tree shows neither four of the six factory characteristics nor a single definition path (an agent, worker, prompt, skill, stage, step or pipeline) - CI configuration alone does not make a factory"
+    },
+    {
+      "tool": "Renovate",
+      "repository": "https://github.com/renovatebot/renovate",
+      "outcome": "imported",
+      "id": "renovatebot-renovate",
+      "license": "AGPL-3.0",
+      "import_class": "blueprint-only",
+      "reason": "already in the registry from an earlier pass"
+    }
+  ]
+}

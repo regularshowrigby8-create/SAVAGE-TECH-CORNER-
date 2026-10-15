@@ -1,0 +1,110 @@
+{
+ "id": "tanaydeo24-medagent",
+ "full_name": "TanayDeo24/MedAgent",
+ "url": "https://github.com/TanayDeo24/MedAgent",
+ "license": "NOASSERTION",
+ "license_file": null,
+ "license_text_sha256": null,
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "a55bc83e8356ad28eafecc70423856eb26369b2d",
+ "vendored_files": [
+  {
+   "path": "agent/__init__.py",
+   "bytes": 241,
+   "sha256": "4c3fea193568d721adb2c92daab2680b23578079098c3d9dbd1e1991614f9b0b"
+  },
+  {
+   "path": "orchestration/__init__.py",
+   "bytes": 1220,
+   "sha256": "d5b625d591b22b2398fcf88247c00660324e941874d4483aaeef7c989e0e065a"
+  },
+  {
+   "path": "orchestration/source_selection.py",
+   "bytes": 4334,
+   "sha256": "e64788cdf23df490676216946612d45215e777a8224929ed7eac6a02c65d8314"
+  },
+  {
+   "path": "orchestration/registry.py",
+   "bytes": 10802,
+   "sha256": "e0cbfe4b597847e196db56759453c19916f5775a6ca77ccead97ebac8ec4ec83"
+  },
+  {
+   "path": "orchestration/query_compilers.py",
+   "bytes": 12075,
+   "sha256": "7693312f859fa778fbb8b3219835fe266a2e57ff3828a1ab154192e456fedf63"
+  },
+  {
+   "path": "orchestration/models.py",
+   "bytes": 14956,
+   "sha256": "adc71a186ca38ec0a518018c0e269d08ebec740eed6126120671d0d2b60ffe9e"
+  },
+  {
+   "path": "agent/prompts.py",
+   "bytes": 17067,
+   "sha256": "df4e035e2ebc2317649287532bcbfc1642560f9d383f6628d5d593037dfc6df3"
+  },
+  {
+   "path": "agent/state.py",
+   "bytes": 18467,
+   "sha256": "7450dc8d9314037426ee062c0f1deccc4377a83b3d5aecc5ecbd7e64be34d793"
+  },
+  {
+   "path": "orchestration/candidate_b_native_tools.py",
+   "bytes": 18494,
+   "sha256": "385f35bd667b2003f417f0ae0109674abfdfd2876d244d3fec07ad9ef3bb61b0"
+  },
+  {
+   "path": "agent/graph.py",
+   "bytes": 22879,
+   "sha256": "8d4ad26b97fb34257f3f39a0ba51a8aeebf6b9d87ce8f2ece16e197499b3ba79"
+  },
+  {
+   "path": "main.py",
+   "bytes": 2757,
+   "sha256": "131d94b740eb81737297d9e61acc9e71f2603e0e046019202209d2c7866ceeb4"
+  },
+  {
+   "path": "generation/pipeline.py",
+   "bytes": 3151,
+   "sha256": "c3224b97ee82b9a60bde32549eaf7638a02e45bbe0c6d8b32da60d54ab0e0afc"
+  },
+  {
+   "path": "grounding_eval/pipeline.py",
+   "bytes": 5954,
+   "sha256": "d4d356e802bce0fc4c631f206b09bf3ef7aa737b609bb6321f5efc6dc2070617"
+  },
+  {
+   "path": "retrieval/verify.py",
+   "bytes": 1626,
+   "sha256": "ac5d068d74135750dde4210e5299800de89ce3daf6e597c81b1486b1df7690ce"
+  },
+  {
+   "path": "README.md",
+   "bytes": 10282,
+   "sha256": "03aec9934647cf45420fea5550feaabdbe213837c20f462234a97f261b2f2c3a"
+  }
+ ],
+ "skipped": {
+  "budget": false,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 471
+ },
+ "providers": [
+  "openai"
+ ],
+ "entrypoints": [
+  "main.py",
+  "generation/pipeline.py",
+  "grounding_eval/pipeline.py"
+ ],
+ "runtime": [
+  "python"
+ ],
+ "notes": [],
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 15,
+ "vendored_bytes": 144305,
+ "content_redistributed": false
+}

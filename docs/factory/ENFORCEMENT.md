@@ -24,6 +24,7 @@ or decorative shell scripts (e.g. exit 0 fake wrappers).
 **Standing Invariant**: **Rules cannot be bypassed, suppressed, or ignored under any standard condition.**
 
 In the unprecedented event that an operational exception is required:
+
 1. **Extremely Good Reason**: Must provide a comprehensive, rigorous architectural justification of at least 100 characters detailing why an exception is mathematically, structurally, or upstream-wise necessary.
 2. **Mandatory Functional Solution**: Every bypass request MUST include an actual functional solution file. Bypassing a rule to leave code broken, missing, or empty is rejected unconditionally.
 3. **5x Exhaustive Test Verification Across the Entire System**: The proposed solution and codebase MUST be executed against the entire system test suite (Factory 2 tests, Factory 3 tests, full system integration audit, and deterministic quality gates) **at least 5 consecutive times across isolated iterations** with a 100% pass rate.
@@ -65,6 +66,7 @@ To stop working backwards or constantly cycling through criticism checks without
 ## 5. Summary of Automated Quality Gates in CI & Git Pre-Commit
 
 Every commit and CI run executes:
+
 ```bash
 echo "=== FACTORY GATE START ==="
 check_python_syntax
@@ -74,4 +76,5 @@ check_provenance_and_apk      # Verifies authentic package identity
 check_claims_and_paths        # Verifies all markdown claims
 check_wiring_and_coverage     # Verifies all tools are wired into run_all.sh
 ```
+
 Git pre-commit hooks (`.githooks/pre-commit`) and GitHub Actions fail closed if any rule is breached.

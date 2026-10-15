@@ -15,9 +15,9 @@
     "test:e2e": "playwright test",
     "size": "size-limit",
     "knip": "knip",
-    "audit:security": "npm audit --audit-level=high",
+    "audit:security": "node tools/security/npm_audit_gate.mjs",
     "conveyor-belt": "node scripts/conveyor_belt.js",
-    "prepare": "husky install || true"
+    "prepare": "husky install"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
@@ -25,19 +25,19 @@
     "@eslint/js": "^9.25.0",
     "@playwright/test": "^1.49.0",
     "@size-limit/file": "^11.2.0",
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.6.3",
     "@types/node": "^22.14.0",
+    "@vitest/coverage-v8": "^5.0.4",
     "axe-core": "^4.10.3",
     "eslint": "^9.25.0",
     "husky": "^9.1.7",
     "jsdom": "^25.0.1",
-    "knip": "^5.46.2",
-    "lint-staged": "^15.5.1",
+    "knip": "^5.88.1",
+    "lint-staged": "^17.6.0",
+    "playwright": "^1.49.0",
     "prettier": "^3.5.3",
     "size-limit": "^11.2.0",
     "typescript": "^5.8.2",
-    "vitest": "^3.1.1"
+    "vitest": "^5.0.4"
   },
   "lint-staged": {
     "*.{js,ts,mjs,cjs}": [

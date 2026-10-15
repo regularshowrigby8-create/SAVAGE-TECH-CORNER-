@@ -1,0 +1,179 @@
+{
+ "id": "openai-agents-js",
+ "full_name": "openai/openai-agents-js",
+ "url": "https://github.com/openai/openai-agents-js",
+ "license": "MIT",
+ "license_file": "LICENSE",
+ "license_text_sha256": "969d1c8178ad9a1ae2ff1e67534151d4cc58a2626274b272f918995bccd3a6ad",
+ "import_class": "asset-import",
+ "snapshot": "2026-10-14",
+ "commit": "89a9ddf1e241e75f2e0ad4c15d89de9e215ebac6",
+ "vendored_files": [
+  {
+   "path": "packages/agents/src/realtime/index.ts",
+   "bytes": 41,
+   "sha256": "9c07b5e6d6f7aad7d86e2299c77551f86284e2f9b3e89ab0663cde333939516c",
+   "_content": "ZXhwb3J0ICogZnJvbSAnQG9wZW5haS9hZ2VudHMtcmVhbHRpbWUnOwo="
+  },
+  {
+   "path": "packages/agents/src/utils/index.ts",
+   "bytes": 43,
+   "sha256": "54d6f990d9a0fcb007667dd3e3e5c8c614d8c7f41d05891536b28e11185a9f62",
+   "_content": "ZXhwb3J0ICogZnJvbSAnQG9wZW5haS9hZ2VudHMtY29yZS91dGlscyc7Cg=="
+  },
+  {
+   "path": "packages/agents/src/testing/index.ts",
+   "bytes": 45,
+   "sha256": "2295daaddddc42a38c2e60e55a20b4aae385496ec2868d8d81e4ee917d8ff456",
+   "_content": "ZXhwb3J0ICogZnJvbSAnQG9wZW5haS9hZ2VudHMtY29yZS90ZXN0aW5nJzsK"
+  },
+  {
+   "path": "packages/agents/src/sandbox/index.ts",
+   "bytes": 45,
+   "sha256": "4c1db4376b26c00ec32e677ae101ac7c198e31b9df53b16be0bcd922c20f8349",
+   "_content": "ZXhwb3J0ICogZnJvbSAnQG9wZW5haS9hZ2VudHMtY29yZS9zYW5kYm94JzsK"
+  },
+  {
+   "path": "packages/agents/src/realtime/testing/index.ts",
+   "bytes": 49,
+   "sha256": "11a872bdc508473371c9b44b52bec3d67d3c361ce18f490642a11e14a0076260",
+   "_content": "ZXhwb3J0ICogZnJvbSAnQG9wZW5haS9hZ2VudHMtcmVhbHRpbWUvdGVzdGluZyc7Cg=="
+  },
+  {
+   "path": "packages/agents/src/sandbox/local.ts",
+   "bytes": 51,
+   "sha256": "8558bf93308ad63bed0c8ea27add2cff1aac5d2495c49fba658e84719c6f0f90",
+   "_content": "ZXhwb3J0ICogZnJvbSAnQG9wZW5haS9hZ2VudHMtY29yZS9zYW5kYm94L2xvY2FsJzsK"
+  },
+  {
+   "path": "integration-tests/cloudflare-workers/worker/.npmrc",
+   "bytes": 62,
+   "sha256": "5446c4d40e9f9ccffae9a202bff3daf09c3726bbb9daae1440fe822dcaac7f72",
+   "_content": "QG9wZW5haTpyZWdpc3RyeT1odHRwczovL3JlZ2lzdHJ5Lm5wbWpzLm9yZwpwYWNrYWdlLWxvY2s9ZmFsc2U="
+  },
+  {
+   "path": ".agents/skills/code-change-verification/scripts/run.sh",
+   "bytes": 137,
+   "sha256": "1f5d2494f774e787e5be0993b851c19e63ce5be1d7b4189993e049fdf86ec2f1",
+   "_content": "IyEvdXNyL2Jpbi9lbnYgYmFzaApzZXQgLWV1byBwaXBlZmFpbAoKU0NSSVBUX0RJUj0iJChjZCAiJChkaXJuYW1lICIke0JBU0hfU09VUkNFWzBdfSIpIiAmJiBwd2QpIgpleGVjIG5vZGUgIiR7U0NSSVBUX0RJUn0vcnVuLm1qcyIgIiRAIgo="
+  },
+  {
+   "path": "packages/agents/tsconfig.json",
+   "bytes": 151,
+   "sha256": "f1723b7ee5d008b882bf12ca4e0433069930cd9b60187533f2e85f2a1b650040",
+   "_content": "ewogICJleHRlbmRzIjogIi4uLy4uL3RzY29uZmlnLmpzb24iLAogICJjb21waWxlck9wdGlvbnMiOiB7CiAgICAib3V0RGlyIjogIi4vZGlzdCIsCiAgICAicm9vdERpciI6ICIuL3NyYyIKICB9LAogICJleGNsdWRlIjogWyJkaXN0LyoqIiwgInRlc3QvKioiXQp9Cg=="
+  },
+  {
+   "path": "packages/agents/tsconfig.test.json",
+   "bytes": 162,
+   "sha256": "293cb0e2a6656c29b916fbd36835682ac29debe648e924c1552514dd6bf0b6dc",
+   "_content": "ewogICJleHRlbmRzIjogIi4uLy4uL3RzY29uZmlnLmpzb24iLAogICJjb21waWxlck9wdGlvbnMiOiB7CiAgICAib3V0RGlyIjogIi4vZGlzdCIKICB9LAogICJpbmNsdWRlIjogWyJzcmMvKiovKi50cyIsICJ0ZXN0LyoqLyoudHMiXSwKICAiZXhjbHVkZSI6IFsiZGlzdC8qKiJdCn0K"
+  },
+  {
+   "path": ".agents/skills/code-change-verification/scripts/run.ps1",
+   "bytes": 196,
+   "sha256": "006280f499482958b2b5b404252262a307f8c874f3b69a6972830f883e3d09ca",
+   "_content": "U2V0LVN0cmljdE1vZGUgLVZlcnNpb24gTGF0ZXN0CiRFcnJvckFjdGlvblByZWZlcmVuY2UgPSAiU3RvcCIKCiRzY3JpcHREaXIgPSBTcGxpdC1QYXRoIC1QYXJlbnQgJE15SW52b2NhdGlvbi5NeUNvbW1hbmQuRGVmaW5pdGlvbgomIG5vZGUgKEpvaW4tUGF0aCAkc2NyaXB0RGlyICJydW4ubWpzIikgQGFyZ3MKZXhpdCAkTEFTVEVYSVRDT0RFCg=="
+  },
+  {
+   "path": "examples/docs/agents/simpleAgent.ts",
+   "bytes": 211,
+   "sha256": "43e8562587f5ac0a49f29a89bffe121b89b0541ffa9723df4fb7b85ecfd3f7f4",
+   "_content": "aW1wb3J0IHsgQWdlbnQgfSBmcm9tICdAb3BlbmFpL2FnZW50cyc7Cgpjb25zdCBhZ2VudCA9IG5ldyBBZ2VudCh7CiAgbmFtZTogJ0hhaWt1IEFnZW50JywKICBpbnN0cnVjdGlvbnM6ICdBbHdheXMgcmVzcG9uZCBpbiBoYWlrdSBmb3JtLicsCiAgbW9kZWw6ICdncHQtNS40JywgLy8gb3B0aW9uYWwg4oCTIGZhbGxzIGJhY2sgdG8gdGhlIGRlZmF1bHQgbW9kZWwKfSk7Cg=="
+  },
+  {
+   "path": ".agents/skills/docs-sync/agents/openai.yaml",
+   "bytes": 232,
+   "sha256": "2e62bee17a95e89aa6455cb2ef56474d34c43c7bf608b337621b0dcca17c09ad",
+   "_content": "aW50ZXJmYWNlOgogIGRpc3BsYXlfbmFtZTogIkRvY3MgU3luYyIKICBzaG9ydF9kZXNjcmlwdGlvbjogIkF1ZGl0IGRvY3MgY292ZXJhZ2UgYW5kIHByb3Bvc2UgdGFyZ2V0ZWQgdXBkYXRlcyIKICBkZWZhdWx0X3Byb21wdDogIlVzZSAkZG9jcy1zeW5jIHRvIGF1ZGl0IHRoZSBjdXJyZW50IGJyYW5jaCBhZ2FpbnN0IGRvY3MvIGFuZCBwcm9wb3NlIHRhcmdldGVkIGRvY3VtZW50YXRpb24gdXBkYXRlcy4iCg=="
+  },
+  {
+   "path": ".agents/skills/openai-knowledge/agents/openai.yaml",
+   "bytes": 233,
+   "sha256": "79270a4649975d21ae63ff3c0d2b9097f892210a1bff4298f5a49a62ce55e726",
+   "_content": "aW50ZXJmYWNlOgogIGRpc3BsYXlfbmFtZTogIk9wZW5BSSBLbm93bGVkZ2UiCiAgc2hvcnRfZGVzY3JpcHRpb246ICJQdWxsIGF1dGhvcml0YXRpdmUgT3BlbkFJIHBsYXRmb3JtIGRvY3VtZW50YXRpb24iCiAgZGVmYXVsdF9wcm9tcHQ6ICJVc2UgJG9wZW5haS1rbm93bGVkZ2UgdG8gZmV0Y2ggdGhlIGV4YWN0IE9wZW5BSSBkb2NzIG5lZWRlZCBmb3IgdGhpcyBBUEkgb3IgcGxhdGZvcm0gcXVlc3Rpb24uIgo="
+  },
+  {
+   "path": ".agents/skills/pr-draft-summary/agents/openai.yaml",
+   "bytes": 251,
+   "sha256": "31dc54e1d3bc0e48973f3a89fa96c6719590eddef67ec98699c3a791b2bca4d0",
+   "_content": "aW50ZXJmYWNlOgogIGRpc3BsYXlfbmFtZTogIlBSIERyYWZ0IFN1bW1hcnkiCiAgc2hvcnRfZGVzY3JpcHRpb246ICJEcmFmdCB0aGUgcmVwby1yZWFkeSBQUiB0aXRsZSBhbmQgZGVzY3JpcHRpb24iCiAgZGVmYXVsdF9wcm9tcHQ6ICJVc2UgJHByLWRyYWZ0LXN1bW1hcnkgdG8gZ2VuZXJhdGUgdGhlIFBSLXJlYWR5IHN1bW1hcnkgYmxvY2ssIHRpdGxlLCBhbmQgZHJhZnQgZGVzY3JpcHRpb24gZm9yIHRoZSBjdXJyZW50IGNoYW5nZXMuIgo="
+  },
+  {
+   "path": ".agents/skills/test-coverage-improver/agents/openai.yaml",
+   "bytes": 264,
+   "sha256": "eac460e12a8698ed66df24d163edd663325e5972c3d6119a823abcea96b01f2f",
+   "_content": "aW50ZXJmYWNlOgogIGRpc3BsYXlfbmFtZTogIlRlc3QgQ292ZXJhZ2UgSW1wcm92ZXIiCiAgc2hvcnRfZGVzY3JpcHRpb246ICJBbmFseXplIGNvdmVyYWdlIGdhcHMgYW5kIHByb3Bvc2UgaGlnaC1pbXBhY3QgdGVzdHMiCiAgZGVmYXVsdF9wcm9tcHQ6ICJVc2UgJHRlc3QtY292ZXJhZ2UtaW1wcm92ZXIgdG8gYW5hbHl6ZSBjb3ZlcmFnZSBnYXBzLCBwcm9wb3NlIGhpZ2gtaW1wYWN0IHRlc3RzLCBhbmQgdXBkYXRlIGNvdmVyYWdlIGFmdGVyIGFwcHJvdmFsLiIK"
+  },
+  {
+   "path": ".agents/skills/changeset-validation/agents/openai.yaml",
+   "bytes": 276,
+   "sha256": "6da852493aafeac8edf839a3497cc81aca5b2efd76be4bf60858db7aad029a04",
+   "_content": "aW50ZXJmYWNlOgogIGRpc3BsYXlfbmFtZTogIkNoYW5nZXNldCBWYWxpZGF0aW9uIgogIHNob3J0X2Rlc2NyaXB0aW9uOiAiVmFsaWRhdGUgY2hhbmdlc2V0cyBhZ2FpbnN0IHRoZSBjdXJyZW50IGJyYW5jaCBkaWZmIgogIGRlZmF1bHRfcHJvbXB0OiAiVXNlICRjaGFuZ2VzZXQtdmFsaWRhdGlvbiB0byB2YWxpZGF0ZSB0aGUgY3VycmVudCBicmFuY2ggY2hhbmdlc2V0IGFnYWluc3QgdGhlIGRpZmYgYW5kIHJlcG9ydCBhbnkgcmVxdWlyZWQgZWRpdHMgb3IgYnVtcCBjaGFuZ2VzLiIK"
+  },
+  {
+   "path": ".agents/skills/final-release-review/agents/openai.yaml",
+   "bytes": 289,
+   "sha256": "89a1f1dbba5cedc08e182808db0b73f6ccc49cd7b0831495642407f43fa04cf9",
+   "_content": "aW50ZXJmYWNlOgogIGRpc3BsYXlfbmFtZTogIkZpbmFsIFJlbGVhc2UgUmV2aWV3IgogIHNob3J0X2Rlc2NyaXB0aW9uOiAiQXVkaXQgQ2hhbmdlc2V0cy1iYXNlZCByZWxlYXNlIHJlYWRpbmVzcyIKICBkZWZhdWx0X3Byb21wdDogIlVzZSAkZmluYWwtcmVsZWFzZS1yZXZpZXcgdG8gZGVyaXZlIHRoZSByZWxlYXNlIHR5cGUgZnJvbSBDaGFuZ2VzZXRzLCBhdWRpdCB0aGUgcmVsZWFzZSBkaWZmLCByZXZpZXcgZG9jdW1lbnRhdGlvbiBjb3ZlcmFnZSwgYW5kIGNhbGwgdGhlIHNoaXAvYmxvY2sgZ2F0ZS4iCg=="
+  },
+  {
+   "path": ".agents/skills/pnpm-upgrade/agents/openai.yaml",
+   "bytes": 290,
+   "sha256": "125e9bb8311451aa5d685bb670d4eab2af4ca6c97d6e704f47e4808fa2eefa3c",
+   "_content": "aW50ZXJmYWNlOgogIGRpc3BsYXlfbmFtZTogInBucG0gVXBncmFkZSIKICBzaG9ydF9kZXNjcmlwdGlvbjogIlByZWZsaWdodCBhbmQgcmVmcmVzaCBwbnBtIHBsdXMgQ0kgd29ya2Zsb3cgcGlucyIKICBkZWZhdWx0X3Byb21wdDogIlVzZSAkcG5wbS11cGdyYWRlIHRvIHByZWZsaWdodCB0aGUgQ0kgaW5zdGFsbGF0aW9uIHBhdGgsIHVwZGF0ZSBwbnBtIGxvY2FsbHksIGFsaWduIHBhY2thZ2VNYW5hZ2VyLCBhbmQgcmVmcmVzaCBwaW5uZWQgcG5wbS9hY3Rpb24tc2V0dXAgd29ya2Zsb3cgdmVyc2lvbnMuIgo="
+  },
+  {
+   "path": ".agents/skills/implementation-kickoff/agents/openai.yaml",
+   "bytes": 300,
+   "sha256": "f1c44f4e076c8f1e363c6ef8f8168f7adf9f8218d3dfc17f75bef7fe5bba2cd6",
+   "_content": "aW50ZXJmYWNlOgogIGRpc3BsYXlfbmFtZTogIkltcGxlbWVudGF0aW9uIEtpY2tvZmYiCiAgc2hvcnRfZGVzY3JpcHRpb246ICJSdW4gaW1wbGVtZW50YXRpb24gaW4gYSBmcmVzaCBQUi1yZWFkeSB3b3JrdHJlZSIKICBkZWZhdWx0X3Byb21wdDogIlVzZSAkaW1wbGVtZW50YXRpb24ta2lja29mZiB0byBzdGFydCB0aGlzIGltcGxlbWVudGF0aW9uIGluIGEgZnJlc2ggd29ya3RyZWUgYW5kIGxlYXZlIG9uZSB2ZXJpZmllZCBsb2NhbCBjb21taXQuIgpwb2xpY3k6CiAgYWxsb3dfaW1wbGljaXRfaW52b2NhdGlvbjogZmFsc2UK"
+  },
+  {
+   "path": ".agents/skills/implementation-final-review/agents/openai.yaml",
+   "bytes": 302,
+   "sha256": "dd65f3ffb4c88442fc901612634bf1ef23b1de833beacd9e75547029e33b4a0b",
+   "_content": "aW50ZXJmYWNlOgogIGRpc3BsYXlfbmFtZTogIkltcGxlbWVudGF0aW9uIEZpbmFsIFJldmlldyIKICBzaG9ydF9kZXNjcmlwdGlvbjogIlJldmlldyBpbXBsZW1lbnRhdGlvbiBkaWZmcyBiZWZvcmUgY29tcGxldGlvbiIKICBkZWZhdWx0X3Byb21wdDogIlVzZSAkaW1wbGVtZW50YXRpb24tZmluYWwtcmV2aWV3IHRvIGF1ZGl0IHRoaXMgaW1wbGVtZW50YXRpb24gZnJvbSBmaXJzdCBwcmluY2lwbGVzIGJlZm9yZSBjYWxsaW5nIGl0IGNvbXBsZXRlLiIKCnBvbGljeToKICBhbGxvd19pbXBsaWNpdF9pbnZvY2F0aW9uOiBmYWxzZQo="
+  },
+  {
+   "path": "examples/docs/agents/agentCloning.ts",
+   "bytes": 309,
+   "sha256": "d6ebfd9e698ec93fe90d7dc70667518d0a467673bf1f91d476e6f380ba682597",
+   "_content": "aW1wb3J0IHsgQWdlbnQgfSBmcm9tICdAb3BlbmFpL2FnZW50cyc7Cgpjb25zdCBwaXJhdGVBZ2VudCA9IG5ldyBBZ2VudCh7CiAgbmFtZTogJ1BpcmF0ZScsCiAgaW5zdHJ1Y3Rpb25zOiAnUmVzcG9uZCBsaWtlIGEgcGlyYXRlIOKAkyBsb3RzIG9mIOKAnEFycnIh4oCdJywKICBtb2RlbDogJ2dwdC01LjQnLAp9KTsKCmNvbnN0IHJvYm90QWdlbnQgPSBwaXJhdGVBZ2VudC5jbG9uZSh7CiAgbmFtZTogJ1JvYm90JywKICBpbnN0cnVjdGlvbnM6ICdSZXNwb25kIGxpa2UgYSByb2JvdCDigJMgYmUgcHJlY2lzZSBhbmQgZmFjdHVhbC4nLAp9KTsK"
+  },
+  {
+   "path": "examples/docs/agents/agentWithLifecycleHooks.ts",
+   "bytes": 320,
+   "sha256": "a31f258e59d753b9e2b3fda08817cf1fe63f17d31952e81c73dcaae25774e5e5",
+   "_content": "aW1wb3J0IHsgQWdlbnQgfSBmcm9tICdAb3BlbmFpL2FnZW50cyc7Cgpjb25zdCBhZ2VudCA9IG5ldyBBZ2VudCh7CiAgbmFtZTogJ1ZlcmJvc2UgYWdlbnQnLAogIGluc3RydWN0aW9uczogJ0V4cGxhaW4gdGhpbmdzIHRob3JvdWdobHkuJywKfSk7CgphZ2VudC5vbignYWdlbnRfc3RhcnQnLCAoY3R4LCBhZ2VudCkgPT4gewogIGNvbnNvbGUubG9nKGBbJHthZ2VudC5uYW1lfV0gc3RhcnRlZGApOwp9KTsKYWdlbnQub24oJ2FnZW50X2VuZCcsIChjdHgsIG91dHB1dCkgPT4gewogIGNvbnNvbGUubG9nKGBbYWdlbnRdIHByb2R1Y2VkOmAsIG91dHB1dCk7Cn0pOwo="
+  },
+  {
+   "path": ".agents/skills/sensitive-logging-audit/agents/openai.yaml",
+   "bytes": 327,
+   "sha256": "1e5624900f43430ba2aa4734deb1773a412c69159869a52c80898dfd5bdf0163",
+   "_content": "aW50ZXJmYWNlOgogIGRpc3BsYXlfbmFtZTogIlNlbnNpdGl2ZSBMb2dnaW5nIEF1ZGl0IgogIHNob3J0X2Rlc2NyaXB0aW9uOiAiQXVkaXQgbW9kZWwvdG9vbCBwYXlsb2FkIGxvZ2dpbmcgd2l0aG91dCBJRCBmYWxzZSBwb3NpdGl2ZXMiCiAgZGVmYXVsdF9wcm9tcHQ6ICJVc2UgJHNlbnNpdGl2ZS1sb2dnaW5nLWF1ZGl0IHRvIGludmVudG9yeSBydW50aW1lIGxvZ3MsIHByb3ZlIG1vZGVsIG9yIHRvb2wgcGF5bG9hZCBleHBvc3VyZSBiZWZvcmUgY2hhbmdpbmcgY29kZSwgcHJlc2VydmUgb3BlcmF0aW9uYWwgbWV0YWRhdGEsIGFuZCBmaXggY29uZmlybWVkIGxlYWtzLiIK"
+  },
+  {
+   "path": "examples/docs/agents/agentWithZodOutputType.ts",
+   "bytes": 341,
+   "sha256": "96040b1f8e9d18ce58cfa712dc9e36f7dee934eb4795e134de74492458789c7b",
+   "_content": "aW1wb3J0IHsgQWdlbnQgfSBmcm9tICdAb3BlbmFpL2FnZW50cyc7CmltcG9ydCB7IHogfSBmcm9tICd6b2QnOwoKY29uc3QgQ2FsZW5kYXJFdmVudCA9IHoub2JqZWN0KHsKICBuYW1lOiB6LnN0cmluZygpLAogIGRhdGU6IHouc3RyaW5nKCksCiAgcGFydGljaXBhbnRzOiB6LmFycmF5KHouc3RyaW5nKCkpLAp9KTsKCmNvbnN0IGV4dHJhY3RvciA9IG5ldyBBZ2VudCh7CiAgbmFtZTogJ0NhbGVuZGFyIGV4dHJhY3RvcicsCiAgaW5zdHJ1Y3Rpb25zOiAnRXh0cmFjdCBjYWxlbmRhciBldmVudHMgZnJvbSB0aGUgc3VwcGxpZWQgdGV4dC4nLAogIG91dHB1dFR5cGU6IENhbGVuZGFyRXZlbnQsCn0pOwo="
+  }
+ ],
+ "skipped": {
+  "budget": true,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 1641
+ },
+ "providers": [
+  "openai"
+ ],
+ "entrypoints": [],
+ "runtime": [
+  "node",
+  "shell"
+ ],
+ "notes": [],
+ "_license_bytes": "TUlUIExpY2Vuc2UKCkNvcHlyaWdodCAoYykgMjAyNSBPcGVuQUkKClBlcm1pc3Npb24gaXMgaGVyZWJ5IGdyYW50ZWQsIGZyZWUgb2YgY2hhcmdlLCB0byBhbnkgcGVyc29uIG9idGFpbmluZyBhIGNvcHkKb2YgdGhpcyBzb2Z0d2FyZSBhbmQgYXNzb2NpYXRlZCBkb2N1bWVudGF0aW9uIGZpbGVzICh0aGUgIlNvZnR3YXJlIiksIHRvIGRlYWwKaW4gdGhlIFNvZnR3YXJlIHdpdGhvdXQgcmVzdHJpY3Rpb24sIGluY2x1ZGluZyB3aXRob3V0IGxpbWl0YXRpb24gdGhlIHJpZ2h0cwp0byB1c2UsIGNvcHksIG1vZGlmeSwgbWVyZ2UsIHB1Ymxpc2gsIGRpc3RyaWJ1dGUsIHN1YmxpY2Vuc2UsIGFuZC9vciBzZWxsCmNvcGllcyBvZiB0aGUgU29mdHdhcmUsIGFuZCB0byBwZXJtaXQgcGVyc29ucyB0byB3aG9tIHRoZSBTb2Z0d2FyZSBpcwpmdXJuaXNoZWQgdG8gZG8gc28sIHN1YmplY3QgdG8gdGhlIGZvbGxvd2luZyBjb25kaXRpb25zOgoKVGhlIGFib3ZlIGNvcHlyaWdodCBub3RpY2UgYW5kIHRoaXMgcGVybWlzc2lvbiBub3RpY2Ugc2hhbGwgYmUgaW5jbHVkZWQgaW4gYWxsCmNvcGllcyBvciBzdWJzdGFudGlhbCBwb3J0aW9ucyBvZiB0aGUgU29mdHdhcmUuCgpUSEUgU09GVFdBUkUgSVMgUFJPVklERUQgIkFTIElTIiwgV0lUSE9VVCBXQVJSQU5UWSBPRiBBTlkgS0lORCwgRVhQUkVTUyBPUgpJTVBMSUVELCBJTkNMVURJTkcgQlVUIE5PVCBMSU1JVEVEIFRPIFRIRSBXQVJSQU5USUVTIE9GIE1FUkNIQU5UQUJJTElUWSwKRklUTkVTUyBGT1IgQSBQQVJUSUNVTEFSIFBVUlBPU0UgQU5EIE5PTklORlJJTkdFTUVOVC4gSU4gTk8gRVZFTlQgU0hBTEwgVEhFCkFVVEhPUlMgT1IgQ09QWVJJR0hUIEhPTERFUlMgQkUgTElBQkxFIEZPUiBBTlkgQ0xBSU0sIERBTUFHRVMgT1IgT1RIRVIKTElBQklMSVRZLCBXSEVUSEVSIElOIEFOIEFDVElPTiBPRiBDT05UUkFDVCwgVE9SVCBPUiBPVEhFUldJU0UsIEFSSVNJTkcgRlJPTSwKT1VUIE9GIE9SIElOIENPTk5FQ1RJT04gV0lUSCBUSEUgU09GVFdBUkUgT1IgVEhFIFVTRSBPUiBPVEhFUiBERUFMSU5HUyBJTiBUSEUKU09GVFdBUkUu"
+}

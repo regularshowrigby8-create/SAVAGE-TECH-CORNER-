@@ -1,0 +1,146 @@
+{
+ "id": "bjwanneng-veriflow-agent",
+ "full_name": "bjwanneng/Veriflow-agent",
+ "url": "https://github.com/bjwanneng/Veriflow-agent",
+ "license": "NOASSERTION",
+ "license_file": null,
+ "license_text_sha256": null,
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "625c7105cfc7ce0c1c120da27549dbd0b7174771",
+ "vendored_files": [
+  {
+   "path": "prompts/test_prompt.md",
+   "bytes": 29,
+   "sha256": "ae1fd0dd03ce8bebfe0b84d51ea19c74513e44ba4f2c3ec7fae812650efa2313"
+  },
+  {
+   "path": "src/veriflow_agent/prompts/stage1_architect_quick.md",
+   "bytes": 3097,
+   "sha256": "74da808ad92f75e7a6e5f22ea4c724a8a51a67d395e9551e8210051c5e02a4b4"
+  },
+  {
+   "path": "src/veriflow_agent/prompts/stage3_coder.md",
+   "bytes": 3107,
+   "sha256": "71f478ea6798c3c226de786aca2820f3f3ff4829dfccf48beae389ef82c6515d"
+  },
+  {
+   "path": "src/veriflow_agent/prompts/stage3_module.md",
+   "bytes": 3922,
+   "sha256": "40a706fc46389ea751b5ffb62c9214d4f159352ddd9febd08ebd7dc51ec72fcd"
+  },
+  {
+   "path": "src/veriflow_agent/prompts/stage15_microarch.md",
+   "bytes": 4139,
+   "sha256": "dbab75fed18ebc82399da0065a1cb9143fcba486c1e8289e6665ee0dd893023f"
+  },
+  {
+   "path": "src/veriflow_agent/prompts/stage35_skill_d.md",
+   "bytes": 4883,
+   "sha256": "8d7d865b6a86b5b5ef0bca4268c64a4b9525cb7ca1220b1328beda4ef05892dd"
+  },
+  {
+   "path": "src/veriflow_agent/prompts/stage4_debugger.md",
+   "bytes": 5004,
+   "sha256": "93de8695115318dc6ec2566c86c148b26093708cf040ab5f03d785def8cad36b"
+  },
+  {
+   "path": "src/veriflow_agent/prompts/stage1_architect.md",
+   "bytes": 7209,
+   "sha256": "61832df0835980c1304cdf7154bc8954fd10a1e0388b6821a32a0fdd0bf15514"
+  },
+  {
+   "path": "src/veriflow_agent/prompts/supervisor.md",
+   "bytes": 10458,
+   "sha256": "aaa4abbd15a3b0643c5930fd22aa49e6dabfdeadb063bc4ec767f0edffe8cd35"
+  },
+  {
+   "path": "src/veriflow_agent/prompts/stage2_timing.md",
+   "bytes": 10977,
+   "sha256": "245aa780c19aa25375cc2ed6db2970e2718c0d845057f78036c3dab090f4be2d"
+  },
+  {
+   "path": "src/veriflow_agent/agents/__init__.py",
+   "bytes": 1029,
+   "sha256": "f01888ca062b72d24135a67b3603b3a16b34048fe9ccbfb5701ac646beb16852"
+  },
+  {
+   "path": "src/veriflow_agent/agents/sim_agent.py",
+   "bytes": 3187,
+   "sha256": "e5d052d77b7e9022c3132aafc5fe55ac21b805a4d949a2728db1b20aeba46740"
+  },
+  {
+   "path": "src/veriflow_agent/agents/microarch.py",
+   "bytes": 4405,
+   "sha256": "3356c577cba9571c52d948d6d94b1009ce322f981abaf7ae827123a4040ea399"
+  },
+  {
+   "path": ".claude/agents/veriflow-agent.md",
+   "bytes": 4416,
+   "sha256": "54e322d5140b7d046defb88d2232f7502ba598189a9ac1732e14096da77e790f"
+  },
+  {
+   "path": "src/veriflow_agent/agents/lint_agent.py",
+   "bytes": 4986,
+   "sha256": "09c46f15a1cde21baf9caf3e56d6a19fc672e6f7d903a8b0acda3d11374ff44a"
+  },
+  {
+   "path": "src/veriflow_agent/agents/synth.py",
+   "bytes": 6123,
+   "sha256": "f98a4aee0c3b2512415087590043999e3fd3f7f09210ff83cb0ba15f281e1fdc"
+  },
+  {
+   "path": "src/veriflow_agent/agents/timing.py",
+   "bytes": 7634,
+   "sha256": "5843a64e0b600be62987013f126668cd3c4fa777d07661a567571725fb93c1aa"
+  },
+  {
+   "path": "src/veriflow_agent/agents/supervisor.py",
+   "bytes": 8764,
+   "sha256": "373c8413907998cd0ad0fb4b243baff8d965ad4be6656bb7d0adcabaa9f80122"
+  },
+  {
+   "path": "src/veriflow_agent/agents/output_extractor.py",
+   "bytes": 11323,
+   "sha256": "ce8b79d0a7e19de2950453e6f31c28887738728a61c2ad80d5fbe0897e92a380"
+  },
+  {
+   "path": "src/veriflow_agent/agents/architect.py",
+   "bytes": 13895,
+   "sha256": "f7976a54f83f356eae6ac0a6c0bfe4a653fbf5520a5c5321b5b77e3b5851c305"
+  },
+  {
+   "path": "src/veriflow_agent/agents/debugger.py",
+   "bytes": 16244,
+   "sha256": "4ee01c8a3e004f466d92754d002895642f3df1dba271618a528272e1c1e67bd6"
+  },
+  {
+   "path": "claude.md",
+   "bytes": 5969,
+   "sha256": "b4218e0301d16fd49f4928669dc8878708aae22a352fa3b982ea412af8d6b6a7"
+  },
+  {
+   "path": "README.md",
+   "bytes": 8442,
+   "sha256": "b87d5d5fe5f215386c73ad07fa5056b29f95acdf4cd394432f361e0a2b32c9bb"
+  }
+ ],
+ "skipped": {
+  "budget": true,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 115
+ },
+ "providers": [
+  "anthropic"
+ ],
+ "entrypoints": [],
+ "runtime": [
+  "python"
+ ],
+ "notes": [],
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 23,
+ "vendored_bytes": 149242,
+ "content_redistributed": false
+}

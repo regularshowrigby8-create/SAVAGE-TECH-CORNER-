@@ -1,103 +1,95 @@
 #!/usr/bin/env python3
-"""APK Packager and Builder for Factory 3 Pipeline.
+"""APK build stage for the Factory 3 pipeline.
 
-Assembles and verifies Android Package (APK) artifacts for Savage Browser:
-1. Validates that the authentic, compiled, and signed Android Browser APK is populated.
-2. Preserves v1 (PKCS#7) + v2/v3 Android Signing Blocks during build assembly.
-3. Fallback: Uses Gradle build chain when Android SDK is provisioned.
-4. Output: factories/final-product/SavageBrowser-debug.apk
+Builds the Savage Browser Android application with the real Gradle build that owns it
+(``shell/android_project``) and publishes the resulting debug APK to the final-product directory.
+
+Design rules:
+* the APK is *built*, never copied from a pre-built file that happens to sit in the repository - a
+  file this checkout did not build says nothing about this checkout;
+* when the Gradle build cannot run (no wrapper, no JDK, no Android SDK), this stage fails with the
+  build's own output. It never falls back to an older artifact;
+* the SHA-256 of the APK that was actually built is written next to it, so downstream verification
+  has something to verify.
+
+Output: factories/final-product/SavageBrowser-debug.apk (+ .sha256)
 """
 
 from __future__ import annotations
 
-import base64
 import hashlib
-import os
-import shutil
-import struct
 import subprocess
 import sys
-import tempfile
-import zipfile
 from pathlib import Path
 
 _curr = Path(__file__).resolve()
-ROOT_DIR = _curr.parent.parent.parent.parent if _curr.parent.parent.name == "factories" or _curr.parent.name == "tools" and "factories" in _curr.parts else _curr.parent.parent
-if (ROOT_DIR / "factories").exists() and not (ROOT_DIR / "shell").exists():
-    ROOT_DIR = ROOT_DIR.parent
-if not (ROOT_DIR / "shell").exists() and Path("/home/user/SAVAGE-TECH-CORNER-/shell").exists():
-    ROOT_DIR = Path("/home/user/SAVAGE-TECH-CORNER-")
+ROOT_DIR = _curr.parent.parent.parent
 
+
+def find_root() -> Path:
+    """Locates the repository root that contains both shell/ and factories/."""
+    for candidate in (_curr.parent.parent.parent, _curr.parent.parent.parent.parent,
+                      _curr.parent.parent):
+        if (candidate / "shell" / "android_project" / "gradlew").is_file():
+            return candidate
+    return ROOT_DIR
+
+
+ROOT_DIR = find_root()
+ANDROID_PROJECT = ROOT_DIR / "shell" / "android_project"
+SOURCE_APK = ANDROID_PROJECT / "app" / "build" / "outputs" / "apk" / "debug" / "app-debug.apk"
 FINAL_PRODUCT_DIR = ROOT_DIR / "factories" / "final-product"
 SHELL_DIR = ROOT_DIR / "shell"
 
 
-def extract_signing_block(apk_bytes: bytes) -> bytes:
-    """Extracts Android v2/v3 Signing Block if present."""
-    magic = b"APK Sig Block 42"
-    pos = apk_bytes.rfind(magic)
-    if pos == -1:
-        return b""
-    cd_start = pos + 16
-    size_end = int.from_bytes(apk_bytes[pos-8:pos], "little")
-    block_start = cd_start - 8 - size_end
-    if block_start < 0 or block_start >= cd_start:
-        return b""
-    return apk_bytes[block_start:cd_start]
+def sha256_of(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
-def inject_signing_block(apk_bytes: bytes, sig_block: bytes) -> bytes:
-    """Injects preserved Android v2/v3 Signing Block before Central Directory."""
-    if not sig_block:
-        return apk_bytes
-    eocd_pos = apk_bytes.rfind(b"PK\x05\x06")
-    if eocd_pos == -1:
-        return apk_bytes
-    cd_offset = int.from_bytes(apk_bytes[eocd_pos+16:eocd_pos+20], "little")
-    cd_size = int.from_bytes(apk_bytes[eocd_pos+12:eocd_pos+16], "little")
-    
-    pre_cd = apk_bytes[:cd_offset]
-    cd_and_eocd = apk_bytes[cd_offset:]
-    
-    new_cd_offset = cd_offset + len(sig_block)
-    new_eocd_pos = len(pre_cd) + len(sig_block) + cd_size
-    new_apk = pre_cd + sig_block + cd_and_eocd
-    
-    patched = bytearray(new_apk)
-    patched[new_eocd_pos+16:new_eocd_pos+20] = struct.pack("<I", new_cd_offset)
-    return bytes(patched)
+def build_debug_apk(output_apk_path: Path = FINAL_PRODUCT_DIR / "SavageBrowser-debug.apk") -> Path:
+    """Runs Gradle and publishes the APK it produced to ``output_apk_path``."""
+    wrapper = ANDROID_PROJECT / "gradlew"
+    if not wrapper.is_file():
+        raise FileNotFoundError(
+            f"the Gradle wrapper is missing at {wrapper}; this stage cannot build an APK without it")
 
+    command = [str(wrapper), ":app:assembleDebug", "--stacktrace", "--no-daemon"]
+    print(f"[APK-BUILDER] {' '.join(command)} (cwd={ANDROID_PROJECT})")
+    completed = subprocess.run(command, cwd=ANDROID_PROJECT, check=False)
+    if completed.returncode != 0:
+        raise RuntimeError(
+            f"the Gradle build failed with exit code {completed.returncode}; no APK was published "
+            f"and no older artifact is used as a substitute")
 
-def create_signed_apk(output_apk_path: Path) -> Path:
-    """Delivers verified authentic Android browser APK deliverable with multi-scheme signing (v1, v2, v3)."""
+    if not SOURCE_APK.is_file():
+        raise FileNotFoundError(
+            f"Gradle reported success but {SOURCE_APK} does not exist; refusing to publish anything")
+
     output_apk_path.parent.mkdir(parents=True, exist_ok=True)
-
-    source_apk = None
-    shell_apk = ROOT_DIR / "shell" / "android_project" / "app" / "build" / "outputs" / "apk" / "debug" / "SavageBrowser-debug.apk"
-    assets_apk = ROOT_DIR / "assets" / "SavageBrowser-v2.0.0.apk"
-    legacy_shell_apk = ROOT_DIR / "shell" / "final-product" / "SavageBrowser-debug.apk"
-
-    if shell_apk.exists() and shell_apk.stat().st_size > 50000:
-        source_apk = shell_apk
-    elif assets_apk.exists() and assets_apk.stat().st_size > 50000:
-        source_apk = assets_apk
-    elif legacy_shell_apk.exists() and legacy_shell_apk.stat().st_size > 50000:
-        source_apk = legacy_shell_apk
-
-    if source_apk is None:
-        raise FileNotFoundError("Authentic signed Android Browser APK deliverable not found. Refusing to generate fake/mock stub APK.")
-
-    # Copy source APK and ensure v2/v3 signatures remain preserved
-    shutil.copyfile(source_apk, output_apk_path)
+    output_apk_path.write_bytes(SOURCE_APK.read_bytes())
+    digest = sha256_of(output_apk_path)
+    output_apk_path.with_suffix(".apk.sha256").write_text(
+        f"{digest}  {output_apk_path.name}\n", encoding="utf-8")
+    print(f"[APK-BUILDER] built {SOURCE_APK} ({SOURCE_APK.stat().st_size} bytes)")
+    print(f"[APK-BUILDER] published {output_apk_path} sha256={digest}")
     return output_apk_path
 
 
+def create_signed_apk(output_apk_path: Path) -> Path:
+    """Backwards-compatible name for the build stage used by factories/run_factories.py."""
+    return build_debug_apk(output_apk_path)
+
+
 def main() -> None:
-    dest = FINAL_PRODUCT_DIR / "SavageBrowser-debug.apk"
-    apk_path = create_signed_apk(dest)
+    apk_path = build_debug_apk()
     size_kb = apk_path.stat().st_size / 1024
-    print(f"[APK-BUILDER] Verified authentic Savage Browser APK: {apk_path} ({size_kb:.2f} KB)")
+    print(f"[APK-BUILDER] Savage Browser APK: {apk_path} ({size_kb:.2f} KB) "
+          f"sha256={sha256_of(apk_path)}")
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

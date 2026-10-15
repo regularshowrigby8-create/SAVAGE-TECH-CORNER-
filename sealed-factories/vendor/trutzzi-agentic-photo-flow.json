@@ -1,0 +1,43 @@
+{
+ "id": "trutzzi-agentic-photo-flow",
+ "full_name": "trutzzi/agentic-photo-flow",
+ "url": "https://github.com/trutzzi/agentic-photo-flow",
+ "license": "NOASSERTION",
+ "license_file": null,
+ "license_text_sha256": null,
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "6053f0d64fdc3e9b6a63dcd391f4c9a1ba95d754",
+ "vendored_files": [
+  {
+   "path": "src/orchestrator.js",
+   "bytes": 3491,
+   "sha256": "61f3438183372a716a73e692beff3cf0d7126ce54b630a93f49af08693db2cc2"
+  },
+  {
+   "path": "README.md",
+   "bytes": 4076,
+   "sha256": "d445ae5d23c25da915cf87139b0443f2f6c3ada809469d6af49399685a00df9c"
+  }
+ ],
+ "skipped": {
+  "budget": false,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 16
+ },
+ "providers": [
+  "ollama"
+ ],
+ "entrypoints": [
+  "src/orchestrator.js"
+ ],
+ "runtime": [
+  "node"
+ ],
+ "notes": [],
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 2,
+ "vendored_bytes": 7567,
+ "content_redistributed": false
+}

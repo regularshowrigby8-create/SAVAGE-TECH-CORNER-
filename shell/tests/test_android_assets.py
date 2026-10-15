@@ -1,0 +1,599 @@
+"""Repository-level checks on the Android application assets.
+
+These run without an Android SDK, so they are the fast, always-available guard for the invariants
+that are cheapest to break: the permission set, the shipped UI strings, the fail-closed TLS rule
+and the build configuration. Every check reads real files from the repository; none of them can pass
+when a file is missing, because a missing file is reported as a failure.
+"""
+
+import re
+import subprocess
+import os
+import unittest
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+ANDROID_ROOT = REPO_ROOT / "shell" / "android_project"
+MAIN = ANDROID_ROOT / "app" / "src" / "main"
+JAVA = MAIN / "java" / "com" / "savage" / "soulbrowser"
+ANDROID_TEST = (ANDROID_ROOT / "app" / "src" / "androidTest" / "java" / "com" / "savage"
+                / "soulbrowser")
+RES = MAIN / "res"
+MANIFEST = MAIN / "AndroidManifest.xml"
+
+EXPECTED_PACKAGE = "com.savage.soulbrowser"
+ALLOWED_PERMISSIONS = {
+    "android.permission.INTERNET",
+    "android.permission.ACCESS_NETWORK_STATE",
+}
+
+
+def read(path: Path) -> str:
+    """Reads a file, failing the test when it is absent (never silently skipping)."""
+    if not path.is_file():
+        raise AssertionError(f"required file is missing: {path.relative_to(REPO_ROOT)}")
+    return path.read_text(encoding="utf-8")
+
+
+def java_sources() -> list:
+    return sorted(JAVA.rglob("*.java"))
+
+
+class AndroidProjectLayoutTest(unittest.TestCase):
+    def test_the_expected_android_project_exists(self):
+        for relative in (
+            "build.gradle.kts",
+            "settings.gradle.kts",
+            "gradle.properties",
+            "gradlew",
+            "gradle/wrapper/gradle-wrapper.properties",
+            "gradle/wrapper/gradle-wrapper.jar",
+            "app/build.gradle.kts",
+            "app/proguard-rules.pro",
+            "app/src/main/AndroidManifest.xml",
+        ):
+            with self.subTest(path=relative):
+                self.assertTrue((ANDROID_ROOT / relative).exists(), relative)
+
+    def test_the_gradle_wrapper_is_a_real_jar_and_pinned(self):
+        wrapper_jar = ANDROID_ROOT / "gradle" / "wrapper" / "gradle-wrapper.jar"
+        data = wrapper_jar.read_bytes()
+        self.assertGreater(len(data), 40_000, "the wrapper jar must be the real Gradle wrapper")
+        self.assertTrue(data.startswith(b"PK"), "the wrapper jar must be a ZIP archive")
+        properties = read(ANDROID_ROOT / "gradle" / "wrapper" / "gradle-wrapper.properties")
+        self.assertIn("gradle-8.", properties, "the wrapper must pin a concrete Gradle version")
+        self.assertIn("-bin.zip", properties)
+
+    def test_plugin_and_sdk_versions_are_pinned(self):
+        root_gradle = read(ANDROID_ROOT / "build.gradle.kts")
+        app_gradle = read(ANDROID_ROOT / "app" / "build.gradle.kts")
+        self.assertRegex(root_gradle,
+                         r'id\("com\.android\.application"\)\s*version\s*"\d+\.\d+\.\d+"',
+                         "the Android Gradle Plugin version must be pinned")
+        self.assertRegex(app_gradle, r"compileSdk\s*=\s*35")
+        self.assertRegex(app_gradle, r"targetSdk\s*=\s*35")
+        self.assertRegex(app_gradle, r"minSdk\s*=\s*26")
+        self.assertIn(f'applicationId = "{EXPECTED_PACKAGE}"', app_gradle)
+        self.assertIn('namespace = "com.savage.soulbrowser"', app_gradle)
+
+    def test_release_build_type_is_hardened_and_not_debuggable(self):
+        app_gradle = read(ANDROID_ROOT / "app" / "build.gradle.kts")
+        self.assertRegex(app_gradle, r'getByName\("release"\)[\s\S]*?isDebuggable = false')
+        self.assertRegex(app_gradle, r'getByName\("release"\)[\s\S]*?isMinifyEnabled = true')
+        self.assertIn("abortOnError = true", app_gradle,
+                      "lint must fail the build instead of reporting and continuing")
+        self.assertIn('options.encoding = "UTF-8"', app_gradle,
+                      "the sources contain non-ASCII characters; the encoding must be pinned")
+        self.assertNotIn("signingConfig = signingConfigs.getByName(\"release\")", app_gradle.replace(
+            "            if (keystorePropertiesFile.exists()) {\n"
+            "                signingConfig = signingConfigs.getByName(\"release\")\n"
+            "            }", ""), "release signing must stay gated on operator-supplied credentials")
+
+    def test_no_signing_material_is_committed(self):
+        forbidden = []
+        for path in REPO_ROOT.rglob("*"):
+            if not path.is_file() or ".git" in path.parts:
+                continue
+            name = path.name.lower()
+            if name.endswith((".jks", ".keystore", ".p12", ".pfx")):
+                forbidden.append(path)
+            if name in {"keystore.properties", "signing.properties"}:
+                forbidden.append(path)
+        self.assertEqual([], [str(p.relative_to(REPO_ROOT)) for p in forbidden],
+                         "no keystore or signing properties may be committed")
+
+
+class AndroidManifestTest(unittest.TestCase):
+    def setUp(self):
+        self.manifest = read(MANIFEST)
+
+    def test_package_identity_is_com_savage_soulbrowser(self):
+        app_gradle = read(ANDROID_ROOT / "app" / "build.gradle.kts")
+        self.assertIn(EXPECTED_PACKAGE, app_gradle)
+        self.assertRegex(self.manifest, r'android:name="\.ui\.MainActivity"')
+
+    def test_permissions_are_exactly_the_two_network_permissions(self):
+        declared = set(re.findall(r'<uses-permission\s+android:name="([^"]+)"', self.manifest))
+        self.assertEqual(ALLOWED_PERMISSIONS, declared)
+
+    def test_components_set_exported_and_cleartext_is_refused(self):
+        self.assertIn('android:usesCleartextTraffic="false"', self.manifest)
+        self.assertIn('android:networkSecurityConfig="@xml/network_security_config"', self.manifest)
+        for match in re.finditer(r"<activity\b[^>]*>", self.manifest):
+            with self.subTest(activity=match.group(0)[:60]):
+                self.assertIn("android:exported=", match.group(0))
+        self.assertEqual(1, len(re.findall(r'android:exported="true"', self.manifest)),
+                         "only the launcher activity may be exported")
+
+    def test_cleartext_is_refused_by_the_network_security_config(self):
+        config = read(RES / "xml" / "network_security_config.xml")
+        self.assertIn('cleartextTrafficPermitted="false"', config)
+        self.assertNotIn('cleartextTrafficPermitted="true"', config)
+
+
+class AndroidSourcesTest(unittest.TestCase):
+    def test_fail_closed_tls_never_proceeds(self):
+        offenders = []
+        for source in java_sources():
+            text = source.read_text(encoding="utf-8")
+            for match in re.finditer(r"\.proceed\s*\(", text):
+                offenders.append(f"{source.relative_to(REPO_ROOT)}:{text[:match.start()].count(chr(10)) + 1}")
+        self.assertEqual([], offenders,
+                         "an SSL error must never be proceeded through (fail-closed)")
+
+    def test_no_debug_logging_of_sensitive_values(self):
+        offenders = []
+        for source in java_sources():
+            text = source.read_text(encoding="utf-8")
+            for line_no, line in enumerate(text.splitlines(), start=1):
+                if re.search(r"\b(Log\.d|System\.out\.print|printStackTrace)\b", line):
+                    offenders.append(f"{source.relative_to(REPO_ROOT)}:{line_no}")
+                if re.search(r"Log\.[a-z]\(.*(password|token|secret|apikey|api_key)", line, re.I):
+                    offenders.append(f"{source.relative_to(REPO_ROOT)}:{line_no}")
+        self.assertEqual([], offenders, "no debug logging and no secret logging in the app")
+
+    def test_no_placeholder_implementations_in_the_application_sources(self):
+        offenders = []
+        for source in java_sources():
+            text = source.read_text(encoding="utf-8")
+            for line_no, line in enumerate(text.splitlines(), start=1):
+                if re.search(r"\bTODO\b|\bFIXME\b|NotImplemented|UnsupportedOperationException", line):
+                    offenders.append(f"{source.relative_to(REPO_ROOT)}:{line_no}")
+        self.assertEqual([], offenders, "the shipped application has no placeholders")
+
+    def test_no_third_party_browser_code_identifiers(self):
+        # Assembled at runtime on purpose: the repository's own anti-deception auditor greps every
+        # source file for these tokens, and a detector file must not match its own patterns.
+        forbidden = tuple("".join(parts) for parts in (
+            ("acr", ".browser"), ("anthony", "cr"), ("light", "ning")))
+        offenders = []
+        for path in list(java_sources()) + list(RES.rglob("*.xml")):
+            text = path.read_text(encoding="utf-8").lower()
+            for needle in forbidden:
+                if needle in text:
+                    offenders.append(f"{path.relative_to(REPO_ROOT)}: {needle}")
+        self.assertEqual([], offenders)
+
+    def test_only_the_declared_androidx_libraries_are_imported(self):
+        imports = set()
+        for source in java_sources():
+            imports.update(re.findall(r"^import\s+(androidx\.[\w.]+)", source.read_text(encoding="utf-8"),
+                                      re.M))
+        packages = {name.rsplit(".", 1)[0] for name in imports}
+        allowed_prefixes = ("androidx.appcompat", "androidx.recyclerview", "androidx.activity",
+                            "androidx.core", "androidx.annotation", "androidx.lifecycle")
+        for package in sorted(packages):
+            with self.subTest(package=package):
+                self.assertTrue(package.startswith(allowed_prefixes),
+                                f"unexpected dependency surface: {package}")
+
+
+class AndroidResourcesTest(unittest.TestCase):
+    """AC-033: no user-visible text is hard-coded in layouts and the UI is fully labelled."""
+
+    def layout_files(self):
+        return sorted((RES / "layout").glob("*.xml"))
+
+    def test_layouts_have_no_hard_coded_text(self):
+        offenders = []
+        for layout in self.layout_files():
+            text = layout.read_text(encoding="utf-8")
+            for match in re.finditer(r'android:(?:text|hint|title)="([^"]*)"', text):
+                value = match.group(1)
+                if value.startswith("@string/") or value.startswith("?") or value.startswith("@"):
+                    continue
+                line = text[:match.start()].count("\n") + 1
+                offenders.append(f"{layout.name}:{line} -> {value!r}")
+        self.assertEqual([], offenders, "every user-visible string must come from @string")
+
+    def test_every_clickable_control_in_the_layouts_is_labelled(self):
+        offenders = []
+        for layout in self.layout_files():
+            text = layout.read_text(encoding="utf-8")
+            for match in re.finditer(r"<(\w+(?:Button|ImageButton|Image))\b([\s\S]*?)/?>", text):
+                block = match.group(0)
+                if "android:clickable=" in block:
+                    continue
+                if "android:contentDescription=" not in block and "android:text=" not in block:
+                    offenders.append(f"{layout.name}: {match.group(1)} without labelling")
+        self.assertEqual([], offenders)
+
+    def test_every_string_reference_resolves(self):
+        strings = read(RES / "values" / "strings.xml")
+        declared = set(re.findall(r'<string\s+name="([^"]+)"', strings))
+        referenced = set()
+        for path in list(RES.rglob("*.xml")) + list(java_sources()):
+            text = path.read_text(encoding="utf-8")
+            referenced.update(re.findall(r"@string/([A-Za-z0-9_]+)", text))
+            # android.R.string.* are platform strings and are not declared in this app.
+            referenced.update(re.findall(r"(?<!android\.)\bR\.string\.([A-Za-z0-9_]+)", text))
+        missing = sorted(referenced - declared)
+        self.assertEqual([], missing, "every referenced string must be declared")
+
+    def test_resource_names_follow_the_android_convention(self):
+        offenders = []
+        for path in sorted(RES.rglob("*.xml")):
+            if path.parent.name.startswith("values"):
+                continue
+            name = path.stem
+            if not re.fullmatch(r"[a-z0-9_]+", name):
+                offenders.append(str(path.relative_to(REPO_ROOT)))
+            if name.startswith("ic_") and path.parent.name in {"drawable", "mipmap"}:
+                continue
+        self.assertEqual([], offenders)
+
+    def test_themes_used_by_the_manifest_exist(self):
+        manifest = read(MANIFEST)
+        themes = set(re.findall(r'android:theme="@style/([^"]+)"', manifest))
+        themes.update(re.findall(r'android:theme="@style/([^"]+)"', manifest))
+        styles = read(RES / "values" / "themes.xml")
+        declared = set(re.findall(r'<style\s+name="([^"]+)"', styles))
+        self.assertTrue(themes, "the manifest must set a theme")
+        for theme in sorted(themes):
+            with self.subTest(theme=theme):
+                self.assertIn(theme.replace(".", "."), declared)
+
+
+class AndroidTestsExistTest(unittest.TestCase):
+    """Every unit/instrumented test named by the acceptance criteria must exist."""
+
+    def test_every_named_test_class_exists(self):
+        expected = {
+            "app/src/test/java/com/savage/soulbrowser/domain/UrlPolicyTest.java",
+            "app/src/test/java/com/savage/soulbrowser/domain/DisplayTextTest.java",
+            "app/src/test/java/com/savage/soulbrowser/domain/OmniboxResolverTest.java",
+            "app/src/test/java/com/savage/soulbrowser/domain/TrustedOriginsTest.java",
+            "app/src/test/java/com/savage/soulbrowser/domain/InputValidatorTest.java",
+            "app/src/test/java/com/savage/soulbrowser/domain/TabListTest.java",
+            "app/src/test/java/com/savage/soulbrowser/domain/ViewStateMachineTest.java",
+            "app/src/test/java/com/savage/soulbrowser/domain/HistoryRetentionTest.java",
+            "app/src/test/java/com/savage/soulbrowser/domain/PermissionPolicyTest.java",
+            "app/src/test/java/com/savage/soulbrowser/domain/DownloadPolicyTest.java",
+            "app/src/test/java/com/savage/soulbrowser/browser/SslDecisionTest.java",
+            "app/src/test/java/com/savage/soulbrowser/manifest/AndroidManifestContractTest.java",
+            "app/src/androidTest/java/com/savage/soulbrowser/TestSupport.java",
+            "app/src/androidTest/java/com/savage/soulbrowser/MainActivityLaunchTest.java",
+            "app/src/androidTest/java/com/savage/soulbrowser/NavigationStateTest.java",
+            "app/src/androidTest/java/com/savage/soulbrowser/JourneyInstrumentedTest.java",
+            "app/src/androidTest/java/com/savage/soulbrowser/TabManagerTest.java",
+            "app/src/androidTest/java/com/savage/soulbrowser/TabsAdapterTest.java",
+            "app/src/androidTest/java/com/savage/soulbrowser/BackNavigationTest.java",
+            "app/src/androidTest/java/com/savage/soulbrowser/AccessibilityTest.java",
+            "app/src/androidTest/java/com/savage/soulbrowser/StateRestoreTest.java",
+            "app/src/androidTest/java/com/savage/soulbrowser/PersistenceTest.java",
+            "app/src/androidTest/java/com/savage/soulbrowser/CorruptionRecoveryTest.java",
+            "app/src/androidTest/java/com/savage/soulbrowser/RepositoryEmptyStateTest.java",
+            "app/src/androidTest/java/com/savage/soulbrowser/BookmarkRepositoryTest.java",
+            "app/src/androidTest/java/com/savage/soulbrowser/HistoryRepositoryTest.java",
+            "app/src/androidTest/java/com/savage/soulbrowser/BookmarksActivityTest.java",
+            "app/src/androidTest/java/com/savage/soulbrowser/HistoryActivityTest.java",
+            "app/src/androidTest/java/com/savage/soulbrowser/SslPolicyTest.java",
+            "app/src/androidTest/java/com/savage/soulbrowser/BridgePolicyTest.java",
+            "app/src/androidTest/java/com/savage/soulbrowser/WebPermissionTest.java",
+        }
+        missing = sorted(path for path in expected if not (ANDROID_ROOT / path).is_file())
+        self.assertEqual([], missing)
+
+    def test_emulator_script_is_posix_shell_safe(self):
+        """The emulator action runs its script with /usr/bin/sh (dash) on the runner image.
+
+        `set -o pipefail` and ${PIPESTATUS[0]} are bash-only, so an inline bash script there dies
+        with exit code 2 before any test runs. The action must call a bash script file instead.
+        """
+        workflow = (REPO_ROOT / ".github" / "workflows" / "android-build.yml").read_text(
+            encoding="utf-8")
+        block = workflow.split("script: |", 1)[1].split("\n\n", 1)[0] \
+            if "script: |" in workflow else ""
+        self.assertNotIn("pipefail", block)
+        self.assertNotIn("PIPESTATUS", block)
+        self.assertNotIn("[[", block)
+        self.assertIn("bash tools/ci/android_emulator_run.sh", block)
+        runner = REPO_ROOT / "tools" / "ci" / "android_emulator_run.sh"
+        self.assertTrue(runner.is_file(), "the emulator stage script must exist")
+        self.assertTrue(os.access(runner, os.X_OK), "the emulator stage script must be executable")
+        self.assertIn("connectedDebugAndroidTest", runner.read_text(encoding="utf-8"))
+
+    def test_no_test_is_disabled(self):
+        offenders = []
+        for path in (ANDROID_ROOT / "app" / "src").rglob("*.java"):
+            text = path.read_text(encoding="utf-8")
+            for line_no, line in enumerate(text.splitlines(), start=1):
+                if re.search(r"@Ignore|@Disabled|assumeTrue|assumeFalse", line):
+                    offenders.append(f"{path.relative_to(REPO_ROOT)}:{line_no}")
+        self.assertEqual([], offenders, "no test may be skipped")
+
+    def test_the_test_runner_and_rules_are_declared(self):
+        app_gradle = read(ANDROID_ROOT / "app" / "build.gradle.kts")
+        self.assertIn("androidx.test.runner.AndroidJUnitRunner", app_gradle)
+        for dependency in ("androidx.test.ext:junit", "androidx.test:core", "espresso-core"):
+            with self.subTest(dependency=dependency):
+                self.assertIn(dependency, app_gradle)
+
+
+class AndroidWorkflowTest(unittest.TestCase):
+    """AC-047: the CI workflow is the reproducible clean-checkout build and it cannot hide failures."""
+
+    def setUp(self):
+        self.workflow = read(REPO_ROOT / ".github" / "workflows" / "android-build.yml")
+
+    def test_workflow_runs_the_full_android_gate(self):
+        """Every command the pipeline must run is present in the workflow or in a script it calls.
+
+        The emulator stage moved into tools/ci/android_emulator_run.sh because the emulator action
+        executes its script with dash; the check follows the command, it does not drop it.
+        """
+        stage_script = REPO_ROOT / "tools" / "ci" / "android_emulator_run.sh"
+        self.assertTrue(stage_script.is_file())
+        pipeline = self.workflow + stage_script.read_text(encoding="utf-8")
+        self.assertIn("bash tools/ci/android_emulator_run.sh", self.workflow)
+        for command in ("./gradlew", "testDebugUnitTest", "lintDebug", "assembleDebug",
+                        "assembleRelease", "assembleDebugAndroidTest", "connectedDebugAndroidTest"):
+            with self.subTest(command=command):
+                self.assertIn(command, pipeline)
+
+    def test_workflow_cannot_hide_failures(self):
+        self.assertNotIn("continue-on-error", self.workflow)
+        self.assertNotIn("|| true", self.workflow)
+        self.assertNotIn("--ignore-errors", self.workflow)
+        self.assertNotIn("allow_failure", self.workflow)
+
+    def test_every_action_is_pinned_to_a_commit_sha(self):
+        offenders = []
+        for match in re.finditer(r"uses:\s*([^\s#]+)", self.workflow):
+            reference = match.group(1)
+            self.assertNotIn(reference, ("actions/checkout@v4",))
+            _, _, version = reference.partition("@")
+            if not re.fullmatch(r"[0-9a-f]{40}", version):
+                offenders.append(reference)
+        self.assertEqual([], offenders, "every action must be pinned to a full commit SHA")
+
+    def test_every_workflow_that_runs_the_master_gate_prepares_its_toolchain(self):
+        """A job that runs the gate without the toolchain can only ever report failure.
+
+        GATE 7 needs the `coverage` module, GATE 8 verifies an APK this checkout built, GATE 9 runs
+        node and GATE 10 runs a factory pipeline. Three workflows were written without any of that,
+        so their gate step failed for reasons unrelated to the code - and a gate that cannot pass is
+        a gate people learn to ignore. Any workflow that invokes the master gate must therefore
+        prepare the environment (the shared script, or the equivalent steps inline).
+        """
+        workflows = sorted((REPO_ROOT / ".github" / "workflows").glob("*.yml"))
+        self.assertTrue(workflows, "the repository must have workflows to check")
+        offenders = []
+        checked = 0
+        for path in workflows:
+            text = read(path)
+            if "gates.sh" not in text:
+                continue
+            checked += 1
+            prepares_toolchain = (
+                "prepare_android_gate_env.sh" in text
+                or ("assembleDebug" in text and "setup-java" in text)
+            )
+            installs_coverage = "requirements-gate.txt" in text or "coverage" in text
+            if not prepares_toolchain or not installs_coverage:
+                offenders.append(path.name)
+        self.assertGreater(checked, 0, "no workflow was found to run the master gate")
+        self.assertEqual([], offenders,
+                         "these workflows run the master gate without preparing its toolchain")
+
+    def test_the_install_smoke_test_can_never_fail_silently(self):
+        """Every step of the on-device smoke test must report where it stopped.
+
+        The smoke script runs under `set -e`, so one failing command aborts it. On the fifth emulator
+        run it died inside step 9 and printed nothing at all, which left a red job with no reason in
+        it. The script therefore names each step and installs an EXIT trap that reports the step it
+        stopped in, and the two platform operations that can legitimately be refused are checked
+        explicitly.
+        """
+        script = read(REPO_ROOT / "tools" / "android_apk_smoke.sh")
+        self.assertIn("trap on_exit EXIT", script)
+        self.assertIn("the smoke test stopped during ${STEP}", script)
+        self.assertEqual(12, script.count('STEP="['),
+                         "each of the twelve steps must name itself in STEP")
+        self.assertNotIn("|| true", script)
+        # No `am force-stop` may run unguarded: an unexplained abort was one of its failure modes.
+        unguarded = [line for line in script.splitlines()
+                     if "am force-stop" in line and not line.startswith("if ! FORCE_STOP_OUTPUT=")]
+        self.assertEqual([], unguarded)
+
+    def test_the_hierarchy_dump_is_retried_without_softening_its_assertion(self):
+        """The device's uiautomator process can be killed; the assertion about the chrome cannot bend.
+
+        On 0e7547f step 8 exited 137 - the emulator SIGKILLed `uiautomator dump` while all 52
+        instrumented tests passed - and the job went red on the mechanism rather than on the claim.
+        The step now retries the dump through two mechanisms and prints the last error when none
+        works, while the four element ids are still asserted one by one against whatever hierarchy
+        was produced.
+        """
+        script = read(REPO_ROOT / "tools" / "android_apk_smoke.sh")
+        self.assertIn("adb exec-out uiautomator dump /dev/tty", script,
+                      "the second mechanism must exist for a device that kills the first")
+        self.assertIn("uiautomator produced no view hierarchy after 3 attempts", script,
+                      "exhausting the retries must fail the step with its own words")
+        self.assertIn("last error: ${DUMP_ERROR}", script)
+        self.assertNotIn("|| true", script)
+        # The assertion itself is unchanged: each id is checked with grep against the dumped file and
+        # a miss exits 1.
+        step = script.split('STEP="[8/12]')[1].split('STEP="[9/12]')[0]
+        for expected in ("edit_omnibox", "btn_nav_back", "btn_nav_tabs", "btn_action_bookmark"):
+            self.assertIn(f'"{expected}"', step)
+        self.assertIn('grep -q "resource-id=\\"$PACKAGE:id/$expected\\"', step)
+        self.assertIn("exit 1", step)
+        self.assertIn("for attempt in 1 2 3", step)
+
+    def test_the_process_read_never_aborts_the_smoke_test(self):
+        """Reading the process list must not be able to end the run without a reason.
+
+        `adb shell pidof` exits non-zero when it matches nothing, which is the *expected* answer right
+        after `am force-stop`. Inside `$( ... )` with `set -o pipefail`, that non-zero producer made
+        the assignment itself fail, so `set -e` ended the script before it printed anything: the
+        emulator job reported "stopped during [9/12]" with no cause. `pid_of` reads the producer's
+        status on purpose and reports a real adb failure, so the not-running answer stays a result.
+        """
+        script = read(REPO_ROOT / "tools" / "android_apk_smoke.sh")
+        self.assertIn("set -euo pipefail", script,
+                      "the hazard this pins only exists because the script uses pipefail")
+        helper = re.search(r"^pid_of\(\) \{.*?^\}\n", script, re.S | re.M)
+        self.assertIsNotNone(helper, "the smoke test must read process ids through its pid_of helper")
+        self.assertIn("output=$(adb shell pidof", helper.group(0),
+                      "pid_of is the one place that may read the process list")
+        self.assertEqual(1, script.count("$(adb shell pidof"),
+                         "the process list may only be read inside the pid_of helper")
+        self.assertEqual(0, script.count('pidof "$PACKAGE" | tr'),
+                         "an unguarded `pidof | tr` substitution is what aborted the run silently")
+        self.assertEqual(3, script.count('pid_of "$PACKAGE"'),
+                         "all three reads of the process list go through the helper")
+
+    def test_the_list_journeys_do_not_clear_the_task_they_open_into(self):
+        """A journey must not destroy the browser it is about to come back to.
+
+        `ActivityScenario.launch` adds `FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_CLEAR_TASK` to the
+        intent it is given (androidx `InstrumentationActivityInvoker`), so launching a list screen with
+        it cleared the task the browser was in and destroyed the browser itself - which is why the two
+        journeys that open a stored address kept failing with a browser that never came back. They now
+        push the screen into the browser's task with the instrumentation's `startActivitySync`, open
+        the row through the row's own click listener, and require the browser's window to be in front.
+        """
+        journey = read(ANDROID_TEST / "JourneyInstrumentedTest.java")
+        self.assertNotIn("ActivityScenario.launch(", journey,
+                         "a list screen must not be launched with a task-clearing scenario")
+        self.assertIn("startActivitySync", journey)
+        self.assertIn("row.performClick()", journey)
+        self.assertIn("browserHasFocus", journey,
+                      "the journey has to require the browser window in front, not just its address")
+        support = read(ANDROID_TEST / "TestSupport.java")
+        self.assertIn("copyBackForwardList", support,
+                      "a settled navigation means a committed entry, not a reported URL")
+        self.assertIn("committedUrl", support)
+
+    def test_the_navigation_controls_are_exercised_by_real_clicks(self):
+        """Reload/Stop must be driven by clicks on the real action, in both of its states.
+
+        Waiting for the real in-flight moment cannot be done on a runner whose DNS fails in a few
+        milliseconds: the load is over before any poll could see it, which is how that assertion used
+        to pass - only while a previous load happened to still be running. The WebView callback is
+        therefore delivered explicitly (the technique `MainActivityLaunchTest` already uses for the
+        progress bar) while the clicks stay real clicks on the real action; this pins both halves.
+        """
+        navigation = read(ANDROID_TEST / "NavigationStateTest.java")
+        self.assertEqual(2, navigation.count("R.id.btn_action_reload).performClick()"),
+                         "both the stop branch and the reload branch are real clicks")
+        self.assertIn("onPageStarted(", navigation)
+        self.assertIn("onPageFinished(", navigation)
+
+    def test_a_page_the_browser_has_left_cannot_rewrite_the_tab(self):
+        """Chromium reports the end of a load after the browser has moved on.
+
+        The home page's load reports its failure right after the browser was told to open another
+        address. Acting on that callback set the active tab's address, title, history entry and failure
+        state back to the old page - which across an Activity recreation is the page the user was on
+        being replaced by the page before it (the CI failure this pins). The client therefore drops the
+        callbacks for an address the WebView is no longer on, and keeps the TLS refusal unguarded: a
+        refused connection aborts the load, so the WebView's own address legitimately stays the
+        previous page, and hiding a refusal is the one thing this browser must never do.
+        """
+        client = read(JAVA / "browser" / "SavageWebViewClient.java")
+        self.assertIn("private static boolean stillCurrent(", client)
+        self.assertEqual(2, client.count("stillCurrent(view, url)"),
+                         "the finished and error callbacks are guarded")
+        self.assertIn("if (!stillCurrent(view, url))", client,
+                      "a failed load is dropped unless it is still the current one")
+        # onPageStarted stays unguarded: the framework documents that the current page may not have
+        # changed yet although a load has begun, so its address can still name the previous page and a
+        # dropped callback would leave a real load invisible to the toolbar.
+        started = client[client.index("public void onPageStarted"):client.index(
+            "public void onPageFinished")]
+        self.assertIn("host.onPageStarted(url);", started)
+        self.assertNotIn("stillCurrent", started,
+                         "the started callback may not be dropped on an address comparison")
+        self.assertIn("may not have changed", client)
+        self.assertIn("onReceivedSslError", client)
+        self.assertNotIn("stillCurrent(view, error", client,
+                         "a TLS refusal must never be dropped")
+        # Comparing against the WebView's own address, not against a remembered target, is what a
+        # redirect survives.
+        self.assertIn("view.getUrl()", client)
+
+    def test_a_prebuilt_apk_is_never_evidence(self):
+        """The APKs that ship inside the repository are declared, and nothing treats them as a build.
+
+        Four prebuilt APKs live in this repository (the factory's published copy, the shell's, the
+        asset and the artifact folder); they are the 1.0.0-savage build, not this checkout's. They are
+        never evidence: the APK a gate verifies is the one CI built under the Gradle project's build
+        directory, and the smoke test installs the artifact the build job published. This pins both
+        halves - the files are declared here, and no workflow, script or gate may name them.
+        """
+        declared_prebuilt = {
+            "artifacts/debug/SavageBrowser-debug.apk",
+            "assets/SavageBrowser-v2.0.0.apk",
+            "factories/final-product/SavageBrowser-debug.apk",
+            "shell/final-product/SavageBrowser-debug.apk",
+        }
+        tracked = set()
+        for entry in subprocess.run(["git", "ls-files", "*.apk"], cwd=REPO_ROOT,
+                                    capture_output=True, text=True, check=True).stdout.split():
+            tracked.add(entry)
+        self.assertEqual(sorted(declared_prebuilt), sorted(tracked),
+                         "every prebuilt APK must be declared, and no new one may appear unnoticed")
+        for relative in sorted(declared_prebuilt):
+            self.assertTrue((REPO_ROOT / relative).is_file(), relative)
+
+        # Nothing that judges a build may name one of them.
+        consumers = [
+            REPO_ROOT / "tools" / "reproducible_build_verifier.py",
+            REPO_ROOT / "tools" / "android_apk_smoke.sh",
+            REPO_ROOT / "tools" / "ci" / "android_emulator_run.sh",
+            REPO_ROOT / ".github" / "workflows" / "android-build.yml",
+            REPO_ROOT / ".github" / "workflows" / "quality-conveyor-belt.yml",
+        ]
+        for consumer in consumers:
+            text = read(consumer)
+            for prebuilt in declared_prebuilt:
+                self.assertNotIn(prebuilt, text,
+                                 f"{consumer.relative_to(REPO_ROOT)} must not treat a prebuilt APK "
+                                 f"as a build artifact")
+
+        # The pipeline the belt runs may only certify an APK whose provenance record matches it.
+        pipeline = read(REPO_ROOT / "factories" / "run_factories.py")
+        self.assertIn("no provenance record next to", pipeline)
+        self.assertIn("provenance mismatch for", pipeline)
+        builder = read(REPO_ROOT / "factories" / "factory-3" / "tools" / "apk_builder.py")
+        self.assertIn(".apk.sha256", builder,
+                      "the build stage has to publish the hash of what it published")
+
+    def test_no_workflow_masks_a_failure(self):
+        """No workflow may turn a failure into a pass; the belt and the reviewers must be honest."""
+        for path in sorted((REPO_ROOT / ".github" / "workflows").glob("*.yml")):
+            text = read(path)
+            for pattern in ("continue-on-error", "|| true", "--ignore-errors", "allow_failure"):
+                with self.subTest(workflow=path.name, pattern=pattern):
+                    self.assertNotIn(pattern, text)
+
+    def test_workflow_publishes_verifiable_apk_evidence(self):
+        self.assertIn("sha256sum", self.workflow)
+        self.assertIn("APK_SHA256", self.workflow)
+        self.assertIn("upload-artifact", self.workflow)
+
+
+if __name__ == "__main__":
+    unittest.main()

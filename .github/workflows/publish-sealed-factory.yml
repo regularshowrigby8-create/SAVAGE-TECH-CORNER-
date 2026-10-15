@@ -1,0 +1,109 @@
+name: Publish Sealed Factory (own branch)
+
+# The sealed component is published to a branch of its own - never to main. The gates are in the order
+# that makes that safe: the seal verifies, the component rechecks itself with the factories it carries
+# and repairs what it can, its own tests pass, and then the exact tree that is about to be pushed proves
+# itself again inside the branch worktree. Nothing is written to the branch before all of that passes.
+#
+# Why a workflow and not a person: this repository's rules require a clean checkout, evidence from a
+# run, and no hand-pushed branch. A publish is an operation with an order to it, and an order belongs in
+# something that runs the same way every time.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - production
+      - arena/**
+    paths:
+      - ".github/workflows/publish-sealed-factory.yml"
+      - "tools/ci/publish_sealed_factory.sh"
+      - "tools/ci/build_component_snapshot.py"
+      - "tools/ci/published_environment_judge.py"
+      - "sealed-factories/runtime/selfcheck.py"
+      # The component itself: a set that was re-sealed publishes itself, on the same push that carries
+      # it. The bot's re-seal commit is only made by a growth run that already passed the strict
+      # self-check and the whole shell suite, and every gate below re-checks that set in this job before
+      # anything is written - so this is a trigger for a verified tree, not a way around verification.
+      # Without it a re-seal waited for a hand-made follow-up commit, which is the kind of step that
+      # makes a component's own branch drift behind the component.
+      - "sealed-factories/**"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-sealed-factory
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Verify, self-check, and publish the component to its own branch
+    runs-on: ubuntu-latest
+    env:
+      PUBLISH_BRANCH: sealed-factory
+      BRANCH_SOURCE: ${{ github.ref_name }}
+    steps:
+      - name: Checkout the branch under review
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # The component's runtime is standard-library only, and so is this job: it installs nothing, which
+      # is the same claim the air-gapped run makes - a branch that can be published by a machine with no
+      # registry is a branch that can be published anywhere.
+      - name: Verify, recheck, re-verify in the published tree, and publish
+        run: |
+          set -euo pipefail
+          bash tools/ci/publish_sealed_factory.sh
+
+      - name: Publish the summary of what was published
+        if: success()
+        run: |
+          set -euo pipefail
+          {
+            echo "### Sealed factory published to \`sealed-factory\`"
+            echo
+            echo "The component verified, rechecked itself with the factories it carries, passed its"
+            echo "own tests, and proved itself again inside the published tree."
+            echo
+            echo "This branch does not touch \`main\`: the component is proposed for main only once"
+            echo "this branch's evidence says it is functional."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Which gate refused, by name: the run writes its current gate to a file before it runs, and this
+      # step reads it. "A step failed" is not a reason anyone can act on - the lesson from the belt's own
+      # failure reporter, which used to fail into the log with nothing to show for it.
+      - name: Say what refused, and whether anything was published
+        if: failure()
+        run: |
+          set -uo pipefail
+          # The run writes `gate: <name>` before a gate runs and `stage: <what>` before anything else,
+          # so this step can be accurate in both cases. It used to blame the last gate for any failure -
+          # and said "nothing was written to the publish branch" on the run that had already pushed its
+          # commit and then died reporting it.
+          # Read only if it is there, and never with a shell fallback that turns a failing command into
+          # a pass: this repository has a test that forbids exactly that in a workflow, and it is right.
+          recorded=""
+          if [ -s "${RUNNER_TEMP}/publish-gate.txt" ]; then
+            recorded="$(cat "${RUNNER_TEMP}/publish-gate.txt")"
+          fi
+          case "$recorded" in
+            gate:*)
+              echo "::error title=Publish sealed factory::the gate '${recorded#gate: }' refused the component, so nothing was written to the publish branch"
+              echo "The branch is unchanged. The gate's own output is annotated above it."
+              ;;
+            stage:*)
+              echo "::error title=Publish sealed factory::the publish failed while ${recorded#stage: } - that is not a gate, so read the branch before assuming nothing was published"
+              echo "Every gate before it passed, and their notices are on this page. The stage is where the run stopped."
+              ;;
+            *)
+              echo "::error title=Publish sealed factory::the publish failed before it recorded what it was doing"
+              ;;
+          esac

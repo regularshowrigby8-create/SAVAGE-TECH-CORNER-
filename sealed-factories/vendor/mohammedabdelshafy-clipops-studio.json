@@ -1,0 +1,34 @@
+{
+ "id": "mohammedabdelshafy-clipops-studio",
+ "full_name": "MohammedAbdelshafy/clipops-studio",
+ "url": "https://github.com/MohammedAbdelshafy/clipops-studio",
+ "license": "NOASSERTION",
+ "license_file": null,
+ "license_text_sha256": null,
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "257b3ba28adce49bba61a5a096316a8df9d9b967",
+ "vendored_files": [
+  {
+   "path": "README.md",
+   "bytes": 8183,
+   "sha256": "a19911dfe7a1e6aba46076531a4df3a04b4cd9c5ffb569b05cfa459531a3ebe4"
+  }
+ ],
+ "skipped": {
+  "budget": false,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 3
+ },
+ "providers": [
+  "google"
+ ],
+ "entrypoints": [],
+ "runtime": [],
+ "notes": [],
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 1,
+ "vendored_bytes": 8183,
+ "content_redistributed": false
+}
