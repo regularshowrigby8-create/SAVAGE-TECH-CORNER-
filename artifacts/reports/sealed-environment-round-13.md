@@ -884,6 +884,61 @@ failure step's first version read the gate file with a shell fallback that turns
 a pass, which a test forbids in a workflow, and the belt's shell-suite gate named that test - once that
 gate could name anything, which is this round's last change to it.
 
+### 2.14 The copy on the branch is made to run itself, and what the branch had been carrying
+
+Everything above proves the component works where it is built. This subsection is about the tree
+that actually lands. The copy is now executed inside the snapshot before the branch is touched, so
+"is it functional?" is answered by the copy rather than by the repository it came from.
+
+Publish run `38739741202` (from `1877a6a`) is the first that did it, and it passed: the copy
+verified, rechecked itself with the factories it carries, ran its own environment - plan mode, no
+model, one instance of every role - and the judge read that run and refused nothing. The gates are
+named in the run's own annotations, and the judge's line is in the run's log.
+
+That gate exposed two things the published branch had been carrying, both of them from the run that
+proved it:
+
+- **1,711 files and 4.5 MB of run output.** The component's own `.gitignore` names the manifest and
+  the runs directory and says why: plans, prompts, model output and the report are the run, not the
+  component, and committing them would mean committing a timestamped machine run. The copy carries
+  no `.gitignore`, and the gates run inside it after it is built, so everything they wrote was
+  committed to the branch as if it were part of the component.
+- **13 compiled bytecode files**, for the same reason: the snapshot builder skips `__pycache__` when
+  it copies, and the gates recreate it afterwards.
+
+The snapshot is cleaned around the gates now, so the branch carries the component's tracked content
+and nothing else: the published tree went from 2,246 files to 537, with no `__pycache__`, no
+`manifest/` and no `runs/`. The seal was unaffected - none of that was pinned - and the copy still
+verified, rechecked itself, ran and was judged in the same publish that produced the smaller tree.
+
+**The judge is part of the component now.** It was named nowhere in the seal's removal record, so
+the published branch carried the pipeline that publishes it and not the gate that judged it. The
+record now names the judge and its test (16 tooling files, 9 tests); growth run `38742942233` re-
+sealed the set with that record - 171 records, 135 carrying content, 149 licence texts, `FUNCTIONAL`
+with 0 blocking findings, root `8ab03010…` - and the branch published from `5cf28b7` carries both
+files.
+
+**The judge's own tests ran on a hosted runner.** `shell/tests/test_published_environment_judge.py`
+(11 cases) ran in the belt on `6b7ad5f` and passed, in the same suite the publish job runs inside
+the copy. A gate that screens the pipeline cannot be a gate nobody has executed.
+
+**The commit says what was measured.** The published commit and the growth commit now quote their
+own judge's line verbatim: the copy's run in the tree the commit contains, and the counts the growth
+judge measured on the set it grew. That is not decoration. The publish job's single step emits ten
+annotations, and the judge gate's notice did not survive that limit - which is the reason a claim
+that lives only in a log or a notice is worth less than one the artifact carries.
+
+**One place decides the environment limit.** `--env-limit` is a cost control, and it now has a
+single default (`DEFAULT_ENV_LIMIT`) shared by the library entry point and the command line, above
+any role count this set carries. The belt, the growth job and the air-gapped run pass no limit of
+their own, so all three execute one instance of every role; the cap that left roles untested is not
+reachable by default from any of them.
+
+**Two style rules this round's documents broke**, worth writing down because both were hand wrapping
+rather than content: Prettier rewrites `*emphasis*` to `_emphasis_`, and a wrapped line that begins
+with `-` is a nested list item to the markdown parser rather than the continuation of its sentence.
+Both are now written the way the formatter writes them, and the belt that refused them was right
+both times.
 ## 3. Acceptance criteria covered
 
 | Criterion | What it asserts                                                                                                                 | Test                                                                                                                                       | Evidence               |
@@ -944,7 +999,9 @@ The criterion text is in `docs/ACCEPTANCE_CRITERIA.md` (AC-051, AC-060, AC-061, 
 ```
 python3 tools/factory/seal_factories.py seal
 python3 tools/factory/seal_factories.py verify
-python3 tools/factory/sealed_factory_runtime.py run --max-model-calls 0 --env-limit 200
+python3 tools/factory/sealed_factory_runtime.py run --max-model-calls 0
+# (the run recorded in section 2.4 passed --env-limit 200; a default run now executes one instance of
+# every role, which is the limit the belt's Stage 0 gate enforces)
 python3 -m unittest discover -s shell/tests
 python3 tools/anti_deception_auditor.py && python3 tools/duplication_auditor.py
 node scripts/conveyor_belt.js
