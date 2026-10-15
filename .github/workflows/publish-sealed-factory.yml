@@ -20,6 +20,13 @@ on:
       - "tools/ci/publish_sealed_factory.sh"
       - "tools/ci/build_component_snapshot.py"
       - "sealed-factories/runtime/selfcheck.py"
+      # The component itself: a set that was re-sealed publishes itself, on the same push that carries
+      # it. The bot's re-seal commit is only made by a growth run that already passed the strict
+      # self-check and the whole shell suite, and every gate below re-checks that set in this job before
+      # anything is written - so this is a trigger for a verified tree, not a way around verification.
+      # Without it a re-seal waited for a hand-made follow-up commit, which is the kind of step that
+      # makes a component's own branch drift behind the component.
+      - "sealed-factories/**"
 
 permissions:
   contents: write
