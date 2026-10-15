@@ -40,8 +40,8 @@ or `factory-3/` reads it; station 0 of `scripts/conveyor_belt.js` reports
 
     sealed component ABSENT - the belt continues with this repository's own factories
 
-and the belt passes exactly as before. The full removal list - this directory, 15
-tooling files, 8 test files, 2 workflows and one document - is recorded in
+and the belt passes exactly as before. The full removal list - this directory, 16
+tooling files, 9 test files, 2 workflows and one document - is recorded in
 `SEAL.json` under `removal`, and `shell/tests/test_sealed_factory_runtime.py` proves that list matches
 the files that exist, including a test that runs the runtime in an empty tree and checks that absence
 is reported, exits zero, and creates nothing.
