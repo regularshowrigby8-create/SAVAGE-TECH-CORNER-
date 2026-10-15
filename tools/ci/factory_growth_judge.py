@@ -41,14 +41,20 @@ import seal_factories  # noqa: E402  (the licence policy lives with the sealer, 
 #: `3b7d58ab1ae274ef63a3a5a2aabe0c2039d658d89de8c311e1a9420736ce7bea` and the `RUN-REPORT.json` of
 #: the run that followed it (2026-10-15). These are floors, not targets: growth may exceed them and
 #: must never fall below them.
+#: The floors the grown set may not fall below - the ledger of what the committed set already reaches.
+#: Raised to the measured values of the 171-record set the growth run of run 38725458864 produced and the
+#: publish run of 38729176242 published: 171 records, 106 imported, 134 operational in plan mode, 135
+#: carrying content under 149 licence texts. `ai_records` and `mcp_records` did not move; the two
+#: definition counts below stay at the values of the 149-record set deliberately - they are warnings
+#: rather than problems, and a floor set from a count this file cannot measure here would be a guess.
 LEDGER = {
-    "records": 149,
-    "imported_records": 84,
+    "records": 171,
+    "imported_records": 106,
     "ai_records": 23,
     "mcp_records": 42,
-    "operational_plan": 112,
-    "carried_content": 113,
-    "licence_texts": 127,
+    "operational_plan": 134,
+    "carried_content": 135,
+    "licence_texts": 149,
     "stages_defined": 592,
     "workers_defined": 579,
 }
