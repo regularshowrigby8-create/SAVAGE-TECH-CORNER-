@@ -20,15 +20,17 @@ own refusal is quoted instead of a summary of it.
 | MCP servers verified by handshake | 7 servers, 52 tools                                                      | **16 servers, 303 tools**, each with the command that was verified                                                                                                                                | `tools/factory/imported_mcp_servers.json` |
 | MCP servers that cannot start     | 24 of 42                                                                 | **14 of 42** not installed here; 7 more start but refuse for a named reason (see §2.2)                                                                                                            | catalogue + `cli.py mcp-probe`            |
 | Emulator stage                    | ran `connectedDebugAndroidTest` against whatever state the device was in | wakes the screen, dismisses the keyguard, and asserts `Awake` + a non-keyguard focus before the suite                                                                                             | `tools/ci/android_emulator_run.sh`        |
-| Seal root                         | `32bf92d3…`, 1,849,160 payload bytes                                     | **`923aaf4b…`**, 2,471,216 payload bytes, 167 factories (130 operational), 145 licence texts, 10 component files pinned — see §2.11                                                               | `sealed-factories/SEAL.json`              |
+| Seal root                         | `32bf92d3…`, 1,849,160 payload bytes                                     | **`1e8548d6…`**, 2,555,593 payload bytes, 171 factories (134 operational), 149 licence texts, 12 component files pinned — see §2.11 and §2.13                                              | `sealed-factories/SEAL.json`              |
 
 The seal root changed for one reason: `runtime/toolkit.py` gained the GitHub section and `runtime/agents.py`
 gave the researcher role the GitHub tool group, and the seal pins every runtime module by hash
 (AC-056). The payloads and the licence texts committed with this report are the 149-record set described in §2.8d;
 the 137-record figures quoted in this report's own evidence blocks are the runs that produced them, and are left verbatim.
-The set has since grown on a hosted runner: §2.12 records the GitHub-native growth pipeline and its two
-live runs, which took the seal to 161 records, 139 licence texts and root `3cf0045c…` — the figures in the
-table above — while §2.8d keeps the measurements of the 149-record seal that CI verified before it.
+The set has since grown on hosted runners: §2.12 records the GitHub-native growth pipeline and its
+live runs, which took the seal to 161 records and root `3cf0045c…`, and §2.13 records the two rounds
+after it - the licence store, the self-check inside the seal, and the publish to the component's own
+branch - which left it at 171 records, 149 licence texts and root `1e8548d6…`, the figures in the
+table above. §2.8d keeps the measurements of the 149-record seal that CI verified before it.
 
 The root is `sha256(SEAL.json)`, and that document records when it was sealed (`sealed_at`), so the
 root moves on every re-seal even when nothing else does. What does not move is the content: two
@@ -844,6 +846,32 @@ tree lacks is an error rather than a smaller publish), and then the copy that is
 proves itself again inside the branch worktree. Nothing is written to the branch before the last gate.
 The script refuses `main`, `master` and `production` outright, and says so in its own words: the
 component is proposed for `main` only once this branch's evidence says it is functional.
+
+**What the runs say.** Every figure below is read from a hosted run, not projected:
+
+- growth run `38725458864` grew the set to 171 records, re-sealed it, read its own verdict back out of
+  the report it wrote - `FUNCTIONAL`, 0 blocking findings, 38 named states - passed the whole shell
+  suite on the set it produced, and committed it as `d4febed`;
+- publish runs `38726514671` and `38729176242` passed every gate and published the component to
+  `sealed-factory`, which carries it at `4dcf6a2`: seal root `1e8548d6…`, 171 records, 135 of them
+  carrying content under 149 licence texts, self-check `FUNCTIONAL` with 0 blocking findings and the
+  two named states named above. The branch exists only because those gates passed, and its
+  `SEALED-COMPONENT.md` names the commit it was published from;
+- the belt on `12cae8e` is green, and its air-gapped job ran the same environment with
+  `SEALED_NO_NETWORK=1` and passed: 48 tools, 201 agent roles, and a swarm that executed 201 agent
+  instances - one per role - with 201 checks passed and no failed step. The gate that demanded one
+  instance of every role is what caught the environment's execution cap when the set outgrew it.
+
+The first publish is part of this evidence rather than a missing entry. `222ff34` was written to the
+branch by a run that then reported nothing had been written, and named a gate its own notice says
+passed: the script captured its commit sha inside a subshell and died on the next line, and the failure
+step blamed the last gate that happened to run. Both are fixed - the sha is read at the top level, the
+branch head is read back from the remote and compared with the sha this run built, and the run records
+whether it was in a gate or in a stage, so a failure after the gates is reported as the stage it
+happened in. The next fix after that was caught by this repository's own test rather than by review: the
+failure step's first version read the gate file with a shell fallback that turns a failing command into
+a pass, which a test forbids in a workflow, and the belt's shell-suite gate named that test - once that
+gate could name anything, which is this round's last change to it.
 
 ## 3. Acceptance criteria covered
 

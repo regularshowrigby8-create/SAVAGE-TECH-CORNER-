@@ -926,7 +926,9 @@ operational, 37 without definitions), 119 carrying content under 133 licence tex
 - **Evidence required**: the growth run's `Factory Growth (GitHub-native)` job green with the licence
   store and self-check steps in it, the publish run's `Publish Sealed Factory (own branch)` job green,
   and the commit it published to the branch the component owns - recorded in §2.13 of the round-13
-  report
+  report. The runs that did it: growth `38725458864`, publish `38726514671` and `38729176242`, and the
+  branch `sealed-factory` carrying the component at `4dcf6a2`, seal root `1e8548d6…`, verdict
+  `FUNCTIONAL` with 0 blocking findings
 
 ## 2. Traceability summary
 
