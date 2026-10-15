@@ -212,3 +212,15 @@ jobs:
           set -euo pipefail
           gh workflow run quality-conveyor-belt.yml --ref "${BRANCH}"
           echo "dispatched the belt on ${BRANCH} at ${{ steps.commit.outputs.head }}"
+
+      # The component publishes itself, and this is what makes that true. The publish workflow watches
+      # the sealed set, but a push made here is made with GITHUB_TOKEN, and those trigger no workflow at
+      # all - GitHub's rule, stated at the top of this file. So the re-seal commit that this job just
+      # pushed is published by asking for it: the publish run checks out this branch, which is now at
+      # that commit, and every gate it has runs against the tree it is about to publish.
+      - name: Publish the component this job re-sealed
+        if: steps.push.outputs.pushed == 'true'
+        run: |
+          set -euo pipefail
+          gh workflow run publish-sealed-factory.yml --ref "${BRANCH}"
+          echo "dispatched the publish of ${BRANCH} at ${{ steps.commit.outputs.head }}"
