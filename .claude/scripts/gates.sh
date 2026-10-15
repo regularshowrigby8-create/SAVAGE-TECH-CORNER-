@@ -65,7 +65,28 @@ python3 -m unittest discover -s factory-2/tests || fail test_f2 "Factory 2 tests
 python3 -m unittest discover -s factory-3/tests || fail test_f3 "Factory 3 tests failed"
 python3 -m unittest discover -s tools/factory/tests || fail test_tools "Factory tools tests failed"
 python3 -m unittest discover -s factories/tests || fail test_factories "Multi-factory pipeline tests failed"
-python3 -m unittest discover -s shell/tests || fail test_shell "Shell unit tests failed"
+# The shell suite is the largest of these and the one that has failed into a raw log before. Its output
+# is captured so that a failure names the tests that failed, on the run page and in the step summary -
+# both of which a reader can reach without the runner's log.
+SHELL_SUITE_LOG="$(mktemp)"
+if python3 -m unittest discover -s shell/tests > "$SHELL_SUITE_LOG" 2>&1; then
+  tail -3 "$SHELL_SUITE_LOG"
+else
+  tail -30 "$SHELL_SUITE_LOG"
+  grep -E "^(FAIL|ERROR): " "$SHELL_SUITE_LOG" | head -10 | while read -r line; do
+    echo "::error title=Shell suite::${line}"
+  done
+  if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+    {
+      echo "### Shell suite failures"
+      echo
+      echo '```'
+      grep -E "^(FAIL|ERROR): |^AssertionError" "$SHELL_SUITE_LOG" | head -30
+      echo '```'
+    } >> "$GITHUB_STEP_SUMMARY"
+  fi
+  fail test_shell "Shell unit tests failed"
+fi
 
 echo "[GATE 7] Authenticity of Automated Test Coverage..."
 if ! python3 - <<'PY'
