@@ -27,16 +27,23 @@ GATE_FILE="${RUNNER_TEMP:-/tmp}/publish-gate.txt"
 
 # Every gate records its own name before it runs, so the failure step can say which one refused rather
 # than "a step failed". The output of the gate that refuses is annotated below it.
+#: The status is captured inside the branch that ran the command. `status=$?` after the `fi` would
+#: read the *if statement's* status - which is 0 when the condition failed and no else branch ran - and
+#: a crashing gate was reported as "(exit 0)" exactly once because of it.
 gate() {
-    name="$1"
+    local name="$1"
     shift
     printf '%s' "$name" > "$GATE_FILE"
     echo "--- ${name}"
+    local output
+    local status
     if output="$("$@" 2>&1)"; then
         printf '%s\n' "$output"
+        echo "::notice title=Publish gate::the gate '${name}' passed"
         return 0
+    else
+        status=$?
     fi
-    status=$?
     echo "::error title=Publish sealed factory::the gate '${name}' refused the component (exit ${status})"
     printf '%s\n' "$output" | tail -25 | while read -r line; do
         echo "::error title=Publish sealed factory::- ${line}"

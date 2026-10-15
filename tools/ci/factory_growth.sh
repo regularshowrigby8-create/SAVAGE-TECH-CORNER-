@@ -35,13 +35,15 @@ run_and_report() {
     shift
     local log
     log="$(mktemp)"
+    local status
     if "$@" > "$log" 2>&1; then
         cat "$log"
         rm -f "$log"
         return 0
+    else
+        # Read here, not after the `fi`: an if statement with no else branch is itself status 0.
+        status=$?
     fi
-    local status
-    status=$?
     cat "$log"
     echo "::error title=Factory growth::${title} failed (exit ${status}); its own output follows"
     if grep -a -q -E 'FAIL|ERROR|Error|error|missing|refused|cannot|Cannot|Traceback' "$log"; then

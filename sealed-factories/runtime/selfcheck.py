@@ -152,9 +152,16 @@ def read_structures(document: dict, reader) -> dict[str, dict]:
                                          "unreadable": True,
                                          "why": f"{type(problem).__name__}: {problem}"}
             continue
+        # The reader returns `(source, label)` pairs for most kinds and plain strings for an MCP
+        # server's tool list. Unpacking blindly killed the whole survey on the first MCP record, which
+        # is how this was found: a survey that dies on one record reports nothing about the other 166.
         labels: list[str] = []
         for kind in ("stages", "roles", "gates", "prompts", "headings", "mcp_tools"):
-            labels += [str(label) for _source, label in derived.get(kind, [])]
+            for item in derived.get(kind, []) or []:
+                if isinstance(item, (tuple, list)):
+                    labels.append(str(item[-1]) if item else "")
+                else:
+                    labels.append(str(item))
         structures[factory["id"]] = {"structure_found": bool(derived.get("structure_found")),
                                      "labels": labels, "totals": derived.get("totals", {}),
                                      "unreadable": False}
