@@ -87,7 +87,12 @@ jobs:
           # so this step can be accurate in both cases. It used to blame the last gate for any failure -
           # and said "nothing was written to the publish branch" on the run that had already pushed its
           # commit and then died reporting it.
-          recorded="$(cat "${RUNNER_TEMP}/publish-gate.txt" 2>/dev/null || true)"
+          # Read only if it is there, and never with a shell fallback that turns a failing command into
+          # a pass: this repository has a test that forbids exactly that in a workflow, and it is right.
+          recorded=""
+          if [ -s "${RUNNER_TEMP}/publish-gate.txt" ]; then
+            recorded="$(cat "${RUNNER_TEMP}/publish-gate.txt")"
+          fi
           case "$recorded" in
             gate:*)
               echo "::error title=Publish sealed factory::the gate '${recorded#gate: }' refused the component, so nothing was written to the publish branch"

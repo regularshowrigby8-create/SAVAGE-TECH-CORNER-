@@ -12,7 +12,7 @@ published here so it can be reviewed, run and removed on its own, and it will on
 - **Self-check verdict**: `FUNCTIONAL` - 0 blocking finding(s);
   named states: {'content-withheld': 36, 'carried-without-definitions': 2} (a licence that does not permit copying, and slices that define no
   stage, worker, gate or prompt, are states and are named as such rather than counted as fitness)
-- **Published from**: `65a2b0325156d4169bde7f3419a927c408db90cd` on `arena/5223ef6f-savage-tech-corner`
+- **Published from**: `12cae8eddc85508b995cadda643ac352f55b1bcc` on `arena/5223ef6f-savage-tech-corner`
 
 ## What it is
 
