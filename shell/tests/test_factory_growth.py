@@ -314,6 +314,11 @@ class WiringTest(unittest.TestCase):
         self.assertIn("npm run format\n", workflow)
         self.assertIn("npm run format:check", workflow)
         self.assertIn("npx prettier --list-different .", workflow)
+        # A file the formatter rewrote outside the paths this job commits stays unformatted on the
+        # branch: say so here, where the reason is visible, instead of leaving a red belt behind.
+        self.assertIn("this job commits it", workflow)
+        self.assertIn("which this job does not commit", workflow)
+        self.assertIn("git diff --name-only", workflow)
         # A machine commit cannot trigger workflows (GitHub's rule), so this job asks for the belt.
         self.assertIn("gh workflow run quality-conveyor-belt.yml", workflow)
         for forbidden in ("continue-on-error", "|| true"):

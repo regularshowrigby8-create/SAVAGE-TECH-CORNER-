@@ -94,6 +94,19 @@ jobs:
         run: |
           set -euo pipefail
           npm run format
+          # Which files the formatter rewrote, and whether this job is allowed to keep the rewrite: a
+          # file it rewrote outside its committed paths stays unformatted on the branch and the belt's
+          # style gate will fail on that push - which is worth an annotation here, where the reason is
+          # visible, rather than a red belt three minutes later with no explanation.
+          while read -r path; do
+            [ -n "$path" ] || continue
+            case "$path" in
+              sealed-factories/*|tools/factory/*|docs/*|artifacts/*)
+                echo "::notice title=Factory growth::the formatter rewrote ${path}; this job commits it";;
+              *)
+                echo "::warning title=Factory growth::the formatter rewrote ${path}, which this job does not commit - the style gate will fail on the branch";;
+            esac
+          done <<< "$(git diff --name-only)"
           if ! npm run format:check; then
             echo "::error title=Factory growth::format:check failed; Prettier would rewrite:"
             npx prettier --list-different . | while read -r offender; do
