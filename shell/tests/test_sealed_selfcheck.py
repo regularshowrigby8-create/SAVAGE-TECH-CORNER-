@@ -264,10 +264,19 @@ class RepairTest(SelfCheckCase):
         self.assertIn("exited 1", result["detail"])
 
     def test_a_repair_needs_the_tool_it_names(self) -> None:
-        result = selfcheck.repair({"code": "payload-missing", "record": "alpha"},
-                                  runner=lambda argv, **_kwargs: None, offline_now=False)
-        self.assertFalse(result["repaired"])
-        self.assertIn("not present", result["detail"])
+        """A copy without the tool is told so, and nothing runs on its behalf.
+
+        This is the copied-to-another-repository case: the seal travels, the tools travel with it, and a
+        copy that lost one must say which one rather than report a repair it never ran.
+        """
+        with tempfile.TemporaryDirectory() as empty:
+            ran = []
+            result = selfcheck.repair({"code": "payload-missing", "record": "alpha"},
+                                      runner=lambda argv, **_kwargs: ran.append(argv),
+                                      offline_now=False, tools_root=Path(empty))
+            self.assertFalse(result["repaired"])
+            self.assertIn("not present", result["detail"])
+            self.assertEqual([], ran, "nothing may run when the tool it names is not in this copy")
 
 
 class VerdictTest(SelfCheckCase):

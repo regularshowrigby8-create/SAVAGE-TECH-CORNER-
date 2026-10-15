@@ -66,6 +66,19 @@ SUFFIX = "-LICENSE"
 STORE_FILE = re.compile(r"^[\w][\w.-]*-LICENSE$")
 
 
+def shown(path: Path) -> str:
+    """A path a reader can recognise, whether or not it lives inside this repository.
+
+    The store is not always inside the checkout being verified: a published copy, a temporary store in a
+    test and a verification run in a worktree all hand this tool paths that have no relative form here.
+    `relative_to` raises for those - a crash while *reporting* a problem, which is worse than the problem.
+    """
+    try:
+        return str(path.relative_to(REPO_ROOT))
+    except ValueError:
+        return str(path)
+
+
 def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
@@ -128,7 +141,7 @@ def verify(store: Path = STORE, index_path: Path = INDEX, seal_path: Path = SEAL
                             f"exactly one text per record, named <id>{SUFFIX}")
 
     if not index_path.is_file():
-        problems.append(f"there is no licence index at {index_path.relative_to(REPO_ROOT)}; the store "
+        problems.append(f"there is no licence index at {shown(index_path)}; the store "
                         f"is not held together by anything")
     else:
         recorded = json.loads(index_path.read_text(encoding="utf-8"))
@@ -154,7 +167,7 @@ def verify(store: Path = STORE, index_path: Path = INDEX, seal_path: Path = SEAL
     if seal_path.is_file():
         factories = json.loads(seal_path.read_text(encoding="utf-8")).get("factories", [])
     else:
-        problems.append(f"there is no seal at {seal_path.relative_to(REPO_ROOT)} to check the store "
+        problems.append(f"there is no seal at {shown(seal_path)} to check the store "
                         f"against")
     referenced = set()
     for factory in factories:

@@ -119,24 +119,11 @@ else
     echo "no catalogued factory needs vendoring: every slice matches the licence its record now holds"
 fi
 
-# The component's own self-check runs here too, in repair mode, between the vendoring and the seal: a
-# re-vendor that damaged a slice or a licence text while fetching is repaired now, in the middle of the
-# run, instead of being reported as a failure at the end of it. The strict pass (--require-functional)
-# comes after the seal; this one is the component fixing what it can as it goes.
-step "the seal repairing itself after the re-vendor"
-run_and_report "the mid-run self-check" python3 sealed-factories/runtime/cli.py selfcheck --repair
-MIDCHECK_STATUS=$?
-if [ "$MIDCHECK_STATUS" -ne 0 ] && [ "$MIDCHECK_STATUS" -ne 1 ]; then
-    # 0 fit, 1 not fit but repaired-what-it-could; anything else (3: no seal) stops the run here.
-    echo "::error title=Factory growth::the self-check could not run (exit ${MIDCHECK_STATUS})"
-    exit 1
-fi
-if [ "$MIDCHECK_STATUS" -eq 1 ]; then
-    # Not hidden and not tolerated as a pass: the findings were just annotated by the tool itself, and
-    # the steps that follow - store the licences, index the store, seal, and the strict self-check with
-    # --require-functional - are what has to clear them. If they do not, this run fails there.
-    echo "::warning title=Factory growth::the mid-run self-check still has blocking findings; the licence store, the seal and the strict self-check that follow have to clear them"
-fi
+# There is one self-check in this run, and it is the strict one below: repair, re-seal, verify, then the
+# verdict, all on the tree that is judged. A second pass ran here, before the licence store was indexed
+# and before the seal was written, so it reported a stale index and an unpinned module that the run's own
+# next two steps then fixed - failure annotations on a run that ends FUNCTIONAL, which is exactly the
+# kind of noise that hides a real one. Removing it is not a loss: the strict pass repairs first too.
 
 # A record with no slice is absent from the seal without anything failing - the sealer numbers what it
 # finds, and the set would simply be one smaller. Asking the same question again, after vendoring, is
@@ -247,7 +234,12 @@ fi
 # 7. The run: plan mode, no model calls, and the environment it reads is the seal written above.
 step "sealed run (plan mode, no model)"
 rm -f "$REPORT"
-python3 tools/factory/sealed_factory_runtime.py run --max-model-calls 0
+# One agent instance per role, and a limit above any role count this set has: the cap exists so a
+# million-instance plan is not executed, not so that part of the set goes untested. At a limit the role
+# count can reach, roles simply get no instance - and the component's own test that every role ran would
+# be measuring the limit instead of the set. If the set ever outgrows this number the summary names the
+# roles that got none and that test fails loudly, which is the failure worth having.
+python3 tools/factory/sealed_factory_runtime.py run --max-model-calls 0 --env-limit 10000
 RUN_STATUS=$?
 if [ "$RUN_STATUS" -ne 0 ]; then
     echo "::error title=Factory growth::the sealed run exited ${RUN_STATUS}"
@@ -256,6 +248,45 @@ fi
 if [ ! -s "$REPORT" ]; then
     echo "::error title=Factory growth::the run wrote no report at ${REPORT}"
     exit 1
+fi
+
+# The swarm's numbers belong beside the verdict: how many instances ran of how many planned, how many
+# steps and checks failed, and - if any did - which roles and what they said. Without this the only trace
+# of a failing step is inside a runner-local report.
+if [ -s "$REPORT" ] && [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+    {
+        echo "## Sealed run"
+        echo
+        python3 - "$REPORT" <<'SWARM_PY'
+
+import json
+import sys
+
+report = json.load(open(sys.argv[1]))
+environment = report.get("environment", {})
+swarm = environment.get("swarm", {})
+plan = swarm.get("plan", {})
+counts = swarm.get("counts", {})
+print(f"Swarm: {plan.get('executed')} of {plan.get('instances')} planned agent instances executed "
+      f"({environment.get('agents', {}).get('roles')} roles), {counts.get('steps_ok')} steps ok, "
+      f"{counts.get('steps_failed')} failed, {counts.get('checks_passed')} checks passed, "
+      f"{counts.get('checks_failed')} failed.")
+if plan.get("not_executed"):
+    print(f"- agent instances not executed: {plan['not_executed']} of {plan.get('instances')} "
+          f"(the run's own limit, reported rather than hidden)")
+if plan.get("roles_not_executed"):
+    print(f"- roles that got no agent instance: {len(plan['roles_not_executed'])}")
+failed = {role: stats for role, stats in (swarm.get("per_role") or {}).items()
+          if stats.get("steps_failed") and stats["steps_failed"] > 0}
+if failed:
+    print()
+    print("Roles whose steps failed:")
+    print()
+    for role, stats in sorted(failed.items())[:12]:
+        for error in (stats.get("errors") or [])[:3]:
+            print(f"- `{role}`: {error}")
+SWARM_PY
+    } >> "$GITHUB_STEP_SUMMARY"
 fi
 
 step "judging the grown set"

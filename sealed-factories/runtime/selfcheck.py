@@ -367,29 +367,29 @@ def assign(finding: dict, structures: dict[str, dict]) -> dict:
                              "own tool does the work"}
 
 
-def _vendor_command(finding: dict) -> list[list[str]]:
+def _vendor_command(finding: dict, tools_root: Path = TOOLS) -> list[list[str]]:
     """The vendoring command for one record, by the group its slice lives in."""
     identifier = finding["record"]
     for kind, _registry_path, group in (("imported", None, "vendor"), ("ai", None, "vendor-ai"),
                                         ("mcp", None, "mcp-vendor")):
         if (SEALED / group / f"{identifier}.json").is_file():
             if kind == "imported":
-                return [[sys.executable, str(TOOLS / "vendor_imported_factories.py"),
+                return [[sys.executable, str(tools_root / "vendor_imported_factories.py"),
                          "--refresh", "--only", identifier]]
-            return [[sys.executable, str(TOOLS / "vendor_mcp_servers.py"), "--kind", kind,
+            return [[sys.executable, str(tools_root / "vendor_mcp_servers.py"), "--kind", kind,
                      "--refresh", "--only", identifier]]
     # No vendored record to refresh: the record has to be fetched from its own registry, which the
     # growth run does; here the repair is the same tool with the registry's own list.
-    return [[sys.executable, str(TOOLS / "vendor_imported_factories.py"), "--refresh", "--only",
+    return [[sys.executable, str(tools_root / "vendor_imported_factories.py"), "--refresh", "--only",
              identifier]]
 
 
-def _seal_commands() -> list[list[str]]:
-    return [[sys.executable, str(TOOLS / "seal_factories.py"), "seal"],
-            [sys.executable, str(TOOLS / "seal_factories.py"), "verify"]]
+def _seal_commands(tools_root: Path = TOOLS) -> list[list[str]]:
+    return [[sys.executable, str(tools_root / "seal_factories.py"), "seal"],
+            [sys.executable, str(tools_root / "seal_factories.py"), "verify"]]
 
 
-def repair_commands(finding: dict) -> list[list[str]]:
+def repair_commands(finding: dict, tools_root: Path = TOOLS) -> list[list[str]]:
     """The commands that fix one finding, in the order that leaves the set consistent.
 
     Everything that changes a payload, a stored licence text or the index ends with a re-seal: the seal
@@ -398,18 +398,20 @@ def repair_commands(finding: dict) -> list[list[str]]:
     """
     tool = REPAIRS.get(finding.get("code", ""), {}).get("tool")
     if tool == "vendor":
-        return _vendor_command(finding) + _seal_commands()
+        return _vendor_command(finding, tools_root) + _seal_commands(tools_root)
     if tool == "licence":
-        return [[sys.executable, str(TOOLS / "license_manager.py"), "import",
-                 "--only", finding["record"]]] + _seal_commands()
+        return [[sys.executable, str(tools_root / "license_manager.py"), "import",
+                 "--only", finding["record"]]] + _seal_commands(tools_root)
     if tool == "index":
-        return [[sys.executable, str(TOOLS / "license_manager.py"), "index"]] + _seal_commands()
+        return [[sys.executable, str(tools_root / "license_manager.py"), "index"]] + _seal_commands(
+            tools_root)
     if tool == "seal":
-        return _seal_commands()
+        return _seal_commands(tools_root)
     return []
 
 
-def repair(finding: dict, *, runner=None, offline_now: bool | None = None) -> dict:
+def repair(finding: dict, *, runner=None, offline_now: bool | None = None,
+           tools_root: Path = TOOLS) -> dict:
     """Run the repair this finding names, and report only what actually ran and what it returned."""
     if runner is None:
         runner = subprocess.run
@@ -424,7 +426,7 @@ def repair(finding: dict, *, runner=None, offline_now: bool | None = None) -> di
                 "detail": "the repair needs the network and the network is switched off "
                           "(SEALED_NO_NETWORK=1)"}
     executed = []
-    for argv in repair_commands(finding):
+    for argv in repair_commands(finding, tools_root=tools_root):
         if not Path(argv[1]).is_file():
             return {"record": finding.get("record"), "repaired": False, "executed": executed,
                     "detail": f"the tool {argv[1]} is not present in this copy"}
