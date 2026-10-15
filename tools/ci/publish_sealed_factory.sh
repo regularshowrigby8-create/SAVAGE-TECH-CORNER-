@@ -96,12 +96,31 @@ python3 tools/ci/build_component_snapshot.py --into "$SNAPSHOT" \
     --source-commit "$(git rev-parse HEAD)" --source-branch "${BRANCH_SOURCE:-$BRANCH}"
 
 # 6. The published copy proves itself, in the tree that will be pushed: this is the gate that would
-#    catch a component that only worked because of a file left behind in the repository.
+#    catch a component that only worked because of a file left behind in the repository. The gates below
+#    run the component, and a run leaves droppings - the manifest directory and compiled bytecode - which
+#    are the runner's scratch space rather than the component: the copy is cleaned around them, so what
+#    lands is the tree that proved itself and not the tree the prover left behind.
+clean_copy() {
+    find "$1" -name __pycache__ -type d -prune -exec rm -rf {} +
+    rm -rf "$1/sealed-factories/manifest"
+}
+clean_copy "$SNAPSHOT"
 gate "the copy that is about to be published verifies on its own" \
     bash -c 'cd "$1" && exec python3 sealed-factories/runtime/cli.py verify' _ "$SNAPSHOT"
 gate "the copy that is about to be published is functional on its own" \
     bash -c 'cd "$1" && exec python3 sealed-factories/runtime/cli.py selfcheck --require-functional \
              --workspace "$2"' _ "$SNAPSHOT" "$SELFCHECK_DIR/snapshot"
+
+# 6b. And it runs itself. Everything above asks whether the copy is intact and fit; this asks it to
+#     execute its own environment - its own tools, its own agent roles, its own swarm, in plan mode with
+#     no model - and the judge below refuses a run that skipped a role, failed a step or failed a check.
+#     A copy that cannot do that is a copy that has a seal, not a component that was proved functional.
+gate "the copy that is about to be published runs its own environment" \
+    bash -c 'cd "$1" && exec python3 tools/factory/sealed_factory_runtime.py run --max-model-calls 0' \
+    _ "$SNAPSHOT"
+gate "the copy ran every role it carries and failed nothing" \
+    python3 tools/ci/published_environment_judge.py "$SNAPSHOT/sealed-factories/manifest/RUN-REPORT.json"
+clean_copy "$SNAPSHOT"
 
 # 7. Commit it to the component's own branch: the worktree holds the snapshot and nothing else, so the
 #    tree that lands is exactly the component even when a file was removed from it since the last

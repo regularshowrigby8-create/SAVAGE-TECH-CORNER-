@@ -19,6 +19,7 @@ on:
       - ".github/workflows/publish-sealed-factory.yml"
       - "tools/ci/publish_sealed_factory.sh"
       - "tools/ci/build_component_snapshot.py"
+      - "tools/ci/published_environment_judge.py"
       - "sealed-factories/runtime/selfcheck.py"
       # The component itself: a set that was re-sealed publishes itself, on the same push that carries
       # it. The bot's re-seal commit is only made by a growth run that already passed the strict
