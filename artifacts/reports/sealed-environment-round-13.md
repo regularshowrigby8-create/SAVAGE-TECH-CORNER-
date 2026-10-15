@@ -940,6 +940,21 @@ with `-` is a nested list item to the markdown parser rather than the continuati
 Both are now written the way the formatter writes them, and the belt that refused them was right
 both times.
 
+The loop closed on this. Growth `f5cb017`, triggered by the push that recorded this section, re-sealed
+the set with the new record, committed with the line its own judge printed - `factory set: 171 records
+(134 operational, 37 without definitions), 135 carrying content under 149 licence texts` - and dispatched
+the belt on that commit and the publish of it. The belt is green on `f5cb017`; the publish it asked for
+wrote `ff51fbd`, 537 files, no `__pycache__`, no `manifest/` and no `runs/`, from `f5cb017`. Its commit
+message carries the copy's own line: 171 factories, 48 tools, 201 agent roles, 201 agent instances
+executed, 205 tool steps ok, 201/201 checks passed, 0 model calls. The seal root moved to `2f694c4a…`
+with that re-seal, and the branch it was published to records the same root as the commit it came from.
+
+Two failures on the way were this pipeline's own, and both were found by the gates rather than by
+review. The growth run refused a set its own judge had just passed, because the line it wanted to quote
+was read after the log holding it was removed. The belt's formatter refused the section above for a
+heading that had lost the blank line before it. Both are fixed in `f7a6723`, and the commit that
+followed quotes its judge and passes.
+
 ## 3. Acceptance criteria covered
 
 | Criterion | What it asserts                                                                                                                 | Test                                                                                                                                       | Evidence               |

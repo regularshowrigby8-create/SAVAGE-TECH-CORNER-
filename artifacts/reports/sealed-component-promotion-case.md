@@ -20,9 +20,10 @@ and 1 document.
 Every claim below is a result of a hosted run; nothing here was measured in a development sandbox.
 
 - **It is intact.** The seal verifies: every payload, every licence text and every runtime module
-  hashes to what the seal records, and the seal's root hash is `8ab03010…` as recorded in its own
-  `SEAL.sha256`. Published: `sealed-factory` at `210c4bc`, published from `5cf28b7` by publish run
-  `38744774674`.
+  hashes to what the seal records, and the seal's root hash is `2f694c4a…` as recorded in its own
+  `SEAL.sha256`. Published: `sealed-factory` at `ff51fbd`, published from `f5cb017` by publish run
+  `38749878986`. The root and the published head move on every re-seal and every publish, so the run
+  ids are what pin a claim here; the branch records the root of the commit it came from.
 - **It is fit.** The self-check the component carries reports `FUNCTIONAL` with 0 blocking
   findings, and names what it is not counting as fitness instead of hiding it: 36 records whose
   content is withheld because their licences do not permit copying, and 2 carried slices that
@@ -31,8 +32,8 @@ Every claim below is a result of a hosted run; nothing here was measured in a de
 - **It runs itself, in the tree that is published.** The publish gates run the sealed environment
   inside the snapshot that is about to be pushed and refuse a run that skipped a role, failed a
   step or failed a check: plan mode, no model calls, one instance of every role. Publish run
-  `38744774674` passed that gate on the tree this file describes; the copy's own numbers are in the
-  published commit's message.
+  `38749878986` passed that gate on the tree this file describes, as `38744774674` did before it;
+  the copy's own numbers are in the published commit's message.
 - **The published tree is the component's tracked content.** The snapshot is cleaned around the
   in-copy gates, so what lands is the sealed set, the tooling, the tests, the workflows and the
   document - 537 files, with no compiled bytecode, no `manifest/` and no `runs/`. The component's
@@ -83,9 +84,9 @@ shape. The first two conditions now hold on the branch and are listed with their
    so a green belt on the merge commit is the component running inside the belt that guards
    `main`. This holds for every commit the branch has published from so far; it has to hold for the
    merge commit itself, which does not exist yet.
-2. **A publish that ran with the copy's own environment as a gate.** Done and proven: publish run
-   `38744774674`, on the copy that became `210c4bc`, with the gates named in its annotations and
-   the copy's own numbers in the commit it wrote.
+2. **A publish that ran with the copy's own environment as a gate.** Done and proven: publish runs
+   `38744774674` and `38749878986`, on the copies that became `210c4bc` and `ff51fbd`, with the gates
+   named in their annotations and the copy's own numbers in the commits they wrote.
 3. **The same evidence read from the default branch** once it is there: the air-gapped job, the
    publish job and the growth run all run on `main` today for this repository, and a component that
    works from a feature branch and not from the default branch is a component with a branch
