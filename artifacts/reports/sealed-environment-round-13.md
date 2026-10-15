@@ -20,7 +20,7 @@ own refusal is quoted instead of a summary of it.
 | MCP servers verified by handshake | 7 servers, 52 tools                                                      | **16 servers, 303 tools**, each with the command that was verified                                                                                                                                | `tools/factory/imported_mcp_servers.json` |
 | MCP servers that cannot start     | 24 of 42                                                                 | **14 of 42** not installed here; 7 more start but refuse for a named reason (see §2.2)                                                                                                            | catalogue + `cli.py mcp-probe`            |
 | Emulator stage                    | ran `connectedDebugAndroidTest` against whatever state the device was in | wakes the screen, dismisses the keyguard, and asserts `Awake` + a non-keyguard focus before the suite                                                                                             | `tools/ci/android_emulator_run.sh`        |
-| Seal root                         | `32bf92d3…`, 1,849,160 payload bytes                                     | **`3cf0045c…`**, 2,399,136 payload bytes, 161 factories (124 operational), 139 licence texts, 10 component files pinned — see §2.11                                                               | `sealed-factories/SEAL.json`              |
+| Seal root                         | `32bf92d3…`, 1,849,160 payload bytes                                     | **`923aaf4b…`**, 2,471,216 payload bytes, 167 factories (130 operational), 145 licence texts, 10 component files pinned — see §2.11                                                               | `sealed-factories/SEAL.json`              |
 
 The seal root changed for one reason: `runtime/toolkit.py` gained the GitHub section and `runtime/agents.py`
 gave the researcher role the GitHub tool group, and the seal pins every runtime module by hash
@@ -737,16 +737,16 @@ is the measurement:
 factory set: 155 records (118 operational, 37 without definitions), 119 carrying content under 133 licence texts
 ```
 
-A second run (`38702482811`, on `650e830`) did the same and grew the set again — the job that grows this
-component does not stop at the first result:
+Two more runs (`38702482811` on `650e830`, `38704101998` on `a21f7c1`) did the same and grew the set again
+each time — the job that grows this component does not stop at the first result:
 
 ```
-factory set: 161 records (124 operational, 37 without definitions), 125 carrying content under 139 licence texts
+factory set: 167 records (130 operational, 37 without definitions), 131 carrying content under 145 licence texts
 ```
 
-The committed seal is now `3cf0045c…` (`sha256(SEAL.json)`, written to `SEAL.sha256` in the same commit):
-161 factories, 2,399,136 payload bytes, 139 licence texts, 125 carrying content, grouped 23 AI-focused,
-42 MCP servers and 96 imported — and `sealed-factories/` is in `.prettierignore` precisely so the
+The committed seal is `923aaf4b…` (`sha256(SEAL.json)`, written to `SEAL.sha256` in the same commit):
+167 factories, 2,471,216 payload bytes, 145 licence texts, 131 carrying content, grouped 23 AI-focused,
+42 MCP servers and 102 imported — and `sealed-factories/` is in `.prettierignore` precisely so the
 formatter cannot touch a component whose whole point is that it is byte-exact. The seal pair was checked
 against each other on the committed tree: recorded and actual hashes agree.
 
@@ -759,9 +759,9 @@ so they still agree with the registry. The judge's floors are untouched: the led
 `tools/ci/factory_growth_judge.py` stays at the committed set it measured (149 records), so growth above
 it passes and any fall below it fails.
 
-The belt ran on each commit and passed: run `38699724589` on `04cfc6f` and run `38703154310` on
-`a31f95b`, both `workflow_dispatch`, with the `Conveyor Belt Verification Pipeline` job green on all
-seventeen steps — including `Code Quality & Linting`, the step that had been red on every push since the
+The belt ran on each commit and passed: run `38699724589` on `04cfc6f`, run `38703154310` on `a31f95b`
+and run `38705009314` on `fe06e80`, all `workflow_dispatch`, with the `Conveyor Belt Verification
+Pipeline` job green on all seventeen steps — including `Code Quality & Linting`, the step that had been red on every push since the
 format change landed and is now green because the job formats with the repository's own formatter before
 it commits — and the `Air-gapped sealed run (SEALED_NO_NETWORK=1)` job green beside each. One push belt
 did go red on the way, and it is recorded rather than tidied away: the belt on `901b37f` failed at
@@ -822,7 +822,7 @@ The criterion text is in `docs/ACCEPTANCE_CRITERIA.md` (AC-051, AC-060, AC-061, 
 - **The emulator pre-flight is hardening, not a demonstrated fix.** Run `226b71c` was not reproduced
   and the later runs passed without the pre-flight, so what is claimed is what the stage now checks
   before the suite — not that the change is what makes the suite pass.
-- **36 of the 155 sealed records carry no content**, and 2 carried slices still define nothing this
+- **36 of the 167 sealed records carry no content**, and 2 carried slices still define nothing this
   runtime reads (`github-mcp-server`, `awesome-mcp-servers`); the run counts them and names them
   instead of counting them as workers. 35 of the 36 are held back by a licence this component may not
   carry (22 with no licence published at all, 12 blocked, one withheld as unclassifiable), and §2.8d
