@@ -101,8 +101,13 @@ python3 tools/ci/build_component_snapshot.py --into "$SNAPSHOT" \
 #    are the runner's scratch space rather than the component: the copy is cleaned around them, so what
 #    lands is the tree that proved itself and not the tree the prover left behind.
 clean_copy() {
+    # The component's own .gitignore names three things a run writes - the bytecode, the manifest and
+    # the runs directory - and says why: plans, prompts, model output and the report are the run, not
+    # the component, and committing them would mean committing a timestamped machine run. The copy
+    # carries no .gitignore, so without this the gates' own output would be published as if it were
+    # part of the component.
     find "$1" -name __pycache__ -type d -prune -exec rm -rf {} +
-    rm -rf "$1/sealed-factories/manifest"
+    rm -rf "$1/sealed-factories/manifest" "$1/sealed-factories/runs"
 }
 clean_copy "$SNAPSHOT"
 gate "the copy that is about to be published verifies on its own" \
