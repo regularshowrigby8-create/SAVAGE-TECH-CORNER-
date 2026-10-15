@@ -29,6 +29,12 @@ on:
       - "tools/ci/factory_growth.sh"
       - "tools/ci/factory_growth_judge.py"
       - "tools/factory/vendor_needed.py"
+      # The tools this job runs are part of the pipeline too: a change to the sealer, to the licence
+      # re-scan or to a vendoring tool is a reason to run the growth against the live API again.
+      - "tools/factory/seal_factories.py"
+      - "tools/factory/license_rescan.py"
+      - "tools/factory/vendor_imported_factories.py"
+      - "tools/factory/vendor_mcp_servers.py"
 
 permissions:
   contents: write

@@ -154,7 +154,12 @@ def judge(report_path: Path, seal_path: Path, registry_path: Path) -> tuple[list
     if summary.get("carried_without_definitions") != len(carried_silent):
         problems.append(f"the summary counts {summary.get('carried_without_definitions')} carried "
                         f"records without definitions while the records list {len(carried_silent)}")
-    unused = [identifier for identifier in REFERENCE_RECORDS if identifier not in report_ids]
+    # The allowance is for the two records that carry a published README and define nothing. It is
+    # data-driven: the moment one of them stops needing it - it defines stages now, or it is gone from
+    # the report - that is said out loud, without failing the run. Testing `not in carried_silent`
+    # rather than `not in report_ids` is what makes the two cases the message names both real: a record
+    # that now defines something is still in the report, so the id-only test never saw it.
+    unused = [identifier for identifier in REFERENCE_RECORDS if identifier not in carried_silent]
     if unused:
         warnings.append("the allowance for a carried README is unused by: " + ", ".join(unused)
                         + "; the record was removed or now defines something, and the allowance in "

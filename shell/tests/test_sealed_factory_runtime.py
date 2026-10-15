@@ -447,6 +447,7 @@ class RemovabilityTest(unittest.TestCase):
         removal = seal()["removal"]
         owned = {(REPO_ROOT / p).resolve() for p in removal["also_remove"]}
         owned |= {(REPO_ROOT / p).resolve() for p in removal["tests"]}
+        owned |= {(REPO_ROOT / p).resolve() for p in removal["workflows"]}
         owned |= {(REPO_ROOT / p).resolve() for p in removal["docs"]}
         self.assertIn(Path(__file__).resolve(), owned,
                       "this test file is part of the component and must be listed for removal")
@@ -483,7 +484,7 @@ class RemovabilityTest(unittest.TestCase):
         removal = seal()["removal"]
         self.assertFalse((REPO_ROOT / removal["delete"].rstrip("/")).is_dir() is False,
                          "the sealed component must exist while it is sealed")
-        for group in ("also_remove", "tests", "docs"):
+        for group in ("also_remove", "tests", "workflows", "docs"):
             for path in removal[group]:
                 self.assertTrue((REPO_ROOT / path).is_file(),
                                 f"{path} is named for removal but missing")

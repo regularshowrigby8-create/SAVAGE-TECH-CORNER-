@@ -162,8 +162,13 @@ class JudgeTest(unittest.TestCase):
     def test_a_third_carried_record_that_defines_nothing_is_rejected(self) -> None:
         """Two records carry a README and define nothing; a third is a gap, not a precedent."""
         seal, report, registry = baseline()
+        # A blueprint record: nothing carried, and the run found no structure in it. Flipping it to
+        # "carried" makes a third record that carries content and defines nothing - the case the judge
+        # must refuse. Picking it by shape rather than by position matters: the first record with no
+        # content and no licence is `servers`, which defines stages, so flipping that one would only
+        # trip the summary-agreement check and this test would pass for the wrong reason.
         emptied = next(factory for factory in seal["factories"]
-                       if not factory["content_redistributed"] and factory["license"] == "NOASSERTION")
+                       if factory["id"].startswith("blueprint-"))
         emptied["content_redistributed"] = True
         emptied["license"] = "MIT"
         for factory in report["factories"]:
@@ -330,9 +335,10 @@ class WiringTest(unittest.TestCase):
         self.assertNotIn("git commit -a", workflow)
         # The formatter rewrites the whole tree; the commit must not.
         self.assertIn("npm run format\n", workflow)
-        staged = workflow.split("git add ", 1)[1].split("\n", 1)[0]
-        for unowned in (".github", "shell", "factory-2", "factory-3", "factories"):
-            self.assertNotIn(unowned, staged, f"the machine commit must not stage {unowned}")
+        staged = workflow.split("git add ", 1)[1].split("\n", 1)[0].split()
+        self.assertEqual(["sealed-factories", "tools/factory", "docs", "artifacts"], staged,
+                         "the machine commit stages exactly these paths, compared as whole paths: a "
+                         "substring check finds `factories` inside `sealed-factories` and says nothing")
 
 
 if __name__ == "__main__":

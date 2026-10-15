@@ -263,21 +263,28 @@ def seal() -> int:
                             "tools/factory/sealed_factory_runtime.py",
                             "tools/factory/vendor_imported_factories.py",
                             "tools/factory/vendor_mcp_servers.py",
+                            "tools/factory/vendor_needed.py",
                             "tools/factory/imported_factories.json",
                             "tools/factory/imported_mcp_servers.json",
-                            "tools/factory/imported_ai_factories.json"],
+                            "tools/factory/imported_ai_factories.json",
+                            "tools/ci/factory_growth.sh",
+                            "tools/ci/factory_growth_judge.py"],
             "tests": ["shell/tests/test_sealed_factory_runtime.py",
                       "shell/tests/test_sealed_environment.py",
                       "shell/tests/test_imported_factories.py",
                       "shell/tests/test_license_rescan.py",
-                      "shell/tests/test_factory_discovery.py"],
+                      "shell/tests/test_factory_discovery.py",
+                      "shell/tests/test_factory_growth.py"],
+            "workflows": [".github/workflows/factory-growth.yml"],
             "docs": ["docs/factory/MULTISTAGE_FACTORY.md"],
             "belt_station": "the Stage 0 block in scripts/conveyor_belt.js, which reports ABSENT "
                             "without it",
             "leaves_intact": ["shell/", "factories/", "factory-2/", "factory-3/", "tools/",
                               ".github/", ".claude/"],
-            "note": ("Nothing outside sealed-factories/ imports it; the belt reports it as ABSENT and "
-                     "continues with the existing factories."),
+            "note": ("The growth pipeline and the tooling above exist only to grow and serve this set, "
+                     "so they are removed with it; nothing in shell/, factories/, factory-2/ or "
+                     "factory-3/ reads it, and the belt reports it as ABSENT and continues with the "
+                     "existing factories."),
         },
         "component_files": component_files(),
         "factories": factories,
@@ -400,7 +407,7 @@ or `factory-3/` reads it; station 0 of `scripts/conveyor_belt.js` reports
     sealed component ABSENT - the belt continues with this repository's own factories
 
 and the belt passes exactly as before. The full removal list - this directory, {len(document['removal']['also_remove'])}
-tooling files, {len(document['removal']['tests'])} test file and one document - is recorded in
+tooling files, {len(document['removal']['tests'])} test files, the growth workflow and one document - is recorded in
 `SEAL.json` under `removal`, and `shell/tests/test_sealed_factory_runtime.py` proves that list matches
 the files that exist, including a test that runs the runtime in an empty tree and checks that absence
 is reported, exits zero, and creates nothing.
