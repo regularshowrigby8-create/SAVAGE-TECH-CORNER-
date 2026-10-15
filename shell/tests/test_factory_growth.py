@@ -302,7 +302,11 @@ class WiringTest(unittest.TestCase):
         self.assertIn('python -m unittest discover -s shell/tests >"$log" 2>&1', workflow)
         self.assertIn("the shell test suite failed on the set this run produced", workflow)
         self.assertIn("::error title=Factory growth::- ${line}", workflow)
-        # And the format gate names the files it would rewrite rather than only saying it failed.
+        # Formatting is the repository's own formatter run on the runner (node lives there), and the
+        # check is still a check: if anything outside the paths this job commits is unformatted, the
+        # job fails and names it rather than only saying the style check failed.
+        self.assertIn("npm run format\n", workflow)
+        self.assertIn("npm run format:check", workflow)
         self.assertIn("npx prettier --list-different .", workflow)
         # A machine commit cannot trigger workflows (GitHub's rule), so this job asks for the belt.
         self.assertIn("gh workflow run quality-conveyor-belt.yml", workflow)
@@ -321,9 +325,14 @@ class WiringTest(unittest.TestCase):
     def test_the_commit_stage_is_limited_to_what_the_growth_owns(self) -> None:
         """A machine commit that stages everything is a machine commit that can commit anything."""
         workflow = WORKFLOW.read_text(encoding="utf-8")
-        self.assertIn("git add sealed-factories tools/factory docs/factory", workflow)
+        self.assertIn("git add sealed-factories tools/factory docs artifacts", workflow)
         self.assertNotIn("git add -A", workflow)
         self.assertNotIn("git commit -a", workflow)
+        # The formatter rewrites the whole tree; the commit must not.
+        self.assertIn("npm run format\n", workflow)
+        staged = workflow.split("git add ", 1)[1].split("\n", 1)[0]
+        for unowned in (".github", "shell", "factory-2", "factory-3", "factories"):
+            self.assertNotIn(unowned, staged, f"the machine commit must not stage {unowned}")
 
 
 if __name__ == "__main__":

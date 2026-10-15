@@ -80,23 +80,18 @@ jobs:
           set -euo pipefail
           bash tools/ci/factory_growth.sh 2>&1 | tee "${RUNNER_TEMP}/factory-growth.log"
 
-      # The machine-written JSON is normalised with the repository's own Prettier, so a growth commit
-      # cannot land in a style the repository's format gate would reject. If the repository's own style
-      # check then fails, the offending files are named as annotations: a hosted runner's raw log is not
-      # always retrievable, and "format:check failed" on its own is not actionable.
-      - name: Normalise and check the files the growth wrote
+      # The repository's own formatter, run where node exists: `npm run format` is exactly what a
+      # person runs before committing, and this job cannot rely on one having run it by hand. Whatever
+      # it rewrites inside the paths this job commits is committed with the growth; anything outside
+      # them is still checked below, and named if it fails.
+      - name: Format, then check the style
         run: |
           set -euo pipefail
-          npx prettier --write \
-            tools/factory/imported_factories.json \
-            tools/factory/imported_ai_factories.json \
-            tools/factory/imported_mcp_servers.json \
-            tools/factory/plan_import.json \
-            docs/factory/IMPORTED_FACTORY_CATALOG.md
+          npm run format
           if ! npm run format:check; then
             echo "::error title=Factory growth::format:check failed; Prettier would rewrite:"
             npx prettier --list-different . | while read -r offender; do
-              echo "::error title=Factory growth::${offender} is not in the repository's Prettier style"
+              echo "::error title=Factory growth::${offender} is not in the repository's Prettier style and is not a path this job commits"
             done
             exit 1
           fi
@@ -123,7 +118,9 @@ jobs:
         id: commit
         run: |
           set -euo pipefail
-          git add sealed-factories tools/factory docs/factory
+          # Only the set, the tooling that grows it, and the documents: the formatter may have touched
+          # more than that, and a machine commit that stages everything can commit anything.
+          git add sealed-factories tools/factory docs artifacts
           if git diff --cached --quiet; then
             echo "nothing changed: the set is already what this run produced"
             echo "pushed=false" >> "$GITHUB_OUTPUT"
