@@ -890,8 +890,8 @@ status=0; reason=GitHub is not reachable from here: ...` when the API is pointed
   line (the judge is what lets that step end green; its `factory growth judge: PASS` line is in the job
   log), and the commit the job pushed. Recorded on 2026-10-15: run `38699025254` on `aed00a1` and run
   `38702482811` on `650e830`, both eleven steps green, summaries `factory set: 155 records (118
-  operational, 37 without definitions), 119 carrying content under 133 licence texts` and `factory set:
-  161 records (124 operational, 37 without definitions), 125 carrying content under 139 licence texts`;
+operational, 37 without definitions), 119 carrying content under 133 licence texts` and `factory set:
+161 records (124 operational, 37 without definitions), 125 carrying content under 139 licence texts`;
   commits `04cfc6f` and `a31f95b`; and belt runs `38699724589` and `38703154310` (`workflow_dispatch`)
   green on those commits including `Code Quality & Linting` (report §2.12)
 

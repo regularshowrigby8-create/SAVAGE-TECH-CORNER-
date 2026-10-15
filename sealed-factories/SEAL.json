@@ -1,21 +1,21 @@
 {
  "seal_version": "1.0.0",
- "sealed_at": "2026-10-15T08:03:18Z",
+ "sealed_at": "2026-10-15T08:19:07Z",
  "component": "sealed-factories",
  "description": "The imported factory set. Dropped in or removed as one unit; runs before the repository's own factories and feeds them.",
  "contents": {
-  "factories": 161,
-  "with_payload": 161,
-  "content_redistributed": 125,
+  "factories": 167,
+  "with_payload": 167,
+  "content_redistributed": 131,
   "blueprint_only": 36,
-  "with_license_text": 139,
-  "ai_worker_factories": 121,
+  "with_license_text": 145,
+  "ai_worker_factories": 124,
   "by_group": {
    "AI-focused factory": 23,
    "MCP tool server": 42,
-   "imported factory": 96
+   "imported factory": 102
   },
-  "payload_bytes": 2399136,
+  "payload_bytes": 2471216,
   "component_files": 10
  },
  "pipeline_position": {
@@ -341,6 +341,30 @@
     "libs/agno/agno/agent/factory.py"
    ],
    "ai_workers": true
+  },
+  {
+   "group": "imported factory",
+   "id": "aipoch-open-science",
+   "full_name": "aipoch/open-science",
+   "url": "https://github.com/aipoch/open-science",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "aipoch-open-science-LICENSE",
+   "import_class": "asset-import",
+   "commit": "ff3876892b2d7379cc2fcfd683631b452151d243",
+   "snapshot": "2026-10-15",
+   "files": 25,
+   "bytes": 1984,
+   "content_redistributed": true,
+   "payload": "payloads/aipoch-open-science.tar.gz",
+   "payload_sha256": "b55fc38116ba7538c50a227ce364cfd4db4d3ad2d4ca9efc82b5be7efa90f7b2",
+   "payload_bytes": 2508,
+   "providers": [],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [],
+   "ai_workers": false
   },
   {
    "group": "imported factory",
@@ -1498,6 +1522,32 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
+   "id": "github-gh-aw",
+   "full_name": "github/gh-aw",
+   "url": "https://github.com/github/gh-aw",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "github-gh-aw-LICENSE",
+   "import_class": "asset-import",
+   "commit": "5eb4c298ecba515924d30bd7989113dd79d7d421",
+   "snapshot": "2026-10-15",
+   "files": 25,
+   "bytes": 17039,
+   "content_redistributed": true,
+   "payload": "payloads/github-gh-aw.tar.gz",
+   "payload_sha256": "1c0c18e4e7ec7fe8e4dd5b9480146505658f3cca041a401f0d33fc3e577427ea",
+   "payload_bytes": 8497,
+   "providers": [
+    "anthropic"
+   ],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
    "group": "MCP tool server",
    "id": "github-mcp-server",
    "full_name": "github/github-mcp-server",
@@ -1801,6 +1851,30 @@
    ],
    "entrypoints": [],
    "ai_workers": true
+  },
+  {
+   "group": "imported factory",
+   "id": "iflytek-astron-agent",
+   "full_name": "iflytek/astron-agent",
+   "url": "https://github.com/iflytek/astron-agent",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "iflytek-astron-agent-LICENSE",
+   "import_class": "asset-import",
+   "commit": "5e27fc7afc598c3b8a30694288671584118b38dd",
+   "snapshot": "2026-10-15",
+   "files": 25,
+   "bytes": 7582,
+   "content_redistributed": true,
+   "payload": "payloads/iflytek-astron-agent.tar.gz",
+   "payload_sha256": "aa7002ff0c4b56ce09df00c0d0054c26ff2f4b30a5b91a0948655ec7b0f8b78d",
+   "payload_bytes": 4854,
+   "providers": [],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": false
   },
   {
    "group": "MCP tool server",
@@ -3248,6 +3322,40 @@
    "ai_workers": true
   },
   {
+   "group": "imported factory",
+   "id": "pyspur-dev-pyspur",
+   "full_name": "PySpur-Dev/pyspur",
+   "url": "https://github.com/PySpur-Dev/pyspur",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "pyspur-dev-pyspur-LICENSE",
+   "import_class": "asset-import",
+   "commit": "97b9856e49f227a52868b73493c23c43fb4de358",
+   "snapshot": "2026-10-15",
+   "files": 8,
+   "bytes": 51340,
+   "content_redistributed": true,
+   "payload": "payloads/pyspur-dev-pyspur.tar.gz",
+   "payload_sha256": "afd5be53e89e6207b7f56e4bca9ce2a23a205247b4c0d92154dbb866ee13ce2e",
+   "payload_bytes": 16166,
+   "providers": [
+    "openai",
+    "google",
+    "anthropic"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [
+    "backend/pyspur/nodes/factory.py",
+    "backend/pyspur/api/main.py",
+    "backend/pyspur/rag/datastore/factory.py",
+    "backend/pyspur/cli/main.py",
+    "backend/pyspur/nodes/llm/agent.py"
+   ],
+   "ai_workers": true
+  },
+  {
    "group": "MCP tool server",
    "id": "python-sdk",
    "full_name": "modelcontextprotocol/python-sdk",
@@ -4358,6 +4466,30 @@
   },
   {
    "group": "imported factory",
+   "id": "xerrors-yuxi",
+   "full_name": "xerrors/Yuxi",
+   "url": "https://github.com/xerrors/Yuxi",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "xerrors-yuxi-LICENSE",
+   "import_class": "asset-import",
+   "commit": "ca21a30d64a58269e7c5eefffd1afe24e0ad6f62",
+   "snapshot": "2026-10-15",
+   "files": 25,
+   "bytes": 12983,
+   "content_redistributed": true,
+   "payload": "payloads/xerrors-yuxi.tar.gz",
+   "payload_sha256": "b04f3a3cd30adc17153c38dd9f2a0c3f745e2e01e92ee8f7d6e85c21e9cdcfa7",
+   "payload_bytes": 7398,
+   "providers": [],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [],
+   "ai_workers": false
+  },
+  {
+   "group": "imported factory",
    "id": "yizhiyanhua-ai-fireworks-tech-graph",
    "full_name": "yizhiyanhua-ai/fireworks-tech-graph",
    "url": "https://github.com/yizhiyanhua-ai/fireworks-tech-graph",
@@ -4382,6 +4514,36 @@
     "node"
    ],
    "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
+   "id": "yzhao062-pyod",
+   "full_name": "yzhao062/pyod",
+   "url": "https://github.com/yzhao062/pyod",
+   "license": "BSD-2-Clause",
+   "license_present": true,
+   "license_file": "yzhao062-pyod-LICENSE",
+   "import_class": "asset-import",
+   "commit": "f0d0967d162ed46150cfa39ca61ffd1e7f78404b",
+   "snapshot": "2026-10-15",
+   "files": 10,
+   "bytes": 99042,
+   "content_redistributed": true,
+   "payload": "payloads/yzhao062-pyod.tar.gz",
+   "payload_sha256": "d581d189cb9489909f3a9295f1c3d517030717c899c7fcbe489c1f182607a8b8",
+   "payload_bytes": 32657,
+   "providers": [
+    "anthropic",
+    "local-llama",
+    "openai"
+   ],
+   "runtime": [
+    "python"
+   ],
+   "entrypoints": [
+    "pyod/cli.py"
+   ],
    "ai_workers": true
   }
  ]

@@ -1,6 +1,6 @@
 # Sealed factory set
 
-One component, sealed. 161 imported software factories - 121
+One component, sealed. 167 imported software factories - 124
 of them showing AI-worker evidence in the slice sealed here, the other 19 design-stage factories -
 vendored as bounded slices, hash-sealed, and run as station 0 of this repository's pipeline before
 anything else.
@@ -13,7 +13,7 @@ anything else.
 | `SEAL.sha256` | The hash of `SEAL.json`, so the manifest cannot be edited quietly |
 | `payloads/<id>.tar.gz` | One deterministic archive per factory (fixed mtime, mode, order) |
 | `vendor/<id>.json` | The vendoring record: files, sizes, hashes. No content for blueprint-only factories |
-| `licenses/` | 139 licence texts, one per factory that publishes one |
+| `licenses/` | 145 licence texts, one per factory that publishes one |
 | `ATTRIBUTION.md` | Who each factory is, and the basis it is included on |
 | `manifest/RUN-REPORT.json` | What the last run did (written at run time, not committed) |
 | `runs/<timestamp>/<id>/` | The artefacts each factory produced: plan, prompt, model answer |

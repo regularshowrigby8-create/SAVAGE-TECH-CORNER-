@@ -7,7 +7,7 @@ Two kinds of entry, and the difference matters:
 * **content redistributed** — the licence permits it (MIT, Apache-2.0, BSD, ISC, CC0, Unlicense, 0BSD) and the licence text is included in `licenses/`. The vendored files are in `payloads/<id>.tar.gz`, hash-sealed and never merged into this product's source tree.
 * **blueprint only** — no licence was published, or the licence is one this repository cannot redistribute (AGPL, GPL) or that GitHub could not identify. **Not one byte of their content is redistributed**: the component records the commit, the file structure and the hashes, and re-implements the factory's design here. Their licence text is included when one exists, because attribution is the point.
 
-Sealed: 2026-10-15T08:03:18Z · component version 1.0.0 · 161 factories · 125 with redistributed content · 36 blueprint-only
+Sealed: 2026-10-15T08:19:07Z · component version 1.0.0 · 167 factories · 131 with redistributed content · 36 blueprint-only
 
 | factory | repository | licence | commit | files | bytes | redistribution |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -19,6 +19,7 @@ Sealed: 2026-10-15T08:03:18Z · component version 1.0.0 · 161 factories · 125 
 | `agent-framework` | [microsoft/agent-framework](https://github.com/microsoft/agent-framework) | MIT | `8ec38c481d54` | 25 | 0 | content redistributed |
 | `agent-squad` | [awslabs/agent-squad](https://github.com/2FastLabs/agent-squad) | Apache-2.0 | `729d5f52869c` | 25 | 0 | content redistributed |
 | `agno` | [agno-agi/agno](https://github.com/agno-agi/agno) | Apache-2.0 | `00497422d4a3` | 25 | 0 | content redistributed |
+| `aipoch-open-science` | [aipoch/open-science](https://github.com/aipoch/open-science) | Apache-2.0 | `ff3876892b2d` | 25 | 1984 | content redistributed |
 | `alirezarezvani-claude-skills` | [alirezarezvani/claude-skills](https://github.com/alirezarezvani/claude-skills) | MIT | `19392f7a0826` | 25 | 67567 | content redistributed |
 | `angelmsger-jenkins-cli` | [AngelMsger/jenkins-cli](https://github.com/AngelMsger/jenkins-cli) | MIT | `80b68ec9e703` | 8 | 55399 | content redistributed |
 | `ashishyesale7-lgflutterstarterkit` | [AshishYesale7/LGFlutterStarterKit](https://github.com/AshishYesale7/LGFlutterStarterKit) | MIT | `2378a5276b87` | 25 | 124310 | content redistributed |
@@ -64,6 +65,7 @@ Sealed: 2026-10-15T08:03:18Z · component version 1.0.0 · 161 factories · 125 
 | `getcrew44-crew44` | [getcrew44/crew44](https://github.com/getcrew44/crew44) | MIT | `cfcf1e74d9a2` | 25 | 55471 | content redistributed |
 | `gethuman-sh-human` | [gethuman-sh/human](https://github.com/gethuman-sh/human) | MIT | `11be4294a815` | 25 | 137628 | content redistributed |
 | `github-codeql` | [github/codeql](https://github.com/github/codeql) | MIT | `dd4405c2c2a8` | 22 | 128492 | content redistributed |
+| `github-gh-aw` | [github/gh-aw](https://github.com/github/gh-aw) | MIT | `5eb4c298ecba` | 25 | 17039 | content redistributed |
 | `github-mcp-server` | [github/github-mcp-server](https://github.com/github/github-mcp-server) | MIT | `c59e8c199efb` | 3 | 0 | content redistributed |
 | `gmail-mcp-server` | [GongRzhe/Gmail-MCP-Server](https://github.com/GongRzhe/Gmail-MCP-Server) | MIT | `a890d19189bb` | 3 | 0 | content redistributed |
 | `googleworkspace-cli` | [googleworkspace/cli](https://github.com/googleworkspace/cli) | Apache-2.0 | `a3768d0e82ad` | 25 | 21316 | content redistributed |
@@ -76,6 +78,7 @@ Sealed: 2026-10-15T08:03:18Z · component version 1.0.0 · 161 factories · 125 
 | `hkuds-nanobot` | [HKUDS/nanobot](https://github.com/HKUDS/nanobot) | MIT | `3a28b9e6ce5e` | 25 | 16915 | content redistributed |
 | `humanlayer` | [humanlayer/humanlayer](https://github.com/humanlayer/humanlayer) | Apache-2.0 | `99abe673498c` | 18 | 0 | content redistributed |
 | `ida-pro-mcp` | [mrexodia/ida-pro-mcp](https://github.com/mrexodia/ida-pro-mcp) | MIT | `c133c3853faa` | 25 | 0 | content redistributed |
+| `iflytek-astron-agent` | [iflytek/astron-agent](https://github.com/iflytek/astron-agent) | Apache-2.0 | `5e27fc7afc59` | 25 | 7582 | content redistributed |
 | `inspector` | [modelcontextprotocol/inspector](https://github.com/modelcontextprotocol/inspector) | NOASSERTION | `074b8108f340` | 25 | 0 | blueprint only |
 | `iusztinpaul-squid` | [iusztinpaul/squid](https://github.com/iusztinpaul/squid) | Apache-2.0 | `f5bf6b3e001a` | 20 | 139845 | content redistributed |
 | `jabbala10-bit-ai-agent-platform` | [jabbala10-bit/ai-agent-platform](https://github.com/jabbala10-bit/ai-agent-platform) | NOASSERTION | `6feaddb3dbf7` | 6 | 47772 | blueprint only |
@@ -129,6 +132,7 @@ Sealed: 2026-10-15T08:03:18Z · component version 1.0.0 · 161 factories · 125 
 | `praneethaneelapareddigari-agentic-ai-workflow-copilot` | [praneethaneelapareddigari/agentic-ai-workflow-copilot](https://github.com/praneethaneelapareddigari/agentic-ai-workflow-copilot) | NOASSERTION | `478906b19d69` | 6 | 36961 | blueprint only |
 | `professorpalmer-puppetmaster` | [professorpalmer/Puppetmaster](https://github.com/professorpalmer/Puppetmaster) | MIT | `d06611667286` | 19 | 136806 | content redistributed |
 | `pydantic-ai` | [pydantic/pydantic-ai](https://github.com/pydantic/pydantic-ai) | MIT | `17423c0592f3` | 25 | 0 | content redistributed |
+| `pyspur-dev-pyspur` | [PySpur-Dev/pyspur](https://github.com/PySpur-Dev/pyspur) | Apache-2.0 | `97b9856e49f2` | 8 | 51340 | content redistributed |
 | `python-sdk` | [modelcontextprotocol/python-sdk](https://github.com/modelcontextprotocol/python-sdk) | MIT | `754254c08fe1` | 25 | 0 | content redistributed |
 | `quickstart-resources` | [modelcontextprotocol/quickstart-resources](https://github.com/modelcontextprotocol/quickstart-resources) | NOASSERTION | `a4681cff0003` | 3 | 0 | blueprint only |
 | `rabya89-cv-evaluator` | [rabya89/cv_evaluator](https://github.com/rabya89/cv_evaluator) | NOASSERTION | `54b1a835282a` | 12 | 56620 | blueprint only |
@@ -171,7 +175,9 @@ Sealed: 2026-10-15T08:03:18Z · component version 1.0.0 · 161 factories · 125 
 | `vercel-labs-eve-software-factory-template` | [vercel-labs/eve-software-factory-template](https://github.com/vercel-labs/eve-software-factory-template) | MIT | `6bc5febab95d` | 25 | 11942 | content redistributed |
 | `watt-mind-factory` | [watt-mind/factory](https://github.com/watt-mind/factory) | Apache-2.0 | `d57be4bfbfc4` | 25 | 9945 | content redistributed |
 | `wheresryan22-anatomy` | [wheresryan22/anatomy](https://github.com/wheresryan22/anatomy) | MIT | `bc943e40c599` | 3 | 56602 | content redistributed |
+| `xerrors-yuxi` | [xerrors/Yuxi](https://github.com/xerrors/Yuxi) | MIT | `ca21a30d64a5` | 25 | 12983 | content redistributed |
 | `yizhiyanhua-ai-fireworks-tech-graph` | [yizhiyanhua-ai/fireworks-tech-graph](https://github.com/yizhiyanhua-ai/fireworks-tech-graph) | MIT | `31fea364eda5` | 25 | 33804 | content redistributed |
+| `yzhao062-pyod` | [yzhao062/pyod](https://github.com/yzhao062/pyod) | BSD-2-Clause | `f0d0967d162e` | 10 | 99042 | content redistributed |
 
 ## What this component is not
 
