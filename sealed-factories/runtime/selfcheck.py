@@ -447,7 +447,9 @@ def run(*, do_repair: bool = False, require_functional: bool = False, workspace:
     if offline_now is None:
         offline_now = offline()
     if document is None:
-        document = read_seal()
+        # The seal of the tree being surveyed, not of this file's own directory: a copy asks about
+        # itself, and a tree with no seal is a verdict of its own rather than a pass.
+        document = read_seal(sealed_root / "SEAL.json")
     if document is None:
         return {"verdict": "NO-SEAL", "findings": [], "states": [], "repairs": []}
 
