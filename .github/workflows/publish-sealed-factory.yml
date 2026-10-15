@@ -69,9 +69,15 @@ jobs:
             echo "this branch's evidence says it is functional."
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Say why nothing was published
+      # Which gate refused, by name: the run writes its current gate to a file before it runs, and this
+      # step reads it. "A step failed" is not a reason anyone can act on - the lesson from the belt's own
+      # failure reporter, which used to fail into the log with nothing to show for it.
+      - name: Say which gate refused, and that nothing was published
         if: failure()
         run: |
           set -uo pipefail
-          echo "::error title=Publish sealed factory::a gate refused the component, so nothing was written to the publish branch"
-          echo "The failing step above is the reason; the branch is unchanged."
+          gate_file="${RUNNER_TEMP}/publish-gate.txt"
+          gate="unknown"
+          if [ -s "$gate_file" ]; then gate="$(cat "$gate_file")"; fi
+          echo "::error title=Publish sealed factory::the gate '${gate}' refused the component, so nothing was written to the publish branch"
+          echo "The branch is unchanged. The gate's own output is annotated above it."

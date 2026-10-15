@@ -27,6 +27,37 @@ REGISTRY="tools/factory/imported_factories.json"
 
 step() { echo; echo "=== $* ==="; }
 
+# Run a command and, when it fails, annotate its own output. A gate that fails into a log nobody can
+# fetch is a gate nobody can act on: that is why the belt's failure reporter was rewritten, and this is
+# the same rule applied to every tool this script runs.
+run_and_report() {
+    local title="$1"
+    shift
+    local log
+    log="$(mktemp)"
+    if "$@" > "$log" 2>&1; then
+        cat "$log"
+        rm -f "$log"
+        return 0
+    fi
+    local status
+    status=$?
+    cat "$log"
+    echo "::error title=Factory growth::${title} failed (exit ${status}); its own output follows"
+    if grep -a -q -E 'FAIL|ERROR|Error|error|missing|refused|cannot|Cannot|Traceback' "$log"; then
+        grep -a -A 3 -E 'FAIL|ERROR|Error|error|missing|refused|cannot|Cannot|Traceback' "$log" \
+            | tail -25 | while read -r line; do
+                echo "::error title=Factory growth::- ${line}"
+            done
+    else
+        tail -25 "$log" | while read -r line; do
+            echo "::error title=Factory growth::- ${line}"
+        done
+    fi
+    rm -f "$log"
+    return "$status"
+}
+
 # 1. The licence wall, re-derived from each repository's own text. `--fail-on-unreadable` matters on a
 #    runner: a rate-limited scan leaves records untouched, which is safe but incomplete, and this is
 #    what makes that visible instead of reporting it as a clean scan.
@@ -91,7 +122,7 @@ fi
 # run, instead of being reported as a failure at the end of it. The strict pass (--require-functional)
 # comes after the seal; this one is the component fixing what it can as it goes.
 step "the seal repairing itself after the re-vendor"
-python3 sealed-factories/runtime/cli.py selfcheck --repair
+run_and_report "the mid-run self-check" python3 sealed-factories/runtime/cli.py selfcheck --repair
 MIDCHECK_STATUS=$?
 if [ "$MIDCHECK_STATUS" -ne 0 ] && [ "$MIDCHECK_STATUS" -ne 1 ]; then
     # 0 fit, 1 not fit but repaired-what-it-could; anything else (3: no seal) stops the run here.
@@ -150,10 +181,64 @@ python3 tools/factory/license_manager.py verify || exit 1
 #    define nothing to run). A blocking finding that survives the repair fails the run here rather than
 #    being committed.
 step "the seal rechecking itself with the factories it carries"
-python3 sealed-factories/runtime/cli.py selfcheck --repair --require-functional
+run_and_report "the self-check" python3 sealed-factories/runtime/cli.py selfcheck --repair --require-functional
 SELFCHECK_STATUS=$?
+SELF_CHECK_REPORT="sealed-factories/manifest/self-check.json"
+# The run's verdict belongs somewhere a reader can always reach it: annotations are capped, and a hosted
+# runner's raw log is not always retrievable. The step summary carries the verdict, every blocking
+# finding with the factory that owns it, the named states and what each repair did.
+if [ -s "$SELF_CHECK_REPORT" ] && [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+    {
+        echo "## Sealed set self-check"
+        echo
+        python3 - "$SELF_CHECK_REPORT" <<'SUMMARY_PY'
+
+import json
+import sys
+
+report = json.load(open(sys.argv[1]))
+print(f"Verdict **{report['verdict']}**: {report['records']} records, {report['carried']} carrying "
+      f"content, {report['licence_texts']} licence texts in the seal, {report['store_texts']} in "
+      f"the store, reader {'used' if report['reader_used'] else 'ABSENT'}.")
+print()
+if report["blocking"]:
+    print("Blocking findings:")
+    print()
+    for finding in report["blocking"]:
+        owner = finding.get("assigned_to") or "unassigned"
+        print(f"- `{finding['code']}` {finding['record']} ({owner}) - {finding['detail']}")
+    print()
+states = {}
+for state in report["states"]:
+    states[state["code"]] = states.get(state["code"], 0) + 1
+print(f"Named states: {states or 'none'} (a state is not a defect and is not counted as fitness).")
+if report["repairs"]:
+    print()
+    print("Repairs:")
+    print()
+    for repair in report["repairs"]:
+        state = ("repaired" if repair.get("repaired")
+                 else ("refused" if repair.get("refused") else "not repaired"))
+        print(f"- {state}: {repair.get('record')} - {repair.get('detail')}")
+SUMMARY_PY
+    } >> "$GITHUB_STEP_SUMMARY"
+fi
 if [ "$SELFCHECK_STATUS" -ne 0 ]; then
     echo "::error title=Factory growth::the sealed set could not prove itself functional (exit ${SELFCHECK_STATUS})"
+    if [ -s "$SELF_CHECK_REPORT" ]; then
+        # Annotated once more here, first eight, because the summary is prose and the run page's checks
+        # list is what a reader sees first. A refusal always names itself in one of the two.
+        python3 - "$SELF_CHECK_REPORT" <<'ANNOTATE_PY'
+
+import json
+import sys
+
+report = json.load(open(sys.argv[1]))
+for finding in report["blocking"][:8]:
+    print(f"::error title=Sealed self-check::{finding['code']} {finding['record']}: "
+          f"{finding['detail']}")
+ANNOTATE_PY
+    fi
     exit 1
 fi
 

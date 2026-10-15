@@ -35,6 +35,10 @@ on:
       - "tools/factory/license_rescan.py"
       - "tools/factory/vendor_imported_factories.py"
       - "tools/factory/vendor_mcp_servers.py"
+      - "tools/factory/license_manager.py"
+      # The component's own runtime: a change to what runs inside the seal is a reason to re-seal it and
+      # recheck it, not to wait for the next import to happen to touch this pipeline.
+      - "sealed-factories/runtime/**"
 
 permissions:
   contents: write

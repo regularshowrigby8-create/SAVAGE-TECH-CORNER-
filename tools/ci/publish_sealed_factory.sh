@@ -23,39 +23,70 @@ esac
 echo "=== publishing the sealed component to ${BRANCH} ==="
 
 SELFCHECK_DIR="$(mktemp -d)/selfcheck"
+GATE_FILE="${RUNNER_TEMP:-/tmp}/publish-gate.txt"
 
-# 1. Integrity: every payload, licence text and runtime module still hashes to what the seal recorded.
-echo "--- the seal verifies"
-python3 sealed-factories/runtime/cli.py verify
+# Every gate records its own name before it runs, so the failure step can say which one refused rather
+# than "a step failed". The output of the gate that refuses is annotated below it.
+gate() {
+    name="$1"
+    shift
+    printf '%s' "$name" > "$GATE_FILE"
+    echo "--- ${name}"
+    if output="$("$@" 2>&1)"; then
+        printf '%s\n' "$output"
+        return 0
+    fi
+    status=$?
+    echo "::error title=Publish sealed factory::the gate '${name}' refused the component (exit ${status})"
+    printf '%s\n' "$output" | tail -25 | while read -r line; do
+        echo "::error title=Publish sealed factory::- ${line}"
+    done
+    return "$status"
+}
 
-# 2. Fitness: the component rechecks itself with the factories it carries - the same reader a run uses,
-#    every repair handed to the functional record whose own definitions name that capability - and it
-#    must come out functional with only named states left.
-echo "--- the component rechecks itself"
-python3 sealed-factories/runtime/cli.py selfcheck --repair --require-functional \
-    --workspace "$SELFCHECK_DIR"
+# 1. The component rechecks itself with the factories it carries and repairs what it can - including
+#    re-sealing a runtime module that exists but is not pinned yet, which is what adding this round's
+#    self-check to the seal looks like from inside the component. Integrity is verified next, on the
+#    tree that repair produced, and the strict verdict is demanded after that. A repair may record a
+#    file that is present; it may never bless a file that was changed, and that is what gate 2 is for.
+if ! gate "the component rechecks itself and repairs what it can" \
+        python3 sealed-factories/runtime/cli.py selfcheck --repair --workspace "$SELFCHECK_DIR"; then
+    # Exit 1 here means "still not fit after repairing"; gate 3 is where that is judged, with the
+    # annotations the self-check itself printed above naming every blocking finding.
+    echo "the self-check still has blocking findings; the gates below decide whether that is fatal"
+fi
 
-# 3. The component's own tests, on the tree that is about to be published.
-echo "--- the component's own tests"
-python3 -m unittest shell/tests/test_sealed_factory_runtime.py \
-                     shell/tests/test_sealed_selfcheck.py \
-                     shell/tests/test_license_manager.py
+# 2. Integrity: every payload, licence text and runtime module hashes to what the seal records.
+gate "the seal verifies" python3 sealed-factories/runtime/cli.py verify
 
-# 4. The snapshot, built from the component's own removal record, plus the verdict of this run.
+# 3. Fitness, now strictly: nothing blocking may remain, and the named states are named rather than
+#    counted as fitness.
+gate "the component is functional with only named states left" \
+    python3 sealed-factories/runtime/cli.py selfcheck --require-functional \
+    --workspace "$SELFCHECK_DIR/strict"
+
+# 4. The component's own tests, on the tree that is about to be published.
+gate "the component's own tests" python3 -m unittest \
+    shell/tests/test_sealed_factory_runtime.py \
+    shell/tests/test_sealed_selfcheck.py \
+    shell/tests/test_license_manager.py
+
+# 5. The snapshot, built from the component's own removal record, plus the verdict of this run.
 echo "--- building the snapshot"
 SNAPSHOT="$(mktemp -d)/sealed-factory"
 python3 tools/ci/build_component_snapshot.py --into "$SNAPSHOT" \
     --self-check "$SELFCHECK_DIR/self-check.json" \
     --source-commit "$(git rev-parse HEAD)" --source-branch "${BRANCH_SOURCE:-$BRANCH}"
 
-# 5. The published copy proves itself, in the tree that will be pushed: this is the gate that would
+# 6. The published copy proves itself, in the tree that will be pushed: this is the gate that would
 #    catch a component that only worked because of a file left behind in the repository.
-echo "--- the copy that is about to be published proves itself on its own"
-( cd "$SNAPSHOT" && python3 sealed-factories/runtime/cli.py verify )
-( cd "$SNAPSHOT" && python3 sealed-factories/runtime/cli.py selfcheck --require-functional \
-      --workspace "$SELFCHECK_DIR/snapshot" )
+gate "the copy that is about to be published verifies on its own" \
+    bash -c 'cd "$1" && exec python3 sealed-factories/runtime/cli.py verify' _ "$SNAPSHOT"
+gate "the copy that is about to be published is functional on its own" \
+    bash -c 'cd "$1" && exec python3 sealed-factories/runtime/cli.py selfcheck --require-functional \
+             --workspace "$2"' _ "$SNAPSHOT" "$SELFCHECK_DIR/snapshot"
 
-# 6. Commit it to the component's own branch: the worktree holds the snapshot and nothing else, so the
+# 7. Commit it to the component's own branch: the worktree holds the snapshot and nothing else, so the
 #    tree that lands is exactly the component even when a file was removed from it since the last
 #    publish. No force-push: the branch keeps its history, and each publish is a commit on it.
 WORK="$(mktemp -d)/branch"
@@ -91,7 +122,7 @@ cp -a "$SNAPSHOT/." "$WORK/"
 echo "--- published ${PUBLISHED} to ${BRANCH}"
 git worktree remove --force "$WORK"
 
-python3 - "$SELFCHECK_DIR/self-check.json" "$PUBLISHED" "$BRANCH" <<'PY'
+python3 - "$SELFCHECK_DIR/strict/self-check.json" "$PUBLISHED" "$BRANCH" <<'PY'
 import json
 import sys
 

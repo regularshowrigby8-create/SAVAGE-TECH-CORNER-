@@ -144,10 +144,13 @@ def read_structures(document: dict, reader) -> dict[str, dict]:
     for factory in document.get("factories", []):
         try:
             derived = reader.read_factory(document, factory)
-        except (OSError, ValueError, KeyError):
+        except Exception as problem:  # noqa: BLE001 - a slice that cannot be read is a finding, and the
+            # exception is kept: a self-check that crashed instead of reporting "this slice could not be
+            # read, and here is why" would be the opaque gate this round exists to remove.
             structures[factory["id"]] = {"structure_found": False, "labels": [],
                                          "totals": {"stages": 0, "roles": 0, "gates": 0, "prompts": 0},
-                                         "unreadable": True}
+                                         "unreadable": True,
+                                         "why": f"{type(problem).__name__}: {problem}"}
             continue
         labels: list[str] = []
         for kind in ("stages", "roles", "gates", "prompts", "headings", "mcp_tools"):
@@ -311,7 +314,8 @@ def survey(document: dict, *, structures=_UNSET, store: Path = STORE,
         if structure.get("unreadable"):
             findings.append({"code": "component-incomplete", "record": identifier,
                              "repairable": False, "blocks": True,
-                             "detail": "this slice could not be read by the component's own reader",
+                             "detail": "this slice could not be read by the component's own reader "
+                                       f"({structure.get('why', 'no reason recorded')})",
                              "reason": "a payload that cannot be read cannot be judged fit"})
             continue
         if not factory.get("content_redistributed"):
@@ -491,17 +495,21 @@ def print_report(report: dict, *, as_json: bool = False) -> None:
         state = "repaired" if repair.get("repaired") else (
             "refused" if repair.get("refused") else "not repaired")
         print(f"self-check: {state} {repair.get('record')} - {repair.get('detail')}")
+    # The blocking findings are printed first, and annotated first: if anything about this output is
+    # truncated, what must survive is the reason the component refused to call itself functional.
     for finding in report["blocking"]:
         owner = finding.get("assigned_to") or "unassigned"
+        print(f"::error title=Sealed self-check::{finding['code']} {finding['record']} ({owner}): "
+              f"{finding['detail']}")
         print(f"self-check: {finding['code']} {finding['record']} ({owner}) - {finding['detail']}")
     print(f"self-check: named states {states or 'none'}")
-    line = (f"SELF-CHECK {report['verdict']} - {report['records']} records, "
-            f"{len(report['blocking'])} blocking finding(s), {len(report['states'])} named state(s), "
-            f"seal {report['seal_root'][:16]}…")
-    print(line)
-    for finding in report["blocking"]:
-        print(f"::error title=Sealed self-check::{finding['code']} {finding['record']}: "
-              f"{finding['detail']}")
+    print(f"::notice title=Sealed self-check report::{report['records']} records, "
+          f"{report['store_texts']} texts in the store, reader "
+          f"{'used' if report['reader_used'] else 'ABSENT'}, verdict {report['verdict']}, "
+          f"{len(report['blocking'])} blocking finding(s), {len(report['states'])} named state(s)")
+    print(f"SELF-CHECK {report['verdict']} - {report['records']} records, "
+          f"{len(report['blocking'])} blocking finding(s), {len(report['states'])} named state(s), "
+          f"seal {report['seal_root'][:16]}…")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -516,8 +524,17 @@ def main(argv: list[str] | None = None) -> int:
     # Default where runs already write: the component's own manifest directory, which is gitignored and
     # left out of a published tree - a run's report belongs to the run.
     workspace = Path(args.workspace) if args.workspace else SEALED / "manifest"
-    report = run(do_repair=args.repair, require_functional=args.require_functional,
-                 workspace=workspace)
+    try:
+        report = run(do_repair=args.repair, require_functional=args.require_functional,
+                     workspace=workspace)
+    except Exception:  # noqa: BLE001 - reported, not swallowed: the traceback is annotated and the
+        # command still fails, so a self-check that could not run is visible instead of looking absent.
+        import traceback
+        text = traceback.format_exc()
+        for line in text.rstrip().splitlines()[-12:]:
+            print(f"::error title=Sealed self-check crashed::- {line}")
+        print("self-check: the survey itself failed; see the annotations above", file=sys.stderr)
+        return 1
     print_report(report, as_json=args.json)
     if report.get("verdict") == "NO-SEAL":
         return 3
