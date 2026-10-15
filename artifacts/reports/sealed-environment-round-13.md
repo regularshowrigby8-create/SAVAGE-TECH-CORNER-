@@ -20,12 +20,15 @@ own refusal is quoted instead of a summary of it.
 | MCP servers verified by handshake | 7 servers, 52 tools                                                      | **16 servers, 303 tools**, each with the command that was verified                                                                                                                                | `tools/factory/imported_mcp_servers.json` |
 | MCP servers that cannot start     | 24 of 42                                                                 | **14 of 42** not installed here; 7 more start but refuse for a named reason (see §2.2)                                                                                                            | catalogue + `cli.py mcp-probe`            |
 | Emulator stage                    | ran `connectedDebugAndroidTest` against whatever state the device was in | wakes the screen, dismisses the keyguard, and asserts `Awake` + a non-keyguard focus before the suite                                                                                             | `tools/ci/android_emulator_run.sh`        |
-| Seal root                         | `32bf92d3…`, 1,849,160 payload bytes                                     | **`3b7d58ab…`**, 2,225,134 payload bytes, 149 factories (112 operational), 127 licence texts, 10 component files pinned — see §2.8d                                                               | `sealed-factories/SEAL.json`              |
+| Seal root                         | `32bf92d3…`, 1,849,160 payload bytes                                     | **`57d264a8…`**, 2,321,327 payload bytes, 155 factories (118 operational), 133 licence texts, 10 component files pinned — see §2.11                                                               | `sealed-factories/SEAL.json`              |
 
 The seal root changed for one reason: `runtime/toolkit.py` gained the GitHub section and `runtime/agents.py`
 gave the researcher role the GitHub tool group, and the seal pins every runtime module by hash
 (AC-056). The payloads and the licence texts committed with this report are the 149-record set described in §2.8d;
 the 137-record figures quoted in this report's own evidence blocks are the runs that produced them, and are left verbatim.
+The set has since grown on a hosted runner: §2.11 records the GitHub-native growth pipeline and its first
+live run, which took the seal to 155 records, 133 licence texts and root `57d264a8…` — the figures in the
+table above — while §2.8d keeps the measurements of the 149-record seal that CI verified before it.
 
 The root is `sha256(SEAL.json)`, and that document records when it was sealed (`sealed_at`), so the
 root moves on every re-seal even when nothing else does. What does not move is the content: two
@@ -702,20 +705,62 @@ What the job does, in order, and what each step refuses to accept:
    licence text that has gone from a repository it was fetched from. Moving a floor down is a deliberate
    edit to `factory_growth_judge.py`, in a commit a person writes — which is the only way a floor should
    move;
-7. **verification before commit** — the five suites that decide whether the set may be committed
-   (`test_factory_growth.py`, `test_sealed_factory_runtime.py`, `test_imported_factories.py`,
-   `test_license_rescan.py`, `test_factory_discovery.py`) run in the job, and the machine-written JSON
-   is normalised with the repository's own Prettier so a growth commit cannot land in a style the
-   format gate would reject;
-8. **the commit, and then the belt** — `git add sealed-factories tools/factory docs/factory` and
-   nothing else. A push made with `GITHUB_TOKEN` triggers no workflow in GitHub, so the job itself
+7. **format, then verification before commit** — the repository's own formatter runs first
+   (`npm run format`, then `npm run format:check`, which names every file it would rewrite and fails
+   the job), then the whole of `shell/tests` runs — 266 tests, not a hand-picked subset — and a
+   failure is annotated with each failing test line, because a hosted runner's raw log is not always
+   retrievable afterwards;
+8. **the commit, and then the belt** — `git add sealed-factories tools/factory docs artifacts` and
+   nothing else: the paths the job's own formatter may have rewritten, and no others. The message is
+   written to pass the repository's commit-message hook rather than skipping it — a 370-character body
+   line was refused by commitlint the first time this step ran, and the message is now one short line
+   per paragraph. A push made with `GITHUB_TOKEN` triggers no workflow in GitHub, so the job itself
    dispatches the belt on the commit it pushed: the machine's commit is still verified by the belt,
    on the same ref, immediately.
 
 AC-063 in `docs/ACCEPTANCE_CRITERIA.md` is this section in Given/When/Then form, and
-`shell/tests/test_factory_growth.py` is its test method: fourteen cases against synthetic sets, built to
-the shape of the real one, every one of which must either pass or fail for the reason named — including
-the nine that must fail.
+`shell/tests/test_factory_growth.py` is its test method: twenty-four test methods — fourteen judge cases
+against synthetic sets built to the shape of the real one, five vendoring decisions, and five wiring
+properties of the script and the workflow — and the nine of the fourteen that must fail, each for the
+reason it names. Two earlier statements of this count were wrong and are corrected here rather than
+repeated: the commit message of `522eefe` says "16 tests", and the first version of this section said
+"fourteen cases". The file holds twenty-four.
+
+### 2.12 The first live growth run, and the belt on what it committed
+
+On 2026-10-15 the workflow above ran on a hosted runner for the first time and did the whole job:
+run `38699025254`, `Factory Growth (GitHub-native)`, triggered by the push of `aed00a1`, with all eleven
+steps green — grow, format, verify, commit, push, dispatch. The job's own summary line, read back from
+the run's annotations, is the measurement:
+
+```
+factory set: 155 records (118 operational, 37 without definitions), 119 carrying content under 133 licence texts
+```
+
+It committed `04cfc6f` (`chore(factory): grow the sealed set from GitHub`) with six imported factories
+that were not in the set before — `disler-super-simple-software-factory`, `foundatron-octopusgarden`,
+`googleworkspace-cli`, `nvidia-skillspector`, `renseiai-donmai-libraries`, `wheresryan22-anatomy` — each
+with its licence text and its payload, the seal re-sealed to `57d264a8…` (155 records, 2,321,327 payload
+bytes, 133 licence texts, 119 carrying content), and the catalogue and attribution documents rewritten
+so they still agree with the registry. The judge's floors are untouched: the ledger in
+`tools/ci/factory_growth_judge.py` stays at the committed set it measured (149 records), so growth above
+it passes and any fall below it fails.
+
+The belt ran on that commit — run `38699724589`, `workflow_dispatch` — and passed: the
+`Conveyor Belt Verification Pipeline` job green on all seventeen steps, including `Code Quality &
+Linting` (the step that had been red on every push since the format change landed, and now green
+because the job formats with the repository's own formatter before it commits), and the
+`Air-gapped sealed run (SEALED_NO_NETWORK=1)` job green beside it.
+
+Four defects were found by running this on the runner, and each was fixed at its cause rather than
+worked around: the workflow file was rejected by Actions because a hard-wrapped commit body broke its
+block scalar; the belt's own failure-reporter exited on a `grep` that matched nothing, which is why a
+real failure arrived as an exit code and nothing else; the growth job formatted only five files, so the
+two documents a person had edited failed the style gate; and the machine commit was refused by the
+repository's commitlint hook, which is the hook working as intended. One thing is recorded rather than
+fixed: the `pull_request` runs created on the machine's commit report `action_required` and did not
+execute, which is why the job dispatches the belt itself — the dispatched run is the verification that
+ran on that commit.
 
 ## 3. Acceptance criteria covered
 
@@ -757,7 +802,7 @@ The criterion text is in `docs/ACCEPTANCE_CRITERIA.md` (AC-051, AC-060, AC-061, 
 - **The emulator pre-flight is hardening, not a demonstrated fix.** Run `226b71c` was not reproduced
   and the later runs passed without the pre-flight, so what is claimed is what the stage now checks
   before the suite — not that the change is what makes the suite pass.
-- **36 of the 149 sealed records carry no content**, and 2 carried slices still define nothing this
+- **36 of the 155 sealed records carry no content**, and 2 carried slices still define nothing this
   runtime reads (`github-mcp-server`, `awesome-mcp-servers`); the run counts them and names them
   instead of counting them as workers. 35 of the 36 are held back by a licence this component may not
   carry (22 with no licence published at all, 12 blocked, one withheld as unclassifiable), and §2.8d

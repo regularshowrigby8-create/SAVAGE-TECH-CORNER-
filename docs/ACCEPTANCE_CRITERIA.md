@@ -874,10 +874,11 @@ status=0; reason=GitHub is not reachable from here: ...` when the API is pointed
   record count, imported count, operational count and carried-content count are at or above the ledger,
   whose summary agrees with the records it lists, whose content is carried only under a licence the
   sealer accepts, and whose only carried-but-silent records are the two reference records — anything
-  else fails, and a fall is never reported as growth; the decisive test suites run before anything is
-  committed; the commit stages only `sealed-factories/`, `tools/factory/` and `docs/factory/`; and,
-  because a push made with `GITHUB_TOKEN` triggers no workflow, the belt is dispatched on the commit
-  that was pushed, so the commit a machine made is still verified by the belt
+  else fails, and a fall is never reported as growth; the repository's own formatter runs and the whole
+  of `shell/tests` passes before anything is committed; the commit stages only `sealed-factories/`,
+  `tools/factory/`, `docs/` and `artifacts/` — the paths that job's own formatter may rewrite — and
+  nothing else; and, because a push made with `GITHUB_TOKEN` triggers no workflow, the belt is
+  dispatched on the commit that was pushed, so the commit a machine made is still verified by the belt
 - **Test method**: `shell/tests/test_factory_growth.py` (the judge against synthetic sets — growth
   accepted and reported, a shrunken set, an operational count below the ledger, content stripped, a
   registry record with no slice, content under a refused licence, a third carried-but-silent record, a
@@ -885,8 +886,12 @@ status=0; reason=GitHub is not reachable from here: ...` when the API is pointed
   conditions that must warn without failing — plus the vendoring plan's decisions and the workflow's
   own ordering), and the workflow file itself
 - **Evidence required**: the workflow run URL of the `Factory Growth (GitHub-native)` workflow with a
-  green `Grow and verify the sealed factory set` job on the branch, the judge's `factory growth judge:
-PASS` line in that job's log, and the commit the job pushed
+  green `Grow and verify the sealed factory set` job on the branch, the job's own `factory set:` summary
+  line (the judge is what lets that step end green; its `factory growth judge: PASS` line is in the job
+  log), and the commit the job pushed — recorded on 2026-10-15 as run `38699025254`, eleven steps green
+  on `aed00a1`, summary `factory set: 155 records (118 operational, 37 without definitions), 119
+  carrying content under 133 licence texts`, commit `04cfc6f`, and belt run `38699724589`
+  (`workflow_dispatch`) green on that commit including `Code Quality & Linting` (report §2.12)
 
 ## 2. Traceability summary
 
