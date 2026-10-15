@@ -20,14 +20,14 @@ own refusal is quoted instead of a summary of it.
 | MCP servers verified by handshake | 7 servers, 52 tools                                                      | **16 servers, 303 tools**, each with the command that was verified                                                                                                                                | `tools/factory/imported_mcp_servers.json` |
 | MCP servers that cannot start     | 24 of 42                                                                 | **14 of 42** not installed here; 7 more start but refuse for a named reason (see §2.2)                                                                                                            | catalogue + `cli.py mcp-probe`            |
 | Emulator stage                    | ran `connectedDebugAndroidTest` against whatever state the device was in | wakes the screen, dismisses the keyguard, and asserts `Awake` + a non-keyguard focus before the suite                                                                                             | `tools/ci/android_emulator_run.sh`        |
-| Seal root                         | `32bf92d3…`, 1,849,160 payload bytes                                     | **`57d264a8…`**, 2,321,327 payload bytes, 155 factories (118 operational), 133 licence texts, 10 component files pinned — see §2.11                                                               | `sealed-factories/SEAL.json`              |
+| Seal root                         | `32bf92d3…`, 1,849,160 payload bytes                                     | **`3cf0045c…`**, 2,399,136 payload bytes, 161 factories (124 operational), 139 licence texts, 10 component files pinned — see §2.11                                                               | `sealed-factories/SEAL.json`              |
 
 The seal root changed for one reason: `runtime/toolkit.py` gained the GitHub section and `runtime/agents.py`
 gave the researcher role the GitHub tool group, and the seal pins every runtime module by hash
 (AC-056). The payloads and the licence texts committed with this report are the 149-record set described in §2.8d;
 the 137-record figures quoted in this report's own evidence blocks are the runs that produced them, and are left verbatim.
-The set has since grown on a hosted runner: §2.11 records the GitHub-native growth pipeline and its first
-live run, which took the seal to 155 records, 133 licence texts and root `57d264a8…` — the figures in the
+The set has since grown on a hosted runner: §2.12 records the GitHub-native growth pipeline and its two
+live runs, which took the seal to 161 records, 139 licence texts and root `3cf0045c…` — the figures in the
 table above — while §2.8d keeps the measurements of the 149-record seal that CI verified before it.
 
 The root is `sha256(SEAL.json)`, and that document records when it was sealed (`sealed_at`), so the
@@ -726,16 +726,29 @@ reason it names. Two earlier statements of this count were wrong and are correct
 repeated: the commit message of `522eefe` says "16 tests", and the first version of this section said
 "fourteen cases". The file holds twenty-four.
 
-### 2.12 The first live growth run, and the belt on what it committed
+### 2.12 The live growth runs, and the belt on what they committed
 
-On 2026-10-15 the workflow above ran on a hosted runner for the first time and did the whole job:
-run `38699025254`, `Factory Growth (GitHub-native)`, triggered by the push of `aed00a1`, with all eleven
-steps green — grow, format, verify, commit, push, dispatch. The job's own summary line, read back from
-the run's annotations, is the measurement:
+On 2026-10-15 the workflow above ran on a hosted runner and did the whole job: run `38699025254`,
+`Factory Growth (GitHub-native)`, triggered by the push of `aed00a1`, with all eleven steps green — grow,
+format, verify, commit, push, dispatch. The job's own summary line, read back from the run's annotations,
+is the measurement:
 
 ```
 factory set: 155 records (118 operational, 37 without definitions), 119 carrying content under 133 licence texts
 ```
+
+A second run (`38702482811`, on `650e830`) did the same and grew the set again — the job that grows this
+component does not stop at the first result:
+
+```
+factory set: 161 records (124 operational, 37 without definitions), 125 carrying content under 139 licence texts
+```
+
+The committed seal is now `3cf0045c…` (`sha256(SEAL.json)`, written to `SEAL.sha256` in the same commit):
+161 factories, 2,399,136 payload bytes, 139 licence texts, 125 carrying content, grouped 23 AI-focused,
+42 MCP servers and 96 imported — and `sealed-factories/` is in `.prettierignore` precisely so the
+formatter cannot touch a component whose whole point is that it is byte-exact. The seal pair was checked
+against each other on the committed tree: recorded and actual hashes agree.
 
 It committed `04cfc6f` (`chore(factory): grow the sealed set from GitHub`) with six imported factories
 that were not in the set before — `disler-super-simple-software-factory`, `foundatron-octopusgarden`,
@@ -746,11 +759,18 @@ so they still agree with the registry. The judge's floors are untouched: the led
 `tools/ci/factory_growth_judge.py` stays at the committed set it measured (149 records), so growth above
 it passes and any fall below it fails.
 
-The belt ran on that commit — run `38699724589`, `workflow_dispatch` — and passed: the
-`Conveyor Belt Verification Pipeline` job green on all seventeen steps, including `Code Quality &
-Linting` (the step that had been red on every push since the format change landed, and now green
-because the job formats with the repository's own formatter before it commits), and the
-`Air-gapped sealed run (SEALED_NO_NETWORK=1)` job green beside it.
+The belt ran on each commit and passed: run `38699724589` on `04cfc6f` and run `38703154310` on
+`a31f95b`, both `workflow_dispatch`, with the `Conveyor Belt Verification Pipeline` job green on all
+seventeen steps — including `Code Quality & Linting`, the step that had been red on every push since the
+format change landed and is now green because the job formats with the repository's own formatter before
+it commits — and the `Air-gapped sealed run (SEALED_NO_NETWORK=1)` job green beside each. One push belt
+did go red on the way, and it is recorded rather than tidied away: the belt on `901b37f` failed at
+`Code Quality & Linting` because this document's companion file, `docs/ACCEPTANCE_CRITERIA.md`, had been
+hand-edited into a wrap Prettier would rewrite. The growth run that the same push triggered formatted it
+on the runner, committed the rewrite (the `docs` path is inside the paths that job commits) and
+dispatched the belt on the commit carrying it — which is why the style gate is green from `a31f95b`
+onwards, and why the hand-edit rule is now written down: prose in this repository is formatted by the
+repository's formatter, and the pipeline that owns the documents is the thing that runs it.
 
 Four defects were found by running this on the runner, and each was fixed at its cause rather than
 worked around: the workflow file was rejected by Actions because a hard-wrapped commit body broke its
