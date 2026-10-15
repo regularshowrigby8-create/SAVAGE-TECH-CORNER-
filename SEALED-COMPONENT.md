@@ -4,7 +4,7 @@ This branch carries the sealed factory component and nothing else. It is not `ma
 published here so it can be reviewed, run and removed on its own, and it will only ever be proposed for
 `main` once this branch's own evidence says it is functional. Nothing in this branch was pushed by hand.
 
-- **Seal root**: `e904fa426196db58696d635fab0dbca4ba4f6a172435c442f8afffc4634afcfc` (`sha256(SEAL.json)`, recorded in
+- **Seal root**: `1e8548d65e49f66ed9c59bd788163dc4d2355ece2bda813de851adc7ffbb48f4` (`sha256(SEAL.json)`, recorded in
   `sealed-factories/SEAL.sha256`)
 - **Records**: 171 sealed factories, 135 carrying
   content, 149 licence texts in the seal, 149
@@ -12,7 +12,7 @@ published here so it can be reviewed, run and removed on its own, and it will on
 - **Self-check verdict**: `FUNCTIONAL` - 0 blocking finding(s);
   named states: {'content-withheld': 36, 'carried-without-definitions': 2} (a licence that does not permit copying, and slices that define no
   stage, worker, gate or prompt, are states and are named as such rather than counted as fitness)
-- **Published from**: `ab7d4163362a00a2b0590e436cb6b4f980050652` on `arena/5223ef6f-savage-tech-corner`
+- **Published from**: `65a2b0325156d4169bde7f3419a927c408db90cd` on `arena/5223ef6f-savage-tech-corner`
 
 ## What it is
 

@@ -79,12 +79,25 @@ jobs:
       # Which gate refused, by name: the run writes its current gate to a file before it runs, and this
       # step reads it. "A step failed" is not a reason anyone can act on - the lesson from the belt's own
       # failure reporter, which used to fail into the log with nothing to show for it.
-      - name: Say which gate refused, and that nothing was published
+      - name: Say what refused, and whether anything was published
         if: failure()
         run: |
           set -uo pipefail
-          gate_file="${RUNNER_TEMP}/publish-gate.txt"
-          gate="unknown"
-          if [ -s "$gate_file" ]; then gate="$(cat "$gate_file")"; fi
-          echo "::error title=Publish sealed factory::the gate '${gate}' refused the component, so nothing was written to the publish branch"
-          echo "The branch is unchanged. The gate's own output is annotated above it."
+          # The run writes `gate: <name>` before a gate runs and `stage: <what>` before anything else,
+          # so this step can be accurate in both cases. It used to blame the last gate for any failure -
+          # and said "nothing was written to the publish branch" on the run that had already pushed its
+          # commit and then died reporting it.
+          recorded="$(cat "${RUNNER_TEMP}/publish-gate.txt" 2>/dev/null || true)"
+          case "$recorded" in
+            gate:*)
+              echo "::error title=Publish sealed factory::the gate '${recorded#gate: }' refused the component, so nothing was written to the publish branch"
+              echo "The branch is unchanged. The gate's own output is annotated above it."
+              ;;
+            stage:*)
+              echo "::error title=Publish sealed factory::the publish failed while ${recorded#stage: } - that is not a gate, so read the branch before assuming nothing was published"
+              echo "Every gate before it passed, and their notices are on this page. The stage is where the run stopped."
+              ;;
+            *)
+              echo "::error title=Publish sealed factory::the publish failed before it recorded what it was doing"
+              ;;
+          esac

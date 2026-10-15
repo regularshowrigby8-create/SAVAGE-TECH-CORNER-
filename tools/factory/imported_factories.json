@@ -6434,7 +6434,9 @@
     "id": "openai-openai-agents-js",
     "import_class": "asset-import",
     "snapshot": "2026-10-15",
-    "license_source": "api"
+    "license_source": "api",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "Forward-Future/loopy",
@@ -6482,7 +6484,9 @@
     "id": "forward-future-loopy",
     "import_class": "asset-import",
     "snapshot": "2026-10-15",
-    "license_source": "api"
+    "license_source": "api",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "PhyAgentOS/PhyAgentOS-core",
@@ -6547,7 +6551,9 @@
     "id": "phyagentos-phyagentos-core",
     "import_class": "asset-import",
     "snapshot": "2026-10-15",
-    "license_source": "api"
+    "license_source": "api",
+    "license_evidence": "Permission is hereby granted, free of charge",
+    "license_path": "LICENSE"
   },
   {
     "full_name": "UnicomAI/wanwu",
@@ -6640,6 +6646,8 @@
     "id": "unicomai-wanwu",
     "import_class": "asset-import",
     "snapshot": "2026-10-15",
-    "license_source": "api"
+    "license_source": "api",
+    "license_evidence": "Apache License, Version 2.0",
+    "license_path": "LICENSE"
   }
 ]
