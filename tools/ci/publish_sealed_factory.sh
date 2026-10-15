@@ -48,6 +48,12 @@ gate() {
     local status
     if output="$("$@" 2>&1)"; then
         printf '%s\n' "$output"
+        # A gate whose verdict is quoted later - the copy's own run goes into the published commit's
+        # message - has to leave its output where the script can read it afterwards: a gate is only
+        # worth what can be shown for it.
+        if [ -n "${GATE_CAPTURE:-}" ]; then
+            printf '%s\n' "$output" > "$GATE_CAPTURE"
+        fi
         echo "::notice title=Publish gate::the gate '${name}' passed"
         return 0
     else
@@ -123,8 +129,17 @@ gate "the copy that is about to be published is functional on its own" \
 gate "the copy that is about to be published runs its own environment" \
     bash -c 'cd "$1" && exec python3 tools/factory/sealed_factory_runtime.py run --max-model-calls 0' \
     _ "$SNAPSHOT"
+JUDGE_LOG="$(mktemp)"
+GATE_CAPTURE="$JUDGE_LOG"
 gate "the copy ran every role it carries and failed nothing" \
     python3 tools/ci/published_environment_judge.py "$SNAPSHOT/sealed-factories/manifest/RUN-REPORT.json"
+unset GATE_CAPTURE
+if ! JUDGE_EVIDENCE="$(grep -m1 -E '^\[PUBLISHED\] ' "$JUDGE_LOG")"; then
+    echo "::error title=Publish sealed factory::the copy's own run left no line for this commit to quote"
+    exit 1
+fi
+JUDGE_EVIDENCE="${JUDGE_EVIDENCE#\[PUBLISHED\] }"
+JUDGE_LINES="$(printf '%s\n' "$JUDGE_EVIDENCE" | fold -s -w 92)"
 clean_copy "$SNAPSHOT"
 
 # 7. Commit it to the component's own branch: the worktree holds the snapshot and nothing else, so the
@@ -151,10 +166,10 @@ git -C "$WORK" -c user.name="github-actions[bot]" \
     -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
     commit \
     -m "chore(sealed-factory): publish the sealed component" \
-    -m "Published by tools/ci/publish_sealed_factory.sh from the branch under review." \
-    -m "The seal verified, the component rechecked itself with the factories it carries," \
-    -m "its own tests passed, and the copy published here proved itself again in the" \
-    -m "tree this commit contains." \
+    -m "Published by tools/ci/publish_sealed_factory.sh from the branch under review. The copy this" \
+    -m "commit contains verified, rechecked itself with the factories it carries, passed its own tests," \
+    -m "and then ran its own environment in that tree. The judge that read the run said:" \
+    -m "$JUDGE_LINES" \
     -m "Not for main: this component is proposed for main only once this branch is green."
 git -C "$WORK" push origin "HEAD:$BRANCH"
 PUBLISHED="$(git -C "$WORK" rev-parse HEAD)"

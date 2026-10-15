@@ -312,6 +312,13 @@ if [ "$JUDGE_STATUS" -ne 0 ]; then
     echo "::error title=Factory growth::the set grew but the judge refused it; see FACTORY GROWTH FAIL above"
     exit 1
 fi
+# The commit message quotes what the judge measured rather than paraphrasing it, so the line has to
+# exist: a growth whose commit cannot say what was measured on the set is a growth that does not commit.
+if ! JUDGE_EVIDENCE="$(grep -m1 -E '^factory set: ' "$JUDGE_LOG")"; then
+    echo "::error title=Factory growth::the judge's own line about the set is missing"
+    exit 1
+fi
+printf '%s\n' "$JUDGE_EVIDENCE" > "${RUNNER_TEMP:-/tmp}/factory-growth-evidence.txt"
 
 # 8. Publish what the run changed, for the commit step and for whoever reads the job afterwards. The
 #    self-check's verdict is read from its own report and re-asserted here: the counts below are only
