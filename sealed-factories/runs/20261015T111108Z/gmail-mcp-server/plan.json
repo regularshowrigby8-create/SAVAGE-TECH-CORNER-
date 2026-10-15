@@ -1,0 +1,136 @@
+{
+ "id": "gmail-mcp-server",
+ "full_name": "GongRzhe/Gmail-MCP-Server",
+ "url": "https://github.com/GongRzhe/Gmail-MCP-Server",
+ "group": "MCP tool server",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  "Dockerfile",
+  "README.md",
+  "package.json"
+ ],
+ "stages": [],
+ "roles": [],
+ "gates": [
+  [
+   "check",
+   "file permissions"
+  ],
+  [
+   "check",
+   "the detailed error messages for specific failures"
+  ]
+ ],
+ "prompts": [],
+ "headings": [
+  [
+   "heading",
+   "Gmail AutoAuth MCP Server"
+  ],
+  [
+   "heading",
+   "Features"
+  ],
+  [
+   "heading",
+   "Installation & Authentication"
+  ],
+  [
+   "heading",
+   "Installing via Smithery"
+  ],
+  [
+   "heading",
+   "Installing Manually"
+  ],
+  [
+   "heading",
+   "Docker Support"
+  ],
+  [
+   "heading",
+   "Cloud Server Authentication"
+  ],
+  [
+   "heading",
+   "Setup Instructions for Cloud Environment"
+  ],
+  [
+   "heading",
+   "Available Tools"
+  ],
+  [
+   "heading",
+   "1. Send Email (`send_email`)"
+  ],
+  [
+   "heading",
+   "2. Draft Email (`draft_email`)"
+  ],
+  [
+   "heading",
+   "3. Read Email (`read_email`)"
+  ],
+  [
+   "heading",
+   "4. **Download Attachment (`download_attachment`)**"
+  ],
+  [
+   "heading",
+   "5. Search Emails (`search_emails`)"
+  ],
+  [
+   "heading",
+   "6. Modify Email (`modify_email`)"
+  ],
+  [
+   "heading",
+   "7. Delete Email (`delete_email`)"
+  ],
+  [
+   "heading",
+   "8. List Email Labels (`list_email_labels`)"
+  ],
+  [
+   "heading",
+   "9. Create Label (`create_label`)"
+  ],
+  [
+   "heading",
+   "10. Update Label (`update_label`)"
+  ],
+  [
+   "heading",
+   "11. Delete Label (`delete_label`)"
+  ],
+  [
+   "heading",
+   "12. Get or Create Label (`get_or_create_label`)"
+  ],
+  [
+   "heading",
+   "13. Batch Modify Emails (`batch_modify_emails`)"
+  ],
+  [
+   "heading",
+   "14. Batch Delete Emails (`batch_delete_emails`)"
+  ],
+  [
+   "heading",
+   "14. Create Filter (`create_filter`)"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 3,
+ "launch_command": "npx -y @gongrzhe/server-gmail-autoauth-mcp",
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 0,
+  "gates": 2,
+  "prompts": 0,
+  "headings": 52
+ },
+ "structure_found": true
+}

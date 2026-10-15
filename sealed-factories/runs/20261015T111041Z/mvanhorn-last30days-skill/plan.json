@@ -1,0 +1,276 @@
+{
+ "id": "mvanhorn-last30days-skill",
+ "full_name": "mvanhorn/last30days-skill",
+ "url": "https://github.com/mvanhorn/last30days-skill",
+ "group": "imported factory",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  "skills/last30days/.skillignore",
+  "skills/last30days/agents/openai.yaml",
+  "skills/last30days/references/agent-mode.md",
+  "skills/last30days/references/category-peers.md",
+  "skills/last30days/references/competitors.md",
+  "skills/last30days/references/hiring-signals.md",
+  "skills/last30days/references/library-queue.md",
+  "skills/last30days/scripts/build-skill.sh",
+  "skills/last30days/scripts/compare.sh",
+  "skills/last30days/scripts/lib/__init__.py",
+  "skills/last30days/scripts/lib/cookie_paths.py",
+  "skills/last30days/scripts/lib/dedupe.py",
+  "skills/last30days/scripts/lib/fanout.py",
+  "skills/last30days/scripts/lib/feed.py",
+  "skills/last30days/scripts/lib/html_publish.py",
+  "skills/last30days/scripts/lib/log.py",
+  "skills/last30days/scripts/lib/private_files.py",
+  "skills/last30days/scripts/lib/registers.py",
+  "skills/last30days/scripts/lib/skill_meta.py",
+  "skills/last30days/scripts/lib/snippet.py",
+  "skills/last30days/scripts/lib/web_fetch_keyless.py",
+  "skills/last30days/scripts/setup-keychain.sh",
+  "skills/last30days/scripts/setup-pass.sh",
+  "skills/last30days/scripts/test_device_auth.py",
+  "skills/last30days/scripts/x_lane_parity.py"
+ ],
+ "stages": [
+  [
+   "step",
+   "1: Start device flow"
+  ],
+  [
+   "step",
+   "2: Poll for token"
+  ],
+  [
+   "step",
+   "3: Fetch profile"
+  ]
+ ],
+ "roles": [
+  [
+   "path",
+   "skills/last30days/agents/openai.yaml"
+  ],
+  [
+   "agent",
+   "mode"
+  ],
+  [
+   "agent",
+   "Mode (--agent flag)"
+  ]
+ ],
+ "gates": [
+  [
+   "check",
+   "for explicit error states"
+  ]
+ ],
+ "prompts": [
+  [
+   "path",
+   "skills/last30days/.skillignore"
+  ],
+  [
+   "path",
+   "skills/last30days/agents/openai.yaml"
+  ],
+  [
+   "path",
+   "skills/last30days/references/agent-mode.md"
+  ],
+  [
+   "path",
+   "skills/last30days/references/category-peers.md"
+  ],
+  [
+   "path",
+   "skills/last30days/references/competitors.md"
+  ],
+  [
+   "path",
+   "skills/last30days/references/hiring-signals.md"
+  ],
+  [
+   "path",
+   "skills/last30days/references/library-queue.md"
+  ],
+  [
+   "path",
+   "skills/last30days/scripts/build-skill.sh"
+  ],
+  [
+   "path",
+   "skills/last30days/scripts/compare.sh"
+  ],
+  [
+   "path",
+   "skills/last30days/scripts/lib/__init__.py"
+  ],
+  [
+   "path",
+   "skills/last30days/scripts/lib/cookie_paths.py"
+  ],
+  [
+   "path",
+   "skills/last30days/scripts/lib/dedupe.py"
+  ],
+  [
+   "path",
+   "skills/last30days/scripts/lib/fanout.py"
+  ],
+  [
+   "path",
+   "skills/last30days/scripts/lib/feed.py"
+  ],
+  [
+   "path",
+   "skills/last30days/scripts/lib/html_publish.py"
+  ],
+  [
+   "path",
+   "skills/last30days/scripts/lib/log.py"
+  ],
+  [
+   "path",
+   "skills/last30days/scripts/lib/private_files.py"
+  ],
+  [
+   "path",
+   "skills/last30days/scripts/lib/registers.py"
+  ],
+  [
+   "path",
+   "skills/last30days/scripts/lib/skill_meta.py"
+  ],
+  [
+   "path",
+   "skills/last30days/scripts/lib/snippet.py"
+  ],
+  [
+   "path",
+   "skills/last30days/scripts/lib/web_fetch_keyless.py"
+  ],
+  [
+   "path",
+   "skills/last30days/scripts/setup-keychain.sh"
+  ],
+  [
+   "path",
+   "skills/last30days/scripts/setup-pass.sh"
+  ],
+  [
+   "path",
+   "skills/last30days/scripts/test_device_auth.py"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Hermes scans from this skill directory, not the repository root."
+  ],
+  [
+   "heading",
+   "Research Report: {TOPIC}"
+  ],
+  [
+   "heading",
+   "Key Findings"
+  ],
+  [
+   "heading",
+   "What I learned"
+  ],
+  [
+   "heading",
+   "Stats"
+  ],
+  [
+   "heading",
+   "Category-peer expansion"
+  ],
+  [
+   "heading",
+   "Competitor research"
+  ],
+  [
+   "heading",
+   "Competitor mode (`--competitors`)"
+  ],
+  [
+   "heading",
+   "Hiring signals"
+  ],
+  [
+   "heading",
+   "Hiring Signals mode (`--hiring-signals`)"
+  ],
+  [
+   "heading",
+   "Library, feed, and topic queue"
+  ],
+  [
+   "heading",
+   "build-skill.sh - package this repo as a claude.ai-upload-ready .skill file"
+  ],
+  [
+   "heading",
+   "Usage: bash skills/last30days/scripts/build-skill.sh  (run from repo root)"
+  ],
+  [
+   "heading",
+   "# Produces dist/last30days.skill, a zip with a single top-level `last30days/`"
+  ],
+  [
+   "heading",
+   "directory containing SKILL.md and the scripts/ runtime from skills/last30days."
+  ],
+  [
+   "heading",
+   "See"
+  ],
+  [
+   "heading",
+   "docs/plans/2026-04-14-001-fix-skill-upload-200-file-limit-plan.md."
+  ],
+  [
+   "heading",
+   "A/B test runner: public release vs private beta"
+  ],
+  [
+   "heading",
+   "Usage: bash skills/last30days/scripts/compare.sh \"Kanye West\""
+  ],
+  [
+   "heading",
+   "# Runs /last30days (public release) and /last30days-beta (private beta)"
+  ],
+  [
+   "heading",
+   "sequentially with a 30s gap, saves raw results with distinct suffixes,"
+  ],
+  [
+   "heading",
+   "prints file paths for comparison."
+  ],
+  [
+   "heading",
+   "Run 1: public release"
+  ],
+  [
+   "heading",
+   "Run 2: private beta"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 3,
+  "roles": 3,
+  "gates": 1,
+  "prompts": 25,
+  "headings": 57
+ },
+ "structure_found": true
+}

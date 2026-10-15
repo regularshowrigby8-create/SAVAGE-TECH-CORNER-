@@ -1,0 +1,204 @@
+{
+ "id": "unity-mcp",
+ "full_name": "CoplayDev/unity-mcp",
+ "url": "https://github.com/CoplayDev/unity-mcp",
+ "group": "MCP tool server",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  ".claude/prompts/nl-gameobject-suite.md",
+  ".claude/prompts/nl-unity-suite-nl.md",
+  ".claude/prompts/nl-unity-suite-t.md",
+  ".claude/skills/blender-to-unity/SKILL.md",
+  ".claude/skills/blender-to-unity/manual-verify.md",
+  ".claude/skills/blender-to-unity/references/bridge-fidelity.md",
+  ".claude/skills/mcp-source/SKILL.md",
+  ".claude/skills/unity-mcp-skill/references/probuilder-guide.md",
+  ".claude/skills/unity-mcp-skill/references/resources-reference.md",
+  "MCPForUnity/package.json",
+  "Server/Dockerfile",
+  "Server/src/cli/main.py",
+  "Server/src/main.py",
+  "TestProjects/AssetStoreUploads/Packages/com.unity.asset-store-tools/package.json",
+  "tools/check_unity_test_results.py",
+  "website/package.json",
+  "website/src/pages/index.js"
+ ],
+ "stages": [
+  [
+   "step",
+   "1: Get face info with directions"
+  ],
+  [
+   "step",
+   "2: Use the direction labels to pick faces"
+  ]
+ ],
+ "roles": [],
+ "gates": [
+  [
+   "check",
+   "structural integrity: `validate_script(level:\"standard\")`"
+  ],
+  [
+   "check",
+   "result.data.healthy -- if false, repair"
+  ],
+  [
+   "check",
+   "ready_for_tools == true"
+  ],
+  [
+   "check",
+   "`read_console` regularly to catch errors, warnings, and compilation status"
+  ]
+ ],
+ "prompts": [
+  [
+   "path",
+   ".claude/prompts/nl-gameobject-suite.md"
+  ],
+  [
+   "path",
+   ".claude/prompts/nl-unity-suite-nl.md"
+  ],
+  [
+   "path",
+   ".claude/prompts/nl-unity-suite-t.md"
+  ],
+  [
+   "path",
+   ".claude/skills/blender-to-unity/SKILL.md"
+  ],
+  [
+   "path",
+   ".claude/skills/blender-to-unity/manual-verify.md"
+  ],
+  [
+   "path",
+   ".claude/skills/blender-to-unity/references/bridge-fidelity.md"
+  ],
+  [
+   "path",
+   ".claude/skills/mcp-source/SKILL.md"
+  ],
+  [
+   "path",
+   ".claude/skills/unity-mcp-skill/references/probuilder-guide.md"
+  ],
+  [
+   "path",
+   ".claude/skills/unity-mcp-skill/references/resources-reference.md"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Blender \u2192 Unity Model Handoff"
+  ],
+  [
+   "heading",
+   "Preconditions"
+  ],
+  [
+   "heading",
+   "Steps"
+  ],
+  [
+   "heading",
+   "Notes"
+  ],
+  [
+   "heading",
+   "Manual Verify \u2014 blender-to-unity"
+  ],
+  [
+   "heading",
+   "Blender \u2192 Unity Bridge \u2014 Fidelity Test Results"
+  ],
+  [
+   "heading",
+   "Results"
+  ],
+  [
+   "heading",
+   "Verdict"
+  ],
+  [
+   "heading",
+   "Gotchas discovered (worth automating around)"
+  ],
+  [
+   "heading",
+   "Recovering procedural / node materials (bake)"
+  ],
+  [
+   "heading",
+   "Capture more in one export (GLB flags)"
+  ],
+  [
+   "heading",
+   "Practical rules"
+  ],
+  [
+   "heading",
+   "Switch MCP for Unity Package Source"
+  ],
+  [
+   "heading",
+   "allowed-tools"
+  ],
+  [
+   "heading",
+   "Instructions"
+  ],
+  [
+   "heading",
+   "1. Parse arguments"
+  ],
+  [
+   "heading",
+   "2. Detect repo context"
+  ],
+  [
+   "heading",
+   "3. Discover target Unity projects"
+  ],
+  [
+   "heading",
+   "4. Build the package URL"
+  ],
+  [
+   "heading",
+   "5. Update each manifest"
+  ],
+  [
+   "heading",
+   "6. Report results"
+  ],
+  [
+   "heading",
+   "ProBuilder Workflow Guide"
+  ],
+  [
+   "heading",
+   "Availability"
+  ],
+  [
+   "heading",
+   "Core Workflow: Always Get Info First"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 17,
+ "launch_command": "",
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 2,
+  "roles": 0,
+  "gates": 4,
+  "prompts": 9,
+  "headings": 172
+ },
+ "structure_found": true
+}

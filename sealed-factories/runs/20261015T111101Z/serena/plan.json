@@ -1,0 +1,26 @@
+{
+ "id": "serena",
+ "full_name": "oraios/serena",
+ "url": "https://github.com/oraios/serena",
+ "group": "MCP tool server",
+ "license": "NOASSERTION",
+ "content_redistributed": false,
+ "files": [],
+ "stages": [],
+ "roles": [],
+ "gates": [],
+ "prompts": [],
+ "headings": [],
+ "mcp_tools": [],
+ "texts": 0,
+ "launch_command": "uvx --from git+https://github.com/oraios/serena serena start-mcp-server",
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 0,
+  "gates": 0,
+  "prompts": 0,
+  "headings": 0
+ },
+ "structure_found": false
+}

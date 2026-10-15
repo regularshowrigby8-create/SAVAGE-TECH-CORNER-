@@ -1,0 +1,179 @@
+{
+ "id": "k-dense-ai-scientific-agent-skills",
+ "full_name": "K-Dense-AI/scientific-agent-skills",
+ "url": "https://github.com/K-Dense-AI/scientific-agent-skills",
+ "license": "MIT",
+ "license_file": "LICENSE.md",
+ "license_text_sha256": "09b02a3c9df3053c55531d503357a9c7cde275970e6c3ceaa1ddf5f0e90b40c1",
+ "import_class": "asset-import",
+ "snapshot": "2026-10-14",
+ "commit": "a1043ef544e3a100c28e70a736b6cf32554d0677",
+ "vendored_files": [
+  {
+   "path": "skills/opentrons-integration/requirements-ot2.txt",
+   "bytes": 17,
+   "sha256": "95b907a29f0a2307bafb7849429e2e551fd484b846a43681d909c397e1e5d95d",
+   "_content": "b3BlbnRyb25zPT05LjAuMAo="
+  },
+  {
+   "path": "skills/primer-design/assets/requirements.txt",
+   "bytes": 18,
+   "sha256": "869df4503af0601aab43e7c177486df03b249da308934ed4ccc656b611824bdf",
+   "_content": "cHJpbWVyMy1weT09Mi4zLjEK"
+  },
+  {
+   "path": "skills/opentrons-integration/requirements-flex.txt",
+   "bytes": 18,
+   "sha256": "3662419994f7633377dbcfb12b7c99093ad80159b398a8cd805b44aa0b7dded0",
+   "_content": "b3BlbnRyb25zPT0xMC4wLjAK"
+  },
+  {
+   "path": "skills/openpiv/scripts/__init__.py",
+   "bytes": 29,
+   "sha256": "5970d09bdec018a3082147b88d1d7d013a6836b92581f07bc8a6933a20a31ad6",
+   "_content": "IiIiT3BlblBJViBza2lsbCBzY3JpcHRzLiIiIgo="
+  },
+  {
+   "path": "skills/autoskill/.gitignore",
+   "bytes": 34,
+   "sha256": "6f4ff2992c4e2558837e2e09c39ed2bba140658755b22d046aab810ea2c90ca0",
+   "_content": "X19weWNhY2hlX18vCioucHljCi5weXRlc3RfY2FjaGUvCg=="
+  },
+  {
+   "path": "skills/gtars/scripts/__init__.py",
+   "bytes": 57,
+   "sha256": "ad3f0f0e13877aa22ac08ee94dca3c1a353a0c43b9a6e516a653698881e6970d",
+   "_content": "IiIiRGVwZW5kZW5jeS1mcmVlIGxvY2FsIGhlbHBlcnMgZm9yIHRoZSBHdGFycyBza2lsbC4iIiIK"
+  },
+  {
+   "path": "skills/geniml/scripts/__init__.py",
+   "bytes": 58,
+   "sha256": "7bf3af913d4e1ac2707799e67f39fcc384945ffdeb8c8eca6aad7282179a2fc9",
+   "_content": "IiIiRGVwZW5kZW5jeS1mcmVlIGxvY2FsIGhlbHBlcnMgZm9yIHRoZSBHZW5pbWwgc2tpbGwuIiIiCg=="
+  },
+  {
+   "path": "skills/pydicom/scripts/__init__.py",
+   "bytes": 60,
+   "sha256": "fecf71e36c1caf5edc7470964188e93742dc8e4d69a977e04df910382898a96d",
+   "_content": "IiIiTG9jYWwtb25seSBib3VuZGVkIGhlbHBlciBDTElzIGZvciB0aGUgcHlkaWNvbSBza2lsbC4iIiIK"
+  },
+  {
+   "path": "skills/pufferlib/scripts/__init__.py",
+   "bytes": 62,
+   "sha256": "5e2a587bf7e4f8fb11154872238594d6ba21805716d7f3b974675ebe54e52bfb",
+   "_content": "IiIiTG9jYWwsIGRlcGVuZGVuY3ktZnJlZSBoZWxwZXJzIGZvciB0aGUgUHVmZmVyTGliIHNraWxsLiIiIgo="
+  },
+  {
+   "path": "skills/hypogenic/scripts/__init__.py",
+   "bytes": 64,
+   "sha256": "1ed9e63a4d602a186d27f4aff40c1ab38e25ec8b971a4fa7731fdbae280eb2ca",
+   "_content": "IiIiRGV0ZXJtaW5pc3RpYyBsb2NhbCByZXZpZXcgdG9vbHMgZm9yIHRoZSBIeXBvR2VuaUMgc2tpbGwuIiIiCg=="
+  },
+  {
+   "path": "skills/exploratory-data-analysis/scripts/__init__.py",
+   "bytes": 69,
+   "sha256": "87539288ce5d4caf24fc9fca14e5d70c41730c9d4285106ac4db0c4b5cefd60c",
+   "_content": "IiIiQm91bmRlZCwgbG9jYWwtb25seSBoZWxwZXIgQ0xJcyBmb3IgZXhwbG9yYXRvcnktZGF0YS1hbmFseXNpcy4iIiIK"
+  },
+  {
+   "path": "skills/13c-metabolic-flux/assets/branch-fluxes.json",
+   "bytes": 69,
+   "sha256": "4bcb97f2e4bfab43ca8e964183231fee197879f9d4b80d2ec8e05f92b8d95be4",
+   "_content": "ewogICJ1cHRha2UiOiAxMDAsCiAgInN0cmFpZ2h0IjogNzAsCiAgInN3YXAiOiAzMCwKICAiZXhwb3J0IjogMTAwCn0K"
+  },
+  {
+   "path": "skills/pptx-posters/assets/generation_dependencies.json",
+   "bytes": 70,
+   "sha256": "49a5cfa05452a2f0705564403bc2a5112715c9930d6e2bc7ccd5f6a739719a94",
+   "_content": "ewogICJweXRob24tcHB0eCI6ICIxLjAuMiIsCiAgIlBpbGxvdyI6ICIxMi4zLjAiLAogICJseG1sIjogIjYuMS4zIgp9Cg=="
+  },
+  {
+   "path": "skills/pylabrobot/scripts/__init__.py",
+   "bytes": 72,
+   "sha256": "d1a981fe4edf160c2ed51409244c623b0bb6d73b1ffc9b50e6b729303c640cca",
+   "_content": "IiIiT2ZmbGluZSwgZGV0ZXJtaW5pc3RpYyBoZWxwZXJzIGJ1bmRsZWQgd2l0aCB0aGUgUHlMYWJSb2JvdCBza2lsbC4iIiIK"
+  },
+  {
+   "path": "skills/fluidsim/scripts/__init__.py",
+   "bytes": 74,
+   "sha256": "93b33cb86288cb882ac5876c2cc1db9bae72fc96296abc75c7ecfab97a052989",
+   "_content": "IiIiQm91bmRlZCBsb2NhbCBwbGFubmluZyBhbmQgaW5zcGVjdGlvbiB0b29scyBmb3IgdGhlIEZsdWlkU2ltIHNraWxsLiIiIgo="
+  },
+  {
+   "path": "skills/protocolsio-integration/scripts/__init__.py",
+   "bytes": 76,
+   "sha256": "9a90481692132a90b81854de4e6380dee81e7769b5adb57ffde2cd9cb36abcf2",
+   "_content": "IiIiU2FmZSwgZGVwZW5kZW5jeS1mcmVlIGhlbHBlcnMgZm9yIHRoZSBwcm90b2NvbHMuaW8gaW50ZWdyYXRpb24gc2tpbGwuIiIiCg=="
+  },
+  {
+   "path": "skills/13c-metabolic-flux/assets/tca-fluxes.json",
+   "bytes": 114,
+   "sha256": "b362821e6cf8c14b692c4c41facd7c8aa1af87e20f0290960f0eaaddc69b1cb8",
+   "_content": "ewogICJ2MSI6IDEwMCwKICAidjIiOiAxMDAsCiAgInYzIjogNTAsCiAgInY0IjogNTAsCiAgInY1IjogNTAsCiAgInY2IjogMTI1LAogICJ2NyI6IDc1LAogICJ2OCI6IDUwLAogICJ2OSI6IDUwCn0K"
+  },
+  {
+   "path": "skills/13c-metabolic-flux/assets/requirements.txt",
+   "bytes": 136,
+   "sha256": "537d5d44296de5cce4f909775e2299a589abd914b93705367587e98588bfcede",
+   "_content": "bWZhcHkgQCBnaXQraHR0cHM6Ly9naXRodWIuY29tL2Z1bWlvbWF0c3VkYS9tZmFweS5naXRAYTEwNDMzYWYxNjY4MjM4NjU0OGIzNjAyOTdlMjQ3NjE1MmQ0NmVkZQpudW1weT09Mi41LjMKc2NpcHk9PTEuMTguMQpubG9wdD09Mi4xMS4wCg=="
+  },
+  {
+   "path": "skills/scanpy/assets/celltype_mapping.json",
+   "bytes": 184,
+   "sha256": "57252f2224f1ff8cf1e43661bc8a2fabec36bd5d65f996945599fd010c8edf7c",
+   "_content": "ewogICIwIjogIkNENCBUIGNlbGxzIiwKICAiMSI6ICJDRDE0KyBNb25vY3l0ZXMiLAogICIyIjogIkIgY2VsbHMiLAogICIzIjogIkNEOCBUIGNlbGxzIiwKICAiNCI6ICJOSyBjZWxscyIsCiAgIjUiOiAiRkNHUjNBKyBNb25vY3l0ZXMiLAogICI2IjogIkRlbmRyaXRpYyBjZWxscyIsCiAgIjciOiAiUGxhdGVsZXRzIgp9Cg=="
+  },
+  {
+   "path": "skills/scientific-writing/assets/reporting_coverage_template.json",
+   "bytes": 189,
+   "sha256": "886ca599622c1dfaedde7649ec47e973b4fbe6081cac6a6afaf24ace899d46a9",
+   "_content": "ewogICJkaXNjbGFpbWVyIjogIk5vbi1zY29yaW5nIGNvdmVyYWdlIGFpZCBvbmx5OyBub3QgYSBxdWFsaXR5IGFwcHJhaXNhbCBvciBjb21wbGlhbmNlIGNlcnRpZmljYXRlLiIsCiAgImd1aWRlbGluZV9pZCI6ICJbW1RPRE86Z3VpZGVsaW5lLWlkXV0iLAogICJpdGVtcyI6IFtdLAogICJzY2hlbWFfdmVyc2lvbiI6ICIxLjAiCn0K"
+  },
+  {
+   "path": "skills/tellurium/assets/experiment.json",
+   "bytes": 195,
+   "sha256": "e5e7e30c107a945647bb016a62d00096f9a5f3bc5e2877f95e3638984c08ab53",
+   "_content": "ewogICJlbmRfdGltZSI6IDEwLjAsCiAgInBvaW50cyI6IDEwMSwKICAicmVsYXRpdmVfdG9sZXJhbmNlIjogMWUtOSwKICAiYWJzb2x1dGVfdG9sZXJhbmNlIjogMWUtMTIsCiAgInNwZWNpZXMiOiBbIkEiLCAiQiJdLAogICJzY2VuYXJpb3MiOiB7CiAgICAiYmFzZWxpbmUiOiB7fSwKICAgICJkb3VibGVfayI6IHsiayI6IDAuNH0KICB9Cn0K"
+  },
+  {
+   "path": "skills/peer-review/assets/study_profile_template.json",
+   "bytes": 197,
+   "sha256": "bc0c19b9ad478c78c4b5111bcd913faca8046e0833815b1bd579a046f737df40",
+   "_content": "ewogICJzY2hlbWFfdmVyc2lvbiI6ICIyLjAiLAogICJwcm9maWxlX2lkIjogIlBST0ZJTEUtU1lOVEhFVElDLVJDVCIsCiAgInN0dWR5X3R5cGVzIjogWwogICAgInJhbmRvbWl6ZWRfdHJpYWwiCiAgXSwKICAicmVwb3J0X2tpbmQiOiAicmVzdWx0cyIsCiAgImZlYXR1cmVzIjogW10sCiAgImRvbWFpbnMiOiBbCiAgICAiaGVhbHRoIgogIF0KfQo="
+  },
+  {
+   "path": "skills/primer-design/assets/qpcr-config.json",
+   "bytes": 233,
+   "sha256": "eba6ae9ab645501a429aaa2178d31bb81f6b0890061a6bcc3ea684f6d71bfe0e",
+   "_content": "ewogICJzZXF1ZW5jZV9hcmdzIjogewogICAgIlNFUVVFTkNFX1RBUkdFVCI6IFsKICAgICAgWwogICAgICAgIDIzNSwKICAgICAgICAzMAogICAgICBdCiAgICBdCiAgfSwKICAiZ2xvYmFsX2FyZ3MiOiB7CiAgICAiUFJJTUVSX1BST0RVQ1RfU0laRV9SQU5HRSI6IFsKICAgICAgWwogICAgICAgIDkwLAogICAgICAgIDE4MAogICAgICBdCiAgICBdLAogICAgIlBSSU1FUl9OVU1fUkVUVVJOIjogMwogIH0KfQo="
+  },
+  {
+   "path": "skills/pybamm/assets/chen2020-protocol.json",
+   "bytes": 340,
+   "sha256": "f769f94f1a9f933d253b3a4a6f51dc661b8af49bf9df52cfdabd81ea185de80e",
+   "_content": "ewogICJtb2RlbCI6ICJTUE0iLAogICJwYXJhbWV0ZXJfc2V0IjogIkNoZW4yMDIwIiwKICAiaW5pdGlhbF9zb2MiOiAwLjgsCiAgInRlbXBlcmF0dXJlX0siOiAyOTguMTUsCiAgInNhbXBsZV9wZXJpb2RfcyI6IDEwLjAsCiAgInBhcmFtZXRlcl9vdmVycmlkZXMiOiB7fSwKICAic3RlcHMiOiBbCiAgICB7ImtpbmQiOiAiZGlzY2hhcmdlIiwgImNfcmF0ZSI6IDAuNSwgImR1cmF0aW9uX3MiOiA2MDAuMH0sCiAgICB7ImtpbmQiOiAicmVzdCIsICJkdXJhdGlvbl9zIjogMTIwLjB9LAogICAgeyJraW5kIjogImNoYXJnZSIsICJjX3JhdGUiOiAwLjUsICJkdXJhdGlvbl9zIjogNjAwLjB9CiAgXQp9Cg=="
+  },
+  {
+   "path": "skills/scanpy/assets/gene_signatures.json",
+   "bytes": 355,
+   "sha256": "96b2cf9b5f56d3b1a110eba1ea585fa624618b6648378ce55d5d82c621e8d286",
+   "_content": "ewogICJUX2NlbGwiOiBbIkNEM0QiLCAiQ0QzRSIsICJDRDNHIiwgIkNEMiJdLAogICJCX2NlbGwiOiBbIk1TNEExIiwgIkNENzlBIiwgIkNENzlCIiwgIkNEMTkiXSwKICAibW9ub2N5dGUiOiBbIkNEMTQiLCAiTFlaIiwgIlMxMDBBOCIsICJTMTAwQTkiXSwKICAiTktfY2VsbCI6IFsiTktHNyIsICJHTkxZIiwgIktMUkQxIiwgIk5DQU0xIl0sCiAgImN5dG90b3hpYyI6IFsiR1pNQiIsICJHWk1LIiwgIlBSRjEiLCAiTktHNyJdLAogICJkZW5kcml0aWMiOiBbIkZDRVIxQSIsICJDU1QzIiwgIkNMRUMxMEEiXSwKICAiZXhoYXVzdGlvbiI6IFsiUERDRDEiLCAiSEFWQ1IyIiwgIkxBRzMiLCAiVElHSVQiLCAiQ1RMQTQiXQp9Cg=="
+  }
+ ],
+ "skipped": {
+  "budget": true,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 2780
+ },
+ "providers": [],
+ "entrypoints": [],
+ "runtime": [
+  "python"
+ ],
+ "notes": [],
+ "_license_bytes": "TUlUIExpY2Vuc2UKCkNvcHlyaWdodCAoYykgMjAyNSBLLURlbnNlIEluYy4KClBlcm1pc3Npb24gaXMgaGVyZWJ5IGdyYW50ZWQsIGZyZWUgb2YgY2hhcmdlLCB0byBhbnkgcGVyc29uIG9idGFpbmluZyBhIGNvcHkKb2YgdGhpcyBzb2Z0d2FyZSBhbmQgYXNzb2NpYXRlZCBkb2N1bWVudGF0aW9uIGZpbGVzICh0aGUgIlNvZnR3YXJlIiksIHRvIGRlYWwKaW4gdGhlIFNvZnR3YXJlIHdpdGhvdXQgcmVzdHJpY3Rpb24sIGluY2x1ZGluZyB3aXRob3V0IGxpbWl0YXRpb24gdGhlIHJpZ2h0cwp0byB1c2UsIGNvcHksIG1vZGlmeSwgbWVyZ2UsIHB1Ymxpc2gsIGRpc3RyaWJ1dGUsIHN1YmxpY2Vuc2UsIGFuZC9vciBzZWxsCmNvcGllcyBvZiB0aGUgU29mdHdhcmUsIGFuZCB0byBwZXJtaXQgcGVyc29ucyB0byB3aG9tIHRoZSBTb2Z0d2FyZSBpcwpmdXJuaXNoZWQgdG8gZG8gc28sIHN1YmplY3QgdG8gdGhlIGZvbGxvd2luZyBjb25kaXRpb25zOgoKVGhlIGFib3ZlIGNvcHlyaWdodCBub3RpY2UgYW5kIHRoaXMgcGVybWlzc2lvbiBub3RpY2Ugc2hhbGwgYmUgaW5jbHVkZWQgaW4gYWxsCmNvcGllcyBvciBzdWJzdGFudGlhbCBwb3J0aW9ucyBvZiB0aGUgU29mdHdhcmUuCgpUSEUgU09GVFdBUkUgSVMgUFJPVklERUQgIkFTIElTIiwgV0lUSE9VVCBXQVJSQU5UWSBPRiBBTlkgS0lORCwgRVhQUkVTUyBPUgpJTVBMSUVELCBJTkNMVURJTkcgQlVUIE5PVCBMSU1JVEVEIFRPIFRIRSBXQVJSQU5USUVTIE9GIE1FUkNIQU5UQUJJTElUWSwKRklUTkVTUyBGT1IgQSBQQVJUSUNVTEFSIFBVUlBPU0UgQU5EIE5PTklORlJJTkdFTUVOVC4gSU4gTk8gRVZFTlQgU0hBTEwgVEhFCkFVVEhPUlMgT1IgQ09QWVJJR0hUIEhPTERFUlMgQkUgTElBQkxFIEZPUiBBTlkgQ0xBSU0sIERBTUFHRVMgT1IgT1RIRVIKTElBQklMSVRZLCBXSEVUSEVSIElOIEFOIEFDVElPTiBPRiBDT05UUkFDVCwgVE9SVCBPUiBPVEhFUldJU0UsIEFSSVNJTkcgRlJPTSwKT1VUIE9GIE9SIElOIENPTk5FQ1RJT04gV0lUSCBUSEUgU09GVFdBUkUgT1IgVEhFIFVTRSBPUiBPVEhFUiBERUFMSU5HUyBJTiBUSEUKU09GVFdBUkUu",
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 25,
+ "vendored_bytes": 2790
+}

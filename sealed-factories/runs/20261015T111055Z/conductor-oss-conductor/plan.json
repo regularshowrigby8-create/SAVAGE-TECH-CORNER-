@@ -1,0 +1,122 @@
+{
+ "id": "conductor-oss-conductor",
+ "full_name": "conductor-oss/conductor",
+ "url": "https://github.com/conductor-oss/conductor",
+ "group": "imported factory",
+ "license": "Apache-2.0",
+ "content_redistributed": true,
+ "files": [
+  "agentspan/src/main/java/org/conductoross/conductor/ai/agentspan/runtime/spi/StoredSkillPackage.java",
+  "ai/src/main/java/org/conductoross/conductor/ai/vectordb/VectorDBConfig.java",
+  "amqp/src/main/java/com/netflix/conductor/contribs/queue/amqp/util/ConnectionType.java",
+  "amqp/src/main/java/com/netflix/conductor/contribs/queue/amqp/util/RetryType.java",
+  "common/src/main/java/com/netflix/conductor/common/metadata/acl/Permission.java",
+  "common/src/main/java/com/netflix/conductor/common/metadata/workflow/IdempotencyStrategy.java",
+  "common/src/main/java/org/conductoross/conductor/core/execution/tasks/AnnotatedSystemTaskWorker.java",
+  "core/src/main/java/com/netflix/conductor/core/events/EventQueueManager.java",
+  "core/src/main/java/com/netflix/conductor/core/exception/AccessForbiddenException.java",
+  "es7-persistence/src/main/java/com/netflix/conductor/es7/dao/query/parser/internal/FunctionThrowingException.java",
+  "es8-persistence/src/main/java/org/conductoross/conductor/es8/dao/query/parser/internal/FunctionThrowingException.java",
+  "os-persistence-v2/src/main/java/org/conductoross/conductor/os2/dao/query/parser/internal/FunctionThrowingException.java",
+  "os-persistence-v3/src/main/java/org/conductoross/conductor/os3/dao/query/parser/internal/FunctionThrowingException.java",
+  "scheduler/core/src/main/java/io/orkes/conductor/health/RedisMonitor.java",
+  "scheduler/core/src/main/java/io/orkes/conductor/scheduler/service/SchedulerServiceExecutorImpl.java",
+  "ui-next/src/components/features/agent/Agent.tsx",
+  "ui-next/src/components/features/agent/AgentEditorController.tsx",
+  "ui-next/src/components/features/agent/agent-types.ts",
+  "ui-next/src/components/features/agent/helpers.ts",
+  "ui-next/src/pages/agent/executions/ApiSearchModalIntegration.test.ts",
+  "ui-next/src/pages/agent/executions/agentSearchCode.ts",
+  "ui-next/src/pages/agent/executions/executionsStyles.ts",
+  "ui-next/src/pages/agent/guideMarkdown.ts",
+  "ui-next/src/pages/agent/guides/dotnet/native.md",
+  "ui-next/src/pages/agent/index.ts"
+ ],
+ "stages": [
+  [
+   "path",
+   "common/src/main/java/com/netflix/conductor/common/metadata/workflow/IdempotencyStrategy.java"
+  ]
+ ],
+ "roles": [
+  [
+   "path",
+   "ui-next/src/components/features/agent/Agent.tsx"
+  ],
+  [
+   "path",
+   "ui-next/src/components/features/agent/AgentEditorController.tsx"
+  ],
+  [
+   "path",
+   "ui-next/src/components/features/agent/agent-types.ts"
+  ],
+  [
+   "path",
+   "ui-next/src/components/features/agent/helpers.ts"
+  ],
+  [
+   "path",
+   "ui-next/src/pages/agent/executions/ApiSearchModalIntegration.test.ts"
+  ],
+  [
+   "path",
+   "ui-next/src/pages/agent/executions/agentSearchCode.ts"
+  ],
+  [
+   "path",
+   "ui-next/src/pages/agent/executions/executionsStyles.ts"
+  ],
+  [
+   "path",
+   "ui-next/src/pages/agent/guideMarkdown.ts"
+  ],
+  [
+   "path",
+   "ui-next/src/pages/agent/guides/dotnet/native.md"
+  ],
+  [
+   "path",
+   "ui-next/src/pages/agent/index.ts"
+  ]
+ ],
+ "gates": [],
+ "prompts": [],
+ "headings": [
+  [
+   "heading",
+   "1. Add the SDK"
+  ],
+  [
+   "heading",
+   "2. Configure"
+  ],
+  [
+   "heading",
+   "For authenticated Conductor servers:"
+  ],
+  [
+   "heading",
+   "export CONDUCTOR_AUTH_KEY=<YOUR_AUTH_KEY>"
+  ],
+  [
+   "heading",
+   "export CONDUCTOR_AUTH_SECRET=<YOUR_AUTH_SECRET>"
+  ],
+  [
+   "heading",
+   "3. Run an agent"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 1,
+  "roles": 10,
+  "gates": 0,
+  "prompts": 0,
+  "headings": 6
+ },
+ "structure_found": true
+}

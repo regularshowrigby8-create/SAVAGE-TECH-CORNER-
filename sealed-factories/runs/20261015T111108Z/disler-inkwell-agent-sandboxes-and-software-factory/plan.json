@@ -1,0 +1,185 @@
+{
+ "id": "disler-inkwell-agent-sandboxes-and-software-factory",
+ "full_name": "disler/inkwell-agent-sandboxes-and-software-factory",
+ "url": "https://github.com/disler/inkwell-agent-sandboxes-and-software-factory",
+ "group": "imported factory",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  ".claude/skills/sandbox-exe-dev/exedev_cli/pyproject.toml",
+  ".claude/skills/sssf/apps/visualizer/.oxlintrc.json",
+  ".claude/skills/sssf/apps/visualizer/index.html",
+  ".claude/skills/sssf/apps/visualizer/src/lib/types.ts",
+  ".claude/skills/sssf/apps/visualizer/src/main.ts",
+  ".claude/skills/sssf/apps/visualizer/vite.config.ts",
+  ".claude/skills/sssf/templates/adws/adw_modules/agent_cc.py",
+  ".claude/skills/sssf/templates/adws/adw_modules/prompts.py",
+  ".claude/skills/sssf/templates/prompt_engineering/scout/user.md",
+  "prompts/01-fts5-search.md",
+  "prompts/02-revision-history.md",
+  "prompts/03-scheduled-publishing.md",
+  "prompts/04-export-import.md",
+  "prompts/05-public-permalink.md",
+  "prompts/06-redesign-quiet-room.md",
+  "prompts/07-redesign-editorial.md",
+  "prompts/08-redesign-progressive-focus.md",
+  "prompts/README.md",
+  "prompts/app-breakdown-scout.md",
+  "prompts/demo/01-fan-out-five-rosters.md",
+  "prompts/demo/02-shell-access.md",
+  "prompts/demo/03-agent-access.md",
+  "prompts/light-mode-theming.md",
+  "prompts/scout-app-breakdown.md",
+  "prompts/split-view-editor.md"
+ ],
+ "stages": [],
+ "roles": [],
+ "gates": [],
+ "prompts": [
+  [
+   "path",
+   ".claude/skills/sandbox-exe-dev/exedev_cli/pyproject.toml"
+  ],
+  [
+   "path",
+   ".claude/skills/sssf/apps/visualizer/.oxlintrc.json"
+  ],
+  [
+   "path",
+   ".claude/skills/sssf/apps/visualizer/index.html"
+  ],
+  [
+   "path",
+   ".claude/skills/sssf/apps/visualizer/src/lib/types.ts"
+  ],
+  [
+   "path",
+   ".claude/skills/sssf/apps/visualizer/src/main.ts"
+  ],
+  [
+   "path",
+   ".claude/skills/sssf/apps/visualizer/vite.config.ts"
+  ],
+  [
+   "path",
+   ".claude/skills/sssf/templates/adws/adw_modules/agent_cc.py"
+  ],
+  [
+   "path",
+   ".claude/skills/sssf/templates/adws/adw_modules/prompts.py"
+  ],
+  [
+   "path",
+   ".claude/skills/sssf/templates/prompt_engineering/scout/user.md"
+  ],
+  [
+   "path",
+   "prompts/01-fts5-search.md"
+  ],
+  [
+   "path",
+   "prompts/02-revision-history.md"
+  ],
+  [
+   "path",
+   "prompts/03-scheduled-publishing.md"
+  ],
+  [
+   "path",
+   "prompts/04-export-import.md"
+  ],
+  [
+   "path",
+   "prompts/05-public-permalink.md"
+  ],
+  [
+   "path",
+   "prompts/06-redesign-quiet-room.md"
+  ],
+  [
+   "path",
+   "prompts/07-redesign-editorial.md"
+  ],
+  [
+   "path",
+   "prompts/08-redesign-progressive-focus.md"
+  ],
+  [
+   "path",
+   "prompts/README.md"
+  ],
+  [
+   "path",
+   "prompts/app-breakdown-scout.md"
+  ],
+  [
+   "path",
+   "prompts/demo/01-fan-out-five-rosters.md"
+  ],
+  [
+   "path",
+   "prompts/demo/02-shell-access.md"
+  ],
+  [
+   "path",
+   "prompts/demo/03-agent-access.md"
+  ],
+  [
+   "path",
+   "prompts/light-mode-theming.md"
+  ],
+  [
+   "path",
+   "prompts/scout-app-breakdown.md"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Scout Task"
+  ],
+  [
+   "heading",
+   "Variables"
+  ],
+  [
+   "heading",
+   "prompt"
+  ],
+  [
+   "heading",
+   "previous_envelope"
+  ],
+  [
+   "heading",
+   "context_handoff_dir"
+  ],
+  [
+   "heading",
+   "Task"
+  ],
+  [
+   "heading",
+   "Report"
+  ],
+  [
+   "heading",
+   "prompts"
+  ],
+  [
+   "heading",
+   "Fire one"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 0,
+  "gates": 0,
+  "prompts": 25,
+  "headings": 9
+ },
+ "structure_found": true
+}

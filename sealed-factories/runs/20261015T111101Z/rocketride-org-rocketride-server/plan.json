@@ -1,0 +1,279 @@
+{
+ "id": "rocketride-org-rocketride-server",
+ "full_name": "rocketride-org/rocketride-server",
+ "url": "https://github.com/rocketride-org/rocketride-server",
+ "group": "imported factory",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  "apps/vscode/src/agents/agents-md-installer.ts",
+  "apps/vscode/src/agents/claude-code-installer.ts",
+  "apps/vscode/src/agents/claude-md-installer.ts",
+  "apps/vscode/src/agents/copilot-installer.ts",
+  "apps/vscode/src/agents/cursor-installer.ts",
+  "apps/vscode/src/agents/services.ts",
+  "apps/vscode/src/agents/windsurf-installer.ts",
+  "docs/agents/README.md",
+  "docs/agents/skills/README.md",
+  "docs/agents/skills/rocketride-designing-pipelines/LAYER1_NODE_INDEX.meta.json",
+  "docs/agents/skills/rocketride-designing-pipelines/examples/FAILURE_SCENARIOS.md",
+  "docs/agents/skills/rocketride-designing-pipelines/examples/README.md",
+  "docs/agents/skills/rocketride-designing-pipelines/examples/agentic-chat.pipe",
+  "docs/agents/skills/rocketride-designing-pipelines/examples/document-ingestion.pipe",
+  "docs/agents/skills/rocketride-designing-pipelines/examples/simple-chat-rag.pipe",
+  "nodes/src/nodes/prompt/IGlobal.py",
+  "nodes/src/nodes/prompt/IInstance.py",
+  "nodes/src/nodes/prompt/README.md",
+  "nodes/src/nodes/prompt/__init__.py",
+  "nodes/src/nodes/prompt/services.json",
+  "packages/ai/src/ai/common/agent/__init__.py",
+  "packages/server/engine-lib/engLib/store/pipeline/pipeline_config.hpp",
+  "packages/server/engine-lib/engLib/store/pipeline/validate_pipeline.hpp",
+  "pipelines/exa-search-working.pipe",
+  "pipelines/text_file_to_audio.pipe"
+ ],
+ "stages": [
+  [
+   "path",
+   "packages/server/engine-lib/engLib/store/pipeline/pipeline_config.hpp"
+  ],
+  [
+   "path",
+   "packages/server/engine-lib/engLib/store/pipeline/validate_pipeline.hpp"
+  ],
+  [
+   "path",
+   "pipelines/exa-search-working.pipe"
+  ],
+  [
+   "path",
+   "pipelines/text_file_to_audio.pipe"
+  ]
+ ],
+ "roles": [
+  [
+   "path",
+   "apps/vscode/src/agents/agents-md-installer.ts"
+  ],
+  [
+   "path",
+   "apps/vscode/src/agents/claude-code-installer.ts"
+  ],
+  [
+   "path",
+   "apps/vscode/src/agents/claude-md-installer.ts"
+  ],
+  [
+   "path",
+   "apps/vscode/src/agents/copilot-installer.ts"
+  ],
+  [
+   "path",
+   "apps/vscode/src/agents/cursor-installer.ts"
+  ],
+  [
+   "path",
+   "apps/vscode/src/agents/services.ts"
+  ],
+  [
+   "path",
+   "apps/vscode/src/agents/windsurf-installer.ts"
+  ],
+  [
+   "path",
+   "docs/agents/README.md"
+  ],
+  [
+   "path",
+   "docs/agents/skills/README.md"
+  ],
+  [
+   "path",
+   "docs/agents/skills/rocketride-designing-pipelines/LAYER1_NODE_INDEX.meta.json"
+  ],
+  [
+   "path",
+   "docs/agents/skills/rocketride-designing-pipelines/examples/FAILURE_SCENARIOS.md"
+  ],
+  [
+   "path",
+   "docs/agents/skills/rocketride-designing-pipelines/examples/README.md"
+  ],
+  [
+   "path",
+   "docs/agents/skills/rocketride-designing-pipelines/examples/agentic-chat.pipe"
+  ],
+  [
+   "path",
+   "docs/agents/skills/rocketride-designing-pipelines/examples/document-ingestion.pipe"
+  ],
+  [
+   "path",
+   "docs/agents/skills/rocketride-designing-pipelines/examples/simple-chat-rag.pipe"
+  ],
+  [
+   "path",
+   "packages/ai/src/ai/common/agent/__init__.py"
+  ]
+ ],
+ "gates": [],
+ "prompts": [
+  [
+   "path",
+   "docs/agents/skills/README.md"
+  ],
+  [
+   "path",
+   "docs/agents/skills/rocketride-designing-pipelines/LAYER1_NODE_INDEX.meta.json"
+  ],
+  [
+   "path",
+   "docs/agents/skills/rocketride-designing-pipelines/examples/FAILURE_SCENARIOS.md"
+  ],
+  [
+   "path",
+   "docs/agents/skills/rocketride-designing-pipelines/examples/README.md"
+  ],
+  [
+   "path",
+   "docs/agents/skills/rocketride-designing-pipelines/examples/agentic-chat.pipe"
+  ],
+  [
+   "path",
+   "docs/agents/skills/rocketride-designing-pipelines/examples/document-ingestion.pipe"
+  ],
+  [
+   "path",
+   "docs/agents/skills/rocketride-designing-pipelines/examples/simple-chat-rag.pipe"
+  ],
+  [
+   "path",
+   "nodes/src/nodes/prompt/IGlobal.py"
+  ],
+  [
+   "path",
+   "nodes/src/nodes/prompt/IInstance.py"
+  ],
+  [
+   "path",
+   "nodes/src/nodes/prompt/README.md"
+  ],
+  [
+   "path",
+   "nodes/src/nodes/prompt/__init__.py"
+  ],
+  [
+   "path",
+   "nodes/src/nodes/prompt/services.json"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "docs/agents/"
+  ],
+  [
+   "heading",
+   "Skills"
+  ],
+  [
+   "heading",
+   "The pipeline-builder skill set"
+  ],
+  [
+   "heading",
+   "Failure Scenarios (what NOT to do)"
+  ],
+  [
+   "heading",
+   "\u274c Fabricating a node that isn't in the index"
+  ],
+  [
+   "heading",
+   "\u274c Wiring a lane that doesn't match"
+  ],
+  [
+   "heading",
+   "\u274c Guessing a config field"
+  ],
+  [
+   "heading",
+   "\u274c Putting the control array on the agent"
+  ],
+  [
+   "heading",
+   "\u274c Claiming success without checking"
+  ],
+  [
+   "heading",
+   "\u274c Self-approving a dismissed gate"
+  ],
+  [
+   "heading",
+   "\u274c Hardcoding a secret"
+  ],
+  [
+   "heading",
+   "\u274c Blocking the event loop when running"
+  ],
+  [
+   "heading",
+   "Worked Examples"
+  ],
+  [
+   "heading",
+   "1. `simple-chat-rag.pipe` \u2014 answer questions from indexed docs (RAG)"
+  ],
+  [
+   "heading",
+   "2. `document-ingestion.pipe` \u2014 load docs into the vector store"
+  ],
+  [
+   "heading",
+   "3. `agentic-chat.pipe` \u2014 an agent with an LLM + memory (control plane)"
+  ],
+  [
+   "heading",
+   "prompt"
+  ],
+  [
+   "heading",
+   "What it does"
+  ],
+  [
+   "heading",
+   "Lanes"
+  ],
+  [
+   "heading",
+   "Configuration"
+  ],
+  [
+   "heading",
+   "Instructions"
+  ],
+  [
+   "heading",
+   "Requirements"
+  ],
+  [
+   "heading",
+   "Notes"
+  ],
+  [
+   "heading",
+   "Rendered prompt structure"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 4,
+  "roles": 16,
+  "gates": 0,
+  "prompts": 12,
+  "headings": 31
+ },
+ "structure_found": true
+}

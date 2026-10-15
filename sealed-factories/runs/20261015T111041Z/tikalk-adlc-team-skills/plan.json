@@ -1,0 +1,275 @@
+{
+ "id": "tikalk-adlc-team-skills",
+ "full_name": "tikalk/adlc-team-skills",
+ "url": "https://github.com/tikalk/adlc-team-skills",
+ "group": "imported factory",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  "skills/architect/templates/adr-draft-template.md",
+  "skills/authoring/writing-skills/templates/SKILL-template.md",
+  "skills/change/templates/chdr-draft-template.md",
+  "skills/evals/evals-analyze/scripts/bash/setup-evals-analyze.sh",
+  "skills/evals/evals-clarify/scripts/bash/setup-evals-clarify.sh",
+  "skills/evals/evals-clarify/scripts/powershell/setup-evals-clarify.ps1",
+  "skills/evals/evals-implement/scripts/bash/setup-evals-implement.sh",
+  "skills/evals/evals-init/scripts/bash/setup-evals-init.sh",
+  "skills/evals/evals-init/scripts/powershell/setup-evals-init.ps1",
+  "skills/evals/evals-specify/scripts/bash/setup-evals-specify.sh",
+  "skills/evals/evals-specify/scripts/powershell/setup-evals-specify.ps1",
+  "skills/evals/evals-templates/eval-draft-template.md",
+  "skills/evals/evals-validate/scripts/bash/setup-evals-validate.sh",
+  "skills/factory/factory-setup/references/mode-detect.md",
+  "skills/factory/factory-setup/references/mode-pick.md",
+  "skills/product/product-analyze/scripts/powershell/setup-product-analyze.ps1",
+  "skills/product/templates/pdr-draft-template.md",
+  "skills/product/templates/sections/goals.md",
+  "skills/product/templates/sections/problem.md",
+  "skills/team/team-init/scripts/team-init.sh",
+  "skills/team/team-levelup/scripts/scrub-session.sh",
+  "skills/team/team-levelup/scripts/team-levelup.sh",
+  "skills/team/team-setup/references/post-setup-mcp.md",
+  "skills/team/team-skills/scripts/bash/setup-team.sh",
+  "skills/team/templates/cdr-draft-template.md"
+ ],
+ "stages": [],
+ "roles": [
+  [
+   "path",
+   "skills/team/team-init/scripts/team-init.sh"
+  ],
+  [
+   "path",
+   "skills/team/team-levelup/scripts/scrub-session.sh"
+  ],
+  [
+   "path",
+   "skills/team/team-levelup/scripts/team-levelup.sh"
+  ],
+  [
+   "path",
+   "skills/team/team-setup/references/post-setup-mcp.md"
+  ],
+  [
+   "path",
+   "skills/team/team-skills/scripts/bash/setup-team.sh"
+  ],
+  [
+   "path",
+   "skills/team/templates/cdr-draft-template.md"
+  ]
+ ],
+ "gates": [
+  [
+   "verification",
+   "A run of this skill is done when:"
+  ]
+ ],
+ "prompts": [
+  [
+   "path",
+   "skills/architect/templates/adr-draft-template.md"
+  ],
+  [
+   "path",
+   "skills/authoring/writing-skills/templates/SKILL-template.md"
+  ],
+  [
+   "path",
+   "skills/change/templates/chdr-draft-template.md"
+  ],
+  [
+   "path",
+   "skills/evals/evals-analyze/scripts/bash/setup-evals-analyze.sh"
+  ],
+  [
+   "path",
+   "skills/evals/evals-clarify/scripts/bash/setup-evals-clarify.sh"
+  ],
+  [
+   "path",
+   "skills/evals/evals-clarify/scripts/powershell/setup-evals-clarify.ps1"
+  ],
+  [
+   "path",
+   "skills/evals/evals-implement/scripts/bash/setup-evals-implement.sh"
+  ],
+  [
+   "path",
+   "skills/evals/evals-init/scripts/bash/setup-evals-init.sh"
+  ],
+  [
+   "path",
+   "skills/evals/evals-init/scripts/powershell/setup-evals-init.ps1"
+  ],
+  [
+   "path",
+   "skills/evals/evals-specify/scripts/bash/setup-evals-specify.sh"
+  ],
+  [
+   "path",
+   "skills/evals/evals-specify/scripts/powershell/setup-evals-specify.ps1"
+  ],
+  [
+   "path",
+   "skills/evals/evals-templates/eval-draft-template.md"
+  ],
+  [
+   "path",
+   "skills/evals/evals-validate/scripts/bash/setup-evals-validate.sh"
+  ],
+  [
+   "path",
+   "skills/factory/factory-setup/references/mode-detect.md"
+  ],
+  [
+   "path",
+   "skills/factory/factory-setup/references/mode-pick.md"
+  ],
+  [
+   "path",
+   "skills/product/product-analyze/scripts/powershell/setup-product-analyze.ps1"
+  ],
+  [
+   "path",
+   "skills/product/templates/pdr-draft-template.md"
+  ],
+  [
+   "path",
+   "skills/product/templates/sections/goals.md"
+  ],
+  [
+   "path",
+   "skills/product/templates/sections/problem.md"
+  ],
+  [
+   "path",
+   "skills/team/team-init/scripts/team-init.sh"
+  ],
+  [
+   "path",
+   "skills/team/team-levelup/scripts/scrub-session.sh"
+  ],
+  [
+   "path",
+   "skills/team/team-levelup/scripts/team-levelup.sh"
+  ],
+  [
+   "path",
+   "skills/team/team-setup/references/post-setup-mcp.md"
+  ],
+  [
+   "path",
+   "skills/team/team-skills/scripts/bash/setup-team.sh"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Lightweight ADR draft \u2014 written by team-boot continuous capture."
+  ],
+  [
+   "heading",
+   "{short title, representative of the solved problem and the found solution}"
+  ],
+  [
+   "heading",
+   "Context"
+  ],
+  [
+   "heading",
+   "Decision"
+  ],
+  [
+   "heading",
+   "Rejected Alternatives"
+  ],
+  [
+   "heading",
+   "Reason"
+  ],
+  [
+   "heading",
+   "Revisit When"
+  ],
+  [
+   "heading",
+   "{{Skill Name}}"
+  ],
+  [
+   "heading",
+   "Overview"
+  ],
+  [
+   "heading",
+   "When to Use"
+  ],
+  [
+   "heading",
+   "Core Process"
+  ],
+  [
+   "heading",
+   "Red Flags"
+  ],
+  [
+   "heading",
+   "Configuration"
+  ],
+  [
+   "heading",
+   "Lightweight ChDR draft \u2014 written by team-boot continuous capture."
+  ],
+  [
+   "heading",
+   "ChDR-NNN: {short title}"
+  ],
+  [
+   "heading",
+   "setup-evals-analyze.sh \u2014 Setup for evals-init (self-contained)"
+  ],
+  [
+   "heading",
+   "setup-evals-clarify.sh \u2014 Setup for evals-init (self-contained)"
+  ],
+  [
+   "heading",
+   "setup-evals-clarify.ps1 \u2014 Setup for evals-init (self-contained)"
+  ],
+  [
+   "heading",
+   "setup-evals-implement.sh \u2014 Setup for evals-init (self-contained)"
+  ],
+  [
+   "heading",
+   "setup-evals-init.sh \u2014 Setup for evals-init (self-contained)"
+  ],
+  [
+   "heading",
+   "setup-evals-init.ps1 \u2014 Setup for evals-init (self-contained)"
+  ],
+  [
+   "heading",
+   "setup-evals-specify.sh \u2014 Setup for evals-init (self-contained)"
+  ],
+  [
+   "heading",
+   "setup-evals-specify.ps1 \u2014 Setup for evals-init (self-contained)"
+  ],
+  [
+   "heading",
+   "Lightweight EVAL draft \u2014 written by team-boot continuous capture."
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 6,
+  "gates": 1,
+  "prompts": 25,
+  "headings": 60
+ },
+ "structure_found": true
+}

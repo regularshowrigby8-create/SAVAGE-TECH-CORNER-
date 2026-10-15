@@ -1,0 +1,250 @@
+{
+ "id": "hkuds-nanobot",
+ "full_name": "HKUDS/nanobot",
+ "url": "https://github.com/HKUDS/nanobot",
+ "group": "imported factory",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  ".agent/workflow.md",
+  "nanobot/agent/hooks/__init__.py",
+  "nanobot/agent/skill_metadata.py",
+  "nanobot/agent/tools/cli_apps_config.py",
+  "nanobot/agent/tools/filesystem_config.py",
+  "nanobot/agent/tools/image_generation_config.py",
+  "nanobot/agent/tools/path_utils.py",
+  "nanobot/agent/tools/self_config.py",
+  "nanobot/agent/tools/shell_config.py",
+  "nanobot/agent/tools/web_config.py",
+  "nanobot/skills/clawhub/SKILL.md",
+  "nanobot/skills/github/SKILL.md",
+  "nanobot/skills/memory/SKILL.md",
+  "nanobot/skills/nanobot-document/SKILL.md",
+  "nanobot/templates/agent/_snippets/untrusted_content.md",
+  "nanobot/templates/agent/automation_creation.md",
+  "nanobot/templates/agent/cron_reminder.md",
+  "nanobot/templates/agent/evaluator.md",
+  "nanobot/templates/agent/max_iterations_message.md",
+  "nanobot/templates/agent/platform_policy.md",
+  "nanobot/templates/agent/skills_section.md",
+  "nanobot/templates/agent/subagent_announce.md",
+  "nanobot/templates/agent/subagent_system.md",
+  "nanobot/templates/agent/tool_contract.md",
+  "nanobot/templates/prompts/README.md"
+ ],
+ "stages": [],
+ "roles": [
+  [
+   "path",
+   "nanobot/agent/hooks/__init__.py"
+  ],
+  [
+   "path",
+   "nanobot/agent/skill_metadata.py"
+  ],
+  [
+   "path",
+   "nanobot/agent/tools/cli_apps_config.py"
+  ],
+  [
+   "path",
+   "nanobot/agent/tools/filesystem_config.py"
+  ],
+  [
+   "path",
+   "nanobot/agent/tools/image_generation_config.py"
+  ],
+  [
+   "path",
+   "nanobot/agent/tools/path_utils.py"
+  ],
+  [
+   "path",
+   "nanobot/agent/tools/self_config.py"
+  ],
+  [
+   "path",
+   "nanobot/agent/tools/shell_config.py"
+  ],
+  [
+   "path",
+   "nanobot/agent/tools/web_config.py"
+  ],
+  [
+   "path",
+   "nanobot/templates/agent/_snippets/untrusted_content.md"
+  ],
+  [
+   "path",
+   "nanobot/templates/agent/automation_creation.md"
+  ],
+  [
+   "path",
+   "nanobot/templates/agent/cron_reminder.md"
+  ],
+  [
+   "path",
+   "nanobot/templates/agent/evaluator.md"
+  ],
+  [
+   "agent",
+   "response"
+  ],
+  [
+   "path",
+   "nanobot/templates/agent/max_iterations_message.md"
+  ],
+  [
+   "path",
+   "nanobot/templates/agent/platform_policy.md"
+  ],
+  [
+   "path",
+   "nanobot/templates/agent/skills_section.md"
+  ],
+  [
+   "path",
+   "nanobot/templates/agent/subagent_announce.md"
+  ],
+  [
+   "path",
+   "nanobot/templates/agent/subagent_system.md"
+  ],
+  [
+   "path",
+   "nanobot/templates/agent/tool_contract.md"
+  ]
+ ],
+ "gates": [],
+ "prompts": [
+  [
+   "path",
+   "nanobot/skills/clawhub/SKILL.md"
+  ],
+  [
+   "path",
+   "nanobot/skills/github/SKILL.md"
+  ],
+  [
+   "path",
+   "nanobot/skills/memory/SKILL.md"
+  ],
+  [
+   "path",
+   "nanobot/skills/nanobot-document/SKILL.md"
+  ],
+  [
+   "path",
+   "nanobot/templates/prompts/README.md"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Reusing verification evidence"
+  ],
+  [
+   "heading",
+   "ClawHub"
+  ],
+  [
+   "heading",
+   "When to use"
+  ],
+  [
+   "heading",
+   "Search"
+  ],
+  [
+   "heading",
+   "Install"
+  ],
+  [
+   "heading",
+   "Update"
+  ],
+  [
+   "heading",
+   "List installed"
+  ],
+  [
+   "heading",
+   "Notes"
+  ],
+  [
+   "heading",
+   "GitHub Skill"
+  ],
+  [
+   "heading",
+   "Pull Requests"
+  ],
+  [
+   "heading",
+   "API for Advanced Queries"
+  ],
+  [
+   "heading",
+   "JSON Output"
+  ],
+  [
+   "heading",
+   "Memory"
+  ],
+  [
+   "heading",
+   "Search Past Events"
+  ],
+  [
+   "heading",
+   "nanobot Documentation"
+  ],
+  [
+   "heading",
+   "Original task"
+  ],
+  [
+   "heading",
+   "Platform Policy (Windows)"
+  ],
+  [
+   "heading",
+   "Platform Policy (POSIX)"
+  ],
+  [
+   "heading",
+   "Skills"
+  ],
+  [
+   "heading",
+   "Subagent"
+  ],
+  [
+   "heading",
+   "Workspace"
+  ],
+  [
+   "heading",
+   "Tool Usage Notes"
+  ],
+  [
+   "heading",
+   "Scheduling"
+  ],
+  [
+   "heading",
+   "Prompt Overrides"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 20,
+  "gates": 0,
+  "prompts": 5,
+  "headings": 26
+ },
+ "structure_found": true
+}

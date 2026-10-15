@@ -1,0 +1,127 @@
+{
+ "id": "mcp-for-blender",
+ "full_name": "ahujasid/mcp-for-blender",
+ "url": "https://github.com/ahujasid/mcp-for-blender",
+ "group": "MCP tool server",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  "Dockerfile",
+  "README.md",
+  "main.py"
+ ],
+ "stages": [],
+ "roles": [],
+ "gates": [],
+ "prompts": [],
+ "headings": [
+  [
+   "heading",
+   "MCP for Blender"
+  ],
+  [
+   "heading",
+   "Quickstart"
+  ],
+  [
+   "heading",
+   "macOS"
+  ],
+  [
+   "heading",
+   "Linux"
+  ],
+  [
+   "heading",
+   "Windows"
+  ],
+  [
+   "heading",
+   "Table of Contents"
+  ],
+  [
+   "heading",
+   "Features"
+  ],
+  [
+   "heading",
+   "Premium"
+  ],
+  [
+   "heading",
+   "Components"
+  ],
+  [
+   "heading",
+   "Installation"
+  ],
+  [
+   "heading",
+   "Automatic setup"
+  ],
+  [
+   "heading",
+   "macOS / Linux"
+  ],
+  [
+   "heading",
+   "Windows (PowerShell)"
+  ],
+  [
+   "heading",
+   "Prerequisites"
+  ],
+  [
+   "heading",
+   "Make your client find uvx"
+  ],
+  [
+   "heading",
+   "Pin the Python version"
+  ],
+  [
+   "heading",
+   "Install without uv"
+  ],
+  [
+   "heading",
+   "Run with Docker"
+  ],
+  [
+   "heading",
+   "Environment Variables"
+  ],
+  [
+   "heading",
+   "Safe mode"
+  ],
+  [
+   "heading",
+   "MCP Client Setup"
+  ],
+  [
+   "heading",
+   "Claude for Desktop"
+  ],
+  [
+   "heading",
+   "Codex"
+  ],
+  [
+   "heading",
+   "Codex plugin (recommended)"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 3,
+ "launch_command": "uvx mcp-for-blender install-addon",
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 0,
+  "gates": 0,
+  "prompts": 0,
+  "headings": 50
+ },
+ "structure_found": true
+}

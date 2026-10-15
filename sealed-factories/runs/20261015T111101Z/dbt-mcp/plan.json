@@ -1,0 +1,149 @@
+{
+ "id": "dbt-mcp",
+ "full_name": "dbt-labs/dbt-mcp",
+ "url": "https://github.com/dbt-labs/dbt-mcp",
+ "group": "MCP tool server",
+ "license": "Apache-2.0",
+ "content_redistributed": true,
+ "files": [
+  "src/dbt_mcp/prompts/__init__.py",
+  "src/dbt_mcp/prompts/dbt_cli/args/full_refresh.md",
+  "src/dbt_mcp/prompts/dbt_cli/args/sample.md",
+  "src/dbt_mcp/prompts/dbt_cli/args/sql_query.md",
+  "src/dbt_mcp/prompts/dbt_cli/build.md",
+  "src/dbt_mcp/prompts/dbt_cli/docs.md",
+  "src/dbt_mcp/prompts/dbt_cli/list.md",
+  "src/dbt_mcp/prompts/dbt_cli/test.md",
+  "src/dbt_mcp/prompts/dbt_codegen/args/case_sensitive_cols.md",
+  "src/dbt_mcp/prompts/dbt_codegen/args/database_name.md",
+  "src/dbt_mcp/prompts/dbt_codegen/args/generate_columns.md",
+  "src/dbt_mcp/prompts/dbt_codegen/args/include_data_types.md",
+  "src/dbt_mcp/prompts/dbt_codegen/args/include_descriptions.md",
+  "src/dbt_mcp/prompts/dbt_codegen/args/leading_commas.md",
+  "src/dbt_mcp/prompts/dbt_codegen/args/materialized.md",
+  "src/dbt_mcp/prompts/dbt_codegen/args/model_name.md",
+  "src/dbt_mcp/prompts/dbt_codegen/args/model_names.md",
+  "src/dbt_mcp/prompts/dbt_codegen/args/schema_name.md",
+  "src/dbt_mcp/prompts/dbt_codegen/args/source_name.md",
+  "src/dbt_mcp/prompts/dbt_codegen/args/table_name.md",
+  "src/dbt_mcp/prompts/dbt_codegen/args/table_names.md",
+  "src/dbt_mcp/prompts/dbt_codegen/args/tables.md",
+  "src/dbt_mcp/prompts/dbt_codegen/args/upstream_descriptions.md",
+  "src/dbt_mcp/prompts/lsp/args/column_name.md",
+  "src/dbt_mcp/prompts/prompts.py"
+ ],
+ "stages": [],
+ "roles": [],
+ "gates": [],
+ "prompts": [
+  [
+   "path",
+   "src/dbt_mcp/prompts/__init__.py"
+  ],
+  [
+   "path",
+   "src/dbt_mcp/prompts/dbt_cli/args/full_refresh.md"
+  ],
+  [
+   "path",
+   "src/dbt_mcp/prompts/dbt_cli/args/sample.md"
+  ],
+  [
+   "path",
+   "src/dbt_mcp/prompts/dbt_cli/args/sql_query.md"
+  ],
+  [
+   "path",
+   "src/dbt_mcp/prompts/dbt_cli/build.md"
+  ],
+  [
+   "path",
+   "src/dbt_mcp/prompts/dbt_cli/docs.md"
+  ],
+  [
+   "path",
+   "src/dbt_mcp/prompts/dbt_cli/list.md"
+  ],
+  [
+   "path",
+   "src/dbt_mcp/prompts/dbt_cli/test.md"
+  ],
+  [
+   "path",
+   "src/dbt_mcp/prompts/dbt_codegen/args/case_sensitive_cols.md"
+  ],
+  [
+   "path",
+   "src/dbt_mcp/prompts/dbt_codegen/args/database_name.md"
+  ],
+  [
+   "path",
+   "src/dbt_mcp/prompts/dbt_codegen/args/generate_columns.md"
+  ],
+  [
+   "path",
+   "src/dbt_mcp/prompts/dbt_codegen/args/include_data_types.md"
+  ],
+  [
+   "path",
+   "src/dbt_mcp/prompts/dbt_codegen/args/include_descriptions.md"
+  ],
+  [
+   "path",
+   "src/dbt_mcp/prompts/dbt_codegen/args/leading_commas.md"
+  ],
+  [
+   "path",
+   "src/dbt_mcp/prompts/dbt_codegen/args/materialized.md"
+  ],
+  [
+   "path",
+   "src/dbt_mcp/prompts/dbt_codegen/args/model_name.md"
+  ],
+  [
+   "path",
+   "src/dbt_mcp/prompts/dbt_codegen/args/model_names.md"
+  ],
+  [
+   "path",
+   "src/dbt_mcp/prompts/dbt_codegen/args/schema_name.md"
+  ],
+  [
+   "path",
+   "src/dbt_mcp/prompts/dbt_codegen/args/source_name.md"
+  ],
+  [
+   "path",
+   "src/dbt_mcp/prompts/dbt_codegen/args/table_name.md"
+  ],
+  [
+   "path",
+   "src/dbt_mcp/prompts/dbt_codegen/args/table_names.md"
+  ],
+  [
+   "path",
+   "src/dbt_mcp/prompts/dbt_codegen/args/tables.md"
+  ],
+  [
+   "path",
+   "src/dbt_mcp/prompts/dbt_codegen/args/upstream_descriptions.md"
+  ],
+  [
+   "path",
+   "src/dbt_mcp/prompts/lsp/args/column_name.md"
+  ]
+ ],
+ "headings": [],
+ "mcp_tools": [],
+ "texts": 25,
+ "launch_command": "",
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 0,
+  "gates": 0,
+  "prompts": 25,
+  "headings": 0
+ },
+ "structure_found": true
+}

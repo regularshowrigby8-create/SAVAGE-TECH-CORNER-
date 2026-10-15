@@ -1,0 +1,181 @@
+{
+ "id": "mcp-server-neon",
+ "full_name": "neondatabase-labs/mcp-server-neon",
+ "url": "https://github.com/neondatabase/mcp-server-neon",
+ "group": "MCP tool server",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  ".agents/skills/claimable-postgres/SKILL.md",
+  ".agents/skills/logging-best-practices/SKILL.md",
+  ".agents/skills/logging-best-practices/rules/context.md",
+  ".agents/skills/logging-best-practices/rules/pitfalls.md",
+  ".agents/skills/logging-best-practices/rules/structure.md",
+  ".agents/skills/logging-best-practices/rules/wide-events.md",
+  "AGENTS.md",
+  "README.md",
+  "package.json",
+  "server.json"
+ ],
+ "stages": [],
+ "roles": [
+  [
+   "agent",
+   "Workflow"
+  ]
+ ],
+ "gates": [
+  [
+   "check",
+   "status"
+  ],
+  [
+   "check",
+   "formatting (runs in CI)"
+  ],
+  [
+   "check",
+   "for unused code and dependencies"
+  ],
+  [
+   "review",
+   "Process"
+  ]
+ ],
+ "prompts": [
+  [
+   "path",
+   ".agents/skills/claimable-postgres/SKILL.md"
+  ],
+  [
+   "path",
+   ".agents/skills/logging-best-practices/SKILL.md"
+  ],
+  [
+   "path",
+   ".agents/skills/logging-best-practices/rules/context.md"
+  ],
+  [
+   "path",
+   ".agents/skills/logging-best-practices/rules/pitfalls.md"
+  ],
+  [
+   "path",
+   ".agents/skills/logging-best-practices/rules/structure.md"
+  ],
+  [
+   "path",
+   ".agents/skills/logging-best-practices/rules/wide-events.md"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Claimable Postgres"
+  ],
+  [
+   "heading",
+   "Quick Start"
+  ],
+  [
+   "heading",
+   "Which Method?"
+  ],
+  [
+   "heading",
+   "Auto-provisioning"
+  ],
+  [
+   "heading",
+   "API path"
+  ],
+  [
+   "heading",
+   "CLI path"
+  ],
+  [
+   "heading",
+   "Output Checklist"
+  ],
+  [
+   "heading",
+   "Safety and UX Notes"
+  ],
+  [
+   "heading",
+   "REST API"
+  ],
+  [
+   "heading",
+   "Create a database"
+  ],
+  [
+   "heading",
+   "Error responses"
+  ],
+  [
+   "heading",
+   "CLI"
+  ],
+  [
+   "heading",
+   "Pre-run Check"
+  ],
+  [
+   "heading",
+   "Options"
+  ],
+  [
+   "heading",
+   "Output"
+  ],
+  [
+   "heading",
+   "SDK"
+  ],
+  [
+   "heading",
+   "Vite Plugin"
+  ],
+  [
+   "heading",
+   "Claiming"
+  ],
+  [
+   "heading",
+   "Neon Infrastructure as Code (`neon.ts`)"
+  ],
+  [
+   "heading",
+   "Defaults and Limits"
+  ],
+  [
+   "heading",
+   "Logging Best Practices Skill"
+  ],
+  [
+   "heading",
+   "Purpose"
+  ],
+  [
+   "heading",
+   "When to Apply"
+  ],
+  [
+   "heading",
+   "Core Principles"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 10,
+ "launch_command": "npx -y neon",
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 1,
+  "gates": 4,
+  "prompts": 6,
+  "headings": 132
+ },
+ "structure_found": true
+}

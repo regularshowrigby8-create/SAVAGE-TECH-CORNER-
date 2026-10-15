@@ -1,0 +1,148 @@
+{
+ "id": "comet-ml-opik",
+ "full_name": "comet-ml/opik",
+ "url": "https://github.com/comet-ml/opik",
+ "group": "imported factory",
+ "license": "Apache-2.0",
+ "content_redistributed": true,
+ "files": [
+  "sdks/opik_optimizer/scripts/arc_agi/prompts/user_prompt.md",
+  "sdks/python/src/opik/api_objects/prompt/chat/__init__.py",
+  "sdks/python/src/opik/api_objects/prompt/text/__init__.py",
+  "sdks/python/src/opik/rest_api/prompts/__init__.py",
+  "sdks/python/src/opik/rest_api/prompts/types/create_prompt_version_detail_template_structure.py",
+  "sdks/python/src/opik/rest_api/prompts/types/prompt_write_template_structure.py",
+  "sdks/python/src/opik/rest_api/prompts/types/prompt_write_type.py",
+  "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/index.ts",
+  "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/requests/DeletePromptRequest.ts",
+  "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/requests/GetPromptByCommitRequest.ts",
+  "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/requests/GetPromptVersionByIdRequest.ts",
+  "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/requests/GetPromptVersionByNumberRequest.ts",
+  "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/requests/GetPromptVersionsRequest.ts",
+  "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/requests/GetPromptsRequest.ts",
+  "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/requests/PromptUpdatable.ts",
+  "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/requests/PromptVersionCommitsRequestPublic.ts",
+  "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/requests/PromptVersionEnvironmentUpdate.ts",
+  "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/requests/PromptVersionIdsRequestDetail.ts",
+  "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/requests/RestorePromptVersionRequest.ts",
+  "sdks/typescript/src/opik/rest_api/api/resources/prompts/index.ts",
+  "sdks/typescript/src/opik/rest_api/api/resources/prompts/types/PromptWriteType.ts",
+  "sdks/typescript/src/opik/rest_api/api/resources/prompts/types/index.ts",
+  "sdks/typescript/src/opik/rest_api/serialization/resources/prompts/client/index.ts",
+  "sdks/typescript/src/opik/rest_api/serialization/resources/prompts/index.ts",
+  "sdks/typescript/src/opik/rest_api/serialization/resources/prompts/types/index.ts"
+ ],
+ "stages": [],
+ "roles": [],
+ "gates": [],
+ "prompts": [
+  [
+   "path",
+   "sdks/opik_optimizer/scripts/arc_agi/prompts/user_prompt.md"
+  ],
+  [
+   "path",
+   "sdks/python/src/opik/api_objects/prompt/chat/__init__.py"
+  ],
+  [
+   "path",
+   "sdks/python/src/opik/api_objects/prompt/text/__init__.py"
+  ],
+  [
+   "path",
+   "sdks/python/src/opik/rest_api/prompts/__init__.py"
+  ],
+  [
+   "path",
+   "sdks/python/src/opik/rest_api/prompts/types/create_prompt_version_detail_template_structure.py"
+  ],
+  [
+   "path",
+   "sdks/python/src/opik/rest_api/prompts/types/prompt_write_template_structure.py"
+  ],
+  [
+   "path",
+   "sdks/python/src/opik/rest_api/prompts/types/prompt_write_type.py"
+  ],
+  [
+   "path",
+   "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/index.ts"
+  ],
+  [
+   "path",
+   "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/requests/DeletePromptRequest.ts"
+  ],
+  [
+   "path",
+   "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/requests/GetPromptByCommitRequest.ts"
+  ],
+  [
+   "path",
+   "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/requests/GetPromptVersionByIdRequest.ts"
+  ],
+  [
+   "path",
+   "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/requests/GetPromptVersionByNumberRequest.ts"
+  ],
+  [
+   "path",
+   "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/requests/GetPromptVersionsRequest.ts"
+  ],
+  [
+   "path",
+   "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/requests/GetPromptsRequest.ts"
+  ],
+  [
+   "path",
+   "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/requests/PromptUpdatable.ts"
+  ],
+  [
+   "path",
+   "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/requests/PromptVersionCommitsRequestPublic.ts"
+  ],
+  [
+   "path",
+   "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/requests/PromptVersionEnvironmentUpdate.ts"
+  ],
+  [
+   "path",
+   "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/requests/PromptVersionIdsRequestDetail.ts"
+  ],
+  [
+   "path",
+   "sdks/typescript/src/opik/rest_api/api/resources/prompts/client/requests/RestorePromptVersionRequest.ts"
+  ],
+  [
+   "path",
+   "sdks/typescript/src/opik/rest_api/api/resources/prompts/index.ts"
+  ],
+  [
+   "path",
+   "sdks/typescript/src/opik/rest_api/api/resources/prompts/types/PromptWriteType.ts"
+  ],
+  [
+   "path",
+   "sdks/typescript/src/opik/rest_api/api/resources/prompts/types/index.ts"
+  ],
+  [
+   "path",
+   "sdks/typescript/src/opik/rest_api/serialization/resources/prompts/client/index.ts"
+  ],
+  [
+   "path",
+   "sdks/typescript/src/opik/rest_api/serialization/resources/prompts/index.ts"
+  ]
+ ],
+ "headings": [],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 0,
+  "gates": 0,
+  "prompts": 25,
+  "headings": 0
+ },
+ "structure_found": true
+}

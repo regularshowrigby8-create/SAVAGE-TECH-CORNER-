@@ -1,0 +1,91 @@
+{
+ "id": "playwright-mcp",
+ "full_name": "microsoft/playwright-mcp",
+ "url": "https://github.com/microsoft/playwright-mcp",
+ "group": "MCP tool server",
+ "license": "Apache-2.0",
+ "content_redistributed": true,
+ "files": [
+  ".claude/skills/release.md",
+  "CLAUDE.md",
+  "Dockerfile",
+  "cli.js",
+  "package.json",
+  "server.json"
+ ],
+ "stages": [],
+ "roles": [],
+ "gates": [],
+ "prompts": [
+  [
+   "path",
+   ".claude/skills/release.md"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Preparing a Release"
+  ],
+  [
+   "heading",
+   "1. Roll Playwright"
+  ],
+  [
+   "heading",
+   "2. Bump the version"
+  ],
+  [
+   "heading",
+   "3. Find the exact commit window"
+  ],
+  [
+   "heading",
+   "Resolve each alpha to the exact upstream commit it was built from"
+  ],
+  [
+   "heading",
+   "4. Collect changes"
+  ],
+  [
+   "heading",
+   "This repo"
+  ],
+  [
+   "heading",
+   "5. Write `release-notes.md`"
+  ],
+  [
+   "heading",
+   "\u2728 Highlights"
+  ],
+  [
+   "heading",
+   "\ud83d\udc1b Fixes"
+  ],
+  [
+   "heading",
+   "\ud83d\udce6 Upgrading"
+  ],
+  [
+   "heading",
+   "6. Commit, push, open the PR with the notes as its body"
+  ],
+  [
+   "heading",
+   "Pitfalls"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 6,
+ "launch_command": "npx @playwright/mcp@latest",
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 0,
+  "gates": 0,
+  "prompts": 1,
+  "headings": 13
+ },
+ "structure_found": true
+}

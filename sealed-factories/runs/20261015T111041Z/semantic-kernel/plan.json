@@ -1,0 +1,173 @@
+{
+ "id": "semantic-kernel",
+ "full_name": "microsoft/semantic-kernel",
+ "url": "https://github.com/microsoft/semantic-kernel",
+ "group": "AI-focused factory",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  "dotnet/samples/Demos/ModelContextProtocolClientServer/MCPServer/Prompts/PromptDefinition.cs",
+  "dotnet/samples/LearnResources/Plugins/Prompts/chat/config.json",
+  "dotnet/samples/LearnResources/Plugins/Prompts/chat/skprompt.txt",
+  "dotnet/src/IntegrationTests/prompts/GenerateStory.yaml",
+  "dotnet/src/IntegrationTests/prompts/GenerateStoryHandlebars.yaml",
+  "dotnet/src/SemanticKernel.Abstractions/Filters/Prompt/IPromptRenderFilter.cs",
+  "dotnet/src/SemanticKernel.Abstractions/Filters/Prompt/PromptRenderContext.cs",
+  "python/samples/concepts/prompt_templates/azure_chat_gpt_api_handlebars.py",
+  "python/samples/concepts/prompt_templates/azure_chat_gpt_api_jinja2.py",
+  "python/samples/concepts/prompt_templates/configuring_prompts.py",
+  "python/samples/concepts/prompt_templates/handlebars_prompts.py",
+  "python/samples/concepts/prompt_templates/load_yaml_prompt.py",
+  "python/samples/concepts/prompt_templates/template_language.py",
+  "python/samples/learn_resources/plugins/prompts/chat/config.json",
+  "python/samples/learn_resources/plugins/prompts/chat/skprompt.txt",
+  "python/semantic_kernel/filters/prompts/prompt_render_context.py",
+  "python/semantic_kernel/prompt_template/__init__.py",
+  "python/semantic_kernel/prompt_template/const.py",
+  "python/semantic_kernel/prompt_template/handlebars_prompt_template.py",
+  "python/semantic_kernel/prompt_template/input_variable.py",
+  "python/semantic_kernel/prompt_template/jinja2_prompt_template.py",
+  "python/semantic_kernel/prompt_template/prompt_template_base.py",
+  "python/semantic_kernel/prompt_template/utils/__init__.py",
+  "python/semantic_kernel/prompt_template/utils/handlebars_system_helpers.py",
+  "python/semantic_kernel/prompt_template/utils/jinja2_system_helpers.py"
+ ],
+ "stages": [],
+ "roles": [],
+ "gates": [
+  [
+   "check",
+   "if this variable allows dangerous content"
+  ],
+  [
+   "check",
+   "for primitive types"
+  ],
+  [
+   "check",
+   "for date/time types"
+  ],
+  [
+   "check",
+   "for UUID"
+  ],
+  [
+   "check",
+   "for enums"
+  ],
+  [
+   "check",
+   "for None"
+  ]
+ ],
+ "prompts": [
+  [
+   "path",
+   "dotnet/samples/Demos/ModelContextProtocolClientServer/MCPServer/Prompts/PromptDefinition.cs"
+  ],
+  [
+   "path",
+   "dotnet/samples/LearnResources/Plugins/Prompts/chat/config.json"
+  ],
+  [
+   "path",
+   "dotnet/samples/LearnResources/Plugins/Prompts/chat/skprompt.txt"
+  ],
+  [
+   "path",
+   "dotnet/src/IntegrationTests/prompts/GenerateStory.yaml"
+  ],
+  [
+   "path",
+   "dotnet/src/IntegrationTests/prompts/GenerateStoryHandlebars.yaml"
+  ],
+  [
+   "path",
+   "dotnet/src/SemanticKernel.Abstractions/Filters/Prompt/IPromptRenderFilter.cs"
+  ],
+  [
+   "path",
+   "dotnet/src/SemanticKernel.Abstractions/Filters/Prompt/PromptRenderContext.cs"
+  ],
+  [
+   "path",
+   "python/samples/concepts/prompt_templates/azure_chat_gpt_api_handlebars.py"
+  ],
+  [
+   "path",
+   "python/samples/concepts/prompt_templates/azure_chat_gpt_api_jinja2.py"
+  ],
+  [
+   "path",
+   "python/samples/concepts/prompt_templates/configuring_prompts.py"
+  ],
+  [
+   "path",
+   "python/samples/concepts/prompt_templates/handlebars_prompts.py"
+  ],
+  [
+   "path",
+   "python/samples/concepts/prompt_templates/load_yaml_prompt.py"
+  ],
+  [
+   "path",
+   "python/samples/concepts/prompt_templates/template_language.py"
+  ],
+  [
+   "path",
+   "python/samples/learn_resources/plugins/prompts/chat/config.json"
+  ],
+  [
+   "path",
+   "python/samples/learn_resources/plugins/prompts/chat/skprompt.txt"
+  ],
+  [
+   "path",
+   "python/semantic_kernel/filters/prompts/prompt_render_context.py"
+  ],
+  [
+   "path",
+   "python/semantic_kernel/prompt_template/__init__.py"
+  ],
+  [
+   "path",
+   "python/semantic_kernel/prompt_template/const.py"
+  ],
+  [
+   "path",
+   "python/semantic_kernel/prompt_template/handlebars_prompt_template.py"
+  ],
+  [
+   "path",
+   "python/semantic_kernel/prompt_template/input_variable.py"
+  ],
+  [
+   "path",
+   "python/semantic_kernel/prompt_template/jinja2_prompt_template.py"
+  ],
+  [
+   "path",
+   "python/semantic_kernel/prompt_template/prompt_template_base.py"
+  ],
+  [
+   "path",
+   "python/semantic_kernel/prompt_template/utils/__init__.py"
+  ],
+  [
+   "path",
+   "python/semantic_kernel/prompt_template/utils/handlebars_system_helpers.py"
+  ]
+ ],
+ "headings": [],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 0,
+  "gates": 6,
+  "prompts": 25,
+  "headings": 0
+ },
+ "structure_found": true
+}

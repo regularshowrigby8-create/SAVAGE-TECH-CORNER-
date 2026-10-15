@@ -1,0 +1,305 @@
+{
+ "id": "chrome-devtools-mcp",
+ "full_name": "ChromeDevTools/chrome-devtools-mcp",
+ "url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
+ "group": "MCP tool server",
+ "license": "Apache-2.0",
+ "content_redistributed": true,
+ "files": [
+  "AGENTS.md",
+  "README.md",
+  "package.json",
+  "server.json",
+  "skills/a11y-debugging/SKILL.md",
+  "skills/a11y-debugging/references/a11y-snippets.md",
+  "skills/chrome-devtools-cli/SKILL.md",
+  "skills/chrome-devtools-cli/references/installation.md",
+  "skills/chrome-devtools/SKILL.md",
+  "skills/cookie-debugging/SKILL.md",
+  "skills/debug-optimize-lcp/SKILL.md",
+  "skills/debug-optimize-lcp/references/elements-and-size.md",
+  "skills/debug-optimize-lcp/references/lcp-breakdown.md",
+  "skills/debug-optimize-lcp/references/lcp-snippets.md",
+  "skills/debug-optimize-lcp/references/optimization-strategies.md",
+  "skills/memory-leak-debugging/SKILL.md",
+  "skills/memory-leak-debugging/references/common-leaks.md",
+  "skills/troubleshooting/SKILL.md",
+  "src/telemetry/watchdog/main.ts"
+ ],
+ "stages": [
+  [
+   "step",
+   "1: Record a Performance Trace"
+  ],
+  [
+   "step",
+   "2: Analyze LCP Insights"
+  ],
+  [
+   "step",
+   "3: Identify the LCP Element"
+  ],
+  [
+   "step",
+   "4: Check the Network Waterfall"
+  ],
+  [
+   "step",
+   "5: Inspect HTML for Common Issues"
+  ],
+  [
+   "step",
+   "1: Find and Read Configuration"
+  ],
+  [
+   "step",
+   "2: Triage Common Connection Errors"
+  ],
+  [
+   "step",
+   "3: Read Known Issues"
+  ],
+  [
+   "step",
+   "4: Formulate a Configuration"
+  ],
+  [
+   "step",
+   "5: Run Diagnostic Commands"
+  ],
+  [
+   "step",
+   "6: Check GitHub for Existing Issues"
+  ]
+ ],
+ "roles": [],
+ "gates": [
+  [
+   "check",
+   "`scores` (0-1 scale). A score < 1 indicates violations."
+  ],
+  [
+   "review",
+   "`audits.failed` count."
+  ],
+  [
+   "check",
+   "images for `alt` text."
+  ],
+  [
+   "check",
+   "earlier login/handshake responses for `Set-Cookie` directives:"
+  ],
+  [
+   "check",
+   "for `CookieIssue` entries, such as:"
+  ],
+  [
+   "check",
+   "if `Domain` restricts subdomains."
+  ],
+  [
+   "check",
+   "`list_console_messages(types: [\"issue\"])` for browser rejection reasons."
+  ]
+ ],
+ "prompts": [
+  [
+   "path",
+   "skills/a11y-debugging/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/a11y-debugging/references/a11y-snippets.md"
+  ],
+  [
+   "path",
+   "skills/chrome-devtools-cli/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/chrome-devtools-cli/references/installation.md"
+  ],
+  [
+   "path",
+   "skills/chrome-devtools/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/cookie-debugging/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/debug-optimize-lcp/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/debug-optimize-lcp/references/elements-and-size.md"
+  ],
+  [
+   "path",
+   "skills/debug-optimize-lcp/references/lcp-breakdown.md"
+  ],
+  [
+   "path",
+   "skills/debug-optimize-lcp/references/lcp-snippets.md"
+  ],
+  [
+   "path",
+   "skills/debug-optimize-lcp/references/optimization-strategies.md"
+  ],
+  [
+   "path",
+   "skills/memory-leak-debugging/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/memory-leak-debugging/references/common-leaks.md"
+  ],
+  [
+   "path",
+   "skills/troubleshooting/SKILL.md"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Instructions"
+  ],
+  [
+   "heading",
+   "Rules for TypeScript"
+  ],
+  [
+   "heading",
+   "Rules for Testing"
+  ],
+  [
+   "heading",
+   "Structure and Separation of Concerns"
+  ],
+  [
+   "heading",
+   "Mocking Guidelines (`tests/mocks.ts`)"
+  ],
+  [
+   "heading",
+   "Assertions and Sinon Best Practices"
+  ],
+  [
+   "heading",
+   "Test Cleanliness"
+  ],
+  [
+   "heading",
+   "Chrome DevTools for agents"
+  ],
+  [
+   "heading",
+   "Key features"
+  ],
+  [
+   "heading",
+   "Disclaimers"
+  ],
+  [
+   "heading",
+   "**Usage statistics**"
+  ],
+  [
+   "heading",
+   "Update checks"
+  ],
+  [
+   "heading",
+   "Requirements"
+  ],
+  [
+   "heading",
+   "Getting started"
+  ],
+  [
+   "heading",
+   "MCP Client configuration"
+  ],
+  [
+   "heading",
+   "Your first prompt"
+  ],
+  [
+   "heading",
+   "Tools"
+  ],
+  [
+   "heading",
+   "Configuration"
+  ],
+  [
+   "heading",
+   "Advanced Usage"
+  ],
+  [
+   "heading",
+   "Integrating as a browser subagent"
+  ],
+  [
+   "heading",
+   "Core Concepts"
+  ],
+  [
+   "heading",
+   "Workflow Patterns"
+  ],
+  [
+   "heading",
+   "1. Automated Audit (Lighthouse)"
+  ],
+  [
+   "heading",
+   "2. Browser Issues & Audits"
+  ]
+ ],
+ "mcp_tools": [
+  "chrome-devtools-mcp:click",
+  "chrome-devtools-mcp:close_page",
+  "chrome-devtools-mcp:drag",
+  "chrome-devtools-mcp:emulate",
+  "chrome-devtools-mcp:evaluate_script",
+  "chrome-devtools-mcp:fill",
+  "chrome-devtools-mcp:fill_form",
+  "chrome-devtools-mcp:get_console_message",
+  "chrome-devtools-mcp:get_css_styles",
+  "chrome-devtools-mcp:get_network_request",
+  "chrome-devtools-mcp:handle_dialog",
+  "chrome-devtools-mcp:hover",
+  "chrome-devtools-mcp:lighthouse_audit",
+  "chrome-devtools-mcp:list_console_messages",
+  "chrome-devtools-mcp:list_network_requests",
+  "chrome-devtools-mcp:list_pages",
+  "chrome-devtools-mcp:navigate_page",
+  "chrome-devtools-mcp:new_page",
+  "chrome-devtools-mcp:performance_analyze_insight",
+  "chrome-devtools-mcp:performance_start_trace",
+  "chrome-devtools-mcp:performance_stop_trace",
+  "chrome-devtools-mcp:press_key",
+  "chrome-devtools-mcp:resize_page",
+  "chrome-devtools-mcp:select_page",
+  "chrome-devtools-mcp:take_heapsnapshot",
+  "chrome-devtools-mcp:take_screenshot",
+  "chrome-devtools-mcp:take_snapshot",
+  "chrome-devtools-mcp:type_text",
+  "chrome-devtools-mcp:upload_file",
+  "chrome-devtools-mcp:wait_for"
+ ],
+ "texts": 19,
+ "launch_command": "npx -y chrome-devtools-mcp@latest",
+ "totals": {
+  "mcp_tools": 30,
+  "stages": 11,
+  "roles": 0,
+  "gates": 7,
+  "prompts": 14,
+  "headings": 109
+ },
+ "structure_found": true
+}

@@ -1,0 +1,153 @@
+{
+ "id": "aipoch-open-science",
+ "full_name": "aipoch/open-science",
+ "url": "https://github.com/aipoch/open-science",
+ "group": "imported factory",
+ "license": "Apache-2.0",
+ "content_redistributed": true,
+ "files": [
+  "packages/skills/.gitignore",
+  "packages/skills/src/frontmatter.ts",
+  "packages/skills/tsconfig.dev.json",
+  "packages/skills/tsconfig.test.json",
+  "packages/skills/vitest.config.ts",
+  "resources/skills/alphafold2/.catalog_stamp",
+  "resources/skills/boltz/.catalog_stamp",
+  "resources/skills/borzoi/.catalog_stamp",
+  "resources/skills/chai1/.catalog_stamp",
+  "resources/skills/diffdock/.catalog_stamp",
+  "resources/skills/esmfold2/.catalog_stamp",
+  "resources/skills/evo2/.catalog_stamp",
+  "resources/skills/fair-esm2/.catalog_stamp",
+  "resources/skills/indication-dossier/.catalog_stamp",
+  "resources/skills/ligandmpnn/.catalog_stamp",
+  "resources/skills/literature-review/.catalog_stamp",
+  "resources/skills/openfold3/.catalog_stamp",
+  "resources/skills/paper-narrative/open-science.json",
+  "resources/skills/proteinmpnn/.catalog_stamp",
+  "resources/skills/scgpt/.catalog_stamp",
+  "resources/skills/scvi-tools/.catalog_stamp",
+  "resources/skills/skill-creator/package.json",
+  "resources/skills/skill-creator/scripts/index.js",
+  "resources/skills/solublempnn/.catalog_stamp",
+  "src/main/agents/catalog-contract.ts"
+ ],
+ "stages": [],
+ "roles": [
+  [
+   "path",
+   "src/main/agents/catalog-contract.ts"
+  ]
+ ],
+ "gates": [],
+ "prompts": [
+  [
+   "path",
+   "packages/skills/.gitignore"
+  ],
+  [
+   "path",
+   "packages/skills/src/frontmatter.ts"
+  ],
+  [
+   "path",
+   "packages/skills/tsconfig.dev.json"
+  ],
+  [
+   "path",
+   "packages/skills/tsconfig.test.json"
+  ],
+  [
+   "path",
+   "packages/skills/vitest.config.ts"
+  ],
+  [
+   "path",
+   "resources/skills/alphafold2/.catalog_stamp"
+  ],
+  [
+   "path",
+   "resources/skills/boltz/.catalog_stamp"
+  ],
+  [
+   "path",
+   "resources/skills/borzoi/.catalog_stamp"
+  ],
+  [
+   "path",
+   "resources/skills/chai1/.catalog_stamp"
+  ],
+  [
+   "path",
+   "resources/skills/diffdock/.catalog_stamp"
+  ],
+  [
+   "path",
+   "resources/skills/esmfold2/.catalog_stamp"
+  ],
+  [
+   "path",
+   "resources/skills/evo2/.catalog_stamp"
+  ],
+  [
+   "path",
+   "resources/skills/fair-esm2/.catalog_stamp"
+  ],
+  [
+   "path",
+   "resources/skills/indication-dossier/.catalog_stamp"
+  ],
+  [
+   "path",
+   "resources/skills/ligandmpnn/.catalog_stamp"
+  ],
+  [
+   "path",
+   "resources/skills/literature-review/.catalog_stamp"
+  ],
+  [
+   "path",
+   "resources/skills/openfold3/.catalog_stamp"
+  ],
+  [
+   "path",
+   "resources/skills/paper-narrative/open-science.json"
+  ],
+  [
+   "path",
+   "resources/skills/proteinmpnn/.catalog_stamp"
+  ],
+  [
+   "path",
+   "resources/skills/scgpt/.catalog_stamp"
+  ],
+  [
+   "path",
+   "resources/skills/scvi-tools/.catalog_stamp"
+  ],
+  [
+   "path",
+   "resources/skills/skill-creator/package.json"
+  ],
+  [
+   "path",
+   "resources/skills/skill-creator/scripts/index.js"
+  ],
+  [
+   "path",
+   "resources/skills/solublempnn/.catalog_stamp"
+  ]
+ ],
+ "headings": [],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 1,
+  "gates": 0,
+  "prompts": 24,
+  "headings": 0
+ },
+ "structure_found": true
+}

@@ -1,0 +1,312 @@
+{
+ "id": "sandgardenhq-sgai",
+ "full_name": "sandgardenhq/sgai",
+ "url": "https://github.com/sandgardenhq/sgai",
+ "group": "imported factory",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  "cmd/sgai/skel/.sgai/agent/project-critic-minority-report.md",
+  "cmd/sgai/skel/.sgai/agent/project-critic-sibling-evaluator.md",
+  "cmd/sgai/skel/.sgai/agent/shell-script-developer.md",
+  "cmd/sgai/skel/.sgai/agent/webmaster-reviewer.md",
+  "cmd/sgai/skel/.sgai/skills/condition-based-waiting/SKILL.md",
+  "cmd/sgai/skel/.sgai/skills/defense-in-depth/SKILL.md",
+  "cmd/sgai/skel/.sgai/skills/frontend-design/ABOUT.md",
+  "cmd/sgai/skel/.sgai/skills/how-to-use-code-snippets/SKILL.md",
+  "cmd/sgai/skel/.sgai/skills/incorporate-snippets/SKILL.md",
+  "cmd/sgai/skel/.sgai/skills/markdown-navigation/SKILL.md",
+  "cmd/sgai/skel/.sgai/skills/markdown-navigation/markdown-viewer.sh",
+  "cmd/sgai/skel/.sgai/skills/problem-solving/ABOUT.md",
+  "cmd/sgai/skel/.sgai/skills/problem-solving/collision-zone-thinking/SKILL.md",
+  "cmd/sgai/skel/.sgai/skills/problem-solving/inversion-exercise/SKILL.md",
+  "cmd/sgai/skel/.sgai/skills/problem-solving/meta-pattern-recognition/SKILL.md",
+  "cmd/sgai/skel/.sgai/skills/problem-solving/scale-game/SKILL.md",
+  "cmd/sgai/skel/.sgai/skills/problem-solving/simplification-cascades/SKILL.md",
+  "cmd/sgai/skel/.sgai/skills/product-design/antifragility-framework/ABOUT.md",
+  "cmd/sgai/skel/.sgai/skills/product-design/antifragility-framework/SKILL.md",
+  "cmd/sgai/skel/.sgai/skills/product-design/brainstorming/ABOUT.md",
+  "cmd/sgai/skel/.sgai/skills/product-design/goal-md-composer/REFERENCE.md",
+  "cmd/sgai/skel/.sgai/skills/product-design/goal-md-composer/SKILL.md",
+  "cmd/sgai/skel/.sgai/skills/requesting-code-review/SKILL.md",
+  "cmd/sgai/skel/.sgai/skills/subagent-delegation-protocol/SKILL.md",
+  "cmd/sgai/skel/.sgai/skills/subagent-return-protocol/SKILL.md"
+ ],
+ "stages": [
+  [
+   "phase",
+   "1: Gather Snippet Information"
+  ],
+  [
+   "phase",
+   "2: Validate Snippet"
+  ],
+  [
+   "phase",
+   "3: Save Snippet"
+  ],
+  [
+   "phase",
+   "4: Model Configuration"
+  ]
+ ],
+ "roles": [
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/agent/project-critic-minority-report.md"
+  ],
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/agent/project-critic-sibling-evaluator.md"
+  ],
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/agent/shell-script-developer.md"
+  ],
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/agent/webmaster-reviewer.md"
+  ]
+ ],
+ "gates": [
+  [
+   "check",
+   "command return codes"
+  ],
+  [
+   "review",
+   "Scope"
+  ],
+  [
+   "check",
+   "that all required fields are provided"
+  ],
+  [
+   "check",
+   "for filename conflicts and resolve (append -2, -3, etc.)"
+  ],
+  [
+   "verification",
+   "commands already run"
+  ],
+  [
+   "review",
+   "after each independent work unit or batch of non-overlapping units"
+  ],
+  [
+   "review",
+   "before merge or completion"
+  ],
+  [
+   "review",
+   "when stuck"
+  ],
+  [
+   "verification",
+   "commands:"
+  ],
+  [
+   "review",
+   "expectations:"
+  ],
+  [
+   "review",
+   "Envelope"
+  ]
+ ],
+ "prompts": [
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/skills/condition-based-waiting/SKILL.md"
+  ],
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/skills/defense-in-depth/SKILL.md"
+  ],
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/skills/frontend-design/ABOUT.md"
+  ],
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/skills/how-to-use-code-snippets/SKILL.md"
+  ],
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/skills/incorporate-snippets/SKILL.md"
+  ],
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/skills/markdown-navigation/SKILL.md"
+  ],
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/skills/markdown-navigation/markdown-viewer.sh"
+  ],
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/skills/problem-solving/ABOUT.md"
+  ],
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/skills/problem-solving/collision-zone-thinking/SKILL.md"
+  ],
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/skills/problem-solving/inversion-exercise/SKILL.md"
+  ],
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/skills/problem-solving/meta-pattern-recognition/SKILL.md"
+  ],
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/skills/problem-solving/scale-game/SKILL.md"
+  ],
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/skills/problem-solving/simplification-cascades/SKILL.md"
+  ],
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/skills/product-design/antifragility-framework/ABOUT.md"
+  ],
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/skills/product-design/antifragility-framework/SKILL.md"
+  ],
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/skills/product-design/brainstorming/ABOUT.md"
+  ],
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/skills/product-design/goal-md-composer/REFERENCE.md"
+  ],
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/skills/product-design/goal-md-composer/SKILL.md"
+  ],
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/skills/requesting-code-review/SKILL.md"
+  ],
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/skills/subagent-delegation-protocol/SKILL.md"
+  ],
+  [
+   "path",
+   "cmd/sgai/skel/.sgai/skills/subagent-return-protocol/SKILL.md"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Project Critic MinorityReport"
+  ],
+  [
+   "heading",
+   "Explicit State Updates"
+  ],
+  [
+   "heading",
+   "Required Inputs"
+  ],
+  [
+   "heading",
+   "Dissent Rules"
+  ],
+  [
+   "heading",
+   "Output Format"
+  ],
+  [
+   "heading",
+   "Project Critic Sibling Evaluator"
+  ],
+  [
+   "heading",
+   "Evaluation Rules"
+  ],
+  [
+   "heading",
+   "Shell Script Developer"
+  ],
+  [
+   "heading",
+   "Your Expertise"
+  ],
+  [
+   "heading",
+   "Guidelines"
+  ],
+  [
+   "heading",
+   "Portability"
+  ],
+  [
+   "heading",
+   "Argument Handling"
+  ],
+  [
+   "heading",
+   "Error Handling"
+  ],
+  [
+   "heading",
+   "Best Practices"
+  ],
+  [
+   "heading",
+   "Process"
+  ],
+  [
+   "heading",
+   "Important"
+  ],
+  [
+   "heading",
+   "Subagent Output"
+  ],
+  [
+   "heading",
+   "Webmaster Reviewer"
+  ],
+  [
+   "heading",
+   "Mandatory Review Contract"
+  ],
+  [
+   "heading",
+   "Condition-Based Waiting"
+  ],
+  [
+   "heading",
+   "Overview"
+  ],
+  [
+   "heading",
+   "When to Use"
+  ],
+  [
+   "heading",
+   "Core Pattern"
+  ],
+  [
+   "heading",
+   "Quick Patterns"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 4,
+  "roles": 4,
+  "gates": 11,
+  "prompts": 21,
+  "headings": 107
+ },
+ "structure_found": true
+}

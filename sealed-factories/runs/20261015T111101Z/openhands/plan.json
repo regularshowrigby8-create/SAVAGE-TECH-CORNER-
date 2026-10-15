@@ -1,0 +1,189 @@
+{
+ "id": "openhands",
+ "full_name": "All-Hands-AI/OpenHands",
+ "url": "https://github.com/OpenHands/OpenHands",
+ "group": "AI-focused factory",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  ".agents/skills/desktop-electron/SKILL.md",
+  ".agents/skills/e2e-testing/SKILL.md",
+  ".agents/skills/frontend-api-contracts/SKILL.md",
+  ".agents/skills/frontend-development/SKILL.md",
+  ".agents/skills/local-stack-runtime/SKILL.md",
+  ".agents/skills/telemetry-analytics/SKILL.md",
+  ".agents/skills/verify-openhands/scripts/control-openhands",
+  ".agents/skills/verify-openhands/scripts/lib/agent-profile-repoint.mjs",
+  ".agents/skills/verify-openhands/scripts/lib/baseline.mjs",
+  ".agents/skills/verify-openhands/scripts/lib/build-id.mjs",
+  ".agents/skills/verify-openhands/scripts/lib/build-inputs.mjs",
+  ".agents/skills/verify-openhands/scripts/lib/call-limit.mjs",
+  ".agents/skills/verify-openhands/scripts/lib/events-paging.mjs",
+  ".agents/skills/verify-openhands/scripts/lib/redact-storage.mjs",
+  ".agents/skills/verify-openhands/scripts/lib/route-pattern.mjs",
+  ".agents/skills/verify-openhands/scripts/lib/tmux-path.mjs",
+  "src/components/features/skills/get-skill-card-description.ts",
+  "src/components/features/skills/get-skill-chat-launch-message.ts",
+  "src/components/features/skills/is-copyable-skill-source.ts",
+  "src/components/features/skills/skill-facet-rail.tsx",
+  "src/components/features/skills/skill-facet-row.tsx",
+  "src/components/features/skills/skill-filters-modal.tsx",
+  "src/components/features/skills/skill-icon-badge.tsx",
+  "src/components/features/skills/skill-type-badge.tsx",
+  "src/components/features/skills/skills-toolbar.tsx"
+ ],
+ "stages": [],
+ "roles": [],
+ "gates": [],
+ "prompts": [
+  [
+   "path",
+   ".agents/skills/desktop-electron/SKILL.md"
+  ],
+  [
+   "path",
+   ".agents/skills/e2e-testing/SKILL.md"
+  ],
+  [
+   "path",
+   ".agents/skills/frontend-api-contracts/SKILL.md"
+  ],
+  [
+   "path",
+   ".agents/skills/frontend-development/SKILL.md"
+  ],
+  [
+   "path",
+   ".agents/skills/local-stack-runtime/SKILL.md"
+  ],
+  [
+   "path",
+   ".agents/skills/telemetry-analytics/SKILL.md"
+  ],
+  [
+   "path",
+   ".agents/skills/verify-openhands/scripts/control-openhands"
+  ],
+  [
+   "path",
+   ".agents/skills/verify-openhands/scripts/lib/agent-profile-repoint.mjs"
+  ],
+  [
+   "path",
+   ".agents/skills/verify-openhands/scripts/lib/baseline.mjs"
+  ],
+  [
+   "path",
+   ".agents/skills/verify-openhands/scripts/lib/build-id.mjs"
+  ],
+  [
+   "path",
+   ".agents/skills/verify-openhands/scripts/lib/build-inputs.mjs"
+  ],
+  [
+   "path",
+   ".agents/skills/verify-openhands/scripts/lib/call-limit.mjs"
+  ],
+  [
+   "path",
+   ".agents/skills/verify-openhands/scripts/lib/events-paging.mjs"
+  ],
+  [
+   "path",
+   ".agents/skills/verify-openhands/scripts/lib/redact-storage.mjs"
+  ],
+  [
+   "path",
+   ".agents/skills/verify-openhands/scripts/lib/route-pattern.mjs"
+  ],
+  [
+   "path",
+   ".agents/skills/verify-openhands/scripts/lib/tmux-path.mjs"
+  ],
+  [
+   "path",
+   "src/components/features/skills/get-skill-card-description.ts"
+  ],
+  [
+   "path",
+   "src/components/features/skills/get-skill-chat-launch-message.ts"
+  ],
+  [
+   "path",
+   "src/components/features/skills/is-copyable-skill-source.ts"
+  ],
+  [
+   "path",
+   "src/components/features/skills/skill-facet-rail.tsx"
+  ],
+  [
+   "path",
+   "src/components/features/skills/skill-facet-row.tsx"
+  ],
+  [
+   "path",
+   "src/components/features/skills/skill-filters-modal.tsx"
+  ],
+  [
+   "path",
+   "src/components/features/skills/skill-icon-badge.tsx"
+  ],
+  [
+   "path",
+   "src/components/features/skills/skill-type-badge.tsx"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Electron Desktop"
+  ],
+  [
+   "heading",
+   "Workflow"
+  ],
+  [
+   "heading",
+   "Reference"
+  ],
+  [
+   "heading",
+   "End-to-End Testing"
+  ],
+  [
+   "heading",
+   "Frontend API and Backend Contracts"
+  ],
+  [
+   "heading",
+   "Frontend Development"
+  ],
+  [
+   "heading",
+   "Local Stack and Runtime Services"
+  ],
+  [
+   "heading",
+   "Telemetry and Analytics"
+  ],
+  [
+   "heading",
+   "Thin wrapper so recipes can call `control-openhands ...` once this directory"
+  ],
+  [
+   "heading",
+   "is on PATH. All logic lives in control-openhands.mjs."
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 0,
+  "gates": 0,
+  "prompts": 25,
+  "headings": 10
+ },
+ "structure_found": true
+}

@@ -1,0 +1,408 @@
+{
+ "id": "parthalon025-autonomous-coding-toolkit",
+ "full_name": "parthalon025/autonomous-coding-toolkit",
+ "url": "https://github.com/parthalon025/autonomous-coding-toolkit",
+ "group": "imported factory",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  "agents/bash-expert.md",
+  "agents/dependency-auditor.md",
+  "scripts/prompts/agent-a-superpowers.md",
+  "scripts/prompts/agent-b-ralph.md",
+  "scripts/prompts/judge-agent.md",
+  "scripts/prompts/planner-agent.md",
+  "skills/autocode/ab-verification.md",
+  "skills/autocode/code-quality-standards.md",
+  "skills/dispatching-parallel-agents/SKILL.md",
+  "skills/executing-plans/SKILL.md",
+  "skills/finishing-a-development-branch/SKILL.md",
+  "skills/receiving-code-review/SKILL.md",
+  "skills/requesting-code-review/SKILL.md",
+  "skills/requesting-code-review/code-reviewer.md",
+  "skills/roadmap/SKILL.md",
+  "skills/subagent-driven-development/code-quality-reviewer-prompt.md",
+  "skills/subagent-driven-development/implementer-prompt.md",
+  "skills/subagent-driven-development/spec-reviewer-prompt.md",
+  "skills/systematic-debugging/condition-based-waiting.md",
+  "skills/systematic-debugging/defense-in-depth.md",
+  "skills/systematic-debugging/root-cause-tracing.md",
+  "skills/using-superpowers/SKILL.md",
+  "skills/verify/SKILL.md",
+  "skills/writing-plans/SKILL.md",
+  "skills/writing-skills/SKILL.md"
+ ],
+ "stages": [
+  [
+   "step",
+   "1: Read target files"
+  ],
+  [
+   "step",
+   "2: Grep for Priority 1 blocking patterns"
+  ],
+  [
+   "step",
+   "3: Grep for Priority 2 quality patterns"
+  ],
+  [
+   "step",
+   "4: Check tooling config"
+  ],
+  [
+   "step",
+   "5: Run ShellCheck"
+  ],
+  [
+   "step",
+   "6: Check scope"
+  ],
+  [
+   "step",
+   "0: Tool Availability Check"
+  ],
+  [
+   "step",
+   "1: Repo Detection"
+  ],
+  [
+   "step",
+   "2: CVE Scanning (per repo)"
+  ],
+  [
+   "step",
+   "3: Cross-Language CVE Aggregation"
+  ],
+  [
+   "step",
+   "4: Outdated Package Detection (per repo)"
+  ],
+  [
+   "step",
+   "5: License Compliance (per repo)"
+  ],
+  [
+   "step",
+   "6: Report"
+  ],
+  [
+   "step",
+   "1: Load and Review Plan"
+  ],
+  [
+   "step",
+   "2: Execute Batch"
+  ],
+  [
+   "step",
+   "3: Report"
+  ],
+  [
+   "step",
+   "4: Continue"
+  ],
+  [
+   "step",
+   "5: Complete Development"
+  ],
+  [
+   "step",
+   "1: Verify Tests"
+  ],
+  [
+   "step",
+   "2: Determine Base Branch"
+  ],
+  [
+   "step",
+   "3: Present Options"
+  ],
+  [
+   "step",
+   "4: Execute Choice"
+  ],
+  [
+   "step",
+   "5: Cleanup Worktree"
+  ],
+  [
+   "step",
+   "1: Extract Features"
+  ]
+ ],
+ "roles": [
+  [
+   "path",
+   "agents/bash-expert.md"
+  ],
+  [
+   "path",
+   "agents/dependency-auditor.md"
+  ],
+  [
+   "agent",
+   "A: Superpowers Strategy"
+  ],
+  [
+   "agent",
+   "B: Ralph Wiggum Strategy"
+  ],
+  [
+   "agent",
+   "A (Superpowers) Results"
+  ],
+  [
+   "agent",
+   "B (Ralph Wiggum) Results"
+  ]
+ ],
+ "gates": [
+  [
+   "check",
+   "if `shfmt` config exists (`.editorconfig` or flags)"
+  ],
+  [
+   "verification",
+   "After agents return:"
+  ],
+  [
+   "review",
+   "critically - identify any questions or concerns about the plan"
+  ],
+  [
+   "verification",
+   "fails repeatedly"
+  ],
+  [
+   "review",
+   "plan critically first"
+  ],
+  [
+   "review",
+   "after EACH task"
+  ],
+  [
+   "review",
+   "after each batch (3 tasks)"
+  ],
+  [
+   "review",
+   "{WHAT_WAS_IMPLEMENTED}"
+  ],
+  [
+   "check",
+   "code quality, architecture, testing"
+  ],
+  [
+   "review",
+   "Checklist"
+  ],
+  [
+   "check",
+   "for missing pieces they claimed to implement"
+  ]
+ ],
+ "prompts": [
+  [
+   "path",
+   "scripts/prompts/agent-a-superpowers.md"
+  ],
+  [
+   "path",
+   "scripts/prompts/agent-b-ralph.md"
+  ],
+  [
+   "path",
+   "scripts/prompts/judge-agent.md"
+  ],
+  [
+   "path",
+   "scripts/prompts/planner-agent.md"
+  ],
+  [
+   "path",
+   "skills/autocode/ab-verification.md"
+  ],
+  [
+   "path",
+   "skills/autocode/code-quality-standards.md"
+  ],
+  [
+   "path",
+   "skills/dispatching-parallel-agents/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/executing-plans/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/finishing-a-development-branch/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/receiving-code-review/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/requesting-code-review/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/requesting-code-review/code-reviewer.md"
+  ],
+  [
+   "path",
+   "skills/roadmap/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/subagent-driven-development/code-quality-reviewer-prompt.md"
+  ],
+  [
+   "path",
+   "skills/subagent-driven-development/implementer-prompt.md"
+  ],
+  [
+   "path",
+   "skills/subagent-driven-development/spec-reviewer-prompt.md"
+  ],
+  [
+   "path",
+   "skills/systematic-debugging/condition-based-waiting.md"
+  ],
+  [
+   "path",
+   "skills/systematic-debugging/defense-in-depth.md"
+  ],
+  [
+   "path",
+   "skills/systematic-debugging/root-cause-tracing.md"
+  ],
+  [
+   "path",
+   "skills/using-superpowers/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/verify/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/writing-plans/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/writing-skills/SKILL.md"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Bash Expert"
+  ],
+  [
+   "heading",
+   "Scan Workflow (Audit Mode)"
+  ],
+  [
+   "heading",
+   "Output Format"
+  ],
+  [
+   "heading",
+   "Generation Mode (Writing New Scripts)"
+  ],
+  [
+   "heading",
+   "Hallucination Guard"
+  ],
+  [
+   "heading",
+   "Dependency Auditor"
+  ],
+  [
+   "heading",
+   "CRITICAL / HIGH CVEs \u2014 Fix immediately"
+  ],
+  [
+   "heading",
+   "MEDIUM CVEs \u2014 Fix this sprint"
+  ],
+  [
+   "heading",
+   "Outdated Packages (no known CVE)"
+  ],
+  [
+   "heading",
+   "License Compliance Issues"
+  ],
+  [
+   "heading",
+   "Workspace Rollup"
+  ],
+  [
+   "heading",
+   "Key Rules"
+  ],
+  [
+   "heading",
+   "Work Unit"
+  ],
+  [
+   "heading",
+   "Context"
+  ],
+  [
+   "heading",
+   "MAB Lessons (from prior competing runs)"
+  ],
+  [
+   "heading",
+   "Instructions"
+  ],
+  [
+   "heading",
+   "Strategy Differentiator"
+  ],
+  [
+   "heading",
+   "Judge Agent: MAB Evaluation"
+  ],
+  [
+   "heading",
+   "Design Document"
+  ],
+  [
+   "heading",
+   "Diff"
+  ],
+  [
+   "heading",
+   "Quality Gate Output"
+  ],
+  [
+   "heading",
+   "Evaluation Criteria"
+  ],
+  [
+   "heading",
+   "Planner Agent: Routing Reference"
+  ],
+  [
+   "heading",
+   "How Routing Works"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 42,
+  "roles": 6,
+  "gates": 11,
+  "prompts": 23,
+  "headings": 150
+ },
+ "structure_found": true
+}

@@ -1,0 +1,162 @@
+{
+ "id": "gethuman-sh-human",
+ "full_name": "gethuman-sh/human",
+ "url": "https://github.com/gethuman-sh/human",
+ "group": "imported factory",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  "internal/agent/README.md",
+  "internal/agent/agent.go",
+  "internal/agent/agent_test.go",
+  "internal/agent/agentlog_regression_test.go",
+  "internal/agent/agentlog_sc4820_test.go",
+  "internal/agent/agentlog_stream_test.go",
+  "internal/agent/botenv_test.go",
+  "internal/agent/diagnose.go",
+  "internal/agent/diagnose_test.go",
+  "internal/agent/docker_error_test.go",
+  "internal/agent/manager_release_branch_test.go",
+  "internal/agent/prune.go",
+  "internal/agent/prune_test.go",
+  "internal/agent/stoppedboard.go",
+  "internal/agent/stoppedboard_test.go",
+  "internal/agent/ticket.go",
+  "internal/agent/transcript.go",
+  "internal/agent/transcript_test.go",
+  "internal/agent/worktree.go",
+  "internal/capabilities/README.md",
+  "internal/capabilities/capabilities.go",
+  "internal/capabilities/capabilities_test.go",
+  "internal/pipeline/README.md",
+  "internal/pipeline/pipeline.go",
+  "internal/pipeline/pipeline_test.go"
+ ],
+ "stages": [
+  [
+   "path",
+   "internal/pipeline/README.md"
+  ],
+  [
+   "pipeline",
+   "Runtime"
+  ],
+  [
+   "path",
+   "internal/pipeline/pipeline.go"
+  ],
+  [
+   "path",
+   "internal/pipeline/pipeline_test.go"
+  ]
+ ],
+ "roles": [
+  [
+   "path",
+   "internal/agent/README.md"
+  ],
+  [
+   "path",
+   "internal/agent/agent.go"
+  ],
+  [
+   "path",
+   "internal/agent/agent_test.go"
+  ],
+  [
+   "path",
+   "internal/agent/agentlog_regression_test.go"
+  ],
+  [
+   "path",
+   "internal/agent/agentlog_sc4820_test.go"
+  ],
+  [
+   "path",
+   "internal/agent/agentlog_stream_test.go"
+  ],
+  [
+   "path",
+   "internal/agent/botenv_test.go"
+  ],
+  [
+   "path",
+   "internal/agent/diagnose.go"
+  ],
+  [
+   "path",
+   "internal/agent/diagnose_test.go"
+  ],
+  [
+   "path",
+   "internal/agent/docker_error_test.go"
+  ],
+  [
+   "path",
+   "internal/agent/manager_release_branch_test.go"
+  ],
+  [
+   "path",
+   "internal/agent/prune.go"
+  ],
+  [
+   "path",
+   "internal/agent/prune_test.go"
+  ],
+  [
+   "path",
+   "internal/agent/stoppedboard.go"
+  ],
+  [
+   "path",
+   "internal/agent/stoppedboard_test.go"
+  ],
+  [
+   "path",
+   "internal/agent/ticket.go"
+  ],
+  [
+   "path",
+   "internal/agent/transcript.go"
+  ],
+  [
+   "path",
+   "internal/agent/transcript_test.go"
+  ],
+  [
+   "path",
+   "internal/agent/worktree.go"
+  ]
+ ],
+ "gates": [],
+ "prompts": [],
+ "headings": [
+  [
+   "heading",
+   "AI Developer Agents"
+  ],
+  [
+   "heading",
+   "Run Capabilities"
+  ],
+  [
+   "heading",
+   "Why it runs locally"
+  ],
+  [
+   "heading",
+   "Conventional use"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 4,
+  "roles": 19,
+  "gates": 0,
+  "prompts": 0,
+  "headings": 4
+ },
+ "structure_found": true
+}

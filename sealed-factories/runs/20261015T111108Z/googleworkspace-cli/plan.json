@@ -1,0 +1,282 @@
+{
+ "id": "googleworkspace-cli",
+ "full_name": "googleworkspace/cli",
+ "url": "https://github.com/googleworkspace/cli",
+ "group": "imported factory",
+ "license": "Apache-2.0",
+ "content_redistributed": true,
+ "files": [
+  "skills/persona-it-admin/SKILL.md",
+  "skills/recipe-backup-sheet-as-csv/SKILL.md",
+  "skills/recipe-bulk-download-folder/SKILL.md",
+  "skills/recipe-collect-form-responses/SKILL.md",
+  "skills/recipe-compare-sheet-tabs/SKILL.md",
+  "skills/recipe-create-classroom-course/SKILL.md",
+  "skills/recipe-create-events-from-sheet/SKILL.md",
+  "skills/recipe-create-feedback-form/SKILL.md",
+  "skills/recipe-create-meet-space/SKILL.md",
+  "skills/recipe-create-presentation/SKILL.md",
+  "skills/recipe-create-shared-drive/SKILL.md",
+  "skills/recipe-create-task-list/SKILL.md",
+  "skills/recipe-draft-email-from-doc/SKILL.md",
+  "skills/recipe-find-free-time/SKILL.md",
+  "skills/recipe-find-large-files/SKILL.md",
+  "skills/recipe-forward-labeled-emails/SKILL.md",
+  "skills/recipe-label-and-archive-emails/SKILL.md",
+  "skills/recipe-log-deal-update/SKILL.md",
+  "skills/recipe-plan-weekly-schedule/SKILL.md",
+  "skills/recipe-review-meet-participants/SKILL.md",
+  "skills/recipe-review-overdue-tasks/SKILL.md",
+  "skills/recipe-schedule-recurring-event/SKILL.md",
+  "skills/recipe-send-team-announcement/SKILL.md",
+  "skills/recipe-share-event-materials/SKILL.md",
+  "skills/recipe-watch-drive-changes/SKILL.md"
+ ],
+ "stages": [],
+ "roles": [],
+ "gates": [
+  [
+   "review",
+   "`gws auth status` regularly to verify service account permissions."
+  ],
+  [
+   "check",
+   "Form Responses"
+  ],
+  [
+   "review",
+   "the output to find overlapping free slots"
+  ],
+  [
+   "review",
+   "the output and identify files to archive or move"
+  ],
+  [
+   "check",
+   "this week's agenda: `gws calendar +agenda`"
+  ],
+  [
+   "review",
+   "updated schedule: `gws calendar +agenda`"
+  ],
+  [
+   "review",
+   "Google Meet Attendance"
+  ],
+  [
+   "review",
+   "Overdue Tasks"
+  ],
+  [
+   "review",
+   "due dates and prioritize overdue items"
+  ]
+ ],
+ "prompts": [
+  [
+   "path",
+   "skills/persona-it-admin/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/recipe-backup-sheet-as-csv/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/recipe-bulk-download-folder/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/recipe-collect-form-responses/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/recipe-compare-sheet-tabs/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/recipe-create-classroom-course/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/recipe-create-events-from-sheet/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/recipe-create-feedback-form/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/recipe-create-meet-space/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/recipe-create-presentation/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/recipe-create-shared-drive/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/recipe-create-task-list/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/recipe-draft-email-from-doc/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/recipe-find-free-time/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/recipe-find-large-files/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/recipe-forward-labeled-emails/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/recipe-label-and-archive-emails/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/recipe-log-deal-update/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/recipe-plan-weekly-schedule/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/recipe-review-meet-participants/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/recipe-review-overdue-tasks/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/recipe-schedule-recurring-event/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/recipe-send-team-announcement/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/recipe-share-event-materials/SKILL.md"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "IT Administrator"
+  ],
+  [
+   "heading",
+   "Relevant Workflows"
+  ],
+  [
+   "heading",
+   "Instructions"
+  ],
+  [
+   "heading",
+   "Tips"
+  ],
+  [
+   "heading",
+   "Export a Google Sheet as CSV"
+  ],
+  [
+   "heading",
+   "Steps"
+  ],
+  [
+   "heading",
+   "Bulk Download Drive Folder"
+  ],
+  [
+   "heading",
+   "Compare Two Google Sheets Tabs"
+  ],
+  [
+   "heading",
+   "Create a Google Classroom Course"
+  ],
+  [
+   "heading",
+   "Create Google Calendar Events from a Sheet"
+  ],
+  [
+   "heading",
+   "Create and Share a Google Form"
+  ],
+  [
+   "heading",
+   "Create a Google Meet Conference"
+  ],
+  [
+   "heading",
+   "Create a Google Slides Presentation"
+  ],
+  [
+   "heading",
+   "Create and Configure a Shared Drive"
+  ],
+  [
+   "heading",
+   "Create a Task List and Add Tasks"
+  ],
+  [
+   "heading",
+   "Draft a Gmail Message from a Google Doc"
+  ],
+  [
+   "heading",
+   "Find Free Time Across Calendars"
+  ],
+  [
+   "heading",
+   "Find Largest Files in Drive"
+  ],
+  [
+   "heading",
+   "Forward Labeled Gmail Messages"
+  ],
+  [
+   "heading",
+   "Label and Archive Gmail Threads"
+  ],
+  [
+   "heading",
+   "Log Deal Update to Sheet"
+  ],
+  [
+   "heading",
+   "Plan Your Weekly Google Calendar Schedule"
+  ],
+  [
+   "heading",
+   "Schedule a Recurring Meeting"
+  ],
+  [
+   "heading",
+   "Announce via Gmail and Google Chat"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 0,
+  "gates": 9,
+  "prompts": 25,
+  "headings": 26
+ },
+ "structure_found": true
+}

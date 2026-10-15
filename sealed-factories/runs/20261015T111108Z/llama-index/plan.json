@@ -1,0 +1,163 @@
+{
+ "id": "llama-index",
+ "full_name": "run-llama/llama_index",
+ "url": "https://github.com/run-llama/llama_index",
+ "group": "AI-focused factory",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  "docs/api_reference/api_reference/prompts/index.md",
+  "docs/examples/prompts/llama2_qa_citation_events.jsonl",
+  "docs/src/content/docs/framework/module_guides/deploying/agents/_meta.yml",
+  "docs/src/content/docs/framework/module_guides/models/prompts/_meta.yml",
+  "docs/src/content/docs/framework/module_guides/models/prompts/index.md",
+  "docs/src/content/docs/framework/module_guides/models/prompts/usage_pattern.md",
+  "docs/src/content/docs/framework/understanding/agent/_meta.yml",
+  "llama-index-core/llama_index/core/agent/react/__init__.py",
+  "llama-index-core/llama_index/core/prompts/__init__.py",
+  "llama-index-core/llama_index/core/prompts/base.py",
+  "llama-index-core/llama_index/core/prompts/chat_prompts.py",
+  "llama-index-core/llama_index/core/prompts/default_prompt_selectors.py",
+  "llama-index-core/llama_index/core/prompts/default_prompts.py",
+  "llama-index-core/llama_index/core/prompts/display_utils.py",
+  "llama-index-core/llama_index/core/prompts/guidance_utils.py",
+  "llama-index-core/llama_index/core/prompts/mixin.py",
+  "llama-index-core/llama_index/core/prompts/prompt_type.py",
+  "llama-index-core/llama_index/core/prompts/prompt_utils.py",
+  "llama-index-core/llama_index/core/prompts/prompts.py",
+  "llama-index-core/llama_index/core/prompts/rich.py",
+  "llama-index-core/llama_index/core/prompts/system.py",
+  "llama-index-core/llama_index/core/prompts/utils.py",
+  "llama-index-integrations/agent/llama-index-agent-agentmesh/llama_index/__init__.py",
+  "llama-index-integrations/agent/llama-index-agent-agentmesh/llama_index/agent/__init__.py",
+  "llama-index-integrations/agent/llama-index-agent-azure/llama_index/agent/azure_foundry_agent/__init__.py"
+ ],
+ "stages": [],
+ "roles": [
+  [
+   "path",
+   "docs/src/content/docs/framework/module_guides/deploying/agents/_meta.yml"
+  ],
+  [
+   "path",
+   "docs/src/content/docs/framework/understanding/agent/_meta.yml"
+  ],
+  [
+   "path",
+   "llama-index-core/llama_index/core/agent/react/__init__.py"
+  ],
+  [
+   "path",
+   "llama-index-integrations/agent/llama-index-agent-agentmesh/llama_index/__init__.py"
+  ],
+  [
+   "path",
+   "llama-index-integrations/agent/llama-index-agent-agentmesh/llama_index/agent/__init__.py"
+  ],
+  [
+   "path",
+   "llama-index-integrations/agent/llama-index-agent-azure/llama_index/agent/azure_foundry_agent/__init__.py"
+  ]
+ ],
+ "gates": [
+  [
+   "check",
+   "if prompts_dict, module_dict has restricted \":\" token"
+  ]
+ ],
+ "prompts": [
+  [
+   "path",
+   "docs/api_reference/api_reference/prompts/index.md"
+  ],
+  [
+   "path",
+   "docs/examples/prompts/llama2_qa_citation_events.jsonl"
+  ],
+  [
+   "path",
+   "docs/src/content/docs/framework/module_guides/models/prompts/_meta.yml"
+  ],
+  [
+   "path",
+   "docs/src/content/docs/framework/module_guides/models/prompts/index.md"
+  ],
+  [
+   "path",
+   "docs/src/content/docs/framework/module_guides/models/prompts/usage_pattern.md"
+  ],
+  [
+   "path",
+   "llama-index-core/llama_index/core/prompts/__init__.py"
+  ],
+  [
+   "path",
+   "llama-index-core/llama_index/core/prompts/base.py"
+  ],
+  [
+   "path",
+   "llama-index-core/llama_index/core/prompts/chat_prompts.py"
+  ],
+  [
+   "path",
+   "llama-index-core/llama_index/core/prompts/default_prompt_selectors.py"
+  ],
+  [
+   "path",
+   "llama-index-core/llama_index/core/prompts/default_prompts.py"
+  ],
+  [
+   "path",
+   "llama-index-core/llama_index/core/prompts/display_utils.py"
+  ],
+  [
+   "path",
+   "llama-index-core/llama_index/core/prompts/guidance_utils.py"
+  ],
+  [
+   "path",
+   "llama-index-core/llama_index/core/prompts/mixin.py"
+  ],
+  [
+   "path",
+   "llama-index-core/llama_index/core/prompts/prompt_type.py"
+  ],
+  [
+   "path",
+   "llama-index-core/llama_index/core/prompts/prompt_utils.py"
+  ],
+  [
+   "path",
+   "llama-index-core/llama_index/core/prompts/prompts.py"
+  ],
+  [
+   "path",
+   "llama-index-core/llama_index/core/prompts/rich.py"
+  ],
+  [
+   "path",
+   "llama-index-core/llama_index/core/prompts/system.py"
+  ],
+  [
+   "path",
+   "llama-index-core/llama_index/core/prompts/utils.py"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Required for namespace package"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 6,
+  "gates": 1,
+  "prompts": 19,
+  "headings": 1
+ },
+ "structure_found": true
+}

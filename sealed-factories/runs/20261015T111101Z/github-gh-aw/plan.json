@@ -1,0 +1,271 @@
+{
+ "id": "github-gh-aw",
+ "full_name": "github/gh-aw",
+ "url": "https://github.com/github/gh-aw",
+ "group": "imported factory",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  ".claude/skills/playwright-cli/references/element-attributes.md",
+  ".squad/agents/Rai/history.md",
+  ".squad/agents/fact-checker/history.md",
+  ".squad/agents/mcmanus/charter.md",
+  ".squad/agents/ralph/charter.md",
+  ".squad/agents/ralph/history.md",
+  ".squad/agents/scribe/history.md",
+  ".squad/agents/verbal/charter.md",
+  ".squad/templates/skills/distributed-mesh/mesh.json.example",
+  "eslint-factory/src/rules/core-aliases.ts",
+  "pkg/cli/testdata/model_routing_golden/claude-awf-selected-messages/agent/awf-routing-outcome.json",
+  "pkg/cli/testdata/model_routing_golden/claude-awf-steering-notices/agent/awf-routing-outcome.json",
+  "pkg/cli/testdata/model_routing_golden/copilot-budget-exhausted-steering/agent/awf-routing-outcome.json",
+  "pkg/cli/testdata/model_routing_golden/copilot-cli-builtin-subagents/agent/awf-routing-outcome.json",
+  "pkg/cli/testdata/model_routing_golden/copilot-routed-gpt-responses/agent/awf-routing-outcome.json",
+  "pkg/cli/testdata/model_routing_golden/copilot-sdk-claude-subagent-completions/agent/awf-routing-outcome.json",
+  "pkg/cli/testdata/model_routing_golden/copilot-subagent-failed-and-alias/agent/awf-routing-outcome.json",
+  "pkg/cli/testdata/model_routing_golden_capture/agent/aw_info.json",
+  "pkg/cli/testdata/model_routing_golden_capture/agent/awf-routing-outcome.json",
+  "pkg/cli/testdata/model_routing_golden_capture/agent/output.log",
+  "pkg/workflow/prompts/cache_memory_prompt.md",
+  "pkg/workflow/prompts/cache_memory_prompt_multi.md",
+  "pkg/workflow/prompts/checkouts_no_credentials_warning.md",
+  "pkg/workflow/prompts/github_context_prompt.md",
+  "pkg/workflow/prompts/threat_detection.md"
+ ],
+ "stages": [
+  [
+   "path",
+   "pkg/workflow/prompts/cache_memory_prompt.md"
+  ],
+  [
+   "path",
+   "pkg/workflow/prompts/cache_memory_prompt_multi.md"
+  ],
+  [
+   "path",
+   "pkg/workflow/prompts/checkouts_no_credentials_warning.md"
+  ],
+  [
+   "path",
+   "pkg/workflow/prompts/github_context_prompt.md"
+  ],
+  [
+   "path",
+   "pkg/workflow/prompts/threat_detection.md"
+  ]
+ ],
+ "roles": [
+  [
+   "path",
+   ".squad/agents/Rai/history.md"
+  ],
+  [
+   "path",
+   ".squad/agents/fact-checker/history.md"
+  ],
+  [
+   "path",
+   ".squad/agents/mcmanus/charter.md"
+  ],
+  [
+   "path",
+   ".squad/agents/ralph/charter.md"
+  ],
+  [
+   "path",
+   ".squad/agents/ralph/history.md"
+  ],
+  [
+   "path",
+   ".squad/agents/scribe/history.md"
+  ],
+  [
+   "path",
+   ".squad/agents/verbal/charter.md"
+  ],
+  [
+   "path",
+   "pkg/cli/testdata/model_routing_golden/claude-awf-selected-messages/agent/awf-routing-outcome.json"
+  ],
+  [
+   "path",
+   "pkg/cli/testdata/model_routing_golden/claude-awf-steering-notices/agent/awf-routing-outcome.json"
+  ],
+  [
+   "path",
+   "pkg/cli/testdata/model_routing_golden/copilot-budget-exhausted-steering/agent/awf-routing-outcome.json"
+  ],
+  [
+   "path",
+   "pkg/cli/testdata/model_routing_golden/copilot-cli-builtin-subagents/agent/awf-routing-outcome.json"
+  ],
+  [
+   "path",
+   "pkg/cli/testdata/model_routing_golden/copilot-routed-gpt-responses/agent/awf-routing-outcome.json"
+  ],
+  [
+   "path",
+   "pkg/cli/testdata/model_routing_golden/copilot-sdk-claude-subagent-completions/agent/awf-routing-outcome.json"
+  ],
+  [
+   "path",
+   "pkg/cli/testdata/model_routing_golden/copilot-subagent-failed-and-alias/agent/awf-routing-outcome.json"
+  ],
+  [
+   "path",
+   "pkg/cli/testdata/model_routing_golden_capture/agent/aw_info.json"
+  ],
+  [
+   "path",
+   "pkg/cli/testdata/model_routing_golden_capture/agent/awf-routing-outcome.json"
+  ],
+  [
+   "path",
+   "pkg/cli/testdata/model_routing_golden_capture/agent/output.log"
+  ],
+  [
+   "agent",
+   "Output File"
+  ]
+ ],
+ "gates": [],
+ "prompts": [
+  [
+   "path",
+   ".claude/skills/playwright-cli/references/element-attributes.md"
+  ],
+  [
+   "path",
+   ".squad/templates/skills/distributed-mesh/mesh.json.example"
+  ],
+  [
+   "path",
+   "pkg/workflow/prompts/cache_memory_prompt.md"
+  ],
+  [
+   "path",
+   "pkg/workflow/prompts/cache_memory_prompt_multi.md"
+  ],
+  [
+   "path",
+   "pkg/workflow/prompts/checkouts_no_credentials_warning.md"
+  ],
+  [
+   "path",
+   "pkg/workflow/prompts/github_context_prompt.md"
+  ],
+  [
+   "path",
+   "pkg/workflow/prompts/threat_detection.md"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Inspecting Element Attributes"
+  ],
+  [
+   "heading",
+   "Examples"
+  ],
+  [
+   "heading",
+   "snapshot shows a button as e7 but doesn't reveal its id or data attributes"
+  ],
+  [
+   "heading",
+   "get the element's id"
+  ],
+  [
+   "heading",
+   "get all CSS classes"
+  ],
+  [
+   "heading",
+   "get a specific attribute"
+  ],
+  [
+   "heading",
+   "get a computed style property"
+  ],
+  [
+   "heading",
+   "Project Context"
+  ],
+  [
+   "heading",
+   "Core Context"
+  ],
+  [
+   "heading",
+   "Recent Updates"
+  ],
+  [
+   "heading",
+   "Learnings"
+  ],
+  [
+   "heading",
+   "McManus \u2014 CI/CD & Actions Platform Engineer"
+  ],
+  [
+   "heading",
+   "Identity"
+  ],
+  [
+   "heading",
+   "What I Own"
+  ],
+  [
+   "heading",
+   "Boundaries"
+  ],
+  [
+   "heading",
+   "Model"
+  ],
+  [
+   "heading",
+   "Ralph \u2014 Ralph"
+  ],
+  [
+   "heading",
+   "Responsibilities"
+  ],
+  [
+   "heading",
+   "Work Style"
+  ],
+  [
+   "heading",
+   "Verbal \u2014 DevRel / Docs"
+  ],
+  [
+   "heading",
+   "Cache Folder Available"
+  ],
+  [
+   "heading",
+   "Cache Folders Available"
+  ],
+  [
+   "heading",
+   "Threat Detection Analysis"
+  ],
+  [
+   "heading",
+   "Workflow Source Context"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 5,
+  "roles": 18,
+  "gates": 0,
+  "prompts": 7,
+  "headings": 29
+ },
+ "structure_found": true
+}

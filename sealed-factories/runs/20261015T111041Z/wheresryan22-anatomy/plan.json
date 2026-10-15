@@ -1,0 +1,115 @@
+{
+ "id": "wheresryan22-anatomy",
+ "full_name": "wheresryan22/anatomy",
+ "url": "https://github.com/wheresryan22/anatomy",
+ "group": "imported factory",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  "README.md",
+  "SKILL.md",
+  "agents/openai.yaml"
+ ],
+ "stages": [],
+ "roles": [
+  [
+   "path",
+   "agents/openai.yaml"
+  ]
+ ],
+ "gates": [],
+ "prompts": [],
+ "headings": [
+  [
+   "heading",
+   "Quick start"
+  ],
+  [
+   "heading",
+   "Gallery"
+  ],
+  [
+   "heading",
+   "What it makes"
+  ],
+  [
+   "heading",
+   "Install"
+  ],
+  [
+   "heading",
+   "Usage"
+  ],
+  [
+   "heading",
+   "Examples"
+  ],
+  [
+   "heading",
+   "How it works"
+  ],
+  [
+   "heading",
+   "Requirements"
+  ],
+  [
+   "heading",
+   "Limits"
+  ],
+  [
+   "heading",
+   "Share a figure"
+  ],
+  [
+   "heading",
+   "Contributing"
+  ],
+  [
+   "heading",
+   "License"
+  ],
+  [
+   "heading",
+   "Anatomy"
+  ],
+  [
+   "heading",
+   "The one idea that matters"
+  ],
+  [
+   "heading",
+   "Workflow"
+  ],
+  [
+   "heading",
+   "Setup"
+  ],
+  [
+   "heading",
+   "Craft rules (short form)"
+  ],
+  [
+   "heading",
+   "WebGL inside the drawing"
+  ],
+  [
+   "heading",
+   "3D: figures that turn (beta)"
+  ],
+  [
+   "heading",
+   "References"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 3,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 1,
+  "gates": 0,
+  "prompts": 0,
+  "headings": 20
+ },
+ "structure_found": true
+}

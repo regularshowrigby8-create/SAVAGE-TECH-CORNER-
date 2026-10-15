@@ -1,0 +1,126 @@
+{
+ "id": "mcp-atlassian",
+ "full_name": "sooperset/mcp-atlassian",
+ "url": "https://github.com/sooperset/mcp-atlassian",
+ "group": "MCP tool server",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  "AGENTS.md",
+  "CLAUDE.md",
+  "Dockerfile",
+  "README.md",
+  "src/mcp_atlassian/servers/main.py"
+ ],
+ "stages": [],
+ "roles": [],
+ "gates": [
+  [
+   "check",
+   "for auth errors and return 401 before calling app"
+  ],
+  [
+   "check",
+   "prefix BEFORE stripping to preserve \"Bearer \" / \"Token \" matching"
+  ]
+ ],
+ "prompts": [],
+ "headings": [
+  [
+   "heading",
+   "MCP Atlassian"
+  ],
+  [
+   "heading",
+   "Repository map"
+  ],
+  [
+   "heading",
+   "Architecture"
+  ],
+  [
+   "heading",
+   "Dev workflow"
+  ],
+  [
+   "heading",
+   "Rules"
+  ],
+  [
+   "heading",
+   "Code conventions"
+  ],
+  [
+   "heading",
+   "Gotchas"
+  ],
+  [
+   "heading",
+   "Quick reference"
+  ],
+  [
+   "heading",
+   "Running the server"
+  ],
+  [
+   "heading",
+   "Git workflow"
+  ],
+  [
+   "heading",
+   "Quick Start"
+  ],
+  [
+   "heading",
+   "1. Get Your API Token"
+  ],
+  [
+   "heading",
+   "2. Configure Your IDE"
+  ],
+  [
+   "heading",
+   "Autohand Code"
+  ],
+  [
+   "heading",
+   "3. Start Using"
+  ],
+  [
+   "heading",
+   "Documentation"
+  ],
+  [
+   "heading",
+   "Compatibility"
+  ],
+  [
+   "heading",
+   "Key Tools"
+  ],
+  [
+   "heading",
+   "Security"
+  ],
+  [
+   "heading",
+   "Contributing"
+  ],
+  [
+   "heading",
+   "License"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 5,
+ "launch_command": "uvx mcp-atlassian",
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 0,
+  "gates": 2,
+  "prompts": 0,
+  "headings": 21
+ },
+ "structure_found": true
+}

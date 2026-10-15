@@ -1,0 +1,231 @@
+{
+ "id": "mcp-toolbox",
+ "full_name": "googleapis/mcp-toolbox",
+ "url": "https://github.com/googleapis/mcp-toolbox",
+ "group": "MCP tool server",
+ "license": "Apache-2.0",
+ "content_redistributed": true,
+ "files": [
+  ".hugo/package.json",
+  "docs/en/documentation/configuration/pre-post-processing/js/adk/package.json",
+  "docs/en/documentation/configuration/prompts/_index.md",
+  "docs/en/documentation/configuration/prompts/custom/_index.md",
+  "docs/en/documentation/getting-started/quickstart/js/adk/package.json",
+  "docs/en/documentation/getting-started/quickstart/js/genAI/package.json",
+  "docs/en/documentation/getting-started/quickstart/js/genkit/package.json",
+  "internal/prompts/arguments.go",
+  "internal/prompts/arguments_test.go",
+  "internal/prompts/custom/custom.go",
+  "internal/prompts/custom/custom_test.go",
+  "internal/prompts/messages.go",
+  "internal/prompts/messages_test.go",
+  "internal/prompts/prompts.go",
+  "internal/prompts/prompts_test.go",
+  "npm/server-darwin-x64/package.json",
+  "npm/server-linux-x64/package.json",
+  "pypi/src/toolbox_server/main.py",
+  "skills/maintainer/docsite-link-sweep/references/link-forms.md",
+  "skills/maintainer/reproduce-bug/references/DEVELOPER.md",
+  "skills/maintainer/review-prs/references/CONTRIBUTING.md",
+  "skills/maintainer/review-prs/references/DEVELOPER.md",
+  "skills/maintainer/triage-issues/references/maintainer-playbook.md"
+ ],
+ "stages": [
+  [
+   "phase",
+   "A: Release Platform-Specific Packages**"
+  ],
+  [
+   "phase",
+   "B: Release Main Package (@toolbox-sdk/server)**"
+  ]
+ ],
+ "roles": [
+  [
+   "role",
+   "\"user\""
+  ],
+  [
+   "role",
+   "\"assistant\""
+  ]
+ ],
+ "gates": [
+  [
+   "review",
+   "our community guidelines"
+  ]
+ ],
+ "prompts": [
+  [
+   "path",
+   "docs/en/documentation/configuration/prompts/_index.md"
+  ],
+  [
+   "path",
+   "docs/en/documentation/configuration/prompts/custom/_index.md"
+  ],
+  [
+   "path",
+   "internal/prompts/arguments.go"
+  ],
+  [
+   "path",
+   "internal/prompts/arguments_test.go"
+  ],
+  [
+   "path",
+   "internal/prompts/custom/custom.go"
+  ],
+  [
+   "path",
+   "internal/prompts/custom/custom_test.go"
+  ],
+  [
+   "path",
+   "internal/prompts/messages.go"
+  ],
+  [
+   "path",
+   "internal/prompts/messages_test.go"
+  ],
+  [
+   "path",
+   "internal/prompts/prompts.go"
+  ],
+  [
+   "path",
+   "internal/prompts/prompts_test.go"
+  ],
+  [
+   "path",
+   "skills/maintainer/docsite-link-sweep/references/link-forms.md"
+  ],
+  [
+   "path",
+   "skills/maintainer/reproduce-bug/references/DEVELOPER.md"
+  ],
+  [
+   "path",
+   "skills/maintainer/review-prs/references/CONTRIBUTING.md"
+  ],
+  [
+   "path",
+   "skills/maintainer/review-prs/references/DEVELOPER.md"
+  ],
+  [
+   "path",
+   "skills/maintainer/triage-issues/references/maintainer-playbook.md"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Link forms, path mapping, and traps"
+  ],
+  [
+   "heading",
+   "Path to URL mapping"
+  ],
+  [
+   "heading",
+   "Canonical link form"
+  ],
+  [
+   "heading",
+   "Why a site-absolute link leaks"
+  ],
+  [
+   "heading",
+   "Shortcode-generated links"
+  ],
+  [
+   "heading",
+   "Common traps"
+  ],
+  [
+   "heading",
+   "DEVELOPER.md"
+  ],
+  [
+   "heading",
+   "Prerequisites"
+  ],
+  [
+   "heading",
+   "Developing Toolbox"
+  ],
+  [
+   "heading",
+   "Running from Local Source"
+  ],
+  [
+   "heading",
+   "Cross Compiling For Windows"
+  ],
+  [
+   "heading",
+   "Compiling on Windows"
+  ],
+  [
+   "heading",
+   "Tool Naming Conventions"
+  ],
+  [
+   "heading",
+   "Tool Name"
+  ],
+  [
+   "heading",
+   "Tool Type"
+  ],
+  [
+   "heading",
+   "Tool Invocation & Error Handling"
+  ],
+  [
+   "heading",
+   "Error Categorization"
+  ],
+  [
+   "heading",
+   "Implementation Guidelines"
+  ],
+  [
+   "heading",
+   "Implementation Guides"
+  ],
+  [
+   "heading",
+   "Adding a New Database Source or Tool"
+  ],
+  [
+   "heading",
+   "Adding a New Database Source"
+  ],
+  [
+   "heading",
+   "Adding a New Tool"
+  ],
+  [
+   "heading",
+   "Adding Integration Tests"
+  ],
+  [
+   "heading",
+   "Adding Documentation"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 23,
+ "launch_command": "npx -y @toolbox-sdk/server",
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 2,
+  "roles": 2,
+  "gates": 1,
+  "prompts": 15,
+  "headings": 96
+ },
+ "structure_found": true
+}

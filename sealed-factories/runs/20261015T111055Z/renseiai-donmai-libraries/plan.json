@@ -1,0 +1,143 @@
+{
+ "id": "renseiai-donmai-libraries",
+ "full_name": "RenseiAI/donmai-libraries",
+ "url": "https://github.com/RenseiAI/donmai-libraries",
+ "group": "imported factory",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  ".agent/add-dep.sh",
+  ".agent/heartbeat.json",
+  ".agent/todos.json",
+  "packages/architectural-intelligence/src/prompts/__test-helpers__.ts",
+  "packages/architectural-intelligence/src/prompts/index.ts",
+  "packages/architectural-intelligence/src/prompts/prompts.test.ts",
+  "packages/architectural-intelligence/src/prompts/v1/convention-identification.ts",
+  "packages/architectural-intelligence/src/prompts/v1/decision-recording.ts",
+  "packages/architectural-intelligence/src/prompts/v1/deviation-detection.ts",
+  "packages/architectural-intelligence/src/prompts/v1/pattern-extraction.ts",
+  "packages/core/src/orchestrator/merge-mention-context.test.ts",
+  "packages/dashboard/dev/app/pipeline/page.tsx",
+  "packages/dashboard/src/components/pipeline/pipeline-column.tsx",
+  "packages/nextjs/src/handlers/workers/list.ts",
+  "packages/nextjs/src/orchestrator/error-formatting.ts",
+  "packages/nextjs/src/orchestrator/index.ts",
+  "packages/spring-ai-bench/agents/agentfactory-single.yaml",
+  "packages/spring-ai-bench/agents/agentfactory.yaml",
+  "templates/dashboard/src/app/api/sessions/[id]/prompts/route.ts",
+  "templates/dashboard/src/app/api/workers/[id]/heartbeat/route.ts",
+  "templates/dashboard/src/app/api/workers/[id]/poll/route.ts",
+  "templates/dashboard/src/app/api/workers/[id]/route.ts",
+  "templates/dashboard/src/app/api/workers/register/route.ts",
+  "templates/dashboard/src/app/api/workers/route.ts",
+  "templates/dashboard/src/app/pipeline/page.tsx"
+ ],
+ "stages": [
+  [
+   "path",
+   "packages/dashboard/dev/app/pipeline/page.tsx"
+  ],
+  [
+   "path",
+   "packages/dashboard/src/components/pipeline/pipeline-column.tsx"
+  ],
+  [
+   "path",
+   "templates/dashboard/src/app/pipeline/page.tsx"
+  ]
+ ],
+ "roles": [
+  [
+   "path",
+   "packages/nextjs/src/handlers/workers/list.ts"
+  ],
+  [
+   "path",
+   "packages/spring-ai-bench/agents/agentfactory-single.yaml"
+  ],
+  [
+   "path",
+   "packages/spring-ai-bench/agents/agentfactory.yaml"
+  ],
+  [
+   "path",
+   "templates/dashboard/src/app/api/workers/[id]/heartbeat/route.ts"
+  ],
+  [
+   "path",
+   "templates/dashboard/src/app/api/workers/[id]/poll/route.ts"
+  ],
+  [
+   "path",
+   "templates/dashboard/src/app/api/workers/[id]/route.ts"
+  ],
+  [
+   "path",
+   "templates/dashboard/src/app/api/workers/register/route.ts"
+  ],
+  [
+   "path",
+   "templates/dashboard/src/app/api/workers/route.ts"
+  ]
+ ],
+ "gates": [],
+ "prompts": [
+  [
+   "path",
+   "packages/architectural-intelligence/src/prompts/__test-helpers__.ts"
+  ],
+  [
+   "path",
+   "packages/architectural-intelligence/src/prompts/index.ts"
+  ],
+  [
+   "path",
+   "packages/architectural-intelligence/src/prompts/prompts.test.ts"
+  ],
+  [
+   "path",
+   "packages/architectural-intelligence/src/prompts/v1/convention-identification.ts"
+  ],
+  [
+   "path",
+   "packages/architectural-intelligence/src/prompts/v1/decision-recording.ts"
+  ],
+  [
+   "path",
+   "packages/architectural-intelligence/src/prompts/v1/deviation-detection.ts"
+  ],
+  [
+   "path",
+   "packages/architectural-intelligence/src/prompts/v1/pattern-extraction.ts"
+  ],
+  [
+   "path",
+   "templates/dashboard/src/app/api/sessions/[id]/prompts/route.ts"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Safe dependency addition for agents in worktrees."
+  ],
+  [
+   "heading",
+   "Removes symlinked node_modules, then runs pnpm add with guard bypass."
+  ],
+  [
+   "heading",
+   "Usage: bash .agent/add-dep.sh <package> [--filter <workspace>]"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 3,
+  "roles": 8,
+  "gates": 0,
+  "prompts": 8,
+  "headings": 3
+ },
+ "structure_found": true
+}

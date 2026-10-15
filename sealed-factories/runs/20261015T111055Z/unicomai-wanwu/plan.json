@@ -1,0 +1,238 @@
+{
+ "id": "unicomai-wanwu",
+ "full_name": "UnicomAI/wanwu",
+ "url": "https://github.com/UnicomAI/wanwu",
+ "group": "imported factory",
+ "license": "Apache-2.0",
+ "content_redistributed": true,
+ "files": [
+  "callback/static/prompts/docqa_prompt.txt",
+  "configs/microservice/bff-service/configs/agent-skills/clawhub/tencent-docs/doc/doc_format/prompt/pure_text_system_prompt.txt",
+  "configs/microservice/bff-service/configs/agent-skills/clawhub/tencent-docs/doc/doc_format/prompt/scenario_recognition_prompt.txt",
+  "configs/microservice/bff-service/configs/agent-skills/clawhub/tencent-docs/doc/doc_format/prompt/style_customization_prompt.txt",
+  "configs/microservice/bff-service/configs/agent-skills/clawhub/wechat-article-publisher/agents/openai.yaml",
+  "configs/microservice/bff-service/configs/wga/agents/DeepResearch/config.yaml",
+  "configs/microservice/bff-service/configs/wga/agents/SkillImport/config.yaml",
+  "configs/microservice/bff-service/configs/wga/agents/SkillPreview/config.yaml",
+  "internal/agent-service/service/agent-message-flow/prompt/system_prompt.go",
+  "internal/agent-service/service/agent-message-flow/prompt/system_prompt_knowledge.go",
+  "internal/agent-service/service/agent-message-flow/prompt/system_prompt_new.go",
+  "internal/agent-service/service/agent-message-flow/prompt/system_prompt_no_citation_knowledge.go",
+  "internal/agent-service/service/agent-message-flow/prompt/systemt_supervisor_prompt.go",
+  "pkg/wga-sandbox/internal/runner/eino/agent/shared/sanitizer.go",
+  "web/src/views/adminCenter/prompt/detail.vue",
+  "web/src/views/adminCenter/prompt/index.vue",
+  "web/src/views/agent/components/prompt/compare.vue",
+  "web/src/views/agent/components/prompt/index.vue",
+  "web/src/views/agent/components/prompt/promptDialog.vue",
+  "web/src/views/agent/components/prompt/promptField.vue",
+  "web/src/views/agent/constants.js",
+  "web/src/views/generalAgent/components/skills/workspaceConstants.js",
+  "web/src/views/templateSquare/prompt/promptTempSquare.vue",
+  "web/src/views/templateSquare/skills/skillWorkshop.vue",
+  "web/src/views/tool/prompt/index.vue"
+ ],
+ "stages": [],
+ "roles": [
+  [
+   "path",
+   "configs/microservice/bff-service/configs/agent-skills/clawhub/wechat-article-publisher/agents/openai.yaml"
+  ],
+  [
+   "path",
+   "configs/microservice/bff-service/configs/wga/agents/DeepResearch/config.yaml"
+  ],
+  [
+   "path",
+   "configs/microservice/bff-service/configs/wga/agents/SkillImport/config.yaml"
+  ],
+  [
+   "path",
+   "configs/microservice/bff-service/configs/wga/agents/SkillPreview/config.yaml"
+  ],
+  [
+   "path",
+   "pkg/wga-sandbox/internal/runner/eino/agent/shared/sanitizer.go"
+  ],
+  [
+   "path",
+   "web/src/views/agent/components/prompt/compare.vue"
+  ],
+  [
+   "path",
+   "web/src/views/agent/components/prompt/index.vue"
+  ],
+  [
+   "path",
+   "web/src/views/agent/components/prompt/promptDialog.vue"
+  ],
+  [
+   "path",
+   "web/src/views/agent/components/prompt/promptField.vue"
+  ],
+  [
+   "path",
+   "web/src/views/agent/constants.js"
+  ]
+ ],
+ "gates": [],
+ "prompts": [
+  [
+   "path",
+   "callback/static/prompts/docqa_prompt.txt"
+  ],
+  [
+   "path",
+   "configs/microservice/bff-service/configs/agent-skills/clawhub/tencent-docs/doc/doc_format/prompt/pure_text_system_prompt.txt"
+  ],
+  [
+   "path",
+   "configs/microservice/bff-service/configs/agent-skills/clawhub/tencent-docs/doc/doc_format/prompt/scenario_recognition_prompt.txt"
+  ],
+  [
+   "path",
+   "configs/microservice/bff-service/configs/agent-skills/clawhub/tencent-docs/doc/doc_format/prompt/style_customization_prompt.txt"
+  ],
+  [
+   "path",
+   "internal/agent-service/service/agent-message-flow/prompt/system_prompt.go"
+  ],
+  [
+   "path",
+   "internal/agent-service/service/agent-message-flow/prompt/system_prompt_knowledge.go"
+  ],
+  [
+   "path",
+   "internal/agent-service/service/agent-message-flow/prompt/system_prompt_new.go"
+  ],
+  [
+   "path",
+   "internal/agent-service/service/agent-message-flow/prompt/system_prompt_no_citation_knowledge.go"
+  ],
+  [
+   "path",
+   "internal/agent-service/service/agent-message-flow/prompt/systemt_supervisor_prompt.go"
+  ],
+  [
+   "path",
+   "web/src/views/adminCenter/prompt/detail.vue"
+  ],
+  [
+   "path",
+   "web/src/views/adminCenter/prompt/index.vue"
+  ],
+  [
+   "path",
+   "web/src/views/agent/components/prompt/compare.vue"
+  ],
+  [
+   "path",
+   "web/src/views/agent/components/prompt/index.vue"
+  ],
+  [
+   "path",
+   "web/src/views/agent/components/prompt/promptDialog.vue"
+  ],
+  [
+   "path",
+   "web/src/views/agent/components/prompt/promptField.vue"
+  ],
+  [
+   "path",
+   "web/src/views/generalAgent/components/skills/workspaceConstants.js"
+  ],
+  [
+   "path",
+   "web/src/views/templateSquare/prompt/promptTempSquare.vue"
+  ],
+  [
+   "path",
+   "web/src/views/templateSquare/skills/skillWorkshop.vue"
+  ],
+  [
+   "path",
+   "web/src/views/tool/prompt/index.vue"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "\u7eaf\u6587\u672c\u8f6cXML\u7ed3\u6784\u5316\u4efb\u52a1"
+  ],
+  [
+   "heading",
+   "\u8f93\u5165\u683c\u5f0f"
+  ],
+  [
+   "heading",
+   "\u793a\u4f8b\u8bf4\u660e"
+  ],
+  [
+   "heading",
+   "\u793a\u4f8b1\uff1a\u6807\u7b7e\u6620\u5c04"
+  ],
+  [
+   "heading",
+   "\u793a\u4f8b2\uff1a\u7ed3\u6784\u8865\u5145"
+  ],
+  [
+   "heading",
+   "\u793a\u4f8b3\uff1a\u5d4c\u5957\u7ed3\u6784\u5904\u7406"
+  ],
+  [
+   "heading",
+   "\u6a21\u677f\u7ed3\u6784\u8bf4\u660e"
+  ],
+  [
+   "heading",
+   "\u8f93\u51fa\u683c\u5f0f"
+  ],
+  [
+   "heading",
+   "\u6587\u6863\u573a\u666f\u8bc6\u522b\u4e0e\u6807\u9898\u751f\u6210\u4efb\u52a1"
+  ],
+  [
+   "heading",
+   "\u652f\u6301\u7684\u573a\u666f"
+  ],
+  [
+   "heading",
+   "\u9700\u8981\u8bc6\u522b\u7684\u6587\u672c\u5185\u5bb9"
+  ],
+  [
+   "heading",
+   "\u53ef\u7528\u6837\u5f0f\u540d"
+  ],
+  [
+   "heading",
+   "\u4e2d\u6587\u5b57\u53f7\u5bf9\u5e94\u5173\u7cfb"
+  ],
+  [
+   "heading",
+   "\u53ef\u7528\u989c\u8272\u5bf9\u5e94\u5173\u7cfb"
+  ],
+  [
+   "heading",
+   "\u5bf9\u9f50\u65b9\u5f0f\u5bf9\u5e94\u5173\u7cfb"
+  ],
+  [
+   "heading",
+   "\u884c\u8ddd\u5bf9\u5e94\u5173\u7cfb"
+  ],
+  [
+   "heading",
+   "\u7528\u6237\u8bf7\u6c42"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 10,
+  "gates": 0,
+  "prompts": 19,
+  "headings": 17
+ },
+ "structure_found": true
+}

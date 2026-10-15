@@ -1,0 +1,106 @@
+{
+ "id": "muskansoni0214-ai-agent-orchestration-pipeline",
+ "full_name": "MuskanSoni0214/ai-agent-orchestration-pipeline",
+ "url": "https://github.com/MuskanSoni0214/ai-agent-orchestration-pipeline",
+ "license": "NOASSERTION",
+ "license_file": null,
+ "license_text_sha256": null,
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "a2ab8b822216650237f86214d8645263abd8adf7",
+ "vendored_files": [
+  {
+   "path": "prompts/renderer.txt",
+   "bytes": 693,
+   "sha256": "5500f4656e2e21d470a2febd7485674b113a2794b272cd8664e00b188147f97f"
+  },
+  {
+   "path": "prompts/executor.txt",
+   "bytes": 922,
+   "sha256": "4910159a3e3dd45c94a0c4a712cca2c2a72500521a57f9bbb006359e98e572f0"
+  },
+  {
+   "path": "prompts/classifier.txt",
+   "bytes": 1054,
+   "sha256": "c583b771f930058b0f4de3e30446ed0e36952ef9a7a3f70e5712ad499b33ab08"
+  },
+  {
+   "path": "prompts/planner.txt",
+   "bytes": 1067,
+   "sha256": "f16630011fe281687fbaaf4e16e58aeb6e95da66bb643c900b667869281f07b3"
+  },
+  {
+   "path": "prompts/reflection.txt",
+   "bytes": 1413,
+   "sha256": "a9a42542a5cf820eba396ce96a64e1fe7cad3729ea3b62734c70c48876eede3e"
+  },
+  {
+   "path": "app/agents/__init__.py",
+   "bytes": 60,
+   "sha256": "1bb45549aabf6245e87793fbfc7e5c091d32eaaa3b31ff6a96f0469c59affca8"
+  },
+  {
+   "path": "app/agents/classifier.py",
+   "bytes": 1549,
+   "sha256": "61671b3c5184006fb7ff64795f21683fc6dfbb08d7e8fbf9e415b5455f27440a"
+  },
+  {
+   "path": "app/agents/renderer.py",
+   "bytes": 3036,
+   "sha256": "eb41cb382677fe1563cdd3340b95afc8d3f323ae4ad9170b36128c31942f7cf2"
+  },
+  {
+   "path": "app/agents/planner.py",
+   "bytes": 3424,
+   "sha256": "702bf0ce8adcfa93e8be09be344252631726c32bf9f7d536a9544eaaab70d2ab"
+  },
+  {
+   "path": "app/agents/executor.py",
+   "bytes": 4047,
+   "sha256": "b054c2b76e416606192307ab1b07df610f2fa69412bb679c3313824be3bea7d0"
+  },
+  {
+   "path": "app/agents/reflection.py",
+   "bytes": 4062,
+   "sha256": "2085316d320df01b222282d9627becbea5c9e6792e317d11dbf327e7087044e4"
+  },
+  {
+   "path": "app/main.py",
+   "bytes": 4204,
+   "sha256": "e0053489e845dd60955b9cb1f3d42d9bc0d74eec3a176e7614e1822fa234dae7"
+  },
+  {
+   "path": "app/pipeline.py",
+   "bytes": 4875,
+   "sha256": "3dda311281b14a5b870eef230f4e0ae5d667a6d2ed6c0373f491fcd167717fa7"
+  },
+  {
+   "path": "README.md",
+   "bytes": 15308,
+   "sha256": "5d7531af27db8998e3166d83a3daf27ad41dc1da10d7b0d7cc9047481f2ac77b"
+  }
+ ],
+ "skipped": {
+  "budget": false,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 44
+ },
+ "providers": [
+  "openai",
+  "anthropic",
+  "google"
+ ],
+ "entrypoints": [
+  "app/main.py",
+  "app/pipeline.py"
+ ],
+ "runtime": [
+  "python"
+ ],
+ "notes": [],
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 14,
+ "vendored_bytes": 45714,
+ "content_redistributed": false
+}

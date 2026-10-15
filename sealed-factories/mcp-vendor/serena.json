@@ -1,0 +1,168 @@
+{
+  "id": "serena",
+  "full_name": "oraios/serena",
+  "url": "https://github.com/oraios/serena",
+  "license": "NOASSERTION",
+  "license_file": "LICENSE",
+  "license_text_sha256": "6239f4be78ccff409aedfbce88ac89b26f488f76aac7ab199fb6876dc7fdeb4c",
+  "import_class": "blueprint-only",
+  "snapshot": "2026-10-14",
+  "commit": "f9972a32c67359dd4c4a5ab597688bb10d21d1f3",
+  "vendored_files": [
+    {
+      "path": "src/serena/resources/config/prompt_templates/simple_tool_outputs.yml",
+      "bytes": 2470,
+      "sha256": "1198711f2c4d5ea0777e13be671528bec5b02f282c60ef1f51d7750e16f559e1"
+    },
+    {
+      "path": "src/serena/resources/config/prompt_templates/info_prompts.yml",
+      "bytes": 2851,
+      "sha256": "6d8ae2a0f68778748a8e81d4788dc7f5b3a447778ad0ba1b0e8cb5c70cfdae23"
+    },
+    {
+      "path": "src/serena/resources/config/prompt_templates/system_prompt.yml",
+      "bytes": 12388,
+      "sha256": "3c14199e3e2bda83ba067f9f72e823be0aa629da9ca52f32804cf5c44becf28a"
+    },
+    {
+      "path": "server.json",
+      "bytes": 1483,
+      "sha256": "cab9044bb9792014fe0645120e218d90c28ef4984492176b11ee635238d7c7e2"
+    },
+    {
+      "path": "Dockerfile",
+      "bytes": 2603,
+      "sha256": "3f0eb4be87106bc61ce882dd4223830179a9d81a8f07c509df28d5a1649e778b"
+    },
+    {
+      "path": "src/serena/resources/config/modes/no-onboarding.yml",
+      "bytes": 208,
+      "sha256": "5f02397f21071db679d68f5014c295b6a6750485913683126180a528deed441f"
+    },
+    {
+      "path": "src/serena/resources/config/contexts/agent.yml",
+      "bytes": 219,
+      "sha256": "b3cec20f21ef0bd14121260d8d87e0af56ffc9ff76607cca7cec569efd331d1b"
+    },
+    {
+      "path": "src/serena/resources/config/modes/no-memories.yml",
+      "bytes": 348,
+      "sha256": "86c398f98ce6c794621d3b556cf7b75b90eabda2e470ae30491e16f7fca6e926"
+    },
+    {
+      "path": "src/serena/resources/config/contexts/oaicompat-agent.yml",
+      "bytes": 365,
+      "sha256": "9b09d9148249ec973d9129a1aee9c576b99d24d3dfbf1bfd8d3d2828899d072d"
+    },
+    {
+      "path": "src/serena/resources/config/modes/query-projects.yml",
+      "bytes": 383,
+      "sha256": "e17e9f3fd2a65ba3cc9ba0e3ae3f4938b41400523891df79f7e202178a284caa"
+    },
+    {
+      "path": "src/serena/resources/config/modes/planning.yml",
+      "bytes": 488,
+      "sha256": "cd775c131bf63f42baa656615c6dbb5785d01198d5c4efc3e0cdb300d1208e77"
+    },
+    {
+      "path": "src/serena/resources/config/modes/interactive.yml",
+      "bytes": 656,
+      "sha256": "556346c2d3718d54de8e0eda5a9d230d46308eaecf247b085f97a62fd4c222bc"
+    },
+    {
+      "path": "src/serena/resources/config/modes/onboarding.yml",
+      "bytes": 714,
+      "sha256": "3ed47df92f47692a44db8c8fda1ec0eb00fcd23ca476183a131b937ed0e61834"
+    },
+    {
+      "path": "src/serena/resources/config/internal_modes/jetbrains.yml",
+      "bytes": 758,
+      "sha256": "0af8fba4e7176eb0d2e99a5f3a083757f5e22c98a4d7fa922423be51634a154f"
+    },
+    {
+      "path": "src/serena/resources/config/modes/one-shot.yml",
+      "bytes": 907,
+      "sha256": "88bed4fe08c73fe8908268667dac1ac0e55fafad3f0184d3219a43ee927f4b98"
+    },
+    {
+      "path": "src/serena/resources/config/modes/benchmark.yml",
+      "bytes": 978,
+      "sha256": "7071eaf3e703713faca3e6193e67c672d9dcf5e3666b9473330bf0602ae51302"
+    },
+    {
+      "path": "src/serena/resources/config/contexts/desktop-app.yml",
+      "bytes": 982,
+      "sha256": "3ddd8d538e690559dff55c958b7608cdf042682eb927ebcac147da899054a58c"
+    },
+    {
+      "path": "src/serena/resources/config/contexts/codex.yml",
+      "bytes": 988,
+      "sha256": "cfe3c9221915f0c2a874404b866211402110c216bcea534a29ff73d008afc03e"
+    },
+    {
+      "path": "src/serena/resources/config/contexts/copilot-cli.yml",
+      "bytes": 1439,
+      "sha256": "3e70f06c0edc075b9c251e9656141e28f8a0fac47d84d5ef388983c0de930d6b"
+    },
+    {
+      "path": "src/serena/resources/config/contexts/jb-ai-assistant.yml",
+      "bytes": 1453,
+      "sha256": "e7909900b8c229cdb8647e25b109d437957adae26331cf4bfe2011b284d2dbb8"
+    },
+    {
+      "path": "src/serena/resources/config/contexts/ide.yml",
+      "bytes": 1453,
+      "sha256": "e7909900b8c229cdb8647e25b109d437957adae26331cf4bfe2011b284d2dbb8"
+    },
+    {
+      "path": "src/serena/resources/config/contexts/antigravity.yml",
+      "bytes": 1453,
+      "sha256": "e7909900b8c229cdb8647e25b109d437957adae26331cf4bfe2011b284d2dbb8"
+    },
+    {
+      "path": "src/serena/resources/config/contexts/junie.yml",
+      "bytes": 1496,
+      "sha256": "48f7e88b3059df513419a8142f73fdbd012ad6cf90e104c5fbcb8aa414605640"
+    },
+    {
+      "path": "src/serena/resources/config/contexts/jb-copilot-plugin.yml",
+      "bytes": 1595,
+      "sha256": "82ecad7bca3bacd8a45d3a4e64e241f942940ec1637ec3c51888c95525a04011"
+    },
+    {
+      "path": "src/serena/resources/config/contexts/vscode.yml",
+      "bytes": 1622,
+      "sha256": "6246d5af4e4250fd9a755c57a2f049dc8b3b7f555e52ba6a2a6eae6cb40c41c0"
+    }
+  ],
+  "skipped": {
+    "budget": true,
+    "forbidden_token": [],
+    "skipped_path": [],
+    "tree_entries": 1164
+  },
+  "providers": [
+    "anthropic",
+    "openai"
+  ],
+  "entrypoints": [],
+  "runtime": [],
+  "notes": [],
+  "_license_bytes": "U2VyZW5hIExpY2Vuc2luZyBPdmVydmlldwo9PT09PT09PT09PT09PT09PT09PT09PT09CgpUaGlzIHJlcG9zaXRvcnkgaXMgbGljZW5zZWQgcGVyIGNvbXBvbmVudDogU29saWRMU1AgdW5kZXIgdGhlIE1JVCBMaWNlbnNlIGFuZAp0aGUgU2VyZW5hIGFwcGxpY2F0aW9uIHVuZGVyIEdQTC0zLjAtb3ItbGF0ZXIuCgpCZWNhdXNlIE1JVCBpcyBjb21wYXRpYmxlIHdpdGggdGhlIEdQTCwgYW55IGRpc3RyaWJ1dGlvbiB0aGF0IGNvbWJpbmVzIGJvdGggLQpzdWNoIGFzIHRoZSBgc2VyZW5hLWFnZW50YCBwYWNrYWdlIC0gaXMgYXMgYSB3aG9sZSBzdWJqZWN0IHRvIHRoZSB0ZXJtcyBvZgpHUEwtMy4wLW9yLWxhdGVyLiBUaGlzIGRvZXMgbm90IGNoYW5nZSB0aGUgbGljZW5zZSBvZiB0aGUgU29saWRMU1AgZmlsZXMKdGhlbXNlbHZlczogdGhleSByZW1haW4gTUlULWxpY2Vuc2VkIGFuZCBtYXkgYmUgb2J0YWluZWQsIGV4dHJhY3RlZCBhbmQgdXNlZApzZXBhcmF0ZWx5IHVuZGVyIE1JVCB0ZXJtcy4KClRoZSBmdWxsIGxpY2Vuc2UgdGV4dHMgYXJlIGluIHRoZSBMSUNFTlNFUy8gZGlyZWN0b3J5IGFuZCBhcmUgbm90IG1vZGlmaWVkIGluCmFueSB3YXk6CgogICAgTElDRU5TRVMvTUlULnR4dCAgICAgICAgICAgICAgIFRoZSBNSVQgTGljZW5zZQogICAgTElDRU5TRVMvR1BMLTMuMC1vci1sYXRlci50eHQgIFRoZSBHTlUgR2VuZXJhbCBQdWJsaWMgTGljZW5zZSwgdmVyc2lvbiAzCgpDb21wb25lbnRzCi0tLS0tLS0tLS0KCiAgU29saWRMU1AgKHNyYy9zb2xpZGxzcC8sIHRlc3Qvc29saWRsc3AvLCB0ZXN0L3Jlc291cmNlcy8pCiAgICAgIExpY2Vuc2U6IE1JVCAoU1BEWDogTUlUKQogICAgICBDb3B5cmlnaHQgKGMpIDIwMjUtMjAyNiBKYWluICYgUGFuY2hlbmtvIElULUJlcmF0ZXIgUGFydG5lcnNjaGFmdAogICAgICAoT3JhaW9zIEFJKSBhbmQgY29udHJpYnV0b3JzCgogICAgICBTb2xpZExTUCBpcyB0aGUgbGFuZ3VhZ2Utc2VydmVyIGNsaWVudCBsaWJyYXJ5IHRoYXQgcHJvdmlkZXMgdGhlIGJhc2lzCiAgICAgIGZvciBTZXJlbmEncyBmcmVlIGNvZGUtaW50ZWxsaWdlbmNlIGJhY2tlbmQuIEl0IGlzIHBlcm1pc3NpdmUsIHJldXNhYmxlCiAgICAgIGluZnJhc3RydWN0dXJlIGFuZCByZW1haW5zIE1JVC1saWNlbnNlZCBzbyB0aGF0IGl0IGNhbiBiZSB1c2VkCiAgICAgIGluZGVwZW5kZW50bHkgb2YgU2VyZW5hIHVuZGVyIE1JVCB0ZXJtcy4gVGhpcyBpcyB1bmFmZmVjdGVkIGJ5IHRoZQogICAgICBsaWNlbnNpbmcgb2YgdGhlIFNlcmVuYSBhcHBsaWNhdGlvbi4KCiAgICAgIFNvbWUgZmlsZXMgaW4gc3JjL3NvbGlkbHNwL2xzcF9wcm90b2NvbF9oYW5kbGVyLyBhcmUgZGVyaXZlZCBmcm9tCiAgICAgIE9MU1AgKGh0dHBzOi8vZ2l0aHViLmNvbS9wcmVkcmFnbmlrb2xpYy9PTFNQKSwgTUlULWxpY2Vuc2VkOyB0aGUKICAgICAgb3JpZ2luYWwgbm90aWNlcyBhcmUgcmV0YWluZWQgaW4gdGhvc2UgZmlsZXMuCgogIFNlcmVuYSBhcHBsaWNhdGlvbiAoc3JjL3NlcmVuYS8sIHNyYy9pbnRlcnByb21wdC8sIHNjcmlwdHMvLCB0ZXN0L3NlcmVuYS8sCiAgZG9jcy8gYW5kIGV2ZXJ5dGhpbmcgZWxzZSBpbiB0aGlzIHJlcG9zaXRvcnkgdGhhdCBpcyBub3QgbGlzdGVkIGFib3ZlKQogICAgICBMaWNlbnNlOiBHUEwtMy4wLW9yLWxhdGVyIChTUERYOiBHUEwtMy4wLW9yLWxhdGVyKQogICAgICBDb3B5cmlnaHQgKGMpIDIwMjUtMjAyNiBKYWluICYgUGFuY2hlbmtvIElULUJlcmF0ZXIgUGFydG5lcnNjaGFmdAogICAgICAoT3JhaW9zIEFJKSBhbmQgY29udHJpYnV0b3JzCgogICAgICBTZXJlbmEgaXMgdGhlIGFwcGxpY2F0aW9uIGJ1aWx0IG9uIHRvcCBvZiBTb2xpZExTUC4gU3RhcnRpbmcgd2l0aCB0aGUKICAgICAgdjIgbGljZW5zaW5nIHRyYW5zaXRpb24gKHNlZSAiSGlzdG9yaWNhbCBjdXRvZmYiIGJlbG93KSwgU2VyZW5hCiAgICAgIGFwcGxpY2F0aW9uIGNvZGUgaXMgbGljZW5zZWQgdW5kZXIgdGhlIEdOVSBHZW5lcmFsIFB1YmxpYyBMaWNlbnNlLAogICAgICB2ZXJzaW9uIDMgb3IgKGF0IHlvdXIgb3B0aW9uKSBhbnkgbGF0ZXIgdmVyc2lvbi4KClNvdXJjZSBmaWxlcyBjYXJyeSBhbiAiU1BEWC1MaWNlbnNlLUlkZW50aWZpZXIiIGxpbmUgaW5kaWNhdGluZyB3aGljaCBvZiB0aGUKdHdvIGxpY2Vuc2VzIGFwcGxpZXMgdG8gdGhhdCBmaWxlLgoKSGlzdG9yaWNhbCBjdXRvZmYKLS0tLS0tLS0tLS0tLS0tLS0KClRoZSBsaWNlbnNlIGNoYW5nZSBpcyBOT1QgcmV0cm9hY3RpdmUuCgogICogU2VyZW5hIG9yaWdpbmFsbHkgYmVnYW4gdW5kZXIgdGhlIEdOVSBHZW5lcmFsIFB1YmxpYyBMaWNlbnNlICh2ZXJzaW9uIDIpLgogICAgSXQgd2FzIGNoYW5nZWQgdG8gdGhlIE1JVCBMaWNlbnNlIG9uIDIwMjUtMDUtMDEgKGNvbW1pdCAzZTkzODRmNSkuCiAgKiBBbGwgU2VyZW5hIHJlbGVhc2VzIGFuZCBjb21taXRzIGZyb20gdGhhdCBwb2ludCB1cCB0byBhbmQgaW5jbHVkaW5nIHRoZQogICAgY3V0b2ZmIGJlbG93IHdlcmUgcmVsZWFzZWQgdW5kZXIgdGhlIE1JVCBMaWNlbnNlIGFuZCByZW1haW4gYXZhaWxhYmxlCiAgICB1bmRlciB0aGUgTUlUIExpY2Vuc2UuCiAgKiBTZXJlbmEgdjIgYW5kIGFsbCBsYXRlciBhcHBsaWNhdGlvbiBjb2RlIGFyZSBsaWNlbnNlZCB1bmRlcgogICAgR1BMLTMuMC1vci1sYXRlci4KCiAgICBMYXN0IE1JVC1saWNlbnNlZCByZWxlYXNlOiB2MS43LjAKICAgIExhc3QgTUlULWxpY2Vuc2VkIGNvbW1pdDogIDc0YzM4YTY1ZjAzZmMwNzY0ZDdlZTRiMzAxNmVmNmEwNzU3MmVkNjQKICAgIE1hcmtlciB0YWc6ICAgICAgICAgICAgICAgIG1pdC1maW5hbAoKQ29udHJpYnV0aW9ucyB0aGF0IGVudGVyZWQgdGhlIFNlcmVuYSBhcHBsaWNhdGlvbiB1bmRlciB0aGUgTUlUIExpY2Vuc2UgYmVmb3JlCnRoZSBjdXRvZmYgcmVtYWluIGluY29ycG9yYXRlZCBpbiB0aGUgR1BMLWxpY2Vuc2VkIGFwcGxpY2F0aW9uOyB0aGUgTUlUCmNvcHlyaWdodCBhbmQgcGVybWlzc2lvbiBub3RpY2UgKExJQ0VOU0VTL01JVC50eHQpIGNvbnRpbnVlcyB0byBhcHBseSB0byB0aGF0Cmhpc3RvcmljYWwgY29kZSBhcyByZXF1aXJlZCBieSBpdHMgdGVybXMuCgpDb250cmlidXRpb25zCi0tLS0tLS0tLS0tLS0KCkNvbnRyaWJ1dGlvbnMgdG8gdGhpcyByZXBvc2l0b3J5IHJlcXVpcmUgYWNjZXB0YW5jZSBvZiB0aGUgQ29udHJpYnV0b3IgTGljZW5zZQpBZ3JlZW1lbnQgaW4gQ0xBLm1kLiBTZWUgQ09OVFJJQlVUSU5HLm1kIGZvciBkZXRhaWxzLgoKV2h5IEdQTD8KLS0tLS0tLS0KCldlIHdhbnQgdGhlIGJlc3QgdmVyc2lvbiBvZiBTZXJlbmEgdG8gcmVtYWluIGZyZWUuIFRoZSBHUEwgZW5zdXJlcyB0aGF0IGFueW9uZQp3aG8gcmVkaXN0cmlidXRlcyBhIGRlcml2YXRpdmUgdmVyc2lvbiBvZiBTZXJlbmEgbXVzdCBwcmVzZXJ2ZSB0aGUgc2FtZQpzb2Z0d2FyZSBmcmVlZG9tcyBmb3IgaXRzIHVzZXJzLgo=",
+  "launch": {
+    "command": [
+      "uvx",
+      "--from",
+      "git+https://github.com/oraios/serena",
+      "serena",
+      "start-mcp-server"
+    ],
+    "requires": "uv and network access on first run",
+    "verified": [],
+    "launch_verified": false,
+    "command_source": "repository",
+    "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one"
+  },
+  "what": "A powerful MCP toolkit for coding, providing semantic retrieval and editing capabilities  - the IDE for your agent",
+  "content_redistributed": false
+}

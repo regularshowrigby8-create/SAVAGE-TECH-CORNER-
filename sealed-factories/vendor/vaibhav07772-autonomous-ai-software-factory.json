@@ -1,0 +1,55 @@
+{
+ "id": "vaibhav07772-autonomous-ai-software-factory",
+ "full_name": "vaibhav07772/Autonomous-AI-Software-Factory",
+ "url": "https://github.com/vaibhav07772/Autonomous-AI-Software-Factory",
+ "license": "NOASSERTION",
+ "license_file": null,
+ "license_text_sha256": null,
+ "import_class": "blueprint-only",
+ "snapshot": "2026-10-14",
+ "commit": "399f7cfb7dfc70e66ffb586d6c900face6afff4f",
+ "vendored_files": [
+  {
+   "path": "agents/tools/mcp_file_tools.py",
+   "bytes": 1261,
+   "sha256": "1499e4a33babf1a65d4e9e63496546d4fd6df0e6e105dd90f98c936f118ff5df"
+  },
+  {
+   "path": "agents/factory_crew.py",
+   "bytes": 3344,
+   "sha256": "fbf21728adf83cb87a7e256091d067d8416c37e4e05ddaa10bba6ff5a0f311c4"
+  },
+  {
+   "path": "app/main.py",
+   "bytes": 1234,
+   "sha256": "df197efbcf4208768880e37874cfc64977d30c5cd52f0da2f1a3b47b61508be4"
+  },
+  {
+   "path": "README.md",
+   "bytes": 4643,
+   "sha256": "d64bedc442d1b39deecd2983da69b0d51243107f57a92c09f42270c504101a4d"
+  }
+ ],
+ "skipped": {
+  "budget": false,
+  "forbidden_token": [],
+  "skipped_path": [],
+  "tree_entries": 9
+ },
+ "providers": [
+  "openai",
+  "groq",
+  "anthropic"
+ ],
+ "entrypoints": [
+  "app/main.py"
+ ],
+ "runtime": [
+  "python"
+ ],
+ "notes": [],
+ "vendored_at": "2026-10-14",
+ "vendored_files_count": 4,
+ "vendored_bytes": 10482,
+ "content_redistributed": false
+}

@@ -1,0 +1,276 @@
+{
+ "id": "forward-future-loopy",
+ "full_name": "Forward-Future/loopy",
+ "url": "https://github.com/Forward-Future/loopy",
+ "group": "imported factory",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  "loop-library/site/agents/index.html",
+  "loop-library/worker/.dev.vars.example",
+  "loop-library/worker/bin/export-catalog.mjs",
+  "loop-library/worker/bin/import-bootstrap.mjs",
+  "loop-library/worker/bin/publish-loop.mjs",
+  "loop-library/worker/bin/restore-catalog.mjs",
+  "loop-library/worker/examples/loop.json",
+  "loop-library/worker/package.json",
+  "loop-library/worker/src/loop-schema.js",
+  "loop-library/worker/src/vote-store.js",
+  "loop-library/worker/wrangler.jsonc",
+  "skills/loop-library/SKILL.md",
+  "skills/loop-library/agents/openai.yaml",
+  "skills/loop-library/references/audit.md",
+  "skills/loop-library/references/debrief.md",
+  "skills/loop-library/references/discover.md",
+  "skills/loop-library/references/publish.md",
+  "skills/loop-library/references/run.md",
+  "skills/loopy/SKILL.md",
+  "skills/loopy/agents/openai.yaml",
+  "skills/loopy/references/audit.md",
+  "skills/loopy/references/debrief.md",
+  "skills/loopy/references/discover.md",
+  "skills/loopy/references/publish.md",
+  "skills/loopy/references/run.md"
+ ],
+ "stages": [
+  [
+   "json:steps",
+   "Record the current state and the acceptance check."
+  ],
+  [
+   "json:steps",
+   "Make one bounded change and run the same check again."
+  ],
+  [
+   "json:steps",
+   "Keep improvements and stop at success or no measurable progress."
+  ]
+ ],
+ "roles": [
+  [
+   "path",
+   "loop-library/site/agents/index.html"
+  ],
+  [
+   "path",
+   "loop-library/worker/.dev.vars.example"
+  ],
+  [
+   "path",
+   "loop-library/worker/bin/export-catalog.mjs"
+  ],
+  [
+   "path",
+   "loop-library/worker/bin/import-bootstrap.mjs"
+  ],
+  [
+   "path",
+   "loop-library/worker/bin/publish-loop.mjs"
+  ],
+  [
+   "path",
+   "loop-library/worker/bin/restore-catalog.mjs"
+  ],
+  [
+   "path",
+   "loop-library/worker/examples/loop.json"
+  ],
+  [
+   "path",
+   "loop-library/worker/package.json"
+  ],
+  [
+   "path",
+   "loop-library/worker/src/loop-schema.js"
+  ],
+  [
+   "path",
+   "loop-library/worker/src/vote-store.js"
+  ],
+  [
+   "path",
+   "loop-library/worker/wrangler.jsonc"
+  ],
+  [
+   "path",
+   "skills/loop-library/agents/openai.yaml"
+  ],
+  [
+   "path",
+   "skills/loopy/agents/openai.yaml"
+  ]
+ ],
+ "gates": [
+  [
+   "verification",
+   "is reproducible and, when overfitting or self-approval is a"
+  ]
+ ],
+ "prompts": [
+  [
+   "path",
+   "skills/loop-library/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/loop-library/agents/openai.yaml"
+  ],
+  [
+   "path",
+   "skills/loop-library/references/audit.md"
+  ],
+  [
+   "path",
+   "skills/loop-library/references/debrief.md"
+  ],
+  [
+   "path",
+   "skills/loop-library/references/discover.md"
+  ],
+  [
+   "path",
+   "skills/loop-library/references/publish.md"
+  ],
+  [
+   "path",
+   "skills/loop-library/references/run.md"
+  ],
+  [
+   "path",
+   "skills/loopy/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/loopy/agents/openai.yaml"
+  ],
+  [
+   "path",
+   "skills/loopy/references/audit.md"
+  ],
+  [
+   "path",
+   "skills/loopy/references/debrief.md"
+  ],
+  [
+   "path",
+   "skills/loopy/references/discover.md"
+  ],
+  [
+   "path",
+   "skills/loopy/references/publish.md"
+  ],
+  [
+   "path",
+   "skills/loopy/references/run.md"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Loop Library (legacy alias)"
+  ],
+  [
+   "heading",
+   "Route the request"
+  ],
+  [
+   "heading",
+   "Discover loops from existing work"
+  ],
+  [
+   "heading",
+   "Find a published loop"
+  ],
+  [
+   "heading",
+   "Audit and repair a loop"
+  ],
+  [
+   "heading",
+   "Run a loop"
+  ],
+  [
+   "heading",
+   "Debrief completed runs"
+  ],
+  [
+   "heading",
+   "Prepare or publish a loop"
+  ],
+  [
+   "heading",
+   "Save and reuse project loops"
+  ],
+  [
+   "heading",
+   "Keep every workflow grounded"
+  ],
+  [
+   "heading",
+   "Craft a loop through an interview"
+  ],
+  [
+   "heading",
+   "Design the feedback cycle"
+  ],
+  [
+   "heading",
+   "Validate every crafted loop"
+  ],
+  [
+   "heading",
+   "Deliver the loop"
+  ],
+  [
+   "heading",
+   "[Loop name]"
+  ],
+  [
+   "heading",
+   "Loop Doctor"
+  ],
+  [
+   "heading",
+   "Inspect the loop"
+  ],
+  [
+   "heading",
+   "Repair the loop"
+  ],
+  [
+   "heading",
+   "Debrief a Loop Run"
+  ],
+  [
+   "heading",
+   "Diagnose from evidence"
+  ],
+  [
+   "heading",
+   "Return the debrief"
+  ],
+  [
+   "heading",
+   "Loopy debrief"
+  ],
+  [
+   "heading",
+   "Loop Discovery"
+  ],
+  [
+   "heading",
+   "Inspect the evidence"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 3,
+  "roles": 13,
+  "gates": 1,
+  "prompts": 14,
+  "headings": 35
+ },
+ "structure_found": true
+}

@@ -1,0 +1,237 @@
+{
+ "id": "exa-mcp-server",
+ "full_name": "exa-labs/exa-mcp-server",
+ "url": "https://github.com/exa-labs/exa-mcp-server",
+ "group": "MCP tool server",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  "Dockerfile",
+  "README.md",
+  "package.json",
+  "server.json",
+  "skills/exa-agent/SKILL.md",
+  "skills/search/SKILL.md",
+  "skills/search/references/extraction.md",
+  "skills/search/references/filtering.md",
+  "skills/search/references/patterns-code.md",
+  "skills/search/references/patterns-companies.md",
+  "skills/search/references/patterns-news.md",
+  "skills/search/references/patterns-papers.md",
+  "skills/search/references/patterns-people.md",
+  "skills/search/references/patterns-relationships.md",
+  "skills/search/references/searching.md",
+  "skills/search/references/source-quality.md",
+  "skills/search/references/synthesis.md"
+ ],
+ "stages": [
+  [
+   "step",
+   "1: Assess the Query"
+  ],
+  [
+   "step",
+   "2: Dispatch Subagents"
+  ],
+  [
+   "step",
+   "3: Compile Results"
+  ]
+ ],
+ "roles": [
+  [
+   "agent",
+   "Plugin"
+  ],
+  [
+   "agent",
+   "Skills"
+  ]
+ ],
+ "gates": [
+  [
+   "check",
+   "row count against target."
+  ],
+  [
+   "check",
+   "segment coverage."
+  ],
+  [
+   "check",
+   "each row against the criterion"
+  ],
+  [
+   "check",
+   "publication/event dates against the boundary"
+  ],
+  [
+   "verification",
+   "Searches"
+  ]
+ ],
+ "prompts": [
+  [
+   "path",
+   "skills/exa-agent/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/search/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/search/references/extraction.md"
+  ],
+  [
+   "path",
+   "skills/search/references/filtering.md"
+  ],
+  [
+   "path",
+   "skills/search/references/patterns-code.md"
+  ],
+  [
+   "path",
+   "skills/search/references/patterns-companies.md"
+  ],
+  [
+   "path",
+   "skills/search/references/patterns-news.md"
+  ],
+  [
+   "path",
+   "skills/search/references/patterns-papers.md"
+  ],
+  [
+   "path",
+   "skills/search/references/patterns-people.md"
+  ],
+  [
+   "path",
+   "skills/search/references/patterns-relationships.md"
+  ],
+  [
+   "path",
+   "skills/search/references/searching.md"
+  ],
+  [
+   "path",
+   "skills/search/references/source-quality.md"
+  ],
+  [
+   "path",
+   "skills/search/references/synthesis.md"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Installation"
+  ],
+  [
+   "heading",
+   "Claude"
+  ],
+  [
+   "heading",
+   "Codex / ChatGPT"
+  ],
+  [
+   "heading",
+   "Other MCP Clients"
+  ],
+  [
+   "heading",
+   "Available Tools"
+  ],
+  [
+   "heading",
+   "Default Tools"
+  ],
+  [
+   "heading",
+   "Optional Tools (enable via the `tools` parameter)"
+  ],
+  [
+   "heading",
+   "Authentication"
+  ],
+  [
+   "heading",
+   "Exa Agent Research"
+  ],
+  [
+   "heading",
+   "Required tools"
+  ],
+  [
+   "heading",
+   "Exa Connect providers"
+  ],
+  [
+   "heading",
+   "Decision tree"
+  ],
+  [
+   "heading",
+   "Before creating a run"
+  ],
+  [
+   "heading",
+   "Schema rules"
+  ],
+  [
+   "heading",
+   "Exa Agent workflow"
+  ],
+  [
+   "heading",
+   "Continuation patterns"
+  ],
+  [
+   "heading",
+   "Exhaustiveness and coverage language"
+  ],
+  [
+   "heading",
+   "Batch Script Mode"
+  ],
+  [
+   "heading",
+   "Failure handling"
+  ],
+  [
+   "heading",
+   "Exa Research Orchestrator"
+  ],
+  [
+   "heading",
+   "Prerequisites: Auth"
+  ],
+  [
+   "heading",
+   "Date Calculation (Do This First)"
+  ],
+  [
+   "heading",
+   "What subagents do"
+  ],
+  [
+   "heading",
+   "How to dispatch"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 17,
+ "launch_command": "npx -y exa-mcp-server",
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 3,
+  "roles": 2,
+  "gates": 5,
+  "prompts": 13,
+  "headings": 74
+ },
+ "structure_found": true
+}

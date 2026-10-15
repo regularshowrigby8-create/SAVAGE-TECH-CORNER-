@@ -1,0 +1,339 @@
+{
+ "id": "shenwell-ai-software-factory-pipeline",
+ "full_name": "shenwell/ai-software-factory-pipeline",
+ "url": "https://github.com/shenwell/ai-software-factory-pipeline",
+ "group": "imported factory",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  ".cursor/rules/factory.mdc",
+  ".cursor/skills/analyst/SKILL.md",
+  ".cursor/skills/classifier/SKILL.md",
+  ".cursor/skills/designer/SKILL.md",
+  ".cursor/skills/factory-pipeline/SKILL.md",
+  ".cursor/skills/factory-pipeline/references/chat-auto-start.md",
+  ".cursor/skills/factory-pipeline/references/decomposition.md",
+  ".cursor/skills/factory-pipeline/references/run-report.md",
+  ".cursor/skills/factory-setup/SKILL.md",
+  ".cursor/skills/factory-upgrade/SKILL.md",
+  ".cursor/skills/frontend-design/SKILL.md",
+  ".cursor/skills/github-intake/SKILL.md",
+  ".cursor/skills/implementer/SKILL.md",
+  ".cursor/skills/researcher/SKILL.md",
+  ".cursor/skills/reviewer/SKILL.md",
+  ".cursor/skills/reviewer/references/ui-gate.md",
+  ".cursor/skills/triaging-issues/SKILL.md",
+  ".cursor/skills/triaging-issues/references/repro-request-structure.md",
+  ".cursor/skills/ui-ux-pro-max/data/catalog-summary.json",
+  ".cursor/skills/ui-ux-pro-max/references/pro-rules.md",
+  ".cursor/skills/ui-ux-pro-max/scripts/reasoning_contract.py",
+  ".cursor/skills/ui-ux-pro-max/scripts/search.py",
+  ".cursor/skills/writing-quality/SKILL.md",
+  ".cursor/skills/writing-quality/references/ai-phrases-to-avoid.md",
+  ".cursor/skills/writing-quality/references/plain-english-alternatives.md"
+ ],
+ "stages": [
+  [
+   "step",
+   "1 \u2014 Workspace layout"
+  ],
+  [
+   "step",
+   "2 \u2014 Git"
+  ],
+  [
+   "step",
+   "3 \u2014 GitHub CLI"
+  ],
+  [
+   "step",
+   "4 \u2014 Resolve owner/repo"
+  ],
+  [
+   "step",
+   "5 \u2014 Create repository (`create` path only)"
+  ],
+  [
+   "step",
+   "6 \u2014 Factory label"
+  ],
+  [
+   "step",
+   "7 \u2014 Workflow file"
+  ],
+  [
+   "step",
+   "8 \u2014 Python (UI jobs)"
+  ],
+  [
+   "step",
+   "9 \u2014 Config touch-up"
+  ],
+  [
+   "step",
+   "10 \u2014 Board bootstrap"
+  ],
+  [
+   "step",
+   "11 \u2014 Write setup record"
+  ],
+  [
+   "step",
+   "12 \u2014 Report to the user"
+  ],
+  [
+   "step",
+   "1 \u2014 Fetch upstream kit (consumer only)"
+  ],
+  [
+   "step",
+   "2 \u2014 Copy kit-managed paths (overwrite)"
+  ],
+  [
+   "step",
+   "3 \u2014 Never overwrite (preserve local state)"
+  ],
+  [
+   "step",
+   "4 \u2014 Merge `factory.config.json`"
+  ],
+  [
+   "step",
+   "5 \u2014 Merge `AGENTS.md`"
+  ],
+  [
+   "step",
+   "6 \u2014 Git (consumer)"
+  ],
+  [
+   "step",
+   "7 \u2014 Write upgrade record"
+  ],
+  [
+   "step",
+   "8 \u2014 Report to the user"
+  ]
+ ],
+ "roles": [],
+ "gates": [
+  [
+   "review",
+   "the real diff"
+  ],
+  [
+   "review",
+   "in this order"
+  ],
+  [
+   "check",
+   "for repetitive sentence structures"
+  ]
+ ],
+ "prompts": [
+  [
+   "path",
+   ".cursor/skills/analyst/SKILL.md"
+  ],
+  [
+   "path",
+   ".cursor/skills/classifier/SKILL.md"
+  ],
+  [
+   "path",
+   ".cursor/skills/designer/SKILL.md"
+  ],
+  [
+   "path",
+   ".cursor/skills/factory-pipeline/SKILL.md"
+  ],
+  [
+   "path",
+   ".cursor/skills/factory-pipeline/references/chat-auto-start.md"
+  ],
+  [
+   "path",
+   ".cursor/skills/factory-pipeline/references/decomposition.md"
+  ],
+  [
+   "path",
+   ".cursor/skills/factory-pipeline/references/run-report.md"
+  ],
+  [
+   "path",
+   ".cursor/skills/factory-setup/SKILL.md"
+  ],
+  [
+   "path",
+   ".cursor/skills/factory-upgrade/SKILL.md"
+  ],
+  [
+   "path",
+   ".cursor/skills/frontend-design/SKILL.md"
+  ],
+  [
+   "path",
+   ".cursor/skills/github-intake/SKILL.md"
+  ],
+  [
+   "path",
+   ".cursor/skills/implementer/SKILL.md"
+  ],
+  [
+   "path",
+   ".cursor/skills/researcher/SKILL.md"
+  ],
+  [
+   "path",
+   ".cursor/skills/reviewer/SKILL.md"
+  ],
+  [
+   "path",
+   ".cursor/skills/reviewer/references/ui-gate.md"
+  ],
+  [
+   "path",
+   ".cursor/skills/triaging-issues/SKILL.md"
+  ],
+  [
+   "path",
+   ".cursor/skills/triaging-issues/references/repro-request-structure.md"
+  ],
+  [
+   "path",
+   ".cursor/skills/ui-ux-pro-max/data/catalog-summary.json"
+  ],
+  [
+   "path",
+   ".cursor/skills/ui-ux-pro-max/references/pro-rules.md"
+  ],
+  [
+   "path",
+   ".cursor/skills/ui-ux-pro-max/scripts/reasoning_contract.py"
+  ],
+  [
+   "path",
+   ".cursor/skills/ui-ux-pro-max/scripts/search.py"
+  ],
+  [
+   "path",
+   ".cursor/skills/writing-quality/SKILL.md"
+  ],
+  [
+   "path",
+   ".cursor/skills/writing-quality/references/ai-phrases-to-avoid.md"
+  ],
+  [
+   "path",
+   ".cursor/skills/writing-quality/references/plain-english-alternatives.md"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Software factory"
+  ],
+  [
+   "heading",
+   "Analyst"
+  ],
+  [
+   "heading",
+   "Ground the plan in the checkout"
+  ],
+  [
+   "heading",
+   "Produce"
+  ],
+  [
+   "heading",
+   "Decomposition"
+  ],
+  [
+   "heading",
+   "Classifier"
+  ],
+  [
+   "heading",
+   "Designer"
+  ],
+  [
+   "heading",
+   "When you run"
+  ],
+  [
+   "heading",
+   "How to design"
+  ],
+  [
+   "heading",
+   "Artifact"
+  ],
+  [
+   "heading",
+   "Factory pipeline"
+  ],
+  [
+   "heading",
+   "Chat auto-start"
+  ],
+  [
+   "heading",
+   "How you write"
+  ],
+  [
+   "heading",
+   "Policy"
+  ],
+  [
+   "heading",
+   "Ensure issue (free text only)"
+  ],
+  [
+   "heading",
+   "Multi-phase runs"
+  ],
+  [
+   "heading",
+   "Researcher"
+  ],
+  [
+   "heading",
+   "Decomposition (after analyst)"
+  ],
+  [
+   "heading",
+   "Implementer"
+  ],
+  [
+   "heading",
+   "Reviewer"
+  ],
+  [
+   "heading",
+   "Deliver"
+  ],
+  [
+   "heading",
+   "Run report"
+  ],
+  [
+   "heading",
+   "Artifacts"
+  ],
+  [
+   "heading",
+   "Queue, runs, board"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 20,
+  "roles": 0,
+  "gates": 3,
+  "prompts": 24,
+  "headings": 143
+ },
+ "structure_found": true
+}

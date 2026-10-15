@@ -1,0 +1,255 @@
+{
+ "id": "openai-openai-agents-python",
+ "full_name": "openai/openai-agents-python",
+ "url": "https://github.com/openai/openai-agents-python",
+ "group": "imported factory",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  ".agents/skills/docs-sync/agents/openai.yaml",
+  ".agents/skills/openai-knowledge/agents/openai.yaml",
+  "docs/ref/sandbox/capabilities/capabilities.md",
+  "docs/ref/sandbox/capabilities/capability.md",
+  "docs/ref/sandbox/capabilities/filesystem.md",
+  "docs/ref/sandbox/capabilities/memory.md",
+  "docs/ref/sandbox/capabilities/shell.md",
+  "docs/ref/sandbox/capabilities/skills.md",
+  "docs/ref/sandbox/capabilities/tools/apply_patch_tool.md",
+  "docs/ref/sandbox/capabilities/tools/shell_tool.md",
+  "docs/ref/sandbox/capabilities/tools/view_image.md",
+  "src/agents/extensions/__init__.py",
+  "src/agents/extensions/experimental/__init__.py",
+  "src/agents/py.typed",
+  "src/agents/realtime/README.md",
+  "src/agents/sandbox/instructions/prompt.md",
+  "src/agents/sandbox/memory/prompts/memory_consolidation_prompt.md",
+  "src/agents/sandbox/memory/prompts/memory_read_prompt.md",
+  "src/agents/sandbox/memory/prompts/rollout_extraction_prompt.md",
+  "src/agents/sandbox/memory/prompts/rollout_extraction_user_message.md",
+  "src/agents/tracing/logger.py",
+  "src/agents/util/_coro.py",
+  "src/agents/util/_types.py",
+  "src/agents/version.py",
+  "src/agents/voice/exceptions.py"
+ ],
+ "stages": [],
+ "roles": [
+  [
+   "path",
+   ".agents/skills/docs-sync/agents/openai.yaml"
+  ],
+  [
+   "path",
+   ".agents/skills/openai-knowledge/agents/openai.yaml"
+  ],
+  [
+   "path",
+   "src/agents/extensions/__init__.py"
+  ],
+  [
+   "path",
+   "src/agents/extensions/experimental/__init__.py"
+  ],
+  [
+   "path",
+   "src/agents/py.typed"
+  ],
+  [
+   "path",
+   "src/agents/realtime/README.md"
+  ],
+  [
+   "path",
+   "src/agents/sandbox/instructions/prompt.md"
+  ],
+  [
+   "path",
+   "src/agents/sandbox/memory/prompts/memory_consolidation_prompt.md"
+  ],
+  [
+   "path",
+   "src/agents/sandbox/memory/prompts/memory_read_prompt.md"
+  ],
+  [
+   "path",
+   "src/agents/sandbox/memory/prompts/rollout_extraction_prompt.md"
+  ],
+  [
+   "path",
+   "src/agents/sandbox/memory/prompts/rollout_extraction_user_message.md"
+  ],
+  [
+   "path",
+   "src/agents/tracing/logger.py"
+  ],
+  [
+   "path",
+   "src/agents/util/_coro.py"
+  ],
+  [
+   "path",
+   "src/agents/util/_types.py"
+  ],
+  [
+   "path",
+   "src/agents/version.py"
+  ],
+  [
+   "path",
+   "src/agents/voice/exceptions.py"
+  ]
+ ],
+ "gates": [
+  [
+   "verification",
+   "or reporting behaviors the user expects without restating"
+  ],
+  [
+   "verification",
+   "habits: the user\u2019s expectations for tests/lints/sanity checks, and what"
+  ],
+  [
+   "verification",
+   "checklist (concrete success checks)"
+  ]
+ ],
+ "prompts": [
+  [
+   "path",
+   ".agents/skills/docs-sync/agents/openai.yaml"
+  ],
+  [
+   "path",
+   ".agents/skills/openai-knowledge/agents/openai.yaml"
+  ],
+  [
+   "path",
+   "src/agents/sandbox/instructions/prompt.md"
+  ],
+  [
+   "path",
+   "src/agents/sandbox/memory/prompts/memory_consolidation_prompt.md"
+  ],
+  [
+   "path",
+   "src/agents/sandbox/memory/prompts/memory_read_prompt.md"
+  ],
+  [
+   "path",
+   "src/agents/sandbox/memory/prompts/rollout_extraction_prompt.md"
+  ],
+  [
+   "path",
+   "src/agents/sandbox/memory/prompts/rollout_extraction_user_message.md"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "`Skills`"
+  ],
+  [
+   "heading",
+   "This package contains experimental extensions to the agents package."
+  ],
+  [
+   "heading",
+   "The interface and implementation details could be changed until being GAed."
+  ],
+  [
+   "heading",
+   "Realtime"
+  ],
+  [
+   "heading",
+   "How you work"
+  ],
+  [
+   "heading",
+   "Personality"
+  ],
+  [
+   "heading",
+   "AGENTS.md spec"
+  ],
+  [
+   "heading",
+   "Responsiveness"
+  ],
+  [
+   "heading",
+   "Preamble messages"
+  ],
+  [
+   "heading",
+   "Task execution"
+  ],
+  [
+   "heading",
+   "Validating your work"
+  ],
+  [
+   "heading",
+   "Ambition vs. precision"
+  ],
+  [
+   "heading",
+   "Sharing progress updates"
+  ],
+  [
+   "heading",
+   "Presenting your work and final message"
+  ],
+  [
+   "heading",
+   "Final answer structure and style guidelines"
+  ],
+  [
+   "heading",
+   "Tool Guidelines"
+  ],
+  [
+   "heading",
+   "Shell commands"
+  ],
+  [
+   "heading",
+   "Memory Writing Agent: Phase 2 (Consolidation)"
+  ],
+  [
+   "heading",
+   "Task 1: <task description, outcome>"
+  ],
+  [
+   "heading",
+   "rollout_summary_files"
+  ],
+  [
+   "heading",
+   "keywords"
+  ],
+  [
+   "heading",
+   "Task 2: <task description, outcome>"
+  ],
+  [
+   "heading",
+   "User preferences"
+  ],
+  [
+   "heading",
+   "Reusable knowledge"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 16,
+  "gates": 3,
+  "prompts": 7,
+  "headings": 38
+ },
+ "structure_found": true
+}

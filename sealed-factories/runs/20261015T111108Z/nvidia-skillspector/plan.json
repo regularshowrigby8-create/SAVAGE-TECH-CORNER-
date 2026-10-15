@@ -1,0 +1,149 @@
+{
+ "id": "nvidia-skillspector",
+ "full_name": "NVIDIA/SkillSpector",
+ "url": "https://github.com/NVIDIA/SkillSpector",
+ "group": "imported factory",
+ "license": "Apache-2.0",
+ "content_redistributed": true,
+ "files": [
+  "README.md",
+  "contrib/batch_scan/runner.py",
+  "skills/skill-inspector/SKILL.md"
+ ],
+ "stages": [
+  [
+   "stage",
+   "1: Static Analysis"
+  ],
+  [
+   "stage",
+   "2: LLM Semantic Analysis (Optional)"
+  ]
+ ],
+ "roles": [],
+ "gates": [
+  [
+   "review",
+   "what was suppressed (still excluded from the score)."
+  ],
+  [
+   "review",
+   "Workflow"
+  ]
+ ],
+ "prompts": [
+  [
+   "path",
+   "skills/skill-inspector/SKILL.md"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "SkillSpector"
+  ],
+  [
+   "heading",
+   "Overview"
+  ],
+  [
+   "heading",
+   "Documentation"
+  ],
+  [
+   "heading",
+   "Features"
+  ],
+  [
+   "heading",
+   "Quick Start"
+  ],
+  [
+   "heading",
+   "Installation"
+  ],
+  [
+   "heading",
+   "Update later: uv tool update skillspector"
+  ],
+  [
+   "heading",
+   "Clone the repository"
+  ],
+  [
+   "heading",
+   "Create and activate virtual environment"
+  ],
+  [
+   "heading",
+   "or: python3 -m venv .venv && source .venv/bin/activate"
+  ],
+  [
+   "heading",
+   "Install for production use"
+  ],
+  [
+   "heading",
+   "Or install with development dependencies"
+  ],
+  [
+   "heading",
+   "Docker (no Python required)"
+  ],
+  [
+   "heading",
+   "or: docker build -t skillspector ."
+  ],
+  [
+   "heading",
+   "Basic Usage"
+  ],
+  [
+   "heading",
+   "Scan a local skill directory"
+  ],
+  [
+   "heading",
+   "Scan a single SKILL.md file"
+  ],
+  [
+   "heading",
+   "Scan a Git repository"
+  ],
+  [
+   "heading",
+   "Scan a zip file"
+  ],
+  [
+   "heading",
+   "Size limits"
+  ],
+  [
+   "heading",
+   "Output Formats"
+  ],
+  [
+   "heading",
+   "Terminal output (default) - pretty formatted"
+  ],
+  [
+   "heading",
+   "JSON output - machine readable"
+  ],
+  [
+   "heading",
+   "Markdown output - for documentation"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 3,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 2,
+  "roles": 0,
+  "gates": 2,
+  "prompts": 1,
+  "headings": 133
+ },
+ "structure_found": true
+}

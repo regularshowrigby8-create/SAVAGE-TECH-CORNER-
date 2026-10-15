@@ -1,0 +1,319 @@
+{
+ "id": "konflux-ci-konflux-ci",
+ "full_name": "konflux-ci/konflux-ci",
+ "url": "https://github.com/konflux-ci/konflux-ci",
+ "group": "imported factory",
+ "license": "Apache-2.0",
+ "content_redistributed": true,
+ "files": [
+  ".tekton/pipelines/operator-e2e/README.md",
+  ".tekton/pipelines/operator-e2e/pipeline.yaml",
+  "operator/config/certmanager/kustomization.yaml",
+  "operator/config/network-policy/kustomization.yaml",
+  "pipelines/notify-and-trigger-github-release/README.md",
+  "pipelines/notify-and-trigger-github-release/notify-and-trigger-github-release.yaml",
+  "skills/companion-pr-review/SKILL.md",
+  "skills/create-pr/SKILL.md",
+  "skills/debug-e2e-tests/SKILL.md",
+  "skills/debug-e2e-tests/pac-webhook-debugging.md",
+  "skills/debug-e2e-tests/prow-reference.md",
+  "skills/debug-e2e-tests/reference.md",
+  "skills/debug-e2e-tests/scripts/download-logs.sh",
+  "skills/debug-e2e-tests/scripts/download-prow-logs.sh",
+  "skills/dev-verify-loop/SKILL.md",
+  "skills/dev-verify-loop/scripts/stop-operator.sh",
+  "skills/ginkgo-testing/SKILL.md",
+  "skills/go-toolchain-upgrade/SKILL.md",
+  "skills/go-toolchain-upgrade/reference.md",
+  "skills/local-dev-setup/SKILL.md",
+  "skills/local-dev-setup/scripts/apply-konflux-cr.sh",
+  "skills/local-dev-setup/scripts/wait-for-konflux.sh",
+  "skills/pr-review/SKILL.md",
+  "skills/retro-filing-policy/SKILL.md",
+  "skills/update-upstream-deps/SKILL.md"
+ ],
+ "stages": [
+  [
+   "path",
+   ".tekton/pipelines/operator-e2e/README.md"
+  ],
+  [
+   "path",
+   ".tekton/pipelines/operator-e2e/pipeline.yaml"
+  ],
+  [
+   "path",
+   "pipelines/notify-and-trigger-github-release/README.md"
+  ],
+  [
+   "path",
+   "pipelines/notify-and-trigger-github-release/notify-and-trigger-github-release.yaml"
+  ],
+  [
+   "step",
+   "1: Identify the CI System and Failed Run"
+  ],
+  [
+   "step",
+   "2: Download Artifacts"
+  ],
+  [
+   "step",
+   "3: Analyze Test Output"
+  ],
+  [
+   "step",
+   "4: Analyze Cluster Logs"
+  ],
+  [
+   "step",
+   "5: Inspect the Tested Commit (Optional)"
+  ],
+  [
+   "step",
+   "6: Determine Root Cause and Suggest Fix"
+  ],
+  [
+   "step",
+   "1: Set OPERATOR_INSTALL_METHOD=none"
+  ],
+  [
+   "step",
+   "2: Deploy Cluster and Dependencies"
+  ],
+  [
+   "step",
+   "3: Install CRDs and Run the Operator"
+  ],
+  [
+   "step",
+   "4: Apply the Konflux CR and Wait"
+  ],
+  [
+   "step",
+   "1: Set OPERATOR_INSTALL_METHOD"
+  ],
+  [
+   "step",
+   "2: Run deploy-local.sh"
+  ]
+ ],
+ "roles": [],
+ "gates": [
+  [
+   "check",
+   "companion workflow state before commenting"
+  ],
+  [
+   "review",
+   "agents only** (no deterministic automation sets this):"
+  ],
+  [
+   "check",
+   "if user can push to upstream"
+  ],
+  [
+   "check",
+   "`system-resources.log` and `cluster-resources.log`"
+  ],
+  [
+   "check",
+   "if the failure is non-deterministic: one arch passes while the other"
+  ],
+  [
+   "check",
+   "whether other PRs or workflow runs were active at the same time and"
+  ],
+  [
+   "check",
+   "each link"
+  ]
+ ],
+ "prompts": [
+  [
+   "path",
+   "skills/companion-pr-review/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/create-pr/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/debug-e2e-tests/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/debug-e2e-tests/pac-webhook-debugging.md"
+  ],
+  [
+   "path",
+   "skills/debug-e2e-tests/prow-reference.md"
+  ],
+  [
+   "path",
+   "skills/debug-e2e-tests/reference.md"
+  ],
+  [
+   "path",
+   "skills/debug-e2e-tests/scripts/download-logs.sh"
+  ],
+  [
+   "path",
+   "skills/debug-e2e-tests/scripts/download-prow-logs.sh"
+  ],
+  [
+   "path",
+   "skills/dev-verify-loop/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/dev-verify-loop/scripts/stop-operator.sh"
+  ],
+  [
+   "path",
+   "skills/ginkgo-testing/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/go-toolchain-upgrade/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/go-toolchain-upgrade/reference.md"
+  ],
+  [
+   "path",
+   "skills/local-dev-setup/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/local-dev-setup/scripts/apply-konflux-cr.sh"
+  ],
+  [
+   "path",
+   "skills/local-dev-setup/scripts/wait-for-konflux.sh"
+  ],
+  [
+   "path",
+   "skills/pr-review/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/retro-filing-policy/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/update-upstream-deps/SKILL.md"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "`operator-e2e-pipeline`"
+  ],
+  [
+   "heading",
+   "Scope"
+  ],
+  [
+   "heading",
+   "Operator process vs. test phase"
+  ],
+  [
+   "heading",
+   "Inputs (params)"
+  ],
+  [
+   "heading",
+   "Examples: Konflux CR (ConfigMap vs sample file)"
+  ],
+  [
+   "heading",
+   "Examples: `integration-go-test-extra-args` / `conformance-go-test-extra-args`"
+  ],
+  [
+   "heading",
+   "Expected Secret shapes"
+  ],
+  [
+   "heading",
+   "`ibmcloud-credentials-secret`"
+  ],
+  [
+   "heading",
+   "Verifying task or pipeline changes"
+  ],
+  [
+   "heading",
+   "Resolution model"
+  ],
+  [
+   "heading",
+   "(overrides optional) -> deprovision."
+  ],
+  [
+   "heading",
+   "# The deploy Task builds and runs bin/manager in-process"
+  ],
+  [
+   "heading",
+   "operator install to keep the first upstream iteration minimal."
+  ],
+  [
+   "heading",
+   "# Input modes:"
+  ],
+  [
+   "heading",
+   "konflux-cr-configmap / konflux-cr-relative-path drive deploy CR apply."
+  ],
+  [
+   "heading",
+   "- overrides-yaml examples:"
+  ],
+  [
+   "heading",
+   "* PAC (from Pipelines as Code template values):"
+  ],
+  [
+   "heading",
+   "ref: {{revision}}"
+  ],
+  [
+   "heading",
+   "replacement: ...:on-pr-{{revision}}"
+  ],
+  [
+   "heading",
+   "instrumented-container-image is only set for coverage-instrumented builds):"
+  ],
+  [
+   "heading",
+   "ref: $(tasks.test-metadata.results.git-revision)"
+  ],
+  [
+   "heading",
+   "replacement: $(tasks.test-metadata.results.container-image)"
+  ],
+  [
+   "heading",
+   "apiVersion: tekton.dev/v1"
+  ],
+  [
+   "heading",
+   "notify-and-trigger-github-release Pipeline"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 16,
+  "roles": 0,
+  "gates": 7,
+  "prompts": 19,
+  "headings": 245
+ },
+ "structure_found": true
+}

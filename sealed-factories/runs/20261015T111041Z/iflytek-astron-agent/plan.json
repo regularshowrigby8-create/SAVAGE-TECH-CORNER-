@@ -1,0 +1,166 @@
+{
+ "id": "iflytek-astron-agent",
+ "full_name": "iflytek/astron-agent",
+ "url": "https://github.com/iflytek/astron-agent",
+ "group": "imported factory",
+ "license": "Apache-2.0",
+ "content_redistributed": true,
+ "files": [
+  "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/dto/skill/SkillDirectoryUploadResultDto.java",
+  "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/dto/skill/SkillImportDto.java",
+  "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/dto/skill/SkillImportResourceDto.java",
+  "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/dto/skill/SkillSandboxConfigDto.java",
+  "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/dto/skill/SkillSandboxRuntimeCredentialDto.java",
+  "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/dto/skill/SkillSandboxRuntimeRefDto.java",
+  "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/vo/skill/SkillFileCreateFolderReq.java",
+  "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/vo/skill/SkillFileCreateReq.java",
+  "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/vo/skill/SkillFileMoveReq.java",
+  "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/vo/skill/SkillFileRenameReq.java",
+  "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/vo/skill/SkillFileUpdateContentReq.java",
+  "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/vo/skill/SkillSandboxConfigReq.java",
+  "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/mapper/skill/SkillFileMapper.java",
+  "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/mapper/skill/SkillSandboxConfigMapper.java",
+  "core/agent/.gitignore",
+  "core/agent/Dockerfile",
+  "core/agent/README.md",
+  "core/agent/api/router.py",
+  "core/agent/api/schemas/llm_message.py",
+  "core/agent/exceptions/__init__.py",
+  "core/agent/exceptions/agent_exc.py",
+  "core/agent/exceptions/base.py",
+  "core/agent/exceptions/cot_exc.py",
+  "core/agent/exceptions/middleware_exc.py",
+  "core/agent/service/plugin/base.py"
+ ],
+ "stages": [],
+ "roles": [
+  [
+   "path",
+   "core/agent/.gitignore"
+  ],
+  [
+   "path",
+   "core/agent/Dockerfile"
+  ],
+  [
+   "path",
+   "core/agent/README.md"
+  ],
+  [
+   "path",
+   "core/agent/api/router.py"
+  ],
+  [
+   "path",
+   "core/agent/api/schemas/llm_message.py"
+  ],
+  [
+   "path",
+   "core/agent/exceptions/__init__.py"
+  ],
+  [
+   "path",
+   "core/agent/exceptions/agent_exc.py"
+  ],
+  [
+   "path",
+   "core/agent/exceptions/base.py"
+  ],
+  [
+   "path",
+   "core/agent/exceptions/cot_exc.py"
+  ],
+  [
+   "path",
+   "core/agent/exceptions/middleware_exc.py"
+  ],
+  [
+   "path",
+   "core/agent/service/plugin/base.py"
+  ]
+ ],
+ "gates": [],
+ "prompts": [
+  [
+   "path",
+   "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/dto/skill/SkillDirectoryUploadResultDto.java"
+  ],
+  [
+   "path",
+   "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/dto/skill/SkillImportDto.java"
+  ],
+  [
+   "path",
+   "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/dto/skill/SkillImportResourceDto.java"
+  ],
+  [
+   "path",
+   "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/dto/skill/SkillSandboxConfigDto.java"
+  ],
+  [
+   "path",
+   "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/dto/skill/SkillSandboxRuntimeCredentialDto.java"
+  ],
+  [
+   "path",
+   "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/dto/skill/SkillSandboxRuntimeRefDto.java"
+  ],
+  [
+   "path",
+   "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/vo/skill/SkillFileCreateFolderReq.java"
+  ],
+  [
+   "path",
+   "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/vo/skill/SkillFileCreateReq.java"
+  ],
+  [
+   "path",
+   "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/vo/skill/SkillFileMoveReq.java"
+  ],
+  [
+   "path",
+   "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/vo/skill/SkillFileRenameReq.java"
+  ],
+  [
+   "path",
+   "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/vo/skill/SkillFileUpdateContentReq.java"
+  ],
+  [
+   "path",
+   "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/entity/vo/skill/SkillSandboxConfigReq.java"
+  ],
+  [
+   "path",
+   "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/mapper/skill/SkillFileMapper.java"
+  ],
+  [
+   "path",
+   "console/backend/toolkit/src/main/java/com/iflytek/astron/console/toolkit/mapper/skill/SkillSandboxConfigMapper.java"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Python-generated files"
+  ],
+  [
+   "heading",
+   "Virtual environments"
+  ],
+  [
+   "heading",
+   "Use unified common package import module"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 11,
+  "gates": 0,
+  "prompts": 14,
+  "headings": 3
+ },
+ "structure_found": true
+}

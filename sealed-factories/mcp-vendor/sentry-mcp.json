@@ -1,0 +1,165 @@
+{
+  "id": "sentry-mcp",
+  "full_name": "getsentry/sentry-mcp",
+  "url": "https://github.com/getsentry/toolkit",
+  "license": "NOASSERTION",
+  "license_file": "LICENSE.md",
+  "license_text_sha256": "1f2a39da390f36830e83d88b17f7720527a7c95f8f137b16ebb68f283cbbfabc",
+  "import_class": "asset-only",
+  "snapshot": "2026-10-14",
+  "commit": "6c7d57a50c3bd3368e26a344b1a9fc07dadfc2df",
+  "vendored_files": [
+    {
+      "path": "packages/mcp-core/src/tools/search-issue-events/index.ts",
+      "bytes": 58,
+      "sha256": "87b0541f16ead464ea8d39b9672672878021a43472473a57177f5f5e41f91f41"
+    },
+    {
+      "path": "packages/mcp-core/src/api-client/index.ts",
+      "bytes": 103,
+      "sha256": "21f1c0b72e67ee8f1a8c4f8e98dbe6eab8fd2d85f058e347257c2df340309892"
+    },
+    {
+      "path": "packages/mcp-core/src/tools/search-issues/index.ts",
+      "bytes": 120,
+      "sha256": "f96a8c0c9db5a69e8496ee6f9ac12067c3ece4b306f1bb317e5a1d99d09219e6"
+    },
+    {
+      "path": "packages/mcp-core/src/tools/search-events/index.ts",
+      "bytes": 120,
+      "sha256": "e89e011587b3b6ed24e2262e50e40b0b2ad18606f3cfd589c36542cacb0c11eb"
+    },
+    {
+      "path": "packages/mcp-cloudflare/src/server/oauth/index.ts",
+      "bytes": 371,
+      "sha256": "e23da4ded336166d65f15c618de76fd50d9744bcb4866042e72413c78ab9a815"
+    },
+    {
+      "path": "packages/mcp-core/src/telem/index.ts",
+      "bytes": 435,
+      "sha256": "9a3b7e8edf7e16f57eee0c209e3c2ddc76b7b94972b20967c8daa6201b9a69fb"
+    },
+    {
+      "path": "packages/mcp-core/src/tools/index.ts",
+      "bytes": 650,
+      "sha256": "8df13cefbe5bec56265cba162f96e48c24af3471539fb6e60c618969472f7ea7"
+    },
+    {
+      "path": "packages/mcp-cloudflare/src/client/components/fragments/instructions/zed.tsx",
+      "bytes": 1918,
+      "sha256": "33ddd6087d0f3b75f51a3cd4af4d27b314582922660b8fc346666eb03e463681"
+    },
+    {
+      "path": "packages/mcp-cloudflare/src/client/components/fragments/instructions/claude-code.tsx",
+      "bytes": 2194,
+      "sha256": "d0bfd33d208f517eaa3267aa324fc11304ae6225de218ad02034e9429ffe21b5"
+    },
+    {
+      "path": "packages/mcp-cloudflare/src/client/components/fragments/instructions/codex-cli.tsx",
+      "bytes": 2522,
+      "sha256": "17f9fd61bfa313bed0cd19a8f35d0139639895a06a5163cb7dfb36fd41375048"
+    },
+    {
+      "path": "packages/mcp-cloudflare/src/client/components/fragments/instructions/fx.tsx",
+      "bytes": 2614,
+      "sha256": "d6ba04ddf950830cd6760ea23b57ed54992eaa224dc5fbaa19675c4d506534ef"
+    },
+    {
+      "path": "packages/mcp-cloudflare/src/client/components/fragments/instructions/cursor.tsx",
+      "bytes": 2981,
+      "sha256": "a95ebd170b1826889cc618c5e6a9a2a8e1ec6b757f7f5608536708a59622a2f2"
+    },
+    {
+      "path": "packages/mcp-cloudflare/src/client/components/fragments/instructions/pi.tsx",
+      "bytes": 3288,
+      "sha256": "df21e2178b03cb8c0ed30d2965e1620488c8e92dd8f64d27cd9f39282f979d64"
+    },
+    {
+      "path": "packages/mcp-cloudflare/src/client/components/fragments/instructions/amp.tsx",
+      "bytes": 3406,
+      "sha256": "d46b59046903aba20711fb216ae59e6303882ee50427dd9de31efdaeccea4271"
+    },
+    {
+      "path": "packages/mcp-cloudflare/src/client/components/fragments/instructions/gemini.tsx",
+      "bytes": 3494,
+      "sha256": "4ae429c43572136db5d2ba7857e8225c79b2222bc26aeda67fc61e5d665713dd"
+    },
+    {
+      "path": "packages/mcp-cloudflare/src/client/components/fragments/instructions/vscode.tsx",
+      "bytes": 3678,
+      "sha256": "5f6dd4813a8f23314ba26cb5ba8663793e3a4fbbb52317ce1e192ba7adbd5d15"
+    },
+    {
+      "path": "packages/mcp-cloudflare/src/client/components/fragments/instructions/opencode.tsx",
+      "bytes": 3746,
+      "sha256": "1cc2d9879761d6c1964adb553764e6c266e2765cfb7adaae263275bac3f55064"
+    },
+    {
+      "path": "packages/mcp-cloudflare/src/client/components/fragments/instructions/warp.tsx",
+      "bytes": 3840,
+      "sha256": "a269c7a61f928a78a9397b23d68871cd821b07a16b3daab7694b84f7095db108"
+    },
+    {
+      "path": "packages/cli/src/types/index.ts",
+      "bytes": 5096,
+      "sha256": "703d5af22d3e3bdf1865c00083d85a4d31d5b394bc364f6c4452358c8737b26f"
+    },
+    {
+      "path": "packages/mcp-core/src/tools/catalog/index.ts",
+      "bytes": 7875,
+      "sha256": "3268a8116b2a14c8c91515ae17d0db37cd9b28605f857e4deee952c2b7472985"
+    },
+    {
+      "path": "packages/mcp-cloudflare/src/server/index.ts",
+      "bytes": 14474,
+      "sha256": "1cc530fd86b62caed4a967f9ca4860359239f46787d9a2bfdda70f202e81c1fb"
+    },
+    {
+      "path": "packages/cli/.cursor/skills/sentry-cli/SKILL.md",
+      "bytes": 31388,
+      "sha256": "3d98257de675a876900cbef7009ed4be2fe49a9155b5f9de738113f41c0f808b"
+    },
+    {
+      "path": "apps/cli-docs/public/.well-known/skills/sentry-cli/SKILL.md",
+      "bytes": 31388,
+      "sha256": "3d98257de675a876900cbef7009ed4be2fe49a9155b5f9de738113f41c0f808b"
+    },
+    {
+      "path": "packages/mcp-core/src/internal/agents/tools/data/system.json",
+      "bytes": 267,
+      "sha256": "aca7200fd5dc196eed7755cb6fe4faed353532079d2e6e093ff29d75783afec1"
+    },
+    {
+      "path": "packages/mcp-core/src/internal/agents/tools/data/go.json",
+      "bytes": 283,
+      "sha256": "b12465bd7debef73d07346acd5884651a7e92bb2324477fcbe320ad220226236"
+    }
+  ],
+  "skipped": {
+    "budget": true,
+    "forbidden_token": [],
+    "skipped_path": [],
+    "tree_entries": 2269
+  },
+  "providers": [],
+  "entrypoints": [],
+  "runtime": [
+    "node"
+  ],
+  "notes": [],
+  "_license_bytes": "IyBGdW5jdGlvbmFsIFNvdXJjZSBMaWNlbnNlLCBWZXJzaW9uIDEuMSwgQXBhY2hlIDIuMCBGdXR1cmUgTGljZW5zZQoKIyMgQWJicmV2aWF0aW9uCgpGU0wtMS4xLUFwYWNoZS0yLjAKCiMjIE5vdGljZQoKQ29weXJpZ2h0IDIwMDgtMjAyNCBGdW5jdGlvbmFsIFNvZnR3YXJlLCBJbmMuIGRiYSBTZW50cnkKCiMjIFRlcm1zIGFuZCBDb25kaXRpb25zCgojIyMgTGljZW5zb3IgKCJXZSIpCgpUaGUgcGFydHkgb2ZmZXJpbmcgdGhlIFNvZnR3YXJlIHVuZGVyIHRoZXNlIFRlcm1zIGFuZCBDb25kaXRpb25zLgoKIyMjIFRoZSBTb2Z0d2FyZQoKVGhlICJTb2Z0d2FyZSIgaXMgZWFjaCB2ZXJzaW9uIG9mIHRoZSBzb2Z0d2FyZSB0aGF0IHdlIG1ha2UgYXZhaWxhYmxlIHVuZGVyCnRoZXNlIFRlcm1zIGFuZCBDb25kaXRpb25zLCBhcyBpbmRpY2F0ZWQgYnkgb3VyIGluY2x1c2lvbiBvZiB0aGVzZSBUZXJtcyBhbmQKQ29uZGl0aW9ucyB3aXRoIHRoZSBTb2Z0d2FyZS4KCiMjIyBMaWNlbnNlIEdyYW50CgpTdWJqZWN0IHRvIHlvdXIgY29tcGxpYW5jZSB3aXRoIHRoaXMgTGljZW5zZSBHcmFudCBhbmQgdGhlIFBhdGVudHMsClJlZGlzdHJpYnV0aW9uIGFuZCBUcmFkZW1hcmsgY2xhdXNlcyBiZWxvdywgd2UgaGVyZWJ5IGdyYW50IHlvdSB0aGUgcmlnaHQgdG8KdXNlLCBjb3B5LCBtb2RpZnksIGNyZWF0ZSBkZXJpdmF0aXZlIHdvcmtzLCBwdWJsaWNseSBwZXJmb3JtLCBwdWJsaWNseSBkaXNwbGF5CmFuZCByZWRpc3RyaWJ1dGUgdGhlIFNvZnR3YXJlIGZvciBhbnkgUGVybWl0dGVkIFB1cnBvc2UgaWRlbnRpZmllZCBiZWxvdy4KCiMjIyBQZXJtaXR0ZWQgUHVycG9zZQoKQSBQZXJtaXR0ZWQgUHVycG9zZSBpcyBhbnkgcHVycG9zZSBvdGhlciB0aGFuIGEgQ29tcGV0aW5nIFVzZS4gQSBDb21wZXRpbmcgVXNlCm1lYW5zIG1ha2luZyB0aGUgU29mdHdhcmUgYXZhaWxhYmxlIHRvIG90aGVycyBpbiBhIGNvbW1lcmNpYWwgcHJvZHVjdCBvcgpzZXJ2aWNlIHRoYXQ6CgoxLiBzdWJzdGl0dXRlcyBmb3IgdGhlIFNvZnR3YXJlOwoKMi4gc3Vic3RpdHV0ZXMgZm9yIGFueSBvdGhlciBwcm9kdWN0IG9yIHNlcnZpY2Ugd2Ugb2ZmZXIgdXNpbmcgdGhlIFNvZnR3YXJlCiAgIHRoYXQgZXhpc3RzIGFzIG9mIHRoZSBkYXRlIHdlIG1ha2UgdGhlIFNvZnR3YXJlIGF2YWlsYWJsZTsgb3IKCjMuIG9mZmVycyB0aGUgc2FtZSBvciBzdWJzdGFudGlhbGx5IHNpbWlsYXIgZnVuY3Rpb25hbGl0eSBhcyB0aGUgU29mdHdhcmUuCgpQZXJtaXR0ZWQgUHVycG9zZXMgc3BlY2lmaWNhbGx5IGluY2x1ZGUgdXNpbmcgdGhlIFNvZnR3YXJlOgoKMS4gZm9yIHlvdXIgaW50ZXJuYWwgdXNlIGFuZCBhY2Nlc3M7CgoyLiBmb3Igbm9uLWNvbW1lcmNpYWwgZWR1Y2F0aW9uOwoKMy4gZm9yIG5vbi1jb21tZXJjaWFsIHJlc2VhcmNoOyBhbmQKCjQuIGluIGNvbm5lY3Rpb24gd2l0aCBwcm9mZXNzaW9uYWwgc2VydmljZXMgdGhhdCB5b3UgcHJvdmlkZSB0byBhIGxpY2Vuc2VlCiAgIHVzaW5nIHRoZSBTb2Z0d2FyZSBpbiBhY2NvcmRhbmNlIHdpdGggdGhlc2UgVGVybXMgYW5kIENvbmRpdGlvbnMuCgojIyMgUGF0ZW50cwoKVG8gdGhlIGV4dGVudCB5b3VyIHVzZSBmb3IgYSBQZXJtaXR0ZWQgUHVycG9zZSB3b3VsZCBuZWNlc3NhcmlseSBpbmZyaW5nZSBvdXIKcGF0ZW50cywgdGhlIGxpY2Vuc2UgZ3JhbnQgYWJvdmUgaW5jbHVkZXMgYSBsaWNlbnNlIHVuZGVyIG91ciBwYXRlbnRzLiBJZiB5b3UKbWFrZSBhIGNsYWltIGFnYWluc3QgYW55IHBhcnR5IHRoYXQgdGhlIFNvZnR3YXJlIGluZnJpbmdlcyBvciBjb250cmlidXRlcyB0bwp0aGUgaW5mcmluZ2VtZW50IG9mIGFueSBwYXRlbnQsIHRoZW4geW91ciBwYXRlbnQgbGljZW5zZSB0byB0aGUgU29mdHdhcmUgZW5kcwppbW1lZGlhdGVseS4KCiMjIyBSZWRpc3RyaWJ1dGlvbgoKVGhlIFRlcm1zIGFuZCBDb25kaXRpb25zIGFwcGx5IHRvIGFsbCBjb3BpZXMsIG1vZGlmaWNhdGlvbnMgYW5kIGRlcml2YXRpdmVzIG9mCnRoZSBTb2Z0d2FyZS4KCklmIHlvdSByZWRpc3RyaWJ1dGUgYW55IGNvcGllcywgbW9kaWZpY2F0aW9ucyBvciBkZXJpdmF0aXZlcyBvZiB0aGUgU29mdHdhcmUsCnlvdSBtdXN0IGluY2x1ZGUgYSBjb3B5IG9mIG9yIGEgbGluayB0byB0aGVzZSBUZXJtcyBhbmQgQ29uZGl0aW9ucyBhbmQgbm90CnJlbW92ZSBhbnkgY29weXJpZ2h0IG5vdGljZXMgcHJvdmlkZWQgaW4gb3Igd2l0aCB0aGUgU29mdHdhcmUuCgojIyMgRGlzY2xhaW1lcgoKVEhFIFNPRlRXQVJFIElTIFBST1ZJREVEICJBUyBJUyIgQU5EIFdJVEhPVVQgV0FSUkFOVElFUyBPRiBBTlkgS0lORCwgRVhQUkVTUyBPUgpJTVBMSUVELCBJTkNMVURJTkcgV0lUSE9VVCBMSU1JVEFUSU9OIFdBUlJBTlRJRVMgT0YgRklUTkVTUyBGT1IgQSBQQVJUSUNVTEFSClBVUlBPU0UsIE1FUkNIQU5UQUJJTElUWSwgVElUTEUgT1IgTk9OLUlORlJJTkdFTUVOVC4KCklOIE5PIEVWRU5UIFdJTEwgV0UgSEFWRSBBTlkgTElBQklMSVRZIFRPIFlPVSBBUklTSU5HIE9VVCBPRiBPUiBSRUxBVEVEIFRPIFRIRQpTT0ZUV0FSRSwgSU5DTFVESU5HIElORElSRUNULCBTUEVDSUFMLCBJTkNJREVOVEFMIE9SIENPTlNFUVVFTlRJQUwgREFNQUdFUywKRVZFTiBJRiBXRSBIQVZFIEJFRU4gSU5GT1JNRUQgT0YgVEhFSVIgUE9TU0lCSUxJVFkgSU4gQURWQU5DRS4KCiMjIyBUcmFkZW1hcmtzCgpFeGNlcHQgZm9yIGRpc3BsYXlpbmcgdGhlIExpY2Vuc2UgRGV0YWlscyBhbmQgaWRlbnRpZnlpbmcgdXMgYXMgdGhlIG9yaWdpbiBvZgp0aGUgU29mdHdhcmUsIHlvdSBoYXZlIG5vIHJpZ2h0IHVuZGVyIHRoZXNlIFRlcm1zIGFuZCBDb25kaXRpb25zIHRvIHVzZSBvdXIKdHJhZGVtYXJrcywgdHJhZGUgbmFtZXMsIHNlcnZpY2UgbWFya3Mgb3IgcHJvZHVjdCBuYW1lcy4KCiMjIEdyYW50IG9mIEZ1dHVyZSBMaWNlbnNlCgpXZSBoZXJlYnkgaXJyZXZvY2FibHkgZ3JhbnQgeW91IGFuIGFkZGl0aW9uYWwgbGljZW5zZSB0byB1c2UgdGhlIFNvZnR3YXJlIHVuZGVyCnRoZSBBcGFjaGUgTGljZW5zZSwgVmVyc2lvbiAyLjAgdGhhdCBpcyBlZmZlY3RpdmUgb24gdGhlIHNlY29uZCBhbm5pdmVyc2FyeSBvZgp0aGUgZGF0ZSB3ZSBtYWtlIHRoZSBTb2Z0d2FyZSBhdmFpbGFibGUuIE9uIG9yIGFmdGVyIHRoYXQgZGF0ZSwgeW91IG1heSB1c2UgdGhlClNvZnR3YXJlIHVuZGVyIHRoZSBBcGFjaGUgTGljZW5zZSwgVmVyc2lvbiAyLjAsIGluIHdoaWNoIGNhc2UgdGhlIGZvbGxvd2luZwp3aWxsIGFwcGx5OgoKTGljZW5zZWQgdW5kZXIgdGhlIEFwYWNoZSBMaWNlbnNlLCBWZXJzaW9uIDIuMCAodGhlICJMaWNlbnNlIik7IHlvdSBtYXkgbm90IHVzZQp0aGlzIGZpbGUgZXhjZXB0IGluIGNvbXBsaWFuY2Ugd2l0aCB0aGUgTGljZW5zZS4KCllvdSBtYXkgb2J0YWluIGEgY29weSBvZiB0aGUgTGljZW5zZSBhdAoKaHR0cDovL3d3dy5hcGFjaGUub3JnL2xpY2Vuc2VzL0xJQ0VOU0UtMi4wCgpVbmxlc3MgcmVxdWlyZWQgYnkgYXBwbGljYWJsZSBsYXcgb3IgYWdyZWVkIHRvIGluIHdyaXRpbmcsIHNvZnR3YXJlIGRpc3RyaWJ1dGVkCnVuZGVyIHRoZSBMaWNlbnNlIGlzIGRpc3RyaWJ1dGVkIG9uIGFuICJBUyBJUyIgQkFTSVMsIFdJVEhPVVQgV0FSUkFOVElFUyBPUgpDT05ESVRJT05TIE9GIEFOWSBLSU5ELCBlaXRoZXIgZXhwcmVzcyBvciBpbXBsaWVkLiBTZWUgdGhlIExpY2Vuc2UgZm9yIHRoZQpzcGVjaWZpYyBsYW5ndWFnZSBnb3Zlcm5pbmcgcGVybWlzc2lvbnMgYW5kIGxpbWl0YXRpb25zIHVuZGVyIHRoZSBMaWNlbnNlLgo=",
+  "launch": {
+    "command": [
+      "npx",
+      "-y",
+      "@sentry/mcp-server"
+    ],
+    "requires": "Node.js and the package from npm (fetched on first run)",
+    "verified": [],
+    "launch_verified": false,
+    "command_source": "repository",
+    "launch_note": "the repository's README states this command; this environment did not complete a handshake with it, so it is carried as a stated command rather than a verified one"
+  },
+  "what": "Agentic tooling for Sentry",
+  "content_redistributed": false
+}

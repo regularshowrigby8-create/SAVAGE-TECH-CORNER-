@@ -1,0 +1,156 @@
+{
+ "id": "cloudflare-moltworker",
+ "full_name": "cloudflare/moltworker",
+ "url": "https://github.com/cloudflare/moltworker",
+ "group": "imported factory",
+ "license": "Apache-2.0",
+ "content_redistributed": true,
+ "files": [
+  "AGENTS.md",
+  "README.md",
+  "skills/cloudflare-browser/SKILL.md",
+  "skills/cloudflare-browser/scripts/cdp-client.js",
+  "skills/cloudflare-browser/scripts/screenshot.js",
+  "skills/cloudflare-browser/scripts/video.js"
+ ],
+ "stages": [],
+ "roles": [
+  [
+   "agent",
+   "Instructions"
+  ]
+ ],
+ "gates": [
+  [
+   "check",
+   "secrets"
+  ]
+ ],
+ "prompts": [
+  [
+   "path",
+   "skills/cloudflare-browser/SKILL.md"
+  ],
+  [
+   "path",
+   "skills/cloudflare-browser/scripts/cdp-client.js"
+  ],
+  [
+   "path",
+   "skills/cloudflare-browser/scripts/screenshot.js"
+  ],
+  [
+   "path",
+   "skills/cloudflare-browser/scripts/video.js"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "Project Overview"
+  ],
+  [
+   "heading",
+   "Project Structure"
+  ],
+  [
+   "heading",
+   "Key Patterns"
+  ],
+  [
+   "heading",
+   "Environment Variables"
+  ],
+  [
+   "heading",
+   "CLI Commands"
+  ],
+  [
+   "heading",
+   "Success Detection"
+  ],
+  [
+   "heading",
+   "Commands"
+  ],
+  [
+   "heading",
+   "Testing"
+  ],
+  [
+   "heading",
+   "Code Style"
+  ],
+  [
+   "heading",
+   "Documentation"
+  ],
+  [
+   "heading",
+   "Architecture"
+  ],
+  [
+   "heading",
+   "Key Files"
+  ],
+  [
+   "heading",
+   "Local Development"
+  ],
+  [
+   "heading",
+   "Edit .dev.vars with your ANTHROPIC_API_KEY"
+  ],
+  [
+   "heading",
+   "WebSocket Limitations"
+  ],
+  [
+   "heading",
+   "Docker Image Caching"
+  ],
+  [
+   "heading",
+   "Build cache bust: 2026-02-06-v28-openclaw-upgrade"
+  ],
+  [
+   "heading",
+   "Gateway Configuration"
+  ],
+  [
+   "heading",
+   "AI Provider Priority"
+  ],
+  [
+   "heading",
+   "Container Environment Variables"
+  ],
+  [
+   "heading",
+   "OpenClaw Config Schema"
+  ],
+  [
+   "heading",
+   "Common Tasks"
+  ],
+  [
+   "heading",
+   "Adding a New API Endpoint"
+  ],
+  [
+   "heading",
+   "Adding a New Environment Variable"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 6,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 1,
+  "gates": 1,
+  "prompts": 4,
+  "headings": 98
+ },
+ "structure_found": true
+}

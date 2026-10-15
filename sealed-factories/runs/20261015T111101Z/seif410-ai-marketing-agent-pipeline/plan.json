@@ -1,0 +1,25 @@
+{
+ "id": "seif410-ai-marketing-agent-pipeline",
+ "full_name": "seif410/ai-marketing-agent-pipeline",
+ "url": "https://github.com/seif410/ai-marketing-agent-pipeline",
+ "group": "imported factory",
+ "license": "NOASSERTION",
+ "content_redistributed": false,
+ "files": [],
+ "stages": [],
+ "roles": [],
+ "gates": [],
+ "prompts": [],
+ "headings": [],
+ "mcp_tools": [],
+ "texts": 0,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 0,
+  "gates": 0,
+  "prompts": 0,
+  "headings": 0
+ },
+ "structure_found": false
+}

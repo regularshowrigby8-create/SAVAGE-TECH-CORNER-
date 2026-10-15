@@ -1,0 +1,25 @@
+{
+ "id": "gratefuljinx77-speckit-claude",
+ "full_name": "GratefulJinx77/speckit-claude",
+ "url": "https://github.com/GratefulJinx77/speckit-claude",
+ "group": "imported factory",
+ "license": "NOASSERTION",
+ "content_redistributed": false,
+ "files": [],
+ "stages": [],
+ "roles": [],
+ "gates": [],
+ "prompts": [],
+ "headings": [],
+ "mcp_tools": [],
+ "texts": 0,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 0,
+  "gates": 0,
+  "prompts": 0,
+  "headings": 0
+ },
+ "structure_found": false
+}

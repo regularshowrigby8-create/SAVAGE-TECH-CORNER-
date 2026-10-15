@@ -1,0 +1,290 @@
+{
+ "id": "hadamrd-titan",
+ "full_name": "hadamrd/titan",
+ "url": "https://github.com/hadamrd/titan",
+ "group": "imported factory",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  "e2e/pipelines/include-shared/shared/lint-test.yml",
+  "e2e/pipelines/include-shared/titan-pipeline-cross-repo.yml",
+  "e2e/pipelines/include-shared/titan-pipeline.yml",
+  "e2e/pipelines/java-matrix/README.md",
+  "e2e/pipelines/java-matrix/titan-pipeline.yml",
+  "e2e/pipelines/live-log-stream/titan-pipeline.yml",
+  "e2e/pipelines/node-app-with-failing-test/README.md",
+  "e2e/pipelines/node-app-with-failing-test/package.json",
+  "e2e/pipelines/node-app-with-failing-test/src/sum.js",
+  "e2e/pipelines/node-app-with-failing-test/src/sum.test.js",
+  "e2e/pipelines/node-app/package.json",
+  "e2e/pipelines/node-app/src/index.js",
+  "e2e/pipelines/node-app/src/index.test.js",
+  "e2e/pipelines/oom-step/README.md",
+  "titan-step-api/src/main/java/io/adaptiq/titan/worker/step/LogSink.java",
+  "titan-step-api/src/main/java/io/adaptiq/titan/worker/step/OutputSink.java",
+  "titan-step-api/src/main/java/io/adaptiq/titan/worker/step/ParamSpec.java",
+  "titan-step-api/src/main/java/io/adaptiq/titan/worker/step/StepApi.java",
+  "titan-step-api/src/main/java/io/adaptiq/titan/worker/step/StepHandlerContext.java",
+  "titan-step-api/src/main/java/io/adaptiq/titan/worker/step/StepHandlerProvider.java",
+  "titan-step-api/src/testFixtures/java/io/adaptiq/titan/worker/step/BrokenProvider.java",
+  "titan-step-api/src/testFixtures/java/io/adaptiq/titan/worker/step/FixtureProvider.java",
+  "titan-step-api/src/testFixtures/java/io/adaptiq/titan/worker/step/FixtureStepHandler.java",
+  "titan-worker/src/main/java/io/adaptiq/titan/worker/DbLogSink.java",
+  "titan-worker/src/main/java/io/adaptiq/titan/worker/step/builtin/ErrorStepHandler.java"
+ ],
+ "stages": [
+  [
+   "path",
+   "e2e/pipelines/include-shared/shared/lint-test.yml"
+  ],
+  [
+   "yaml:stages",
+   "stage: lint"
+  ],
+  [
+   "yaml:stages",
+   "steps"
+  ],
+  [
+   "yaml:steps",
+   "sh: ./scripts/lint.sh"
+  ],
+  [
+   "yaml:steps",
+   "stage: test"
+  ],
+  [
+   "yaml:stages",
+   "dependsOn"
+  ],
+  [
+   "yaml:steps",
+   "sh: ./scripts/test.sh"
+  ],
+  [
+   "stage",
+   "lint"
+  ],
+  [
+   "stage",
+   "test"
+  ],
+  [
+   "path",
+   "e2e/pipelines/include-shared/titan-pipeline-cross-repo.yml"
+  ],
+  [
+   "yaml:stages",
+   "stage: deploy"
+  ],
+  [
+   "yaml:steps",
+   "sh: ./scripts/deploy.sh"
+  ],
+  [
+   "stage",
+   "deploy"
+  ],
+  [
+   "path",
+   "e2e/pipelines/include-shared/titan-pipeline.yml"
+  ],
+  [
+   "path",
+   "e2e/pipelines/java-matrix/README.md"
+  ],
+  [
+   "path",
+   "e2e/pipelines/java-matrix/titan-pipeline.yml"
+  ],
+  [
+   "yaml:stages",
+   "stage: build"
+  ],
+  [
+   "yaml:stages",
+   "matrix"
+  ],
+  [
+   "yaml:stages",
+   "fail_fast"
+  ],
+  [
+   "yaml:stages",
+   "axes"
+  ],
+  [
+   "yaml:stages",
+   "jdk"
+  ],
+  [
+   "yaml:stages",
+   "profile"
+  ],
+  [
+   "yaml:steps",
+   "sh: |"
+  ],
+  [
+   "stage",
+   "build"
+  ]
+ ],
+ "roles": [
+  [
+   "path",
+   "titan-step-api/src/main/java/io/adaptiq/titan/worker/step/LogSink.java"
+  ],
+  [
+   "path",
+   "titan-step-api/src/main/java/io/adaptiq/titan/worker/step/OutputSink.java"
+  ],
+  [
+   "path",
+   "titan-step-api/src/main/java/io/adaptiq/titan/worker/step/ParamSpec.java"
+  ],
+  [
+   "path",
+   "titan-step-api/src/main/java/io/adaptiq/titan/worker/step/StepApi.java"
+  ],
+  [
+   "path",
+   "titan-step-api/src/main/java/io/adaptiq/titan/worker/step/StepHandlerContext.java"
+  ],
+  [
+   "path",
+   "titan-step-api/src/main/java/io/adaptiq/titan/worker/step/StepHandlerProvider.java"
+  ],
+  [
+   "path",
+   "titan-step-api/src/testFixtures/java/io/adaptiq/titan/worker/step/BrokenProvider.java"
+  ],
+  [
+   "path",
+   "titan-step-api/src/testFixtures/java/io/adaptiq/titan/worker/step/FixtureProvider.java"
+  ],
+  [
+   "path",
+   "titan-step-api/src/testFixtures/java/io/adaptiq/titan/worker/step/FixtureStepHandler.java"
+  ],
+  [
+   "path",
+   "titan-worker/src/main/java/io/adaptiq/titan/worker/DbLogSink.java"
+  ],
+  [
+   "path",
+   "titan-worker/src/main/java/io/adaptiq/titan/worker/step/builtin/ErrorStepHandler.java"
+  ]
+ ],
+ "gates": [],
+ "prompts": [],
+ "headings": [
+  [
+   "heading",
+   "Shared lint+test prelude (issue #1120 fixture)."
+  ],
+  [
+   "heading",
+   "Cross-repo include fixture (issue #1120)."
+  ],
+  [
+   "heading",
+   "secret in the secret manager (design/40) \u2014 NEVER a plaintext token."
+  ],
+  [
+   "heading",
+   "Main pipeline that pulls in the shared lint+test prelude (issue #1120 fixture)."
+  ],
+  [
+   "heading",
+   "titan-pipeline.yml I will not migrate.\""
+  ],
+  [
+   "heading",
+   "java-matrix fixture (issue #1127)"
+  ],
+  [
+   "heading",
+   "Fixture pipeline for issue #1127 \u2014 matrix step expansion."
+  ],
+  [
+   "heading",
+   "# Shape:"
+  ],
+  [
+   "heading",
+   "build (matrix on {jdk: [17, 21], profile: [unit, it]}) -> 4 parallel cells"
+  ],
+  [
+   "heading",
+   "# Invariants the e2e spec asserts:"
+  ],
+  [
+   "heading",
+   "* 4 cell stages render in the UI, one per cartesian point of jdk \u00d7 profile."
+  ],
+  [
+   "heading",
+   "* Each cell's log contains the MATRIX_JDK / MATRIX_PROFILE env values for"
+  ],
+  [
+   "heading",
+   "that cell \u2014 proving env injection threads through to the worker."
+  ],
+  [
+   "heading",
+   "* fail_fast: false is honoured \u2014 sibling cells run to completion even if"
+  ],
+  [
+   "heading",
+   "one cell deliberately fails (the (jdk=21, profile=it) cell is rigged"
+  ],
+  [
+   "heading",
+   "to exit non-zero), and the parent verdict rolls up as FAILED with the"
+  ],
+  [
+   "heading",
+   "other 3 cells still reporting SUCCESS."
+  ],
+  [
+   "heading",
+   "# We use plain `sh` rather than a real JDK probe so the rig (which may not"
+  ],
+  [
+   "heading",
+   "have multiple JDKs installed) can still run this fixture green. The matrix"
+  ],
+  [
+   "heading",
+   "semantics \u2014 fan-out, env injection, verdict roll-up \u2014 are what's being"
+  ],
+  [
+   "heading",
+   "validated, not the JDK toolchain itself."
+  ],
+  [
+   "heading",
+   "Fixture pipeline for issue #1264 \u2014 live build-log streaming."
+  ],
+  [
+   "heading",
+   "stream -> emit 6 lines, one per second, then exit 0 (SUCCESS)."
+  ],
+  [
+   "heading",
+   "# Invariants the e2e spec (`e2e/specs/live-log-stream.spec.ts`) asserts:"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 45,
+  "roles": 11,
+  "gates": 0,
+  "prompts": 0,
+  "headings": 41
+ },
+ "structure_found": true
+}

@@ -1,0 +1,148 @@
+{
+ "id": "langchain",
+ "full_name": "langchain-ai/langchain",
+ "url": "https://github.com/langchain-ai/langchain",
+ "group": "AI-focused factory",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  "libs/core/langchain_core/prompts/__init__.py",
+  "libs/core/langchain_core/prompts/dict.py",
+  "libs/core/langchain_core/prompts/image.py",
+  "libs/core/langchain_core/prompts/message.py",
+  "libs/core/langchain_core/prompts/structured.py",
+  "libs/langchain/langchain_classic/chains/llm_summarization_checker/prompts/are_all_true_prompt.txt",
+  "libs/langchain/langchain_classic/chains/llm_summarization_checker/prompts/check_facts.txt",
+  "libs/langchain/langchain_classic/chains/llm_summarization_checker/prompts/create_facts.txt",
+  "libs/langchain/langchain_classic/chains/llm_summarization_checker/prompts/revise_summary.txt",
+  "libs/langchain/langchain_classic/indexes/prompts/__init__.py",
+  "libs/langchain/langchain_classic/indexes/prompts/entity_extraction.py",
+  "libs/langchain/langchain_classic/indexes/prompts/entity_summarization.py",
+  "libs/langchain/langchain_classic/indexes/prompts/knowledge_triplet_extraction.py",
+  "libs/langchain/langchain_classic/prompts/__init__.py",
+  "libs/langchain/langchain_classic/prompts/base.py",
+  "libs/langchain/langchain_classic/prompts/chat.py",
+  "libs/langchain/langchain_classic/prompts/example_selector/__init__.py",
+  "libs/langchain/langchain_classic/prompts/example_selector/base.py",
+  "libs/langchain/langchain_classic/prompts/example_selector/length_based.py",
+  "libs/langchain/langchain_classic/prompts/example_selector/ngram_overlap.py",
+  "libs/langchain/langchain_classic/prompts/example_selector/semantic_similarity.py",
+  "libs/langchain/langchain_classic/prompts/few_shot.py",
+  "libs/langchain/langchain_classic/prompts/few_shot_with_templates.py",
+  "libs/langchain/langchain_classic/prompts/loading.py",
+  "libs/langchain/langchain_classic/prompts/prompt.py"
+ ],
+ "stages": [],
+ "roles": [],
+ "gates": [],
+ "prompts": [
+  [
+   "path",
+   "libs/core/langchain_core/prompts/__init__.py"
+  ],
+  [
+   "path",
+   "libs/core/langchain_core/prompts/dict.py"
+  ],
+  [
+   "path",
+   "libs/core/langchain_core/prompts/image.py"
+  ],
+  [
+   "path",
+   "libs/core/langchain_core/prompts/message.py"
+  ],
+  [
+   "path",
+   "libs/core/langchain_core/prompts/structured.py"
+  ],
+  [
+   "path",
+   "libs/langchain/langchain_classic/chains/llm_summarization_checker/prompts/are_all_true_prompt.txt"
+  ],
+  [
+   "path",
+   "libs/langchain/langchain_classic/chains/llm_summarization_checker/prompts/check_facts.txt"
+  ],
+  [
+   "path",
+   "libs/langchain/langchain_classic/chains/llm_summarization_checker/prompts/create_facts.txt"
+  ],
+  [
+   "path",
+   "libs/langchain/langchain_classic/chains/llm_summarization_checker/prompts/revise_summary.txt"
+  ],
+  [
+   "path",
+   "libs/langchain/langchain_classic/indexes/prompts/__init__.py"
+  ],
+  [
+   "path",
+   "libs/langchain/langchain_classic/indexes/prompts/entity_extraction.py"
+  ],
+  [
+   "path",
+   "libs/langchain/langchain_classic/indexes/prompts/entity_summarization.py"
+  ],
+  [
+   "path",
+   "libs/langchain/langchain_classic/indexes/prompts/knowledge_triplet_extraction.py"
+  ],
+  [
+   "path",
+   "libs/langchain/langchain_classic/prompts/__init__.py"
+  ],
+  [
+   "path",
+   "libs/langchain/langchain_classic/prompts/base.py"
+  ],
+  [
+   "path",
+   "libs/langchain/langchain_classic/prompts/chat.py"
+  ],
+  [
+   "path",
+   "libs/langchain/langchain_classic/prompts/example_selector/__init__.py"
+  ],
+  [
+   "path",
+   "libs/langchain/langchain_classic/prompts/example_selector/base.py"
+  ],
+  [
+   "path",
+   "libs/langchain/langchain_classic/prompts/example_selector/length_based.py"
+  ],
+  [
+   "path",
+   "libs/langchain/langchain_classic/prompts/example_selector/ngram_overlap.py"
+  ],
+  [
+   "path",
+   "libs/langchain/langchain_classic/prompts/example_selector/semantic_similarity.py"
+  ],
+  [
+   "path",
+   "libs/langchain/langchain_classic/prompts/few_shot.py"
+  ],
+  [
+   "path",
+   "libs/langchain/langchain_classic/prompts/few_shot_with_templates.py"
+  ],
+  [
+   "path",
+   "libs/langchain/langchain_classic/prompts/loading.py"
+  ]
+ ],
+ "headings": [],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 0,
+  "roles": 0,
+  "gates": 0,
+  "prompts": 25,
+  "headings": 0
+ },
+ "structure_found": true
+}

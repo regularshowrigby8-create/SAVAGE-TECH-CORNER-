@@ -1,0 +1,158 @@
+{
+ "id": "codebase-memory-mcp",
+ "full_name": "DeusData/codebase-memory-mcp",
+ "url": "https://github.com/DeusData/codebase-memory-mcp",
+ "group": "MCP tool server",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  "graph-ui/agents/hooks/atlas-trace-watch.mjs",
+  "graph-ui/src/agents/ActivityPanel.test.tsx",
+  "graph-ui/src/agents/AgentSetup.test.tsx",
+  "graph-ui/src/agents/AgentSetup.tsx",
+  "graph-ui/src/agents/activity-model.test.ts",
+  "graph-ui/src/agents/activity-model.ts",
+  "graph-ui/src/agents/activity-strings.ts",
+  "graph-ui/src/agents/activity.css",
+  "graph-ui/src/agents/agent-colors.test.ts",
+  "graph-ui/src/agents/agent-colors.ts",
+  "graph-ui/src/agents/agent-event.test.ts",
+  "graph-ui/src/agents/agent-preference.test.ts",
+  "graph-ui/src/agents/agent-source.test.tsx",
+  "graph-ui/src/agents/agent-timeline.test.ts",
+  "graph-ui/src/agents/agent-view.test.ts",
+  "src/pipeline/laravel_routing.h",
+  "src/pipeline/lsp_surface.h",
+  "src/pipeline/pass_configures.c",
+  "src/pipeline/pass_cross_repo.h",
+  "src/pipeline/pass_diagrams.c",
+  "src/pipeline/pass_ensemble_routing.h",
+  "src/pipeline/pass_gitdiff.c",
+  "src/pipeline/pass_spawns.c",
+  "src/pipeline/path_alias.h",
+  "src/pipeline/worker_pool.h"
+ ],
+ "stages": [
+  [
+   "path",
+   "src/pipeline/laravel_routing.h"
+  ],
+  [
+   "path",
+   "src/pipeline/lsp_surface.h"
+  ],
+  [
+   "path",
+   "src/pipeline/pass_configures.c"
+  ],
+  [
+   "path",
+   "src/pipeline/pass_cross_repo.h"
+  ],
+  [
+   "path",
+   "src/pipeline/pass_diagrams.c"
+  ],
+  [
+   "path",
+   "src/pipeline/pass_ensemble_routing.h"
+  ],
+  [
+   "path",
+   "src/pipeline/pass_gitdiff.c"
+  ],
+  [
+   "path",
+   "src/pipeline/pass_spawns.c"
+  ],
+  [
+   "path",
+   "src/pipeline/path_alias.h"
+  ],
+  [
+   "pipeline",
+   "can consume it. */"
+  ],
+  [
+   "path",
+   "src/pipeline/worker_pool.h"
+  ]
+ ],
+ "roles": [
+  [
+   "path",
+   "graph-ui/agents/hooks/atlas-trace-watch.mjs"
+  ],
+  [
+   "path",
+   "graph-ui/src/agents/ActivityPanel.test.tsx"
+  ],
+  [
+   "path",
+   "graph-ui/src/agents/AgentSetup.test.tsx"
+  ],
+  [
+   "path",
+   "graph-ui/src/agents/AgentSetup.tsx"
+  ],
+  [
+   "path",
+   "graph-ui/src/agents/activity-model.test.ts"
+  ],
+  [
+   "path",
+   "graph-ui/src/agents/activity-model.ts"
+  ],
+  [
+   "path",
+   "graph-ui/src/agents/activity-strings.ts"
+  ],
+  [
+   "path",
+   "graph-ui/src/agents/activity.css"
+  ],
+  [
+   "path",
+   "graph-ui/src/agents/agent-colors.test.ts"
+  ],
+  [
+   "path",
+   "graph-ui/src/agents/agent-colors.ts"
+  ],
+  [
+   "path",
+   "graph-ui/src/agents/agent-event.test.ts"
+  ],
+  [
+   "path",
+   "graph-ui/src/agents/agent-preference.test.ts"
+  ],
+  [
+   "path",
+   "graph-ui/src/agents/agent-source.test.tsx"
+  ],
+  [
+   "path",
+   "graph-ui/src/agents/agent-timeline.test.ts"
+  ],
+  [
+   "path",
+   "graph-ui/src/agents/agent-view.test.ts"
+  ]
+ ],
+ "gates": [],
+ "prompts": [],
+ "headings": [],
+ "mcp_tools": [],
+ "texts": 25,
+ "launch_command": "",
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 11,
+  "roles": 15,
+  "gates": 0,
+  "prompts": 0,
+  "headings": 0
+ },
+ "structure_found": true
+}

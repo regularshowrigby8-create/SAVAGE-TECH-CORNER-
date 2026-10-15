@@ -1,0 +1,110 @@
+{
+ "id": "chroma-mcp",
+ "full_name": "chroma-core/chroma-mcp",
+ "url": "https://github.com/chroma-core/chroma-mcp",
+ "group": "MCP tool server",
+ "license": "Apache-2.0",
+ "content_redistributed": true,
+ "files": [
+  "Dockerfile",
+  "README.md",
+  "src/chroma_mcp/server.py"
+ ],
+ "stages": [],
+ "roles": [],
+ "gates": [
+  [
+   "check",
+   "if there are empty strings in the ids list"
+  ],
+  [
+   "check",
+   "for duplicate IDs"
+  ],
+  [
+   "check",
+   "the return value"
+  ]
+ ],
+ "prompts": [],
+ "headings": [
+  [
+   "heading",
+   "Chroma MCP Server"
+  ],
+  [
+   "heading",
+   "Features"
+  ],
+  [
+   "heading",
+   "Supported Tools"
+  ],
+  [
+   "heading",
+   "Embedding Functions"
+  ],
+  [
+   "heading",
+   "Usage with Claude Desktop"
+  ],
+  [
+   "heading",
+   "Demos"
+  ],
+  [
+   "heading",
+   "Using Environment Variables"
+  ],
+  [
+   "heading",
+   "Common variables"
+  ],
+  [
+   "heading",
+   "For persistent client"
+  ],
+  [
+   "heading",
+   "For cloud client (Chroma Cloud)"
+  ],
+  [
+   "heading",
+   "For HTTP client (self-hosted)"
+  ],
+  [
+   "heading",
+   "Optional: Specify path to .env file (defaults to .chroma_env)"
+  ],
+  [
+   "heading",
+   "Embedding Function Environment Variables"
+  ]
+ ],
+ "mcp_tools": [
+  "chroma-mcp:chroma_list_collections",
+  "chroma-mcp:chroma_create_collection",
+  "chroma-mcp:chroma_peek_collection",
+  "chroma-mcp:chroma_get_collection_info",
+  "chroma-mcp:chroma_get_collection_count",
+  "chroma-mcp:chroma_modify_collection",
+  "chroma-mcp:chroma_fork_collection",
+  "chroma-mcp:chroma_delete_collection",
+  "chroma-mcp:chroma_add_documents",
+  "chroma-mcp:chroma_query_documents",
+  "chroma-mcp:chroma_get_documents",
+  "chroma-mcp:chroma_update_documents",
+  "chroma-mcp:chroma_delete_documents"
+ ],
+ "texts": 3,
+ "launch_command": "uvx --with pydantic<2.12 chroma-mcp --client-type persistent --data-dir /tmp/chromamcp",
+ "totals": {
+  "mcp_tools": 13,
+  "stages": 0,
+  "roles": 0,
+  "gates": 3,
+  "prompts": 0,
+  "headings": 13
+ },
+ "structure_found": true
+}

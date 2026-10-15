@@ -1,0 +1,368 @@
+{
+ "id": "alirezarezvani-claude-skills",
+ "full_name": "alirezarezvani/claude-skills",
+ "url": "https://github.com/alirezarezvani/claude-skills",
+ "group": "imported factory",
+ "license": "MIT",
+ "content_redistributed": true,
+ "files": [
+  ".gemini/skills/changelog/SKILL.md",
+  ".gemini/skills/cmd-a11y-audit/SKILL.md",
+  ".gemini/skills/cmd-cs-aeo/SKILL.md",
+  ".gemini/skills/cs-webinar/SKILL.md",
+  ".gemini/skills/okr/SKILL.md",
+  ".gemini/skills/persona/SKILL.md",
+  ".gemini/skills/pipeline/SKILL.md",
+  ".gemini/skills/prd/SKILL.md",
+  ".gemini/skills/retro/SKILL.md",
+  ".gemini/skills/rice/SKILL.md",
+  ".gemini/skills/seo-auditor/SKILL.md",
+  ".gemini/skills/slo-design/SKILL.md",
+  ".gemini/skills/sprint-plan/SKILL.md",
+  ".gemini/skills/tc/SKILL.md",
+  ".gemini/skills/tdd/SKILL.md",
+  ".gemini/skills/tech-debt/SKILL.md",
+  ".gemini/skills/user-story/SKILL.md",
+  ".gemini/skills/wiki-ingest/SKILL.md",
+  ".gemini/skills/wiki-init/SKILL.md",
+  ".gemini/skills/wiki-lint/SKILL.md",
+  ".gemini/skills/wiki-log/SKILL.md",
+  ".gemini/skills/wiki-query/SKILL.md",
+  "engineering/book-to-skill/skills/book-to-skill/scripts/book_to_skill/parsers/__init__.py",
+  "marketing-skill/skills/x-twitter-growth/.gitignore",
+  "product-team/code-to-prd/skills/code-to-prd/scripts/.gitignore"
+ ],
+ "stages": [
+  [
+   "step",
+   "1: Scan"
+  ],
+  [
+   "step",
+   "2: Fix"
+  ],
+  [
+   "step",
+   "3: Contrast Check"
+  ],
+  [
+   "step",
+   "4: Report"
+  ],
+  [
+   "phase",
+   "1: Audit"
+  ],
+  [
+   "phase",
+   "2: Optimize (if audit < industry threshold)"
+  ],
+  [
+   "phase",
+   "3: Publish (manual step \u2014 review the optimized variant, then deploy)"
+  ],
+  [
+   "phase",
+   "4: Track (over 4-12 weeks)"
+  ],
+  [
+   "phase",
+   "5: Report (monthly)"
+  ],
+  [
+   "path",
+   ".gemini/skills/pipeline/SKILL.md"
+  ],
+  [
+   "phase",
+   "1 \u2014 Forcing Questions (before any drafting)"
+  ],
+  [
+   "phase",
+   "2 \u2014 Draft (required-sections checklist)"
+  ],
+  [
+   "phase",
+   "3 \u2014 Prioritization hook (optional)"
+  ],
+  [
+   "phase",
+   "1: Discovery & Baseline"
+  ],
+  [
+   "phase",
+   "2: Meta Tag Audit"
+  ],
+  [
+   "phase",
+   "3: Content Quality & Readability"
+  ],
+  [
+   "phase",
+   "4: Keyword Optimization"
+  ],
+  [
+   "phase",
+   "5: Link Audit"
+  ],
+  [
+   "phase",
+   "6: Sitemap & Build"
+  ],
+  [
+   "phase",
+   "7: Report"
+  ],
+  [
+   "step",
+   "1: gather inputs (service, sli-type, target, window, owner)"
+  ],
+  [
+   "step",
+   "2: render SLO definition"
+  ],
+  [
+   "step",
+   "3: compute error budget + burn-rate alerts"
+  ],
+  [
+   "step",
+   "4: render the markdown SLO for peer review"
+  ]
+ ],
+ "roles": [
+  [
+   "agent",
+   "[`cs-aeo`](agents/marketing/cs-aeo.md)"
+  ],
+  [
+   "agent",
+   "[`cs-webinar-marketer`](../agents/marketing/cs-webinar-marketer.md)"
+  ],
+  [
+   "path",
+   ".gemini/skills/persona/SKILL.md"
+  ]
+ ],
+ "gates": [
+  [
+   "check",
+   "for broken relative links (`../`, `./`)"
+  ],
+  [
+   "review",
+   "cadence"
+  ],
+  [
+   "check",
+   "`test_cases`: warn if any are `pending`, `fail`, or `blocked`."
+  ]
+ ],
+ "prompts": [
+  [
+   "path",
+   ".gemini/skills/changelog/SKILL.md"
+  ],
+  [
+   "path",
+   ".gemini/skills/cmd-a11y-audit/SKILL.md"
+  ],
+  [
+   "path",
+   ".gemini/skills/cmd-cs-aeo/SKILL.md"
+  ],
+  [
+   "path",
+   ".gemini/skills/cs-webinar/SKILL.md"
+  ],
+  [
+   "path",
+   ".gemini/skills/okr/SKILL.md"
+  ],
+  [
+   "path",
+   ".gemini/skills/persona/SKILL.md"
+  ],
+  [
+   "path",
+   ".gemini/skills/pipeline/SKILL.md"
+  ],
+  [
+   "path",
+   ".gemini/skills/prd/SKILL.md"
+  ],
+  [
+   "path",
+   ".gemini/skills/retro/SKILL.md"
+  ],
+  [
+   "path",
+   ".gemini/skills/rice/SKILL.md"
+  ],
+  [
+   "path",
+   ".gemini/skills/seo-auditor/SKILL.md"
+  ],
+  [
+   "path",
+   ".gemini/skills/slo-design/SKILL.md"
+  ],
+  [
+   "path",
+   ".gemini/skills/sprint-plan/SKILL.md"
+  ],
+  [
+   "path",
+   ".gemini/skills/tc/SKILL.md"
+  ],
+  [
+   "path",
+   ".gemini/skills/tdd/SKILL.md"
+  ],
+  [
+   "path",
+   ".gemini/skills/tech-debt/SKILL.md"
+  ],
+  [
+   "path",
+   ".gemini/skills/user-story/SKILL.md"
+  ],
+  [
+   "path",
+   ".gemini/skills/wiki-ingest/SKILL.md"
+  ],
+  [
+   "path",
+   ".gemini/skills/wiki-init/SKILL.md"
+  ],
+  [
+   "path",
+   ".gemini/skills/wiki-lint/SKILL.md"
+  ],
+  [
+   "path",
+   ".gemini/skills/wiki-log/SKILL.md"
+  ],
+  [
+   "path",
+   ".gemini/skills/wiki-query/SKILL.md"
+  ],
+  [
+   "path",
+   "engineering/book-to-skill/skills/book-to-skill/scripts/book_to_skill/parsers/__init__.py"
+  ],
+  [
+   "path",
+   "marketing-skill/skills/x-twitter-growth/.gitignore"
+  ]
+ ],
+ "headings": [
+  [
+   "heading",
+   "/changelog"
+  ],
+  [
+   "heading",
+   "Usage"
+  ],
+  [
+   "heading",
+   "Examples"
+  ],
+  [
+   "heading",
+   "Scripts"
+  ],
+  [
+   "heading",
+   "Skill Reference"
+  ],
+  [
+   "heading",
+   "/a11y-audit"
+  ],
+  [
+   "heading",
+   "What It Does"
+  ],
+  [
+   "heading",
+   "/cs:aeo \u2014 Answer Engine Optimization"
+  ],
+  [
+   "heading",
+   "Distinct From `/cs:seo-audit`"
+  ],
+  [
+   "heading",
+   "When To Run"
+  ],
+  [
+   "heading",
+   "When NOT To Run"
+  ],
+  [
+   "heading",
+   "Actions"
+  ],
+  [
+   "heading",
+   "`audit` \u2014 Score content for AEO readiness"
+  ],
+  [
+   "heading",
+   "`optimize` \u2014 Generate AEO-improved variant"
+  ],
+  [
+   "heading",
+   "`track` \u2014 Log a citation you observed in an LLM response"
+  ],
+  [
+   "heading",
+   "`report` \u2014 Aggregate citation report for a URL"
+  ],
+  [
+   "heading",
+   "`export` \u2014 Emit citation ledger as CSV"
+  ],
+  [
+   "heading",
+   "Minimal Intake (3 Questions)"
+  ],
+  [
+   "heading",
+   "Workflow"
+  ],
+  [
+   "heading",
+   "\u2192 composite score 0-100 + top fixes"
+  ],
+  [
+   "heading",
+   "\u2192 optimized variant + changelog"
+  ],
+  [
+   "heading",
+   "\u2192 ledger updated"
+  ],
+  [
+   "heading",
+   "\u2192 per-URL citation report"
+  ],
+  [
+   "heading",
+   "Industry-Specific Thresholds"
+  ]
+ ],
+ "mcp_tools": [],
+ "texts": 25,
+ "totals": {
+  "mcp_tools": 0,
+  "stages": 29,
+  "roles": 3,
+  "gates": 3,
+  "prompts": 25,
+  "headings": 124
+ },
+ "structure_found": true
+}
