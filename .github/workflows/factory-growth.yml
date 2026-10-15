@@ -1,0 +1,140 @@
+name: Factory Growth (GitHub-native)
+
+# The sealed factory set is grown here, on GitHub, against the live API: what this job finds is
+# committed to the branch, and the commit is verified before it is committed rather than after.
+#
+# Why this job exists at all: the work that grew the set to 149 records was run by hand in a
+# development sandbox, which is neither repeatable nor where the network and the tools live. The same
+# three tools now run on a runner, in a fixed order, with the resulting set judged against the ledger
+# the committed set has already reached (tools/ci/factory_growth_judge.py).
+#
+# A push made with GITHUB_TOKEN does not trigger other workflows - that is GitHub's rule, not a choice
+# here - so this job runs the decisive test suites itself before committing and then dispatches the
+# belt on the commit it pushed. Nothing about the resulting commit is unverified.
+
+# It runs when the pipeline that grows the set changes, and it can be asked to run by hand. Not on a
+# schedule yet, and not by a push from its own commit: a scheduled run fires on the repository's default
+# branch, where this component does not live until the branch under review is merged, and a push made
+# with GITHUB_TOKEN - which is what the commit step below does - triggers no workflow at all. The
+# schedule belongs here once the branch this job grows is the default branch.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - production
+      - arena/**
+    paths:
+      - ".github/workflows/factory-growth.yml"
+      - "tools/ci/factory_growth.sh"
+      - "tools/ci/factory_growth_judge.py"
+      - "tools/factory/vendor_needed.py"
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: factory-growth
+  cancel-in-progress: false
+
+jobs:
+  grow:
+    name: Grow and verify the sealed factory set
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BRANCH: ${{ github.ref_name }}
+    steps:
+      - name: Checkout the branch this growth belongs to
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Node Dependencies
+        run: |
+          set -euo pipefail
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            echo "no package-lock.json in this repository; falling back to npm install"
+            npm install
+          fi
+
+      # Re-reads every licence from the repository's own text, imports further factories, re-vendors
+      # what changed, re-seals the set, runs it in plan mode, and judges the result. Every step fails
+      # the job; none of them reports a partial result as a complete one.
+      - name: Grow the set from GitHub
+        run: |
+          set -euo pipefail
+          bash tools/ci/factory_growth.sh 2>&1 | tee "${RUNNER_TEMP}/factory-growth.log"
+
+      # The machine-written JSON is normalised with the repository's own Prettier, so a growth commit
+      # cannot land in a style the repository's format gate would reject.
+      - name: Normalise and check the files the growth wrote
+        run: |
+          set -euo pipefail
+          npx prettier --write \
+            tools/factory/imported_factories.json \
+            tools/factory/imported_ai_factories.json \
+            tools/factory/imported_mcp_servers.json \
+            tools/factory/plan_import.json \
+            docs/factory/IMPORTED_FACTORY_CATALOG.md
+          npm run format:check
+
+      # The suites the belt would run on this commit. They run here because GITHUB_TOKEN pushes do not
+      # trigger workflows, so this is the last chance to refuse a bad set before it is committed.
+      - name: Verify the set the growth produced
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s shell/tests \
+            -p "test_imported_factories.py" 2>&1 | tail -3
+          python -m unittest discover -s shell/tests \
+            -p "test_license_rescan.py" 2>&1 | tail -3
+          python -m unittest discover -s shell/tests \
+            -p "test_factory_discovery.py" 2>&1 | tail -3
+          python -m unittest discover -s shell/tests \
+            -p "test_factory_growth.py" 2>&1 | tail -3
+          python -m unittest discover -s shell/tests \
+            -p "test_sealed_factory_runtime.py" 2>&1 | tail -3
+
+      - name: Commit what the growth changed
+        id: commit
+        run: |
+          set -euo pipefail
+          git add sealed-factories tools/factory docs/factory
+          if git diff --cached --quiet; then
+            echo "nothing changed: the set is already what this run produced"
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -m "chore(factory): grow the sealed set from GitHub" \
+              -m "Produced by the Factory Growth workflow from the live API: licences re-read from each
+repository's own text, further factories imported, the changed slices re-vendored, the set
+re-sealed and run in plan mode, and the result judged against the ledger the committed set
+already reached. Every step and every test ran in the job that made this commit."
+          git push origin "HEAD:${BRANCH}"
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
+          echo "head=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      # The commit above is invisible to other workflows, so the belt is asked for explicitly. It runs
+      # the same sealed set this job just judged, plus the six stations after it.
+      - name: Dispatch the belt on the commit this job pushed
+        if: steps.commit.outputs.pushed == 'true'
+        run: |
+          set -euo pipefail
+          gh workflow run quality-conveyor-belt.yml --ref "${BRANCH}"
+          echo "dispatched the belt on ${BRANCH} at ${{ steps.commit.outputs.head }}"

@@ -656,6 +656,67 @@ That run is also the test of the pre-flight refactor, since the emulator stage's
 commit: its emulator job carries no `FAIL:` annotation and no pre-flight `::warning` - the stage's own
 signal that the screen did come up awake and focused - only the three runner deprecation notices.
 
+### 2.11 Growth runs on GitHub now, not in a sandbox
+
+The directive that closed this round was short: *stop running things in the sandbox; everything happens
+on GitHub*. That is not only a working preference — it is the right place for this particular job. The
+growth of the sealed set needs the live API, the network, a machine that can hold a long job, and a
+record of what it did; a development sandbox offers none of those reliably, and every run there that
+died mid-way had to be repeated. So the pipeline that grew the set to 149 records is now a workflow:
+
+```
+.github/workflows/factory-growth.yml   runs when the growth pipeline changes, and on manual
+                                        dispatch; contents: write, actions: write
+tools/ci/factory_growth.sh              the run, step by step, each step failing the job
+tools/ci/factory_growth_judge.py        the gate on what the run produced
+tools/factory/vendor_needed.py          which records need (re)vendoring: no slice, or a slice
+                                        fetched under a licence the registry no longer records
+```
+
+It is not on a schedule yet, and it does not trigger itself: a scheduled run fires on the repository's
+default branch, where this component does not live until the branch under review is merged, and a push
+made with `GITHUB_TOKEN` - which is what its commit step does - triggers no workflow. Both of those
+belong here the moment the branch it grows becomes the default branch; until then the trigger is a
+change to the pipeline or a person asking for one.
+
+What the job does, in order, and what each step refuses to accept:
+
+1. **licences re-read from each repository's own text** — with `--fail-on-unreadable`, because a
+   rate-limited scan leaves records untouched: safe, but incomplete, and it must not be reportable as a
+   clean scan;
+2. **growth** — a search for repositories new to the set, then the repositories a plan named. Both
+   passes refuse anything whose own tree is not factory-shaped, and both rewrite the catalog document
+   so it keeps agreeing with the registry;
+3. **re-vendoring, only what changed** — computed from the records themselves, then re-checked; a
+   record left without a slice fails the job rather than being silently absent from the seal;
+4. **re-seal and verify** — the seal is rebuilt from the records and then verified as a seal;
+5. **the run** — plan mode, `--max-model-calls 0`, no keys, and the environment it reads is the seal
+   written two steps earlier;
+6. **the judge** — accepts only a set at or above the ledger, and the ledger is the committed set:
+   `149 records, 112 operational, 113 carrying content, 84 imported, 592 stages, 579 workers`. A set may
+   grow above those numbers and may not fall below them. Content being stripped (an upstream relicence),
+   an operational factory disappearing, a registry record that never got a slice, a summary that
+   disagrees with the records it lists, a third record carrying a README without defining anything —
+   each of those fails the job, and the failure is what stops a machine commit from reporting a loss as
+   growth. Two things warn instead: an upstream slice that now defines fewer stages or workers, and a
+   licence text that has gone from a repository it was fetched from. Moving a floor down is a deliberate
+   edit to `factory_growth_judge.py`, in a commit a person writes — which is the only way a floor should
+   move;
+7. **verification before commit** — the five suites that decide whether the set may be committed
+   (`test_factory_growth.py`, `test_sealed_factory_runtime.py`, `test_imported_factories.py`,
+   `test_license_rescan.py`, `test_factory_discovery.py`) run in the job, and the machine-written JSON
+   is normalised with the repository's own Prettier so a growth commit cannot land in a style the
+   format gate would reject;
+8. **the commit, and then the belt** — `git add sealed-factories tools/factory docs/factory` and
+   nothing else. A push made with `GITHUB_TOKEN` triggers no workflow in GitHub, so the job itself
+   dispatches the belt on the commit it pushed: the machine's commit is still verified by the belt,
+   on the same ref, immediately.
+
+AC-063 in `docs/ACCEPTANCE_CRITERIA.md` is this section in Given/When/Then form, and
+`shell/tests/test_factory_growth.py` is its test method: fourteen cases against synthetic sets, built to
+the shape of the real one, every one of which must either pass or fail for the reason named — including
+the nine that must fail.
+
 ## 3. Acceptance criteria covered
 
 | Criterion | What it asserts                                                                                                                 | Test                                                                                                                                       | Evidence               |

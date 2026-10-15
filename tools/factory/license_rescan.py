@@ -212,6 +212,11 @@ def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description="Re-scan catalogued repositories for their licence")
     parser.add_argument("--only", default="", help="comma-separated ids")
     parser.add_argument("--apply", action="store_true", help="write the registry changes")
+    # A scan that could not read a repository leaves that record exactly as it was, which is the safe
+    # outcome but not a complete scan: on a rate-limited runner it would report success having checked
+    # nothing. Growth runs pass this so a degraded scan fails loudly instead of passing quietly.
+    parser.add_argument("--fail-on-unreadable", action="store_true",
+                        help="exit non-zero if any record could not be read")
     args = parser.parse_args(argv[1:])
     wanted = {part.strip() for part in args.only.split(",") if part.strip()}
 
@@ -257,6 +262,10 @@ def main(argv: list[str]) -> int:
             written += 1
     print(f"\n{'applied to ' + str(written) + ' registry file(s); ' if args.apply else 'report only; '}"
           f"{json.dumps(summary, sort_keys=True)}")
+    if args.fail_on_unreadable and summary["unreadable"]:
+        print(f"{summary['unreadable']} record(s) could not be read, so this scan is incomplete; "
+              f"nothing was guessed for them", file=sys.stderr)
+        return 1
     return 0
 
 

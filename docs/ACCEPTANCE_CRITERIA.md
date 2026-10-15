@@ -856,6 +856,38 @@ status=0; reason=GitHub is not reachable from here: ...` when the API is pointed
   counts from the run that followed it (112 `OPERATIONAL-PLAN`, 37 `NO-STRUCTURE`, 2 of those
   carrying content without definitions)
 
+### AC-063 — The set grows on GitHub, and a grown set is refused unless it beats the ledger it already reached
+
+- **Feature**: F-14 (the sealed factory set) and F-01 (provenance)
+- **Given**: `.github/workflows/factory-growth.yml` (triggered when the growth pipeline itself changes,
+  and by hand on dispatch), `tools/ci/factory_growth.sh`, the three registries, the sealed component, and
+  the ledger inside
+  `tools/ci/factory_growth_judge.py`, measured from the committed set (149 records, 112 operational,
+  113 carrying content, 84 imported, 592 stages, 579 workers)
+- **When**: the workflow runs on a hosted runner, with the live GitHub API available
+- **Then**: in one job and in this order — every licence is re-read from its repository's own text, and
+  a scan this run could not complete fails the job rather than reporting a clean one; further factories
+  are imported from GitHub search and every repository a plan names is accounted for; only the records
+  whose licence or slice changed are re-vendored, and a record left without a slice fails the job
+  rather than being silently absent from the seal; the set is re-sealed and the seal verified; the
+  sealed runtime runs in plan mode with no model and no keys; the judge accepts only a set whose sealed
+  record count, imported count, operational count and carried-content count are at or above the ledger,
+  whose summary agrees with the records it lists, whose content is carried only under a licence the
+  sealer accepts, and whose only carried-but-silent records are the two reference records — anything
+  else fails, and a fall is never reported as growth; the decisive test suites run before anything is
+  committed; the commit stages only `sealed-factories/`, `tools/factory/` and `docs/factory/`; and,
+  because a push made with `GITHUB_TOKEN` triggers no workflow, the belt is dispatched on the commit
+  that was pushed, so the commit a machine made is still verified by the belt
+- **Test method**: `shell/tests/test_factory_growth.py` (the judge against synthetic sets — growth
+  accepted and reported, a shrunken set, an operational count below the ledger, content stripped, a
+  registry record with no slice, content under a refused licence, a third carried-but-silent record, a
+  summary that disagrees with its records, a seal and run that describe different sets, and the two
+  conditions that must warn without failing — plus the vendoring plan's decisions and the workflow's
+  own ordering), and the workflow file itself
+- **Evidence required**: the workflow run URL of the `Factory Growth (GitHub-native)` workflow with a
+  green `Grow and verify the sealed factory set` job on the branch, the judge's `factory growth judge:
+  PASS` line in that job's log, and the commit the job pushed
+
 ## 2. Traceability summary
 
 | Requirement category (Phase 2 checklist)  | Criteria                        |
