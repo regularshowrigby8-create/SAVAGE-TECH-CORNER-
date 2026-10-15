@@ -1,6 +1,6 @@
 {
  "seal_version": "1.0.0",
- "sealed_at": "2026-10-15T12:34:58Z",
+ "sealed_at": "2026-10-15T13:31:31Z",
  "component": "sealed-factories",
  "description": "The imported factory set. Dropped in or removed as one unit; runs before the repository's own factories and feeds them.",
  "contents": {
@@ -49,7 +49,8 @@
    "tools/ci/factory_growth.sh",
    "tools/ci/factory_growth_judge.py",
    "tools/ci/publish_sealed_factory.sh",
-   "tools/ci/build_component_snapshot.py"
+   "tools/ci/build_component_snapshot.py",
+   "tools/ci/published_environment_judge.py"
   ],
   "tests": [
    "shell/tests/test_sealed_factory_runtime.py",
@@ -59,7 +60,8 @@
    "shell/tests/test_factory_discovery.py",
    "shell/tests/test_factory_growth.py",
    "shell/tests/test_license_manager.py",
-   "shell/tests/test_sealed_selfcheck.py"
+   "shell/tests/test_sealed_selfcheck.py",
+   "shell/tests/test_published_environment_judge.py"
   ],
   "workflows": [
    ".github/workflows/factory-growth.yml",

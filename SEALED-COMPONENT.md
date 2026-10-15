@@ -4,7 +4,7 @@ This branch carries the sealed factory component and nothing else. It is not `ma
 published here so it can be reviewed, run and removed on its own, and it will only ever be proposed for
 `main` once this branch's own evidence says it is functional. Nothing in this branch was pushed by hand.
 
-- **Seal root**: `e229a4742f044790ab53cb7b1a64b47294b58c8a29ebe44b8c399da7e551b912` (`sha256(SEAL.json)`, recorded in
+- **Seal root**: `8ab0301009eeb4c65a275b5ad4fd069e98d47fbf87f2d310dde32448689c6cb5` (`sha256(SEAL.json)`, recorded in
   `sealed-factories/SEAL.sha256`)
 - **Records**: 171 sealed factories, 135 carrying
   content, 149 licence texts in the seal, 149
@@ -12,14 +12,14 @@ published here so it can be reviewed, run and removed on its own, and it will on
 - **Self-check verdict**: `FUNCTIONAL` - 0 blocking finding(s);
   named states: {'content-withheld': 36, 'carried-without-definitions': 2} (a licence that does not permit copying, and slices that define no
   stage, worker, gate or prompt, are states and are named as such rather than counted as fitness)
-- **Published from**: `1877a6a83a63db6798aeedc12c409d2daba02400` on `arena/5223ef6f-savage-tech-corner`
+- **Published from**: `6711f83fd818e0065ad672ca27a7b8ea9cfe378a` on `arena/5223ef6f-savage-tech-corner`
 
 ## What it is
 
 One removable component: the sealed factory set (`sealed-factories/`, 171
 factories with their payloads and licence texts, sealed and hash-verified), the tooling that grows and
-serves it (15 files), its tests
-(8), its workflows (2) and its document.
+serves it (16 files), its tests
+(9), its workflows (2) and its document.
 Removing it is what `SEAL.json`'s `removal` record describes, and no file outside it is needed to run it.
 
 ## Running it
