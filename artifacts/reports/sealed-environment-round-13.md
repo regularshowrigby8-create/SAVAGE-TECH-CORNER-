@@ -966,7 +966,9 @@ minutes earlier with identical application code, and this commit changed one par
 what failed is the emulator's window focus - the same behaviour section 2.9 records as hardening rather
 than as a demonstrated fix. It is reported here rather than re-run away: the API refuses a rerun of this
 workflow (`run 38753059564 cannot be rerun; its workflow file may be broken`), so the record is the run
-and what it says.
+and what it says. The leg ran again on the next push (`38755402672`, `dc2cb3e`) with the same
+application code and passed, which is what makes the failure above an intermittent one rather than a
+defect the next run happened to miss.
 
 ## 3. Acceptance criteria covered
 
