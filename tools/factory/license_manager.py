@@ -131,8 +131,14 @@ def _stored(store: Path) -> dict[str, dict]:
             for path in sorted(store.glob("*")) if path.is_file()}
 
 
-def verify(store: Path = STORE, index_path: Path = INDEX, seal_path: Path = SEAL_FILE) -> list[str]:
-    """Every way the store, the index, the seal and the registries fail to agree. Empty means sound."""
+def verify(store: Path = STORE, index_path: Path = INDEX, seal_path: Path = SEAL_FILE,
+           *, registries: tuple | None = None) -> list[str]:
+    """Every way the store, the index, the seal and the registries fail to agree. Empty means sound.
+
+    `registries` names which registries describe the set this store belongs to. It defaults to this
+    repository's own, read at call time - a copy of the component can be asked about a store that no
+    registry here describes, and a caller that knows which ones do says so explicitly.
+    """
     problems: list[str] = []
     present = _stored(store)
     for name in sorted(present):
@@ -189,7 +195,7 @@ def verify(store: Path = STORE, index_path: Path = INDEX, seal_path: Path = SEAL
 
     # The registries describe the set that is supposed to exist; the store has to cover what they
     # declare, or the growth run quietly shipped a set with a licence missing.
-    for kind, registry_path, group in REGISTRIES:
+    for kind, registry_path, group in (REGISTRIES if registries is None else registries):
         if not registry_path.is_file():
             continue
         for entry in entries_of(json.loads(registry_path.read_text(encoding="utf-8"))):

@@ -42,16 +42,38 @@ def sha(text: str) -> str:
     return license_manager.sha256_bytes(text.encode("utf-8"))
 
 
+#: Fixtures are held for the life of the process. A TemporaryDirectory that nothing references is
+#: collected as soon as the helper returns, so the seal file these tests were given vanished before they
+#: read it and three of them asserted against an empty seal.
+_HELD: list[tempfile.TemporaryDirectory] = []
+
+
 def store_with(*files: tuple[str, str]) -> tempfile.TemporaryDirectory:
+    """A store in the shape this component writes: the texts in `licenses/`, the index beside them.
+
+    The index does not live inside the store: the seal pins the two separately, and a store that holds
+    the index holds a file that is not a licence text - which the tool reports, correctly.
+    """
     directory = tempfile.TemporaryDirectory()
-    root = Path(directory.name)
+    _HELD.append(directory)
+    store = Path(directory.name) / "licenses"
+    store.mkdir(parents=True, exist_ok=True)
     for name, text in files:
-        (root / name).write_text(text, encoding="utf-8")
+        (store / name).write_text(text, encoding="utf-8")
     return directory
+
+
+def store_of(fixture) -> Path:
+    return Path(fixture) / "licenses"
+
+
+def index_of(fixture) -> Path:
+    return Path(fixture) / "LICENSES.json"
 
 
 def seal_with(records: list[dict]) -> Path:
     directory = tempfile.TemporaryDirectory()
+    _HELD.append(directory)
     path = Path(directory.name) / "SEAL.json"
     path.write_text(json.dumps({"factories": records, "contents": {}}), encoding="utf-8")
     return path
@@ -60,7 +82,7 @@ def seal_with(records: list[dict]) -> Path:
 class IndexTest(unittest.TestCase):
     def test_the_index_names_every_text_with_its_hash_and_classification(self) -> None:
         with store_with(("alpha-LICENSE", MIT), ("beta-LICENSE", APACHE)) as store:
-            index = license_manager.build_index(Path(store))
+            index = license_manager.build_index(store_of(store))
             self.assertEqual(2, index["count"])
             entries = {entry["file"]: entry for entry in index["texts"]}
             self.assertEqual("MIT", entries["alpha-LICENSE"]["spdx"])
@@ -72,8 +94,8 @@ class IndexTest(unittest.TestCase):
     def test_the_index_digest_is_the_entries_and_nothing_else(self) -> None:
         """A timestamp in the index would make two identical stores hash differently and re-seal forever."""
         with store_with(("alpha-LICENSE", MIT)) as store:
-            first = license_manager.build_index(Path(store))
-            third = license_manager.build_index(Path(store))
+            first = license_manager.build_index(store_of(store))
+            third = license_manager.build_index(store_of(store))
             self.assertEqual(first["index_sha256"], third["index_sha256"],
                              "two reads of one unchanged store must produce one digest")
             self.assertEqual(first["texts"], third["texts"])
@@ -82,14 +104,14 @@ class IndexTest(unittest.TestCase):
     def test_a_file_that_is_not_a_licence_is_not_indexed_and_is_reported(self) -> None:
         """A store that indexes anything is not a store of licences."""
         with store_with(("alpha-LICENSE", MIT), ("notes.txt", "not a licence")) as store:
-            store_path = Path(store)
+            store_path = store_of(store)
             index = license_manager.build_index(store_path)
             self.assertEqual(1, index["count"])
             self.assertEqual("alpha-LICENSE", index["texts"][0]["file"])
-            license_manager.write_index(store_path / "LICENSES.json", store_path)
+            license_manager.write_index(index_of(store), store_path)
             seal = seal_with([{"id": "alpha", "license_file": "alpha-LICENSE",
                                "license_present": True, "content_redistributed": True}])
-            problems = license_manager.verify(store_path, store_path / "LICENSES.json", seal)
+            problems = license_manager.verify(store_path, index_of(store), seal, registries=())
             self.assertTrue(any("notes.txt" in problem and "not a licence text" in problem
                                 for problem in problems), problems)
 
@@ -99,60 +121,58 @@ class VerifyTest(unittest.TestCase):
         with store_with(("alpha-LICENSE", MIT)) as store:
             seal = seal_with([{"id": "alpha", "license_file": "alpha-LICENSE",
                                "license_present": True, "content_redistributed": True}])
-            problems = license_manager.verify(Path(store), Path(store) / "nope.json", seal)
+            problems = license_manager.verify(store_of(store), Path(store) / "nope.json", seal,
+                                              registries=())
             self.assertTrue(any("no licence index" in problem for problem in problems), problems)
 
     def test_a_stale_index_is_a_problem(self) -> None:
         """The failure this whole tool exists for: a stored text changes and the index still says it did not."""
         with store_with(("alpha-LICENSE", MIT)) as store:
-            store_path = Path(store)
-            index = store_path / "LICENSES.json"
-            license_manager.write_index(index, store_path)
+            store_path = store_of(store)
+            license_manager.write_index(index_of(store), store_path)
             (store_path / "alpha-LICENSE").write_text(MIT + "\nand a term that was added later.\n",
                                                       encoding="utf-8")
             seal = seal_with([{"id": "alpha", "license_file": "alpha-LICENSE",
                                "license_present": True, "content_redistributed": True}])
-            problems = license_manager.verify(store_path, index, seal)
+            problems = license_manager.verify(store_path, index_of(store), seal, registries=())
             self.assertTrue(any("stale" in problem for problem in problems), problems)
 
     def test_an_orphan_text_is_a_problem(self) -> None:
         with store_with(("alpha-LICENSE", MIT), ("nobody-LICENSE", APACHE)) as store:
-            store_path = Path(store)
-            index = store_path / "LICENSES.json"
-            license_manager.write_index(index, store_path)
+            store_path = store_of(store)
+            license_manager.write_index(index_of(store), store_path)
             seal = seal_with([{"id": "alpha", "license_file": "alpha-LICENSE",
                                "license_present": True, "content_redistributed": True}])
-            problems = license_manager.verify(store_path, index, seal)
+            problems = license_manager.verify(store_path, index_of(store), seal, registries=())
             self.assertTrue(any("orphan" in problem for problem in problems), problems)
 
     def test_content_carried_without_a_licence_is_a_problem(self) -> None:
         """The wall itself: content may not travel without the licence that allows it to."""
         with store_with(("alpha-LICENSE", MIT)) as store:
-            store_path = Path(store)
-            index = store_path / "LICENSES.json"
-            license_manager.write_index(index, store_path)
+            store_path = store_of(store)
+            license_manager.write_index(index_of(store), store_path)
             seal = seal_with([{"id": "alpha", "license": "MIT", "license_file": None,
                                "license_present": False, "content_redistributed": True}])
-            problems = license_manager.verify(store_path, index, seal)
+            problems = license_manager.verify(store_path, index_of(store), seal, registries=())
             self.assertTrue(any("carries content with no licence text" in problem
                                 for problem in problems), problems)
 
     def test_a_sealed_record_whose_text_is_gone_is_a_problem(self) -> None:
         with store_with() as store:
-            store_path = Path(store)
-            license_manager.write_index(store_path / "LICENSES.json", store_path)
+            store_path = store_of(store)
+            license_manager.write_index(index_of(store), store_path)
             seal = seal_with([{"id": "alpha", "license_file": "alpha-LICENSE",
                                "license_present": True, "content_redistributed": True}])
-            problems = license_manager.verify(store_path, store_path / "LICENSES.json", seal)
+            problems = license_manager.verify(store_path, index_of(store), seal, registries=())
             self.assertTrue(any("not in the store" in problem for problem in problems), problems)
 
     def test_a_sound_store_verifies_clean(self) -> None:
         with store_with(("alpha-LICENSE", MIT)) as store:
-            store_path = Path(store)
-            license_manager.write_index(store_path / "LICENSES.json", store_path)
+            store_path = store_of(store)
+            license_manager.write_index(index_of(store), store_path)
             seal = seal_with([{"id": "alpha", "license_file": "alpha-LICENSE",
                                "license_present": True, "content_redistributed": True}])
-            problems = license_manager.verify(store_path, store_path / "LICENSES.json", seal)
+            problems = license_manager.verify(store_path, index_of(store), seal, registries=())
             self.assertEqual([], problems)
 
 

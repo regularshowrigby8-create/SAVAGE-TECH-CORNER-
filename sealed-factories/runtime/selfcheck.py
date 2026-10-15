@@ -292,7 +292,7 @@ def survey(document: dict, *, structures=_UNSET, sealed_root: Path = SEALED, sto
     recorded = {entry.get("path") for entry in document.get("component_files", [])
                 if isinstance(entry, dict)}
     for path in sorted((sealed_root / "runtime").glob("*.py")):
-        relative = str(path.relative_to(SEALED))
+        relative = str(path.relative_to(sealed_root))
         if relative not in recorded:
             findings.append({"code": "component-file-unpinned", "record": "-", "repairable": True,
                              "blocks": True,

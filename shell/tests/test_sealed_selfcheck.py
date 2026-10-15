@@ -145,7 +145,8 @@ class FindingTest(SelfCheckCase):
                                                  "component_files": [{"path": "runtime/toolkit.py",
                                                                       "sha256": "x"}]}},
             structures={"alpha": {"structure_found": True, "labels": ["stage: build"]}},
-            store=self.store, index_path=self.sealed / "LICENSES.json", offline_now=True)
+            sealed_root=self.sealed, store=self.store, index_path=self.sealed / "LICENSES.json",
+            offline_now=True)
         # The index is re-derived through the component's own store tool, so this copy must be able to
         # import it; when it cannot, that is the finding - and it is not silently called clean.
         index_findings = [finding for finding in survey["findings"]
