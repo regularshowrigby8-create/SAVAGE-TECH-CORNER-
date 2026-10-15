@@ -307,18 +307,20 @@ if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
         echo '```'
     } >> "$GITHUB_STEP_SUMMARY"
 fi
-rm -f "$JUDGE_LOG"
 if [ "$JUDGE_STATUS" -ne 0 ]; then
     echo "::error title=Factory growth::the set grew but the judge refused it; see FACTORY GROWTH FAIL above"
     exit 1
 fi
-# The commit message quotes what the judge measured rather than paraphrasing it, so the line has to
-# exist: a growth whose commit cannot say what was measured on the set is a growth that does not commit.
+# The commit message quotes what the judge measured rather than paraphrasing it, so the line has to be
+# read while the judge's output still exists - the first version of this read it after the log was
+# removed, and refused a set the judge had just passed - and a growth that cannot say what was measured
+# on the set does not commit at all.
 if ! JUDGE_EVIDENCE="$(grep -m1 -E '^factory set: ' "$JUDGE_LOG")"; then
-    echo "::error title=Factory growth::the judge's own line about the set is missing"
+    echo "::error title=Factory growth::the judge printed no line about the set for this commit to quote"
     exit 1
 fi
 printf '%s\n' "$JUDGE_EVIDENCE" > "${RUNNER_TEMP:-/tmp}/factory-growth-evidence.txt"
+rm -f "$JUDGE_LOG"
 
 # 8. Publish what the run changed, for the commit step and for whoever reads the job afterwards. The
 #    self-check's verdict is read from its own report and re-asserted here: the counts below are only

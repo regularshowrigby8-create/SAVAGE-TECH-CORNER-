@@ -939,6 +939,7 @@ rather than content: Prettier rewrites `*emphasis*` to `_emphasis_`, and a wrapp
 with `-` is a nested list item to the markdown parser rather than the continuation of its sentence.
 Both are now written the way the formatter writes them, and the belt that refused them was right
 both times.
+
 ## 3. Acceptance criteria covered
 
 | Criterion | What it asserts                                                                                                                 | Test                                                                                                                                       | Evidence               |
