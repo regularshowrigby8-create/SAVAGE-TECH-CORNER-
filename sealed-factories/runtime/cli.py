@@ -10,6 +10,7 @@
     python3 sealed-factories/runtime/cli.py run --task "..." --agents 3 --limit 60
     python3 sealed-factories/runtime/cli.py capacity         # how many agents this component holds
     python3 sealed-factories/runtime/cli.py verify           # recompute every sealed payload hash
+    python3 sealed-factories/runtime/cli.py selfcheck        # recheck the set with the factories it carries
 
 Everything defaults to the current directory as the workspace, and to the gateway this component can
 start for itself. Nothing else has to be installed, configured or running for the offline paths.
@@ -192,6 +193,23 @@ def cmd_verify(args) -> int:
     return sealcheck.verify()
 
 
+def cmd_selfcheck(args) -> int:
+    # The component rechecking itself with the factories it carries: integrity is `verify`, fitness is
+    # this - and it repairs what it can, with its own tools, before deciding.
+    import selfcheck  # noqa: PLC0415 - only this command needs it
+
+    argv: list[str] = []
+    if getattr(args, "repair", False):
+        argv.append("--repair")
+    if getattr(args, "require_functional", False):
+        argv.append("--require-functional")
+    if getattr(args, "json", False):
+        argv.append("--json")
+    if getattr(args, "workspace", ""):
+        argv += ["--workspace", args.workspace]
+    return selfcheck.main(argv)
+
+
 def _seal_summary() -> dict:
     seal_file = SEALED / "SEAL.json"
     if not seal_file.is_file():
@@ -277,10 +295,22 @@ def main() -> int:
     verify.add_argument("--repo-verifier", action="store_true",
                         help="use the repository's sealer (tools/factory/seal_factories.py) instead")
 
+    selfcheck = subparsers.add_parser("selfcheck",
+                                      help="recheck the set with the factories it carries, and repair")
+    selfcheck.add_argument("--repair", action="store_true",
+                           help="repair the findings that name a repair, then survey again")
+    selfcheck.add_argument("--require-functional", action="store_true", dest="require_functional",
+                           help="exit 1 unless nothing blocking remains")
+    selfcheck.add_argument("--json", action="store_true")
+    selfcheck.add_argument("--workspace", default="",
+                           help="where to write self-check.json (default: the component's manifest "
+                                "directory)")
+
     args = parser.parse_args(_normalise_argv(sys.argv[1:]))
     handlers = {"capabilities": cmd_capabilities, "tools": cmd_tools, "call": cmd_call,
                 "mcp": cmd_mcp, "gateway": cmd_gateway, "mcp-probe": cmd_mcp_probe,
-                "init": cmd_init, "run": cmd_run, "capacity": cmd_capacity, "verify": cmd_verify}
+                "init": cmd_init, "run": cmd_run, "capacity": cmd_capacity, "verify": cmd_verify,
+                "selfcheck": cmd_selfcheck}
     return handlers[args.command](args)
 
 

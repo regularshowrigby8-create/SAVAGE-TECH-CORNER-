@@ -895,6 +895,39 @@ operational, 37 without definitions), 119 carrying content under 133 licence tex
   commits `04cfc6f` and `a31f95b`; and belt runs `38699724589` and `38703154310` (`workflow_dispatch`)
   green on those commits including `Code Quality & Linting` (report §2.12)
 
+### AC-064 — The licence store holds and handles the set's licences, and the sealed component rechecks itself before it is published
+
+- **Feature**: F-14 (the sealed factory set) and F-01 (provenance)
+- **Given**: `tools/factory/license_manager.py` (the store tool), the store directory inside the
+  component's licences area (one text per record, named `{id}-LICENSE`), the index the store tool
+  writes beside it (pinned by the seal as `COMPONENT_DATA`), the self-check the component carries in
+  its own runtime, and `tools/ci/publish_sealed_factory.sh`
+- **When**: the growth run stores licences and the publish run rechecks the component
+- **Then**: for every record the seal says publishes a licence, the text is in the store, indexed with
+  its size, its hash and what it classifies as, and the index agrees with the seal and the registries;
+  a missing text, a stale index, an orphan, a file that is not a licence text, or a record carrying
+  content with no licence beside it is a problem and fails the run; a text the vendored record already
+  carries is restored without any network, one it does not is imported from the repository's own file,
+  and a repository that cannot be read is a problem rather than a note; the tool never writes a
+  record's licence or its redistributability, so the licence wall cannot be widened by storing a text;
+  and the sealed component rechecks itself with the factories it carries - every payload, licence text,
+  runtime module, registry record and seal count - reading each slice with the reader a run uses,
+  handing each repair to the functional factory whose own definitions name that capability (or leaving
+  it unassigned), and running its own tools to repair what it can, with a repair that needs the network
+  refused while `SEALED_NO_NETWORK=1` is set
+- **Test method**: `shell/tests/test_license_manager.py` (the index and its digest, a stale index, an
+  orphan, content carried without a licence, a sealed text that is gone, import from the record without
+  a network, import from the repository, an unreadable repository as a problem, a repository that
+  publishes no licence, a dry run that writes nothing, and the rule that the tool cannot write a
+  verdict) and `shell/tests/test_sealed_selfcheck.py` (each blocking finding, the two named states,
+  assignment to a functional factory's own keywords with determinism and empty assignments, the refusal
+  of a network repair while the network is off, repair chains that end in a re-seal, and the publish
+  guard that cannot reach `main`)
+- **Evidence required**: the growth run's `Factory Growth (GitHub-native)` job green with the licence
+  store and self-check steps in it, the publish run's `Publish Sealed Factory (own branch)` job green,
+  and the commit it published to the branch the component owns - recorded in §2.13 of the round-13
+  report
+
 ## 2. Traceability summary
 
 | Requirement category (Phase 2 checklist)  | Criteria                        |
@@ -930,6 +963,7 @@ operational, 37 without definitions), 119 carrying content under 133 licence tex
 | no shell anywhere in the environment      | AC-058                          |
 | reproducible sealing                      | AC-059                          |
 | GitHub capability inside the seal         | AC-060, AC-061                  |
+| licence store and self-check              | AC-064                          |
 
 ## 3. Test-method notes (no test is weakened to pass)
 

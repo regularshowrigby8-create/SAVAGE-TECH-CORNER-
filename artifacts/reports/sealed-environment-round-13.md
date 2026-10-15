@@ -782,6 +782,69 @@ fixed: the `pull_request` runs created on the machine's commit report `action_re
 execute, which is why the job dispatches the belt itself — the dispatched run is the verification that
 ran on that commit.
 
+### 2.13 The licence store, the self-check inside the seal, and the branch the component owns
+
+Three things were asked for together, and they belong together: import the licences and keep them
+somewhere that can handle them; make the component recheck itself with the factories it carries and
+repair what it can; and put the sealed factory on a branch of its own, never on `main`, until it has
+proved itself functional.
+
+**The licence store.** `tools/factory/license_manager.py` is the missing layer over the licence texts
+the seal has always carried but never held together. It indexes every stored text - size, sha256, and
+what the text classifies as - into `sealed-factories/LICENSES.json`, and that file is `COMPONENT_DATA`,
+so the seal pins the index and a changed licence text is a seal verification failure rather than
+something nobody would notice. It verifies the store against the index, the seal and all three
+registries, and it imports what is missing: from the vendored record when that already carries the
+bytes (no network, no API budget), otherwise from the repository's own published file over the GitHub
+API, writing both the store and the vendored record so a re-seal keeps it. Three limits are deliberate
+and tested: it never writes a record's `license` or `content_redistributed` - a tool that could widen
+the wall by storing a text would be a way around the wall - it never overwrites a stored text, and it
+never invents one: a repository that publishes no licence file is reported as exactly that, and an
+import it could not complete is a problem rather than a note.
+
+The growth run now does this between vendoring and sealing: import, then index, then seal, then check
+the store against the seal. The order matters - the seal pins the index, so the index has to be current
+when the seal is written.
+
+**The self-check inside the seal.** Integrity was already covered: `cli.py verify` recomputes every
+payload hash from inside the component. What it could not see was fitness, and `selfcheck.py` - also
+inside the seal, also pinned by it - asks those questions and asks them *with the component itself*:
+
+- the reading of every slice (stages, workers, gates, prompts, or nothing at all) is done by the same
+  reader a run uses, imported rather than reimplemented, so "functional" in a self-check means exactly
+  what it means in a run report;
+- each finding is handed to the functional record whose own definitions name that capability - a record
+  that mentions licences owns a missing licence text, one that mentions snapshots or sources owns a
+  missing slice, a seal-shaped one owns a manifest disagreement - and it records the keyword that
+  matched. Where no functional record names the capability, the finding is recorded as unassigned and
+  the component's own tool does the work. Nothing is credited to a factory that did not claim it;
+- the repairs are the component's own tools (`license_manager.py`, the vendoring tools, the sealer and
+  its verifier) run in the order that keeps the set consistent - change a payload, a stored text or the
+  index, and the chain ends in a re-seal, because a repair that left the component failing its own
+  verification would be a repair that broke what it fixed;
+- a finding is only reported as repaired when the command exited zero **and** the finding is gone from
+  a fresh survey, and a repair that needs the network refuses while `SEALED_NO_NETWORK=1` is set: no
+  tool is run under pretence of being offline;
+- blocking findings are: a payload missing or changed, a licence text the seal names and the store has
+  lost, a stale or absent index, a registry record with no slice, a runtime module the seal does not
+  pin, a seal whose counts disagree with its own records, and a component whose own tools are not in the
+  copy at all. Two things are *states*, not findings, and are named rather than counted as fitness: a
+  record whose content is withheld because its licence does not permit copying, and a carried record
+  whose slice defines no stage, worker, gate or prompt for this runtime to run.
+
+The growth run runs `selfcheck --repair --require-functional` before it commits, and reads the verdict
+back out of the report it wrote; the published tree runs it again on its own.
+
+**The branch the component owns.** `tools/ci/publish_sealed_factory.sh` (driven by
+`.github/workflows/publish-sealed-factory.yml`) publishes the component to `sealed-factory`, and the
+order is the point: the seal verifies, the component rechecks itself and repairs what it can, its own
+tests pass, the snapshot is built *from the component's own removal record* in `SEAL.json` (so the
+published tree is exactly what the record says the component is, and a file the record names and the
+tree lacks is an error rather than a smaller publish), and then the copy that is about to be pushed
+proves itself again inside the branch worktree. Nothing is written to the branch before the last gate.
+The script refuses `main`, `master` and `production` outright, and says so in its own words: the
+component is proposed for `main` only once this branch's evidence says it is functional.
+
 ## 3. Acceptance criteria covered
 
 | Criterion | What it asserts                                                                                                                 | Test                                                                                                                                       | Evidence               |

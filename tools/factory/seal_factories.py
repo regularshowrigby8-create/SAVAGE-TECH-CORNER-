@@ -55,7 +55,7 @@ SEAL_HASH = SEALED / "SEAL.sha256"
 SEAL_VERSION = "1.0.0"
 
 #: Data the runtime reads at run time, hashed into the seal alongside the runtime's own code.
-COMPONENT_DATA = ("mcp-servers.json",)
+COMPONENT_DATA = ("mcp-servers.json", "LICENSES.json")
 RUNTIME = SEALED / "runtime"
 
 
@@ -264,18 +264,26 @@ def seal() -> int:
                             "tools/factory/vendor_imported_factories.py",
                             "tools/factory/vendor_mcp_servers.py",
                             "tools/factory/vendor_needed.py",
+                            "tools/factory/license_manager.py",
+                            "tools/factory/license_rescan.py",
+                            "tools/factory/license_text.py",
                             "tools/factory/imported_factories.json",
                             "tools/factory/imported_mcp_servers.json",
                             "tools/factory/imported_ai_factories.json",
                             "tools/ci/factory_growth.sh",
-                            "tools/ci/factory_growth_judge.py"],
+                            "tools/ci/factory_growth_judge.py",
+                            "tools/ci/publish_sealed_factory.sh",
+                            "tools/ci/build_component_snapshot.py"],
             "tests": ["shell/tests/test_sealed_factory_runtime.py",
                       "shell/tests/test_sealed_environment.py",
                       "shell/tests/test_imported_factories.py",
                       "shell/tests/test_license_rescan.py",
                       "shell/tests/test_factory_discovery.py",
-                      "shell/tests/test_factory_growth.py"],
-            "workflows": [".github/workflows/factory-growth.yml"],
+                      "shell/tests/test_factory_growth.py",
+                      "shell/tests/test_license_manager.py",
+                      "shell/tests/test_sealed_selfcheck.py"],
+            "workflows": [".github/workflows/factory-growth.yml",
+                          ".github/workflows/publish-sealed-factory.yml"],
             "docs": ["docs/factory/MULTISTAGE_FACTORY.md"],
             "belt_station": "the Stage 0 block in scripts/conveyor_belt.js, which reports ABSENT "
                             "without it",
@@ -407,7 +415,7 @@ or `factory-3/` reads it; station 0 of `scripts/conveyor_belt.js` reports
     sealed component ABSENT - the belt continues with this repository's own factories
 
 and the belt passes exactly as before. The full removal list - this directory, {len(document['removal']['also_remove'])}
-tooling files, {len(document['removal']['tests'])} test files, the growth workflow and one document - is recorded in
+tooling files, {len(document['removal']['tests'])} test files, {len(document['removal']['workflows'])} workflows and one document - is recorded in
 `SEAL.json` under `removal`, and `shell/tests/test_sealed_factory_runtime.py` proves that list matches
 the files that exist, including a test that runs the runtime in an empty tree and checks that absence
 is reported, exits zero, and creates nothing.

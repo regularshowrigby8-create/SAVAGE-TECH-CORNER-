@@ -29,7 +29,7 @@ _CHUNK = 1 << 20
 
 #: Data the runtime reads at run time, hashed into the seal alongside the runtime's own code. Kept
 #: identical to `COMPONENT_DATA` in tools/factory/seal_factories.py; the agreement test pins that.
-COMPONENT_DATA = ("mcp-servers.json",)
+COMPONENT_DATA = ("mcp-servers.json", "LICENSES.json")
 
 
 def sha256_file(path: Path) -> str:

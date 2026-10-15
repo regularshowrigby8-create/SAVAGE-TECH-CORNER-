@@ -10,10 +10,13 @@
 #      recorded no licence) and re-apply the registry contract to the catalog document;
 #   2. import further factories from GitHub search and account for every repository a plan named;
 #   3. re-vendor only the records whose licence or slice changed, then rebuild every payload;
-#   4. re-seal, and verify the seal it just wrote;
-#   5. run the sealed runtime in plan mode - no model, no keys - and judge the set against the ledger
+#   4. store the licence texts that are missing and index the store, so the seal can pin the index;
+#   5. re-seal, verify the seal it just wrote, and check the licence store against it;
+#   6. let the seal recheck itself with the factories it carries, repairing what can be repaired, and
+#      refuse to go on unless it comes out functional;
+#   7. run the sealed runtime in plan mode - no model, no keys - and judge the set against the ledger
 #      the committed set has already reached;
-#   6. publish the counts the run produced, for the commit step and the job summary.
+#   8. publish the counts the run produced, for the commit step and the job summary.
 set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
@@ -83,6 +86,25 @@ else
     echo "no catalogued factory needs vendoring: every slice matches the licence its record now holds"
 fi
 
+# The component's own self-check runs here too, in repair mode, between the vendoring and the seal: a
+# re-vendor that damaged a slice or a licence text while fetching is repaired now, in the middle of the
+# run, instead of being reported as a failure at the end of it. The strict pass (--require-functional)
+# comes after the seal; this one is the component fixing what it can as it goes.
+step "the seal repairing itself after the re-vendor"
+python3 sealed-factories/runtime/cli.py selfcheck --repair
+MIDCHECK_STATUS=$?
+if [ "$MIDCHECK_STATUS" -ne 0 ] && [ "$MIDCHECK_STATUS" -ne 1 ]; then
+    # 0 fit, 1 not fit but repaired-what-it-could; anything else (3: no seal) stops the run here.
+    echo "::error title=Factory growth::the self-check could not run (exit ${MIDCHECK_STATUS})"
+    exit 1
+fi
+if [ "$MIDCHECK_STATUS" -eq 1 ]; then
+    # Not hidden and not tolerated as a pass: the findings were just annotated by the tool itself, and
+    # the steps that follow - store the licences, index the store, seal, and the strict self-check with
+    # --require-functional - are what has to clear them. If they do not, this run fails there.
+    echo "::warning title=Factory growth::the mid-run self-check still has blocking findings; the licence store, the seal and the strict self-check that follow have to clear them"
+fi
+
 # A record with no slice is absent from the seal without anything failing - the sealer numbers what it
 # finds, and the set would simply be one smaller. Asking the same question again, after vendoring, is
 # what turns that silence into a failure: every record must now have a slice.
@@ -97,14 +119,45 @@ if [ -n "$STILL" ]; then
     exit 1
 fi
 
-# 4. The seal carries content only where the sealer's own policy allows it, so it is re-sealed whenever
+# 4. The licence store: every text the set is missing is stored - from the vendored record when it
+#    already carries the bytes, otherwise from the repository's own published file - and the store is
+#    indexed. The index is pinned by the seal, so it is written here, before the seal, not after it.
+step "licence store: storing the texts the set is missing, then indexing what is stored"
+python3 tools/factory/license_manager.py import
+IMPORT_STATUS=$?
+if [ "$IMPORT_STATUS" -ne 0 ]; then
+    echo "::error title=Factory growth::the licence import could not complete (exit ${IMPORT_STATUS}); a store missing a text is not a stored set"
+    exit 1
+fi
+# The index is written before the seal on purpose: the seal pins it, so it has to be current when the
+# seal is written rather than afterwards.
+python3 tools/factory/license_manager.py index || exit 1
+
+# 5. The seal carries content only where the sealer's own policy allows it, so it is re-sealed whenever
 #    a slice changed, a record was added, or nothing changed at all - a seal is cheap and the verify
 #    below is what proves the result.
 step "sealing the grown set"
 python3 tools/factory/seal_factories.py seal || exit 1
 python3 tools/factory/sealed_factory_runtime.py verify || exit 1
+# Now that the seal describes the set, the store can be checked against it: a text the seal names and
+# the store lost, a text no record names, a record carrying content with no licence beside it.
+python3 tools/factory/license_manager.py verify || exit 1
 
-# 5. The run: plan mode, no model calls, and the environment it reads is the seal written above.
+# 6. The component rechecks itself with the factories it carries, and repairs what it can: the reading
+#    of every slice comes from the same reader a run uses, each repair is handed to the functional
+#    record whose own definitions name that capability, and the repairs run the component's own tools.
+#    The set has to come out functional with only named states left (the licence wall; slices that
+#    define nothing to run). A blocking finding that survives the repair fails the run here rather than
+#    being committed.
+step "the seal rechecking itself with the factories it carries"
+python3 sealed-factories/runtime/cli.py selfcheck --repair --require-functional
+SELFCHECK_STATUS=$?
+if [ "$SELFCHECK_STATUS" -ne 0 ]; then
+    echo "::error title=Factory growth::the sealed set could not prove itself functional (exit ${SELFCHECK_STATUS})"
+    exit 1
+fi
+
+# 7. The run: plan mode, no model calls, and the environment it reads is the seal written above.
 step "sealed run (plan mode, no model)"
 rm -f "$REPORT"
 python3 tools/factory/sealed_factory_runtime.py run --max-model-calls 0
@@ -126,12 +179,26 @@ if [ "$JUDGE_STATUS" -ne 0 ]; then
     exit 1
 fi
 
-# 6. Publish what the run changed, for the commit step and for whoever reads the job afterwards.
+# 8. Publish what the run changed, for the commit step and for whoever reads the job afterwards. The
+#    self-check's verdict is read from its own report and re-asserted here: the counts below are only
+#    worth anything next to the verdict of the run that produced them, and a missing report is a
+#    failure rather than an unknown.
+if [ ! -s sealed-factories/manifest/self-check.json ]; then
+    echo "::error title=Factory growth::the self-check wrote no report"
+    exit 1
+fi
+SELFCHECK_VERDICT="$(python3 -c "import json;print(json.load(open('sealed-factories/manifest/self-check.json'))['verdict'])")"
+if [ "$SELFCHECK_VERDICT" != "FUNCTIONAL" ]; then
+    echo "::error title=Factory growth::the self-check verdict is ${SELFCHECK_VERDICT}"
+    exit 1
+fi
 if [ -n "${GITHUB_OUTPUT:-}" ]; then
     {
         echo "vendored=${VENDORED}"
         echo "records=$(python3 -c "import json;print(json.load(open('$SEAL'))['contents']['factories'])")"
         echo "operational=$(python3 -c "import json;print(json.load(open('$REPORT'))['summary']['operational_plan'])")"
+        echo "licence_texts=$(python3 -c "import json;print(json.load(open('$SEAL'))['contents']['with_license_text'])")"
+        echo "selfcheck=${SELFCHECK_VERDICT}"
     } >> "$GITHUB_OUTPUT"
 fi
 echo "factory growth: PASS"
