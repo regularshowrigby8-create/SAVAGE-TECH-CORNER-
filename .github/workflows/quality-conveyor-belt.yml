@@ -128,8 +128,18 @@ jobs:
             found=1
             # The gate's own failure lines, with a few lines of context: a gate that reports
             # "FAIL" without the reason it rejected something cannot be acted on.
-            tail_text=$(grep -a -A 4 -E 'FAIL|ERROR|error|Error|Violation|violation|missing|cannot|Cannot' "$LOG" | tail -n 30)
-            if [ -z "$tail_text" ]; then tail_text=$(tail -n 20 "$LOG"); fi
+            #
+            # The match is tested first and the extraction happens inside that branch, because a
+            # `grep` that matches nothing exits 1 - and the runner's shell runs with errexit, so a
+            # bare assignment from it ended this step before it printed anything. That is what made
+            # a real failure on 2026-10-15 arrive as "Process completed with exit code 1" and nothing
+            # else: the reporter was the thing failing.
+            pattern='FAIL|ERROR|error|Error|Violation|violation|missing|cannot|Cannot'
+            if grep -a -q -E "$pattern" "$LOG"; then
+              tail_text=$(grep -a -A 4 -E "$pattern" "$LOG" | tail -n 30)
+            else
+              tail_text=$(tail -n 20 "$LOG")
+            fi
             tail_text=${tail_text//%/%25}
             tail_text=${tail_text//$'\n'/%0A}
             echo "::error title=${name} gate output::${tail_text}"

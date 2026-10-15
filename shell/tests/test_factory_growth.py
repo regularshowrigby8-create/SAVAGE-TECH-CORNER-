@@ -296,10 +296,14 @@ class WiringTest(unittest.TestCase):
         dispatch = workflow.index("Dispatch the belt on the commit this job pushed")
         self.assertLess(verify, commit, "the set must be verified before it is committed")
         self.assertLess(commit, dispatch, "the belt is dispatched on what was committed")
-        # The suites that decide whether the set may be committed are run, not named.
-        for suite in ("test_factory_growth.py", "test_sealed_factory_runtime.py",
-                      "test_imported_factories.py", "test_license_rescan.py"):
-            self.assertIn(suite, workflow)
+        # The suite that decides whether the set may be committed is run - the whole of shell/tests, not
+        # a hand-picked subset that could drift from what the belt runs - and a failure names the tests
+        # that failed, because a hosted runner's raw log is not always retrievable afterwards.
+        self.assertIn('python -m unittest discover -s shell/tests >"$log" 2>&1', workflow)
+        self.assertIn("the shell test suite failed on the set this run produced", workflow)
+        self.assertIn("::error title=Factory growth::- ${line}", workflow)
+        # And the format gate names the files it would rewrite rather than only saying it failed.
+        self.assertIn("npx prettier --list-different .", workflow)
         # A machine commit cannot trigger workflows (GitHub's rule), so this job asks for the belt.
         self.assertIn("gh workflow run quality-conveyor-belt.yml", workflow)
         for forbidden in ("continue-on-error", "|| true"):

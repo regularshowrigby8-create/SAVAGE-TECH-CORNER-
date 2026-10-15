@@ -81,7 +81,9 @@ jobs:
           bash tools/ci/factory_growth.sh 2>&1 | tee "${RUNNER_TEMP}/factory-growth.log"
 
       # The machine-written JSON is normalised with the repository's own Prettier, so a growth commit
-      # cannot land in a style the repository's format gate would reject.
+      # cannot land in a style the repository's format gate would reject. If the repository's own style
+      # check then fails, the offending files are named as annotations: a hosted runner's raw log is not
+      # always retrievable, and "format:check failed" on its own is not actionable.
       - name: Normalise and check the files the growth wrote
         run: |
           set -euo pipefail
@@ -91,23 +93,31 @@ jobs:
             tools/factory/imported_mcp_servers.json \
             tools/factory/plan_import.json \
             docs/factory/IMPORTED_FACTORY_CATALOG.md
-          npm run format:check
+          if ! npm run format:check; then
+            echo "::error title=Factory growth::format:check failed; Prettier would rewrite:"
+            npx prettier --list-different . | while read -r offender; do
+              echo "::error title=Factory growth::${offender} is not in the repository's Prettier style"
+            done
+            exit 1
+          fi
 
       # The suites the belt would run on this commit. They run here because GITHUB_TOKEN pushes do not
       # trigger workflows, so this is the last chance to refuse a bad set before it is committed.
+      #
+      # Each suite's failure is annotated with the test lines that failed, for the same reason as above:
+      # the job log is not always readable afterwards, and a suite name alone does not say what broke.
       - name: Verify the set the growth produced
         run: |
           set -euo pipefail
-          python -m unittest discover -s shell/tests \
-            -p "test_imported_factories.py" 2>&1 | tail -3
-          python -m unittest discover -s shell/tests \
-            -p "test_license_rescan.py" 2>&1 | tail -3
-          python -m unittest discover -s shell/tests \
-            -p "test_factory_discovery.py" 2>&1 | tail -3
-          python -m unittest discover -s shell/tests \
-            -p "test_factory_growth.py" 2>&1 | tail -3
-          python -m unittest discover -s shell/tests \
-            -p "test_sealed_factory_runtime.py" 2>&1 | tail -3
+          log="${RUNNER_TEMP}/shell-tests.log"
+          if python -m unittest discover -s shell/tests >"$log" 2>&1; then
+            tail -3 "$log"
+          else
+            echo "::error title=Factory growth::the shell test suite failed on the set this run produced"
+            grep -a -E '^(FAIL|ERROR):|^AssertionError|^Ran |^FAILED' "$log" | head -40 | \
+              while read -r line; do echo "::error title=Factory growth::- ${line}"; done
+            exit 1
+          fi
 
       - name: Commit what the growth changed
         id: commit
