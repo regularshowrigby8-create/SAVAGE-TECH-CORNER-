@@ -1,22 +1,22 @@
 {
  "seal_version": "1.0.0",
- "sealed_at": "2026-10-15T08:19:07Z",
+ "sealed_at": "2026-10-15T10:59:07Z",
  "component": "sealed-factories",
  "description": "The imported factory set. Dropped in or removed as one unit; runs before the repository's own factories and feeds them.",
  "contents": {
-  "factories": 167,
-  "with_payload": 167,
-  "content_redistributed": 131,
+  "factories": 171,
+  "with_payload": 171,
+  "content_redistributed": 135,
   "blueprint_only": 36,
-  "with_license_text": 145,
-  "ai_worker_factories": 124,
+  "with_license_text": 149,
+  "ai_worker_factories": 126,
   "by_group": {
    "AI-focused factory": 23,
    "MCP tool server": 42,
-   "imported factory": 102
+   "imported factory": 106
   },
-  "payload_bytes": 2471216,
-  "component_files": 10
+  "payload_bytes": 2555593,
+  "component_files": 12
  },
  "pipeline_position": {
   "order": 0,
@@ -40,11 +40,16 @@
    "tools/factory/vendor_imported_factories.py",
    "tools/factory/vendor_mcp_servers.py",
    "tools/factory/vendor_needed.py",
+   "tools/factory/license_manager.py",
+   "tools/factory/license_rescan.py",
+   "tools/factory/license_text.py",
    "tools/factory/imported_factories.json",
    "tools/factory/imported_mcp_servers.json",
    "tools/factory/imported_ai_factories.json",
    "tools/ci/factory_growth.sh",
-   "tools/ci/factory_growth_judge.py"
+   "tools/ci/factory_growth_judge.py",
+   "tools/ci/publish_sealed_factory.sh",
+   "tools/ci/build_component_snapshot.py"
   ],
   "tests": [
    "shell/tests/test_sealed_factory_runtime.py",
@@ -52,10 +57,13 @@
    "shell/tests/test_imported_factories.py",
    "shell/tests/test_license_rescan.py",
    "shell/tests/test_factory_discovery.py",
-   "shell/tests/test_factory_growth.py"
+   "shell/tests/test_factory_growth.py",
+   "shell/tests/test_license_manager.py",
+   "shell/tests/test_sealed_selfcheck.py"
   ],
   "workflows": [
-   ".github/workflows/factory-growth.yml"
+   ".github/workflows/factory-growth.yml",
+   ".github/workflows/publish-sealed-factory.yml"
   ],
   "docs": [
    "docs/factory/MULTISTAGE_FACTORY.md"
@@ -80,8 +88,8 @@
   },
   {
    "path": "runtime/cli.py",
-   "bytes": 12647,
-   "sha256": "def1111353415dc1ef9d45fb0355d891ba3d15e0906c1c066dc170386fa9a0e2"
+   "bytes": 14201,
+   "sha256": "ac36d5422141f8b6b3697334c011b0129710a492be4ce98cfcc66678bd9f04dc"
   },
   {
    "path": "runtime/gateway.py",
@@ -100,8 +108,13 @@
   },
   {
    "path": "runtime/sealcheck.py",
-   "bytes": 6536,
-   "sha256": "51d21fef9a784610b040b9e226f64451c416d0ee3c2d83ade088a485205d0dc7"
+   "bytes": 6552,
+   "sha256": "9f3f5775b6de0c41b2c2382070703c44f4384fe1f9e2e7abf966ec2c936f49ba"
+  },
+  {
+   "path": "runtime/selfcheck.py",
+   "bytes": 31423,
+   "sha256": "a1ac51278b9d075ef560f7fae18371ebd3263294f4b4a95ebe37e499ae444b3a"
   },
   {
    "path": "runtime/swarm.py",
@@ -122,6 +135,11 @@
    "path": "mcp-servers.json",
    "bytes": 28513,
    "sha256": "04c70f66172cbd2bd9393bc89a67ee5ce14b2178e780106927472556998e33ab"
+  },
+  {
+   "path": "LICENSES.json",
+   "bytes": 36974,
+   "sha256": "42668079675a9e4599c0570f197356033b6175d7cfb932c96d60cf2753699e97"
   }
  ],
  "factories": [
@@ -1389,6 +1407,30 @@
    "payload": "payloads/firecrawl-mcp-server.tar.gz",
    "payload_sha256": "d173b2c1475a48f773cb4261d0ff51bc1fdb25c77cb3aa863cd177cd3a323739",
    "payload_bytes": 3588,
+   "providers": [],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [],
+   "ai_workers": false
+  },
+  {
+   "group": "imported factory",
+   "id": "forward-future-loopy",
+   "full_name": "Forward-Future/loopy",
+   "url": "https://github.com/Forward-Future/loopy",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "forward-future-loopy-LICENSE",
+   "import_class": "asset-import",
+   "commit": "75966cbd572a4185064971c9fe5e9c52e8f8456d",
+   "snapshot": "2026-10-15",
+   "files": 25,
+   "bytes": 101084,
+   "content_redistributed": true,
+   "payload": "payloads/forward-future-loopy.tar.gz",
+   "payload_sha256": "9a8e95e703c3d1d19e62433d5056f24b4a33a3c59017a4f05da3b02afb227e3d",
+   "payload_bytes": 33903,
    "providers": [],
    "runtime": [
     "node"
@@ -2980,6 +3022,33 @@
   },
   {
    "group": "imported factory",
+   "id": "openai-openai-agents-js",
+   "full_name": "openai/openai-agents-js",
+   "url": "https://github.com/openai/openai-agents-js",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "openai-openai-agents-js-LICENSE",
+   "import_class": "asset-import",
+   "commit": "89a9ddf1e241e75f2e0ad4c15d89de9e215ebac6",
+   "snapshot": "2026-10-15",
+   "files": 25,
+   "bytes": 4927,
+   "content_redistributed": true,
+   "payload": "payloads/openai-openai-agents-js.tar.gz",
+   "payload_sha256": "e5f4c75e43b90a60881202b37110c1e3bd967fba6df01d577d470b5f566f6f33",
+   "payload_bytes": 4364,
+   "providers": [
+    "openai"
+   ],
+   "runtime": [
+    "node",
+    "shell"
+   ],
+   "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
    "id": "openai-openai-agents-python",
    "full_name": "openai/openai-agents-python",
    "url": "https://github.com/openai/openai-agents-python",
@@ -3206,6 +3275,37 @@
    ],
    "runtime": [],
    "entrypoints": [],
+   "ai_workers": true
+  },
+  {
+   "group": "imported factory",
+   "id": "phyagentos-phyagentos-core",
+   "full_name": "PhyAgentOS/PhyAgentOS-core",
+   "url": "https://github.com/PhyAgentOS/PhyAgentOS-core",
+   "license": "MIT",
+   "license_present": true,
+   "license_file": "phyagentos-phyagentos-core-LICENSE",
+   "import_class": "asset-import",
+   "commit": "74546aba45733cf102211e2f13dbf2c80ff6df8b",
+   "snapshot": "2026-10-15",
+   "files": 25,
+   "bytes": 57430,
+   "content_redistributed": true,
+   "payload": "payloads/phyagentos-phyagentos-core.tar.gz",
+   "payload_sha256": "fe942711d23a7d82feb6ffd84b1a92a92e6a98fbf0c6181b3863e709d1f486ab",
+   "payload_bytes": 20393,
+   "providers": [
+    "openai",
+    "anthropic",
+    "google"
+   ],
+   "runtime": [
+    "python",
+    "shell"
+   ],
+   "entrypoints": [
+    "PhyAgentOS/agent/tools/agent.py"
+   ],
    "ai_workers": true
   },
   {
@@ -4325,6 +4425,30 @@
    "runtime": [],
    "entrypoints": [],
    "ai_workers": true
+  },
+  {
+   "group": "imported factory",
+   "id": "unicomai-wanwu",
+   "full_name": "UnicomAI/wanwu",
+   "url": "https://github.com/UnicomAI/wanwu",
+   "license": "Apache-2.0",
+   "license_present": true,
+   "license_file": "unicomai-wanwu-LICENSE",
+   "import_class": "asset-import",
+   "commit": "f21cd89bfe658c2ad6a246b2eaaec050beb689db",
+   "snapshot": "2026-10-15",
+   "files": 25,
+   "bytes": 89345,
+   "content_redistributed": true,
+   "payload": "payloads/unicomai-wanwu.tar.gz",
+   "payload_sha256": "f5161f7ba3ba49fdaec2be6174de36eb15ba17b348e73bd4bd4475d816cfeb47",
+   "payload_bytes": 25717,
+   "providers": [],
+   "runtime": [
+    "node"
+   ],
+   "entrypoints": [],
+   "ai_workers": false
   },
   {
    "group": "MCP tool server",

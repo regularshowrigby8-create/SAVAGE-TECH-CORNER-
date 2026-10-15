@@ -808,7 +808,7 @@ when the seal is written.
 
 **The self-check inside the seal.** Integrity was already covered: `cli.py verify` recomputes every
 payload hash from inside the component. What it could not see was fitness, and `selfcheck.py` - also
-inside the seal, also pinned by it - asks those questions and asks them *with the component itself*:
+inside the seal, also pinned by it - asks those questions and asks them _with the component itself_:
 
 - the reading of every slice (stages, workers, gates, prompts, or nothing at all) is done by the same
   reader a run uses, imported rather than reimplemented, so "functional" in a self-check means exactly
@@ -828,7 +828,7 @@ inside the seal, also pinned by it - asks those questions and asks them *with th
 - blocking findings are: a payload missing or changed, a licence text the seal names and the store has
   lost, a stale or absent index, a registry record with no slice, a runtime module the seal does not
   pin, a seal whose counts disagree with its own records, and a component whose own tools are not in the
-  copy at all. Two things are *states*, not findings, and are named rather than counted as fitness: a
+  copy at all. Two things are _states_, not findings, and are named rather than counted as fitness: a
   record whose content is withheld because its licence does not permit copying, and a carried record
   whose slice defines no stage, worker, gate or prompt for this runtime to run.
 
@@ -838,7 +838,7 @@ back out of the report it wrote; the published tree runs it again on its own.
 **The branch the component owns.** `tools/ci/publish_sealed_factory.sh` (driven by
 `.github/workflows/publish-sealed-factory.yml`) publishes the component to `sealed-factory`, and the
 order is the point: the seal verifies, the component rechecks itself and repairs what it can, its own
-tests pass, the snapshot is built *from the component's own removal record* in `SEAL.json` (so the
+tests pass, the snapshot is built _from the component's own removal record_ in `SEAL.json` (so the
 published tree is exactly what the record says the component is, and a file the record names and the
 tree lacks is an error rather than a smaller publish), and then the copy that is about to be pushed
 proves itself again inside the branch worktree. Nothing is written to the branch before the last gate.

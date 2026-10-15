@@ -7,7 +7,7 @@ Two kinds of entry, and the difference matters:
 * **content redistributed** — the licence permits it (MIT, Apache-2.0, BSD, ISC, CC0, Unlicense, 0BSD) and the licence text is included in `licenses/`. The vendored files are in `payloads/<id>.tar.gz`, hash-sealed and never merged into this product's source tree.
 * **blueprint only** — no licence was published, or the licence is one this repository cannot redistribute (AGPL, GPL) or that GitHub could not identify. **Not one byte of their content is redistributed**: the component records the commit, the file structure and the hashes, and re-implements the factory's design here. Their licence text is included when one exists, because attribution is the point.
 
-Sealed: 2026-10-15T08:19:07Z · component version 1.0.0 · 167 factories · 131 with redistributed content · 36 blueprint-only
+Sealed: 2026-10-15T10:59:07Z · component version 1.0.0 · 171 factories · 135 with redistributed content · 36 blueprint-only
 
 | factory | repository | licence | commit | files | bytes | redistribution |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -60,6 +60,7 @@ Sealed: 2026-10-15T08:19:07Z · component version 1.0.0 · 167 factories · 131 
 | `finchello-tetra` | [finchello/tetra](https://github.com/finchello/tetra) | MIT | `6e3b1f3dea76` | 5 | 34826 | content redistributed |
 | `finna-finn-loop` | [finna/Finn-loop](https://github.com/finna/Finn-loop) | MIT | `7941b62c9461` | 4 | 30740 | content redistributed |
 | `firecrawl-mcp-server` | [mendableai/firecrawl-mcp-server](https://github.com/firecrawl/firecrawl-mcp-server) | MIT | `83f7e6a74446` | 4 | 0 | content redistributed |
+| `forward-future-loopy` | [Forward-Future/loopy](https://github.com/Forward-Future/loopy) | MIT | `75966cbd572a` | 25 | 101084 | content redistributed |
 | `foundatron-octopusgarden` | [foundatron/octopusgarden](https://github.com/foundatron/octopusgarden) | MIT | `1414be0be9b9` | 5 | 19491 | content redistributed |
 | `frankiezheng110-superteam` | [frankiezheng110/superteam](https://github.com/frankiezheng110/superteam) | MIT | `41b14b173a27` | 25 | 13021 | content redistributed |
 | `getcrew44-crew44` | [getcrew44/crew44](https://github.com/getcrew44/crew44) | MIT | `cfcf1e74d9a2` | 25 | 55471 | content redistributed |
@@ -119,6 +120,7 @@ Sealed: 2026-10-15T08:19:07Z · component version 1.0.0 · 167 factories · 131 
 | `nvidia-skillspector` | [NVIDIA/SkillSpector](https://github.com/NVIDIA/SkillSpector) | Apache-2.0 | `240421219409` | 3 | 96997 | content redistributed |
 | `openai-agents-js` | [openai/openai-agents-js](https://github.com/openai/openai-agents-js) | MIT | `89a9ddf1e241` | 25 | 0 | content redistributed |
 | `openai-agents-python` | [openai/openai-agents-python](https://github.com/openai/openai-agents-python) | MIT | `1c1a28df92f3` | 25 | 0 | content redistributed |
+| `openai-openai-agents-js` | [openai/openai-agents-js](https://github.com/openai/openai-agents-js) | MIT | `89a9ddf1e241` | 25 | 4927 | content redistributed |
 | `openai-openai-agents-python` | [openai/openai-agents-python](https://github.com/openai/openai-agents-python) | MIT | `24ebf1cb0f4b` | 25 | 99752 | content redistributed |
 | `opencharly-plugin-pipeline` | [opencharly/plugin-pipeline](https://github.com/opencharly/plugin-pipeline) | NOASSERTION | `0b58dbbf9ab8` | 2 | 9112 | blueprint only |
 | `openhands` | [All-Hands-AI/OpenHands](https://github.com/OpenHands/OpenHands) | MIT | `bf483c12efbf` | 25 | 0 | content redistributed |
@@ -128,6 +130,7 @@ Sealed: 2026-10-15T08:19:07Z · component version 1.0.0 · 167 factories · 131 
 | `othmanadi-planning-with-files` | [OthmanAdi/planning-with-files](https://github.com/OthmanAdi/planning-with-files) | MIT | `ff349ebe322b` | 25 | 24736 | content redistributed |
 | `owainlewis-machinist` | [owainlewis/machinist](https://github.com/owainlewis/machinist) | MIT | `39435164faf1` | 9 | 60411 | content redistributed |
 | `parthalon025-autonomous-coding-toolkit` | [parthalon025/autonomous-coding-toolkit](https://github.com/parthalon025/autonomous-coding-toolkit) | MIT | `2445ade59d10` | 25 | 59985 | content redistributed |
+| `phyagentos-phyagentos-core` | [PhyAgentOS/PhyAgentOS-core](https://github.com/PhyAgentOS/PhyAgentOS-core) | MIT | `74546aba4573` | 25 | 57430 | content redistributed |
 | `playwright-mcp` | [microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp) | Apache-2.0 | `b8b4183e099f` | 6 | 0 | content redistributed |
 | `praneethaneelapareddigari-agentic-ai-workflow-copilot` | [praneethaneelapareddigari/agentic-ai-workflow-copilot](https://github.com/praneethaneelapareddigari/agentic-ai-workflow-copilot) | NOASSERTION | `478906b19d69` | 6 | 36961 | blueprint only |
 | `professorpalmer-puppetmaster` | [professorpalmer/Puppetmaster](https://github.com/professorpalmer/Puppetmaster) | MIT | `d06611667286` | 19 | 136806 | content redistributed |
@@ -170,6 +173,7 @@ Sealed: 2026-10-15T08:19:07Z · component version 1.0.0 · 167 factories · 131 
 | `tt-a1i-archify` | [tt-a1i/archify](https://github.com/tt-a1i/archify) | MIT | `d0c8c7e9f4e0` | 25 | 81310 | content redistributed |
 | `typescript-sdk` | [modelcontextprotocol/typescript-sdk](https://github.com/modelcontextprotocol/typescript-sdk) | NOASSERTION | `9bc40e903fde` | 20 | 0 | blueprint only |
 | `udoschneider-workflow-pipeline` | [udoschneider/workflow-pipeline](https://github.com/udoschneider/workflow-pipeline) | MIT | `f13b7af7e164` | 8 | 73122 | content redistributed |
+| `unicomai-wanwu` | [UnicomAI/wanwu](https://github.com/UnicomAI/wanwu) | Apache-2.0 | `f21cd89bfe65` | 25 | 89345 | content redistributed |
 | `unity-mcp` | [CoplayDev/unity-mcp](https://github.com/CoplayDev/unity-mcp) | MIT | `142ea0af4890` | 17 | 0 | content redistributed |
 | `vaibhav07772-autonomous-ai-software-factory` | [vaibhav07772/Autonomous-AI-Software-Factory](https://github.com/vaibhav07772/Autonomous-AI-Software-Factory) | NOASSERTION | `399f7cfb7dfc` | 4 | 10482 | blueprint only |
 | `vercel-labs-eve-software-factory-template` | [vercel-labs/eve-software-factory-template](https://github.com/vercel-labs/eve-software-factory-template) | MIT | `6bc5febab95d` | 25 | 11942 | content redistributed |
