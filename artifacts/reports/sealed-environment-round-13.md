@@ -843,7 +843,7 @@ order is the point: the seal verifies, the component rechecks itself and repairs
 tests pass, the snapshot is built _from the component's own removal record_ in `SEAL.json` (so the
 published tree is exactly what the record says the component is, and a file the record names and the
 tree lacks is an error rather than a smaller publish), and then the copy that is about to be pushed
-proves itself again inside the branch worktree - and that copy is also made to *run*: its own
+proves itself again inside the branch worktree - and that copy is also made to _run_: its own
 environment executes inside the snapshot, and a run that skipped a role, failed a step or failed a check
 is refused before the branch is touched. Nothing is written to the branch before the last gate.
 The script refuses `main`, `master` and `production` outright, and says so in its own words: the

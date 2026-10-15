@@ -86,9 +86,9 @@ shape:
 4. **A decision about the 35 licence-held records**, made and recorded rather than implied: either
    their blueprints stay in the set with the reason named, or they leave it. That is a judgement
    about what the component is for, and it is the user's to make, not this file's.
-5. **A stated rollback.** The removal record is the rollback - one directory and the files it names
-   - and the case is complete when that record has been exercised once on a tree that is not the
-   one that wrote it.
+5. **A stated rollback.** The removal record is the rollback: one directory and the files it names,
+   and the case is complete when that record has been exercised once on a tree that is not the one
+   that wrote it.
 
 Until at least the first three hold, the honest description of the component is the one the
 published branch already carries: functional, self-verifying, on its own branch, and not yet on
