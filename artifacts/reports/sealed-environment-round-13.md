@@ -924,9 +924,10 @@ the copy. A gate that screens the pipeline cannot be a gate nobody has executed.
 
 **The commit says what was measured.** The published commit and the growth commit now quote their
 own judge's line verbatim: the copy's run in the tree the commit contains, and the counts the growth
-judge measured on the set it grew. That is not decoration. The publish job's single step emits ten
-annotations, and the judge gate's notice did not survive that limit - which is the reason a claim
-that lives only in a log or a notice is worth less than one the artifact carries.
+judge measured on the set it grew. That is not decoration. The publish run's annotation list carried
+seven of the script's eight gates and the judge gate was the one missing - the step's other output took
+the total to ten annotations - and a claim that lives only in a log or a notice is worth less than one
+the artifact carries.
 
 **One place decides the environment limit.** `--env-limit` is a cost control, and it now has a
 single default (`DEFAULT_ENV_LIMIT`) shared by the library entry point and the command line, above
