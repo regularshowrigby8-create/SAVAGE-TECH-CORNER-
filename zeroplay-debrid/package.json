@@ -1,0 +1,7 @@
+{
+  "name": "zeroplay-debrid",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "description": "ZeroPlay discovery & playback in the DebridStream UI — single-file site + Netlify functions."
+}
