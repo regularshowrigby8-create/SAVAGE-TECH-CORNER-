@@ -1,0 +1,2298 @@
+From 27183108a0225c4ed3bdc3750f9fb82c11fee2ab Mon Sep 17 00:00:00 2001
+From: review <review@example.com>
+Date: Tue, 20 Oct 2026 16:12:48 +0000
+Subject: [PATCH] fix(sealed-factory): one network policy, a publish gate that
+ runs the whole suite
+
+The published sealed-factory branch had two honesty defects and one policy defect.
+
+Policy: SEALED_NO_NETWORK was honoured by the net.* and github.* tools and by
+selfcheck repairs, but not by the model runtime, the gateway or the swarm. With a
+provider key in the environment, 'SEALED_NO_NETWORK=1 tools/factory/
+sealed_factory_runtime.py run --max-model-calls 4' still POSTed to
+api.openai.com; with no keys the component still called api.github.com from the
+researcher role's offline step, so the advertised plan mode was not offline.
+
+  * add runtime/netpolicy.py as the single answer: SEALED_NETWORK=off (default),
+    local, remote; SEALED_NO_NETWORK=1 always forces off
+  * wire it through toolkit, the gateway, the swarm and the sealed runtime
+  * default every model-call cap to 0; --allow-network local|remote is the opt-in
+  * record skipped network steps/checks instead of failing them, and count them
+  * --allow-network on both CLIs; the environment no longer hard-codes 4 calls
+  * tests: shell/tests/test_network_policy.py, plus the GitHub, gateway and
+    online-model tests now declare the policy they need
+
+Honesty: the publish gate ran 3 of the 10 test files and the branch's own
+discovery test imported a module the seal never listed, so 'passed its own tests'
+was not true of the published tree - 14 tests failed or errored there. The seal
+omitted tools/factory/discover_factories.py, plan_import.json and
+repositories.json while keeping the tests that read them.
+
+  * publish gate 4: the whole suite, under SEALED_NETWORK=off
+  * gate 6b: the snapshot's own run also runs under SEALED_NETWORK=off
+  * include the three missing growth files and list them for removal
+  * host-repository assertions skip with the reason on the component-only tree
+  * published_environment_judge: real denominator, and report step skips
+  * README arithmetic (171-126 is 45, not 19), --model-calls flag in the docs
+
+Verified: 214 tests OK (5 host-repo skips) with the policy off and with
+SEALED_NO_NETWORK=1; selfcheck FUNCTIONAL; verify OK; the snapshot run and the
+judge pass with 193/193 checks and 1 policy-skipped step; a real local provider
+is reached only with --allow-network local.
+---
+ SEALED-COMPONENT.md                        |  11 +-
+ docs/factory/MULTISTAGE_FACTORY.md         |   6 +-
+ sealed-factories/ATTRIBUTION.md            |   2 +-
+ sealed-factories/README.md                 |  26 +-
+ sealed-factories/SEAL.json                 |  31 +-
+ sealed-factories/SEAL.sha256               |   2 +-
+ sealed-factories/runtime/cli.py            |  20 +-
+ sealed-factories/runtime/gateway.py        |  17 +-
+ sealed-factories/runtime/netpolicy.py      | 123 ++++++
+ sealed-factories/runtime/swarm.py          |  34 +-
+ sealed-factories/runtime/toolkit.py        |  22 +-
+ shell/tests/test_factory_growth.py         |   6 +-
+ shell/tests/test_imported_factories.py     |   5 +
+ shell/tests/test_network_policy.py         | 138 +++++++
+ shell/tests/test_sealed_environment.py     |  29 +-
+ shell/tests/test_sealed_factory_runtime.py |  29 +-
+ tools/ci/publish_sealed_factory.sh         |  11 +-
+ tools/ci/published_environment_judge.py    |   7 +-
+ tools/factory/discover_factories.py        | 391 +++++++++++++++++++
+ tools/factory/plan_import.json             |  70 ++++
+ tools/factory/repositories.json            | 421 +++++++++++++++++++++
+ tools/factory/seal_factories.py            |  28 +-
+ tools/factory/sealed_factory_runtime.py    |  79 +++-
+ 23 files changed, 1422 insertions(+), 86 deletions(-)
+ create mode 100644 sealed-factories/runtime/netpolicy.py
+ create mode 100644 shell/tests/test_network_policy.py
+ create mode 100644 tools/factory/discover_factories.py
+ create mode 100644 tools/factory/plan_import.json
+ create mode 100644 tools/factory/repositories.json
+
+diff --git a/SEALED-COMPONENT.md b/SEALED-COMPONENT.md
+index 2347883..c6c2a53 100644
+--- a/SEALED-COMPONENT.md
++++ b/SEALED-COMPONENT.md
+@@ -4,7 +4,7 @@ This branch carries the sealed factory component and nothing else. It is not `ma
+ published here so it can be reviewed, run and removed on its own, and it will only ever be proposed for
+ `main` once this branch's own evidence says it is functional. Nothing in this branch was pushed by hand.
+ 
+-- **Seal root**: `2f694c4a5b0f3e4e8606cd7c512bf5b73c044c8d95b6939089a8de67080362ea` (`sha256(SEAL.json)`, recorded in
++- **Seal root**: `1649efc0542d3840a5089797013c7c8701bddf4dc359e11b4edb7d8ac89b4bd9` (`sha256(SEAL.json)`, recorded in
+   `sealed-factories/SEAL.sha256`)
+ - **Records**: 171 sealed factories, 135 carrying
+   content, 149 licence texts in the seal, 149
+@@ -18,8 +18,7 @@ published here so it can be reviewed, run and removed on its own, and it will on
+ 
+ One removable component: the sealed factory set (`sealed-factories/`, 171
+ factories with their payloads and licence texts, sealed and hash-verified), the tooling that grows and
+-serves it (16 files), its tests
+-(9), its workflows (2) and its document.
++serves it (19 files), its tests (10), its workflows (2) and its document.
+ Removing it is what `SEAL.json`'s `removal` record describes, and no file outside it is needed to run it.
+ 
+ ## Running it
+@@ -27,10 +26,14 @@ Removing it is what `SEAL.json`'s `removal` record describes, and no file outsid
+ ```
+ python3 sealed-factories/runtime/cli.py verify                      # recompute every sealed hash
+ python3 sealed-factories/runtime/cli.py selfcheck                   # recheck the set with the factories it carries
+-python3 sealed-factories/runtime/cli.py run --max-model-calls 0     # the swarm, plan mode, no keys
++python3 sealed-factories/runtime/cli.py run --model-calls 0          # the swarm, plan mode, no keys
+ python3 -m unittest discover -s shell/tests                         # the component's own tests
+ ```
+ 
++Nothing leaves the machine unless a run asks it to: `SEALED_NETWORK` is `off` by default, and
++`--allow-network local|remote` (or `SEALED_NO_NETWORK=1`, which always wins) is the whole policy. The
++runtime, the gateway, the swarm and the `net.*`/`github.*` tools read the same switch.
++
+ The licence wall travels with the component: only factories whose licences permit copying have their
+ content carried, every carried record has its licence text beside it, and records whose licences do not
+ permit it are blueprint-only - named as withheld, never quietly dropped.
+diff --git a/docs/factory/MULTISTAGE_FACTORY.md b/docs/factory/MULTISTAGE_FACTORY.md
+index d68e793..2a1ea36 100644
+--- a/docs/factory/MULTISTAGE_FACTORY.md
++++ b/docs/factory/MULTISTAGE_FACTORY.md
+@@ -223,9 +223,11 @@ was taken, and the repository re-implements only what their published documentat
+ ```bash
+ python3 tools/factory/sealed_factory_runtime.py verify   # seal only
+ python3 tools/factory/sealed_factory_runtime.py status    # seal + what models are reachable
+-python3 tools/factory/sealed_factory_runtime.py run --max-model-calls 4
++SEALED_NETWORK=local python3 tools/factory/sealed_factory_runtime.py run --max-model-calls 4
+ node scripts/conveyor_belt.js                            # station 0 among the rest
+ ```
+ 
+-`--max-model-calls` caps the number of paid calls in one run; `--require-model` fails the run when
++`--max-model-calls` caps the number of paid calls in one run (it defaults to 0, so a plain run makes
++none); `--allow-network local|remote` is the opt-in that lets a call happen at all, and
++`SEALED_NO_NETWORK=1` always forces `off`. `--require-model` fails the run when
+ nothing was reachable, which is the honest switch to use in CI where a model _is_ expected.
+diff --git a/sealed-factories/ATTRIBUTION.md b/sealed-factories/ATTRIBUTION.md
+index fe849f1..e70832b 100644
+--- a/sealed-factories/ATTRIBUTION.md
++++ b/sealed-factories/ATTRIBUTION.md
+@@ -7,7 +7,7 @@ Two kinds of entry, and the difference matters:
+ * **content redistributed** — the licence permits it (MIT, Apache-2.0, BSD, ISC, CC0, Unlicense, 0BSD) and the licence text is included in `licenses/`. The vendored files are in `payloads/<id>.tar.gz`, hash-sealed and never merged into this product's source tree.
+ * **blueprint only** — no licence was published, or the licence is one this repository cannot redistribute (AGPL, GPL) or that GitHub could not identify. **Not one byte of their content is redistributed**: the component records the commit, the file structure and the hashes, and re-implements the factory's design here. Their licence text is included when one exists, because attribution is the point.
+ 
+-Sealed: 2026-10-15T14:14:13Z · component version 1.0.0 · 171 factories · 135 with redistributed content · 36 blueprint-only
++Sealed: 2026-10-20T16:07:24Z · component version 1.0.0 · 171 factories · 135 with redistributed content · 36 blueprint-only
+ 
+ | factory | repository | licence | commit | files | bytes | redistribution |
+ | --- | --- | --- | --- | --- | --- | --- |
+diff --git a/sealed-factories/README.md b/sealed-factories/README.md
+index b56f3e0..232da55 100644
+--- a/sealed-factories/README.md
++++ b/sealed-factories/README.md
+@@ -1,7 +1,8 @@
+ # Sealed factory set
+ 
+ One component, sealed. 171 imported software factories - 126
+-of them showing AI-worker evidence in the slice sealed here, the other 19 design-stage factories -
++of them showing AI-worker evidence in the slice sealed here, the other 45
++design-stage or tool-server records -
+ vendored as bounded slices, hash-sealed, and run as station 0 of this repository's pipeline before
+ anything else.
+ 
+@@ -23,15 +24,24 @@ anything else.
+ ```
+ python3 tools/factory/sealed_factory_runtime.py verify   # recompute every payload hash
+ python3 tools/factory/sealed_factory_runtime.py status    # seal + which models are reachable
+-python3 tools/factory/sealed_factory_runtime.py run       # run every factory as a stage
++python3 tools/factory/sealed_factory_runtime.py run       # run every factory as a stage, offline
++python3 tools/factory/sealed_factory_runtime.py run --allow-network local --max-model-calls 4
+ ```
+ 
+ `verify` is the gate: one mismatched payload stops the pipeline. `run` reads each factory's own
+ stages, workers, checks, prompts and published sections from its slice, sends the composed brief to
+-the best reachable model (Ollama / LM Studio / vLLM on their default ports, or a provider key that is
+-already in the environment - nothing is configured, installed, or written to disk), and records what
+-happened. No model reachable means the factories still run from their own definitions and the report
+-says so; nothing is invented for a model that did not answer.
++the best reachable model only when the network policy and `--max-model-calls` both allow it, and
++records what happened. No model reachable or permitted means the factories still run from their own
++definitions and the report says so; nothing is invented for a model that did not answer.
++
++## Network policy
++
++Nothing leaves this machine unless the run is told it may. `SEALED_NETWORK` is `off` by default;
++`local` permits the gateway and local model servers on `127.0.0.1`, and `remote` adds the providers
++and the GitHub API. `--allow-network local|remote` sets it for one run, and `SEALED_NO_NETWORK=1`
++always forces `off` - the air-gapped job's switch cannot be weakened by another variable. The model
++runtime, the gateway, the swarm and the `net.*`/`github.*` tools all read the same policy; the run
++report records the mode and counts the steps the policy skipped instead of failing them.
+ 
+ ## Removing it
+ 
+@@ -40,8 +50,8 @@ or `factory-3/` reads it; station 0 of `scripts/conveyor_belt.js` reports
+ 
+     sealed component ABSENT - the belt continues with this repository's own factories
+ 
+-and the belt passes exactly as before. The full removal list - this directory, 16
+-tooling files, 9 test files, 2 workflows and one document - is recorded in
++and the belt passes exactly as before. The full removal list - this directory, 19
++tooling files, 10 test files, 2 workflows and one document - is recorded in
+ `SEAL.json` under `removal`, and `shell/tests/test_sealed_factory_runtime.py` proves that list matches
+ the files that exist, including a test that runs the runtime in an empty tree and checks that absence
+ is reported, exits zero, and creates nothing.
+diff --git a/sealed-factories/SEAL.json b/sealed-factories/SEAL.json
+index b09ce42..711c70a 100644
+--- a/sealed-factories/SEAL.json
++++ b/sealed-factories/SEAL.json
+@@ -1,6 +1,6 @@
+ {
+  "seal_version": "1.0.0",
+- "sealed_at": "2026-10-15T14:14:13Z",
++ "sealed_at": "2026-10-20T16:07:24Z",
+  "component": "sealed-factories",
+  "description": "The imported factory set. Dropped in or removed as one unit; runs before the repository's own factories and feeds them.",
+  "contents": {
+@@ -16,7 +16,7 @@
+    "imported factory": 106
+   },
+   "payload_bytes": 2555593,
+-  "component_files": 12
++  "component_files": 13
+  },
+  "pipeline_position": {
+   "order": 0,
+@@ -37,6 +37,7 @@
+   "also_remove": [
+    "tools/factory/seal_factories.py",
+    "tools/factory/sealed_factory_runtime.py",
++   "tools/factory/discover_factories.py",
+    "tools/factory/vendor_imported_factories.py",
+    "tools/factory/vendor_mcp_servers.py",
+    "tools/factory/vendor_needed.py",
+@@ -46,6 +47,8 @@
+    "tools/factory/imported_factories.json",
+    "tools/factory/imported_mcp_servers.json",
+    "tools/factory/imported_ai_factories.json",
++   "tools/factory/plan_import.json",
++   "tools/factory/repositories.json",
+    "tools/ci/factory_growth.sh",
+    "tools/ci/factory_growth_judge.py",
+    "tools/ci/publish_sealed_factory.sh",
+@@ -61,7 +64,8 @@
+    "shell/tests/test_factory_growth.py",
+    "shell/tests/test_license_manager.py",
+    "shell/tests/test_sealed_selfcheck.py",
+-   "shell/tests/test_published_environment_judge.py"
++   "shell/tests/test_published_environment_judge.py",
++   "shell/tests/test_network_policy.py"
+   ],
+   "workflows": [
+    ".github/workflows/factory-growth.yml",
+@@ -90,13 +94,13 @@
+   },
+   {
+    "path": "runtime/cli.py",
+-   "bytes": 14201,
+-   "sha256": "ac36d5422141f8b6b3697334c011b0129710a492be4ce98cfcc66678bd9f04dc"
++   "bytes": 15235,
++   "sha256": "bceffcb3ec1b6a475313c68dd06d0ed6622a184353f41f52b12a0bd7fe609899"
+   },
+   {
+    "path": "runtime/gateway.py",
+-   "bytes": 17351,
+-   "sha256": "0a9fc75851a8dffa98a7f1cc5c323e77d4a9f69d20aead274a7a6359c9215852"
++   "bytes": 18071,
++   "sha256": "3ddaa76d0d769e892be2251785a0402c4274c90964a6b20dde53f0a53c3b521c"
+   },
+   {
+    "path": "runtime/langkit.py",
+@@ -108,6 +112,11 @@
+    "bytes": 8891,
+    "sha256": "74c9b3397a99f456a075e901d0414bfdfb652da6e76d8b814846bf7a5be7f1e7"
+   },
++  {
++   "path": "runtime/netpolicy.py",
++   "bytes": 3995,
++   "sha256": "5eeb1c6f42082c25b1383d2ce8c654e016d5791171da6e7479f8804ed7a9d7af"
++  },
+   {
+    "path": "runtime/sealcheck.py",
+    "bytes": 6552,
+@@ -120,13 +129,13 @@
+   },
+   {
+    "path": "runtime/swarm.py",
+-   "bytes": 15476,
+-   "sha256": "d779e4f8b3e6f1e4a31d69048d1c71642fae1029c5a37ea79dbc6134c866e5be"
++   "bytes": 16909,
++   "sha256": "79766e851ceff878c177d2fb150031d125fc6947e57caab54c11dd04919e8256"
+   },
+   {
+    "path": "runtime/toolkit.py",
+-   "bytes": 73084,
+-   "sha256": "a4b73c7f9dfe34d90de965f29e515da21f6933dad8fdbd5b094842b54ae6cafd"
++   "bytes": 73333,
++   "sha256": "0bfc989b7a2e87f86c97e98401523218238e1c315c5d9da59b69df8e27fc548b"
+   },
+   {
+    "path": "runtime/toolserver.py",
+diff --git a/sealed-factories/SEAL.sha256 b/sealed-factories/SEAL.sha256
+index 64f6a67..981904a 100644
+--- a/sealed-factories/SEAL.sha256
++++ b/sealed-factories/SEAL.sha256
+@@ -1 +1 @@
+-2f694c4a5b0f3e4e8606cd7c512bf5b73c044c8d95b6939089a8de67080362ea  SEAL.json
++1649efc0542d3840a5089797013c7c8701bddf4dc359e11b4edb7d8ac89b4bd9  SEAL.json
+diff --git a/sealed-factories/runtime/cli.py b/sealed-factories/runtime/cli.py
+index 5bfd8ff..97ec3d9 100755
+--- a/sealed-factories/runtime/cli.py
++++ b/sealed-factories/runtime/cli.py
+@@ -20,6 +20,7 @@ from __future__ import annotations
+ 
+ import argparse
+ import json
++import os
+ import sys
+ from pathlib import Path
+ 
+@@ -28,6 +29,7 @@ sys.path.insert(0, str(HERE))
+ 
+ import langkit  # noqa: E402
+ import mcplink  # noqa: E402
++import netpolicy  # noqa: E402
+ import swarm  # noqa: E402
+ import sealcheck  # noqa: E402
+ from toolkit import ToolError, Workspace, build_registry, tool_names  # noqa: E402
+@@ -168,12 +170,15 @@ def cmd_run(args) -> int:
+                        execute_limit=args.limit, model_calls=args.model_calls,
+                        gateway_url=_gateway_url(args.gateway), roles_filter=roles)
+     counts = report["counts"]
++    print(f"[swarm] network policy: {report['network']['mode']} "
++          f"(local={report['network']['local']}, remote={report['network']['remote']})")
+     print(f"[swarm] {report['roles']} roles, plan of {report['plan']['instances']} agent "
+           f"instances, executed {report['plan']['executed']} in {report['seconds']}s")
+     print(f"[swarm] {counts['model']} ran with a model, {counts['offline']} offline, "
+           f"{counts['steps_ok']} tool steps ok, {counts['steps_failed']} failed, "
++          f"{counts['steps_skipped']} skipped by the network policy, "
+           f"{counts['checks_passed']}/{counts['checks_passed'] + counts['checks_failed']} checks "
+-          f"passed")
++          f"passed ({counts['checks_skipped']} skipped)")
+     print(f"[swarm] report: {report['run_dir']}/RUN.json")
+     return 0 if counts["checks_failed"] == 0 else 1
+ 
+@@ -224,7 +229,7 @@ def _seal_summary() -> dict:
+ #: Options that belong to every command. argparse only accepts them before the subcommand, which
+ #: means `cli.py --root x run` works and `cli.py run --root x` does not. Both are accepted here: a
+ #: component meant to be driven without reading its source should not care about argument order.
+-GLOBAL_OPTIONS = ("--root", "--gateway", "--with-mcp")
++GLOBAL_OPTIONS = ("--root", "--gateway", "--with-mcp", "--allow-network")
+ 
+ 
+ def _normalise_argv(argv: list[str]) -> list[str]:
+@@ -254,6 +259,10 @@ def main() -> int:
+     parser.add_argument("--gateway", default="", help="unified gateway URL for model calls")
+     parser.add_argument("--with-mcp", action="store_true",
+                         help="also bind installed MCP servers into the tool registry")
++    parser.add_argument("--allow-network", choices=netpolicy.MODES, default=None,
++                        help="network policy for this process: off (default), local (gateway and "
++                             "local model servers) or remote (providers and the GitHub API); "
++                             "SEALED_NO_NETWORK=1 still forces off")
+     subparsers = parser.add_subparsers(dest="command", required=True)
+ 
+     subparsers.add_parser("capabilities", help="what this machine can do")
+@@ -287,7 +296,8 @@ def main() -> int:
+     run.add_argument("--workers", type=int, default=16)
+     run.add_argument("--limit", type=int, default=swarm.DEFAULT_EXECUTE_LIMIT,
+                      help="how many agent instances to execute")
+-    run.add_argument("--model-calls", type=int, default=swarm.DEFAULT_MODEL_CALLS)
++    run.add_argument("--model-calls", type=int, default=swarm.DEFAULT_MODEL_CALLS,
++                     help="cap on model calls; 0 (the default) keeps the run offline")
+     run.add_argument("--roles", default="", help="comma-separated role ids to run")
+ 
+     subparsers.add_parser("capacity", help="how many agents this component holds")
+@@ -307,6 +317,10 @@ def main() -> int:
+                                 "directory)")
+ 
+     args = parser.parse_args(_normalise_argv(sys.argv[1:]))
++    if args.allow_network:
++        # The policy is read at call time from the environment, so setting it here reaches the
++        # toolkit, the swarm, the gateway and the runtime without threading a parameter through them.
++        os.environ[netpolicy.ENV] = args.allow_network
+     handlers = {"capabilities": cmd_capabilities, "tools": cmd_tools, "call": cmd_call,
+                 "mcp": cmd_mcp, "gateway": cmd_gateway, "mcp-probe": cmd_mcp_probe,
+                 "init": cmd_init, "run": cmd_run, "capacity": cmd_capacity, "verify": cmd_verify,
+diff --git a/sealed-factories/runtime/gateway.py b/sealed-factories/runtime/gateway.py
+index cd2b3f4..161c031 100755
+--- a/sealed-factories/runtime/gateway.py
++++ b/sealed-factories/runtime/gateway.py
+@@ -38,6 +38,8 @@ import urllib.request
+ import uuid
+ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+ 
++import netpolicy
++
+ KEY_VARIABLES = {
+     "openai": ("OPENAI_API_KEY", "OPENAI_API_KEYS"),
+     "anthropic": ("ANTHROPIC_API_KEY", "ANTHROPIC_API_KEYS"),
+@@ -122,9 +124,10 @@ def port_open(host: str, port: int, timeout: float = 0.25) -> bool:
+ 
+ 
+ def available(provider: str) -> bool:
++    """Reachable *and permitted*. A key in the environment does not make a dial allowed."""
+     if provider in LOCAL_PORTS:
+-        return port_open("127.0.0.1", LOCAL_PORTS[provider])
+-    return bool(_KEYS.get(provider))
++        return netpolicy.allowed(netpolicy.LOCAL) and port_open("127.0.0.1", LOCAL_PORTS[provider])
++    return netpolicy.allowed(netpolicy.REMOTE) and bool(_KEYS.get(provider))
+ 
+ 
+ def reachable() -> list[str]:
+@@ -137,6 +140,7 @@ def health() -> dict:
+             "keyed": [p for p in reachable() if p not in LOCAL_PORTS],
+             "key_counts": {provider: len(keys) for provider, keys in sorted(_KEYS.items())},
+             "usage": dict(_USAGE), "models_served": len(describe_models()),
++            "network": netpolicy.describe(),
+             "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+ 
+ 
+@@ -226,6 +230,9 @@ def request_timeout() -> int:
+ 
+ 
+ def forward(provider: str, body: dict, timeout: int = 0) -> dict:
++    kind = netpolicy.LOCAL if provider in LOCAL_PORTS else netpolicy.REMOTE
++    if not netpolicy.allowed(kind):
++        raise GatewayError(503, netpolicy.reason(kind))
+     timeout = timeout or request_timeout()
+     url, payload, headers = build_request(provider, body)
+     request = urllib.request.Request(url, data=json.dumps(payload).encode(), headers=headers,
+@@ -267,10 +274,13 @@ def route(body: dict) -> dict:
+     requested = (body.get("model") or "auto").strip()
+     order = list(reachable())
+     if not order:
++        policy = netpolicy.describe()
+         raise GatewayError(503, "no model is reachable: no local server on "
+                                 + ", ".join(f"{name}:{port}" for name, port in sorted(LOCAL_PORTS.items()))
+                                 + " and no provider key in the environment ("
+-                                + ", ".join(sorted(KEY_VARIABLES)) + ")")
++                                + ", ".join(sorted(KEY_VARIABLES)) + "); network policy is "
++                                + policy["mode"] + " (local=" + str(policy["local"]).lower()
++                                + ", remote=" + str(policy["remote"]).lower() + ")")
+     if requested != "auto":
+         provider = requested.split("/", 1)[0] if "/" in requested else ""
+         if provider in PROVIDERS:
+@@ -374,6 +384,7 @@ def main() -> int:
+ 
+     server = ThreadingHTTPServer((args.host, args.port), Handler)
+     print(f"[GATEWAY] listening on http://{args.host}:{args.port}", flush=True)
++    print(f"[GATEWAY] network policy: {netpolicy.describe()['mode']}", flush=True)
+     print(f"[GATEWAY] reachable models: {reachable() or 'none - requests will be refused with 503'}",
+           flush=True)
+     if Handler.token:
+diff --git a/sealed-factories/runtime/netpolicy.py b/sealed-factories/runtime/netpolicy.py
+new file mode 100644
+index 0000000..2794862
+--- /dev/null
++++ b/sealed-factories/runtime/netpolicy.py
+@@ -0,0 +1,123 @@
++#!/usr/bin/env python3
++"""One place that decides whether this component may open a socket.
++
++The component used to answer that question in several places with several answers: the `net.*` and
++`github.*` tools refused under `SEALED_NO_NETWORK`, while the model runtime and the gateway kept
++dialling providers and local ports. A switch that stops two of the four ways out is worse than no
++switch, because the report says "offline" and the machine is not.
++
++This module is the single answer. Three modes:
++
++    off     no outbound socket of any kind (the default)
++    local   the gateway and local model servers on 127.0.0.1 only
++    remote  local plus the providers and the GitHub API
++
++Set it with `SEALED_NETWORK=off|local|remote` or `--allow-network` on the CLI. `SEALED_NO_NETWORK=1`
++keeps working and forces `off` regardless of the other value, so the air-gapped job's switch cannot
++be weakened by a later edit to a different variable.
++
++The mode is read at call time, never cached: a test, a gate and a user can change it between calls
++and every layer sees the same answer.
++"""
++
++from __future__ import annotations
++
++import os
++from urllib.parse import urlsplit
++
++OFF = "off"
++LOCAL = "local"
++REMOTE = "remote"
++MODES = (OFF, LOCAL, REMOTE)
++
++ENV = "SEALED_NETWORK"
++HARD_OFF = "SEALED_NO_NETWORK"
++
++_LOCAL_HOSTS = {"127.0.0.1", "::1", "localhost", "0.0.0.0"}
++
++
++class NetworkRefused(RuntimeError):
++    """Raised by `guard()` when the current policy does not permit the call."""
++
++
++def _truthy(value: str) -> bool:
++    return value.strip().lower() in ("1", "true", "yes", "on")
++
++
++def _raw_mode() -> str:
++    value = os.environ.get(ENV, OFF).strip().lower()
++    return value if value in MODES else OFF
++
++
++def mode() -> str:
++    """The effective mode. `SEALED_NO_NETWORK` always wins."""
++    if _truthy(os.environ.get(HARD_OFF, "")):
++        return OFF
++    return _raw_mode()
++
++
++def allowed(kind: str) -> bool:
++    """May a socket of this kind be opened? `kind` is `local` or `remote`."""
++    if kind not in (LOCAL, REMOTE):
++        raise ValueError(f"unknown network kind: {kind}")
++    current = mode()
++    if current == OFF:
++        return False
++    if current == LOCAL:
++        return kind == LOCAL
++    return True
++
++
++def reason(kind: str = REMOTE) -> str:
++    """Why the call is refused, naming the switch the operator actually set."""
++    if _truthy(os.environ.get(HARD_OFF, "")):
++        return f"network calls are disabled: {HARD_OFF} is set"
++    return (f"network calls are disabled: {ENV}={mode()} does not permit "
++            f"{kind} calls (use --allow-network {kind} or {ENV}={kind})")
++
++
++def guard(kind: str = REMOTE) -> None:
++    if not allowed(kind):
++        raise NetworkRefused(reason(kind))
++
++
++def is_local_url(url: str) -> bool:
++    """Is this URL on this machine? Hostname only: a port cannot make a host local."""
++    try:
++        host = urlsplit(url).hostname or ""
++    except ValueError:
++        return False
++    return host.lower() in _LOCAL_HOSTS
++
++
++def kind_for_url(url: str) -> str:
++    return LOCAL if is_local_url(url) else REMOTE
++
++
++#: Tools whose subject is outside this machine. `proc.run` is deliberately absent: a tool that runs a
++#: command cannot know what the command dials, and claiming otherwise would be the kind of invented
++#: assurance this module exists to remove.
++REMOTE_TOOL_PREFIXES = ("net.", "github.")
++
++#: Tools that only talk to this machine's own gateway.
++LOCAL_TOOL_PREFIXES = ("model.",)
++
++
++def kind_for_tool(name: str) -> str:
++    if name.startswith(REMOTE_TOOL_PREFIXES):
++        return REMOTE
++    if name.startswith(LOCAL_TOOL_PREFIXES):
++        return LOCAL
++    return ""
++
++
++def describe() -> dict:
++    current = mode()
++    return {
++        "mode": current,
++        "local": allowed(LOCAL),
++        "remote": allowed(REMOTE),
++        "source": HARD_OFF if _truthy(os.environ.get(HARD_OFF, "")) else ENV,
++        "note": (f"{HARD_OFF} forces off" if _truthy(os.environ.get(HARD_OFF, ""))
++                 else f"set {ENV}=off|local|remote to change it"),
++    }
+diff --git a/sealed-factories/runtime/swarm.py b/sealed-factories/runtime/swarm.py
+index 780b97f..a6e6d14 100755
+--- a/sealed-factories/runtime/swarm.py
++++ b/sealed-factories/runtime/swarm.py
+@@ -25,13 +25,14 @@ import time
+ from concurrent.futures import ThreadPoolExecutor
+ from pathlib import Path
+ 
++import netpolicy
+ from agents import Role, by_id, catalogue
+ from langkit import detect
+ from toolkit import ToolError, Workspace, build_registry
+ 
+ MAX_AGENTS = 1_000_000
+ DEFAULT_EXECUTE_LIMIT = 200
+-DEFAULT_MODEL_CALLS = 8
++DEFAULT_MODEL_CALLS = 0
+ 
+ 
+ def plan(roles: list[Role], instances: int):
+@@ -64,6 +65,14 @@ def _run_steps(registry: dict, steps: tuple[dict, ...], workspace: Workspace) ->
+     for step in steps:
+         tool = step["tool"]
+         args = dict(step.get("args") or {})
++        kind = netpolicy.kind_for_tool(tool)
++        if kind and not netpolicy.allowed(kind):
++            # Not a failure and not a success: the step did not run, and the report says which switch
++            # stopped it. Counting it as ok would inflate the run; counting it as failed would blame
++            # the factory for the operator's policy.
++            taken.append({"tool": tool, "ok": False, "skipped": True,
++                          "reason": netpolicy.reason(kind)})
++            continue
+         if tool not in registry:
+             taken.append({"tool": tool, "ok": False, "error": "the role names a tool that is not in "
+                                                              "the registry"})
+@@ -137,7 +146,8 @@ def run(root: str, task: str, instances: int = 1, workers: int = 16,
+ 
+     started = time.time()
+     per_role: dict[str, dict] = {role.id: {"instances": 0, "artefacts": 0, "steps_ok": 0,
+-                                           "steps_failed": 0, "model_calls": 0, "errors": []}
++                                           "steps_failed": 0, "steps_skipped": 0, "model_calls": 0,
++                                           "errors": []}
+                                  for role in roles}
+     checks: list[dict] = []
+     model_calls_made = 0
+@@ -161,7 +171,8 @@ def run(root: str, task: str, instances: int = 1, workers: int = 16,
+             entry["steps"] = _run_steps(registry, role.offline, workspace)
+             entry["status"] = "OFFLINE"
+         entry["steps_ok"] = sum(1 for step in entry["steps"] if step["ok"])
+-        entry["steps_failed"] = len(entry["steps"]) - entry["steps_ok"]
++        entry["steps_skipped"] = sum(1 for step in entry["steps"] if step.get("skipped"))
++        entry["steps_failed"] = len(entry["steps"]) - entry["steps_ok"] - entry["steps_skipped"]
+         return entry
+ 
+     executed: list[dict] = []
+@@ -182,10 +193,11 @@ def run(root: str, task: str, instances: int = 1, workers: int = 16,
+         stats["instances"] += 1
+         stats["steps_ok"] += entry["steps_ok"]
+         stats["steps_failed"] += entry["steps_failed"]
++        stats["steps_skipped"] += entry.get("steps_skipped", 0)
+         if entry["status"] == "MODEL":
+             stats["model_calls"] += 1
+         for step in entry["steps"]:
+-            if not step["ok"] and len(stats["errors"]) < 3:
++            if not step["ok"] and not step.get("skipped") and len(stats["errors"]) < 3:
+                 stats["errors"].append(f'{step["tool"]}: {step.get("error", "")[:160]}')
+         target = artefacts_dir / _artefact_name(entry["role"], entry["sequence"])
+         target.write_text(json.dumps(entry, indent=1), encoding="utf-8")
+@@ -198,6 +210,11 @@ def run(root: str, task: str, instances: int = 1, workers: int = 16,
+         for step in role.checks:
+             tool = step["tool"]
+             args = dict(step.get("args") or {})
++            kind = netpolicy.kind_for_tool(tool)
++            if kind and not netpolicy.allowed(kind):
++                checks.append({"role": role.id, "tool": tool, "ok": False, "skipped": True,
++                               "reason": netpolicy.reason(kind)})
++                continue
+             if tool not in registry:
+                 checks.append({"role": role.id, "tool": tool, "ok": False,
+                                "error": "check names a tool that is not in the registry"})
+@@ -214,6 +231,7 @@ def run(root: str, task: str, instances: int = 1, workers: int = 16,
+                                "error": f"{type(problem).__name__}: {str(problem)[:200]}"})
+ 
+     passed = sum(1 for check in checks if check["ok"])
++    skipped_checks = sum(1 for check in checks if check.get("skipped"))
+     report = {
+         "task": task,
+         "started_at": stamp,
+@@ -238,10 +256,13 @@ def run(root: str, task: str, instances: int = 1, workers: int = 16,
+             "model_failed": sum(1 for e in executed if e["status"] == "MODEL-FAILED"),
+             "steps_ok": sum(e["steps_ok"] for e in executed),
+             "steps_failed": sum(e["steps_failed"] for e in executed),
++            "steps_skipped": sum(e.get("steps_skipped", 0) for e in executed),
+             "checks_passed": passed,
+-            "checks_failed": len(checks) - passed,
++            "checks_failed": len(checks) - passed - skipped_checks,
++            "checks_skipped": skipped_checks,
+             "artefacts": len(executed),
+         },
++        "network": netpolicy.describe(),
+         "per_role": per_role,
+         "checks": checks,
+         "artefacts_dir": str(artefacts_dir.relative_to(workspace.root)),
+@@ -266,6 +287,9 @@ def _ask_model(registry: dict, role: Role, task: str) -> dict:
+ def _gateway_ready(gateway_url: str) -> bool:
+     import urllib.error
+     import urllib.request
++    kind = netpolicy.kind_for_url(gateway_url)
++    if not netpolicy.allowed(kind):
++        return False
+     try:
+         with urllib.request.urlopen(f"{gateway_url.rstrip('/')}/healthz", timeout=5) as response:
+             payload = json.loads(response.read().decode("utf-8", "replace"))
+diff --git a/sealed-factories/runtime/toolkit.py b/sealed-factories/runtime/toolkit.py
+index 8b30f53..9f99405 100755
+--- a/sealed-factories/runtime/toolkit.py
++++ b/sealed-factories/runtime/toolkit.py
+@@ -43,6 +43,8 @@ import zipfile
+ from datetime import datetime, timezone
+ from pathlib import Path
+ 
++import netpolicy
++
+ MAX_READ_BYTES = 400_000
+ MAX_HTTP_BYTES = 1_000_000
+ DEFAULT_TIMEOUT = 120
+@@ -659,7 +661,7 @@ def code_syntax(workspace: Workspace, path: str = ".", limit: int = 20) -> dict:
+ 
+ def net_fetch(url: str, timeout: int = 30, as_text: bool = True, limit: int = MAX_HTTP_BYTES) -> dict:
+     if network_disabled():
+-        raise ToolError(f"network calls are disabled: {NO_NETWORK_VAR} is set")
++        raise ToolError(netpolicy.reason(netpolicy.REMOTE))
+     if not re.match(r"^https?://", url, re.I):
+         raise ToolError("only http(s) URLs can be fetched")
+     request = urllib.request.Request(url, headers={"User-Agent": "sealed-factory-runtime/1.0"})
+@@ -683,7 +685,7 @@ def net_fetch(url: str, timeout: int = 30, as_text: bool = True, limit: int = MA
+ def net_http(url: str, method: str = "GET", headers: dict | None = None, body: str = "",
+              timeout: int = 30) -> dict:
+     if network_disabled():
+-        raise ToolError(f"network calls are disabled: {NO_NETWORK_VAR} is set")
++        raise ToolError(netpolicy.reason(netpolicy.REMOTE))
+     request = urllib.request.Request(url, data=body.encode() if body else None, method=method.upper(),
+                                      headers=headers or {})
+     try:
+@@ -709,8 +711,13 @@ NO_NETWORK_VAR = "SEALED_NO_NETWORK"
+ 
+ 
+ def network_disabled() -> bool:
+-    """Is outbound networking switched off for this process? Truthy values, not just "1"."""
+-    return os.environ.get(NO_NETWORK_VAR, "").strip().lower() in ("1", "true", "yes", "on")
++    """Is outbound networking switched off for this process?
++
++    The policy itself lives in `netpolicy.py`, so this function and the model runtime and the gateway
++    cannot disagree about the answer. This name is kept because it reads correctly at the call sites
++    that ask about the *remote* network.
++    """
++    return not netpolicy.allowed(netpolicy.REMOTE)
+ 
+ 
+ #: Where the GitHub REST API lives. `SEALED_GITHUB_API` points the tools at an enterprise instance,
+@@ -738,7 +745,7 @@ def _github_request(path: str, method: str = "GET", body: dict | None = None, ti
+     the two cannot report either honestly.
+     """
+     if network_disabled():
+-        raise ToolError(f"network calls are disabled: {NO_NETWORK_VAR} is set")
++        raise ToolError(netpolicy.reason(netpolicy.REMOTE))
+     if not re.match(r"^[\w./?=&%:-]+$", path):
+         raise ToolError(f"that is not a GitHub API path: {path!r}")
+     url = path if path.startswith("http") else f"{GITHUB_API}/{path.lstrip('/')}"
+@@ -916,7 +923,7 @@ def github_probe(timeout: int = 5) -> dict:
+         return {"available": False, "reachable": False, "status": 0, "disabled": True,
+                 "token_present": bool(github_token()), "url": GITHUB_API, "rate_limit": None,
+                 "rate_limit_remaining": None,
+-                "reason": f"network calls are disabled: {NO_NETWORK_VAR} is set"}
++                "reason": netpolicy.reason(netpolicy.REMOTE)}
+     exchange = _github_request("rate_limit", timeout=timeout)
+     status = exchange["status"]
+     if status == 0:
+@@ -1039,6 +1046,9 @@ def model_ask(gateway_url: str, prompt: str, model: str = "", timeout: int = 120
+     if not gateway_url:
+         raise ToolError("no gateway is configured; start it with `cli.py gateway` or set "
+                         "SEALED_GATEWAY_URL")
++    kind = netpolicy.kind_for_url(gateway_url)
++    if not netpolicy.allowed(kind):
++        raise ToolError(netpolicy.reason(kind))
+     payload = {"model": model or "auto",
+                "messages": ([{"role": "system", "content": system}] if system else [])
+                            + [{"role": "user", "content": prompt}], "stream": False}
+diff --git a/shell/tests/test_factory_growth.py b/shell/tests/test_factory_growth.py
+index 6206d2d..61a6f05 100644
+--- a/shell/tests/test_factory_growth.py
++++ b/shell/tests/test_factory_growth.py
+@@ -358,7 +358,11 @@ class WiringTest(unittest.TestCase):
+             self.assertLessEqual(len(line), 100,
+                                  f"commitlint refuses a body line over 100 characters: {line!r}")
+         # The type has to be one the repository's conventional-commit config allows.
+-        config = (REPO_ROOT / "commitlint.config.js").read_text(encoding="utf-8")
++        config_path = REPO_ROOT / "commitlint.config.js"
++        if not config_path.is_file():
++            self.skipTest("host-repository test: commitlint.config.js is not part of the published "
++                          "component, so the allowed types are checked in the source repository")
++        config = config_path.read_text(encoding="utf-8")
+         self.assertIn("config-conventional", config)
+         commit_type = messages[0].split(":", 1)[0].split("(", 1)[0]
+         self.assertIn(commit_type, ("build", "chore", "ci", "docs", "feat", "fix", "perf",
+diff --git a/shell/tests/test_imported_factories.py b/shell/tests/test_imported_factories.py
+index 0f96a5a..fb45ed9 100644
+--- a/shell/tests/test_imported_factories.py
++++ b/shell/tests/test_imported_factories.py
+@@ -118,6 +118,9 @@ class ImportedFactoryRegistryTest(unittest.TestCase):
+                                  "the repository's authenticity auditor rejects these tokens")
+ 
+     def test_the_catalog_document_lists_exactly_the_registry(self):
++        if not CATALOG.is_file():
++            self.skipTest(f"host-repository test: {CATALOG} is not part of the published component; "
++                          "the registry pair it cross-checks lives in the source repository")
+         catalog = CATALOG.read_text(encoding="utf-8")
+         for entry in self.entries:
+             with self.subTest(entry=entry["id"]):
+@@ -132,6 +135,8 @@ class ImportedFactoryRegistryTest(unittest.TestCase):
+                          "the catalog lists an id the registry does not hold")
+ 
+     def test_the_catalog_states_the_licence_policy(self):
++        if not CATALOG.is_file():
++            self.skipTest(f"host-repository test: {CATALOG} is not part of the published component")
+         catalog = CATALOG.read_text(encoding="utf-8")
+         self.assertIn("asset-import", catalog)
+         self.assertIn("blueprint-only", catalog)
+diff --git a/shell/tests/test_network_policy.py b/shell/tests/test_network_policy.py
+new file mode 100644
+index 0000000..031e128
+--- /dev/null
++++ b/shell/tests/test_network_policy.py
+@@ -0,0 +1,138 @@
++"""One network policy, every layer: the switch has to mean the same thing everywhere.
++
++The component used to answer "may I dial?" in four places with three answers. These tests pin the
++answer: `SEALED_NETWORK=off` is the default, `SEALED_NO_NETWORK=1` always forces it, and the tools,
++the swarm, the gateway and the sealed runtime all refuse before a socket is opened - including the
++model runtime, which used to keep dialling providers with the air-gap switch on.
++
++They are deliberately offline: a patched `urlopen` that raises on any call proves "did not dial"
++without needing a network to be absent.
++"""
++
++from __future__ import annotations
++
++import os
++import sys
++import tempfile
++import unittest
++from pathlib import Path
++from unittest import mock
++
++REPO_ROOT = Path(__file__).resolve().parents[2]
++RUNTIME = REPO_ROOT / "sealed-factories" / "runtime"
++sys.path.insert(0, str(RUNTIME))
++sys.path.insert(0, str(REPO_ROOT / "tools" / "factory"))
++
++import gateway  # noqa: E402
++import netpolicy  # noqa: E402
++import swarm  # noqa: E402
++import toolkit  # noqa: E402
++import sealed_factory_runtime as runtime  # noqa: E402
++
++VARIABLES = ("SEALED_NETWORK", "SEALED_NO_NETWORK")
++
++
++class PolicyTest(unittest.TestCase):
++    def setUp(self) -> None:
++        self._saved = {name: os.environ.get(name) for name in VARIABLES}
++        self.addCleanup(self._restore)
++
++    def _restore(self) -> None:
++        for name, value in self._saved.items():
++            if value is None:
++                os.environ.pop(name, None)
++            else:
++                os.environ[name] = value
++
++    def _clear(self) -> None:
++        for name in VARIABLES:
++            os.environ.pop(name, None)
++
++    def test_the_default_is_off(self) -> None:
++        self._clear()
++        self.assertEqual(netpolicy.mode(), netpolicy.OFF)
++        self.assertFalse(netpolicy.allowed(netpolicy.LOCAL))
++        self.assertFalse(netpolicy.allowed(netpolicy.REMOTE))
++
++    def test_the_hard_switch_always_wins(self) -> None:
++        os.environ["SEALED_NETWORK"] = netpolicy.REMOTE
++        os.environ["SEALED_NO_NETWORK"] = "1"
++        self.assertEqual(netpolicy.mode(), netpolicy.OFF)
++        self.assertFalse(netpolicy.allowed(netpolicy.REMOTE))
++        self.assertIn("SEALED_NO_NETWORK", netpolicy.reason(netpolicy.REMOTE))
++
++    def test_local_mode_allows_only_this_machine(self) -> None:
++        self._clear()
++        os.environ["SEALED_NETWORK"] = netpolicy.LOCAL
++        self.assertTrue(netpolicy.allowed(netpolicy.LOCAL))
++        self.assertFalse(netpolicy.allowed(netpolicy.REMOTE))
++        self.assertEqual(netpolicy.kind_for_url("http://127.0.0.1:8787/v1/chat/completions"),
++                         netpolicy.LOCAL)
++        self.assertEqual(netpolicy.kind_for_url("https://api.openai.com/v1/chat/completions"),
++                         netpolicy.REMOTE)
++
++    def test_an_unknown_mode_is_off_not_a_free_pass(self) -> None:
++        os.environ["SEALED_NETWORK"] = "yes-please"
++        self.assertEqual(netpolicy.mode(), netpolicy.OFF)
++
++    def test_the_model_runtime_does_not_dial_when_off(self) -> None:
++        self._clear()
++        capabilities = {
++            "local_models": [{"name": "ollama", "url": "http://127.0.0.1:11434/api/generate"}],
++            "keyed_providers": [{"name": "openai", "url": "https://api.openai.com/v1/chat/completions",
++                                 "model": "gpt-4o-mini"}],
++            "model_available": True,
++        }
++        with mock.patch("urllib.request.urlopen", side_effect=AssertionError("a socket was opened")):
++            answer = runtime.call_model(capabilities, "prompt", timeout=1)
++        self.assertFalse(answer["ok"])
++        self.assertIn("network calls are disabled", answer["error"])
++
++    def test_a_keyed_provider_is_not_advertised_when_remote_is_off(self) -> None:
++        self._clear()
++        os.environ["OPENAI_API_KEY"] = "sk-" + "0" * 32
++        capabilities = runtime.detect_capabilities()
++        self.assertEqual(capabilities["keyed_providers"], [])
++        self.assertFalse(capabilities["model_available"])
++        self.assertEqual(capabilities["network"]["mode"], netpolicy.OFF)
++
++    def test_the_gateway_refuses_a_key_it_may_not_use(self) -> None:
++        self._clear()
++        saved = dict(gateway._KEYS)
++        self.addCleanup(lambda: (gateway._KEYS.clear(), gateway._KEYS.update(saved)))
++        gateway._KEYS.update({"openai": ["sk-" + "0" * 32]})
++        self.assertEqual(gateway.reachable(), [])
++        with self.assertRaises(gateway.GatewayError) as raised:
++            gateway.forward("openai", {"messages": [{"role": "user", "content": "x"}]})
++        self.assertIn("network calls are disabled", str(raised.exception))
++
++    def test_a_github_step_is_skipped_not_failed(self) -> None:
++        self._clear()
++        with tempfile.TemporaryDirectory() as scratch:
++            workspace = toolkit.Workspace(Path(scratch))
++            registry = toolkit.build_registry(workspace, "")
++            steps = swarm._run_steps(registry, ({"tool": "github.probe", "args": {}},), workspace)
++        self.assertEqual(len(steps), 1)
++        self.assertTrue(steps[0]["skipped"])
++        self.assertFalse(steps[0]["ok"])
++        self.assertIn("SEALED_NETWORK", steps[0]["reason"])
++
++    def test_the_tools_refuse_with_the_policy_reason(self) -> None:
++        self._clear()
++        with self.assertRaises(toolkit.ToolError) as raised:
++            toolkit.net_fetch("https://example.invalid/")
++        self.assertIn("SEALED_NETWORK=off", str(raised.exception))
++
++    def test_the_swarm_report_carries_the_policy(self) -> None:
++        self._clear()
++        with tempfile.TemporaryDirectory() as scratch:
++            (Path(scratch) / "README.md").write_text("# scratch\n", encoding="utf-8")
++            report = swarm.run(scratch, "test", instances=1, workers=2, execute_limit=3,
++                               model_calls=0)
++        self.assertEqual(report["network"]["mode"], netpolicy.OFF)
++        self.assertEqual(report["model"]["available"], False)
++        self.assertEqual(report["model"]["calls_made"], 0)
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/shell/tests/test_sealed_environment.py b/shell/tests/test_sealed_environment.py
+index 3010da7..abeb563 100644
+--- a/shell/tests/test_sealed_environment.py
++++ b/shell/tests/test_sealed_environment.py
+@@ -375,6 +375,11 @@ class GitHubToolTest(unittest.TestCase):
+         original = dict(os.environ)
+         self.addCleanup(lambda: (os.environ.clear(), os.environ.update(original)))
+         os.environ["GITHUB_TOKEN"] = "ghp_" + "0" * 38
++        # These tests are about the GitHub tools, so this test declares the policy they need. The
++        # default everywhere else is off; a test that needs a dial says so rather than relying on
++        # the machine's environment.
++        os.environ.pop("SEALED_NO_NETWORK", None)
++        os.environ["SEALED_NETWORK"] = "remote"
+         self.api = toolkit.GITHUB_API
+         toolkit.GITHUB_API = self.stub.url
+         self.addCleanup(lambda: setattr(toolkit, "GITHUB_API", self.api))
+@@ -584,13 +589,28 @@ class GatewayTest(unittest.TestCase):
+             self.server.server_close()
+ 
+     def test_routing_reaches_a_reachable_local_provider(self) -> None:
++        previous = os.environ.get("SEALED_NETWORK")
++        previous_hard_off = os.environ.pop("SEALED_NO_NETWORK", None)
++        os.environ["SEALED_NETWORK"] = "local"
++
++        def restore_network(previous=previous, previous_hard_off=previous_hard_off):
++            # Bound as defaults, not closed over: the name `previous` is reused below and a late
++            # lookup put a provider tuple into the environment.
++            if previous is None:
++                os.environ.pop("SEALED_NETWORK", None)
++            else:
++                os.environ["SEALED_NETWORK"] = previous
++            if previous_hard_off is not None:
++                os.environ["SEALED_NO_NETWORK"] = previous_hard_off
++
++        self.addCleanup(restore_network)
+         stub = self._Stub()
+         self.addCleanup(stub.stop)
+-        original = gateway.PROVIDERS["ollama"]
++        previous_provider = gateway.PROVIDERS["ollama"]
+         gateway.PROVIDERS["ollama"] = (f"http://127.0.0.1:{stub.port}/v1/chat/completions",
+                                        "llama3.1", False, "openai")
+         gateway.LOCAL_PORTS["ollama"] = stub.port
+-        self.addCleanup(lambda: gateway.PROVIDERS.__setitem__("ollama", original))
++        self.addCleanup(lambda: gateway.PROVIDERS.__setitem__("ollama", previous_provider))
+         self.addCleanup(gateway.LOCAL_PORTS.pop, "ollama", None)
+ 
+         result = gateway.route({"model": "auto", "messages": [{"role": "user", "content": "hi"}]})
+@@ -773,6 +793,11 @@ class SealedEnvironmentReportTest(unittest.TestCase):
+         if not path.is_file():
+             raise unittest.SkipTest("run the sealed runtime first to produce its report")
+         cls.report = json.loads(path.read_text(encoding="utf-8"))
++        # A report written with --no-env records `environment: null` on purpose: that run staged
++        # nothing. There is no environment to judge, so say so instead of failing on a None.
++        if not cls.report.get("environment"):
++            raise unittest.SkipTest("the last sealed run used --no-env, so it reports no environment; "
++                                    "run the runtime without --no-env to produce one")
+ 
+     def test_the_environment_is_reported_with_every_part(self) -> None:
+         environment = self.report.get("environment")
+diff --git a/shell/tests/test_sealed_factory_runtime.py b/shell/tests/test_sealed_factory_runtime.py
+index 199a836..b608639 100644
+--- a/shell/tests/test_sealed_factory_runtime.py
++++ b/shell/tests/test_sealed_factory_runtime.py
+@@ -9,6 +9,7 @@ from __future__ import annotations
+ 
+ import hashlib
+ import json
++import os
+ import shutil
+ import subprocess
+ import sys
+@@ -271,7 +272,9 @@ class SealedComponentTest(unittest.TestCase):
+         answer = sealed_factory_runtime.call_model(offline, "prompt", timeout=1)
+         self.assertFalse(answer["ok"])
+         self.assertIsNone(answer["provider"])
+-        self.assertIn("no model is reachable", answer["error"])
++        self.assertTrue("no model is reachable" in answer["error"]
++                        or "network calls are disabled" in answer["error"],
++                        answer["error"])
+         self.assertEqual(sealed_factory_runtime._extract_text({}), "")
+         self.assertEqual(sealed_factory_runtime._extract_text({"choices": []}), "")
+ 
+@@ -357,8 +360,12 @@ class OnlineModelPathTest(unittest.TestCase):
+         thread = threading.Thread(target=server.serve_forever, daemon=True)
+         thread.start()
+         try:
+-            report = subprocess.run([sys.executable, str(RUNTIME), "run", "--max-model-calls", "1"],
+-                                    capture_output=True, text=True, cwd=REPO_ROOT, timeout=900)
++            environment = dict(os.environ)
++            environment.pop("SEALED_NO_NETWORK", None)  # this test is about the local model path
++            report = subprocess.run([sys.executable, str(RUNTIME), "run", "--allow-network", "local",
++                                     "--max-model-calls", "1"],
++                                    capture_output=True, text=True, cwd=REPO_ROOT, timeout=900,
++                                    env=environment)
+             self.assertEqual(report.returncode, 0, report.stdout + report.stderr)
+             run_report = json.loads((SEALED / "manifest" / "RUN-REPORT.json")
+                                     .read_text(encoding="utf-8"))
+@@ -410,8 +417,12 @@ class OnlineModelPathTest(unittest.TestCase):
+         _name, server = candidate
+         threading.Thread(target=server.serve_forever, daemon=True).start()
+         try:
+-            done = subprocess.run([sys.executable, str(RUNTIME), "run", "--max-model-calls", "1"],
+-                                  capture_output=True, text=True, cwd=REPO_ROOT, timeout=900)
++            environment = dict(os.environ)
++            environment.pop("SEALED_NO_NETWORK", None)  # this test is about the local model path
++            done = subprocess.run([sys.executable, str(RUNTIME), "run", "--allow-network", "local",
++                                   "--max-model-calls", "1"],
++                                  capture_output=True, text=True, cwd=REPO_ROOT, timeout=900,
++                                  env=environment)
+             self.assertEqual(done.returncode, 0, "a refused call is reported, not fatal")
+             run_report = json.loads((SEALED / "manifest" / "RUN-REPORT.json")
+                                     .read_text(encoding="utf-8"))
+@@ -464,6 +475,9 @@ class RemovabilityTest(unittest.TestCase):
+         self.assertEqual(offenders, [], "these files would break if the component were removed")
+ 
+     def test_the_belt_runs_the_sealed_set_first_and_survives_its_absence(self) -> None:
++        if not BELT.is_file():
++            self.skipTest(f"host-repository test: {BELT} is not part of the published component; "
++                          "the belt integration is proved in the source repository")
+         source = BELT.read_text(encoding="utf-8")
+         # The code blocks, not the file header: `// Stage 0` runs before `// Stage 1` in the belt.
+         station_zero = source.index("// Stage 0: The sealed factory set")
+@@ -489,6 +503,11 @@ class RemovabilityTest(unittest.TestCase):
+                 self.assertTrue((REPO_ROOT / path).is_file(),
+                                 f"{path} is named for removal but missing")
+         for keep in removal["leaves_intact"]:
++            if not (REPO_ROOT / keep).exists():
++                # The published branch carries the component, not the host repository it is proposed
++                # for: `factories/` and `factory-2/` do not exist here. Their survival is proved in
++                # the source repository, where they do.
++                self.skipTest(f"host-repository test: {keep} is not in the component-only tree")
+             self.assertTrue((REPO_ROOT / keep).exists(), f"{keep} must survive removal")
+         self.assertIn(removal["belt_station"], "the Stage 0 block in scripts/conveyor_belt.js, which "
+                       "reports ABSENT without it")
+diff --git a/tools/ci/publish_sealed_factory.sh b/tools/ci/publish_sealed_factory.sh
+index 0fd8642..710a396 100644
+--- a/tools/ci/publish_sealed_factory.sh
++++ b/tools/ci/publish_sealed_factory.sh
+@@ -87,11 +87,10 @@ gate "the component is functional with only named states left" \
+     python3 sealed-factories/runtime/cli.py selfcheck --require-functional \
+     --workspace "$SELFCHECK_DIR/strict"
+ 
+-# 4. The component's own tests, on the tree that is about to be published.
+-gate "the component's own tests" python3 -m unittest \
+-    shell/tests/test_sealed_factory_runtime.py \
+-    shell/tests/test_sealed_selfcheck.py \
+-    shell/tests/test_license_manager.py
++# 4. The component's own tests, on the tree that is about to be published - the whole suite, not a
++#    selection. Three files were run before, and the fourteen tests in the other six were never gated;
++#    a published branch that fails its own discovery tests is not "passed its own tests".
++gate "the component's own tests" env SEALED_NETWORK=off python3 -m unittest discover -s shell/tests
+ 
+ # 5. The snapshot, built from the component's own removal record, plus the verdict of this run.
+ stage "building the snapshot from the component's own removal record"
+@@ -127,7 +126,7 @@ gate "the copy that is about to be published is functional on its own" \
+ #     no model - and the judge below refuses a run that skipped a role, failed a step or failed a check.
+ #     A copy that cannot do that is a copy that has a seal, not a component that was proved functional.
+ gate "the copy that is about to be published runs its own environment" \
+-    bash -c 'cd "$1" && exec python3 tools/factory/sealed_factory_runtime.py run --max-model-calls 0' \
++    bash -c 'cd "$1" && exec env SEALED_NETWORK=off python3 tools/factory/sealed_factory_runtime.py run --max-model-calls 0' \
+     _ "$SNAPSHOT"
+ JUDGE_LOG="$(mktemp)"
+ GATE_CAPTURE="$JUDGE_LOG"
+diff --git a/tools/ci/published_environment_judge.py b/tools/ci/published_environment_judge.py
+index 996adca..cfd8c50 100644
+--- a/tools/ci/published_environment_judge.py
++++ b/tools/ci/published_environment_judge.py
+@@ -89,13 +89,16 @@ def judge(report_path: pathlib.Path) -> tuple[list[str], list[str]]:
+             problems.append("a model call was made or claimed on a run asked for none")
+ 
+     if not problems:
++        passed = counts.get("checks_passed") or 0
++        total = passed + (counts.get("checks_failed") or 0)
++        skipped = counts.get("steps_skipped") or 0
+         evidence.append(
+             f"published copy ran itself: {len(factories)} factories, {tools.get('total')} tools "
+             f"({tools.get('native')} native, {tools.get('mcp_bound')} bound from MCP), "
+             f"{roles} agent roles, {executed} agent instances executed, "
+             f"{counts.get('steps_ok')} tool steps ok, "
+-            f"{counts.get('checks_passed')}/{counts.get('checks_passed')} checks passed, "
+-            f"0 model calls")
++            f"{passed}/{total} checks passed, "
++            f"{skipped} tool step(s) skipped by the network policy, 0 model calls")
+     return problems, evidence
+ 
+ 
+diff --git a/tools/factory/discover_factories.py b/tools/factory/discover_factories.py
+new file mode 100644
+index 0000000..a49652a
+--- /dev/null
++++ b/tools/factory/discover_factories.py
+@@ -0,0 +1,391 @@
++#!/usr/bin/env python3
++"""Find more factories on GitHub and add them to the imported-factory registry.
++
++The sealed set is only as operational as the repositories behind it: 22 of its records publish no
++licence at all, so nothing of theirs may be carried, and a record that carries nothing defines nothing.
++The fix is not to argue with those licences - it is to import more repositories that *can* be carried
++and that bring real definitions with them.
++
++This tool does that search, and it does it the same way the original 72 were found, so the method stays
++reproducible:
++
++1. GitHub code-and-metadata search over the phrases this project implements (staged production with AI
++   workers), then a licence filter - only licences this component may redistribute, or CC0;
++2. each candidate's **actual tree** is read through the GitHub API and scored against the same six
++   characteristics the catalogue uses: worker/agent code, stages, orchestration, factory naming,
++   verification/review, build/test/ship steps. Four or more are required, and the evidence recorded is
++   the paths that showed them - not a claim;
++3. entries are appended to `tools/factory/imported_factories.json` and rows to
++   `docs/factory/IMPORTED_FACTORY_CATALOG.md`, the pair `shell/tests/test_imported_factories.py`
++   requires to agree. Nothing is vendored here; that is `vendor_imported_factories.py --only <ids>`.
++
++Usage:
++    python3 tools/factory/discover_factories.py --query '"agent skills" in:name,description' --limit 12
++    python3 tools/factory/discover_factories.py --query ... --apply
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import re
++import subprocess
++import sys
++import time
++from pathlib import Path
++
++REPO_ROOT = Path(__file__).resolve().parents[2]
++REGISTRY = REPO_ROOT / "tools" / "factory" / "imported_factories.json"
++CATALOG = REPO_ROOT / "docs" / "factory" / "IMPORTED_FACTORY_CATALOG.md"
++
++PERMISSIVE_LICENCES = {"MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "CC0-1.0",
++                       "Unlicense", "0BSD"}
++
++#: GitHub returns these upper-cased (`APACHE-2.0`, `AGPL-3.0`, `BSD-3-CLAUSE`), so every comparison
++#: goes through the lower-cased table and the canonical spelling is what gets stored.
++CANONICAL = {licence.lower(): licence for licence in PERMISSIVE_LICENCES
++             | {"AGPL-3.0", "GPL-3.0", "GPL-2.0", "LGPL-3.0", "Elastic-2.0", "PolyForm-Shield-1.0.0",
++                "BSL-1.0", "SSPL-1.0", "MPL-2.0", "CC-BY-4.0", "CC-BY-SA-4.0", "NOASSERTION"}}
++
++
++def canonical_licence(raw: str) -> str:
++    return CANONICAL.get((raw or "").lower(), (raw or "").upper() or "NOASSERTION")
++
++#: The six characteristics, and the tree shapes that demonstrate each one. A characteristic counts only
++#: when a real path proves it, which is why every entry can list the files behind its evidence.
++CHARACTERISTICS: tuple[tuple[str, re.Pattern], ...] = (
++    ("worker/agent code", re.compile(r"(^|/)(agents?|workers?|subagents?|personas?|roles?)/", re.I)),
++    ("stages", re.compile(r"(^|/)(stages?|steps?|phases?|pipelines?|workflows?)/", re.I)),
++    ("orchestration", re.compile(r"(orchestrat\w*|conductor|coordinator|scheduler|runner|dispatcher|"
++                                 r"supervisor)", re.I)),
++    ("factory naming", re.compile(r"factory", re.I)),
++    ("verification/review", re.compile(r"(verify|verifier|review\w*|critic|check\w*|qa|quality)", re.I)),
++    ("build/test/ship steps", re.compile(r"(^|/)(\.github/workflows/|\.gitlab-ci|Jenkinsfile|"
++                                         r"buildspecs?/|Makefile|justfile|Taskfile)", re.I)),
++)
++
++#: A path that carries a *definition* - somewhere a stage, step, pipeline or workflow is described.
++#: A repository may use the word "steps" in a utility module and still define nothing; the scan has to
++#: be able to tell those apart, so a candidate needs at least one path from this set or from
++#: `AI_WORKER_PATH` before it can be registered.
++STAGE_PATH = re.compile(r"(^|/)(stages?|steps?|phases?|pipelines?|workflows?)/", re.I)
++
++#: CI configuration describes how a repository is *built*, which every repository has. It is a use of a
++#: build step, not a definition of a factory stage, so it never counts as a definition on its own -
++#: otherwise every project with a workflow file would look like a factory.
++CI_ONLY = re.compile(r"^(\.github/workflows/|\.gitlab-ci|Jenkinsfile|\.circleci/|\.travis|"
++                     r"\.woodpecker|azure-pipelines)", re.I)
++
++#: A path is AI-worker evidence when it is somewhere an AI worker is defined rather than merely used.
++AI_WORKER_PATH = re.compile(
++    r"(^|/)(agents?|subagents?|workers?|prompts?|prompt_templates?|skills?|personas?|crews?|swarms?|"
++    r"\.claude|\.agent|\.ai|instructions?)/", re.I)
++
++#: Noise the original sweep excluded by hand; keep excluding it, by rule.
++NOISE = re.compile(r"(awesome-|tutorial|course|bootcamp|cheat[-_]?sheet|interview)", re.I)
++
++
++def gh_json(path: str, attempts: int = 3):
++    for attempt in range(attempts):
++        done = subprocess.run(["gh", "api", path], capture_output=True, text=True)
++        if done.returncode == 0:
++            try:
++                return json.loads(done.stdout)
++            except ValueError:
++                return None
++        if "rate limit" in done.stderr.lower() or "secondary" in done.stderr.lower():
++            time.sleep(20 * (attempt + 1))
++            continue
++        if attempt == attempts - 1:
++            return None
++        time.sleep(2)
++    return None
++
++
++def characteristics(paths: list[str]) -> list[str]:
++    """The characteristics this repository's own tree demonstrates, with the proving paths kept."""
++    found: list[str] = []
++    for name, pattern in CHARACTERISTICS:
++        if any(pattern.search(path) for path in paths):
++            found.append(name)
++    return found
++
++
++def evidence_paths(paths: list[str], limit: int = 3) -> list[str]:
++    """A few of the paths that carry the definition, for the registry entry's own record."""
++    interesting = [path for path in paths if AI_WORKER_PATH.search(path) or STAGE_PATH.search(path)]
++    return sorted(interesting, key=lambda path: (path.count("/"), len(path)))[:limit]
++
++
++def slug(full_name: str) -> str:
++    return re.sub(r"-+", "-", re.sub(r"[^a-z0-9]+", "-", full_name.lower())).strip("-")
++
++
++def evaluate_tree(paths: list[str]) -> dict | None:
++    """What a repository's own tree shows, or None when it is not factory-shaped.
++
++    Four characteristics are the bar the catalogued set was built on. On top of that, at least one path
++    has to be a *definition* - an agent, worker, prompt, skill, stage, step or pipeline. Without that
++    second check a library whose utility module happens to be called `steps.py` looks like a factory and
++    gets sealed as one, carrying files the runtime reads nothing from.
++    """
++    found = characteristics(paths)
++    if len(found) < 4:
++        return None
++    definitions = [path for path in paths
++                   if AI_WORKER_PATH.search(path)
++                   or (STAGE_PATH.search(path) and not CI_ONLY.search(path))]
++    if not definitions:
++        return None
++    return {"evidence": found, "evidence_count": len(found), "definitions": definitions[:3],
++            "definition_count": len(definitions),
++            "ai_worker_evidence": any(AI_WORKER_PATH.search(path) for path in paths)}
++
++
++def candidate(entry: dict, query: str, snapshot: str,
++              allow_non_permissive: bool = False) -> dict | None:
++    """Turn one search hit into a registry entry, or return None with the reason printed.
++
++    A sweep only ever adds what this component may carry, so a copyleft licence ends the candidate.
++    A named plan is different: the tool is wanted for what it does, and a copyleft one is recorded as
++    a blueprint - no content copied, `license_file_needed` set - which is the registry's own convention.
++    """
++    full_name = entry["full_name"]
++    if entry.get("archived") or entry.get("disabled"):
++        return None
++    if NOISE.search(full_name) or NOISE.search(entry.get("description") or ""):
++        return None
++    licence = canonical_licence(((entry.get("license") or {}).get("spdx_id") or ""))
++    carriable = licence in PERMISSIVE_LICENCES
++    if not carriable and not allow_non_permissive:
++        return None
++    branch = entry.get("default_branch") or "main"
++    tree_payload = gh_json(f"repos/{full_name}/git/trees/{branch}?recursive=1") or {}
++    paths = [item["path"] for item in tree_payload.get("tree", []) if item.get("type") == "blob"]
++    if not paths:
++        return None
++    shape = evaluate_tree(paths)
++    if not shape:
++        return None
++    dirs = sorted({path.split("/")[0] for path in paths if "/" in path})[:24]
++    return {
++        "full_name": full_name,
++        "url": entry["html_url"],
++        "description": (entry.get("description") or "")[:240],
++        "stars": entry.get("stargazers_count", 0),
++        "forks": entry.get("forks_count", 0),
++        "language": entry.get("language") or "",
++        "size_kb": entry.get("size", 0),
++        "pushed_at": entry.get("pushed_at"),
++        "created_at": entry.get("created_at"),
++        "license": licence,
++        "topics": entry.get("topics") or [],
++        "archived": False,
++        "open_issues": entry.get("open_issues_count", 0),
++        "queries": [query],
++        "dirs": dirs,
++        "entry_names": sorted({path.split("/")[0] for path in paths})[:24],
++        "definition_paths": shape["definitions"],
++        "evidence": shape["evidence"],
++        "evidence_count": shape["evidence_count"],
++        "ai_worker_evidence": shape["ai_worker_evidence"],
++        "license_file_needed": not carriable,
++        "id": slug(full_name),
++        "import_class": "asset-import" if carriable else "blueprint-only",
++        "snapshot": snapshot,
++        "license_source": "api",
++    }
++
++
++def catalog_row(candidate_entry: dict) -> str:
++    """One table row in the catalogue's own shape."""
++    entry = candidate_entry
++    description = (entry["description"] or "").replace("|", "\\|")[:120]
++    workers = "yes" if entry["ai_worker_evidence"] else "no"
++    return (f'| `{entry["id"]}` | [{entry["full_name"]}]({entry["url"]}) | {entry["stars"]} | '
++            f'{entry["license"]} | {entry["import_class"]} | {workers} | '
++            f'{", ".join(entry["evidence"])} | {description} |')
++
++
++def write_catalog(text: str, registry: list[dict]) -> str:
++    """Rebuild the catalog's factory table from the registry, and refresh the counts the prose states.
++
++    Rebuilt rather than appended to. Two earlier versions of this function appended rows, and both
++    were wrong in ways that only showed up later: rows landed in the *class* table above (its cells also
++    begin with a backticked word, so "the first table that looks like this" was the wrong table), and a
++    repeated run appended the same factory again. Rebuilding from the registry makes the document a
++    projection of the registry, so drift and duplication are not possible by construction.
++    """
++    lines = text.split("\n")
++    header = next(index for index, line in enumerate(lines)
++                  if line.startswith("| id") and "repository" in line)
++    start = header + 2                                   # the header, then the separator row
++    end = start
++    while end < len(lines) and lines[end].startswith("|"):
++        end += 1
++    rows = sorted((catalog_row(entry) for entry in registry),
++                  key=lambda line: int(re.search(r"\| (\d+) \|", line).group(1)), reverse=True)
++    lines[start:end] = rows
++
++    # Any factory row that ended up outside that table (an older run's mistake) is removed.
++    factory_row = re.compile(r"^\|\s*`([\w.-]+)`\s*\|\s*\[")
++    lines = [line for index, line in enumerate(lines)
++             if not (factory_row.match(line) and not (start <= index < start + len(rows)))]
++    # Recompute `start` after the removal, then re-insert the table body in one place.
++    header = next(index for index, line in enumerate(lines)
++                  if line.startswith("| id") and "repository" in line)
++    start = header + 2
++    end = start
++    while end < len(lines) and lines[end].startswith("|"):
++        end += 1
++    if end != start + len(rows):
++        lines[start:end] = rows
++    text = "\n".join(lines)
++
++    asset = sum(1 for entry in registry if entry["import_class"] == "asset-import")
++    blueprint = sum(1 for entry in registry if entry["import_class"] == "blueprint-only")
++    workers = sum(1 for entry in registry if entry["ai_worker_evidence"])
++    text = re.sub(r"(The result: \*\*)\d+( verified factories\*\*, of which \*\*)\d+",
++                  rf"\g<1>{len(registry)}\g<2>{workers}", text)
++    # The count is the last cell of the class table's row; the row's other cells are matched whole,
++    # because the Meaning cell contains no pipe but does contain other numbers.
++    for label, value in (("asset-import", asset), ("blueprint-only", blueprint)):
++        text = re.sub(rf"(\| `{label}`\s*\|[^|]*\|\s*)\d+(\s*\|)",
++                      rf"\g<1>{value}\g<2>", text)
++    return text
++
++
++def main(argv: list[str]) -> int:
++    parser = argparse.ArgumentParser(description="Discover and register factory repositories")
++    parser.add_argument("--query", action="append", default=[],
++                        help="a GitHub search query; repeatable")
++    parser.add_argument("--from-plan", dest="from_plan",
++                        help="repositories.json-style file whose `planned` list to import by name")
++    parser.add_argument("--limit", type=int, default=8, help="how many to add")
++    parser.add_argument("--min-stars", type=int, default=25)
++    parser.add_argument("--apply", action="store_true")
++    args = parser.parse_args(argv[1:])
++    if not args.query and not args.from_plan:
++        parser.error("give at least one --query or a --from-plan file")
++    snapshot = time.strftime("%Y-%m-%d", time.gmtime())
++
++    registry = json.loads(REGISTRY.read_text(encoding="utf-8"))
++    known = {entry["full_name"].lower() for entry in registry}
++    known_ids = {entry["id"] for entry in registry}
++    added: list[dict] = []
++    for query in args.query:
++        if len(added) >= args.limit:
++            break
++        search = gh_json(f"search/repositories?q={query.replace(' ', '+')}&sort=stars&per_page=30")
++        for entry in (search or {}).get("items", []):
++            if len(added) >= args.limit:
++                break
++            if entry["full_name"].lower() in known or entry.get("stargazers_count", 0) < args.min_stars:
++                continue
++            built = candidate(entry, query, snapshot)
++            if not built or built["id"] in known_ids:
++                continue
++            known.add(built["full_name"].lower())
++            known_ids.add(built["id"])
++            added.append(built)
++            print(f'+ {built["id"]:44s} {built["license"]:12s} '
++                  f'{"AI-worker " if built["ai_worker_evidence"] else "          "}'
++                  f'{built["stars"]:5d}★ {", ".join(built["evidence"])}')
++
++    outcomes: list[dict] = []
++    if args.from_plan:
++        plan = json.loads(Path(args.from_plan).read_text(encoding="utf-8"))
++        for item in plan.get("planned", []):
++            url = item.get("repository", "")
++            match = re.match(r"https://github\.com/([^/]+/[^/#]+)", url)
++            if not match:
++                reason = (f'host is not github.com ({url}); the registry and its tests address '
++                          f'records as https://github.com/<full_name>')
++                print(f'= {item.get("tool", "?"):16s} refused: {reason}')
++                outcomes.append({"tool": item.get("tool"), "repository": url, "outcome": "refused",
++                                 "reason": reason})
++                continue
++            full_name = match.group(1)
++            if full_name.lower() in known:
++                # Imported by an earlier pass (an `--apply` sweep, or this file run twice). It still
++                # belongs in the record - the point of the file is that no named repository is
++                # unaccounted for, not that this particular run is what added it.
++                existing = next((entry for entry in registry
++                                 if entry["full_name"].lower() == full_name.lower()), {})
++                outcomes.append({"tool": item.get("tool"), "repository": url, "outcome": "imported",
++                                 "id": existing.get("id"), "license": existing.get("license"),
++                                 "import_class": existing.get("import_class"),
++                                 "reason": "already in the registry from an earlier pass"})
++                print(f'= {item.get("tool", "?"):16s} already imported as {existing.get("id")}')
++                continue
++            if len(added) >= args.limit:
++                continue
++            meta = gh_json(f"repos/{full_name}")
++            if not meta or meta.get("message"):
++                reason = "repository metadata unreadable through the GitHub API"
++                print(f'= {item.get("tool", "?"):16s} refused: {reason}')
++                outcomes.append({"tool": item.get("tool"), "repository": url, "outcome": "refused",
++                                 "reason": reason})
++                continue
++            built = candidate(meta, f'planned:{item.get("tool", "")}', snapshot,
++                              allow_non_permissive=True)
++            if not built:
++                reason = ("its own tree shows neither four of the six factory characteristics nor a "
++                          "single definition path (an agent, worker, prompt, skill, stage, step or "
++                          "pipeline) - CI configuration alone does not make a factory")
++                print(f'= {item.get("tool", "?"):16s} refused: {reason}')
++                outcomes.append({"tool": item.get("tool"), "repository": url, "outcome": "refused",
++                                 "reason": reason})
++                continue
++            built["planned_tool"] = item.get("tool", "")
++            built["handles"] = item.get("handles", "")
++            built["plan_gap"] = item.get("gap", "")
++            known.add(built["full_name"].lower())
++            known_ids.add(built["id"])
++            added.append(built)
++            print(f'+ {built["id"]:44s} {built["license"]:12s} {built["import_class"]:14s} '
++                  f'{built["stars"]:5d}* {", ".join(built["evidence"])}')
++            outcomes.append({"tool": item.get("tool"), "repository": url, "outcome": "imported",
++                             "id": built["id"], "license": built["license"],
++                             "import_class": built["import_class"],
++                             "reason": f'imported as {built["import_class"]} under {built["license"]}'})
++
++    print(f"\n{len(added)} new factory record(s)")
++    if not args.apply:
++        print("report only; pass --apply to write the registry and the catalog")
++        return 0
++
++    # Registry first, then the table row that has to agree with it, then the counts the prose states.
++    # The counts are refreshed even when this run added nothing, so a licence re-classified elsewhere
++    # cannot leave the catalog describing a set it no longer matches.
++    if added:
++        registry.extend(added)
++        REGISTRY.write_text(json.dumps(registry, indent=2) + "\n", encoding="utf-8")
++
++    text = CATALOG.read_text(encoding="utf-8")
++    text = write_catalog(text, registry)
++
++    CATALOG.write_text(text, encoding="utf-8")
++    asset = sum(1 for entry in registry if entry["import_class"] == "asset-import")
++    blueprint = sum(1 for entry in registry if entry["import_class"] == "blueprint-only")
++    workers = sum(1 for entry in registry if entry["ai_worker_evidence"])
++
++    if outcomes:
++        plan_path = Path(args.from_plan)
++        report_path = plan_path.with_name("plan_import.json")
++        report_path.write_text(json.dumps(
++            {"method": ("every repository the plan names is either imported into "
++                        "imported_factories.json or refused with the reason recorded here"),
++             "checked": snapshot, "plan": plan_path.name, "outcomes": outcomes},
++            indent=2) + "\n", encoding="utf-8")
++        refused = sum(1 for entry in outcomes if entry["outcome"] == "refused")
++        print(f"plan: {len(outcomes)} named, {len(outcomes) - refused} imported, {refused} refused "
++              f"-> {report_path}")
++    print(f"registry: {len(registry)} entries ({asset} asset-import, {blueprint} blueprint-only, "
++          f"{workers} with AI-worker evidence)")
++    print("catalog: rows and counts updated")
++    return 0
++
++
++if __name__ == "__main__":
++    sys.exit(main(sys.argv))
+diff --git a/tools/factory/plan_import.json b/tools/factory/plan_import.json
+new file mode 100644
+index 0000000..8fa2bd5
+--- /dev/null
++++ b/tools/factory/plan_import.json
+@@ -0,0 +1,70 @@
++{
++  "method": "every repository the plan names is either imported into imported_factories.json or refused with the reason recorded here",
++  "checked": "2026-10-15",
++  "plan": "repositories.json",
++  "outcomes": [
++    {
++      "tool": "CodeQL",
++      "repository": "https://github.com/github/codeql",
++      "outcome": "imported",
++      "id": "github-codeql",
++      "license": "MIT",
++      "import_class": "asset-import",
++      "reason": "already in the registry from an earlier pass"
++    },
++    {
++      "tool": "Schemathesis",
++      "repository": "https://github.com/schemathesis/schemathesis",
++      "outcome": "refused",
++      "reason": "its own tree shows neither four of the six factory characteristics nor a single definition path (an agent, worker, prompt, skill, stage, step or pipeline) - CI configuration alone does not make a factory"
++    },
++    {
++      "tool": "Maestro",
++      "repository": "https://github.com/mobile-dev-inc/maestro",
++      "outcome": "imported",
++      "id": "mobile-dev-inc-maestro",
++      "license": "Apache-2.0",
++      "import_class": "asset-import",
++      "reason": "already in the registry from an earlier pass"
++    },
++    {
++      "tool": "Roborazzi",
++      "repository": "https://github.com/takahirom/roborazzi",
++      "outcome": "refused",
++      "reason": "its own tree shows neither four of the six factory characteristics nor a single definition path (an agent, worker, prompt, skill, stage, step or pipeline) - CI configuration alone does not make a factory"
++    },
++    {
++      "tool": "Macrobenchmark",
++      "repository": "https://android.googlesource.com/platform/frameworks/support/",
++      "outcome": "refused",
++      "reason": "host is not github.com (https://android.googlesource.com/platform/frameworks/support/); the registry and its tests address records as https://github.com/<full_name>"
++    },
++    {
++      "tool": "Perfetto",
++      "repository": "https://android.googlesource.com/platform/external/perfetto/",
++      "outcome": "refused",
++      "reason": "host is not github.com (https://android.googlesource.com/platform/external/perfetto/); the registry and its tests address records as https://github.com/<full_name>"
++    },
++    {
++      "tool": "OWASP ZAP",
++      "repository": "https://github.com/zaproxy/zaproxy",
++      "outcome": "refused",
++      "reason": "its own tree shows neither four of the six factory characteristics nor a single definition path (an agent, worker, prompt, skill, stage, step or pipeline) - CI configuration alone does not make a factory"
++    },
++    {
++      "tool": "k6",
++      "repository": "https://github.com/grafana/k6",
++      "outcome": "refused",
++      "reason": "its own tree shows neither four of the six factory characteristics nor a single definition path (an agent, worker, prompt, skill, stage, step or pipeline) - CI configuration alone does not make a factory"
++    },
++    {
++      "tool": "Renovate",
++      "repository": "https://github.com/renovatebot/renovate",
++      "outcome": "imported",
++      "id": "renovatebot-renovate",
++      "license": "AGPL-3.0",
++      "import_class": "blueprint-only",
++      "reason": "already in the registry from an earlier pass"
++    }
++  ]
++}
+diff --git a/tools/factory/repositories.json b/tools/factory/repositories.json
+new file mode 100644
+index 0000000..b50b83f
+--- /dev/null
++++ b/tools/factory/repositories.json
+@@ -0,0 +1,421 @@
++{
++  "date": "2026-09-30",
++  "repositories": {
++    "git": {
++      "repository": "https://github.com/git/git",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "gh": {
++      "repository": "https://github.com/cli/cli",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "ripgrep": {
++      "repository": "https://github.com/BurntSushi/ripgrep",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "gradle": {
++      "repository": "https://github.com/gradle/gradle",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "detekt": {
++      "repository": "https://github.com/detekt/detekt",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "ktlint": {
++      "repository": "https://github.com/ktlint/ktlint",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "ruff": {
++      "repository": "https://github.com/astral-sh/ruff",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "pylint": {
++      "repository": "https://github.com/pylint-dev/pylint",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "mypy": {
++      "repository": "https://github.com/python/mypy",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "pyright": {
++      "repository": "https://github.com/microsoft/pyright",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "bandit": {
++      "repository": "https://github.com/PyCQA/bandit",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "semgrep": {
++      "repository": "https://github.com/semgrep/semgrep",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "pip-audit": {
++      "repository": "https://github.com/pypa/pip-audit",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "deptry": {
++      "repository": "https://github.com/osprey-oss/deptry",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "vulture": {
++      "repository": "https://github.com/jendrikseipp/vulture",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "xenon": {
++      "repository": "https://github.com/rubik/xenon",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "interrogate": {
++      "repository": "https://github.com/econchick/interrogate",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "pytest": {
++      "repository": "https://github.com/pytest-dev/pytest",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "coverage": {
++      "repository": "https://github.com/coveragepy/coveragepy",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "hypothesis": {
++      "repository": "https://github.com/HypothesisWorks/hypothesis",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "mutmut": {
++      "repository": "https://github.com/boxed/mutmut",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "codespell": {
++      "repository": "https://github.com/codespell-project/codespell",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "yamllint": {
++      "repository": "https://github.com/adrienverge/yamllint",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "check-jsonschema": {
++      "repository": "https://github.com/python-jsonschema/check-jsonschema",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "reuse": {
++      "repository": "https://github.com/fsfe/reuse-tool",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "pip-licenses": {
++      "repository": "https://github.com/raimon49/pip-licenses",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "cyclonedx-py": {
++      "repository": "https://github.com/CycloneDX/cyclonedx-python",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "detect-secrets": {
++      "repository": "https://github.com/Yelp/detect-secrets",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "zizmor": {
++      "repository": "https://github.com/zizmorcore/zizmor",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "shellcheck": {
++      "repository": "https://github.com/koalaman/shellcheck",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "shfmt": {
++      "repository": "https://github.com/mvdan/sh",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "actionlint": {
++      "repository": "https://github.com/rhysd/actionlint",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "hadolint": {
++      "repository": "https://github.com/hadolint/hadolint",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "eslint": {
++      "repository": "https://github.com/eslint/eslint",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "prettier": {
++      "repository": "https://github.com/prettier/prettier",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "jest": {
++      "repository": "https://github.com/jestjs/jest",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "jscpd": {
++      "repository": "https://github.com/kucherenko/jscpd",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "knip": {
++      "repository": "https://github.com/webpro-nl/knip",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "dependency-cruiser": {
++      "repository": "https://github.com/sverweij/dependency-cruiser",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "npm-check-updates": {
++      "repository": "https://github.com/raineorshine/npm-check-updates",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "markdownlint": {
++      "repository": "https://github.com/DavidAnson/markdownlint-cli2",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "markdown-link-check": {
++      "repository": "https://github.com/tcort/markdown-link-check",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "stylelint": {
++      "repository": "https://github.com/stylelint/stylelint",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "retire": {
++      "repository": "https://github.com/RetireJS/retire.js",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "osv-scanner": {
++      "repository": "https://github.com/google/osv-scanner",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "syft": {
++      "repository": "https://github.com/anchore/syft",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "trivy": {
++      "repository": "https://github.com/aquasecurity/trivy",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "gitleaks": {
++      "repository": "https://github.com/gitleaks/gitleaks",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "checkov": {
++      "repository": "https://github.com/bridgecrewio/checkov",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "docker-compose": {
++      "repository": "https://github.com/docker/compose",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "ast-grep": {
++      "repository": "https://github.com/ast-grep/ast-grep",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "playwright": {
++      "repository": "https://github.com/microsoft/playwright",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "axe-core": {
++      "repository": "https://github.com/dequelabs/axe-core",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "pipdeptree": {
++      "repository": "https://github.com/tox-dev/pipdeptree",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "openapi-spec-validator": {
++      "repository": "https://github.com/python-openapi/openapi-spec-validator",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "taplo": {
++      "repository": "https://github.com/tamasfe/taplo",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "npm-audit": {
++      "repository": "https://github.com/npm/cli",
++      "metadata_verified": true,
++      "archived": false
++    },
++    "android-lint": {
++      "repository": "https://android.googlesource.com/platform/tools/base/",
++      "metadata_verified": false,
++      "provenance": "Official source location; not queried through GitHub API"
++    },
++    "r8": {
++      "repository": "https://r8.googlesource.com/r8/",
++      "metadata_verified": false,
++      "provenance": "Official source location; not queried through GitHub API"
++    },
++    "adb": {
++      "repository": "https://android.googlesource.com/platform/packages/modules/adb/",
++      "metadata_verified": false,
++      "provenance": "Official source location; not queried through GitHub API"
++    },
++    "apksigner": {
++      "repository": "https://android.googlesource.com/platform/tools/apksig/",
++      "metadata_verified": false,
++      "provenance": "Official source location; not queried through GitHub API"
++    },
++    "apkanalyzer": {
++      "repository": "https://android.googlesource.com/platform/tools/base/",
++      "metadata_verified": false,
++      "provenance": "Official source location; not queried through GitHub API"
++    },
++    "aapt2": {
++      "repository": "https://android.googlesource.com/platform/frameworks/base/",
++      "metadata_verified": false,
++      "provenance": "Official source location; not queried through GitHub API"
++    },
++    "html-validate": {
++      "repository": "https://gitlab.com/html-validate/html-validate",
++      "metadata_verified": false,
++      "provenance": "Official source location; not queried through GitHub API"
++    },
++    "app-security-policy": {
++      "repository": "https://developer.android.com/privacy-and-security/security-best-practices",
++      "metadata_verified": false,
++      "provenance": "Official Android security guidance; policy contract is repository-local"
++    },
++    "ui-contract-policy": {
++      "repository": "https://developer.android.com/develop/ui/compose",
++      "metadata_verified": false,
++      "provenance": "Official Android Compose guidance; repository-local contract"
++    },
++    "import-android-sdk": {
++      "repository": "https://developer.android.com/tools/sdkmanager",
++      "metadata_verified": false,
++      "provenance": "Repository-local fail-closed stripped SDK importer; no binary is committed"
++    },
++    "finding-lifecycle": {
++      "repository": "https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues",
++      "metadata_verified": false,
++      "provenance": "Repository-local lifecycle policy based on the retrieved plan"
++    },
++    "production-chain": {
++      "repository": "https://docs.github.com/en/actions/using-workflows/about-workflows",
++      "metadata_verified": false,
++      "provenance": "Repository-local fail-closed production stage handoff"
++    },
++    "language-router": {
++      "repository": "https://github.com/semgrep/semgrep",
++      "metadata_verified": false,
++      "provenance": "Repository-local language manifest and changed-file router"
++    },
++    "gradle-quality-queue": {
++      "repository": "https://github.com/detekt/detekt",
++      "metadata_verified": false,
++      "provenance": "Repository-local XML normalization and bounded remediation packets"
++    },
++    "unfinished-repair": {
++      "repository": "https://github.com/SEARCHHH/unfinished-repair",
++      "metadata_verified": true,
++      "archived": false
++    }
++  },
++  "planned": [
++    {
++      "tool": "CodeQL",
++      "repository": "https://github.com/github/codeql",
++      "handles": "Interprocedural Kotlin/Java/Python/JS security analysis",
++      "gap": "Build extraction, query scope, policy and resource budget; not enabled"
++    },
++    {
++      "tool": "Schemathesis",
++      "repository": "https://github.com/schemathesis/schemathesis",
++      "handles": "Generated API request/response property tests",
++      "gap": "Isolated real PostgreSQL/Redis lifecycle and destructive-operation boundaries"
++    },
++    {
++      "tool": "Maestro",
++      "repository": "https://github.com/mobile-dev-inc/maestro",
++      "handles": "Device start/stop/save/navigation journeys",
++      "gap": "Real test APK/emulator, semantic selectors and durable-state assertions"
++    },
++    {
++      "tool": "Roborazzi",
++      "repository": "https://github.com/takahirom/roborazzi",
++      "handles": "Native screen image regression",
++      "gap": "Reachable screens, deterministic fixtures and reviewed references"
++    },
++    {
++      "tool": "Macrobenchmark",
++      "repository": "https://android.googlesource.com/platform/frameworks/support/",
++      "handles": "Android startup and scrolling performance",
++      "gap": "Release-like internal build, physical-device sampling and agreed budgets"
++    },
++    {
++      "tool": "Perfetto",
++      "repository": "https://android.googlesource.com/platform/external/perfetto/",
++      "handles": "CPU, memory, scheduling and frame traces",
++      "gap": "Repeatable device scenarios and interpretation; not a pass/fail budget by itself"
++    },
++    {
++      "tool": "OWASP ZAP",
++      "repository": "https://github.com/zaproxy/zaproxy",
++      "handles": "DAST against a disposable owned backend",
++      "gap": "Authenticated fixture, allowlisted target and no third-party crawling"
++    },
++    {
++      "tool": "k6",
++      "repository": "https://github.com/grafana/k6",
++      "handles": "Backend concurrency, latency and error-rate checks",
++      "gap": "Representative workloads, resource budget and safe dedicated test services"
++    },
++    {
++      "tool": "Renovate",
++      "repository": "https://github.com/renovatebot/renovate",
++      "handles": "Reviewed dependency update proposals",
++      "gap": "Maintainer GitHub App authorization and PR policy; no activation or auto-merge"
++    }
++  ]
++}
+diff --git a/tools/factory/seal_factories.py b/tools/factory/seal_factories.py
+index 3a4ce56..2b2283c 100644
+--- a/tools/factory/seal_factories.py
++++ b/tools/factory/seal_factories.py
+@@ -261,6 +261,7 @@ def seal() -> int:
+             "delete": "sealed-factories/",
+             "also_remove": ["tools/factory/seal_factories.py",
+                             "tools/factory/sealed_factory_runtime.py",
++                            "tools/factory/discover_factories.py",
+                             "tools/factory/vendor_imported_factories.py",
+                             "tools/factory/vendor_mcp_servers.py",
+                             "tools/factory/vendor_needed.py",
+@@ -270,6 +271,8 @@ def seal() -> int:
+                             "tools/factory/imported_factories.json",
+                             "tools/factory/imported_mcp_servers.json",
+                             "tools/factory/imported_ai_factories.json",
++                            "tools/factory/plan_import.json",
++                            "tools/factory/repositories.json",
+                             "tools/ci/factory_growth.sh",
+                             "tools/ci/factory_growth_judge.py",
+                             "tools/ci/publish_sealed_factory.sh",
+@@ -283,7 +286,8 @@ def seal() -> int:
+                       "shell/tests/test_factory_growth.py",
+                       "shell/tests/test_license_manager.py",
+                       "shell/tests/test_sealed_selfcheck.py",
+-                      "shell/tests/test_published_environment_judge.py"],
++                      "shell/tests/test_published_environment_judge.py",
++                      "shell/tests/test_network_policy.py"],
+             "workflows": [".github/workflows/factory-growth.yml",
+                           ".github/workflows/publish-sealed-factory.yml"],
+             "docs": ["docs/factory/MULTISTAGE_FACTORY.md"],
+@@ -377,7 +381,8 @@ def write_readme(document: dict) -> None:
+     text = f"""# Sealed factory set
+ 
+ One component, sealed. {contents['factories']} imported software factories - {contents['ai_worker_factories']}
+-of them showing AI-worker evidence in the slice sealed here, the other 19 design-stage factories -
++of them showing AI-worker evidence in the slice sealed here, the other {contents['factories'] - contents['ai_worker_factories']}
++design-stage or tool-server records -
+ vendored as bounded slices, hash-sealed, and run as station 0 of this repository's pipeline before
+ anything else.
+ 
+@@ -399,15 +404,24 @@ anything else.
+ ```
+ python3 tools/factory/sealed_factory_runtime.py verify   # recompute every payload hash
+ python3 tools/factory/sealed_factory_runtime.py status    # seal + which models are reachable
+-python3 tools/factory/sealed_factory_runtime.py run       # run every factory as a stage
++python3 tools/factory/sealed_factory_runtime.py run       # run every factory as a stage, offline
++python3 tools/factory/sealed_factory_runtime.py run --allow-network local --max-model-calls 4
+ ```
+ 
+ `verify` is the gate: one mismatched payload stops the pipeline. `run` reads each factory's own
+ stages, workers, checks, prompts and published sections from its slice, sends the composed brief to
+-the best reachable model (Ollama / LM Studio / vLLM on their default ports, or a provider key that is
+-already in the environment - nothing is configured, installed, or written to disk), and records what
+-happened. No model reachable means the factories still run from their own definitions and the report
+-says so; nothing is invented for a model that did not answer.
++the best reachable model only when the network policy and `--max-model-calls` both allow it, and
++records what happened. No model reachable or permitted means the factories still run from their own
++definitions and the report says so; nothing is invented for a model that did not answer.
++
++## Network policy
++
++Nothing leaves this machine unless the run is told it may. `SEALED_NETWORK` is `off` by default;
++`local` permits the gateway and local model servers on `127.0.0.1`, and `remote` adds the providers
++and the GitHub API. `--allow-network local|remote` sets it for one run, and `SEALED_NO_NETWORK=1`
++always forces `off` - the air-gapped job's switch cannot be weakened by another variable. The model
++runtime, the gateway, the swarm and the `net.*`/`github.*` tools all read the same policy; the run
++report records the mode and counts the steps the policy skipped instead of failing them.
+ 
+ ## Removing it
+ 
+diff --git a/tools/factory/sealed_factory_runtime.py b/tools/factory/sealed_factory_runtime.py
+index a912b41..4552f3e 100644
+--- a/tools/factory/sealed_factory_runtime.py
++++ b/tools/factory/sealed_factory_runtime.py
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env python3
+ """Runs the sealed factory set as the first stage group of the pipeline.
+ 
+-The sealed component holds 72 imported factories. This runtime makes every one of them *operate*
++The sealed component holds the imported factory set (171 records in the seal this ships with). This runtime makes every one of them *operate*
+ without any setup step from the operator:
+ 
+ * it opens the seal and verifies every payload hash before reading anything - a tampered component
+@@ -12,8 +12,10 @@ without any setup step from the operator:
+   files, printed, or stored, and nothing is installed or downloaded;
+ * every factory is then executed as far as it can genuinely be executed: its own vendored definition
+   files are parsed into stages, worker roles, prompts and gates (always), and the composed prompt is
+-  sent to the best available model (when one is reachable). Where no model is reachable the factory
+-  still runs - it produces its plan and its prompt - and is reported as operating in plan mode.
++  sent to the best available model only when the network policy allows it *and* a model is reachable.
++  The policy defaults to `off`; `--allow-network local|remote` is the opt-in. Where no model is
++  reachable or permitted, the factory still runs - it produces its plan and its prompt - and is
++  reported as operating in plan mode.
+ 
+ Truthfulness rules, because this is a factory and not a demo:
+ * a factory that runs against a model records the provider, the model name and the response; a call
+@@ -25,6 +27,7 @@ Truthfulness rules, because this is a factory and not a demo:
+ Usage:
+     python3 tools/factory/sealed_factory_runtime.py status
+     python3 tools/factory/sealed_factory_runtime.py run [--brief FILE] [--max-model-calls N]
++    python3 tools/factory/sealed_factory_runtime.py run --allow-network local --max-model-calls 4
+     python3 tools/factory/sealed_factory_runtime.py verify
+ """
+ 
+@@ -60,6 +63,11 @@ import seal_factories  # noqa: E402  (same directory, the component's own toolin
+ #: The environment that lives inside the seal: tools, agent roles, language packs, MCP binding.
+ sys.path.insert(0, str(SEALED / "runtime"))
+ 
++try:  # The component is removable: with sealed-factories/ deleted, this module still has to run.
++    import netpolicy  # noqa: E402  (the runtime's one network policy, shared with the tools)
++except ImportError:  # pragma: no cover - exercised by the removability tests
++    netpolicy = None
++
+ #: Local model servers, tried on their default ports. Probing is a sub-second TCP connect, so a
+ #: machine without any of them pays ~0.3 s once - and a machine that already runs one needs no setup.
+ LOCAL_ENDPOINTS = (
+@@ -146,23 +154,34 @@ def detect_capabilities() -> dict:
+         except (OSError, subprocess.SubprocessError):
+             interpreters[name] = None
+ 
++    if netpolicy is None:
++        return {"interpreters": interpreters, "local_models": [], "keyed_providers": [],
++                "model_available": False,
++                "network": {"mode": "absent", "local": False, "remote": False,
++                            "source": "sealed component absent",
++                            "note": "no network policy ships without the component"},
++                "detected_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
++
+     local = []
+-    for name, host, port, url in LOCAL_ENDPOINTS:
+-        if port_open(host, port):
+-            local.append({"name": name, "url": url})
++    if netpolicy.allowed(netpolicy.LOCAL):
++        for name, host, port, url in LOCAL_ENDPOINTS:
++            if port_open(host, port):
++                local.append({"name": name, "url": url})
+ 
+     keyed = []
+-    for name, variable, url, model in REMOTE_PROVIDERS:
+-        value = os.environ.get(variable)
+-        if value:
+-            # Only that the key exists is recorded - never the key, not even its length.
+-            keyed.append({"name": name, "env": variable, "url": url, "model": model})
++    if netpolicy.allowed(netpolicy.REMOTE):
++        for name, variable, url, model in REMOTE_PROVIDERS:
++            value = os.environ.get(variable)
++            if value:
++                # Only that the key exists is recorded - never the key, not even its length.
++                keyed.append({"name": name, "env": variable, "url": url, "model": model})
+ 
+     return {
+         "interpreters": interpreters,
+         "local_models": local,
+         "keyed_providers": keyed,
+         "model_available": bool(local or keyed),
++        "network": netpolicy.describe(),
+         "detected_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+     }
+ 
+@@ -349,8 +368,18 @@ def compose_prompt(derived: dict, factory: dict, brief: str) -> str:
+ 
+ 
+ def call_model(capabilities: dict, prompt: str, timeout: int = 120) -> dict:
+-    """Sends the prompt to the best available model. Returns a result dict, never raises."""
+-    if capabilities["local_models"]:
++    """Sends the prompt to the best available model. Returns a result dict, never raises.
++
++    The network policy is checked here and not only where the capabilities were detected: a caller
++    can hand this function a capabilities dict from anywhere, and the dial itself has to be the thing
++    that is refused.
++    """
++    if netpolicy is None:
++        return {"ok": False, "provider": None,
++                "error": "the network policy is not present (the sealed component is absent)"}
++    if not (netpolicy.allowed(netpolicy.LOCAL) or netpolicy.allowed(netpolicy.REMOTE)):
++        return {"ok": False, "provider": None, "error": netpolicy.reason(netpolicy.REMOTE)}
++    if capabilities["local_models"] and netpolicy.allowed(netpolicy.LOCAL):
+         local = capabilities["local_models"][0]
+         if local["name"] == "ollama":
+             body = {"model": os.environ.get("OLLAMA_MODEL", "llama3.1"),
+@@ -441,6 +470,8 @@ def run(brief: str, max_model_calls: int, require_model: bool, env_agents: int =
+     print(f"[SEALED] {document['contents']['factories']} factories sealed "
+           f"({document['contents']['content_redistributed']} with redistributed content, "
+           f"{document['contents']['blueprint_only']} blueprint-only)")
++    print(f"[SEALED] network policy: {capabilities['network']['mode']} "
++          f"(local={capabilities['network']['local']}, remote={capabilities['network']['remote']})")
+     print(f"[SEALED] models: local={[m['name'] for m in capabilities['local_models']]} "
+           f"keyed={[p['name'] for p in capabilities['keyed_providers']]}")
+ 
+@@ -543,7 +574,8 @@ def run(brief: str, max_model_calls: int, require_model: bool, env_agents: int =
+     if env:
+         try:
+             environment_report = environment(agents=env_agents, limit=env_limit,
+-                                              workspace=env_workspace, with_mcp=env_with_mcp)
++                                              workspace=env_workspace, with_mcp=env_with_mcp,
++                                              model_calls=max_model_calls)
+         except Exception as problem:  # the environment is part of the component; a bug is a failure
+             print(f"[SEALED] FAIL: the sealed environment could not run: "
+                   f"{type(problem).__name__}: {problem}", file=sys.stderr)
+@@ -598,7 +630,7 @@ SAMPLE_MODULE = ("\"\"\"A file for the agent swarm to read and measure.\"\"\"\n\
+ 
+ 
+ def environment(agents: int = 1, limit: int = 200, gateway_url: str = "", with_mcp: bool = False,
+-                workspace: str = "") -> dict:
++                workspace: str = "", model_calls: int = 0) -> dict:
+     """Runs the sealed environment itself: its tools, its agent roles and a real swarm pass.
+ 
+     This is the part of stage 0 that does not depend on the imported factories at all - it is the
+@@ -636,7 +668,9 @@ def environment(agents: int = 1, limit: int = 200, gateway_url: str = "", with_m
+     roles = agent_catalogue.catalogue(swarm._imported_records(), languages["available"])
+     run_report = swarm.run(str(root), "Stage 0: take this repository's product one stage further.",
+                            instances=agents, workers=16, execute_limit=limit,
+-                           model_calls=4 if gateway_url else 0, gateway_url=gateway_url)
++                           # The caller's cap, not a hard-coded 4: `--max-model-calls 0` has to mean
++                           # zero here too, or the environment spends budget the operator refused.
++                           model_calls=model_calls, gateway_url=gateway_url)
+ 
+     summary = {
+         "tools": {"native": native_tools, "mcp_bound": len(link["tools"]),
+@@ -653,6 +687,7 @@ def environment(agents: int = 1, limit: int = 200, gateway_url: str = "", with_m
+                    "topologies": sorted({r.topology for r in roles}),
+                    "capacity": swarm.MAX_AGENTS},
+         "languages": {"available": languages["available"], "missing": languages["missing"]},
++        "network": run_report.get("network"),
+         "swarm": {"plan": run_report["plan"], "counts": run_report["counts"],
+                   "seconds": run_report["seconds"], "run_dir": run_report["run_dir"],
+                   "per_role": run_report["per_role"]},
+@@ -667,10 +702,11 @@ def environment(agents: int = 1, limit: int = 200, gateway_url: str = "", with_m
+           f"({', '.join(languages['missing'][:6])} missing)")
+     print(f"[SEALED] swarm: {run_report['plan']['executed']} agent instances of a "
+           f"{run_report['plan']['instances']}-instance plan in {run_report['seconds']}s, "
+-          f"{run_report['counts']['steps_ok']} tool steps, "
++          f"{run_report['counts']['steps_ok']} tool steps "
++          f"({run_report['counts']['steps_skipped']} skipped by the network policy), "
+           f"{run_report['counts']['checks_passed']}/"
+           f"{run_report['counts']['checks_passed'] + run_report['counts']['checks_failed']} checks "
+-          f"passed")
++          f"passed ({run_report['counts']['checks_skipped']} skipped)")
+     target = SEALED / "manifest"
+     target.mkdir(parents=True, exist_ok=True)
+     (target / "ENVIRONMENT.json").write_text(json.dumps(summary, indent=1), encoding="utf-8")
+@@ -702,7 +738,10 @@ def main() -> int:
+     parser.add_argument("action", nargs="?", default="run", choices=("run", "status", "verify"))
+     parser.add_argument("--brief", default="", help="what the stage group should work on")
+     parser.add_argument("--brief-file", default="", help="read the brief from a file")
+-    parser.add_argument("--max-model-calls", type=int, default=4,
++    parser.add_argument("--allow-network", choices=(netpolicy.MODES if netpolicy else
++                                                    ("off", "local", "remote")), default=None,
++                        help="network policy for this run: off (default), local or remote")
++    parser.add_argument("--max-model-calls", type=int, default=0,
+                         help="cap on model calls per run (cost control); 0 disables model calls")
+     parser.add_argument("--require-model", action="store_true",
+                         help="fail when no factory reached a model")
+@@ -721,6 +760,8 @@ def main() -> int:
+                         help="directory the agent swarm works in (default: the component's own "
+                              "scratch workspace; point it at a repository for a full sweep)")
+     args = parser.parse_args()
++    if args.allow_network and netpolicy is not None:
++        os.environ[netpolicy.ENV] = args.allow_network
+ 
+     if args.action == "verify":
+         return seal_factories.verify()
+-- 
+2.39.5
+
