@@ -327,6 +327,7 @@ settings.debrid = Object.assign({providers:DEFAULT_PROVIDERS.slice(),resolutions
 settings.stream=Object.assign({preload:"smart",raceTimeoutSec:8,stallSwitch:true,stallTimeoutSec:20,quality:"auto",maxFileSizeGb:5,dataSaver:"auto",dnsWarm:true,sortByHealth:true},settings.stream||{});
 if(!(Number(settings.stream.maxFileSizeGb)>0)||Number(settings.stream.maxFileSizeGb)>5) settings.stream.maxFileSizeGb=5;
 settings.debrid.maxFileSizeGb=settings.stream.maxFileSizeGb;
+if(settings.source==="embedwave") settings.source="vidstuck"; /* Embedwave is last-resort only — never the saved default */
 if(!Array.isArray(settings.customSources)) settings.customSources=[];
 if(!Array.isArray(settings.disabledSources)) settings.disabledSources=[];
 settings.feed=Object.assign({url:"",auto:true,intervalMin:15,lastCheck:0,healthAuto:true},settings.feed||{});
@@ -497,17 +498,18 @@ function connInfo(){ const c=navigator.connection||{}; return {type:c.effectiveT
 function routeNow(){ return (location.hash.replace(/^#\/?/,"").split("?")[0]||"home"); }
 
 /* ---- source registry: ZeroPlay built-ins + your websites ---- */
+const LAST_RESORT=new Set(["embedwave"]); /* always tried only after every other enabled source */
 function allSources(includeDisabled){
   const dis=new Set(settings.disabledSources||[]);
   const list=SOURCES.map(s=>({id:s.id,name:s.name,kind:"builtin",enabled:!dis.has(s.id)}))
     .concat((settings.customSources||[]).map(c=>({id:c.id,name:c.name,kind:"custom",movieTpl:c.movieTpl||"",tvTpl:c.tvTpl||"",direct:!!c.direct,enabled:c.enabled!==false,addedVia:c.addedVia||"manual"})));
   const out=includeDisabled?list:list.filter(s=>s.enabled);
-  if(settings.stream.sortByHealth) out.sort((a,b)=>healthScore(b.id)-healthScore(a.id));
+  out.sort((a,b)=>{ const la=LAST_RESORT.has(a.id)?1:0, lb=LAST_RESORT.has(b.id)?1:0; if(la!==lb) return la-lb; return settings.stream.sortByHealth ? healthScore(b.id)-healthScore(a.id) : 0; });
   return out;
 }
 function getSource(id){ return allSources(true).find(s=>s.id===id); }
-function sourceOptionsHTML(selected){ const list=allSources(); if(!list.length) return '<option value="">No sources enabled</option>'; return list.map(s=>'<option value="'+esc(s.id)+'"'+(s.id===selected?" selected":"")+">"+esc(s.name)+"</option>").join(""); }
-function defaultSourceId(){ const list=allSources(); if(list.some(s=>s.id===settings.source)) return settings.source; return (list[0]||{id:"vidstuck"}).id; }
+function sourceOptionsHTML(selected,forDefault){ const list=allSources(); if(!list.length) return '<option value="">No sources enabled</option>'; return list.map(s=>{ const lr=LAST_RESORT.has(s.id); return '<option value="'+esc(s.id)+'"'+(s.id===selected?" selected":"")+((forDefault&&lr)?" disabled":"")+">"+esc(s.name)+(lr?" \u00b7 last resort":"")+"</option>"; }).join(""); }
+function defaultSourceId(){ const list=allSources(); if(list.some(s=>s.id===settings.source)&&!LAST_RESORT.has(settings.source)) return settings.source; const normal=list.find(s=>!LAST_RESORT.has(s.id)); return (normal||list[0]||{id:"vidstuck"}).id; }
 function sourceHost(source){ try{ if(source.kind==="builtin") return source.id==="embedwave"?"embedwave.cc":source.id==="zxcstream"?"zxcstream.cc":"vidstuck.cc"; return new URL(source.movieTpl||source.tvTpl).hostname; }catch{ return ""; } }
 function sourceOrigin(source){ const h=sourceHost(source); return h?"https://"+h:""; }
 
@@ -787,7 +789,7 @@ async function openPlayer(item,pos){
   pos=pos||{};
   const prev=progress[keyOf(item.type,item.id)]||{};
   playerState={item, season:pos.season==null?(prev.season||1):pos.season, episode:pos.episode==null?(prev.episode||1):pos.episode,
-    source:pos.source||settings.source||defaultSourceId(), tempSource:null, trailer:null,
+    source:pos.source||defaultSourceId(), tempSource:null, trailer:null,
     tried:new Set(), url:"", direct:false, fileBytes:null, lastTs:-1, lastAdvanceAt:0, stalls:0};
   registerProgress(item,playerState.season,playerState.episode);
   await drawPlayer(prev);
@@ -974,7 +976,7 @@ function drawDetail(){
   if(isTV){ $("#seasonSelect").onchange=e=>{ detailState.season=Number(e.target.value); loadEpisodes(); }; }
   const rec=$("#recSection"); if(rec) bindCards(rec);
   const da=document.querySelector(".detail-actions"); if(da&&!document.getElementById("fastBadge")){ const fb=document.createElement("span"); fb.className="chip violet"; fb.id="fastBadge"; da.appendChild(fb); }
-  faststreamPreload({type,id:d.id,title:titleOf(d),year:yearOf(d),season:isTV?(prev.season||detailState.season||1):1,episode:isTV?(prev.episode||1):1}, settings.source);
+  faststreamPreload({type,id:d.id,title:titleOf(d),year:yearOf(d),season:isTV?(prev.season||detailState.season||1):1,episode:isTV?(prev.episode||1):1}, defaultSourceId());
 }
 async function loadEpisodes(){
   const box=$("#epList"); if(!box||!detailState) return;
@@ -1148,8 +1150,8 @@ function renderDebrid(){
     +'<div class="input-with-action"><input type="password" id="tmdbKey" placeholder="TMDB v3 API key or v4 access token" autocomplete="off" value="'+esc(settings.tmdbKey||"")+'"><button type="button" id="btnTestTmdb" class="btn btn-secondary">Test Key</button></div>'
     +'<div id="tmdbStatus" class="status-box hidden"></div>'
     +'<small class="help-text">Free at <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">themoviedb.org/settings/api</a>. Leave empty if your Netlify deploy sets <code>TMDB_API_KEY</code> (server-side proxy) — otherwise the demo catalog is shown.</small></div>'
-    +'<div class="form-row"><div class="form-group"><label for="playbackSource">Default playback source</label><select id="playbackSource">'+sourceOptionsHTML(settings.source)+"</select>"
-    +'<small class="help-text">ZeroPlay embed sources. Switch any time inside the player.</small></div>'
+    +'<div class="form-row"><div class="form-group"><label for="playbackSource">Default playback source</label><select id="playbackSource">'+sourceOptionsHTML(settings.source,true)+"</select>"
+    +'<small class="help-text">ZeroPlay embed sources. Switch any time inside the player. Embedwave is always last resort — it cannot be the default and is only tried after every other source.</small></div>'
     +'<div class="form-group"><label for="addonBase">DebridStream server URL</label><input type="text" id="addonBase" placeholder="https://your-debrid-stream.example.com" value="'+esc(settings.addonBase||"")+'">'
     +'<small class="help-text">Where your self-hosted <code>debrid-stream</code> runs. Used to build the Stremio manifest URL below.</small></div></div></section>'
     /* actions */
@@ -1196,7 +1198,7 @@ function renderDebrid(){
   const collect=()=>{
     settings.rdToken=$("#rdToken").value.trim();
     settings.tmdbKey=$("#tmdbKey").value.trim();
-    settings.source=$("#playbackSource").value;
+    settings.source=$("#playbackSource").value==="embedwave"?"vidstuck":$("#playbackSource").value;
     settings.addonBase=$("#addonBase").value.trim().replace(/\/+$/,"");
     settings.debrid.providers=$$('input[name="providers"]:checked').map(cb=>cb.value);
     settings.debrid.resolutions=$$('input[name="resolutions"]:checked').map(cb=>cb.value);
@@ -1259,12 +1261,13 @@ function renderSources(soft){
     const tplTxt=s.kind==="builtin"?"Built-in ZeroPlay embed · "+esc(sourceHost(s)):[s.movieTpl?("Movie: "+s.movieTpl):"",s.tvTpl?("TV: "+s.tvTpl):""].filter(Boolean).join("\n");
     return '<div class="src-row"><div class="grow"><span class="nm">'+esc(s.name)+"</span> "
       +'<span class="chip '+(s.kind==="builtin"?"violet":"")+'">'+(s.kind==="builtin"?"BUILT-IN":s.addedVia==="feed"?"FROM FEED":"CUSTOM")+"</span> "
+      +(LAST_RESORT.has(s.id)?'<span class="chip">LAST RESORT</span> ':"")
       +(s.direct?'<span class="chip rd">DIRECT · ≤'+capGb()+"GB</span> ":"")
       +(settings.source===s.id?'<span class="chip rd">DEFAULT</span> ':"")
       +healthBadge(s.id)
       +'<code>'+esc(tplTxt)+"</code></div>"
       +'<div class="src-actions">'
-      +'<button class="btn btn-secondary btn-xs" data-src-default="'+esc(s.id)+'">Set default</button>'
+      +(LAST_RESORT.has(s.id)?"":'<button class="btn btn-secondary btn-xs" data-src-default="'+esc(s.id)+'">Set default</button>')
       +'<button class="btn btn-secondary btn-xs" data-src-test="'+esc(s.id)+'">▶ Test</button>'
       +(s.kind==="custom"
         ? '<button class="btn btn-outline btn-xs" data-src-toggle="'+esc(s.id)+'">'+(s.enabled?"Disable":"Enable")+'</button><button class="btn btn-danger btn-xs" data-src-delete="'+esc(s.id)+'">Delete</button>'
@@ -1272,7 +1275,7 @@ function renderSources(soft){
       +"</div></div>";
   }).join("");
   const logs=(settings.dlog||[]).map(e=>'<li><span>'+new Date(e.t).toLocaleTimeString()+"</span>"+esc(e.msg)+"</li>").join("");
-  view.innerHTML='<div class="page"><h1>🌐 Sources &amp; FastStream</h1><p class="lede">Paste any website link to turn it into a playable source. Multiple websites supported — no torrents. Direct files are hard-capped at '+capGb()+' GB.</p>'
+  view.innerHTML='<div class="page"><h1>🌐 Sources &amp; FastStream</h1><p class="lede">Paste any website link to turn it into a playable source. Multiple websites supported — no torrents. Direct files are hard-capped at '+capGb()+' GB. Embedwave is always <strong>last resort</strong>.</p>'
 
   +'<section class="panel"><h2>➕ Add a website as a source</h2><p class="section-desc">Paste a link to a title page or player on any site. ZeroPlay RD detects TMDB/IMDb ids and season/episodes and converts the link into a reusable template using <code>{tmdb}</code> <code>{imdb}</code> <code>{season}</code> <code>{episode}</code> <code>{type}</code> <code>{title}</code>.</p>'
   +'<div class="form-group"><label for="pasteLink">Paste website link</label><div class="input-with-action"><input type="text" id="pasteLink" placeholder="e.g. https://example.com/embed/movie/27205 or https://example.com/watch/tt1375666/1/2"><button class="btn btn-secondary" id="btnDetect" type="button">Detect</button></div><div id="detectNote" class="status-box hidden"></div></div>'
