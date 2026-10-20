@@ -38,6 +38,14 @@ app and paste your free TMDB API key (stored only in your browser).
    key server-side and only forwards allowlisted TMDB routes — same design as ZeroPlay's
    own `web/functions/tmdb.js`), and Real-Debrid validation goes through `/api/debrid`.
 
+### Vercel (alternative host)
+
+Import the repo in Vercel with **Root Directory** `zeroplay-debrid` (no build command).
+The included `vercel.json` provides the same deep-link rewrites + CSP headers, and
+`api/tmdb.js` / `api/debrid.js` are the Vercel twins of the Netlify functions —
+set `TMDB_API_KEY` in Vercel Project Settings → Environment Variables for the
+server-side catalog, exactly as on Netlify.
+
 ### Option C — Netlify CLI
 
 ```bash
