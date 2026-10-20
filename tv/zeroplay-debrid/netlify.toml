@@ -24,6 +24,12 @@
   force = true
 
 [[redirects]]
+  from = "/api/extract"
+  to = "/.netlify/functions/extract"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/debrid"
   to = "/.netlify/functions/debrid"
   status = 200

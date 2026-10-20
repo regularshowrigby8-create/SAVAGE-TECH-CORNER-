@@ -277,12 +277,13 @@ body.locked{overflow:hidden}
       <button class="btn btn-secondary" type="submit">⌕ Search</button>
     </form>
     <a class="rd-dot" id="rdDot" href="#/debrid" title="Real-Debrid status — open Debrid settings"><span class="dot"></span><span id="rdDotText">RD not set</span></a>
+    <span class="chip violet" id="catalogModeChip" title="Active catalogue source">Catalog: TMDB</span>
   </div>
 </header>
 
 <div class="demo-banner hidden" id="demoBanner">
   <div class="status-box info">
-    <span>ℹ️ <strong>Demo catalog</strong> — add your free TMDB API key for live posters, cast &amp; trailers. Playback already works.</span>
+    <span>ℹ️ <strong>Offline demo data</strong> — the keyless Cinemeta catalog is unreachable right now. Add a free TMDB API key for live data, or try again. Playback already works.</span>
     <button class="btn btn-primary btn-xs" id="demoBannerBtn" type="button">Add TMDB key →</button>
   </div>
 </div>
@@ -291,11 +292,12 @@ body.locked{overflow:hidden}
 
 <footer class="footer">
   ZeroPlay RD · ZeroPlay 2.2 discovery &amp; playback in the DebridStream interface ·
-  Catalog by <a href="https://www.themoviedb.org" target="_blank" rel="noopener">TMDB</a> · Playback: VidStuck / ZXCStream / Embedwave<br>
+  Catalog by <a href="https://www.themoviedb.org" target="_blank" rel="noopener">TMDB</a> · Playback: VidStuck / ZXCStream / Embedwave (last resort) · Direct streams: <a href="https://faststream.online" target="_blank" rel="noopener">FastStream</a> · Keyless catalog: Cinemeta · Addon discovery data: <a href="https://stremio-addons.net" target="_blank" rel="noopener">stremio-addons.net</a><br>
   This product uses the TMDB API but is not endorsed or certified by TMDB. ZeroPlay hosts no media files.
 </footer>
 
 <div id="modalRoot"></div>
+<div id="streamsRoot"></div>
 <div id="playerRoot"></div>
 <div id="toasts" aria-live="polite"></div>
 
@@ -324,7 +326,7 @@ let settings = Object.assign({
            maxResults:30, maxResultsPerQuality:0, maxFileSizeGb:0, showCachedOnly:true }
 }, loadJSON(LS.settings,{}));
 settings.debrid = Object.assign({providers:DEFAULT_PROVIDERS.slice(),resolutions:["2160p","1080p","720p"],sortOrder:"quality_seeders",maxResults:30,maxResultsPerQuality:0,maxFileSizeGb:0,showCachedOnly:true}, settings.debrid||{});
-settings.stream=Object.assign({preload:"smart",raceTimeoutSec:8,stallSwitch:true,stallTimeoutSec:20,quality:"auto",maxFileSizeGb:5,dataSaver:"auto",dnsWarm:true,sortByHealth:true},settings.stream||{});
+settings.stream=Object.assign({preload:"smart",player:"faststream",raceTimeoutSec:8,stallSwitch:true,stallTimeoutSec:20,quality:"auto",maxFileSizeGb:5,dataSaver:"auto",dnsWarm:true,sortByHealth:true},settings.stream||{});
 if(!(Number(settings.stream.maxFileSizeGb)>0)||Number(settings.stream.maxFileSizeGb)>5) settings.stream.maxFileSizeGb=5;
 settings.debrid.maxFileSizeGb=settings.stream.maxFileSizeGb;
 if(settings.source==="embedwave") settings.source="vidstuck"; /* Embedwave is last-resort only — never the saved default */
@@ -333,6 +335,10 @@ if(!Array.isArray(settings.disabledSources)) settings.disabledSources=[];
 settings.feed=Object.assign({url:"",auto:true,intervalMin:15,lastCheck:0,healthAuto:true},settings.feed||{});
 if(!settings.health||typeof settings.health!=="object") settings.health={};
 if(!Array.isArray(settings.dlog)) settings.dlog=[];
+if(!Array.isArray(settings.sites)) settings.sites=[];
+if(!settings.siteCatalogues||typeof settings.siteCatalogues!=="object") settings.siteCatalogues={};
+if(!Array.isArray(settings.addons)) settings.addons=[];
+if(typeof settings.debridManifestUrl!=="string") settings.debridManifestUrl="";
 let watchlist = loadJSON(LS.watchlist,[]);
 let progress  = loadJSON(LS.progress,{});
 const saveSettings = ()=>saveJSON(LS.settings,settings);
@@ -352,14 +358,14 @@ function phSVG(title,seed,w,h){
   return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
 }
 const IMG = "https://image.tmdb.org/t/p/";
-function posterURL(it,size="w342"){ if(effectiveSaver()) size={w500:"w342",w342:"w185"}[size]||size; return it&&it.poster_path ? IMG+size+it.poster_path : phSVG(titleOf(it),it&&it.id,342,513); }
-function backdropURL(it,size="w1280"){ if(effectiveSaver()&&size==="w1280") size="w780"; return it&&it.backdrop_path ? IMG+size+it.backdrop_path : (it&&it.poster_path ? IMG+size+it.poster_path : phSVG(titleOf(it),it&&it.id,1280,720)); }
+function posterURL(it,size="w342"){ if(it&&it.poster_url) return effectiveSaver()? it.poster_url.replace("/poster/medium/","/poster/small/") : it.poster_url; if(effectiveSaver()) size={w500:"w342",w342:"w185"}[size]||size; return it&&it.poster_path ? IMG+size+it.poster_path : phSVG(titleOf(it),it&&it.id,342,513); }
+function backdropURL(it,size="w1280"){ if(it&&it.backdrop_url) return it.backdrop_url; if(effectiveSaver()&&size==="w1280") size="w780"; return it&&it.backdrop_path ? IMG+size+it.backdrop_path : (it&&it.poster_path ? IMG+size+it.poster_path : phSVG(titleOf(it),it&&it.id,1280,720)); }
 document.addEventListener("error",e=>{ const el=e.target; if(el&&el.tagName==="IMG"&&!el.dataset.fb){ el.dataset.fb="1"; el.src=phSVG(el.alt||"ZeroPlay RD", el.dataset.seed||9, el.classList.contains("hero-bg")?1280:342, el.classList.contains("hero-bg")?720:513); } },true);
 
 function titleOf(it){ return it ? (it.title||it.name||"Untitled") : "Untitled"; }
 function typeOf(it){ return it.media_type==="tv"||it.first_air_date!==undefined&&it.title===undefined ? "tv" : (it.media_type|| (it.title!==undefined?"movie":"tv")); }
 function yearOf(it){ const d=it.release_date||it.first_air_date||""; return d?String(d).slice(0,4):""; }
-function snap(it,type){ return {id:it.id,type:type||typeOf(it),title:titleOf(it),poster_path:it.poster_path||null,backdrop_path:it.backdrop_path||null,year:yearOf(it),rating:it.vote_average?Number(it.vote_average).toFixed(1):null}; }
+function snap(it,type){ return {id:it.id,type:type||typeOf(it),title:titleOf(it),poster_path:it.poster_path||null,backdrop_path:it.backdrop_path||null,year:yearOf(it),rating:it.vote_average?Number(it.vote_average).toFixed(1):null,poster_url:it.poster_url||null,backdrop_url:it.backdrop_url||null,imdb_id:it.imdb_id||null}; }
 const keyOf = (type,id)=>type+":"+id;
 const inWatchlist = (type,id)=>watchlist.some(w=>w.type===type&&w.id===id);
 
@@ -428,10 +434,171 @@ function demoResponse(path,params){
 
 /* ---------------- TMDB client ---------------- */
 let demoMode = false;
+let catalogMode="tmdb";
+function setCatalogMode(m){ catalogMode=m; const c=$("#catalogModeChip"); if(c) c.textContent = m==="cinemeta" ? "Catalog: Cinemeta (keyless)" : m==="demo" ? "Catalog: offline demo" : "Catalog: TMDB"; }
 function setDemo(on){ demoMode=on; $("#demoBanner").classList.toggle("hidden",!on); }
+/* ---------------- Cinemeta keyless catalogue ----------------
+   Stremio's official catalogue addon (no API key, CORS-open). Used whenever
+   no TMDB key/proxy is available, so the app always has a LIVE catalogue
+   with real poster/backdrop artwork (Metahub). Metas include moviedb_id,
+   so titles keep working with the TMDB-id playback sources. */
+const CINEMETA = "https://v3-cinemeta.strem.io";
+const cinemetaCache = new Map();
+const cinemetaMetaCache = new Map();
+const cinemetaByTmdb = new Map();
+let cinemetaDownUntil = 0;
+const CM_TMDB_GENRES={
+ movie:{28:"Action",12:"Adventure",16:"Animation",35:"Comedy",80:"Crime",99:"Documentary",18:"Drama",10751:"Family",14:"Fantasy",36:"History",27:"Horror",10402:"Music",9648:"Mystery",10749:"Romance",878:"Science Fiction",10770:"TV Movie",53:"Thriller",10752:"War",37:"Western"},
+ tv:{10759:"Action & Adventure",16:"Animation",35:"Comedy",80:"Crime",99:"Documentary",18:"Drama",10751:"Family",10762:"Kids",9648:"Mystery",10763:"News",10764:"Reality",10765:"Sci-Fi & Fantasy",10766:"Soap",10767:"Talk",10768:"War & Politics",37:"Western"}
+};
+function cmGenreName(type,id){ return (CM_TMDB_GENRES[type]||{})[id] || ""; }
+const CM_GENRE_ALIAS = {"Science Fiction":"Sci-Fi","Action & Adventure":"Action","Sci-Fi & Fantasy":"Sci-Fi","War & Politics":"War","Reality":"Reality-TV","Talk":"Talk-Show","News":null,"TV Movie":null,"Kids":"Family","Soap":null};
+
+async function cinemetaFetch(url){
+  const hit = cinemetaCache.get(url);
+  if(hit && Date.now()-hit.t < 300000) return hit.data;
+  const ctl = new AbortController(); const to = setTimeout(()=>ctl.abort(), 9000);
+  try{
+    const r = await fetch(url, {signal: ctl.signal, headers:{Accept:"application/json"}});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const data = await r.json();
+    cinemetaCache.set(url, {t: Date.now(), data});
+    return data;
+  } finally { clearTimeout(to); }
+}
+function cmType(type){ return type==="tv" ? "series" : "movie"; }
+function cmMapMeta(m){
+  if(!m || !m.moviedb_id) return null;
+  const type = m.type==="series" ? "tv" : "movie";
+  const item = {
+    id: Number(m.moviedb_id), media_type: type,
+    title: type==="movie" ? m.name : undefined, name: type==="tv" ? m.name : undefined,
+    poster_path: null, backdrop_path: null,
+    poster_url: m.poster ? m.poster.replace("/poster/small/","/poster/medium/") : null,
+    backdrop_url: m.background || null,
+    vote_average: parseFloat(m.imdbRating) || 0,
+    release_date: type==="movie" ? (m.released||"") : "", first_air_date: type==="tv" ? (m.released||"") : "",
+    overview: m.description || "", imdb_id: m.imdb_id || m.id || "", popularity: m.popularity || 0,
+    genre_ids: []
+  };
+  if(item.imdb_id) imdbCache[type+":"+item.id] = item.imdb_id;
+  cinemetaByTmdb.set(item.id, item.imdb_id);
+  return item;
+}
+async function cmCatalog(type, catalogId, extra){
+  const seg = extra ? "/" + Object.entries(extra).map(([k,v])=>k+"="+encodeURIComponent(v)).join("&") : "";
+  const data = await cinemetaFetch(CINEMETA + "/catalog/" + cmType(type) + "/" + catalogId + seg + ".json");
+  return (data.metas || []).map(cmMapMeta).filter(Boolean);
+}
+function cmWrap(results, page){
+  return {page, total_pages: results.length >= 90 ? page + 2 : page, total_results: results.length, results};
+}
+function cmClientFilter(items, params, type){
+  let list = items.slice();
+  const y = (params["primary_release_date.gte"] || params["first_air_date.gte"] || "").slice(0,4);
+  if(y) list = list.filter(i => yearOf(i) >= y);
+  if(params["vote_average.gte"]) list = list.filter(i => i.vote_average >= Number(params["vote_average.gte"]));
+  if(params.sort_by === "vote_average.desc") list.sort((a,b)=>b.vote_average-a.vote_average);
+  else if(/date\.desc/.test(params.sort_by||"")) list.sort((a,b)=>String(b.release_date||b.first_air_date).localeCompare(String(a.release_date||a.first_air_date)));
+  return list;
+}
+function lookupImdbByTmdb(tmdbId){
+  if(cinemetaByTmdb.get(tmdbId)) return cinemetaByTmdb.get(tmdbId);
+  for(const w of watchlist) if(w.id===tmdbId && w.imdb_id) return w.imdb_id;
+  for(const p of Object.values(progress)) if(p.id===tmdbId && p.imdb_id) return p.imdb_id;
+  return "";
+}
+async function cmMetaByTmdb(type, tmdbId){
+  const imdb = lookupImdbByTmdb(tmdbId);
+  if(!imdb) return null;
+  if(cinemetaMetaCache.get(imdb)) return cinemetaMetaCache.get(imdb);
+  const data = await cinemetaFetch(CINEMETA + "/meta/" + cmType(type) + "/" + imdb + ".json");
+  const meta = data.meta || null;
+  if(meta) cinemetaMetaCache.set(imdb, meta);
+  return meta;
+}
+async function cmDetail(type, tmdbId){
+  const m = await cmMetaByTmdb(type, tmdbId);
+  if(!m) return null;
+  const isTV = type==="tv";
+  const videos = Array.isArray(m.videos) ? m.videos : [];
+  const seasonNums = [...new Set(videos.map(v=>v.season))].filter(n=>n!=null).sort((a,b)=>a-b);
+  let recs = [];
+  try{ recs = (await cmCatalog(type, "top")).filter(i=>i.id!==tmdbId).slice(0,12); }catch{}
+  return {
+    id: tmdbId, imdb_id: m.imdb_id || m.id,
+    title: !isTV ? m.name : undefined, name: isTV ? m.name : undefined,
+    overview: m.description || "", vote_average: parseFloat(m.imdbRating)||0,
+    release_date: !isTV ? (m.released||"") : "", first_air_date: isTV ? (m.released||"") : "",
+    poster_url: m.poster ? m.poster.replace("/poster/small/","/poster/medium/") : null, backdrop_url: m.background || null,
+    poster_path: null, backdrop_path: null,
+    genres: (m.genres || m.genre || []).map(name=>({name})),
+    runtime: !isTV ? (parseInt(m.runtime)||undefined) : undefined,
+    episode_run_time: isTV && parseInt(m.runtime) ? [parseInt(m.runtime)] : undefined,
+    number_of_seasons: isTV ? seasonNums.filter(n=>n>0).length || undefined : undefined,
+    number_of_episodes: isTV ? videos.filter(v=>v.season>0).length || undefined : undefined,
+    seasons: isTV ? seasonNums.map(n=>({season_number:n, name: n===0?"Specials":"Season "+n, episode_count: videos.filter(v=>v.season===n).length})) : undefined,
+    status: m.status || "",
+    credits: {cast: (m.cast||[]).slice(0,14).map(name=>({name, character:"", profile_path:null}))},
+    videos: {results: (m.trailers||[]).map(t=>({site:"YouTube", type:"Trailer", key:t.source})).filter(t=>t.key)},
+    recommendations: {results: recs},
+    external_ids: {imdb_id: m.imdb_id || m.id}
+  };
+}
+async function cinemetaResponse(path, params){
+  params = params || {};
+  const page = Number(params.page||1), skip = (page-1)*20;
+  if(path==="/trending/all/day"||path==="/trending/all/week"){
+    const [mv, tv] = await Promise.all([cmCatalog("movie","top"), cmCatalog("tv","top")]);
+    return cmWrap([...mv, ...tv].sort((a,b)=>(b.popularity||0)-(a.popularity||0)).slice(0,60), page);
+  }
+  if(path==="/movie/popular") return cmWrap(await cmCatalog("movie","top",{skip}), page);
+  if(path==="/movie/top_rated") return cmWrap(await cmCatalog("movie","imdbRating",{skip}), page);
+  if(path==="/movie/now_playing"||path==="/movie/upcoming") return cmWrap(await cmCatalog("movie","year",{genre:String(new Date().getFullYear()),skip}), page);
+  if(path==="/tv/popular"||path==="/tv/airing_today"||path==="/tv/on_the_air") return cmWrap(await cmCatalog("tv","top",{skip}), page);
+  if(path==="/search/multi"){
+    const q = params.query||"";
+    const [mv, tv] = await Promise.all([
+      cmCatalog("movie","top",{search:q}).catch(()=>[]),
+      cmCatalog("tv","top",{search:q}).catch(()=>[])
+    ]);
+    return cmWrap([...mv.map(i=>({...i,media_type:"movie"})), ...tv.map(i=>({...i,media_type:"tv"}))], page);
+  }
+  if(path==="/discover/movie"||path==="/discover/tv"){
+    const type = path.endsWith("movie") ? "movie" : "tv";
+    let extra = {skip};
+    if(params.with_genres){
+      const name = cmGenreName(type, Number(params.with_genres));
+      const alias = CM_GENRE_ALIAS.hasOwnProperty(name) ? CM_GENRE_ALIAS[name] : name;
+      if(alias) extra = {genre: alias, skip};
+    }
+    return cmWrap(cmClientFilter(await cmCatalog(type, params.sort_by==="vote_average.desc" ? "imdbRating" : "top", extra), params, type), page);
+  }
+  let mm = path.match(/^\/(movie|tv)\/(\d+)\/season\/(\d+)$/);
+  if(mm){
+    const meta = await cmMetaByTmdb(mm[1], Number(mm[2]));
+    if(!meta) return null;
+    const n = Number(mm[3]);
+    return {season_number:n, episodes:(meta.videos||[]).filter(v=>v.season===n).sort((a,b)=>a.episode-b.episode).map(v=>({episode_number:v.episode, name:v.name||("Episode "+v.episode), air_date:(v.released||"").slice(0,10), runtime:0, overview:v.overview||v.description||""}))};
+  }
+  if(path==="/genre/movie/list"||path==="/genre/tv/list"){ const t=path.includes("movie")?"movie":"tv"; return {genres:Object.entries(CM_TMDB_GENRES[t]).map(([id,name])=>({id:Number(id),name}))}; }
+  mm = path.match(/^\/(movie|tv)\/(\d+)$/);
+  if(mm) return cmDetail(mm[1], Number(mm[2]));
+  return null;
+}
+async function cinemetaSafe(path, params){
+  if(Date.now() < cinemetaDownUntil) return null;
+  try{ const c = await cinemetaResponse(path, params); if(c) return c; return null; }
+  catch{ cinemetaDownUntil = Date.now() + 60000; return null; }
+}
+
 async function tmdb(path,params={}){
-  if(demoMode) return demoResponse(path,params);
   const key=(settings.tmdbKey||"").trim();
+  if(demoMode&&!key){
+    const c=await cinemetaSafe(path,params);
+    if(c){ setCatalogMode("cinemeta"); $("#demoBanner").classList.add("hidden"); return c; }
+    setCatalogMode("demo"); $("#demoBanner").classList.remove("hidden"); return demoResponse(path,params);
+  }
   try{
     let url, opts={headers:{Accept:"application/json"}};
     if(key){
@@ -448,13 +615,17 @@ async function tmdb(path,params={}){
     if(!r.ok) throw new Error("HTTP "+r.status);
     const data=await r.json();
     if(data&&data.success===false) throw new Error(data.status_message||"TMDB error");
+    setCatalogMode("tmdb");
     return data;
   }catch(err){
-    if(!key){ setDemo(true); return demoResponse(path,params); }  /* no proxy/key → demo */
+    if(!key){
+      const c=await cinemetaSafe(path,params);
+      if(c){ demoMode=true; $("#demoBanner").classList.add("hidden"); setCatalogMode("cinemeta"); return c; }
+      setDemo(true); setCatalogMode("demo"); return demoResponse(path,params);
+    }
     throw err;
   }
 }
-
 /* ---------------- playback sources (ZeroPlay logic) ---------------- */
 const SOURCES=[{id:"vidstuck",name:"VidStuck"},{id:"zxcstream",name:"ZXCStream (Beta)"},{id:"embedwave",name:"Embedwave (BETA)"}];
 const SOURCE_HOSTS=["vidstuck.cc","zxcstream.cc","embedwave.cc"];
@@ -502,7 +673,9 @@ const LAST_RESORT=new Set(["embedwave"]); /* always tried only after every other
 function allSources(includeDisabled){
   const dis=new Set(settings.disabledSources||[]);
   const list=SOURCES.map(s=>({id:s.id,name:s.name,kind:"builtin",enabled:!dis.has(s.id)}))
-    .concat((settings.customSources||[]).map(c=>({id:c.id,name:c.name,kind:"custom",movieTpl:c.movieTpl||"",tvTpl:c.tvTpl||"",direct:!!c.direct,enabled:c.enabled!==false,addedVia:c.addedVia||"manual"})));
+    .concat((settings.customSources||[]).map(c=>({id:c.id,name:c.name,kind:"custom",movieTpl:c.movieTpl||"",tvTpl:c.tvTpl||"",direct:!!c.direct,enabled:c.enabled!==false,addedVia:c.addedVia||"manual"})))
+    .concat((settings.sites||[]).map(c=>({id:c.id,name:c.name,kind:"site",base:c.base,enabled:(c.enabled!==false&&!dis.has(c.id))})))
+    .concat((settings.addons||[]).map(a=>({id:a.id,name:a.name,kind:"addon",base:a.base,enabled:(a.enabled!==false&&!dis.has(a.id))})));
   const out=includeDisabled?list:list.filter(s=>s.enabled);
   out.sort((a,b)=>{ const la=LAST_RESORT.has(a.id)?1:0, lb=LAST_RESORT.has(b.id)?1:0; if(la!==lb) return la-lb; return settings.stream.sortByHealth ? healthScore(b.id)-healthScore(a.id) : 0; });
   return out;
@@ -534,6 +707,8 @@ async function fetchImdbId(type,id){
 }
 async function resolveSourceURL(source, ctx){
   if(!source) throw new Error("No playback source enabled — add one in Sources");
+  if(source.kind==="addon") return resolveAddonURL(source,ctx);
+  if(source.kind==="site") return resolveSiteURL(source,ctx);
   if(source.kind==="builtin") return sourceURL({type:ctx.type,id:ctx.id},{season:ctx.season,episode:ctx.episode,timestamp:ctx.timestamp,percent:ctx.percent},source.id);
   const tpl = ctx.type==="tv" ? (source.tvTpl||source.movieTpl) : (source.movieTpl||source.tvTpl);
   if(!tpl) throw new Error(source.name+" has no "+ctx.type+" template");
@@ -684,9 +859,13 @@ function scheduleDiscovery(){
   discoveryTimer=setInterval(()=>{
     const mins=Math.max(5,Number(settings.feed.intervalMin)||15);
     const due=Date.now()-Number(settings.feed.lastCheck||0)>=mins*60*1000;
-    if(!due) return;
-    if(settings.feed.auto&&settings.feed.url) checkFeed(false);
-    else if(settings.feed.healthAuto){ settings.feed.lastCheck=Date.now(); saveSettings(); runHealthChecks(false); }
+    if(due){
+      if(settings.feed.auto&&settings.feed.url) checkFeed(false);
+      else if(settings.feed.healthAuto){ settings.feed.lastCheck=Date.now(); saveSettings(); runHealthChecks(false); }
+    }
+    const addonDue=Date.now()-Number(settings.feed.lastAddonCheck||0)>=mins*60*1000;
+    if(addonDue&&settings.feed.addonsAuto!==false) discoverAddons(false);
+    if(due&&(settings.sites||[]).length) refreshSites(false);
   },60000);
 }
 function applyQualityPreset(q){
@@ -747,12 +926,13 @@ function bindCards(root){
     if(rm){ e.stopPropagation(); const [t,id]=rm.dataset.remove.split(":"); delete progress[keyOf(t,Number(id))]; watchlist=watchlist.filter(w=>!(w.type===t&&w.id===Number(id))); saveProgress(); saveWatchlist(); toast("Removed"); render(); return; }
     const play=e.target.closest("[data-play]"), det=e.target.closest("[data-details]"), list=e.target.closest("[data-list]");
     const card=e.target.closest(".poster-card");
+    if(card&&card.dataset.site){ playSiteItem(card.dataset.site, Number(card.dataset.idx)); return; }
     if(list&&card){ e.stopPropagation(); toggleWatchlist(card.dataset.type,Number(card.dataset.id),card); return; }
     if(play&&card){ e.stopPropagation(); quickPlay(card.dataset.type,Number(card.dataset.id)); return; }
     if(card){ openDetail(card.dataset.type,Number(card.dataset.id)); return; }
     if(det){ const [t,id]=det.dataset.details.split(":"); openDetail(t,Number(id)); }
   });
-  root.addEventListener("keydown",e=>{ const card=e.target.closest&&e.target.closest(".poster-card"); if(card&&(e.key==="Enter"||e.key===" ")){ e.preventDefault(); openDetail(card.dataset.type,Number(card.dataset.id)); } });
+  root.addEventListener("keydown",e=>{ const card=e.target.closest&&e.target.closest(".poster-card"); if(card&&(e.key==="Enter"||e.key===" ")){ e.preventDefault(); if(card.dataset.site){ playSiteItem(card.dataset.site,Number(card.dataset.idx)); return; } openDetail(card.dataset.type,Number(card.dataset.id)); } });
 }
 function toggleWatchlist(type,id,cardEl,snapData){
   if(inWatchlist(type,id)){ watchlist=watchlist.filter(w=>!(w.type===type&&w.id===id)); toast("Removed from watchlist"); }
@@ -789,7 +969,7 @@ async function openPlayer(item,pos){
   pos=pos||{};
   const prev=progress[keyOf(item.type,item.id)]||{};
   playerState={item, season:pos.season==null?(prev.season||1):pos.season, episode:pos.episode==null?(prev.episode||1):pos.episode,
-    source:pos.source||defaultSourceId(), tempSource:null, trailer:null,
+    source:pos.source||defaultSourceId(), tempSource:null, trailer:null, directUrl:"", directQueue:[],
     tried:new Set(), url:"", direct:false, fileBytes:null, lastTs:-1, lastAdvanceAt:0, stalls:0};
   registerProgress(item,playerState.season,playerState.episode);
   await drawPlayer(prev);
@@ -798,7 +978,7 @@ function openSourceTest(tempSource,type){
   const item=type==="tv"
     ? {id:1399,type:"tv",name:"Game of Thrones (source test)",title:"Game of Thrones (source test)"}
     : {id:27205,type:"movie",title:"Inception (source test)"};
-  playerState={item,season:1,episode:1,source:tempSource.id,tempSource,trailer:null,tried:new Set([tempSource.id]),url:"",direct:false,fileBytes:null,lastTs:-1,lastAdvanceAt:0,stalls:0,testImdb:type==="tv"?"tt0944947":"tt1375666"};
+  playerState={item,season:1,episode:1,source:tempSource.id,tempSource,trailer:null,directUrl:"",directQueue:[],tried:new Set([tempSource.id]),url:"",direct:false,fileBytes:null,lastTs:-1,lastAdvanceAt:0,stalls:0,testImdb:type==="tv"?"tt0944947":"tt1375666"};
   drawPlayer({});
 }
 function openTrailer(title,youtubeKey){
@@ -836,7 +1016,6 @@ function updatePlayerMeta(source){
   parts.push("Quality pref: "+esc(settings.stream.quality==="auto"?"Auto":settings.stream.quality));
   parts.push("Cap: "+capGb()+" GB");
   if(st.direct) parts.push("File: "+fmtBytes(st.fileBytes));
-  if(st.tempSource&&st.url) parts.push('<a href="'+esc(st.url)+'" target="_blank" rel="noopener">Open original ↗</a>');
   parts.push("Slow or stuck? Switch source above — your place is saved.");
   m.innerHTML=parts.join(" · ");
   updateFastBadge();
@@ -855,8 +1034,8 @@ async function drawPlayer(prevProgress){
   let imdb=st.testImdb||"";
   if(!imdb&&detailState&&detailState.data&&detailState.data.id===it.id) imdb=detailState.data.imdb_id||((detailState.data.external_ids||{}).imdb_id)||"";
   let url="";
-  try{ url=await resolveSourceURL(source,{type:it.type,id:it.id,title:titleOf(it),year:it.year||yearOf(it),season:st.season,episode:st.episode,timestamp:resume.timestamp,percent:resume.percent,imdb}); }
-  catch(e){ $("#playerStage").innerHTML='<div style="padding:2rem"><div class="status-box error">❌ '+esc(e.message||"Could not resolve this source")+'</div><p style="margin-top:1rem"><button class="btn btn-primary" id="btnGotoSources">Open Source Manager</button></p></div>'; const g=$("#btnGotoSources"); if(g) g.onclick=()=>{ closePlayer(); location.hash="#/sources"; }; return; }
+  try{ url=st.directUrl||await resolveSourceURL(source,{type:it.type,id:it.id,title:titleOf(it),year:it.year||yearOf(it),season:st.season,episode:st.episode,timestamp:resume.timestamp,percent:resume.percent,imdb}); }
+  catch(e){ if(!st.tempSource&&allSources().some(s=>!st.tried.has(s.id))){ failover(((source&&source.name)||"Source")+" unavailable"); return; } $("#playerStage").innerHTML='<div style="padding:2rem"><div class="status-box error">❌ '+esc(e.message||"Could not resolve this source")+'</div><p style="margin-top:1rem"><button class="btn btn-primary" id="btnGotoSources">Open Source Manager</button></p></div>'; const g=$("#btnGotoSources"); if(g) g.onclick=()=>{ closePlayer(); location.hash="#/sources"; }; return; }
   st.url=url; st.direct=!!(source.direct||isDirectMedia(url));
   if(st.direct){
     st.fileBytes=await probeFileSize(url);
@@ -890,27 +1069,44 @@ async function drawPlayer(prevProgress){
   if(isTV&&settings.stream.preload!=="off") playerTimers.push(setTimeout(()=>{ if(playerState===st) faststreamPreload({type:it.type,id:it.id,title:titleOf(it),season:st.season,episode:st.episode+1},source.id); },6000));
 }
 function mountDirectVideo(stage,url,source,loadT0,resume){
-  const st=playerState, it=st.item;
-  stage.innerHTML='<video class="player-frame" id="directVideo" controls autoplay playsinline preload="auto" src="'+esc(url)+'"></video><div class="hud" id="hud"></div>';
-  const v=$("#directVideo"); let waits=0, lastSave=0;
-  function hud(extra){
-    const h=$("#hud"); if(!h) return;
-    let ahead=0; try{ if(v.buffered&&v.buffered.length) ahead=Math.max(0,v.buffered.end(v.buffered.length-1)-v.currentTime); }catch{}
-    h.innerHTML='<span class="chip rd">DIRECT FILE</span> <span class="chip">'+(v.videoWidth?v.videoWidth+"×"+v.videoHeight:"…")+'</span> <span class="chip">buffer +'+ahead.toFixed(0)+'s</span> <span class="chip">stalls '+waits+'</span> <span class="chip">file '+fmtBytes(st.fileBytes)+'</span> <span class="chip violet">cap '+capGb()+' GB</span>'+(extra?' <span class="chip" style="color:var(--error)">'+esc(extra)+"</span>":"");
+  const st=playerState;
+  const isMedia=/\.(mp4|m3u8|mpd|webm)(\?|#|$)/i.test(url);
+  if(settings.stream.player!=="builtin" && isMedia){
+    /* Embedded FastStream web player: fragmented parallel downloading of the
+       direct stream right here in the app — no external player. */
+    stage.innerHTML='<iframe class="player-frame" id="fsFrame" src="https://faststream.online/player/#'+encodeURI(url)+'" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen title="FastStream player"></iframe>'
+      +'<div class="hud"><span class="chip rd">⚡ FASTSTREAM WEB PLAYER</span> <span class="chip">file '+fmtBytes(st.fileBytes)+'</span> <span class="chip violet">cap '+capGb()+' GB</span> <span class="chip">'+esc(source.name)+'</span> <button class="btn btn-secondary btn-xs" id="btnBuiltinPlayer" type="button">Player blank? Use built-in player</button></div>';
+    const f=$("#fsFrame");
+    f.addEventListener("load",()=>{ recordHealth(source.id,true,performance.now()-loadT0); updatePlayerMeta(); });
+    $("#btnBuiltinPlayer").onclick=()=>{ settings.stream.player="builtin"; saveSettings(); mountDirectVideo(stage,url,source,performance.now(),resume); toast("Switched to the built-in player for direct streams (saved)"); };
+    return;
   }
-  v.addEventListener("loadedmetadata",()=>{ recordHealth(source.id,true,performance.now()-loadT0); if(resume&&resume.timestamp>30){ try{ v.currentTime=resume.timestamp; }catch{} } hud(); });
-  v.addEventListener("waiting",()=>{ waits++; hud(); });
-  v.addEventListener("progress",hud);
-  v.addEventListener("timeupdate",()=>{
-    hud();
-    const now=Date.now(); if(now-lastSave<5000) return; lastSave=now;
-    const k=keyOf(it.type,it.id), pr=progress[k]||{};
-    progress[k]=Object.assign({},pr,snap(it,it.type),{timestamp:v.currentTime,duration:v.duration||0,percent:v.duration?v.currentTime/v.duration*100:0,season:st.season,episode:st.episode,updatedAt:now});
-    saveProgress();
-  });
-  v.addEventListener("error",()=>{ recordHealth(source.id,false,performance.now()-loadT0); hud("This file would not play here (format/codec or network). Try another source."); });
-  hud();
+  stage.innerHTML='<video class="player-frame" id="pv" controls autoplay playsinline preload="auto"></video><div class="hud" id="hud"></div>';
+  const v=$("#pv");
+  const bufSec=()=>{ try{ for(let i=0;i<v.buffered.length;i++){ if(v.buffered.start(i)<=v.currentTime&&v.currentTime<=v.buffered.end(i)) return Math.max(0,v.buffered.end(i)-v.currentTime); } }catch{} return 0; };
+  const hud=extra=>{ const h=$("#hud"); if(!h) return; h.innerHTML='<span class="chip rd">⚡ FASTSTREAM DIRECT</span> <span class="chip">buffer '+bufSec().toFixed(0)+'s</span> <span class="chip">file '+fmtBytes(st.fileBytes)+'</span> <span class="chip violet">cap '+capGb()+' GB</span>'+(st.prime?(' <span class="chip">primed '+st.prime.mb.toFixed(1)+' MB @ '+st.prime.mbps.toFixed(1)+' MB/s</span>'):'')+(extra?(' <span class="chip star">'+esc(extra)+'</span>'):''); };
+  hud("connecting…");
+  let srcEl=document.createElement("source"); srcEl.src=url; v.appendChild(srcEl);
+  try{ if("mediaSession"in navigator&&navigator.mediaSession){ } }catch{}
+  v.addEventListener("playing",()=>{ recordHealth(source.id,true,performance.now()-loadT0); if(resume&&resume>20&&v.duration&&resume<v.duration-15){ try{ v.currentTime=resume; }catch{} } hud(); updatePlayerMeta(); });
+  v.addEventListener("progress",()=>hud());
+  v.addEventListener("waiting",()=>{ st.stalls++; hud("buffering… try a lower quality if this repeats"); });
+  v.addEventListener("timeupdate",()=>{ if(st.noProgress) return; const k=keyOf(st.item.type,st.item.id), p=progress[k]; if(p&&v.duration&&v.currentTime>5){ p.position=Math.floor(v.currentTime); p.duration=Math.floor(v.duration); p.percent=Math.min(100,Math.round(v.currentTime/v.duration*100)); saveProgress(); } });
+  v.addEventListener("error",()=>{ recordHealth(source.id,false); const next=(st.directQueue||[]).shift(); if(next){ toast("Stream failed — trying the next one","error"); st.directUrl=next; mountDirectVideo(stage,next,source,performance.now(),0); return; } hud("file could not be played by the browser (codec/container)"); },true);
+  /* FastStream priming: 4 parallel range requests warm the cache + measure
+     real throughput so playback starts hot. */
+  (async()=>{
+    try{
+      const saver=effectiveSaver();
+      const budget=saver?1*1048576:(qualityRank(settings.stream.quality)>=3?6*1048576:3*1048576);
+      const chunk=512*1024; let off=0, got=0; const t0=performance.now();
+      st.primeCtl=new AbortController();
+      const worker=async()=>{ while(off<budget&&playerState===st){ const start=off; off+=chunk; try{ const r=await fetch(url,{headers:{Range:"bytes="+start+"-"+(start+chunk-1)},signal:st.primeCtl.signal,credentials:"omit"}); if(!r.body) break; const rd=r.body.getReader(); for(;;){ const part=await rd.read(); if(part.done) break; got+=part.value.length; } const sec=(performance.now()-t0)/1000; st.prime={mb:got/1048576, mbps:sec>0?(got/1048576)/sec:0}; if(playerState===st) hud(); }catch{ break; } } };
+      await Promise.all([worker(),worker(),worker(),worker()]);
+    }catch{}
+  })();
 }
+
 function failover(reason){
   const st=playerState; if(!st||st.trailer) return;
   const candidates=allSources().filter(s=>!st.tried.has(s.id));
@@ -920,7 +1116,7 @@ function failover(reason){
   toast("⚡ "+reason+" — switching to "+next.name);
   drawPlayer(progress[keyOf(st.item.type,st.item.id)]||{});
 }
-function closePlayer(){ clearPlayerTimers(); clearPreload(); $("#playerRoot").innerHTML=""; playerState=null; document.body.classList.remove("locked"); }
+function closePlayer(){ if(playerState&&playerState.primeCtl) try{playerState.primeCtl.abort();}catch{} clearPlayerTimers(); clearPreload(); $("#playerRoot").innerHTML=""; playerState=null; document.body.classList.remove("locked"); }
 
 /* ---------------- detail modal ---------------- */
 let detailState=null;
@@ -962,6 +1158,7 @@ function drawDetail(){
     +'<p class="overview">'+esc(d.overview||"No synopsis available.")+"</p>"
     +'<div class="detail-actions"><button class="btn btn-primary btn-large" id="btnPlay">'+esc(playLabel)+"</button>"
     +(trailer?'<button class="btn btn-secondary" id="btnTrailer">▶ Trailer</button>':"")
+    +'<button class="btn btn-secondary" id="btnStreams">⚡ Find streams</button>'
     +'<button class="btn btn-outline" id="btnWatchlist" data-type="'+type+'" data-id="'+d.id+'">'+(inWatchlist(type,d.id)?"✓ In Library":"+ Watchlist")+"</button>"
     +'<select id="detailSource" aria-label="Playback source" style="width:auto">'+sourceOptionsHTML(settings.source)+"</select></div>"
     +(prev.percent?'<div class="help-text">Resume available — '+Math.round(prev.percent)+"% watched"+(isTV?" (S"+(prev.season||1)+" E"+(prev.episode||1)+")":"")+".</div>":"")
@@ -971,6 +1168,7 @@ function drawDetail(){
     +(recs.length?'<div class="detail-section" id="recSection"><h3>More Like This</h3><div class="rail-track">'+recs.map(r=>cardHTML(Object.assign({},r,{media_type:type}))).join("")+"</div></div>":"");
   $("#btnCloseDetail").onclick=closeDetail;
   $("#btnPlay").onclick=()=>openPlayer(snap(d,type),{season:isTV?(prev.season||detailState.season||1):undefined,episode:isTV?(prev.episode||1):undefined,source:$("#detailSource").value});
+  $("#btnStreams").onclick=()=>showStreamsModal({type,id:d.id,title:titleOf(d),year:yearOf(d),season:isTV?(prev.season||detailState.season||1):1,episode:isTV?(prev.episode||1):1,imdb:(d.imdb_id||(d.external_ids||{}).imdb_id||""),item:snap(d,type)});
   $("#btnWatchlist").onclick=()=>toggleWatchlist(type,d.id,null,snap(d,type));
   if(trailer) $("#btnTrailer").onclick=()=>openTrailer(titleOf(d),trailer.key);
   if(isTV){ $("#seasonSelect").onchange=e=>{ detailState.season=Number(e.target.value); loadEpisodes(); }; }
@@ -993,13 +1191,13 @@ async function loadEpisodes(){
 /* ---------------- views ---------------- */
 function continueItems(){
   return Object.values(progress).filter(p=>p.title&&(!p.percent||p.percent<98)).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).slice(0,14)
-    .map(p=>({id:p.id,media_type:p.type,title:p.type==="movie"?p.title:undefined,name:p.type==="tv"?p.title:undefined,poster_path:p.poster_path,backdrop_path:p.backdrop_path,release_date:p.year?p.year+"-01-01":"",first_air_date:p.year?p.year+"-01-01":"",vote_average:p.rating?Number(p.rating):0}));
+    .map(p=>({id:p.id,media_type:p.type,title:p.type==="movie"?p.title:undefined,name:p.type==="tv"?p.title:undefined,poster_path:p.poster_path,poster_url:p.poster_url||null,backdrop_url:p.backdrop_url||null,imdb_id:p.imdb_id||null,backdrop_path:p.backdrop_path,release_date:p.year?p.year+"-01-01":"",first_air_date:p.year?p.year+"-01-01":"",vote_average:p.rating?Number(p.rating):0}));
 }
 async function renderHome(){
   view.innerHTML='<div class="page"><div id="heroSlot">'+skeletonRail("Featured")+"</div>"
     +(continueItems().length?railHTML("Continue Watching",continueItems(),{remove:true}):"")
-    +(watchlist.length?railHTML("My Watchlist",watchlist.map(w=>({id:w.id,media_type:w.type,title:w.type==="movie"?w.title:undefined,name:w.type==="tv"?w.title:undefined,poster_path:w.poster_path,release_date:w.year?w.year+"-01-01":"",first_air_date:w.year?w.year+"-01-01":"",vote_average:w.rating?Number(w.rating):0}))):"")
-    +'<div id="railTrending">'+skeletonRail("Trending Today")+'</div><div id="railMovies">'+skeletonRail("Popular Movies")+'</div><div id="railSeries">'+skeletonRail("Popular Series")+'</div><div id="railTop">'+skeletonRail("Top Rated Movies")+'</div><div id="railNow">'+skeletonRail("Now Playing")+"</div></div>";
+    +(watchlist.length?railHTML("My Watchlist",watchlist.map(w=>({id:w.id,media_type:w.type,title:w.type==="movie"?w.title:undefined,name:w.type==="tv"?w.title:undefined,poster_path:w.poster_path,poster_url:w.poster_url||null,backdrop_url:w.backdrop_url||null,imdb_id:w.imdb_id||null,release_date:w.year?w.year+"-01-01":"",first_air_date:w.year?w.year+"-01-01":"",vote_average:w.rating?Number(w.rating):0}))):"")
+    +siteRailsHTML()+'<div id="railTrending">'+skeletonRail("Trending Today")+'</div><div id="railMovies">'+skeletonRail("Popular Movies")+'</div><div id="railSeries">'+skeletonRail("Popular Series")+'</div><div id="railTop">'+skeletonRail("Top Rated Movies")+'</div><div id="railNow">'+skeletonRail("Now Playing")+"</div></div>";
   bindCards(view);
   const fill=async(id,title,path,params,opts)=>{ try{ const d=await tmdb(path,params); const el=document.getElementById(id); if(el) el.outerHTML=railHTML(title,(d.results||[]).filter(x=>typeOf(x)==="movie"||typeOf(x)==="tv").slice(0,16),opts); return d.results||[]; }catch{ const el=document.getElementById(id); if(el) el.innerHTML='<div class="status-box error">❌ '+esc(title)+' failed to load. <button class="btn btn-secondary btn-xs" onclick="location.hash=\'#/home\';location.reload()">Retry</button></div>'; return []; } };
   const trending=await fill("railTrending","Trending Today","/trending/all/day",{page:1},{rd:true});
@@ -1096,7 +1294,7 @@ function drawSearchResults(){
 
 function renderLibrary(){
   const cont=continueItems();
-  const wl=watchlist.map(w=>({id:w.id,media_type:w.type,title:w.type==="movie"?w.title:undefined,name:w.type==="tv"?w.title:undefined,poster_path:w.poster_path,release_date:w.year?w.year+"-01-01":"",first_air_date:w.year?w.year+"-01-01":"",vote_average:w.rating?Number(w.rating):0}));
+  const wl=watchlist.map(w=>({id:w.id,media_type:w.type,title:w.type==="movie"?w.title:undefined,name:w.type==="tv"?w.title:undefined,poster_path:w.poster_path,poster_url:w.poster_url||null,backdrop_url:w.backdrop_url||null,imdb_id:w.imdb_id||null,release_date:w.year?w.year+"-01-01":"",first_air_date:w.year?w.year+"-01-01":"",vote_average:w.rating?Number(w.rating):0}));
   view.innerHTML='<div class="page"><h1>My Library</h1><p class="lede">Stored locally in this browser — no account needed.</p>'
     +(cont.length?railHTML("Continue Watching",cont,{remove:true}):"")
     +(wl.length?'<section class="rail"><div class="rail-head"><h2>Watchlist</h2></div><div class="grid">'+wl.map(it=>cardHTML(it,{remove:true})).join("")+"</div></section>":"")
@@ -1223,6 +1421,7 @@ function renderDebrid(){
       enabledProviders:settings.debrid.providers,showCachedOnly:settings.debrid.showCachedOnly,sortOrder:settings.debrid.sortOrder};
     const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(cfg)))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
     const manifestUrl=settings.addonBase+"/"+encoded+"/manifest.json";
+    settings.debridManifestUrl=manifestUrl; saveSettings();
     return {manifestUrl,stremioInstallUrl:manifestUrl.replace(/^https?:\/\//,"stremio://")};
   };
   $("#btnInstall").onclick=()=>{ const u=buildManifest(); if(!u) return; $("#manifestUrlInput").value=u.manifestUrl; $("#installNotice").classList.remove("hidden"); location.href=u.stremioInstallUrl; };
@@ -1258,9 +1457,9 @@ function renderSources(soft){
   const st=settings.stream, fd=settings.feed, ci=connInfo();
   const rows=allSources(true).map(s=>{
     const dis=new Set(settings.disabledSources||[]);
-    const tplTxt=s.kind==="builtin"?"Built-in ZeroPlay embed · "+esc(sourceHost(s)):[s.movieTpl?("Movie: "+s.movieTpl):"",s.tvTpl?("TV: "+s.tvTpl):""].filter(Boolean).join("\n");
+    const tplTxt=s.kind==="builtin"?"Built-in ZeroPlay embed · "+esc(sourceHost(s)):s.kind==="site"?("Extracted catalogue · "+(((settings.siteCatalogues||{})[s.id]||{}).items||[]).length+" titles · "+s.base):s.kind==="addon"?("Stremio addon streams · "+s.base):[s.movieTpl?("Movie: "+s.movieTpl):"",s.tvTpl?("TV: "+s.tvTpl):""].filter(Boolean).join("\n");
     return '<div class="src-row"><div class="grow"><span class="nm">'+esc(s.name)+"</span> "
-      +'<span class="chip '+(s.kind==="builtin"?"violet":"")+'">'+(s.kind==="builtin"?"BUILT-IN":s.addedVia==="feed"?"FROM FEED":"CUSTOM")+"</span> "
+      +'<span class="chip '+(s.kind==="builtin"?"violet":"")+'">'+(s.kind==="builtin"?"BUILT-IN":s.kind==="site"?"WEBSITE CATALOGUE":s.kind==="addon"?"STREMIO ADDON":s.addedVia==="feed"?"FROM FEED":"CUSTOM")+"</span> "
       +(LAST_RESORT.has(s.id)?'<span class="chip">LAST RESORT</span> ':"")
       +(s.direct?'<span class="chip rd">DIRECT · ≤'+capGb()+"GB</span> ":"")
       +(settings.source===s.id?'<span class="chip rd">DEFAULT</span> ':"")
@@ -1269,7 +1468,7 @@ function renderSources(soft){
       +'<div class="src-actions">'
       +(LAST_RESORT.has(s.id)?"":'<button class="btn btn-secondary btn-xs" data-src-default="'+esc(s.id)+'">Set default</button>')
       +'<button class="btn btn-secondary btn-xs" data-src-test="'+esc(s.id)+'">▶ Test</button>'
-      +(s.kind==="custom"
+      +(s.kind==="custom"||s.kind==="site"
         ? '<button class="btn btn-outline btn-xs" data-src-toggle="'+esc(s.id)+'">'+(s.enabled?"Disable":"Enable")+'</button><button class="btn btn-danger btn-xs" data-src-delete="'+esc(s.id)+'">Delete</button>'
         : '<button class="btn btn-outline btn-xs" data-src-toggle="'+esc(s.id)+'">'+(dis.has(s.id)?"Enable":"Disable")+"</button>")
       +"</div></div>";
@@ -1277,15 +1476,15 @@ function renderSources(soft){
   const logs=(settings.dlog||[]).map(e=>'<li><span>'+new Date(e.t).toLocaleTimeString()+"</span>"+esc(e.msg)+"</li>").join("");
   view.innerHTML='<div class="page"><h1>🌐 Sources &amp; FastStream</h1><p class="lede">Paste any website link to turn it into a playable source. Multiple websites supported — no torrents. Direct files are hard-capped at '+capGb()+' GB. Embedwave is always <strong>last resort</strong>.</p>'
 
-  +'<section class="panel"><h2>➕ Add a website as a source</h2><p class="section-desc">Paste a link to a title page or player on any site. ZeroPlay RD detects TMDB/IMDb ids and season/episodes and converts the link into a reusable template using <code>{tmdb}</code> <code>{imdb}</code> <code>{season}</code> <code>{episode}</code> <code>{type}</code> <code>{title}</code>.</p>'
+  +'<section class="panel"><h2>➕ Add a website as a source</h2><p class="section-desc"><strong>Just paste a homepage</strong> (e.g. anisuge.tv) and press “Extract catalogue” — the app imports its titles &amp; servers automatically and adds the site below as a source. Or paste a link to a title page or player on any site. ZeroPlay RD detects TMDB/IMDb ids and season/episodes and converts the link into a reusable template using <code>{tmdb}</code> <code>{imdb}</code> <code>{season}</code> <code>{episode}</code> <code>{type}</code> <code>{title}</code>.</p>'
   +'<div class="form-group"><label for="pasteLink">Paste website link</label><div class="input-with-action"><input type="text" id="pasteLink" placeholder="e.g. https://example.com/embed/movie/27205 or https://example.com/watch/tt1375666/1/2"><button class="btn btn-secondary" id="btnDetect" type="button">Detect</button></div><div id="detectNote" class="status-box hidden"></div></div>'
   +'<div class="form-row"><div class="form-group"><label for="srcName">Source name</label><input type="text" id="srcName" placeholder="My Site"></div>'
   +'<div class="form-group"><label for="srcKind">Source type</label><select id="srcKind"><option value="embed">Website embed (iframe)</option><option value="direct">Direct media files (.mp4/.m3u8…)</option></select></div></div>'
   +'<div class="form-group"><label for="srcMovie">Movie URL template</label><input type="text" id="srcMovie" placeholder="https://example.com/embed/movie/{tmdb}"></div>'
   +'<div class="form-group"><label for="srcTv">TV episode URL template (optional)</label><input type="text" id="srcTv" placeholder="https://example.com/embed/tv/{tmdb}/{season}/{episode}"></div>'
-  +'<div style="display:flex;gap:.6rem;flex-wrap:wrap"><button class="btn btn-primary" id="btnAddSource" type="button">Add source</button><button class="btn btn-outline" id="btnTestNew" type="button">▶ Test with Inception</button></div></section>'
+  +'<div style="display:flex;gap:.6rem;flex-wrap:wrap"><button class="btn btn-primary" id="btnAddSource" type="button">Add source</button><button class="btn btn-outline" id="btnTestNew" type="button">▶ Test with Inception</button> <button class="btn btn-primary" id="btnExtract" type="button">🗂 Extract catalogue from this site</button></div></section>'
 
-  +'<section class="panel"><h2>▶ Play a link now</h2><p class="section-desc">One-off playback: a direct .mp4/.m3u8 link opens in the built-in player (size-checked against the '+capGb()+' GB cap); any other link opens as a website embed (some sites block embedding — you will get an “Open original” link).</p>'
+  +'<section class="panel"><h2>▶ Play a link now</h2><p class="section-desc">One-off playback: a direct .mp4/.m3u8 link opens in the built-in player (size-checked against the '+capGb()+' GB cap); any other link opens as a website embed (some sites block embedding — switch source if the player stays blank).</p>'
   +'<div class="input-with-action"><input type="text" id="playLink" placeholder="Paste any video or website URL…"><button class="btn btn-primary" id="btnPlayLink" type="button">▶ Play link</button></div></section>'
 
   +'<section class="panel"><h2>🎛 Available sources</h2><p class="section-desc">Everywhere you press Watch, these are your options. Sorted by live health score when enabled below.</p><div id="srcList">'+(rows||'<div class="empty"><h3>No sources</h3><p>Add a website above.</p></div>')+"</div></section>"
@@ -1298,9 +1497,9 @@ function renderSources(soft){
   +'<div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem"><button class="btn btn-primary" id="btnFeedSave" type="button">💾 Save discovery settings</button><button class="btn btn-secondary" id="btnFeedNow" type="button">Check feed now</button><button class="btn btn-secondary" id="btnHealthNow" type="button">Run health check</button></div>'
   +'<h3 class="category-heading">Discovery log</h3><ul class="log-list">'+(logs||'<li><span>—</span>No discovery events yet.</li>')+"</ul></section>"
 
-  +'<section class="panel"><h2>⚡ FastStream &amp; streaming optimiser</h2><p class="section-desc">FastStream is the built-in preload engine: DNS warm-up (preconnect), hover/detail intent preloading, next-episode warm-up, ranged warm-up for direct files, plus load-race and stall failover across your sources. Quality preference applies to your Debrid resolutions, preload amounts and data usage — embed websites choose their own in-player quality, which no hosting page can override.</p>'
+  +addonPanelHTML()+'<section class="panel"><h2>⚡ FastStream &amp; streaming optimiser</h2><p class="section-desc">Direct streams play inside the embedded FastStream web player (fragmented parallel downloading, faststream.online). Around the 3 embed players, FastStream is the preload &amp; race engine: DNS warm-up (preconnect), hover/detail intent preloading, next-episode warm-up, ranged warm-up for direct files, plus load-race and stall failover across your sources. Quality preference applies to your Debrid resolutions, preload amounts and data usage — embed websites choose their own in-player quality, which no hosting page can override.</p>'
   +'<div class="stat-grid"><div class="stat"><div class="k">Connection</div><div class="v">'+esc(ci.type)+'</div></div><div class="stat"><div class="k">Est. downlink</div><div class="v">'+(ci.downlink?ci.downlink+" Mbps":"unknown")+'</div></div><div class="stat"><div class="k">Round-trip</div><div class="v">'+(ci.rtt?ci.rtt+" ms":"unknown")+'</div></div><div class="stat"><div class="k">Data saver (effective)</div><div class="v">'+(effectiveSaver()?"ON":"OFF")+'</div></div><div class="stat"><div class="k">Enabled sources</div><div class="v">'+allSources().length+'</div></div><div class="stat"><div class="k">File-size cap</div><div class="v">'+capGb()+' GB max</div></div></div>'
-  +'<div class="form-row"><div class="form-group"><label for="optPreload">FastStream preload</label><select id="optPreload"><option value="off"'+(st.preload==="off"?" selected":"")+'>Off</option><option value="smart"'+(st.preload==="smart"?" selected":"")+'>Smart — DNS/connection warm-up + direct-file warm-up (recommended)</option><option value="aggressive"'+(st.preload==="aggressive"?" selected":"")+'>Aggressive — also pre-loads the embed player in the background</option></select><small class="help-text">Aggressive may start a provider player early in a hidden frame; if you ever hear background audio, switch back to Smart.</small></div>'
+  +'<div class="form-row"><div class="form-group"><label for="optPlayer">Direct-stream player</label><select id="optPlayer"><option value="faststream"'+(st.player!=="builtin"?" selected":"")+'>⚡ Embedded FastStream web player (fastest)</option><option value="builtin"'+(st.player==="builtin"?" selected":"")+'>Built-in HTML5 player (with priming)</option></select><small class="help-text">FastStream downloads in parallel fragments. Use built-in if a host blocks embedding.</small></div>'+'<div class="form-row"><div class="form-group"><label for="optPreload">FastStream preload</label><select id="optPreload"><option value="off"'+(st.preload==="off"?" selected":"")+'>Off</option><option value="smart"'+(st.preload==="smart"?" selected":"")+'>Smart — DNS/connection warm-up + direct-file warm-up (recommended)</option><option value="aggressive"'+(st.preload==="aggressive"?" selected":"")+'>Aggressive — also pre-loads the embed player in the background</option></select><small class="help-text">Aggressive may start a provider player early in a hidden frame; if you ever hear background audio, switch back to Smart.</small></div>'
   +'<div class="form-group"><label for="optQuality">Preferred quality (stability first)</label><select id="optQuality">'+[["auto","Auto — best available"],["2160p","4K UHD 2160p"],["1080p","Full HD 1080p"],["720p","HD 720p — most stable on slow links"],["480p","SD 480p — minimum buffering"]].map(([v,t])=>'<option value="'+v+'"'+(st.quality===v?" selected":"")+">"+t+"</option>").join("")+"</select><small class='help-text'>Syncs your Debrid resolution list (⚡ Debrid → section 4) and direct-file warm-up size.</small></div></div>"
   +'<div class="form-row"><div class="form-group"><label for="optRace">Slow-source failover after (seconds)</label><input type="number" id="optRace" min="4" max="30" value="'+esc(st.raceTimeoutSec)+'"></div>'
   +'<div class="form-group"><label for="optStallSec">Stall detected after (seconds)</label><input type="number" id="optStallSec" min="10" max="60" value="'+esc(st.stallTimeoutSec)+'"></div></div>'
@@ -1317,13 +1516,14 @@ function renderSources(soft){
     const p=parsePastedLink($("#pasteLink").value);
     if(!p){ note("❌ That does not look like a valid http(s) link.","error"); return; }
     $("#srcName").value=p.name; $("#srcMovie").value=p.movieTpl; $("#srcTv").value=p.tvTpl; $("#srcKind").value=p.direct?"direct":"embed";
-    note("✅ "+p.detected,"success");
+    note("✅ "+p.detected+(p.detected.startsWith("No title id")?" This looks like a homepage — use “Extract catalogue from this site” to import all its titles.":""),"success");
   };
   $("#pasteLink").addEventListener("paste",()=>setTimeout(()=>$("#btnDetect").click(),30));
   const collectForm=()=>{
     const movieTpl=$("#srcMovie").value.trim(), tvTpl=$("#srcTv").value.trim();
     return {name:$("#srcName").value.trim(),movieTpl,tvTpl,direct:$("#srcKind").value==="direct"};
   };
+  $("#btnExtract").onclick=extractSiteCatalogueFlow;
   $("#btnAddSource").onclick=()=>{
     const f=collectForm();
     if(!f.movieTpl&&!f.tvTpl){ note("❌ Add at least a movie or TV template.","error"); return; }
@@ -1354,14 +1554,14 @@ function renderSources(soft){
       else { const dis=new Set(settings.disabledSources||[]); dis.has(id)?dis.delete(id):dis.add(id); settings.disabledSources=[...dis]; }
       saveSettings(); renderSources(true);
     }
-    if(del){ settings.customSources=settings.customSources.filter(x=>x.id!==del.dataset.srcDelete); saveSettings(); toast("Source removed"); renderSources(true); }
+    if(del){ const did=del.dataset.srcDelete; settings.customSources=settings.customSources.filter(x=>x.id!==did); settings.sites=(settings.sites||[]).filter(x=>x.id!==did); if(settings.siteCatalogues) delete settings.siteCatalogues[did]; saveSettings(); toast("Source removed"); renderSources(true); }
   });
   $("#btnFeedSave").onclick=()=>{ settings.feed.url=$("#feedUrl").value.trim(); settings.feed.intervalMin=Number($("#feedInterval").value)||15; settings.feed.auto=$("#feedAuto").checked; settings.feed.healthAuto=$("#healthAuto").checked; saveSettings(); scheduleDiscovery(); toast("Discovery settings saved","success"); };
   $("#btnFeedNow").onclick=async e=>{ settings.feed.url=$("#feedUrl").value.trim(); saveSettings(); e.target.disabled=true; e.target.innerHTML='<span class="spinner"></span> Checking…'; await checkFeed(true); e.target.disabled=false; e.target.textContent="Check feed now"; };
   $("#btnHealthNow").onclick=async e=>{ e.target.disabled=true; e.target.innerHTML='<span class="spinner"></span> Checking…'; await runHealthChecks(true); e.target.disabled=false; e.target.textContent="Run health check"; };
   $("#optCap").addEventListener("input",e=>{ $("#optCapVal").textContent=Number(e.target.value).toFixed(1).replace(/\.0$/,"")+" GB"; });
   $("#btnOptSave").onclick=()=>{
-    settings.stream.preload=$("#optPreload").value;
+    settings.stream.player=$("#optPlayer").value; settings.stream.preload=$("#optPreload").value;
     settings.stream.raceTimeoutSec=Math.min(30,Math.max(4,Number($("#optRace").value)||8));
     settings.stream.stallTimeoutSec=Math.min(60,Math.max(10,Number($("#optStallSec").value)||20));
     settings.stream.stallSwitch=$("#optStall").checked;
@@ -1374,7 +1574,296 @@ function renderSources(soft){
     saveSettings(); warmedHosts.clear(); warmAllSources();
     toast("Streaming optimiser saved","success"); renderSources(true);
   };
+  wireAddonPanel();
   if(!soft) window.scrollTo({top:0});
+}
+
+/* ---------------- Stremio addon discovery + streams + site catalogues ----------------
+   Zero-config discovery from two public, CORS-open seed catalogs:
+   stremio-addons.net (public REST API, attribution in UI) and Cinemeta's
+   community addon catalog. Only direct http(s) streams are ever played:
+   torrent (infoHash) and external-player streams are counted and hidden. */
+const ADDON_SEEDS = [
+  {name:"stremio-addons.net", url:"https://stremio-addons.net/api/v0/addons?limit=100&sort_by=stars&order=desc&nsfw=exclude", kind:"stremio-addons"},
+  {name:"Cinemeta community catalog", url:"https://v3-cinemeta.strem.io/addon_catalog/all/community.json", kind:"cinemeta"}
+];
+async function fetchJsonLoose(url, timeoutMs){
+  const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(), timeoutMs||9000);
+  try{ const r=await fetch(url,{signal:ctl.signal,headers:{Accept:"application/json"}}); if(!r.ok) throw new Error("HTTP "+r.status); return await r.json(); }
+  catch(e){
+    try{ const r=await fetch("/api/extract?mode=json&url="+encodeURIComponent(url),{signal:ctl.signal}); if(r.ok) return await r.json(); }catch{}
+    return null;
+  } finally{ clearTimeout(to); }
+}
+function manifestStreamInfo(manifest){
+  if(!manifest) return {stream:false, types:[]};
+  const types = manifest.types || [];
+  let stream = false, idPrefixes = manifest.idPrefixes || [];
+  for(const r of (manifest.resources||[])){
+    if(r==="stream"){ stream=true; }
+    else if(r && r.name==="stream"){ stream=true; if(r.idPrefixes) idPrefixes=r.idPrefixes; }
+  }
+  return {stream, types, idPrefixes};
+}
+function normalizeAddon(manifestUrl, manifest, stars, from){
+  if(!manifestUrl || !manifest) return null;
+  const info = manifestStreamInfo(manifest);
+  if(!info.stream) return null;
+  if(!info.types.some(t=>t==="movie"||t==="series")) return null;
+  if(info.idPrefixes.length && !info.idPrefixes.includes("tt")) return null;
+  const base = manifestUrl.replace(/\/manifest\.json(\?.*)?$/,"");
+  return {id:"addon:"+base, name:(manifest.name||"Addon").slice(0,48), base, manifestUrl, types:info.types, stars:stars||0, from:from||"", enabled:true, kind:"addon"};
+}
+async function discoverAddons(manual){
+  const found = new Map();
+  for(const seed of ADDON_SEEDS){
+    const data = await fetchJsonLoose(seed.url, 12000);
+    if(!data) continue;
+    const entries = [];
+    if(seed.kind==="stremio-addons"){
+      for(const a of (data.addons||[])){ entries.push({manifestUrl:a.manifestUrl, manifest:a.manifest, stars:a.stars||0});
+        for(const inst of (a.instances||[]).slice(0,2)) entries.push({manifestUrl:inst.manifestUrl, manifest:inst.manifest, stars:inst.stars||0}); }
+    } else {
+      for(const a of (data.addons||[])) entries.push({manifestUrl:a.transportUrl, manifest:a.manifest, stars:0});
+    }
+    for(const e of entries){ const n = normalizeAddon(e.manifestUrl, e.manifest, e.stars, seed.name); if(n && !found.has(n.base)) found.set(n.base, n); }
+  }
+  if(settings.debridManifestUrl){
+    const base = settings.debridManifestUrl.replace(/\/manifest\.json(\?.*)?$/,"");
+    found.set(base, {id:"addon:"+base, name:"⚡ My DebridStream", base, manifestUrl:settings.debridManifestUrl, types:["movie","series"], stars:999999, from:"your DebridStream", enabled:true, kind:"addon", pinned:true});
+  }
+  const prev = new Map((settings.addons||[]).map(a=>[a.base,a]));
+  let list = [...found.values()].sort((a,b)=>(b.stars||0)-(a.stars||0)).slice(0,60)
+    .map(a=>{ const p=prev.get(a.base); return p ? Object.assign({}, a, {enabled:p.enabled!==false}) : a; });
+  const addedCount = list.filter(a=>!prev.has(a.base)).length;
+  settings.addons = list;
+  settings.feed.lastAddonCheck = Date.now();
+  saveSettings();
+  if(addedCount) dlog("🧩 Addon discovery: "+addedCount+" new stream addons ("+list.length+" total)");
+  if(manual) toast(list.length ? ("Discovered "+list.length+" stream addons") : "No addons discovered — seed catalogs unreachable", list.length?"success":"error");
+  if(routeNow()==="sources") renderSources(true);
+  return list.length;
+}
+function enabledAddons(){ return (settings.addons||[]).filter(a=>a.enabled!==false); }
+function parseStreamMeta(s){
+  const text = [s.name||"", s.title||"", s.description||""].join("\n");
+  const sizeM = text.match(/(\d+(?:[.,]\d+)?)\s*(TB|GB|GiB|MB|MiB)/i);
+  let bytes = null;
+  if(sizeM){ const v=parseFloat(sizeM[1].replace(",",".")); const u=sizeM[2].toLowerCase(); bytes = Math.round(v * (u.startsWith("t")?1e12 : u.startsWith("g")?1e9 : 1e6)); }
+  const qM = text.match(/(2160p|1080p|720p|480p|4k|uhd|hdr|dv|dolby vision)/i);
+  const seedM = text.match(/👤\s*(\d+)|seeders?\D{0,6}(\d+)/i);
+  return { bytes, quality: qM ? qM[1].toUpperCase().replace("UHD","4K") : "", seeders: seedM ? Number(seedM[1]||seedM[2]) : null, label:(s.name||s.title||"Stream").split("\n")[0].slice(0,90), sub:(s.title||s.description||"").split("\n").slice(0,2).join(" · ").slice(0,140) };
+}
+function qualityRank(q){ return {"2160P":4,"4K":4,"1080P":3,"720P":2,"480P":1}[String(q||"").toUpperCase()]||0; }
+async function queryAddonStreams(addon, ctx){
+  const imdb = ctx.imdb || (ctx.id ? await fetchImdbId(ctx.type, ctx.id) : "");
+  if(!imdb) return {direct:[], torrents:0, oversize:0, external:0, error:"no IMDb id"};
+  const type = ctx.type==="tv" ? "series" : "movie";
+  const id = ctx.type==="tv" ? imdb+":"+(ctx.season||1)+":"+(ctx.episode||1) : imdb;
+  const data = await fetchJsonLoose(addon.base + "/stream/" + type + "/" + encodeURIComponent(id) + ".json", 12000);
+  if(!data || !Array.isArray(data.streams)) return {direct:[], torrents:0, oversize:0, external:0, error:"no response"};
+  const out = {direct:[], torrents:0, oversize:0, external:0};
+  const seen = new Set();
+  for(const s of data.streams){
+    if(s.url && /^https?:\/\//i.test(s.url)){
+      if(seen.has(s.url)) continue; seen.add(s.url);
+      const meta = parseStreamMeta(s);
+      if(meta.bytes!=null && meta.bytes > capBytes()){ out.oversize++; continue; }
+      out.direct.push({url:s.url, addonName:addon.name, addonBase:addon.base, bytes:meta.bytes, quality:meta.quality, seeders:meta.seeders, label:meta.label, sub:meta.sub, notWebReady: !!(s.behaviorHints&&s.behaviorHints.notWebReady), needsHeaders: !!(s.behaviorHints&&s.behaviorHints.proxyHeaders)});
+    }
+    else if(s.infoHash) out.torrents++;
+    else if(s.externalUrl || s.ytId) out.external++;
+  }
+  const pref = qualityRank(settings.stream.quality==="auto" ? "2160p" : settings.stream.quality);
+  out.direct.sort((a,b)=>{
+    const da=Math.abs(qualityRank(a.quality)-pref), db=Math.abs(qualityRank(b.quality)-pref);
+    if(da!==db) return da-db;
+    if(a.notWebReady!==b.notWebReady) return a.notWebReady?1:-1;
+    return (b.seeders||0)-(a.seeders||0);
+  });
+  return out;
+}
+async function collectAllStreams(ctx){
+  const addons = enabledAddons().slice(0,12);
+  const results = await Promise.allSettled(addons.map(a=>queryAddonStreams(a, ctx)));
+  const agg = {direct:[], torrents:0, oversize:0, external:0, queried:addons.length};
+  for(const r of results){ if(r.status==="fulfilled"){ agg.direct.push(...r.value.direct); agg.torrents+=r.value.torrents; agg.oversize+=r.value.oversize; agg.external+=r.value.external; } }
+  return agg;
+}
+async function measureSpeed(url, bytes, timeoutMs){
+  bytes = bytes||384*1024; timeoutMs = timeoutMs||2600;
+  const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(), timeoutMs); const t0=performance.now();
+  try{
+    const r=await fetch(url,{headers:{Range:"bytes=0-"+(bytes-1)},signal:ctl.signal,credentials:"omit"});
+    if(!r.body) return null;
+    const rd=r.body.getReader(); let got=0;
+    while(got<bytes){ const part=await rd.read(); if(part.done) break; got+=part.value.length; }
+    try{ await rd.cancel(); }catch{}
+    const sec=(performance.now()-t0)/1000;
+    return got>20000 && sec>0 ? (got/1048576)/sec : null;
+  }catch{ return null; } finally{ clearTimeout(to); }
+}
+function playResolvedURL(url, item, label, queue){
+  playerState={item, season:1, episode:1, source:"__direct", tempSource:{id:"__direct",name:label||"Direct stream",kind:"custom",movieTpl:url,direct:true,enabled:true},
+    directUrl:url, directQueue:queue||[], trailer:null, tried:new Set(), url:"", direct:false, fileBytes:null, lastTs:-1, lastAdvanceAt:0, stalls:0, noProgress:true};
+  drawPlayer({});
+}
+async function resolveAddonURL(source, ctx){
+  const addon = enabledAddons().find(a=>a.id===source.id) || source;
+  const res = await queryAddonStreams(addon, ctx);
+  if(!res.direct.length) throw new Error(addon.name+": no direct streams ("+res.torrents+" torrent-only hidden by no-torrent policy"+(res.oversize?", "+res.oversize+" over "+capGb()+" GB cap":"")+")");
+  return res.direct[0].url;
+}
+
+/* ---- site catalogues (paste a homepage -> titles in your catalogue) ---- */
+async function extractCall(mode, url){
+  const r = await fetch("/api/extract?mode="+mode+"&url="+encodeURIComponent(url));
+  let data=null; try{ data=await r.json(); }catch{}
+  if(!r.ok || !data || data.ok===false) throw new Error((data&&data.error) || ("Extractor unavailable (HTTP "+r.status+") — it runs as a serverless function on Vercel/Netlify deploys"));
+  return data;
+}
+async function extractSiteCatalogue(rawUrl, manual){
+  const u = (()=>{ try{ return new URL(rawUrl.includes("://")?rawUrl:"https://"+rawUrl); }catch{ return null; } })();
+  if(!u) throw new Error("Invalid URL");
+  const data = await extractCall("catalog", u.href);
+  if(!data.items || !data.items.length) throw new Error("No title cards found on that page (the site may render its catalogue with JavaScript only)");
+  const name = prettyHostName(u.hostname);
+  const id = "site:" + u.hostname;
+  settings.sites = (settings.sites||[]).filter(s=>s.id!==id);
+  settings.sites.push({id, name:(data.site||name).slice(0,40), base:u.origin, home:u.href, enabled:true});
+  settings.siteCatalogues = settings.siteCatalogues || {};
+  settings.siteCatalogues[id] = {items:data.items, servers:data.servers||[], embedHosts:data.embedHosts||[], updatedAt:Date.now()};
+  saveSettings();
+  dlog("🗂 Catalogue extracted from "+u.hostname+": "+data.items.length+" titles"+(data.servers&&data.servers.length?(" · servers: "+data.servers.join(", ")):""));
+  if(manual) toast(data.items.length+" titles added from "+u.hostname, "success");
+  return data;
+}
+function adjustEpisodeInUrl(url, episode){
+  if(episode==null) return url;
+  return url.replace(/\/ep-(\d+)(\/?(?:[?#].*)?)$/, "/ep-"+episode+"$2").replace(/([?&]ep(?:isode)?=)\d+/i, "$1"+episode);
+}
+async function resolveSiteURL(source, ctx){
+  const cat = (settings.siteCatalogues||{})[source.id];
+  if(!cat || !cat.items.length) throw new Error(source.name+" catalogue is empty — re-extract it in Sources");
+  const norm = s=>String(s||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+  const target = norm(ctx.title);
+  const item = cat.items.find(i=>norm(i.title)===target) || cat.items.find(i=>norm(i.title).startsWith(target)||target.startsWith(norm(i.title)));
+  if(!item) throw new Error("“"+(ctx.title||"This title")+"” was not found in the "+source.name+" catalogue extract");
+  const watchUrl = adjustEpisodeInUrl(item.url, ctx.type==="tv" ? ctx.episode : null);
+  const watch = await extractCall("watch", watchUrl);
+  return (watch.direct&&watch.direct[0]) || watch.embed || watchUrl;
+}
+async function playSiteItem(siteId, idx){
+  const site=(settings.sites||[]).find(s=>s.id===siteId);
+  const cat=(settings.siteCatalogues||{})[siteId];
+  const item=cat&&cat.items[idx];
+  if(!site||!item){ toast("That catalogue entry is gone — re-extract the site","error"); return; }
+  toast("Extracting player from "+site.name+"…");
+  try{
+    const watch = await extractCall("watch", item.url);
+    const url = (watch.direct&&watch.direct[0]) || watch.embed || item.url;
+    playResolvedURL(url, {id:"site:"+siteId+":"+idx, type:"movie", title:item.title, poster_url:item.poster||null}, site.name);
+  }catch(e){ toast("Could not extract a player: "+(e.message||e), "error"); }
+}
+function siteRailsHTML(){
+  let out="";
+  for(const site of (settings.sites||[]).filter(s=>s.enabled!==false)){
+    const cat=(settings.siteCatalogues||{})[site.id];
+    if(!cat||!cat.items.length) continue;
+    out += '<section class="rail"><div class="rail-head"><h2>🗂 From '+esc(site.name)+'</h2><div class="rail-arrows"><button class="icon-btn" data-scroll="-1" aria-label="Scroll left">‹</button><button class="icon-btn" data-scroll="1" aria-label="Scroll right">›</button></div></div><div class="rail-track">'
+      + cat.items.map((it,i)=>'<article class="poster-card" data-site="'+esc(site.id)+'" data-idx="'+i+'" tabindex="0" role="button" aria-label="'+esc(it.title)+'"><div class="poster-wrap"><img loading="lazy" src="'+esc(it.poster||phSVG(it.title, i+3, 342, 513))+'" alt="'+esc(it.title)+'" data-seed="'+i+'"><div class="poster-badges"><span class="chip rd">'+esc(site.name)+'</span></div><div class="hover-actions"><button class="btn btn-primary">▶ Watch on '+esc(site.name)+'</button></div></div><div class="poster-meta"><div class="t">'+esc(it.title)+'</div><div class="s">Extracted catalogue</div></div></article>').join("")
+      + "</div></section>";
+  }
+  return out;
+}
+async function refreshSites(manual){
+  for(const site of (settings.sites||[]).filter(s=>s.enabled!==false)){
+    try{ await extractSiteCatalogue(site.home, false); }catch(e){ dlog("⚠️ Catalogue refresh failed for "+site.name+": "+(e.message||e)); }
+  }
+  if(manual) toast("Site catalogues refreshed","success");
+  if(routeNow()==="home"||routeNow()==="") render();
+  if(routeNow()==="sources") renderSources(true);
+}
+
+/* ---- ⚡ Find streams modal (3 players + your sites + addon direct streams) ---- */
+let streamsCtx=null;
+function closeStreams(){ $("#streamsRoot").innerHTML=""; streamsCtx=null; if(!playerState&&!detailState) document.body.classList.remove("locked"); }
+async function showStreamsModal(ctx){
+  streamsCtx=ctx;
+  const embeds=allSources().filter(s=>s.kind!=="addon");
+  document.body.classList.add("locked");
+  $("#streamsRoot").innerHTML='<div class="overlay" id="streamsOverlay"><div class="modal"><button class="icon-btn modal-close" id="btnCloseStreams" aria-label="Close">×</button>'
+    +'<div style="padding:1.6rem 1.8rem 1.8rem"><span class="logo-badge" style="margin-bottom:.7rem">⚡ FastStream · Find streams</span>'
+    +'<h2 style="color:var(--text-heading)">'+esc(ctx.title||"Stream")+(ctx.type==="tv"?' <span class="chip violet">S'+(ctx.season||1)+" · E"+(ctx.episode||1)+"</span>":"")+"</h2>"
+    +'<p class="section-desc">The 3 players and your websites first, then direct streams discovered from Stremio addons. Torrent streams are hidden (no-torrent policy); files over '+capGb()+' GB are hidden by your cap.</p>'
+    +'<h3 class="category-heading">Players &amp; websites</h3><div id="streamEmbeds">'
+    + embeds.map(s=>'<div class="src-row"><div class="grow"><span class="nm">'+esc(s.name)+'</span> '+(LAST_RESORT.has(s.id)?'<span class="chip">LAST RESORT</span> ':"")+healthBadge(s.id)+'</div><div class="src-actions"><button class="btn btn-primary btn-xs" data-stream-embed="'+esc(s.id)+'">▶ Play</button></div></div>').join("")
+    +'</div><h3 class="category-heading">Direct streams (Stremio addons) — play in embedded FastStream</h3>'
+    +'<div style="margin-bottom:.8rem"><button class="btn btn-primary" id="btnRace">⚡ FastStream Race — measure &amp; play fastest</button> <span id="raceStatus" class="help-text" style="display:inline"></span></div>'
+    +'<div id="streamDirect"><p style="color:var(--text-muted)"><span class="spinner"></span> Querying '+enabledAddons().length+' discovered addons…</p></div>'
+    +'<div id="streamCounts" class="help-text"></div></div></div></div>';
+  $("#btnCloseStreams").onclick=closeStreams;
+  $("#streamsOverlay").addEventListener("click",e=>{
+    if(e.target.id==="streamsOverlay"){ closeStreams(); return; }
+    const emb=e.target.closest("[data-stream-embed]");
+    if(emb){ const c=streamsCtx; closeStreams(); closeDetail(); openPlayer(c.item||snap({id:c.id,title:c.title,name:c.title},c.type), {season:c.season, episode:c.episode, source:emb.dataset.streamEmbed}); return; }
+    const dir=e.target.closest("[data-stream-direct]");
+    if(dir&&streamsCtx&&streamsCtx._direct){ const s=streamsCtx._direct[Number(dir.dataset.streamDirect)]; if(s){ const c=streamsCtx; closeStreams(); closeDetail(); playResolvedURL(s.url, c.item||{id:c.id,type:c.type,title:c.title}, s.addonName); polluteProgressFromStream(c); } }
+  });
+  $("#btnRace").onclick=async()=>{
+    const btn=$("#btnRace"), status=$("#raceStatus");
+    const direct=(streamsCtx&&streamsCtx._direct)||[];
+    btn.disabled=true;
+    if(!direct.length){ status.textContent="No direct streams to race — using best player instead."; const c=streamsCtx; closeStreams(); closeDetail(); openPlayer(c.item||snap({id:c.id,title:c.title,name:c.title},c.type),{season:c.season,episode:c.episode,source:defaultSourceId()}); return; }
+    status.textContent="Measuring "+Math.min(4,direct.length)+" streams (384 KB each)…";
+    const cand=direct.slice(0,4);
+    const speeds=await Promise.all(cand.map(s=>measureSpeed(s.url)));
+    let best=-1, bestV=0; speeds.forEach((v,i)=>{ if(v&&v>bestV){ bestV=v; best=i; } });
+    const chosen = best>=0 ? cand[best] : direct[0];
+    toast("⚡ FastStream Race winner: "+chosen.addonName+(best>=0?(" at "+bestV.toFixed(1)+" MB/s"):" (speeds unmeasurable — best ranked)"));
+    const c=streamsCtx; closeStreams(); closeDetail();
+    playResolvedURL(chosen.url, c.item||{id:c.id,type:c.type,title:c.title}, chosen.addonName); polluteProgressFromStream(c);
+  };
+  const agg = await collectAllStreams(ctx);
+  if(!streamsCtx) return;
+  streamsCtx._direct = agg.direct;
+  const box=$("#streamDirect"); if(!box) return;
+  box.innerHTML = agg.direct.length ? agg.direct.slice(0,25).map((s,i)=>
+    '<div class="src-row"><div class="grow"><span class="nm">'+esc(s.addonName)+'</span> '+(s.quality?'<span class="chip violet">'+esc(s.quality)+'</span> ':"")+(s.bytes?'<span class="chip">'+fmtBytes(s.bytes)+'</span> ':"")+(s.seeders!=null?'<span class="chip">👤 '+s.seeders+'</span> ':"")+(s.notWebReady?'<span class="chip">may not play in browser</span> ':"")+(s.needsHeaders?'<span class="chip">needs special headers</span> ':"")+'<code>'+esc(s.label+(s.sub?" — "+s.sub:""))+"</code></div><div class='src-actions'><button class='btn btn-primary btn-xs' data-stream-direct='"+i+"'>▶ Play</button></div></div>").join("")
+    : '<div class="empty"><h3>No direct streams found</h3><p>Discovered addons returned no playable http(s) links for this title. Add Real-Debrid (⚡ Debrid) or your own DebridStream server for direct links.</p></div>';
+  const cnt=$("#streamCounts");
+  if(cnt) cnt.textContent = "Queried "+agg.queried+" addons · "+agg.torrents+" torrent streams hidden · "+agg.oversize+" over your "+capGb()+" GB cap hidden · "+agg.external+" external-player links hidden. Addon data: stremio-addons.net";
+}
+function polluteProgressFromStream(ctx){ /* register continue-watching for addon-stream plays of real TMDB titles */
+  if(ctx&&ctx.item&&Number.isInteger(ctx.item.id)) registerProgress(ctx.item, ctx.season, ctx.episode);
+}
+function addonPanelHTML(){
+  const list=(settings.addons||[]);
+  const rows=list.slice(0,30).map(a=>'<div class="src-row"><div class="grow"><span class="nm">'+esc(a.name)+'</span> <span class="chip">STREMIO ADDON</span> '+(a.stars&&a.stars<900000?'<span class="chip star">★ '+a.stars+'</span> ':"")+healthBadge(a.id)+'<code>'+esc(a.base)+' · '+(a.types||[]).join("/")+(a.from?" · via "+esc(a.from):"")+'</code></div><div class="src-actions"><button class="btn btn-outline btn-xs" data-addon-toggle="'+esc(a.id)+'">'+(a.enabled!==false?"Disable":"Enable")+"</button></div></div>").join("");
+  return '<section class="panel"><h2>🧩 Stremio addon discovery — zero config</h2><p class="section-desc">Continuously crawls two public addon catalogs (stremio-addons.net public API + Cinemeta community catalog) and auto-registers stream addons as sources. At play time their streams are filtered to direct http(s) links only — torrent and external-player streams are hidden, and anything over your '+capGb()+' GB cap is dropped. Addon data credit: <a href="https://stremio-addons.net" target="_blank" rel="noopener">stremio-addons.net</a>. '+(settings.debridManifestUrl?"Your DebridStream addon is pinned.":"Tip: generate a manifest in ⚡ Debrid and your own DebridStream becomes a pinned addon source.")+'</p>'
+    +'<div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem"><button class="btn btn-primary" id="btnDiscoverAddons" type="button">🔎 Discover addons now</button><span class="help-text" style="align-self:center">'+list.length+' addons registered · last crawl: '+(settings.feed.lastAddonCheck?new Date(settings.feed.lastAddonCheck).toLocaleString():"never")+'</span></div>'
+    +'<div id="addonList">'+(rows||'<div class="empty"><h3>No addons yet</h3><p>Press “Discover addons now” — no configuration needed.</p></div>')+"</div></section>";
+}
+function wireAddonPanel(){
+  const btn=$("#btnDiscoverAddons");
+  if(btn) btn.onclick=async e=>{ e.target.disabled=true; e.target.innerHTML='<span class="spinner"></span> Crawling addon catalogs…'; await discoverAddons(true); };
+  const listEl=$("#addonList");
+  if(listEl) listEl.addEventListener("click",e=>{
+    const t=e.target.closest("[data-addon-toggle]"); if(!t) return;
+    const a=(settings.addons||[]).find(x=>x.id===t.dataset.addonToggle);
+    if(a){ a.enabled=a.enabled===false?true:false; saveSettings(); renderSources(true); }
+  });
+}
+async function extractSiteCatalogueFlow(){
+  const raw=($("#pasteLink").value||"").trim();
+  const note=(msg,type)=>{ const n=$("#detectNote"); n.textContent=msg; n.className="status-box "+type; };
+  if(!raw){ note("❌ Paste a website link first (e.g. anisuge.tv).","error"); return; }
+  note("🗂 Extracting catalogue from "+raw+" …","info");
+  try{
+    const data=await extractSiteCatalogue(raw, true);
+    note("✅ Extracted "+data.items.length+" titles from "+new URL(data.url).hostname+" — find them on Home and in Available sources."+(data.servers&&data.servers.length?(" Servers: "+data.servers.join(", ")):""),"success");
+    renderSources(true);
+  }catch(e){ note("❌ "+(e.message||e),"error"); }
 }
 
 /* ---------------- router ---------------- */
@@ -1415,6 +1904,7 @@ window.addEventListener("hashchange",render);
   warmAllSources();
   scheduleDiscovery();
   setTimeout(()=>{ if(settings.feed.healthAuto) runHealthChecks(false); },4000);
+  setTimeout(()=>{ if(settings.feed.addonsAuto!==false) discoverAddons(false); },5000);
   if(m&&!location.hash){ history.replaceState(null,"","/"); location.hash="#/title/"+m[1]+"/"+m[2]; }
   if(location.pathname==="/movies"&&!location.hash){ history.replaceState(null,"","/"); location.hash="#/movies"; }
   if(location.pathname==="/series"&&!location.hash){ history.replaceState(null,"","/"); location.hash="#/series"; }

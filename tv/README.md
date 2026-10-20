@@ -20,3 +20,30 @@ remote-friendly player — building on ZeroPlay's TV experience in
 See `zeroplay-debrid/README.md` for deploy instructions (Netlify + Vercel),
 the source-manager/FastStream feature list, and the honest limitations
 (5 GB cap scope, discovery model, embed quality control).
+
+## Phase 3 (keyless pictures, site extraction, addon discovery, embedded FastStream)
+
+- **Real posters with zero config**: when no TMDB key/proxy is configured, the catalogue
+  now comes from Stremio's keyless Cinemeta addon (real Metahub artwork, TMDB ids
+  preserved via `moviedb_id`). The header chip shows the active catalogue
+  (TMDB / Cinemeta / offline demo); the static demo only appears if Cinemeta is
+  unreachable too.
+- **Paste a homepage, get a catalogue**: Sources → paste e.g. `anisuge.tv` →
+  "Extract catalogue from this site". The new `api/extract.js` serverless function
+  (Netlify twin in `netlify/functions/extract.js`) extracts title cards
+  (title/poster/watch URL) and server names/embed hosts. Titles appear as Home rails
+  and the site joins Available sources (title-matched playback via watch-page
+  extraction). SSRF-guarded; no login/paywall bypass.
+- **Zero-config Stremio addon discovery**: continuously crawls stremio-addons.net's
+  public API + Cinemeta's community addon catalog and registers stream addons as
+  sources. Only direct http(s) streams are ever shown/played — torrent and
+  external-player streams are counted and hidden; >5 GB (your cap) dropped.
+  Detail pages get "⚡ Find streams" with a FastStream Race (parallel 384 KB
+  throughput measurement, fastest wins). Your generated DebridStream manifest is
+  pinned as an addon source automatically.
+- **FastStream embedded for any direct stream**: direct files/streams play inside
+  the official FastStream web player (faststream.online, fragmented parallel
+  downloading) embedded in-app — no external players, "Open original" removed.
+  Built-in HTML5 fallback (4-way parallel-range priming + live MB/s HUD) one tap
+  away. The 3 embed players keep FastStream race/preload/failover around them
+  (their cross-origin internals can't be accelerated by any host page).
