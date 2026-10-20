@@ -6,6 +6,6 @@
   "description": "ZeroPlay keyless discovery and playback \u2014 single-file site + serverless functions.",
   "scripts": {
     "build": "mkdir -p dist && cp index.html dist/index.html && echo ZeroPlay static build complete",
-    "test": "node tests/discovery-identity.test.cjs && node tests/crawler.test.cjs && node tests/regressions.test.cjs"
+    "test": "node tests/discovery-identity.test.cjs && node tests/crawler.test.cjs && node tests/regressions.test.cjs && node tests/tv-player.test.cjs"
   }
 }

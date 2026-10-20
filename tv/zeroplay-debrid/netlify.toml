@@ -61,6 +61,21 @@
   status = 200
 
 [[redirects]]
+  from = "/categories"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/discover"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/sources"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
   from = "/configure"
   to = "/index.html"
   status = 200

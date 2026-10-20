@@ -37,5 +37,34 @@ remains a later phase after user approval.
   direct media uses embedded FastStream, torrents are hidden, and known files
   over the hard 5 GB ceiling are rejected.
 
+## TV browsing and player polish
+
+- A menu drawer, top menu bar, category strip, category shelves and a
+  dedicated Categories page provide TV-style browsing without replacing the
+  approved ZeroPlay layout.
+- Poster title blocks, the home hero and the detail backdrop can preview a
+  muted trailer inline after hover, remote/keyboard focus or scroll settling.
+  Only one preview runs at a time; Data Saver, reduced motion and slow/save-data
+  connections disable it.
+- Arrow-key spatial navigation and strong focus states support TV remotes.
+- Playback uses one ZeroPlay shell with Back, Servers, Details, play/pause,
+  seek, ±10 seconds, volume, speed, quality, PiP and fullscreen where the
+  active engine permits them.
+- **Servers with this title** progressively lists only direct/website servers
+  that return the selected movie or exact episode, grouped by server and real
+  quality variant. Built-in/custom players that can merely address the exact
+  TMDB/IMDb ID are shown separately as exact-ID routes, not falsely labelled
+  verified.
+- FastStream is integrated through its official EmbedAPI when the hosted
+  player advertises `ready`: ZeroPlay controls then drive FastStream and its
+  `getLevels` quality menu. The currently hosted player lags that API, so Auto
+  mode does not delay playable files: MP4/WebM use the responsive ZeroPlay
+  engine while capability is probed in the background, and HLS/DASH use the
+  embedded FastStream player inside the same shell.
+- Player responsiveness protections include throttled progress writes,
+  parent-shell focus retention, safe 206-only range priming with a small
+  two-worker budget, cancellable server searches, and pausing continuous
+  discovery cycles while video is open.
+
 See `zeroplay-debrid/README.md` for the full architecture, deployment and
 limitations.

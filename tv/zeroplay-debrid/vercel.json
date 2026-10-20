@@ -30,6 +30,18 @@
       "destination": "/index.html"
     },
     {
+      "source": "/categories",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/discover",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/sources",
+      "destination": "/index.html"
+    },
+    {
       "source": "/configure",
       "destination": "/index.html"
     }
