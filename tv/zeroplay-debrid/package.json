@@ -1,0 +1,10 @@
+{
+  "name": "zeroplay-debrid",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "description": "ZeroPlay discovery & playback in the DebridStream UI \u2014 single-file site + Netlify functions.",
+  "scripts": {
+    "build": "mkdir -p dist && cp index.html dist/index.html && echo ZeroPlay RD static build complete"
+  }
+}
