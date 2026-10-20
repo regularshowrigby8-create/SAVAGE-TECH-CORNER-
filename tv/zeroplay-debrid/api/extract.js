@@ -96,12 +96,15 @@ function serverNames(html) {
   const names = new Set();
   for (const m of html.matchAll(/<(a|li|button|div|span|option)\b([^>]*)>([\s\S]{0,300}?)<\/\1>/gi)) {
     const attrs = m[2] || '';
-    const declared = attr('<x ' + attrs + '>', 'data-server') || attr('<x ' + attrs + '>', 'data-name');
-    const looksLikeServer = /(?:class|id|data-[a-z-]+)\s*=\s*["'][^"']*(?:server|sv[-_ ]?item|server[-_]?name)[^"']*["']/i.test(attrs);
+    const tagForAttrs = '<x ' + attrs + '>';
+    const declaredServer = attr(tagForAttrs, 'data-server');
+    const declared = declaredServer || attr(tagForAttrs, 'data-name');
+    const classId = ' ' + ((attr(tagForAttrs, 'class') || '') + ' ' + (attr(tagForAttrs, 'id') || '')).toLowerCase() + ' ';
+    const looksLikeServer = /(?:^|[\s_-])(?:server|servers|server[-_](?:item|btn|button|name|link|tab|option)|btn[-_]server|sv[-_]item)(?:$|[\s_-])/i.test(classId);
     const rawText = decodeEntities(stripTags(declared || m[3] || ''));
     const t = rawText.slice(0, 40);
-    if (!declared && rawText.length > 40) continue;
-    if ((looksLikeServer || declared) && t && !/^(server|servers|choose|select|watch|episode|sub|dub)$/i.test(t)) names.add(t);
+    if (!declaredServer && rawText.length > 40) continue;
+    if ((looksLikeServer || declaredServer) && t && !/^(server|servers|choose|select|watch|episode|sub|dub|signup|login|register|forgot|settings?|auto(?:[-_ ]?.*)?)$/i.test(t)) names.add(t);
     if (names.size >= 12) break;
   }
   return [...names];
@@ -384,6 +387,17 @@ function adjustEpisodeInUrl(url, season, episode) {
   return out;
 }
 
+function episodeCandidateUrls(url, episode) {
+  if (episode == null) return [];
+  try {
+    const u = new URL(url);
+    if (/(?:\/(?:ep|episode)[-_/]\d+|-ep(?:isode)?-\d+|[?&](?:ep|episode|episode_id)=\d+)/i.test(u.href)) return [];
+    const path = u.pathname.replace(/\/+$/, '');
+    if (!path || path === '/') return [];
+    return [u.origin + path + '/ep-' + episode, u.origin + path + '/episode-' + episode];
+  } catch { return []; }
+}
+
 function findEpisodeUrl(html, base, season, episode) {
   if (episode == null) return '';
   const stripEpisode = value => {
@@ -442,11 +456,24 @@ async function resolveMatchedWatch(matchUrl, query) {
       let watch = parseWatch(doc.text, doc.finalUrl);
       let watchUrl = doc.finalUrl;
       if (isTv && !watch.embed && !watch.direct.length) {
-        const episodeUrl = findEpisodeUrl(doc.text, doc.finalUrl, query.season || 1, query.episode || 1);
+        let episodeUrl = findEpisodeUrl(doc.text, doc.finalUrl, query.season || 1, query.episode || 1);
         if (episodeUrl && episodeUrl !== doc.finalUrl) {
           const epDoc = await fetchDocument(episodeUrl, false, 8000);
           watch = parseWatch(epDoc.text, epDoc.finalUrl);
           watchUrl = epDoc.finalUrl;
+        } else if (!episodeUrl) {
+          for (const inferredUrl of episodeCandidateUrls(doc.finalUrl, query.episode || 1)) {
+            try {
+              const epDoc = await fetchDocument(inferredUrl, false, 7000);
+              const epPattern = new RegExp('(?:/(?:ep|episode)[-_/]' + (query.episode || 1) + '(?:[/?#]|$)|-ep(?:isode)?-' + (query.episode || 1) + '(?:[/?#]|$))', 'i');
+              const looksLikeEpisode = epPattern.test(epDoc.finalUrl) || !!findEpisodeUrl(epDoc.text, epDoc.finalUrl, query.season || 1, query.episode || 1);
+              if (!looksLikeEpisode) continue;
+              watch = parseWatch(epDoc.text, epDoc.finalUrl);
+              watchUrl = epDoc.finalUrl;
+              episodeUrl = epDoc.finalUrl;
+              break;
+            } catch {}
+          }
         }
       }
       last = { watch, watchUrl };
@@ -485,7 +512,9 @@ async function findTitleOnSite(rawSiteUrl, rawQuery) {
       if (!guardUrl(candidate.url) || !sameSite(candidate.url, site.href)) continue;
       const score = titleScore(candidate, variants, query);
       checked++;
-      if (!best || score > best.score) best = { score, url: candidate.url, strategy };
+      const epPattern = /(?:\/(?:ep|episode)[-_/]\d+|-ep(?:isode)?-\d+|[?&](?:ep|episode|episode_id)=\d+)/i;
+      const episodeTie = best && score === best.score && (query.type === 'tv' || query.type === 'series') && epPattern.test(candidate.url) && !epPattern.test(best.url);
+      if (!best || score > best.score || episodeTie) best = { score, url: candidate.url, strategy };
     }
   };
 
@@ -584,5 +613,5 @@ module.exports = async function handler(req, res) {
   const out = await handle(mode, String(query.url || ''), query);
   return res.status(out.status).json(out.body);
 };
-module.exports._parse = { parseWatch, parseResultLinks, guardUrl, serverNames, normalizeTitle, titleScore, searchTemplatesFromHtml, commonSearchTemplates, buildSearchUrl, adjustEpisodeInUrl, findEpisodeUrl };
+module.exports._parse = { parseWatch, parseResultLinks, guardUrl, serverNames, normalizeTitle, titleScore, searchTemplatesFromHtml, commonSearchTemplates, buildSearchUrl, adjustEpisodeInUrl, findEpisodeUrl, episodeCandidateUrls };
 module.exports._find = { profileSite, findTitleOnSite, handle };
