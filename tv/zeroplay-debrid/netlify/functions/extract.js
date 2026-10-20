@@ -455,12 +455,14 @@ async function resolveMatchedWatch(matchUrl, query) {
       const doc = await fetchDocument(safe.href, false, 8000);
       let watch = parseWatch(doc.text, doc.finalUrl);
       let watchUrl = doc.finalUrl;
+      let resolvedEpisode = false;
       if (isTv && !watch.embed && !watch.direct.length) {
         let episodeUrl = findEpisodeUrl(doc.text, doc.finalUrl, query.season || 1, query.episode || 1);
+        if (episodeUrl) resolvedEpisode = true;
         if (episodeUrl && episodeUrl !== doc.finalUrl) {
           const epDoc = await fetchDocument(episodeUrl, false, 8000);
           watch = parseWatch(epDoc.text, epDoc.finalUrl);
-          watchUrl = epDoc.finalUrl;
+          watchUrl = episodeUrl;
         } else if (!episodeUrl) {
           for (const inferredUrl of episodeCandidateUrls(doc.finalUrl, query.episode || 1)) {
             try {
@@ -469,8 +471,9 @@ async function resolveMatchedWatch(matchUrl, query) {
               const looksLikeEpisode = epPattern.test(epDoc.finalUrl) || !!findEpisodeUrl(epDoc.text, epDoc.finalUrl, query.season || 1, query.episode || 1);
               if (!looksLikeEpisode) continue;
               watch = parseWatch(epDoc.text, epDoc.finalUrl);
-              watchUrl = epDoc.finalUrl;
-              episodeUrl = epDoc.finalUrl;
+              watchUrl = epPattern.test(epDoc.finalUrl) ? epDoc.finalUrl : inferredUrl;
+              episodeUrl = watchUrl;
+              resolvedEpisode = true;
               break;
             } catch {}
           }
@@ -478,6 +481,8 @@ async function resolveMatchedWatch(matchUrl, query) {
       }
       last = { watch, watchUrl };
       if (watch.direct.length || watch.embed) return last;
+      if (resolvedEpisode) return last;
+      if (isTv && candidateUrl === adjusted && adjusted !== matchUrl) return last;
     } catch {}
   }
   return last || { watch: { embed: '', embeds: [], direct: [], servers: [], embedHosts: [] }, watchUrl: adjusted || matchUrl };
