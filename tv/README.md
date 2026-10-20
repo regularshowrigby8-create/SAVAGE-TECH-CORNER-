@@ -21,19 +21,23 @@ See `zeroplay-debrid/README.md` for deploy instructions (Netlify + Vercel),
 the source-manager/FastStream feature list, and the honest limitations
 (5 GB cap scope, discovery model, embed quality control).
 
-## Phase 3 (keyless pictures, site extraction, addon discovery, embedded FastStream)
+## Phase 3 (keyless pictures, dynamic website lookup, addon discovery, embedded FastStream)
 
 - **Real posters with zero config**: when no TMDB key/proxy is configured, the catalogue
   now comes from Stremio's keyless Cinemeta addon (real Metahub artwork, TMDB ids
   preserved via `moviedb_id`). The header chip shows the active catalogue
   (TMDB / Cinemeta / offline demo); the static demo only appears if Cinemeta is
   unreachable too.
-- **Paste a homepage, get a catalogue**: Sources → paste e.g. `anisuge.tv` →
-  "Extract catalogue from this site". The new `api/extract.js` serverless function
-  (Netlify twin in `netlify/functions/extract.js`) extracts title cards
-  (title/poster/watch URL) and server names/embed hosts. Titles appear as Home rails
-  and the site joins Available sources (title-matched playback via watch-page
-  extraction). SSRF-guarded; no login/paywall bypass.
+- **Paste a homepage, get a lookup source (default for every added website)**:
+  Sources → paste a site such as the `anisuge.tv` example → "Add website lookup".
+  Anisuge is not built in or permanent. The app does **not** import/pull the
+  website's covers or titles and does not create Home rails from it. It stores
+  only the domain/search configuration. When the user selects an existing
+  catalogue title/episode, `api/extract.js` (Netlify twin included) checks that
+  site's public search/results for the exact title, resolves the matching
+  episode/watch page, and plays its embed/direct stream if found. Explicit URL
+  templates remain an optional advanced source type. SSRF-guarded; no
+  login/paywall/CAPTCHA/DRM bypass.
 - **Zero-config Stremio addon discovery**: continuously crawls stremio-addons.net's
   public API + Cinemeta's community addon catalog and registers stream addons as
   sources. Only direct http(s) streams are ever shown/played — torrent and

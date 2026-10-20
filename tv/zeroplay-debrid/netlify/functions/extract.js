@@ -1,15 +1,22 @@
-/* ZeroPlay RD — website extractor + JSON relay (Netlify Function, twin of api/extract.js)
- * mode=catalog : fetch a site page, extract title cards (title, watch URL, poster)
- *                + server names/embed hosts from the first watch page.
- * mode=watch   : fetch a watch page, extract embed iframe + direct media + servers.
- * mode=json    : fetch a JSON URL server-side (CORS fallback for Stremio addons).
- * Safety: http(s) only, private/loopback hosts blocked, 1.5 MB cap, 10 s timeout,
- * HTML/JSON only. No logins, no paywall/DRM bypass — plain public-page parsing.
+/* ZeroPlay RD — website title lookup + watch resolver (Netlify Function)
+ *
+ * mode=profile : inspect a user-added website only to discover how its public
+ *                search works. It does not import that site's titles/covers.
+ * mode=find    : check whether an existing catalogue title exists on that
+ *                website, then resolve its public watch/embed/direct URL.
+ * mode=watch   : inspect one known watch page for public embed/direct URLs.
+ * mode=json    : fetch a JSON URL server-side (CORS fallback for addons).
+ *
+ * Safety: http(s) only, private/loopback hosts blocked, 1.5 MB response cap,
+ * bounded search requests and timeouts. This parses public pages only; it
+ * does not log in, bypass paywalls, solve CAPTCHAs, or bypass DRM.
  */
 'use strict';
 
 const MAX_BYTES = 1500000;
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36';
+const SEARCH_PLACEHOLDER = '__ZP_Q__';
+const BLOCKED_PATH = /\/(login|register|signup|filter|search|genre|genres|tag|tags|category|categories|type|types|year|years|status|user|profile|dmca|terms|privacy|contact|about|home)(\/|\?|$)/i;
 
 function guardUrl(raw) {
   let u;
@@ -24,9 +31,17 @@ function guardUrl(raw) {
   return u;
 }
 
-async function fetchText(url, wantJson) {
+function canonicalHost(host) {
+  return String(host || '').toLowerCase().replace(/^www\./, '');
+}
+
+function sameSite(a, b) {
+  try { return canonicalHost(new URL(a).hostname) === canonicalHost(new URL(b).hostname); } catch { return false; }
+}
+
+async function fetchDocument(url, wantJson, timeoutMs) {
   const ctl = new AbortController();
-  const to = setTimeout(() => ctl.abort(), 10000);
+  const to = setTimeout(() => ctl.abort(), timeoutMs || 10000);
   try {
     const r = await fetch(url, {
       signal: ctl.signal,
@@ -34,122 +49,527 @@ async function fetchText(url, wantJson) {
       headers: { 'User-Agent': UA, Accept: wantJson ? 'application/json,text/plain,*/*' : 'text/html,application/xhtml+xml,*/*' },
     });
     if (!r.ok) throw new Error('HTTP ' + r.status);
-    const finalHost = new URL(r.url).hostname.toLowerCase();
-    if (/^(127\.|10\.|192\.168\.|169\.254\.)/.test(finalHost) || finalHost === 'localhost') throw new Error('Blocked redirect');
+    const finalUrl = r.url || url;
+    const final = guardUrl(finalUrl);
+    if (!final) throw new Error('Blocked redirect');
     const buf = Buffer.from(await r.arrayBuffer());
-    if (buf.length > MAX_BYTES) return buf.subarray(0, MAX_BYTES).toString('utf8');
-    return buf.toString('utf8');
+    const text = (buf.length > MAX_BYTES ? buf.subarray(0, MAX_BYTES) : buf).toString('utf8');
+    return { text, finalUrl: final.href, status: r.status };
   } finally { clearTimeout(to); }
 }
 
+async function fetchText(url, wantJson, timeoutMs) {
+  return (await fetchDocument(url, wantJson, timeoutMs)).text;
+}
+
 const abs = (href, base) => { try { return new URL(href, base).href; } catch { return ''; } };
-const stripTags = s => String(s || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-const decodeEntities = s => String(s || '').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+const stripTags = s => String(s || '').replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+function decodeEntities(s) {
+  return String(s || '')
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => { try { return String.fromCodePoint(parseInt(n, 16)); } catch { return ''; } })
+    .replace(/&#(\d+);/g, (_, n) => { try { return String.fromCodePoint(Number(n)); } catch { return ''; } })
+    .replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+}
+function attr(tag, name) {
+  const m = String(tag || '').match(new RegExp(name + '\\s*=\\s*"([^"]*)"', 'i'))
+    || String(tag || '').match(new RegExp(name + "\\s*=\\s*'([^']*)'", 'i'));
+  return m ? decodeEntities(m[1]) : '';
+}
 
 function pageTitle(html) {
-  const m = html.match(/<title[^>]*>([^<]{1,160})<\/title>/i);
-  return m ? decodeEntities(stripTags(m[1])).slice(0, 120) : '';
+  const m = html.match(/<title[^>]*>([^<]{1,220})<\/title>/i);
+  return m ? decodeEntities(stripTags(m[1])).slice(0, 160) : '';
 }
 
 function iframeHosts(html) {
   const out = new Set();
-  for (const m of html.matchAll(/<iframe[^>]+src\s*=\s*["']([^"']+)["']/gi)) {
-    try { out.add(new URL(m[1].startsWith('//') ? 'https:' + m[1] : m[1]).hostname); } catch {}
+  for (const m of html.matchAll(/<iframe\b[^>]*>/gi)) {
+    const src = attr(m[0], 'src') || attr(m[0], 'data-src') || attr(m[0], 'data-lazy-src');
+    if (!src) continue;
+    try { out.add(new URL(src.startsWith('//') ? 'https:' + src : src).hostname); } catch {}
   }
   return [...out];
 }
 
 function serverNames(html) {
   const names = new Set();
-  for (const m of html.matchAll(/<(?:a|li|button|div|span|option)[^>]*(?:class|id)\s*=\s*"[^"]*server[^"]*"[^>]*>([^<]{2,32})</gi)) {
-    const t = decodeEntities(stripTags(m[1]));
-    if (t && !/^(server|servers|choose|select|watch|episode)$/i.test(t)) names.add(t.slice(0, 32));
+  for (const m of html.matchAll(/<(a|li|button|div|span|option)\b([^>]*)>([\s\S]{0,300}?)<\/\1>/gi)) {
+    const attrs = m[2] || '';
+    const declared = attr('<x ' + attrs + '>', 'data-server') || attr('<x ' + attrs + '>', 'data-name');
+    const looksLikeServer = /(?:class|id|data-[a-z-]+)\s*=\s*["'][^"']*(?:server|sv[-_ ]?item|server[-_]?name)[^"']*["']/i.test(attrs);
+    const rawText = decodeEntities(stripTags(declared || m[3] || ''));
+    const t = rawText.slice(0, 40);
+    if (!declared && rawText.length > 40) continue;
+    if ((looksLikeServer || declared) && t && !/^(server|servers|choose|select|watch|episode|sub|dub)$/i.test(t)) names.add(t);
     if (names.size >= 12) break;
   }
   return [...names];
 }
 
-function parseCatalog(html, base) {
-  const items = [];
-  const seen = new Set();
-  const anchorRe = /<a\s[^>]*href\s*=\s*"([^"]+)"[^>]*>([\s\S]{0,900}?)<\/a>/gi;
-  for (const m of html.matchAll(anchorRe)) {
-    const hrefRaw = m[1], inner = m[2] || '';
-    if (!hrefRaw || hrefRaw.startsWith('#') || hrefRaw.startsWith('javascript:')) continue;
-    const imgTag = (inner.match(/<img\s[^>]*>/i) || [])[0] || '';
-    const attr = (tag, name) => {
-      const m = tag.match(new RegExp(name + '\\s*=\\s*"([^"]*)"', 'i')) || tag.match(new RegExp(name + "\\s*=\\s*'([^']*)'", 'i'));
-      return m ? m[1] : '';
-    };
-    let poster = attr(imgTag, 'data-src') || attr(imgTag, 'data-lazy-src') || attr(imgTag, 'src');
-    if (/^data:/i.test(poster)) poster = (attr(imgTag, 'srcset').split(' ')[0] || '');
-    const alt = attr(imgTag, 'alt');
-    const titleAttr = (m[0].match(/<a\s[^>]*title\s*=\s*"([^"]+)"/i) || [])[1] || '';
-    const title = decodeEntities(stripTags(titleAttr || alt || inner)).slice(0, 110);
-    const url = abs(decodeEntities(hrefRaw), base);
-    if (!url || !title || title.length < 2) continue;
-    let sameOrigin = false;
-    try { sameOrigin = new URL(url).origin === new URL(base).origin; } catch {}
-    if (!sameOrigin) continue;
-    if (/\/(login|register|signup|filter|search|genre|tag|category|user|profile|dmca|terms|privacy|contact)(\/|\?|$)/i.test(url)) continue;
-    const likely = /\/(watch|anime|movie|movies|tv|series|detail|info|play|episode|ep-|show|drama)/i.test(url);
-    if (!likely && !poster) continue;
-    const dedupeKey = url.replace(/\/ep-\d+([/?#]|$)/, '$1');
-    if (seen.has(dedupeKey)) continue;
-    seen.add(dedupeKey);
-    items.push({ title, url, poster: poster ? abs(decodeEntities(poster), base) : '' });
-    if (items.length >= 48) break;
-  }
-  return items;
+function embedScore(url) {
+  let score = 0;
+  if (/embed|player|stream|video|play|watch/i.test(url)) score += 30;
+  if (/\.(m3u8|mp4|mpd)(\?|$)/i.test(url)) score -= 10;
+  if (/vid|stream|play|tube|cloud|hide|wish|tape|moly/i.test(url)) score += 10;
+  return score;
 }
 
 function parseWatch(html, base) {
   const embeds = [];
-  for (const m of html.matchAll(/<iframe[^>]+src\s*=\s*["']([^"']+)["']/gi)) {
-    let src = decodeEntities(m[1]);
+  for (const m of html.matchAll(/<iframe\b[^>]*>/gi)) {
+    let src = attr(m[0], 'src') || attr(m[0], 'data-src') || attr(m[0], 'data-lazy-src');
+    if (!src || /^about:blank$/i.test(src)) continue;
     if (src.startsWith('//')) src = 'https:' + src;
     src = abs(src, base);
     if (!src || /facebook|twitter|sharethis|googletagmanager|google\.com\/recaptcha|disqus|platform-cdn/i.test(src)) continue;
-    embeds.push(src);
+    if (!embeds.includes(src)) embeds.push(src);
   }
-  embeds.sort((a, b) => (/embed|player|stream|video|play/i.test(b) ? 1 : 0) - (/embed|player|stream|video|play/i.test(a) ? 1 : 0));
+  const addEmbedCandidate = raw => {
+    let src = decodeEntities(String(raw || '')).replace(/\\\//g, '/').replace(/[),.;]+$/, '');
+    if (!src || /^about:blank$/i.test(src)) return;
+    if (src.startsWith('//')) src = 'https:' + src;
+    src = abs(src, base);
+    if (!src || !guardUrl(src)) return;
+    if (/facebook|twitter|sharethis|googletagmanager|google\.com\/recaptcha|disqus|platform-cdn/i.test(src)) return;
+    if (/\.(?:js|css|png|jpe?g|gif|webp|svg|ico|woff2?)(?:\?|#|$)/i.test(src)) return;
+    if (!embeds.includes(src)) embeds.push(src);
+  };
+  for (const m of html.matchAll(/\bdata-(?:src|url|embed|video|link|player)\s*=\s*["']([^"']+)["']/gi)) {
+    const candidate = abs(decodeEntities(m[1] || ''), base);
+    if (candidate && (embedScore(candidate) >= 30 || /\.(?:m3u8|mp4|mpd)(?:\?|#|$)/i.test(candidate))) addEmbedCandidate(candidate);
+  }
+  const normalizedHtml = html.replace(/\\\//g, '/');
+  for (const m of normalizedHtml.matchAll(/https?:\/\/[^\s"'<>]+/gi)) {
+    const candidate = m[0];
+    if (/\/(?:embed|player)(?:\/|\?|#|[-_])/i.test(candidate) || /[?&](?:embed|player|video)=/i.test(candidate)) addEmbedCandidate(candidate);
+  }
+  embeds.sort((a, b) => embedScore(b) - embedScore(a));
+
   const directSet = new Set();
-  for (const m of html.matchAll(/https?:\\?\/\\?\/[^\s"'<>\\]+?\.(?:m3u8|mp4|mpd)(?:\?[^\s"'<>\\]*)?/gi)) {
-    directSet.add(m[0].replace(/\\\//g, '/'));
+  for (const m of html.matchAll(/<(?:video|source)\b[^>]*>/gi)) {
+    const src = abs(attr(m[0], 'src'), base);
+    if (src && /\.(?:m3u8|mp4|mpd|webm)(?:\?|#|$)/i.test(src)) directSet.add(src);
+  }
+  for (const m of normalizedHtml.matchAll(/https?:\/\/[^\s"'<>]+?\.(?:m3u8|mp4|mpd)(?:\?[^\s"'<>]*)?/gi)) {
+    directSet.add(m[0]);
     if (directSet.size >= 5) break;
   }
+  const direct = [...directSet].slice(0, 5);
   return {
     title: pageTitle(html),
     embed: embeds[0] || '',
     embeds: embeds.slice(0, 4),
-    direct: [...directSet],
+    direct,
     servers: serverNames(html),
     embedHosts: iframeHosts(html),
   };
 }
 
-async function handle(mode, rawUrl) {
+function normalizeTitle(s) {
+  return decodeEntities(String(s || ''))
+    .replace(/\s*\(source test\)\s*$/i, '')
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/\b(the|a|an)\b/g, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+function slugTitle(s) { return normalizeTitle(s).replace(/ /g, '-'); }
+function stripSeasonSuffix(normalized) {
+  return String(normalized || '').replace(/\b(season|series|part|cour)\s+\d+\b/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function explicitSeason(text) {
+  const m = normalizeTitle(text).match(/\b(?:season|series|part|cour)\s+(\d{1,3})\b/);
+  return m ? Number(m[1]) : null;
+}
+function tokenSet(s) { return new Set(normalizeTitle(s).split(' ').filter(Boolean)); }
+function titleScore(candidate, targets, opts) {
+  opts = opts || {};
+  const candidateTexts = [candidate && candidate.title, candidate && candidate.slugTitle].filter(Boolean);
+  let best = 0;
+  for (const rawTarget of targets || []) {
+    const target = normalizeTitle(rawTarget);
+    if (!target) continue;
+    const targetTokens = tokenSet(target);
+    for (const rawCandidate of candidateTexts) {
+      const cand = normalizeTitle(rawCandidate);
+      if (!cand) continue;
+      let score = 0;
+      if (cand === target) score = 100;
+      else if (stripSeasonSuffix(cand) === target || cand === stripSeasonSuffix(target)) score = 95;
+      else if (cand.startsWith(target + ' ')) {
+        const extra = cand.split(' ').length - target.split(' ').length;
+        score = Math.max(68, 88 - extra * 4);
+      } else if (target.startsWith(cand + ' ')) score = 82;
+      else {
+        const candTokens = tokenSet(cand);
+        let hit = 0;
+        for (const t of targetTokens) if (candTokens.has(t)) hit++;
+        const containment = hit / Math.max(1, targetTokens.size);
+        const jaccard = hit / Math.max(1, new Set([...targetTokens, ...candTokens]).size);
+        score = Math.round(containment * 58 + jaccard * 34);
+        if (hit === targetTokens.size && targetTokens.size > 1) score = Math.max(score, 84);
+      }
+      const season = explicitSeason(rawCandidate);
+      if (season != null && Number(opts.season || 1) !== season) score -= 22;
+      if (season != null && Number(opts.season || 1) === season) score += 3;
+      best = Math.max(best, score);
+    }
+  }
+  const url = String((candidate && candidate.url) || '');
+  const years = (String((candidate && candidate.title) || '') + ' ' + url).match(/\b(19\d{2}|20\d{2})\b/g) || [];
+  if (opts.year && years.length) best += years.includes(String(opts.year)) ? 4 : -14;
+  if (opts.type === 'movie' && /\/(tv|series|season|episode)(\/|-)/i.test(url) && !/\/anime\//i.test(url)) best -= 10;
+  if ((opts.type === 'tv' || opts.type === 'series') && /\/movies?(\/|-)/i.test(url) && !/\/anime\//i.test(url)) best -= 10;
+  return Math.max(0, Math.min(100, Math.round(best)));
+}
+
+function candidateSlugTitle(url) {
+  try {
+    const parts = new URL(url).pathname.split('/').filter(Boolean).map(x => { try { return decodeURIComponent(x); } catch { return x; } });
+    const useful = parts.filter(p => !/^(anime|movie|movies|tv|series|show|watch|detail|info|play|title|video|episode|ep-\d+|\d+)$/i.test(p));
+    return normalizeTitle(useful.join(' ').replace(/[-_]+/g, ' '));
+  } catch { return ''; }
+}
+
+function parseResultLinks(html, base) {
+  const byUrl = new Map();
+  const anchorRe = /<a\s[^>]*href\s*=\s*"([^"]+)"[^>]*>([\s\S]{0,1200}?)<\/a>/gi;
+  for (const m of html.matchAll(anchorRe)) {
+    const hrefRaw = decodeEntities(m[1] || '');
+    if (!hrefRaw || hrefRaw.startsWith('#') || /^javascript:/i.test(hrefRaw)) continue;
+    let url = abs(hrefRaw, base);
+    if (!url || !guardUrl(url) || !sameSite(url, base)) continue;
+    try {
+      const u = new URL(url);
+      u.hash = '';
+      if (u.pathname === '/' || BLOCKED_PATH.test(u.pathname + u.search)) continue;
+      url = u.href;
+    } catch { continue; }
+    const inner = m[2] || '';
+    const imgTag = (inner.match(/<img\s[^>]*>/i) || [])[0] || '';
+    const openTag = m[0].slice(0, m[0].indexOf('>') + 1);
+    const title = decodeEntities(stripTags(attr(openTag, 'title') || attr(imgTag, 'alt') || inner)).slice(0, 140);
+    const slug = candidateSlugTitle(url);
+    if ((!title || title.length < 2) && (!slug || slug.length < 2)) continue;
+    const prior = byUrl.get(url);
+    if (!prior || (!prior.title && title) || (title && title.length < prior.title.length && normalizeTitle(title).length >= 2)) {
+      byUrl.set(url, { title: title || (prior && prior.title) || '', slugTitle: slug, url });
+    }
+    if (byUrl.size >= 220) break;
+  }
+  return [...byUrl.values()];
+}
+
+function addTemplate(out, template, base) {
+  if (!template) return;
+  let t = String(template).replace(/%7B/gi, '{').replace(/%7D/gi, '}');
+  t = t.replaceAll(SEARCH_PLACEHOLDER, '{q}');
+  if (!t.includes('{q}') && !t.includes('{slug}')) return;
+  const probe = t.replace('{q}', 'test').replace('{slug}', 'test');
+  const u = guardUrl(abs(probe, base));
+  if (!u || !sameSite(u.href, base)) return;
+  if (!out.includes(t)) out.push(t);
+}
+
+function searchTemplatesFromHtml(html, base) {
+  const out = [];
+  const searchNames = new Set(['q', 'query', 'search', 'keyword', 'keywords', 's', 'title', 'text', 'term', 'name']);
+  for (const fm of html.matchAll(/<form\b[^>]*>[\s\S]{0,4000}?<\/form>/gi)) {
+    const form = fm[0];
+    const open = form.slice(0, form.indexOf('>') + 1);
+    if (/method\s*=\s*["']?post/i.test(open)) continue;
+    const inputs = [...form.matchAll(/<input\b[^>]*>/gi)].map(x => x[0]);
+    const searchInput = inputs.find(tag => {
+      const name = attr(tag, 'name').toLowerCase();
+      return searchNames.has(name) || /^search$/i.test(attr(tag, 'type')) || /search/i.test(attr(tag, 'placeholder'));
+    });
+    if (!searchInput) continue;
+    const name = attr(searchInput, 'name') || 'q';
+    const action = abs(attr(open, 'action') || base, base);
+    const u = guardUrl(action);
+    if (!u) continue;
+    for (const tag of inputs) {
+      const n = attr(tag, 'name');
+      if (!n || n === name) continue;
+      if (/hidden/i.test(attr(tag, 'type'))) u.searchParams.set(n, attr(tag, 'value') || '');
+    }
+    u.searchParams.set(name, SEARCH_PLACEHOLDER);
+    addTemplate(out, u.href, base);
+  }
+  for (const m of html.matchAll(/(?:href|action)\s*=\s*"([^"]*(?:search|filter)[^"]*)"/gi)) {
+    const raw = abs(decodeEntities(m[1]), base);
+    const u = guardUrl(raw);
+    if (!u) continue;
+    for (const key of ['keyword', 'q', 'query', 'search', 's', 'title']) {
+      if (u.searchParams.has(key)) { u.searchParams.set(key, SEARCH_PLACEHOLDER); addTemplate(out, u.href, base); break; }
+    }
+  }
+  return out.slice(0, 8);
+}
+
+function commonSearchTemplates(siteUrl) {
+  const u = guardUrl(siteUrl);
+  if (!u) return [];
+  const roots = new Set();
+  roots.add(u.origin);
+  try { roots.add(new URL('./', u.href).href.replace(/\/$/, '')); } catch {}
+  const suffixes = ['/search?keyword={q}', '/search?q={q}', '/search?query={q}', '/filter?keyword={q}', '/?s={q}', '/search/{slug}', '/search/{q}'];
+  const out = [];
+  for (const root of roots) for (const suffix of suffixes) {
+    const t = root + suffix;
+    if (!out.includes(t)) out.push(t);
+  }
+  return out;
+}
+
+function buildSearchUrl(template, query) {
+  return String(template || '')
+    .replaceAll('{slug}', slugTitle(query))
+    .replaceAll('{q}', encodeURIComponent(query));
+}
+
+async function profileSite(rawUrl) {
+  const u = guardUrl(rawUrl);
+  if (!u) throw new Error('Invalid or blocked URL');
+  const docs = [];
+  const first = await fetchDocument(u.href, false, 8000);
+  docs.push(first);
+  let templates = searchTemplatesFromHtml(first.text, first.finalUrl);
+  if (!templates.length && !sameSite(first.finalUrl, u.origin + '/')) {
+    try {
+      const root = await fetchDocument(u.origin + '/', false, 8000);
+      docs.push(root);
+      templates = searchTemplatesFromHtml(root.text, root.finalUrl);
+    } catch {}
+  } else if (!templates.length && u.pathname !== '/') {
+    try {
+      const root = await fetchDocument(u.origin + '/', false, 8000);
+      docs.push(root);
+      templates = [...new Set([...templates, ...searchTemplatesFromHtml(root.text, root.finalUrl)])];
+    } catch {}
+  }
+  if (!templates.length) templates = commonSearchTemplates(u.href).slice(0, 4);
+  const embedHosts = [...new Set(docs.flatMap(d => iframeHosts(d.text)))];
+  return {
+    ok: true,
+    mode: 'profile',
+    url: first.finalUrl,
+    origin: u.origin,
+    lookup: 'dynamic-title-search',
+    searchTemplate: templates[0] || '',
+    searchTemplates: templates.slice(0, 5),
+    embedHosts,
+  };
+}
+
+function adjustEpisodeInUrl(url, season, episode) {
+  let out = String(url || '');
+  const ep = episode == null ? null : String(episode);
+  const se = season == null ? null : String(season);
+  if (ep != null) {
+    out = out.replace(/([?&](?:ep|episode|episode_id)=)\d+/i, '$1' + ep);
+    out = out.replace(/(\/(?:ep|episode)[-_/])(\d+)(\/?(?:[?#].*)?)$/i, '$1' + ep + '$3');
+    out = out.replace(/(-ep(?:isode)?-)(\d+)(\/?(?:[?#].*)?)$/i, '$1' + ep + '$3');
+  }
+  if (se != null && ep != null) {
+    out = out.replace(/(\/season[-_/])(\d+)(\/episode[-_/])(\d+)/i, '$1' + se + '$3' + ep);
+    out = out.replace(/(\/)(\d{1,3})\/(\d{1,4})(\/?(?:[?#].*)?)$/i, (m, slash, oldSeason, oldEpisode, tail) => {
+      return /\/(tv|series|show|anime)\//i.test(out) ? slash + se + '/' + ep + tail : m;
+    });
+  }
+  return out;
+}
+
+function findEpisodeUrl(html, base, season, episode) {
+  if (episode == null) return '';
+  const stripEpisode = value => {
+    try {
+      const u = new URL(value);
+      return u.origin + u.pathname
+        .replace(/\/(?:ep|episode)[-_/]\d+(?:\/|$)/i, '/')
+        .replace(/-ep(?:isode)?-\d+(?:\/|$)/i, '/')
+        .replace(/\/$/, '');
+    } catch { return ''; }
+  };
+  const baseKey = stripEpisode(base);
+  let best = '', bestScore = -1;
+  for (const m of String(html || '').matchAll(/<a\s[^>]*href\s*=\s*"([^"]+)"[^>]*>([\s\S]{0,500}?)<\/a>/gi)) {
+    const url = abs(decodeEntities(m[1] || ''), base);
+    if (!url || !guardUrl(url) || !sameSite(url, base)) continue;
+    const openTag = m[0].slice(0, m[0].indexOf('>') + 1);
+    const text = normalizeTitle(attr(openTag, 'title') || stripTags(m[2] || ''));
+    const epMatches = [
+      new RegExp('/(?:ep|episode)[-_/]' + episode + '(?:[/?#]|$)', 'i'),
+      new RegExp('-ep(?:isode)?-' + episode + '(?:[/?#]|$)', 'i'),
+      new RegExp('[?&](?:ep|episode|episode_id)=' + episode + '(?:[&#]|$)', 'i'),
+    ].some(re => re.test(url));
+    const textMatches = text === String(episode) || text === 'episode ' + episode || text === 'ep ' + episode;
+    if (!epMatches && !textMatches) continue;
+    let score = epMatches ? 60 : 40;
+    if (baseKey && stripEpisode(url) === baseKey) score += 25;
+    const seasonInUrl = explicitSeason(url);
+    if (seasonInUrl != null) score += seasonInUrl === Number(season || 1) ? 20 : -50;
+    if (score > bestScore) { bestScore = score; best = url; }
+  }
+  return bestScore >= 40 ? best : '';
+}
+function cleanVariants(query) {
+  const values = [query.title, ...(Array.isArray(query.alternatives) ? query.alternatives : []), query.alt].flatMap(v => String(v || '').split('|'));
+  const seen = new Set(), out = [];
+  for (const v of values) {
+    const clean = String(v || '').replace(/\s*\(source test\)\s*$/i, '').trim().slice(0, 140);
+    const key = normalizeTitle(clean);
+    if (clean && key && !seen.has(key)) { seen.add(key); out.push(clean); }
+  }
+  return out.slice(0, 4);
+}
+
+async function resolveMatchedWatch(matchUrl, query) {
+  const isTv = query.type === 'tv' || query.type === 'series';
+  const adjusted = isTv ? adjustEpisodeInUrl(matchUrl, query.season || 1, query.episode || 1) : matchUrl;
+  const attempts = [...new Set([adjusted, matchUrl].filter(Boolean))];
+  let last = null;
+
+  for (const candidateUrl of attempts) {
+    const safe = guardUrl(candidateUrl);
+    if (!safe) continue;
+    try {
+      const doc = await fetchDocument(safe.href, false, 8000);
+      let watch = parseWatch(doc.text, doc.finalUrl);
+      let watchUrl = doc.finalUrl;
+      if (isTv && !watch.embed && !watch.direct.length) {
+        const episodeUrl = findEpisodeUrl(doc.text, doc.finalUrl, query.season || 1, query.episode || 1);
+        if (episodeUrl && episodeUrl !== doc.finalUrl) {
+          const epDoc = await fetchDocument(episodeUrl, false, 8000);
+          watch = parseWatch(epDoc.text, epDoc.finalUrl);
+          watchUrl = epDoc.finalUrl;
+        }
+      }
+      last = { watch, watchUrl };
+      if (watch.direct.length || watch.embed) return last;
+    } catch {}
+  }
+  return last || { watch: { embed: '', embeds: [], direct: [], servers: [], embedHosts: [] }, watchUrl: adjusted || matchUrl };
+}
+
+async function findTitleOnSite(rawSiteUrl, rawQuery) {
+  const site = guardUrl(rawSiteUrl);
+  if (!site) throw new Error('Invalid or blocked site URL');
+  const query = {
+    title: String(rawQuery.title || rawQuery.q || '').trim(),
+    alternatives: rawQuery.alternatives || [],
+    alt: rawQuery.alt || '',
+    type: rawQuery.type || 'movie',
+    year: rawQuery.year || '',
+    season: Number(rawQuery.season || 1) || 1,
+    episode: Number(rawQuery.episode || 1) || 1,
+  };
+  const variants = cleanVariants(query);
+  if (!variants.length) throw new Error('A catalogue title is required');
+
+  let homeDoc = null;
+  try { homeDoc = await fetchDocument(site.href, false, 7000); } catch {}
+  const templates = [];
+  if (rawQuery.searchTemplate) addTemplate(templates, rawQuery.searchTemplate, site.href);
+  if (homeDoc) for (const t of searchTemplatesFromHtml(homeDoc.text, homeDoc.finalUrl)) addTemplate(templates, t, site.href);
+  for (const t of commonSearchTemplates(site.href)) addTemplate(templates, t, site.href);
+
+  let best = null;
+  let checked = 0;
+  const consider = (candidates, strategy) => {
+    for (const candidate of candidates || []) {
+      if (!guardUrl(candidate.url) || !sameSite(candidate.url, site.href)) continue;
+      const score = titleScore(candidate, variants, query);
+      checked++;
+      if (!best || score > best.score) best = { score, url: candidate.url, strategy };
+    }
+  };
+
+  if (homeDoc) {
+    consider(parseResultLinks(homeDoc.text, homeDoc.finalUrl), 'site-home');
+    const homeTitle = pageTitle(homeDoc.text).replace(/\s+[-|–—].*$/, '');
+    consider([{ title: homeTitle, slugTitle: candidateSlugTitle(homeDoc.finalUrl), url: homeDoc.finalUrl }], 'pasted-page');
+  }
+
+  let searchFetches = 0;
+  outer:
+  for (let vi = 0; vi < variants.length; vi++) {
+    if (best && best.score >= 95) break;
+    if (vi > 0 && best && best.score >= 80) break;
+    for (const template of templates.slice(0, 8)) {
+      if (searchFetches >= 10) break outer;
+      const searchUrl = guardUrl(buildSearchUrl(template, variants[vi]));
+      if (!searchUrl || !sameSite(searchUrl.href, site.href)) continue;
+      searchFetches++;
+      try {
+        const doc = await fetchDocument(searchUrl.href, false, 6000);
+        consider(parseResultLinks(doc.text, doc.finalUrl), 'site-search');
+        const finalTitle = pageTitle(doc.text).replace(/\s+[-|–—].*$/, '');
+        if (!BLOCKED_PATH.test(new URL(doc.finalUrl).pathname)) {
+          consider([{ title: finalTitle, slugTitle: candidateSlugTitle(doc.finalUrl), url: doc.finalUrl }], 'search-redirect');
+        }
+        if (best && best.score >= 98) break outer;
+      } catch {}
+    }
+  }
+
+  if (!best || best.score < 80) {
+    return { ok: true, mode: 'find', matched: false, checked, searchFetches, bestScore: best ? best.score : 0 };
+  }
+
+  const resolved = await resolveMatchedWatch(best.url, query);
+  const watch = resolved.watch;
+  const playUrl = (watch.direct && watch.direct[0]) || watch.embed || resolved.watchUrl;
+  return {
+    ok: true,
+    mode: 'find',
+    matched: true,
+    checked,
+    searchFetches,
+    match: { score: best.score, strategy: best.strategy },
+    matchedUrl: best.url,
+    watchUrl: resolved.watchUrl,
+    playUrl,
+    embed: watch.embed || '',
+    embeds: watch.embeds || [],
+    direct: watch.direct || [],
+    servers: watch.servers || [],
+    embedHosts: watch.embedHosts || [],
+    pageFallback: !watch.embed && !(watch.direct && watch.direct.length),
+  };
+}
+
+async function handle(mode, rawUrl, query) {
+  query = query || {};
   const u = guardUrl(rawUrl);
   if (!u) return { status: 400, body: { ok: false, error: 'Invalid or blocked URL' } };
   try {
     if (mode === 'json') {
-      const text = await fetchText(u.href, true);
+      const text = await fetchText(u.href, true, 10000);
       let data; try { data = JSON.parse(text); } catch { return { status: 502, body: { ok: false, error: 'Remote did not return JSON' } }; }
       return { status: 200, body: data, raw: true };
     }
-    const html = await fetchText(u.href, false);
-    if (mode === 'watch') return { status: 200, body: { ok: true, mode, url: u.href, ...parseWatch(html, u.href) } };
-    const items = parseCatalog(html, u.href);
-    let servers = [], embedHosts = iframeHosts(html);
-    if (items.length) {
-      try {
-        const first = guardUrl(items[0].url);
-        if (first) { const w = parseWatch(await fetchText(first.href, false), first.href); servers = w.servers; embedHosts = [...new Set([...embedHosts, ...w.embedHosts])]; }
-      } catch {}
+    if (mode === 'profile') return { status: 200, body: await profileSite(u.href) };
+    if (mode === 'find') {
+      const body = await findTitleOnSite(u.href, {
+        title: query.q || query.title || '',
+        alt: query.alt || '',
+        type: query.type || 'movie',
+        year: query.year || '',
+        season: query.season || 1,
+        episode: query.episode || 1,
+        searchTemplate: query.searchTemplate || '',
+      });
+      return { status: 200, body };
     }
-    return { status: 200, body: { ok: true, mode: 'catalog', url: u.href, site: pageTitle(html), items, servers, embedHosts } };
+    const doc = await fetchDocument(u.href, false, 10000);
+    return { status: 200, body: { ok: true, mode: 'watch', url: doc.finalUrl, ...parseWatch(doc.text, doc.finalUrl) } };
   } catch (e) {
-    return { status: 502, body: { ok: false, error: 'Fetch failed: ' + (e && e.message || e) } };
+    return { status: 502, body: { ok: false, error: 'Site lookup failed: ' + (e && e.message || e) } };
   }
 }
 
@@ -157,9 +577,10 @@ exports.handler = async (event) => {
   const H = { 'Content-Type': 'application/json; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-store' };
   if (event.httpMethod !== 'GET') return { statusCode: 405, headers: H, body: JSON.stringify({ ok: false, error: 'Method not allowed' }) };
   const q = event.queryStringParameters || {};
-  const mode = String(q.mode || 'catalog');
-  if (!['catalog', 'watch', 'json'].includes(mode)) return { statusCode: 400, headers: H, body: JSON.stringify({ ok: false, error: 'Unknown mode' }) };
-  const out = await handle(mode, String(q.url || ''));
+  const mode = String(q.mode || 'profile');
+  if (!['profile', 'find', 'watch', 'json'].includes(mode)) return { statusCode: 400, headers: H, body: JSON.stringify({ ok: false, error: 'Unknown mode' }) };
+  const out = await handle(mode, String(q.url || ''), q);
   return { statusCode: out.status, headers: H, body: JSON.stringify(out.body) };
 };
-exports._parse = { parseCatalog, parseWatch, guardUrl, serverNames };
+exports._parse = { parseWatch, parseResultLinks, guardUrl, serverNames, normalizeTitle, titleScore, searchTemplatesFromHtml, commonSearchTemplates, buildSearchUrl, adjustEpisodeInUrl, findEpisodeUrl };
+exports._find = { profileSite, findTitleOnSite, handle };

@@ -336,12 +336,13 @@ settings.feed=Object.assign({url:"",auto:true,intervalMin:15,lastCheck:0,healthA
 if(!settings.health||typeof settings.health!=="object") settings.health={};
 if(!Array.isArray(settings.dlog)) settings.dlog=[];
 if(!Array.isArray(settings.sites)) settings.sites=[];
-if(!settings.siteCatalogues||typeof settings.siteCatalogues!=="object") settings.siteCatalogues={};
+const hadLegacySiteCatalogues=Object.prototype.hasOwnProperty.call(settings,"siteCatalogues"); if(hadLegacySiteCatalogues) delete settings.siteCatalogues; /* websites are lookup-only: never retain imported site titles/covers */
 if(!Array.isArray(settings.addons)) settings.addons=[];
 if(typeof settings.debridManifestUrl!=="string") settings.debridManifestUrl="";
 let watchlist = loadJSON(LS.watchlist,[]);
 let progress  = loadJSON(LS.progress,{});
 const saveSettings = ()=>saveJSON(LS.settings,settings);
+if(hadLegacySiteCatalogues) saveSettings();
 const saveWatchlist= ()=>saveJSON(LS.watchlist,watchlist);
 const saveProgress = ()=>saveJSON(LS.progress,progress);
 
@@ -674,7 +675,7 @@ function allSources(includeDisabled){
   const dis=new Set(settings.disabledSources||[]);
   const list=SOURCES.map(s=>({id:s.id,name:s.name,kind:"builtin",enabled:!dis.has(s.id)}))
     .concat((settings.customSources||[]).map(c=>({id:c.id,name:c.name,kind:"custom",movieTpl:c.movieTpl||"",tvTpl:c.tvTpl||"",direct:!!c.direct,enabled:c.enabled!==false,addedVia:c.addedVia||"manual"})))
-    .concat((settings.sites||[]).map(c=>({id:c.id,name:c.name,kind:"site",base:c.base,enabled:(c.enabled!==false&&!dis.has(c.id))})))
+    .concat((settings.sites||[]).map(c=>({id:c.id,name:c.name,kind:"site",base:c.base,home:c.home||c.base,lookup:c.lookup||"dynamic",searchTemplate:c.searchTemplate||"",enabled:(c.enabled!==false&&!dis.has(c.id))})))
     .concat((settings.addons||[]).map(a=>({id:a.id,name:a.name,kind:"addon",base:a.base,enabled:(a.enabled!==false&&!dis.has(a.id))})));
   const out=includeDisabled?list:list.filter(s=>s.enabled);
   out.sort((a,b)=>{ const la=LAST_RESORT.has(a.id)?1:0, lb=LAST_RESORT.has(b.id)?1:0; if(la!==lb) return la-lb; return settings.stream.sortByHealth ? healthScore(b.id)-healthScore(a.id) : 0; });
@@ -683,7 +684,7 @@ function allSources(includeDisabled){
 function getSource(id){ return allSources(true).find(s=>s.id===id); }
 function sourceOptionsHTML(selected,forDefault){ const list=allSources(); if(!list.length) return '<option value="">No sources enabled</option>'; return list.map(s=>{ const lr=LAST_RESORT.has(s.id); return '<option value="'+esc(s.id)+'"'+(s.id===selected?" selected":"")+((forDefault&&lr)?" disabled":"")+">"+esc(s.name)+(lr?" \u00b7 last resort":"")+"</option>"; }).join(""); }
 function defaultSourceId(){ const list=allSources(); if(list.some(s=>s.id===settings.source)&&!LAST_RESORT.has(settings.source)) return settings.source; const normal=list.find(s=>!LAST_RESORT.has(s.id)); return (normal||list[0]||{id:"vidstuck"}).id; }
-function sourceHost(source){ try{ if(source.kind==="builtin") return source.id==="embedwave"?"embedwave.cc":source.id==="zxcstream"?"zxcstream.cc":"vidstuck.cc"; return new URL(source.movieTpl||source.tvTpl).hostname; }catch{ return ""; } }
+function sourceHost(source){ try{ if(source.kind==="builtin") return source.id==="embedwave"?"embedwave.cc":source.id==="zxcstream"?"zxcstream.cc":"vidstuck.cc"; if(source.kind==="site"||source.kind==="addon") return new URL(source.base||source.home).hostname; return new URL(source.movieTpl||source.tvTpl).hostname; }catch{ return ""; } }
 function sourceOrigin(source){ const h=sourceHost(source); return h?"https://"+h:""; }
 
 /* ---- templates: {tmdb} {imdb} {type} {season} {episode} {title} {year} ---- */
@@ -752,7 +753,7 @@ function parsePastedLink(raw){
   }
   const q=new URLSearchParams(u.search);
   for(const key of ["tmdb","id","movie","tmdb_id"]){ const v=q.get(key); if(v&&/^\d{2,}$/.test(v)){ q.set(key,"{tmdb}"); const qs=q.toString().replace(/%7B/g,"{").replace(/%7D/g,"}"); return {name, movieTpl:u.origin+u.pathname+"?"+qs, tvTpl:"", direct:false, detected:"TMDB id in query string detected → converted to template"}; } }
-  return {name, movieTpl:s, tvTpl:"", direct:false, detected:"No title id found in that link — saved as a fixed link (opens the same page for every title). Tip: paste a link that contains a TMDB/IMDb id, or write {tmdb} yourself."};
+  return {name, movieTpl:"", tvTpl:"", direct:false, site:true, base:u.origin, home:s, detected:"Website detected → default dynamic lookup. ZeroPlay keeps its own cover/title and checks this site for that exact title/episode only when you press play."};
 }
 function validateTemplate(t){ if(!t) return true; try{ const u=new URL(t.replace(/\{[^}]+\}/g,"1")); return u.protocol==="https:"||u.protocol==="http:"; }catch{ return false; } }
 
@@ -865,7 +866,6 @@ function scheduleDiscovery(){
     }
     const addonDue=Date.now()-Number(settings.feed.lastAddonCheck||0)>=mins*60*1000;
     if(addonDue&&settings.feed.addonsAuto!==false) discoverAddons(false);
-    if(due&&(settings.sites||[]).length) refreshSites(false);
   },60000);
 }
 function applyQualityPreset(q){
@@ -926,13 +926,12 @@ function bindCards(root){
     if(rm){ e.stopPropagation(); const [t,id]=rm.dataset.remove.split(":"); delete progress[keyOf(t,Number(id))]; watchlist=watchlist.filter(w=>!(w.type===t&&w.id===Number(id))); saveProgress(); saveWatchlist(); toast("Removed"); render(); return; }
     const play=e.target.closest("[data-play]"), det=e.target.closest("[data-details]"), list=e.target.closest("[data-list]");
     const card=e.target.closest(".poster-card");
-    if(card&&card.dataset.site){ playSiteItem(card.dataset.site, Number(card.dataset.idx)); return; }
     if(list&&card){ e.stopPropagation(); toggleWatchlist(card.dataset.type,Number(card.dataset.id),card); return; }
     if(play&&card){ e.stopPropagation(); quickPlay(card.dataset.type,Number(card.dataset.id)); return; }
     if(card){ openDetail(card.dataset.type,Number(card.dataset.id)); return; }
     if(det){ const [t,id]=det.dataset.details.split(":"); openDetail(t,Number(id)); }
   });
-  root.addEventListener("keydown",e=>{ const card=e.target.closest&&e.target.closest(".poster-card"); if(card&&(e.key==="Enter"||e.key===" ")){ e.preventDefault(); if(card.dataset.site){ playSiteItem(card.dataset.site,Number(card.dataset.idx)); return; } openDetail(card.dataset.type,Number(card.dataset.id)); } });
+  root.addEventListener("keydown",e=>{ const card=e.target.closest&&e.target.closest(".poster-card"); if(card&&(e.key==="Enter"||e.key===" ")){ e.preventDefault(); openDetail(card.dataset.type,Number(card.dataset.id)); } });
 }
 function toggleWatchlist(type,id,cardEl,snapData){
   if(inWatchlist(type,id)){ watchlist=watchlist.filter(w=>!(w.type===type&&w.id===id)); toast("Removed from watchlist"); }
@@ -1034,7 +1033,7 @@ async function drawPlayer(prevProgress){
   let imdb=st.testImdb||"";
   if(!imdb&&detailState&&detailState.data&&detailState.data.id===it.id) imdb=detailState.data.imdb_id||((detailState.data.external_ids||{}).imdb_id)||"";
   let url="";
-  try{ url=st.directUrl||await resolveSourceURL(source,{type:it.type,id:it.id,title:titleOf(it),year:it.year||yearOf(it),season:st.season,episode:st.episode,timestamp:resume.timestamp,percent:resume.percent,imdb}); }
+  try{ url=st.directUrl||await resolveSourceURL(source,{type:it.type,id:it.id,title:titleOf(it),altTitles:(detailState&&detailState.data?[detailState.data.original_title,detailState.data.original_name].filter(Boolean):[]),year:it.year||yearOf(it),season:st.season,episode:st.episode,timestamp:resume.timestamp,percent:resume.percent,imdb}); }
   catch(e){ if(!st.tempSource&&allSources().some(s=>!st.tried.has(s.id))){ failover(((source&&source.name)||"Source")+" unavailable"); return; } $("#playerStage").innerHTML='<div style="padding:2rem"><div class="status-box error">❌ '+esc(e.message||"Could not resolve this source")+'</div><p style="margin-top:1rem"><button class="btn btn-primary" id="btnGotoSources">Open Source Manager</button></p></div>'; const g=$("#btnGotoSources"); if(g) g.onclick=()=>{ closePlayer(); location.hash="#/sources"; }; return; }
   st.url=url; st.direct=!!(source.direct||isDirectMedia(url));
   if(st.direct){
@@ -1168,7 +1167,7 @@ function drawDetail(){
     +(recs.length?'<div class="detail-section" id="recSection"><h3>More Like This</h3><div class="rail-track">'+recs.map(r=>cardHTML(Object.assign({},r,{media_type:type}))).join("")+"</div></div>":"");
   $("#btnCloseDetail").onclick=closeDetail;
   $("#btnPlay").onclick=()=>openPlayer(snap(d,type),{season:isTV?(prev.season||detailState.season||1):undefined,episode:isTV?(prev.episode||1):undefined,source:$("#detailSource").value});
-  $("#btnStreams").onclick=()=>showStreamsModal({type,id:d.id,title:titleOf(d),year:yearOf(d),season:isTV?(prev.season||detailState.season||1):1,episode:isTV?(prev.episode||1):1,imdb:(d.imdb_id||(d.external_ids||{}).imdb_id||""),item:snap(d,type)});
+  $("#btnStreams").onclick=()=>showStreamsModal({type,id:d.id,title:titleOf(d),altTitles:[d.original_title,d.original_name].filter(Boolean),year:yearOf(d),season:isTV?(prev.season||detailState.season||1):1,episode:isTV?(prev.episode||1):1,imdb:(d.imdb_id||(d.external_ids||{}).imdb_id||""),item:snap(d,type)});
   $("#btnWatchlist").onclick=()=>toggleWatchlist(type,d.id,null,snap(d,type));
   if(trailer) $("#btnTrailer").onclick=()=>openTrailer(titleOf(d),trailer.key);
   if(isTV){ $("#seasonSelect").onchange=e=>{ detailState.season=Number(e.target.value); loadEpisodes(); }; }
@@ -1197,7 +1196,7 @@ async function renderHome(){
   view.innerHTML='<div class="page"><div id="heroSlot">'+skeletonRail("Featured")+"</div>"
     +(continueItems().length?railHTML("Continue Watching",continueItems(),{remove:true}):"")
     +(watchlist.length?railHTML("My Watchlist",watchlist.map(w=>({id:w.id,media_type:w.type,title:w.type==="movie"?w.title:undefined,name:w.type==="tv"?w.title:undefined,poster_path:w.poster_path,poster_url:w.poster_url||null,backdrop_url:w.backdrop_url||null,imdb_id:w.imdb_id||null,release_date:w.year?w.year+"-01-01":"",first_air_date:w.year?w.year+"-01-01":"",vote_average:w.rating?Number(w.rating):0}))):"")
-    +siteRailsHTML()+'<div id="railTrending">'+skeletonRail("Trending Today")+'</div><div id="railMovies">'+skeletonRail("Popular Movies")+'</div><div id="railSeries">'+skeletonRail("Popular Series")+'</div><div id="railTop">'+skeletonRail("Top Rated Movies")+'</div><div id="railNow">'+skeletonRail("Now Playing")+"</div></div>";
+    +'<div id="railTrending">'+skeletonRail("Trending Today")+'</div><div id="railMovies">'+skeletonRail("Popular Movies")+'</div><div id="railSeries">'+skeletonRail("Popular Series")+'</div><div id="railTop">'+skeletonRail("Top Rated Movies")+'</div><div id="railNow">'+skeletonRail("Now Playing")+"</div></div>";
   bindCards(view);
   const fill=async(id,title,path,params,opts)=>{ try{ const d=await tmdb(path,params); const el=document.getElementById(id); if(el) el.outerHTML=railHTML(title,(d.results||[]).filter(x=>typeOf(x)==="movie"||typeOf(x)==="tv").slice(0,16),opts); return d.results||[]; }catch{ const el=document.getElementById(id); if(el) el.innerHTML='<div class="status-box error">❌ '+esc(title)+' failed to load. <button class="btn btn-secondary btn-xs" onclick="location.hash=\'#/home\';location.reload()">Retry</button></div>'; return []; } };
   const trending=await fill("railTrending","Trending Today","/trending/all/day",{page:1},{rd:true});
@@ -1457,9 +1456,9 @@ function renderSources(soft){
   const st=settings.stream, fd=settings.feed, ci=connInfo();
   const rows=allSources(true).map(s=>{
     const dis=new Set(settings.disabledSources||[]);
-    const tplTxt=s.kind==="builtin"?"Built-in ZeroPlay embed · "+esc(sourceHost(s)):s.kind==="site"?("Extracted catalogue · "+(((settings.siteCatalogues||{})[s.id]||{}).items||[]).length+" titles · "+s.base):s.kind==="addon"?("Stremio addon streams · "+s.base):[s.movieTpl?("Movie: "+s.movieTpl):"",s.tvTpl?("TV: "+s.tvTpl):""].filter(Boolean).join("\n");
+    const tplTxt=s.kind==="builtin"?"Built-in ZeroPlay embed · "+esc(sourceHost(s)):s.kind==="site"?("Dynamic title lookup at play time · no titles/covers imported · "+s.base):s.kind==="addon"?("Stremio addon streams · "+s.base):[s.movieTpl?("Movie: "+s.movieTpl):"",s.tvTpl?("TV: "+s.tvTpl):""].filter(Boolean).join("\n");
     return '<div class="src-row"><div class="grow"><span class="nm">'+esc(s.name)+"</span> "
-      +'<span class="chip '+(s.kind==="builtin"?"violet":"")+'">'+(s.kind==="builtin"?"BUILT-IN":s.kind==="site"?"WEBSITE CATALOGUE":s.kind==="addon"?"STREMIO ADDON":s.addedVia==="feed"?"FROM FEED":"CUSTOM")+"</span> "
+      +'<span class="chip '+(s.kind==="builtin"?"violet":"")+'">'+(s.kind==="builtin"?"BUILT-IN":s.kind==="site"?"WEBSITE LOOKUP":s.kind==="addon"?"STREMIO ADDON":s.addedVia==="feed"?"FROM FEED":"CUSTOM")+"</span> "
       +(LAST_RESORT.has(s.id)?'<span class="chip">LAST RESORT</span> ':"")
       +(s.direct?'<span class="chip rd">DIRECT · ≤'+capGb()+"GB</span> ":"")
       +(settings.source===s.id?'<span class="chip rd">DEFAULT</span> ':"")
@@ -1476,13 +1475,13 @@ function renderSources(soft){
   const logs=(settings.dlog||[]).map(e=>'<li><span>'+new Date(e.t).toLocaleTimeString()+"</span>"+esc(e.msg)+"</li>").join("");
   view.innerHTML='<div class="page"><h1>🌐 Sources &amp; FastStream</h1><p class="lede">Paste any website link to turn it into a playable source. Multiple websites supported — no torrents. Direct files are hard-capped at '+capGb()+' GB. Embedwave is always <strong>last resort</strong>.</p>'
 
-  +'<section class="panel"><h2>➕ Add a website as a source</h2><p class="section-desc"><strong>Just paste a homepage</strong> (e.g. anisuge.tv) and press “Extract catalogue” — the app imports its titles &amp; servers automatically and adds the site below as a source. Or paste a link to a title page or player on any site. ZeroPlay RD detects TMDB/IMDb ids and season/episodes and converts the link into a reusable template using <code>{tmdb}</code> <code>{imdb}</code> <code>{season}</code> <code>{episode}</code> <code>{type}</code> <code>{title}</code>.</p>'
-  +'<div class="form-group"><label for="pasteLink">Paste website link</label><div class="input-with-action"><input type="text" id="pasteLink" placeholder="e.g. https://example.com/embed/movie/27205 or https://example.com/watch/tt1375666/1/2"><button class="btn btn-secondary" id="btnDetect" type="button">Detect</button></div><div id="detectNote" class="status-box hidden"></div></div>'
+  +'<section class="panel"><h2>➕ Add a website as a source</h2><p class="section-desc"><strong>Default for every added website: lookup only.</strong> Paste just the homepage (the example earlier was anisuge.tv — it is not built in or permanent). ZeroPlay does <strong>not</strong> import that site’s covers or titles. It keeps the main catalogue’s cover/title, then checks whether that exact title or episode exists on the added site’s servers when you press Watch, and plays from there if found. URL templates below are an optional advanced alternative for sites with predictable TMDB/IMDb links.</p>'
+  +'<div class="form-group"><label for="pasteLink">Paste website link</label><div class="input-with-action"><input type="text" id="pasteLink" placeholder="e.g. anisuge.tv or https://example.com/watch/tt1375666/1/2"><button class="btn btn-secondary" id="btnDetect" type="button">Detect</button></div><div id="detectNote" class="status-box hidden"></div></div>'
   +'<div class="form-row"><div class="form-group"><label for="srcName">Source name</label><input type="text" id="srcName" placeholder="My Site"></div>'
   +'<div class="form-group"><label for="srcKind">Source type</label><select id="srcKind"><option value="embed">Website embed (iframe)</option><option value="direct">Direct media files (.mp4/.m3u8…)</option></select></div></div>'
-  +'<div class="form-group"><label for="srcMovie">Movie URL template</label><input type="text" id="srcMovie" placeholder="https://example.com/embed/movie/{tmdb}"></div>'
-  +'<div class="form-group"><label for="srcTv">TV episode URL template (optional)</label><input type="text" id="srcTv" placeholder="https://example.com/embed/tv/{tmdb}/{season}/{episode}"></div>'
-  +'<div style="display:flex;gap:.6rem;flex-wrap:wrap"><button class="btn btn-primary" id="btnAddSource" type="button">Add source</button><button class="btn btn-outline" id="btnTestNew" type="button">▶ Test with Inception</button> <button class="btn btn-primary" id="btnExtract" type="button">🗂 Extract catalogue from this site</button></div></section>'
+  +'<div class="form-group"><label for="srcMovie">Movie URL template (advanced, optional)</label><input type="text" id="srcMovie" placeholder="https://example.com/embed/movie/{tmdb}"></div>'
+  +'<div class="form-group"><label for="srcTv">TV episode URL template (advanced, optional)</label><input type="text" id="srcTv" placeholder="https://example.com/embed/tv/{tmdb}/{season}/{episode}"></div>'
+  +'<div style="display:flex;gap:.6rem;flex-wrap:wrap"><button class="btn btn-primary" id="btnAddWebsite" type="button">🌐 Add website lookup (default)</button><button class="btn btn-secondary" id="btnAddSource" type="button">Add template source</button><button class="btn btn-outline" id="btnTestNew" type="button">▶ Test template with Inception</button></div></section>'
 
   +'<section class="panel"><h2>▶ Play a link now</h2><p class="section-desc">One-off playback: a direct .mp4/.m3u8 link opens in the built-in player (size-checked against the '+capGb()+' GB cap); any other link opens as a website embed (some sites block embedding — switch source if the player stays blank).</p>'
   +'<div class="input-with-action"><input type="text" id="playLink" placeholder="Paste any video or website URL…"><button class="btn btn-primary" id="btnPlayLink" type="button">▶ Play link</button></div></section>'
@@ -1516,17 +1515,19 @@ function renderSources(soft){
     const p=parsePastedLink($("#pasteLink").value);
     if(!p){ note("❌ That does not look like a valid http(s) link.","error"); return; }
     $("#srcName").value=p.name; $("#srcMovie").value=p.movieTpl; $("#srcTv").value=p.tvTpl; $("#srcKind").value=p.direct?"direct":"embed";
-    note("✅ "+p.detected+(p.detected.startsWith("No title id")?" This looks like a homepage — use “Extract catalogue from this site” to import all its titles.":""),"success");
+    note("✅ "+p.detected,"success");
   };
   $("#pasteLink").addEventListener("paste",()=>setTimeout(()=>$("#btnDetect").click(),30));
   const collectForm=()=>{
     const movieTpl=$("#srcMovie").value.trim(), tvTpl=$("#srcTv").value.trim();
     return {name:$("#srcName").value.trim(),movieTpl,tvTpl,direct:$("#srcKind").value==="direct"};
   };
-  $("#btnExtract").onclick=extractSiteCatalogueFlow;
-  $("#btnAddSource").onclick=()=>{
+  $("#btnAddWebsite").onclick=addWebsiteSourceFlow;
+  $("#btnAddSource").onclick=async()=>{
     const f=collectForm();
-    if(!f.movieTpl&&!f.tvTpl){ note("❌ Add at least a movie or TV template.","error"); return; }
+    const pasted=parsePastedLink($("#pasteLink").value);
+    if(!f.movieTpl&&!f.tvTpl&&pasted&&pasted.site){ await addWebsiteSourceFlow(); return; }
+    if(!f.movieTpl&&!f.tvTpl){ note("❌ Add a template, or use “Add website lookup” for a normal website homepage.","error"); return; }
     if(!validateTemplate(f.movieTpl)||!validateTemplate(f.tvTpl)){ note("❌ Templates must be valid http(s) URLs (placeholders like {tmdb} are allowed).","error"); return; }
     const src={id:"cs-"+Date.now().toString(36)+Math.random().toString(36).slice(2,7),name:f.name||prettyHostName((()=>{try{return new URL(f.movieTpl||f.tvTpl).hostname}catch{return "Source"}})()),movieTpl:f.movieTpl,tvTpl:f.tvTpl,direct:f.direct,enabled:true,addedVia:"manual"};
     settings.customSources.push(src); saveSettings(); dlog("➕ Source added manually: "+src.name);
@@ -1554,7 +1555,7 @@ function renderSources(soft){
       else { const dis=new Set(settings.disabledSources||[]); dis.has(id)?dis.delete(id):dis.add(id); settings.disabledSources=[...dis]; }
       saveSettings(); renderSources(true);
     }
-    if(del){ const did=del.dataset.srcDelete; settings.customSources=settings.customSources.filter(x=>x.id!==did); settings.sites=(settings.sites||[]).filter(x=>x.id!==did); if(settings.siteCatalogues) delete settings.siteCatalogues[did]; saveSettings(); toast("Source removed"); renderSources(true); }
+    if(del){ const did=del.dataset.srcDelete; settings.customSources=settings.customSources.filter(x=>x.id!==did); settings.sites=(settings.sites||[]).filter(x=>x.id!==did); saveSettings(); toast("Source removed"); renderSources(true); }
   });
   $("#btnFeedSave").onclick=()=>{ settings.feed.url=$("#feedUrl").value.trim(); settings.feed.intervalMin=Number($("#feedInterval").value)||15; settings.feed.auto=$("#feedAuto").checked; settings.feed.healthAuto=$("#healthAuto").checked; saveSettings(); scheduleDiscovery(); toast("Discovery settings saved","success"); };
   $("#btnFeedNow").onclick=async e=>{ settings.feed.url=$("#feedUrl").value.trim(); saveSettings(); e.target.disabled=true; e.target.innerHTML='<span class="spinner"></span> Checking…'; await checkFeed(true); e.target.disabled=false; e.target.textContent="Check feed now"; };
@@ -1578,7 +1579,7 @@ function renderSources(soft){
   if(!soft) window.scrollTo({top:0});
 }
 
-/* ---------------- Stremio addon discovery + streams + site catalogues ----------------
+/* ---------------- Stremio addon discovery + streams + dynamic website lookup ----------------
    Zero-config discovery from two public, CORS-open seed catalogs:
    stremio-addons.net (public REST API, attribution in UI) and Cinemeta's
    community addon catalog. Only direct http(s) streams are ever played:
@@ -1715,74 +1716,85 @@ async function resolveAddonURL(source, ctx){
   return res.direct[0].url;
 }
 
-/* ---- site catalogues (paste a homepage -> titles in your catalogue) ---- */
-async function extractCall(mode, url){
-  const r = await fetch("/api/extract?mode="+mode+"&url="+encodeURIComponent(url));
+/* ---- website lookup sources (paste a site; catalogue titles stay in ZeroPlay) ---- */
+async function resolverCall(params){
+  const qs=new URLSearchParams();
+  for(const [k,v] of Object.entries(params||{})) if(v!==undefined&&v!==null&&v!=="") qs.set(k,String(v));
+  const r=await fetch("/api/extract?"+qs.toString());
   let data=null; try{ data=await r.json(); }catch{}
-  if(!r.ok || !data || data.ok===false) throw new Error((data&&data.error) || ("Extractor unavailable (HTTP "+r.status+") — it runs as a serverless function on Vercel/Netlify deploys"));
+  if(!r.ok||!data||data.ok===false) throw new Error((data&&data.error)||("Website lookup service unavailable (HTTP "+r.status+")"));
   return data;
 }
-async function extractSiteCatalogue(rawUrl, manual){
-  const u = (()=>{ try{ return new URL(rawUrl.includes("://")?rawUrl:"https://"+rawUrl); }catch{ return null; } })();
-  if(!u) throw new Error("Invalid URL");
-  const data = await extractCall("catalog", u.href);
-  if(!data.items || !data.items.length) throw new Error("No title cards found on that page (the site may render its catalogue with JavaScript only)");
-  const name = prettyHostName(u.hostname);
-  const id = "site:" + u.hostname;
-  settings.sites = (settings.sites||[]).filter(s=>s.id!==id);
-  settings.sites.push({id, name:(data.site||name).slice(0,40), base:u.origin, home:u.href, enabled:true});
-  settings.siteCatalogues = settings.siteCatalogues || {};
-  settings.siteCatalogues[id] = {items:data.items, servers:data.servers||[], embedHosts:data.embedHosts||[], updatedAt:Date.now()};
+async function extractCall(mode, url){ return resolverCall({mode,url}); }
+async function registerWebsiteSource(rawUrl, manual, preferredName){
+  let u=null;
+  try{ u=new URL(String(rawUrl||"").includes("://")?String(rawUrl):"https://"+String(rawUrl||"")); }catch{}
+  if(!u||(u.protocol!=="https:"&&u.protocol!=="http:")) throw new Error("Paste a valid website link first");
+  if(isDirectMedia(u.href)) throw new Error("That is a direct media file, not a website. Use “Play a link now” for one-off files.");
+  if(/\{(tmdb|imdb|id|season|episode|type)\}/.test(u.href)) throw new Error("That is an explicit URL template — use “Add template source” instead.");
+  const profile=await resolverCall({mode:"profile",url:u.href});
+  const id="site:"+u.hostname.toLowerCase();
+  const name=String(preferredName||prettyHostName(u.hostname)).trim().slice(0,40)||prettyHostName(u.hostname);
+  settings.sites=(settings.sites||[]).filter(site=>site.id!==id);
+  settings.sites.push({id,name,base:profile.origin||u.origin,home:profile.url||u.href,enabled:true,lookup:"dynamic",searchTemplate:profile.searchTemplate||"",addedAt:Date.now()});
+  if(Object.prototype.hasOwnProperty.call(settings,"siteCatalogues")) delete settings.siteCatalogues;
   saveSettings();
-  dlog("🗂 Catalogue extracted from "+u.hostname+": "+data.items.length+" titles"+(data.servers&&data.servers.length?(" · servers: "+data.servers.join(", ")):""));
-  if(manual) toast(data.items.length+" titles added from "+u.hostname, "success");
+  dlog("🌐 Website lookup added: "+name+" ("+u.hostname+") — no website titles or covers imported");
+  if(manual) toast(name+" added as a lookup source","success");
+  return profile;
+}
+function canonicalCatalogueTitle(ctx){
+  return String((ctx&&ctx.title)||"").replace(/\s*\(source test\)\s*$/i,"").trim();
+}
+const siteLookupCache=new Map();
+function siteLookupKey(source,ctx,title){
+  return [source.id,ctx.type||"movie",ctx.id||title,ctx.season||1,ctx.episode||1].join(":");
+}
+async function findOnWebsite(source, ctx){
+  const site=(settings.sites||[]).find(x=>x.id===source.id)||source;
+  const title=canonicalCatalogueTitle(ctx);
+  if(!title) throw new Error((source.name||"Website")+" lookup needs the catalogue title");
+  const key=siteLookupKey(source,ctx,title);
+  const cached=siteLookupCache.get(key);
+  if(cached&&Date.now()-cached.t<(cached.data.matched?900000:300000)) return cached.data;
+  const data=await resolverCall({
+    mode:"find",
+    url:site.home||site.base||source.home||source.base,
+    q:title,
+    alt:(ctx.altTitles||[]).filter(Boolean).join("|"),
+    type:ctx.type||"movie",
+    year:ctx.year||"",
+    season:ctx.season||1,
+    episode:ctx.episode||1,
+    searchTemplate:site.searchTemplate||source.searchTemplate||""
+  });
+  siteLookupCache.set(key,{t:Date.now(),data});
   return data;
 }
-function adjustEpisodeInUrl(url, episode){
-  if(episode==null) return url;
-  return url.replace(/\/ep-(\d+)(\/?(?:[?#].*)?)$/, "/ep-"+episode+"$2").replace(/([?&]ep(?:isode)?=)\d+/i, "$1"+episode);
+async function checkWebsiteAvailability(source, ctx){
+  try{ return await findOnWebsite(source,ctx); }
+  catch(e){ return {matched:false,error:e.message||String(e)}; }
 }
 async function resolveSiteURL(source, ctx){
-  const cat = (settings.siteCatalogues||{})[source.id];
-  if(!cat || !cat.items.length) throw new Error(source.name+" catalogue is empty — re-extract it in Sources");
-  const norm = s=>String(s||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
-  const target = norm(ctx.title);
-  const item = cat.items.find(i=>norm(i.title)===target) || cat.items.find(i=>norm(i.title).startsWith(target)||target.startsWith(norm(i.title)));
-  if(!item) throw new Error("“"+(ctx.title||"This title")+"” was not found in the "+source.name+" catalogue extract");
-  const watchUrl = adjustEpisodeInUrl(item.url, ctx.type==="tv" ? ctx.episode : null);
-  const watch = await extractCall("watch", watchUrl);
-  return (watch.direct&&watch.direct[0]) || watch.embed || watchUrl;
+  const found=await findOnWebsite(source,ctx);
+  if(!found.matched||!found.playUrl) throw new Error("“"+canonicalCatalogueTitle(ctx)+"” was not found on "+source.name);
+  return found.playUrl;
 }
-async function playSiteItem(siteId, idx){
-  const site=(settings.sites||[]).find(s=>s.id===siteId);
-  const cat=(settings.siteCatalogues||{})[siteId];
-  const item=cat&&cat.items[idx];
-  if(!site||!item){ toast("That catalogue entry is gone — re-extract the site","error"); return; }
-  toast("Extracting player from "+site.name+"…");
+async function addWebsiteSourceFlow(){
+  const raw=($("#pasteLink").value||"").trim();
+  const note=(msg,type)=>{ const n=$("#detectNote"); if(n){ n.textContent=msg; n.className="status-box "+type; } };
+  if(!raw){ note("❌ Paste a website homepage or title-page link first.","error"); return; }
+  const btn=$("#btnAddWebsite");
+  if(btn){ btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Checking website lookup…'; }
+  note("🌐 Checking how this website searches — no covers or titles will be imported.","info");
   try{
-    const watch = await extractCall("watch", item.url);
-    const url = (watch.direct&&watch.direct[0]) || watch.embed || item.url;
-    playResolvedURL(url, {id:"site:"+siteId+":"+idx, type:"movie", title:item.title, poster_url:item.poster||null}, site.name);
-  }catch(e){ toast("Could not extract a player: "+(e.message||e), "error"); }
-}
-function siteRailsHTML(){
-  let out="";
-  for(const site of (settings.sites||[]).filter(s=>s.enabled!==false)){
-    const cat=(settings.siteCatalogues||{})[site.id];
-    if(!cat||!cat.items.length) continue;
-    out += '<section class="rail"><div class="rail-head"><h2>🗂 From '+esc(site.name)+'</h2><div class="rail-arrows"><button class="icon-btn" data-scroll="-1" aria-label="Scroll left">‹</button><button class="icon-btn" data-scroll="1" aria-label="Scroll right">›</button></div></div><div class="rail-track">'
-      + cat.items.map((it,i)=>'<article class="poster-card" data-site="'+esc(site.id)+'" data-idx="'+i+'" tabindex="0" role="button" aria-label="'+esc(it.title)+'"><div class="poster-wrap"><img loading="lazy" src="'+esc(it.poster||phSVG(it.title, i+3, 342, 513))+'" alt="'+esc(it.title)+'" data-seed="'+i+'"><div class="poster-badges"><span class="chip rd">'+esc(site.name)+'</span></div><div class="hover-actions"><button class="btn btn-primary">▶ Watch on '+esc(site.name)+'</button></div></div><div class="poster-meta"><div class="t">'+esc(it.title)+'</div><div class="s">Extracted catalogue</div></div></article>').join("")
-      + "</div></section>";
+    await registerWebsiteSource(raw,true,($("#srcName").value||"").trim());
+    note("✅ Website added as a lookup source. Pick any existing catalogue title and ZeroPlay will check this site at play time.","success");
+    renderSources(true);
+  }catch(e){
+    note("❌ "+(e.message||e),"error");
+    if(btn){ btn.disabled=false; btn.textContent="🌐 Add website lookup (default)"; }
   }
-  return out;
-}
-async function refreshSites(manual){
-  for(const site of (settings.sites||[]).filter(s=>s.enabled!==false)){
-    try{ await extractSiteCatalogue(site.home, false); }catch(e){ dlog("⚠️ Catalogue refresh failed for "+site.name+": "+(e.message||e)); }
-  }
-  if(manual) toast("Site catalogues refreshed","success");
-  if(routeNow()==="home"||routeNow()==="") render();
-  if(routeNow()==="sources") renderSources(true);
 }
 
 /* ---- ⚡ Find streams modal (3 players + your sites + addon direct streams) ---- */
@@ -1795,9 +1807,9 @@ async function showStreamsModal(ctx){
   $("#streamsRoot").innerHTML='<div class="overlay" id="streamsOverlay"><div class="modal"><button class="icon-btn modal-close" id="btnCloseStreams" aria-label="Close">×</button>'
     +'<div style="padding:1.6rem 1.8rem 1.8rem"><span class="logo-badge" style="margin-bottom:.7rem">⚡ FastStream · Find streams</span>'
     +'<h2 style="color:var(--text-heading)">'+esc(ctx.title||"Stream")+(ctx.type==="tv"?' <span class="chip violet">S'+(ctx.season||1)+" · E"+(ctx.episode||1)+"</span>":"")+"</h2>"
-    +'<p class="section-desc">The 3 players and your websites first, then direct streams discovered from Stremio addons. Torrent streams are hidden (no-torrent policy); files over '+capGb()+' GB are hidden by your cap.</p>'
+    +'<p class="section-desc">The 3 players first. Added websites are checked live against this existing catalogue title/episode — their own covers and titles are never imported. Then direct streams discovered from Stremio addons. Torrent streams are hidden (no-torrent policy); files over '+capGb()+' GB are hidden by your cap.</p>'
     +'<h3 class="category-heading">Players &amp; websites</h3><div id="streamEmbeds">'
-    + embeds.map(s=>'<div class="src-row"><div class="grow"><span class="nm">'+esc(s.name)+'</span> '+(LAST_RESORT.has(s.id)?'<span class="chip">LAST RESORT</span> ':"")+healthBadge(s.id)+'</div><div class="src-actions"><button class="btn btn-primary btn-xs" data-stream-embed="'+esc(s.id)+'">▶ Play</button></div></div>').join("")
+    + embeds.map(s=>'<div class="src-row"><div class="grow"><span class="nm">'+esc(s.name)+'</span> '+(s.kind==="site"?'<span class="chip" data-site-status="'+esc(s.id)+'">checking title on site…</span> ':"")+(LAST_RESORT.has(s.id)?'<span class="chip">LAST RESORT</span> ':"")+healthBadge(s.id)+'</div><div class="src-actions"><button class="btn btn-primary btn-xs" data-stream-embed="'+esc(s.id)+'"'+(s.kind==="site"?" disabled":"")+'>'+(s.kind==="site"?"Checking…":"▶ Play")+'</button></div></div>').join("")
     +'</div><h3 class="category-heading">Direct streams (Stremio addons) — play in embedded FastStream</h3>'
     +'<div style="margin-bottom:.8rem"><button class="btn btn-primary" id="btnRace">⚡ FastStream Race — measure &amp; play fastest</button> <span id="raceStatus" class="help-text" style="display:inline"></span></div>'
     +'<div id="streamDirect"><p style="color:var(--text-muted)"><span class="spinner"></span> Querying '+enabledAddons().length+' discovered addons…</p></div>'
@@ -1824,6 +1836,17 @@ async function showStreamsModal(ctx){
     const c=streamsCtx; closeStreams(); closeDetail();
     playResolvedURL(chosen.url, c.item||{id:c.id,type:c.type,title:c.title}, chosen.addonName); polluteProgressFromStream(c);
   };
+  for(const s of embeds.filter(x=>x.kind==="site")){
+    checkWebsiteAvailability(s,ctx).then(found=>{
+      if(!streamsCtx||streamsCtx!==ctx) return;
+      const statusEl=$$("#streamEmbeds [data-site-status]").find(el=>el.dataset.siteStatus===s.id);
+      const btn=$$("#streamEmbeds [data-stream-embed]").find(el=>el.dataset.streamEmbed===s.id);
+      if(!statusEl||!btn) return;
+      if(found.matched){ statusEl.textContent="✓ found on this site"; statusEl.className="chip rd"; btn.disabled=false; btn.textContent="▶ Play from site"; }
+      else if(found.error){ statusEl.textContent="lookup failed"; btn.disabled=false; btn.textContent="▶ Try site"; }
+      else { statusEl.textContent="not found on this site"; btn.disabled=true; btn.textContent="Not available"; }
+    });
+  }
   const agg = await collectAllStreams(ctx);
   if(!streamsCtx) return;
   streamsCtx._direct = agg.direct;
@@ -1854,18 +1877,6 @@ function wireAddonPanel(){
     if(a){ a.enabled=a.enabled===false?true:false; saveSettings(); renderSources(true); }
   });
 }
-async function extractSiteCatalogueFlow(){
-  const raw=($("#pasteLink").value||"").trim();
-  const note=(msg,type)=>{ const n=$("#detectNote"); n.textContent=msg; n.className="status-box "+type; };
-  if(!raw){ note("❌ Paste a website link first (e.g. anisuge.tv).","error"); return; }
-  note("🗂 Extracting catalogue from "+raw+" …","info");
-  try{
-    const data=await extractSiteCatalogue(raw, true);
-    note("✅ Extracted "+data.items.length+" titles from "+new URL(data.url).hostname+" — find them on Home and in Available sources."+(data.servers&&data.servers.length?(" Servers: "+data.servers.join(", ")):""),"success");
-    renderSources(true);
-  }catch(e){ note("❌ "+(e.message||e),"error"); }
-}
-
 /* ---------------- router ---------------- */
 function setNav(name){ $$(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.nav===name)); }
 function render(){
