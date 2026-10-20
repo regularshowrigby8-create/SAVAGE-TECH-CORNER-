@@ -2453,6 +2453,7 @@ async function runDiscoveryCycle(reason){
         for(const e of (r.errors||[])) totals.errors.push(key+": "+e);
       }catch(e){ totals.errors.push(key+": "+(e.message||e)); }
       syncInstalledAddonsFromProviders(); saveSettings();
+      if(document.getElementById("providerList")) refreshProviderList();
       await discoveryDelay(60);
     }
   }finally{
