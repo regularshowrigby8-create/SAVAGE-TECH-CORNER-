@@ -1,21 +1,55 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm install --ignore-scripts --no-audit --no-fund",
   "rewrites": [
-    { "source": "/movie/:path*", "destination": "/index.html" },
-    { "source": "/tv/:path*", "destination": "/index.html" },
-    { "source": "/movies", "destination": "/index.html" },
-    { "source": "/series", "destination": "/index.html" },
-    { "source": "/library", "destination": "/index.html" },
-    { "source": "/search", "destination": "/index.html" },
-    { "source": "/configure", "destination": "/index.html" }
+    {
+      "source": "/movie/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/tv/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/movies",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/series",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/library",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/search",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/configure",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        },
         {
           "key": "Content-Security-Policy",
           "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https://image.tmdb.org data: blob:; connect-src 'self' https://api.themoviedb.org https://api.real-debrid.com; frame-src https://vidstuck.cc https://zxcstream.cc https://embedwave.cc https://www.youtube.com https://www.youtube-nocookie.com; media-src https: blob:; object-src 'none'; base-uri 'self'; form-action 'self'"
