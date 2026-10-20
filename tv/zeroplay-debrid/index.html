@@ -283,8 +283,8 @@ body.locked{overflow:hidden}
 
 <div class="demo-banner hidden" id="demoBanner">
   <div class="status-box info">
-    <span>ℹ️ <strong>Offline demo data</strong> — the keyless Cinemeta catalog is unreachable right now. Add a free TMDB API key for live data, or try again. Playback already works.</span>
-    <button class="btn btn-primary btn-xs" id="demoBannerBtn" type="button">Add TMDB key →</button>
+    <span>ℹ️ <strong>Offline demo data</strong> — no bundled TMDB key is configured on this deployment and the keyless Cinemeta catalog is unreachable right now. Set <code>TMDB_API_KEY</code> in the hosting environment for launch-ready TMDB, or paste your own key. Playback already works.</span>
+    <button class="btn btn-primary btn-xs" id="demoBannerBtn" type="button">TMDB setup →</button>
   </div>
 </div>
 
@@ -436,7 +436,7 @@ function demoResponse(path,params){
 /* ---------------- TMDB client ---------------- */
 let demoMode = false;
 let catalogMode="tmdb";
-function setCatalogMode(m){ catalogMode=m; const c=$("#catalogModeChip"); if(c) c.textContent = m==="cinemeta" ? "Catalog: Cinemeta (keyless)" : m==="demo" ? "Catalog: offline demo" : "Catalog: TMDB"; }
+function setCatalogMode(m){ catalogMode=m; const c=$("#catalogModeChip"); if(c) c.textContent = m==="cinemeta" ? "Catalog: Cinemeta (keyless)" : m==="demo" ? "Catalog: offline demo" : m==="tmdb-bundled" ? "Catalog: TMDB (bundled)" : "Catalog: TMDB"; }
 function setDemo(on){ demoMode=on; $("#demoBanner").classList.toggle("hidden",!on); }
 /* ---------------- Cinemeta keyless catalogue ----------------
    Stremio's official catalogue addon (no API key, CORS-open). Used whenever
@@ -616,7 +616,7 @@ async function tmdb(path,params={}){
     if(!r.ok) throw new Error("HTTP "+r.status);
     const data=await r.json();
     if(data&&data.success===false) throw new Error(data.status_message||"TMDB error");
-    setCatalogMode("tmdb");
+    setCatalogMode(key?"tmdb":"tmdb-bundled");
     return data;
   }catch(err){
     if(!key){
@@ -1343,10 +1343,10 @@ function renderDebrid(){
     +'<section class="section"><h2>4. Video Resolutions</h2>'+checkboxCards("resolutions",RESOLUTIONS.map(([v,t])=>[v,t,v]),d.resolutions)+"</section>"
     /* 5 ZeroPlay */
     +'<section class="section"><h2>5. ZeroPlay Catalog &amp; Playback</h2>'
-    +'<div class="form-group"><label for="tmdbKey">TMDB API Key <span class="required">*</span></label>'
-    +'<div class="input-with-action"><input type="password" id="tmdbKey" placeholder="TMDB v3 API key or v4 access token" autocomplete="off" value="'+esc(settings.tmdbKey||"")+'"><button type="button" id="btnTestTmdb" class="btn btn-secondary">Test Key</button></div>'
+    +'<div class="form-group"><label for="tmdbKey">TMDB API Key <span class="optional">optional override</span></label>'
+    +'<div class="input-with-action"><input type="password" id="tmdbKey" placeholder="Optional — leave blank to use the bundled deployment key" autocomplete="off" value="'+esc(settings.tmdbKey||"")+'"><button type="button" id="btnTestTmdb" class="btn btn-secondary">Test TMDB</button></div>'
     +'<div id="tmdbStatus" class="status-box hidden"></div>'
-    +'<small class="help-text">Free at <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">themoviedb.org/settings/api</a>. Leave empty if your Netlify deploy sets <code>TMDB_API_KEY</code> (server-side proxy) — otherwise the demo catalog is shown.</small></div>'
+    +'<small class="help-text">Original ZeroPlay ships with a bundled TMDB key so the catalog works on launch. On web that key stays server-side: leave this blank when the deployment sets <code>TMDB_API_KEY</code> or <code>TMDB_ACCESS_TOKEN</code> in Vercel/Netlify environment variables. Paste your own free key from <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">themoviedb.org/settings/api</a> only if you want to override the bundled key on this device.</small></div>'
     +'<div class="form-row"><div class="form-group"><label for="playbackSource">Default playback source</label><select id="playbackSource">'+sourceOptionsHTML(settings.source,true)+"</select>"
     +'<small class="help-text">ZeroPlay embed sources. Switch any time inside the player. Embedwave is always last resort — it cannot be the default and is only tried after every other source.</small></div>'
     +'<div class="form-group"><label for="addonBase">DebridStream server URL</label><input type="text" id="addonBase" placeholder="https://your-debrid-stream.example.com" value="'+esc(settings.addonBase||"")+'">'
@@ -1378,18 +1378,25 @@ function renderDebrid(){
 
   $("#btnTestTmdb").onclick=async()=>{
     const key=$("#tmdbKey").value.trim(), box=$("#tmdbStatus"), btn=$("#btnTestTmdb");
-    if(!key){ status(box,"Paste a TMDB key first — or leave empty to use the Netlify TMDB_API_KEY proxy / demo catalog.","error"); return; }
     btn.disabled=true; btn.textContent="Checking...";
     try{
-      const url=new URL("https://api.themoviedb.org/3/trending/all/day"); url.searchParams.set("page","1");
-      const opts={headers:{Accept:"application/json"}};
-      if(key.startsWith("eyJ")) opts.headers.Authorization="Bearer "+key; else url.searchParams.set("api_key",key);
-      const r=await fetch(url,opts); if(!r.ok) throw new Error("TMDB rejected the key (HTTP "+r.status+")");
-      await r.json();
-      settings.tmdbKey=key; saveSettings(); setDemo(false);
-      status(box,"✅ TMDB key works! Saved — the live catalog is now active.","success");
+      if(!key){
+        const r=await fetch("/api/tmdb?path=%2Ftrending%2Fall%2Fday&page=1",{headers:{Accept:"application/json"}});
+        const data=await r.json().catch(()=>null);
+        if(!r.ok) throw new Error(data&&data.code==="TMDB_NOT_CONFIGURED" ? "No bundled TMDB key is configured on this deployment yet. Add TMDB_API_KEY (or TMDB_ACCESS_TOKEN) in the Vercel/Netlify environment variables and redeploy — or paste your own key here." : "Bundled TMDB proxy unavailable (HTTP "+r.status+")");
+        settings.tmdbKey=""; saveSettings(); setDemo(false); setCatalogMode("tmdb-bundled");
+        status(box,"✅ Bundled TMDB key is active — the TMDB catalog works on launch with no key entry.","success");
+      }else{
+        const url=new URL("https://api.themoviedb.org/3/trending/all/day"); url.searchParams.set("page","1");
+        const opts={headers:{Accept:"application/json"}};
+        if(key.startsWith("eyJ")) opts.headers.Authorization="Bearer "+key; else url.searchParams.set("api_key",key);
+        const r=await fetch(url,opts); if(!r.ok) throw new Error("TMDB rejected the key (HTTP "+r.status+")");
+        await r.json();
+        settings.tmdbKey=key; saveSettings(); setDemo(false); setCatalogMode("tmdb");
+        status(box,"✅ Your TMDB key works! Saved on this device — the live catalog is now active.","success");
+      }
     }catch(e){ status(box,"❌ "+(e.message||"Could not reach TMDB"),"error"); }
-    btn.disabled=false; btn.textContent="Test Key";
+    btn.disabled=false; btn.textContent="Test TMDB";
   };
 
   const collect=()=>{

@@ -23,11 +23,14 @@ the source-manager/FastStream feature list, and the honest limitations
 
 ## Phase 3 (keyless pictures, dynamic website lookup, addon discovery, embedded FastStream)
 
-- **Real posters with zero config**: when no TMDB key/proxy is configured, the catalogue
-  now comes from Stremio's keyless Cinemeta addon (real Metahub artwork, TMDB ids
-  preserved via `moviedb_id`). The header chip shows the active catalogue
-  (TMDB / Cinemeta / offline demo); the static demo only appears if Cinemeta is
-  unreachable too.
+- **Bundled TMDB on launch (original ZeroPlay model) + keyless fallback**: original
+  ZeroPlay's release builds inject a project TMDB key from a private CI/hosting
+  secret, so users never paste a key. The web equivalent here is the server-side
+  `TMDB_API_KEY` / `TMDB_ACCESS_TOKEN` environment variable behind `/api/tmdb`;
+  once the deployer sets it, the header shows “Catalog: TMDB (bundled)” and a
+  pasted key is only an optional per-device override. Until/unless that env key is
+  configured, the catalogue falls back to Stremio's keyless Cinemeta addon (real
+  Metahub artwork, TMDB ids preserved via `moviedb_id`), then the offline demo.
 - **Paste a homepage, get a lookup source (default for every added website)**:
   Sources → paste a site such as the `anisuge.tv` example → "Add website lookup".
   Anisuge is not built in or permanent. The app does **not** import/pull the

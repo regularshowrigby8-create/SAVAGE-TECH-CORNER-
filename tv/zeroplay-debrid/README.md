@@ -21,9 +21,11 @@ limits, resolutions, `[RD+]` cached-only toggle, Install-to-Stremio manifest gen
 2. Go to **[app.netlify.com/drop](https://app.netlify.com/drop)** and drop the zip/file.
 3. Done — you get a live `*.netlify.app` URL.
 
-With drag & drop there is no server-side TMDB key, so the app opens in **demo catalog**
-mode (playback already works). For the live catalog, open **⚡ Debrid → section 5** in the
-app and paste your free TMDB API key (stored only in your browser).
+With drag & drop there is no bundled server-side TMDB key. The app then opens with the
+keyless Cinemeta catalog when reachable (offline demo only if that is unreachable too;
+playback already works). For original-ZeroPlay-style **TMDB on launch for every
+visitor**, use a Git/hosting deploy and set the bundled deployment key below; a key
+pasted in **⚡ Debrid → section 5** is only an optional per-device override.
 
 ### Option B — Git deploy (recommended: live catalog for every visitor)
 
@@ -93,9 +95,13 @@ npx netlify env:set TMDB_API_KEY your_tmdb_v3_key
 
 ### Catalog modes (automatic, in order)
 
-1. **Your pasted TMDB key** (⚡ Debrid → 5) → browser talks to TMDB directly (v3 key or v4 token).
-2. **Netlify env key** → browser uses the `/api/tmdb` function proxy.
-3. **Neither** → built-in 18-title **demo catalog** with generated artwork. Playback, details
+1. **Your pasted TMDB key** (⚡ Debrid → 5, optional override) → browser talks to TMDB directly (v3 key or v4 token).
+2. **Bundled deployment TMDB key** → browser uses the `/api/tmdb` function proxy. This is
+   the web equivalent of original ZeroPlay's bundled launch key: the deployer sets
+   `TMDB_API_KEY` / `TMDB_ACCESS_TOKEN` once in Vercel/Netlify environment variables,
+   the secret never reaches the browser, and visitors get TMDB on launch with no key entry.
+3. **Keyless Cinemeta catalog** → real posters/metadata with TMDB ids preserved when no TMDB key/proxy is available.
+4. **Offline demo catalog** → only if Cinemeta is unreachable too. Playback, details
    and episodes still work so you can evaluate the whole UI before adding keys.
 
 ## ⚠️ Honest notes

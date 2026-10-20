@@ -75,7 +75,7 @@ module.exports = async function handler(req, res) {
 
   const v3 = process.env.TMDB_API_KEY;
   const v4 = process.env.TMDB_ACCESS_TOKEN;
-  if (!v3 && !v4) return send(res, 503, { error: 'The catalog is temporarily unavailable. Please try again later.' });
+  if (!v3 && !v4) return send(res, 503, { error: 'The catalog is temporarily unavailable. Please try again later.', code: 'TMDB_NOT_CONFIGURED' });
 
   const path = raw.path;
   const url = new URL('https://api.themoviedb.org/3' + path);
