@@ -1,58 +1,41 @@
-# 📺 TV — ZeroPlay × DebridStream prototype
+# TV — ZeroPlay prototype
 
-This folder is the new home base for the TV project. It was created inside
-`SAVAGE-TECH-CORNER-` because this Arena session is bound to that repo/branch —
-the whole `tv/` folder can be copied into the standalone `tv` GitHub repo as-is.
+This folder is the working area for the TV project.
 
 | Path | What it is |
 | --- | --- |
-| `upstream-zeroplay/` | Fresh sparse clone of [Zer0Spce/ZeroPlay](https://github.com/Zer0Spce/ZeroPlay) (`web/` + `api/` + root files), **unmodified reference**. Full clone (Android/TV/Windows) when needed: `git clone https://github.com/Zer0Spce/ZeroPlay` |
-| `zeroplay-debrid/` | **The prototype app** — ZeroPlay's discovery/playback in DebridStream's UI, plus the Sources/FastStream feature set. This is what is deployed. |
+| `upstream-zeroplay/` | Unmodified sparse reference clone of ZeroPlay (`web/`, `api/` and root files). |
+| `zeroplay-debrid/` | The deployed web prototype. The directory name is historical; Real-Debrid features have been removed from the app. |
 
 **Live prototype:** https://zeroplay-rd.vercel.app
 (Vercel project `zeroplay-rd`, root directory `tv/zeroplay-debrid`.)
 
-**Status:** web prototype for review. Next phase after approval: adapt for the
-Xiaomi TV Box (3rd gen) — Android TV focus/D-pad navigation, larger type,
-remote-friendly player — building on ZeroPlay's TV experience in
-`upstream-zeroplay/` and the upstream Android TV source.
+**Status:** web prototype for review. Xiaomi TV Box 3rd-generation adaptation
+remains a later phase after user approval.
 
-See `zeroplay-debrid/README.md` for deploy instructions (Netlify + Vercel),
-the source-manager/FastStream feature list, and the honest limitations
-(5 GB cap scope, discovery model, embed quality control).
+## Current discovery design
 
-## Phase 3 (keyless pictures, dynamic website lookup, addon discovery, embedded FastStream)
+- Visitors never enter API keys. TMDB is used only if the deployment provides
+  a server-side `TMDB_API_KEY` or `TMDB_ACCESS_TOKEN`; otherwise the keyless
+  Cinemeta catalogue supplies real posters/metadata.
+- One continuous-search button starts independent crawlers for recursive
+  addon catalogues, stremio-addons.net, GitHub projects, feeds/seeds,
+  websites, candidate server identification and health.
+- The crawler identifies a server/addon before installing it: manifest,
+  resources, movie/series support, ID prefixes, searchable catalogues and
+  episode capability are recorded by category.
+- GitHub projects are not executed. They become installed providers only when
+  a hosted declarative endpoint/manifest is identified.
+- The provider registry has no ZeroPlay-imposed cap. Providers can be
+  filtered, searched, enabled, disabled and removed while the crawler runs;
+  the UI paginates rows only for rendering performance.
+- At playback time, the built-in title identifier creates a canonical identity
+  from TMDB/IMDb IDs, title variants, year, type and season/episode. Website
+  results, catalogue metas and direct streams must pass that identifier.
+- Added websites remain lookup-only: no titles or covers are imported.
+- VidStuck/ZXCStream/Embedwave remain built-in, Embedwave is last resort,
+  direct media uses embedded FastStream, torrents are hidden, and known files
+  over the hard 5 GB ceiling are rejected.
 
-- **Bundled TMDB on launch (original ZeroPlay model) + keyless fallback**: original
-  ZeroPlay's release builds inject a project TMDB key from a private CI/hosting
-  secret, so users never paste a key. The web equivalent here is the server-side
-  `TMDB_API_KEY` / `TMDB_ACCESS_TOKEN` environment variable behind `/api/tmdb`;
-  once the deployer sets it, the header shows “Catalog: TMDB (bundled)” and a
-  pasted key is only an optional per-device override. Until/unless that env key is
-  configured, the catalogue falls back to Stremio's keyless Cinemeta addon (real
-  Metahub artwork, TMDB ids preserved via `moviedb_id`; fetched directly and,
-  if that network path fails, through this deployment's `/api/extract?mode=json`
-  Vercel/Netlify relay), then the offline demo.
-- **Paste a homepage, get a lookup source (default for every added website)**:
-  Sources → paste a site such as the `anisuge.tv` example → "Add website lookup".
-  Anisuge is not built in or permanent. The app does **not** import/pull the
-  website's covers or titles and does not create Home rails from it. It stores
-  only the domain/search configuration. When the user selects an existing
-  catalogue title/episode, `api/extract.js` (Netlify twin included) checks that
-  site's public search/results for the exact title, resolves the matching
-  episode/watch page, and plays its embed/direct stream if found. Explicit URL
-  templates remain an optional advanced source type. SSRF-guarded; no
-  login/paywall/CAPTCHA/DRM bypass.
-- **Zero-config Stremio addon discovery**: continuously crawls stremio-addons.net's
-  public API + Cinemeta's community addon catalog and registers stream addons as
-  sources. Only direct http(s) streams are ever shown/played — torrent and
-  external-player streams are counted and hidden; >5 GB (your cap) dropped.
-  Detail pages get "⚡ Find streams" with a FastStream Race (parallel 384 KB
-  throughput measurement, fastest wins). Your generated DebridStream manifest is
-  pinned as an addon source automatically.
-- **FastStream embedded for any direct stream**: direct files/streams play inside
-  the official FastStream web player (faststream.online, fragmented parallel
-  downloading) embedded in-app — no external players, "Open original" removed.
-  Built-in HTML5 fallback (4-way parallel-range priming + live MB/s HUD) one tap
-  away. The 3 embed players keep FastStream race/preload/failover around them
-  (their cross-origin internals can't be accelerated by any host page).
+See `zeroplay-debrid/README.md` for the full architecture, deployment and
+limitations.

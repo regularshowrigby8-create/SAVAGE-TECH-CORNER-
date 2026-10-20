@@ -1,4 +1,4 @@
-/* ZeroPlay RD — website title lookup + watch resolver (Vercel Function)
+/* ZeroPlay — website title lookup + watch resolver (Vercel Function)
  *
  * mode=profile : inspect a user-added website only to discover how its public
  *                search works. It does not import that site's titles/covers.
@@ -189,9 +189,39 @@ function explicitSeason(text) {
   return m ? Number(m[1]) : null;
 }
 function tokenSet(s) { return new Set(normalizeTitle(s).split(' ').filter(Boolean)); }
+function explicitEpisodeInfo(text) {
+  const raw = String(text || '');
+  const normalized = raw.replace(/[_./-]+/g, ' ').toLowerCase();
+  let m = normalized.match(/\bs\s*(\d{1,3})\s*e\s*(\d{1,4})\b/);
+  if (m) return { season: Number(m[1]), episode: Number(m[2]) };
+  m = normalized.match(/\bseason\s*(\d{1,3})\b[^\d]{0,24}\bepisode\s*(\d{1,4})\b/);
+  if (m) return { season: Number(m[1]), episode: Number(m[2]) };
+  const urlEp = raw.match(/(?:\/(?:ep|episode)[-_/]|[?&](?:ep|episode|episode_id)=|-ep(?:isode)?-)(\d{1,4})\b/i);
+  const season = explicitSeason(raw);
+  const episode = urlEp ? Number(urlEp[1]) : (normalized.match(/\b(?:episode|ep)\s*(\d{1,4})\b/) || [])[1];
+  return { season, episode: episode == null ? null : Number(episode) };
+}
+function extractCandidateIds(candidate) {
+  const text = [candidate && candidate.title, candidate && candidate.slugTitle, candidate && candidate.url, candidate && candidate.id].filter(Boolean).join(' ');
+  const imdb = (text.match(/\btt\d{6,}\b/i) || [])[0] || '';
+  const tmdb = text.match(/\btmdb(?:[:/_-]|%3a)(\d{2,})\b/i) || text.match(/[?&](?:tmdb|tmdb_id)=(\d{2,})\b/i);
+  return {
+    imdbId: String((candidate && (candidate.imdbId || candidate.imdb_id)) || imdb).toLowerCase(),
+    tmdbId: Number((candidate && (candidate.tmdbId || candidate.moviedb_id)) || (tmdb && tmdb[1]) || 0) || null,
+  };
+}
 function titleScore(candidate, targets, opts) {
   opts = opts || {};
   const candidateTexts = [candidate && candidate.title, candidate && candidate.slugTitle].filter(Boolean);
+  const candidateIds = extractCandidateIds(candidate);
+  const wantedImdb = String(opts.imdb || opts.imdbId || '').toLowerCase();
+  const wantedTmdb = Number(opts.tmdb || opts.tmdbId || 0) || null;
+  const epInfo = explicitEpisodeInfo([candidate && candidate.title, candidate && candidate.slugTitle, candidate && candidate.url].filter(Boolean).join(' '));
+  const episodeConflict = (opts.type === 'tv' || opts.type === 'series') && ((epInfo.season != null && epInfo.season !== Number(opts.season || 1)) || (epInfo.episode != null && epInfo.episode !== Number(opts.episode || 1)));
+  if (wantedImdb && candidateIds.imdbId && wantedImdb !== candidateIds.imdbId) return 0;
+  if (wantedTmdb && candidateIds.tmdbId && wantedTmdb !== candidateIds.tmdbId) return 0;
+  if (((wantedImdb && candidateIds.imdbId === wantedImdb) || (wantedTmdb && candidateIds.tmdbId === wantedTmdb)) && !episodeConflict) return 100;
+  if (episodeConflict) return 0;
   let best = 0;
   for (const rawTarget of targets || []) {
     const target = normalizeTitle(rawTarget);
@@ -227,7 +257,42 @@ function titleScore(candidate, targets, opts) {
   if (opts.year && years.length) best += years.includes(String(opts.year)) ? 4 : -14;
   if (opts.type === 'movie' && /\/(tv|series|season|episode)(\/|-)/i.test(url) && !/\/anime\//i.test(url)) best -= 10;
   if ((opts.type === 'tv' || opts.type === 'series') && /\/movies?(\/|-)/i.test(url) && !/\/anime\//i.test(url)) best -= 10;
+  if ((opts.type === 'tv' || opts.type === 'series') && epInfo.episode != null && epInfo.episode === Number(opts.episode || 1)) best += 3;
   return Math.max(0, Math.min(100, Math.round(best)));
+}
+function identifyTitleCandidate(candidate, targets, opts) {
+  opts = opts || {};
+  const score = titleScore(candidate, targets, opts);
+  const candidateIds = extractCandidateIds(candidate);
+  const episodeInfo = explicitEpisodeInfo([candidate && candidate.title, candidate && candidate.slugTitle, candidate && candidate.url].filter(Boolean).join(' '));
+  const reasons = [];
+  const wantedImdb = String(opts.imdb || '').toLowerCase();
+  const wantedTmdb = Number(opts.tmdb || 0) || null;
+  let hardReject = false;
+  if (wantedImdb && candidateIds.imdbId && wantedImdb !== candidateIds.imdbId) { hardReject = true; reasons.push('different IMDb id'); }
+  else if (wantedImdb && candidateIds.imdbId === wantedImdb) reasons.push('exact IMDb id');
+  if (wantedTmdb && candidateIds.tmdbId && wantedTmdb !== candidateIds.tmdbId) { hardReject = true; reasons.push('different TMDB id'); }
+  else if (wantedTmdb && candidateIds.tmdbId === wantedTmdb) reasons.push('exact TMDB id');
+  if ((opts.type === 'tv' || opts.type === 'series') && ((episodeInfo.season != null && episodeInfo.season !== Number(opts.season || 1)) || (episodeInfo.episode != null && episodeInfo.episode !== Number(opts.episode || 1)))) {
+    hardReject = true; reasons.push('different season/episode');
+  }
+  if (score >= 95) reasons.push('exact title');
+  else if (score >= 80) reasons.push('verified title');
+  else if (score >= 55) reasons.push('partial title');
+  if (opts.year) {
+    const years = ([candidate && candidate.title, candidate && candidate.url].filter(Boolean).join(' ').match(/\b(19\d{2}|20\d{2})\b/g) || []);
+    if (years.length) reasons.push(years.includes(String(opts.year)) ? 'year match' : 'year differs');
+  }
+  return {
+    score: hardReject ? 0 : score,
+    verdict: hardReject ? 'rejected' : score >= 95 ? 'exact' : score >= 80 ? 'verified' : score >= 65 ? 'possible' : 'rejected',
+    accepted: !hardReject && score >= 80,
+    hardReject,
+    reasons,
+    candidateIds,
+    episodeInfo,
+    matchedTitle: (candidate && (candidate.title || candidate.slugTitle)) || '',
+  };
 }
 
 function candidateSlugTitle(url) {
@@ -439,7 +504,7 @@ function cleanVariants(query) {
     const key = normalizeTitle(clean);
     if (clean && key && !seen.has(key)) { seen.add(key); out.push(clean); }
   }
-  return out.slice(0, 4);
+  return out.slice(0, 12);
 }
 
 async function resolveMatchedWatch(matchUrl, query) {
@@ -499,6 +564,8 @@ async function findTitleOnSite(rawSiteUrl, rawQuery) {
     year: rawQuery.year || '',
     season: Number(rawQuery.season || 1) || 1,
     episode: Number(rawQuery.episode || 1) || 1,
+    imdb: String(rawQuery.imdb || '').toLowerCase(),
+    tmdb: Number(rawQuery.tmdb || rawQuery.tmdbId || 0) || null,
   };
   const variants = cleanVariants(query);
   if (!variants.length) throw new Error('A catalogue title is required');
@@ -515,11 +582,12 @@ async function findTitleOnSite(rawSiteUrl, rawQuery) {
   const consider = (candidates, strategy) => {
     for (const candidate of candidates || []) {
       if (!guardUrl(candidate.url) || !sameSite(candidate.url, site.href)) continue;
-      const score = titleScore(candidate, variants, query);
+      const identity = identifyTitleCandidate(candidate, variants, query);
+      const score = identity.score;
       checked++;
       const epPattern = /(?:\/(?:ep|episode)[-_/]\d+|-ep(?:isode)?-\d+|[?&](?:ep|episode|episode_id)=\d+)/i;
       const episodeTie = best && score === best.score && (query.type === 'tv' || query.type === 'series') && epPattern.test(candidate.url) && !epPattern.test(best.url);
-      if (!best || score > best.score || episodeTie) best = { score, url: candidate.url, strategy };
+      if (!best || score > best.score || episodeTie) best = { score, url: candidate.url, strategy, title: candidate.title || candidate.slugTitle || '', identity };
     }
   };
 
@@ -552,7 +620,7 @@ async function findTitleOnSite(rawSiteUrl, rawQuery) {
   }
 
   if (!best || best.score < 80) {
-    return { ok: true, mode: 'find', matched: false, checked, searchFetches, bestScore: best ? best.score : 0 };
+    return { ok: true, mode: 'find', matched: false, checked, searchFetches, bestScore: best ? best.score : 0, identity: best ? best.identity : null, bestTitle: best ? best.title : '' };
   }
 
   const resolved = await resolveMatchedWatch(best.url, query);
@@ -564,9 +632,11 @@ async function findTitleOnSite(rawSiteUrl, rawQuery) {
     matched: true,
     checked,
     searchFetches,
-    match: { score: best.score, strategy: best.strategy },
+    match: { score: best.score, strategy: best.strategy, title: best.title || '' },
+    identity: best.identity || null,
     matchedUrl: best.url,
     watchUrl: resolved.watchUrl,
+    watchTitle: watch.title || '',
     playUrl,
     embed: watch.embed || '',
     embeds: watch.embeds || [],
@@ -596,6 +666,8 @@ async function handle(mode, rawUrl, query) {
         year: query.year || '',
         season: query.season || 1,
         episode: query.episode || 1,
+        imdb: query.imdb || '',
+        tmdb: query.tmdb || '',
         searchTemplate: query.searchTemplate || '',
       });
       return { status: 200, body };
@@ -618,5 +690,5 @@ module.exports = async function handler(req, res) {
   const out = await handle(mode, String(query.url || ''), query);
   return res.status(out.status).json(out.body);
 };
-module.exports._parse = { parseWatch, parseResultLinks, guardUrl, serverNames, normalizeTitle, titleScore, searchTemplatesFromHtml, commonSearchTemplates, buildSearchUrl, adjustEpisodeInUrl, findEpisodeUrl, episodeCandidateUrls };
+module.exports._parse = { parseWatch, parseResultLinks, guardUrl, serverNames, normalizeTitle, titleScore, identifyTitleCandidate, explicitEpisodeInfo, extractCandidateIds, searchTemplatesFromHtml, commonSearchTemplates, buildSearchUrl, adjustEpisodeInUrl, findEpisodeUrl, episodeCandidateUrls };
 module.exports._find = { profileSite, findTitleOnSite, handle };

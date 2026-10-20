@@ -1,10 +1,10 @@
-# ZeroPlay RD — Netlify configuration
+# ZeroPlay — Netlify configuration
 # Deploy options:
 #   A) Drag & drop: drop zeroplay-debrid-netlify.zip (or just index.html) on app.netlify.com/drop
 #   B) Git deploy:  point Netlify at this repo with base directory "zeroplay-debrid"
 # For the live TMDB catalog add env var TMDB_API_KEY (or TMDB_ACCESS_TOKEN)
 # in Site settings → Environment variables. Without it the site still works:
-# visitors can paste their own TMDB key in ⚡ Debrid → section 5, or browse the demo catalog.
+# the keyless Cinemeta catalogue is used automatically. No visitor API key is required.
 
 [build]
   publish = "."
@@ -26,12 +26,6 @@
 [[redirects]]
   from = "/api/extract"
   to = "/.netlify/functions/extract"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/debrid"
-  to = "/.netlify/functions/debrid"
   status = 200
   force = true
 
