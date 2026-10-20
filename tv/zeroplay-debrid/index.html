@@ -458,14 +458,24 @@ const CM_GENRE_ALIAS = {"Science Fiction":"Sci-Fi","Action & Adventure":"Action"
 async function cinemetaFetch(url){
   const hit = cinemetaCache.get(url);
   if(hit && Date.now()-hit.t < 300000) return hit.data;
-  const ctl = new AbortController(); const to = setTimeout(()=>ctl.abort(), 9000);
-  try{
-    const r = await fetch(url, {signal: ctl.signal, headers:{Accept:"application/json"}});
-    if(!r.ok) throw new Error("HTTP "+r.status);
-    const data = await r.json();
-    cinemetaCache.set(url, {t: Date.now(), data});
-    return data;
-  } finally { clearTimeout(to); }
+  const fetchJson = async(target, timeoutMs)=>{
+    const ctl = new AbortController(); const to = setTimeout(()=>ctl.abort(), timeoutMs);
+    try{
+      const r = await fetch(target, {signal: ctl.signal, headers:{Accept:"application/json"}});
+      if(!r.ok) throw new Error("HTTP "+r.status);
+      return await r.json();
+    } finally { clearTimeout(to); }
+  };
+  let data;
+  try{ data = await fetchJson(url, 9000); }
+  catch(directErr){
+    // Online launches without a bundled TMDB env key can still reach the
+    // keyless catalogue through this deployment's own JSON relay if the
+    // browser/network cannot reach Cinemeta directly.
+    data = await fetchJson("/api/extract?mode=json&url=" + encodeURIComponent(url), 12000);
+  }
+  cinemetaCache.set(url, {t: Date.now(), data});
+  return data;
 }
 function cmType(type){ return type==="tv" ? "series" : "movie"; }
 function cmMapMeta(m){

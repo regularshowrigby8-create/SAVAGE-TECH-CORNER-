@@ -30,7 +30,9 @@ the source-manager/FastStream feature list, and the honest limitations
   once the deployer sets it, the header shows “Catalog: TMDB (bundled)” and a
   pasted key is only an optional per-device override. Until/unless that env key is
   configured, the catalogue falls back to Stremio's keyless Cinemeta addon (real
-  Metahub artwork, TMDB ids preserved via `moviedb_id`), then the offline demo.
+  Metahub artwork, TMDB ids preserved via `moviedb_id`; fetched directly and,
+  if that network path fails, through this deployment's `/api/extract?mode=json`
+  Vercel/Netlify relay), then the offline demo.
 - **Paste a homepage, get a lookup source (default for every added website)**:
   Sources → paste a site such as the `anisuge.tv` example → "Add website lookup".
   Anisuge is not built in or permanent. The app does **not** import/pull the
