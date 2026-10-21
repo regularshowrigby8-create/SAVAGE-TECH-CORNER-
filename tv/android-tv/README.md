@@ -91,6 +91,24 @@ The verifier checks:
 - Internet/network-state permissions;
 - SHA-256 and APK size.
 
+## Download on the TV (Downloader)
+
+The verified APK is published as a GitHub Release asset with a direct,
+no-login download URL for the **Downloader** app on the TV:
+
+```text
+https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/releases/download/zeroplay-tv-v1.0.0/zeroplay-tv.apk
+```
+
+1. Open **Downloader** on the Xiaomi TV Box and type the URL above into the URL box, then press **Go**.
+2. When the download finishes, choose **Install**. If Google TV asks, allow Downloader to install unknown apps (Settings → Apps → Security & restrictions → Unknown sources → Downloader).
+3. Open **ZeroPlay TV** from the TV home screen. Choose **Delete** in Downloader afterwards to remove the downloaded APK file if you want the space back.
+
+The release is published by CI only after the full verification gate passes
+(package, Leanback, ARMv7 ABI, DEX and signature). The `.sha256` and
+`.verify.json` assets on the release page carry the checksum and the full
+verification report for the exact APK.
+
 ## Sideloading notes
 
 This sideload build uses Android's debug certificate so no private release key is committed to the repository. Future updates must keep the same package name and signing certificate, or Android will require uninstalling the previous copy first. A production store release should move to a privately held release key before its first public distribution.
