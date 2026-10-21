@@ -514,6 +514,18 @@ body.android-tv .nav button{font-size:1.02rem;padding:.72rem 1rem}
 body.android-tv .topbar-search{max-width:430px;margin-left:auto}
 body.android-tv .topbar-search input{min-height:46px;font-size:1rem}
 body.android-tv .topbar-search .btn{display:none}
+body.android-tv{overflow-x:hidden}
+body.android-tv .overlay{padding:2.5vh 2.5vw;background:rgba(1,4,9,.9)}
+body.android-tv .modal{width:min(980px,94vw);max-height:92vh;overflow-y:auto}
+body.android-tv .settings-hub-grid{grid-template-columns:1fr}
+body.android-tv .panel,body.android-tv .form-group,body.android-tv .setting-switch,body.android-tv .form-row>*{min-width:0}
+body.android-tv .player-bar,body.android-tv .player-controls{padding-left:3vw;padding-right:3vw}
+body.android-tv .player-controls #btnPiP,body.android-tv .player-controls #playerRate,body.android-tv .player-controls .volume-wrap,body.android-tv .player-bar #btnPlayerDownload,body.android-tv .player-bar #btnPlayerDetails{display:none}
+body.android-tv [data-switch-label]:focus-visible{outline:3px solid var(--focus);outline-offset:3px;border-radius:999px}
+body.android-tv *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+body.android-tv *,body.android-tv *::before,body.android-tv *::after{transition-duration:.12s!important;animation-duration:.12s!important}
+body.android-tv .spinner,body.android-tv .big-spinner{animation-duration:.85s!important}
+body.android-tv .poster-card:hover,body.android-tv .continue-card:hover{transform:none}
 body.android-tv .logo-badge{font-size:1.3rem}
 body.android-tv .logo-mark{width:42px;height:42px;border-radius:13px}
 body.android-tv .hero{min-height:clamp(440px,60vh,660px);border-radius:26px;margin-bottom:2.7rem}
@@ -873,7 +885,7 @@ function syncFeatureToggles(root){
 }
 function featureSwitchHTML(key,label,description,idSuffix){
   const id="feature-"+key+(idSuffix?"-"+idSuffix:"");
-  return '<div class="setting-switch"><div class="setting-copy"><label for="'+id+'">'+esc(label)+'</label>'+(description?'<small>'+esc(description)+'</small>':"")+'</div><label class="switch-label setting-control" for="'+id+'"><input type="checkbox" id="'+id+'" data-feature-toggle="'+esc(key)+'"'+(getFeatureToggle(key)?" checked":"")+'><span class="slider"></span></label></div>';
+  return '<div class="setting-switch"><div class="setting-copy"><label for="'+id+'">'+esc(label)+'</label>'+(description?'<small>'+esc(description)+'</small>':"")+'</div><label tabindex="0" data-switch-label="1" class="switch-label setting-control" for="'+id+'"><input type="checkbox" id="'+id+'" data-feature-toggle="'+esc(key)+'"'+(getFeatureToggle(key)?" checked":"")+'><span class="slider"></span></label></div>';
 }
 document.addEventListener("change",e=>{
   const input=e.target&&e.target.closest?e.target.closest("[data-feature-toggle]"):null;
@@ -2545,13 +2557,24 @@ function showPlayerChrome(sticky){
   const st=playerState, overlay=document.getElementById("playerOverlay"); if(!st||!overlay) return;
   overlay.classList.remove("chrome-hidden");
   if(st.chromeTimer) clearTimeout(st.chromeTimer);
-  if(sticky) return;
+  const playingNow=!!(st.playback&&!st.playback.paused&&!st.playback.buffering);
+  // On TV the remote focus always sits on a chrome control, so a sticky
+  // bar would cover the movie forever. While playing, always schedule
+  // the hide; any key press wakes the bar again.
+  if(sticky&&!(ANDROID_TV_APP&&playingNow)) return;
   st.chromeTimer=setTimeout(()=>{
     if(playerState!==st) return;
+    if(!(st.playback&&!st.playback.paused&&!st.playback.buffering)) return;
     const active=document.activeElement;
-    if(active&&active.closest&&active.closest(".player-bar,.player-controls")) { showPlayerChrome(true); return; }
-    if(st.playback&&!st.playback.paused&&!st.playback.buffering) overlay.classList.add("chrome-hidden");
-  },3400);
+    if(active&&active.tagName==="SELECT"){ showPlayerChrome(true); return; }
+    if(active&&active.closest&&active.closest(".player-bar,.player-controls")&&!st.embedFocused){
+      // Park focus on the stage so focusin does not instantly re-show
+      // the bar and the next key lands on the wake-up handler.
+      const stage=document.getElementById("playerStage");
+      if(stage){ stage.setAttribute("tabindex","-1"); stage.focus({preventScroll:true}); }
+    }
+    overlay.classList.add("chrome-hidden");
+  },3000);
 }
 function setPlayerControlMode(mode){
   const st=playerState; if(st) st.engine=mode||st.engine;
@@ -2567,6 +2590,7 @@ function setPlayerControlMode(mode){
   refreshPlayerQualityOptions();
   showPlayerChrome(true);
   if(full&&ANDROID_TV_APP){ const active=document.activeElement; if(!active||!active.closest||!active.closest("#playerRoot")){ const play=document.getElementById("btnPlayPause"); if(play) setTimeout(()=>play.focus({preventScroll:true}),30); } }
+  else if(limited&&ANDROID_TV_APP){ const embedBtn=document.getElementById("btnFocusEmbed"); if(embedBtn) setTimeout(()=>embedBtn.focus({preventScroll:true}),30); showPlayerChrome(false); }
 }
 function refreshPlayerQualityOptions(){
   const sel=document.getElementById("playerQuality"); if(!sel||!playerState) return;
@@ -2645,7 +2669,7 @@ async function playerCommand(action,value){
       const fresh=await fsCommand("getState",{},5000).catch(()=>null); if(fresh) updatePlaybackUI(normalizeFastStreamState(fresh));
       return;
     }
-    if(action==="focusEmbed"){ const f=document.getElementById("playerFrame")||document.getElementById("fsFrame"); if(f){ f.focus(); toast("Video controls focused. Use ZeroPlay Back/Close above to return."); } }
+    if(action==="focusEmbed"){ const f=document.getElementById("playerFrame")||document.getElementById("fsFrame"); if(f){ playerState.embedFocused=true; const ov=document.getElementById("playerOverlay"); if(ov) ov.classList.add("chrome-hidden"); f.focus(); toast("Video controls focused. Press Back once to return to the ZeroPlay bar."); } }
   }catch(err){ toast("Player control failed: "+(err&&err.message||err),"error"); }
 }
 async function togglePlayerFullscreen(){
@@ -2779,11 +2803,19 @@ async function refreshFastStreamLevels(applyPref){
 }
 async function applyPreferredFastStreamLevel(quality,announce){
   const st=playerState; if(!st||!st.levels||!st.levels.length) return;
-  const pref=normalizeQualityLabel(quality||"auto"); if(pref==="auto") return;
+  const pref=normalizeQualityLabel(quality||"auto");
+  const sorted=st.levels.slice().sort((a,b)=>(Number(a.height)||0)-(Number(b.height)||0)||(Number(a.bitrate)||0)-(Number(b.bitrate)||0));
+  if(pref==="auto"){
+    // Start high, then step down only if buffering proves the connection
+    // cannot sustain it (handled in the faststream event listener).
+    // FastStream's own auto starts low and can sit there indefinitely.
+    const top=sorted[sorted.length-1]; if(!top) return;
+    if(st.autoHighLevelId!==top.id){ await fsCommand("setVideoLevel",{id:top.id}); st.autoHighLevelId=top.id; st.autoHighBufferingSince=0; }
+    return;
+  }
   const prefH=qualityHeight(pref);
-  const sorted=st.levels.slice().sort((a,b)=>(Number(a.height)||0)-(Number(b.height)||0));
   const level=sorted.filter(l=>(Number(l.height)||0)<=prefH).pop()||sorted[0];
-  if(level){ await fsCommand("setVideoLevel",{id:level.id}); st.qualitySelection="level:"+level.id; refreshPlayerQualityOptions(); if(announce) toast("Quality set to "+(level.height?level.height+"p":pref)); }
+  if(level){ st.autoHighLevelId=""; await fsCommand("setVideoLevel",{id:level.id}); st.qualitySelection="level:"+level.id; refreshPlayerQualityOptions(); if(announce) toast("Quality set to "+(level.height?level.height+"p":pref)); }
 }
 window.addEventListener("message",e=>{
   if(e.origin!==FASTSTREAM_ORIGIN||!fsBridge.frame||e.source!==fsBridge.frame.contentWindow) return;
@@ -2805,6 +2837,16 @@ window.addEventListener("message",e=>{
   if(!playerState||playerState.trailer) return;
   if(playerState.engine==="faststream-api"||playerState.engine==="faststream-connecting"){
     updatePlaybackUI(state,data.event);
+    if(playerState.autoHighLevelId&&(!playerState.qualitySelection||playerState.qualitySelection==="auto")){
+      if(playerState.playback&&playerState.playback.buffering&&!playerState.playback.paused){ playerState.autoHighBufferingSince=playerState.autoHighBufferingSince||Date.now(); }
+      else playerState.autoHighBufferingSince=0;
+      if(playerState.autoHighBufferingSince&&Date.now()-playerState.autoHighBufferingSince>7000){
+        playerState.autoHighBufferingSince=0;
+        const sortedLevels=(playerState.levels||[]).slice().sort((a,b)=>(Number(a.height)||0)-(Number(b.height)||0)||(Number(a.bitrate)||0)-(Number(b.bitrate)||0));
+        const lvlIdx=sortedLevels.findIndex(l=>String(l.id)===String(playerState.autoHighLevelId));
+        if(lvlIdx>0){ const lower=sortedLevels[lvlIdx-1]; playerState.autoHighLevelId=lower.id; fsCommand("setVideoLevel",{id:lower.id}).catch(()=>{}); }
+      }
+    }
     if(data.event==="manifestparsed"||data.event==="sourcechange"||data.event==="loadedmetadata"){
       clearTimeout(fsLevelsTimer); fsLevelsTimer=setTimeout(()=>refreshFastStreamLevels(true),180);
     }
@@ -2904,7 +2946,7 @@ function bindPlayerChrome(){
   if(overlay){
     overlay.addEventListener("mousemove",()=>showPlayerChrome(false));
     overlay.addEventListener("touchstart",()=>showPlayerChrome(false),{passive:true});
-    overlay.addEventListener("focusin",()=>showPlayerChrome(true));
+    overlay.addEventListener("focusin",()=>showPlayerChrome(false));
     overlay.addEventListener("focusout",()=>showPlayerChrome(false));
   }
   setPlayerControlMode(st.engine||"loading");
@@ -6437,7 +6479,7 @@ function addonPanelHTML(){
     +'<div class="form-group"><label for="feedInterval">Feed check</label><select id="feedInterval">'+[5,15,30,60].map(m=>'<option value="'+m+'"'+(Number(fd.intervalMin)===m?" selected":"")+">Every "+m+" minutes</option>").join("")+"</select></div></div>"
     +'<div class="form-group"><label for="githubQueries">GitHub crawler searches (one per line)</label><textarea id="githubQueries" rows="5">'+esc((cfg.githubQueries||[]).join("\n"))+'</textarea><small class="help-text">The keyless GitHub API is rate-limited, so the crawler rotates one search page per cycle and backs off automatically.</small></div>'
     +'<div class="form-group"><label for="feedUrl">Provider/source feed URL (JSON)</label><input type="text" id="feedUrl" placeholder="https://example.com/providers.json" value="'+esc(fd.url||"")+'"><small class="help-text">Feeds may contain URL templates, manifest URLs, GitHub repositories, websites or nested provider lists. New endpoints are identified before use.</small></div>'
-    +'<div class="form-row"><div class="form-group toggle-group"><label class="switch-label" for="feedAuto" style="position:relative"><span>Include feed in continuous search</span><input type="checkbox" id="feedAuto"'+(fd.auto?" checked":"")+'><span class="slider"></span></label></div><div class="form-group toggle-group"><label class="switch-label" for="healthAuto" style="position:relative"><span>Continuous health batches</span><input type="checkbox" id="healthAuto"'+(fd.healthAuto?" checked":"")+'><span class="slider"></span></label></div></div>'
+    +'<div class="form-row"><div class="form-group toggle-group"><label tabindex="0" data-switch-label="1" class="switch-label" for="feedAuto" style="position:relative"><span>Include feed in continuous search</span><input type="checkbox" id="feedAuto"'+(fd.auto?" checked":"")+'><span class="slider"></span></label></div><div class="form-group toggle-group"><label tabindex="0" data-switch-label="1" class="switch-label" for="healthAuto" style="position:relative"><span>Continuous health batches</span><input type="checkbox" id="healthAuto"'+(fd.healthAuto?" checked":"")+'><span class="slider"></span></label></div></div>'
     +'<div class="discovery-actions"><button class="btn btn-primary" id="btnDiscoverySave" type="button">Save crawler settings</button><button class="btn btn-secondary" id="btnFeedNow" type="button">Check feed now</button></div>'
     +(seeds?'<h3 class="category-heading">Crawler seeds</h3><div id="seedList">'+seeds+'</div>':"")
     +'<h3 class="category-heading">Discovery activity</h3><ul class="log-list">'+(logs||'<li><span>—</span>No discovery events yet.</li>')+'</ul>'
@@ -6593,6 +6635,7 @@ document.addEventListener("click",e=>{
 $("#topSearch").addEventListener("submit",e=>{ e.preventDefault(); const q=$("#topQuery").value.trim(); const target="#/search?q="+encodeURIComponent(q); if(location.hash===target) render(); else location.hash=target; });
 $("#demoBannerBtn").onclick=()=>{ location.hash="#/sources"; };
 let lastTvFocusSelector="";
+let lastTvFocusPoint=null;
 let lastTvFocusElement=null;
 let tvInitialFocusTimer=null;
 function tvFocusSelectorFor(el){
@@ -6607,7 +6650,9 @@ function tvFocusSelectorFor(el){
 }
 function rememberTvFocus(el){
   el=el||document.activeElement;
-  if(!el||el===document.body||(el.closest&&el.closest("#playerRoot,#modalRoot,#streamsRoot,#downloadsRoot,#menuDrawer"))) return;
+  if(!el||el===document.body) return;
+  try{ const r=el.getBoundingClientRect(); if(r.width>2&&r.height>2) lastTvFocusPoint={x:r.left+r.width/2+window.scrollX,y:r.top+r.height/2+window.scrollY}; }catch{}
+  if(el.closest&&el.closest("#playerRoot,#modalRoot,#streamsRoot,#downloadsRoot,#menuDrawer")) return;
   const selector=tvFocusSelectorFor(el);
   if(selector){ lastTvFocusSelector=selector; lastTvFocusElement=el; }
 }
@@ -6626,7 +6671,9 @@ function focusInitialTvTarget(){
   const drawer=document.getElementById("menuDrawer"); if(drawer&&drawer.classList.contains("open")) return false;
   const active=document.activeElement;
   if(active&&active!==document.body&&active.id!=="btnMenu"&&isTvFocusable(active)) return false;
-  const target=document.querySelector("#view .continue-card")||document.querySelector("#view .poster-card")||document.getElementById("heroPlay")||document.querySelector("#view .category-tile")||document.querySelector("#view button:not([disabled])");
+  let target=null;
+  if(lastTvFocusSelector){ try{ const remembered=document.querySelector(lastTvFocusSelector); if(remembered&&isTvFocusable(remembered)) target=remembered; }catch{} }
+  target=target||document.querySelector("#view .continue-card")||document.querySelector("#view .poster-card")||document.getElementById("heroPlay")||document.querySelector("#view .category-tile")||document.querySelector("#view button:not([disabled])");
   if(!target||!isTvFocusable(target)) return false;
   target.focus({preventScroll:true});
   target.scrollIntoView({block:"nearest",inline:"center",behavior:tvPerformanceEnabled()?"auto":"smooth"});
@@ -6657,19 +6704,52 @@ function tvFocusables(){
   const root=tvFocusableRoot()||document;
   return $$("button:not([disabled]), [href], input:not([type='hidden']), select, textarea, .poster-card, .continue-card, [tabindex]:not([tabindex='-1'])",root).filter(isTvFocusable);
 }
+function tvFocusAndReveal(el){
+  if(!el) return;
+  el.focus({preventScroll:true});
+  const behavior=tvPerformanceEnabled()?"auto":"smooth";
+  try{ el.scrollIntoView({block:"nearest",inline:"nearest",behavior}); }catch{}
+  // WebView scrollIntoView can miss nested scrollers (menu drawer, rails,
+  // settings panels); reveal inside every scrollable ancestor manually.
+  let node=el.parentElement;
+  while(node&&node!==document.body){
+    const style=window.getComputedStyle?getComputedStyle(node):null;
+    if(style&&(/(auto|scroll)/.test(style.overflowY)||/(auto|scroll)/.test(style.overflowX))){
+      const nr=node.getBoundingClientRect(), r=el.getBoundingClientRect(), pad=18;
+      if(r.bottom>nr.bottom-pad) node.scrollTop+=r.bottom-nr.bottom+pad;
+      else if(r.top<nr.top+pad) node.scrollTop-=nr.top+pad-r.top;
+      if(r.right>nr.right-pad) node.scrollLeft+=r.right-nr.right+pad;
+      else if(r.left<nr.left+pad) node.scrollLeft-=nr.left+pad-r.left;
+    }
+    node=node.parentElement;
+  }
+}
 function moveTvFocus(direction){
   const list=tvFocusables(); if(!list.length) return false;
   const current=document.activeElement;
   if(!current||!list.includes(current)){
-    const first=list.find(el=>el.classList&&el.classList.contains("continue-card"))||list.find(el=>el.classList&&el.classList.contains("poster-card"))||list.find(el=>el.id==="heroPlay")||list[0];
-    first.focus({preventScroll:true}); first.scrollIntoView({block:"nearest",inline:"center",behavior:tvPerformanceEnabled()?"auto":"smooth"});
+    // Focus was lost (view re-render detached the focused node). Recover
+    // where the viewer actually was instead of jumping back to the top.
+    let target=null;
+    if(lastTvFocusSelector){ try{ const candidate=document.querySelector(lastTvFocusSelector); if(candidate&&list.includes(candidate)) target=candidate; }catch{} }
+    if(!target&&lastTvFocusPoint){
+      let nearest=null,nearestDist=Infinity;
+      for(const el of list){ const r=el.getBoundingClientRect(); const d=Math.hypot(r.left+r.width/2+window.scrollX-lastTvFocusPoint.x,r.top+r.height/2+window.scrollY-lastTvFocusPoint.y); if(d<nearestDist){ nearestDist=d; nearest=el; } }
+      if(nearest&&nearestDist<900) target=nearest;
+    }
+    target=target||list.find(el=>el.classList&&el.classList.contains("continue-card"))||list.find(el=>el.classList&&el.classList.contains("poster-card"))||list.find(el=>el.id==="heroPlay")||list[0];
+    tvFocusAndReveal(target);
     return true;
   }
   const cr=current.getBoundingClientRect(), cx=cr.left+cr.width/2, cy=cr.top+cr.height/2;
+  const currentRail=current.closest?current.closest(".rail-track,.cast-track,.category-strip"):null;
   let best=null,bestScore=Infinity;
   for(const el of list){
     if(el===current) continue;
     if(current.classList&&(current.classList.contains("poster-card")||current.classList.contains("continue-card"))&&current.contains(el)) continue;
+    // Left/right inside a poster rail stays in that rail; at the rail edge
+    // focus stops instead of teleporting to a menu or another row.
+    if((direction==="left"||direction==="right")&&currentRail&&!currentRail.contains(el)) continue;
     const r=el.getBoundingClientRect(), x=r.left+r.width/2, y=r.top+r.height/2;
     const dx=x-cx, dy=y-cy;
     let primary=0, secondary=0;
@@ -6682,8 +6762,7 @@ function moveTvFocus(direction){
     if(score<bestScore){ bestScore=score; best=el; }
   }
   if(!best) return false;
-  best.focus({preventScroll:true});
-  best.scrollIntoView({block:"nearest",inline:best.classList&&(best.classList.contains("poster-card")||best.classList.contains("continue-card"))?"center":"nearest",behavior:tvPerformanceEnabled()?"auto":"smooth"});
+  tvFocusAndReveal(best);
   return true;
 }
 function handlePlayerKeyboard(e){
@@ -6692,6 +6771,13 @@ function handlePlayerKeyboard(e){
   if(/^(INPUT|TEXTAREA|SELECT)$/.test(tag)&&document.activeElement.id!=="seekRange"&&document.activeElement.id!=="volumeRange") return false;
   const full=st.engine==="native"||st.engine==="faststream-api";
   const key=e.key;
+  const overlayEl=document.getElementById("playerOverlay");
+  if(overlayEl&&overlayEl.classList.contains("chrome-hidden")&&!st.embedFocused&&/^(Arrow|Enter|Channel)/.test(key)){
+    e.preventDefault(); showPlayerChrome(false);
+    const wake=document.getElementById(full?"btnPlayPause":"btnFocusEmbed")||document.getElementById("btnPlayerServers");
+    if(wake&&wake.style.display!=="none"&&!wake.disabled) wake.focus({preventScroll:true});
+    return true;
+  }
   if(key==="MediaStop"){ e.preventDefault(); closePlayer(); return true; }
   if(key==="MediaTrackNext"||key==="ChannelUp"||key==="MediaTrackPrevious"||key==="ChannelDown"){
     const epBtn=document.getElementById(key==="MediaTrackNext"||key==="ChannelUp"?"btnNextEp":"btnPrevEp");
@@ -6726,6 +6812,7 @@ function handleZeroPlayTvBack(){
   const drawer=document.getElementById("menuDrawer");
   if(drawer&&drawer.classList.contains("open")){ closeMenuDrawer(); return true; }
   if(playerState){
+    if(playerState.embedFocused){ playerState.embedFocused=false; showPlayerChrome(false); const backBtn=document.getElementById("btnFocusEmbed"); if(backBtn) backBtn.focus({preventScroll:true}); return true; }
     if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); return true; }
     closePlayer(); return true;
   }
@@ -6794,6 +6881,8 @@ document.addEventListener("keydown",e=>{
     return;
   }
   if(e.key==="/"&&!/input|textarea|select/i.test(activeTag)){ e.preventDefault(); $("#topQuery").focus(); return; }
+  const switchLabel=e.target&&e.target.closest?e.target.closest("[data-switch-label]"):null;
+  if(switchLabel&&(e.key==="Enter"||e.key===" ")){ const input=switchLabel.querySelector("input[type='checkbox']")||document.getElementById(switchLabel.htmlFor); if(input){ e.preventDefault(); input.click(); } return; }
   if(handlePlayerKeyboard(e)) return;
   if(/^(INPUT|TEXTAREA|SELECT)$/.test(activeTag)){
     const active=document.activeElement;
@@ -6807,8 +6896,9 @@ document.addEventListener("keydown",e=>{
     const active=document.activeElement;
     if(!active||active===document.body||active.closest&&active.closest("button,a,.poster-card,.continue-card,.player-bar,.player-controls,.modal,#menuDrawer,.topbar,#view")){
       const dir=e.key.replace("Arrow","").toLowerCase();
-      if(moveTvFocus(dir)) e.preventDefault();
-      else if(ANDROID_TV_APP&&dir==="left"&&!playerState&&!detailState&&!streamsCtx&&!(typeof downloadModalState!=="undefined"&&downloadModalState)){ openMenuDrawer(); e.preventDefault(); }
+      const movedTv=moveTvFocus(dir);
+      if(movedTv||ANDROID_TV_APP) e.preventDefault();
+      if(!movedTv&&ANDROID_TV_APP&&dir==="left"&&!playerState&&!detailState&&!streamsCtx&&!(typeof downloadModalState!=="undefined"&&downloadModalState)){ openMenuDrawer(); }
     }
   }
 });

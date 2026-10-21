@@ -97,7 +97,7 @@ The verified APK is published as a GitHub Release asset with a direct,
 no-login download URL for the **Downloader** app on the TV:
 
 ```text
-https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/releases/download/zeroplay-tv-v1.0.0/zeroplay-tv.apk
+https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/releases/download/zeroplay-tv-v1.0.1/zeroplay-tv.apk
 ```
 
 1. Open **Downloader** on the Xiaomi TV Box and type the URL above into the URL box, then press **Go**.

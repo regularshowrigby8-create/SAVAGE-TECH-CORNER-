@@ -256,6 +256,14 @@ const eq = (actual, expected, label) => { assert.strictEqual(actual, expected, l
     [androidJava.includes('KEYCODE_MEDIA_PLAY_PAUSE') && androidJava.includes('handleZeroPlayTvBack') && androidJava.includes('ZeroPlayTV/'), 'native shell forwards D-pad/media keys and identifies itself to the web app'],
     [androidJava.includes('onTrimMemory') && androidJava.includes('handleZeroPlayTvLowMemory') && androidJava.includes('totalMemoryMb'), 'native shell reports memory and asks the web app to shed previews under pressure'],
     [fs.existsSync(path.join(repoRoot, 'tv/android-tv/app/src/main/res/drawable-xhdpi/tv_banner.png')) && fs.existsSync(path.join(repoRoot, 'tv/android-tv/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png')), 'TV launcher banner and icons are present'],
+    [html.includes('tabindex="0" data-switch-label="1"') && html.includes('closest("[data-switch-label]")'), 'menu/settings switches are D-pad focusable and toggle with OK so menus can scroll'],
+    [html.includes('lastTvFocusPoint') && html.includes('nearestDist<900') && html.includes('function tvFocusAndReveal'), 'lost TV focus recovers near the last position instead of jumping to the top'],
+    [html.includes('currentRail&&!currentRail.contains(el)') && html.includes('if(movedTv||ANDROID_TV_APP) e.preventDefault()'), 'rail left/right stays in-row and TV arrows never fall through to native WebView focus jumps'],
+    [html.includes('if(sticky&&!(ANDROID_TV_APP&&playingNow)) return;') && html.includes('chrome-hidden') && html.includes('overlayEl.classList.contains("chrome-hidden")'), 'player menu auto-hides during TV playback and wakes on the next key press'],
+    [html.includes('playerState.embedFocused=true') && html.includes('if(playerState.embedFocused){ playerState.embedFocused=false;'), 'embedded players get a real D-pad focus mode and Back returns to the ZeroPlay bar first'],
+    [html.includes('autoHighLevelId') && html.includes('autoHighBufferingSince'), 'FastStream auto quality starts at the highest level and steps down only on sustained buffering'],
+    [html.includes('body.android-tv .settings-hub-grid{grid-template-columns:1fr}') && html.includes('body.android-tv .modal{width:min(980px,94vw)') && html.includes('#btnPlayerDownload'), 'TV layout keeps settings on-screen and hides tool clutter from the player bar'],
+    [html.includes('body.android-tv *{backdrop-filter:none!important;') && html.includes('animation-duration:.12s!important'), 'TV mode strips backdrop blur and caps animation cost for 2 GB boxes'],
   ];
   for (const [condition, label] of staticChecks) ok(condition, label);
 
