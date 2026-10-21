@@ -1,0 +1,352 @@
+name: ZeroPlay Android TV APK
+
+on:
+  push:
+    branches:
+      - main
+      - arena/*
+    paths:
+      - 'tv/android-tv/**'
+      - 'tv/zeroplay-debrid/index.html'
+      - 'tv/zeroplay-debrid/package.json'
+      - 'tv/zeroplay-debrid/tests/**'
+      - 'factories/factory-3/**'
+      - '.github/workflows/zeroplay-android-tv.yml'
+  pull_request:
+    paths:
+      - 'tv/android-tv/**'
+      - 'tv/zeroplay-debrid/index.html'
+      - 'tv/zeroplay-debrid/package.json'
+      - 'tv/zeroplay-debrid/tests/**'
+      - 'factories/factory-3/**'
+      - '.github/workflows/zeroplay-android-tv.yml'
+  workflow_dispatch:
+    inputs:
+      publish_release:
+        description: 'Publish the verified APK as a GitHub Release (public TV Downloader link)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: zeroplay-android-tv-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and verify ARMv7 TV APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Selective factory use: the sealed component is checked out as a
+      # separate, read-only tool source. Its verify/self-check and code tools
+      # gate this job, while Gradle remains the actual APK compiler.
+      - name: Checkout sealed factory tool source
+        uses: actions/checkout@v4
+        with:
+          ref: sealed-factory
+          path: .factory/sealed-factory
+          fetch-depth: 1
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run ZeroPlay web/TV tests
+        working-directory: tv/zeroplay-debrid
+        run: npm test --silent
+
+      - name: Sealed factory preflight (selected tools)
+        env:
+          SEALED_NO_NETWORK: '1'
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set -euo pipefail
+          EVIDENCE="tv/android-tv/dist/factory-evidence"
+          mkdir -p "$EVIDENCE"
+          CLI=".factory/sealed-factory/sealed-factories/runtime/cli.py"
+          test -f "$CLI" || {
+            echo "::error title=Sealed factory::sealed-factory checkout is missing its runtime"
+            exit 1
+          }
+          python3 "$CLI" verify | tee "$EVIDENCE/sealed-verify.txt"
+          python3 "$CLI" selfcheck --require-functional \
+            --workspace "${RUNNER_TEMP:-/tmp}/zeroplay-sealed-selfcheck" \
+            | tee "$EVIDENCE/sealed-selfcheck.txt"
+          python3 "$CLI" --root "$GITHUB_WORKSPACE" call code.metrics \
+            --arguments '{"path":"tv/android-tv","limit":100}' \
+            > "$EVIDENCE/sealed-code-metrics.json"
+          python3 "$CLI" --root "$GITHUB_WORKSPACE" call code.todos \
+            --arguments '{"path":"tv/android-tv","limit":100}' \
+            > "$EVIDENCE/sealed-code-todos.json"
+          python3 "$CLI" --root "$GITHUB_WORKSPACE" call code.secrets \
+            --arguments '{"path":"tv/android-tv"}' \
+            > "$EVIDENCE/sealed-code-secrets.json"
+          python3 - <<'PYEOF'
+          import json
+          from pathlib import Path
+          evidence = Path("tv/android-tv/dist/factory-evidence")
+          todos = json.loads((evidence / "sealed-code-todos.json").read_text())
+          secrets = json.loads((evidence / "sealed-code-secrets.json").read_text())
+          if todos.get("findings"):
+              raise SystemExit(f"sealed code.todos found unfinished markers: {todos['findings']}")
+          if not secrets.get("clean") or secrets.get("findings"):
+              raise SystemExit(f"sealed code.secrets found possible secrets: {secrets}")
+          print("Sealed factory selected-tool preflight passed")
+          PYEOF
+
+      - name: Factory 3 Android preflight (current factory)
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set -euo pipefail
+          EVIDENCE="tv/android-tv/dist/factory-evidence"
+          mkdir -p "$EVIDENCE"
+          python3 -m unittest discover -s factories/factory-3/tests -v
+          python3 - <<'PYEOF'
+          import json
+          import sys
+          from pathlib import Path
+          tools = Path("factories/factory-3/tools").resolve()
+          sys.path.insert(0, str(tools))
+          from middleman_broker import MiddlemanBroker
+          report = MiddlemanBroker().audit_target(Path("tv/android-tv"))
+          output = Path("tv/android-tv/dist/factory-evidence/factory3-preflight.json")
+          output.write_text(json.dumps(report, indent=2, default=str) + "\n", encoding="utf-8")
+          print(json.dumps(report, indent=2, default=str))
+          if not report.get("clean"):
+              raise SystemExit("Factory 3 Android preflight reported blocking findings")
+          PYEOF
+
+      - name: Prepare Android SDK 34
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          if [ -z "$SDK_ROOT" ] || [ ! -d "$SDK_ROOT" ]; then
+            echo "::error title=Android SDK::no Android SDK on this runner (ANDROID_HOME unset)"
+            exit 1
+          fi
+          SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER=$(command -v sdkmanager || true)
+          fi
+          if [ -z "${SDKMANAGER:-}" ] || [ ! -x "$SDKMANAGER" ]; then
+            echo "::error title=Android SDK::sdkmanager not found in $SDK_ROOT"
+            exit 1
+          fi
+          printf 'y\n%.0s' {1..40} | "$SDKMANAGER" --licenses > /dev/null
+          "$SDKMANAGER" "platforms;android-34" "build-tools;34.0.0" "platform-tools"
+          "$SDKMANAGER" --list_installed | sed -n '1,40p'
+          test -d "$SDK_ROOT/platforms/android-34" || {
+            echo "::error title=Android SDK::platform android-34 is not installed"
+            exit 1
+          }
+          test -d "$SDK_ROOT/build-tools/34.0.0" || {
+            echo "::error title=Android SDK::build-tools 34.0.0 are not installed"
+            exit 1
+          }
+          echo "SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+
+      - name: Build minified ARMv7 release APK
+        working-directory: tv/android-tv
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          LOG="${{ runner.temp }}/zeroplay-tv-build.log"
+          ./gradlew clean :app:assembleRelease \
+            --stacktrace --no-daemon --console=plain 2>&1 | tee "$LOG"
+
+      - name: Surface Gradle failure
+        if: failure()
+        run: |
+          set -uo pipefail
+          LOG="${{ runner.temp }}/zeroplay-tv-build.log"
+          mkdir -p tv/android-tv/dist/factory-evidence
+          if [ -s "$LOG" ]; then
+            cp "$LOG" tv/android-tv/dist/factory-evidence/gradle-build.log
+          else
+            echo "Gradle produced no build log" \
+              > tv/android-tv/dist/factory-evidence/gradle-build.log
+            LOG="tv/android-tv/dist/factory-evidence/gradle-build.log"
+          fi
+          python3 - "$LOG" <<'PYEOF'
+          import io
+          import sys
+          lines = [line.rstrip() for line in io.open(
+              sys.argv[1], encoding="utf-8", errors="replace").read().splitlines()]
+          keys = ("FAILED", "What went wrong", "Execution failed", "error:", "Error",
+                  "Exception", "Caused by:", "not found", "Could not", "FAILURE")
+          picked = [line for line in lines if any(key in line for key in keys)]
+          tail = picked[-60:]
+          if tail:
+              tail += ["..."]
+          tail += lines[-45:]
+          def esc(text):
+              return text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+          for start in range(0, len(tail), 12):
+              print("::error title=Gradle build failure::" + esc("\n".join(tail[start:start + 12])))
+          PYEOF
+
+      - name: Upload factory and Gradle diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZeroPlay-TV-build-diagnostics
+          if-no-files-found: warn
+          path: |
+            tv/android-tv/dist/factory-evidence/**
+            tv/android-tv/app/build/reports/**
+            tv/android-tv/app/build/outputs/logs/**
+
+      - name: Locate and name the release APK
+        id: apk
+        run: |
+          set -euo pipefail
+          find tv/android-tv/app/build/outputs/apk/release -type f -name '*.apk' -print
+          SRC_APK=$(find tv/android-tv/app/build/outputs/apk/release -type f -iname '*armeabi-v7a*release*.apk' | head -n 1)
+          if [ -z "$SRC_APK" ]; then
+            echo 'ERROR: Gradle did not produce an armeabi-v7a release APK' >&2
+            exit 1
+          fi
+          mkdir -p tv/android-tv/dist
+          TARGET_APK="tv/android-tv/dist/ZeroPlay-TV-1.0.2-armeabi-v7a.apk"
+          cp "$SRC_APK" "$TARGET_APK"
+          echo "apk_path=$TARGET_APK" >> "$GITHUB_OUTPUT"
+          echo "Built $TARGET_APK from $SRC_APK"
+
+      - name: Verify package, Leanback contract, ABI, DEX and signature
+        run: |
+          set -uo pipefail
+          REPORT="tv/android-tv/dist/ZeroPlay-TV-1.0.2-armeabi-v7a.verify.json"
+          # GitHub's default bash invocation already enables -e. Disable it
+          # around the verifier so a failing report can be surfaced as
+          # annotations instead of only "exit code 1".
+          set +e
+          python3 tv/android-tv/tools/verify_apk.py \
+            "${{ steps.apk.outputs.apk_path }}" \
+            --require-sdk-tools \
+            --json "$REPORT"
+          VERIFY_CODE=$?
+          set -e
+          if [ "$VERIFY_CODE" -ne 0 ]; then
+            python3 - "$REPORT" <<'PYEOF'
+          import json
+          import sys
+          try:
+              report = json.load(open(sys.argv[1], encoding="utf-8"))
+          except Exception as problem:
+              print(f"::error title=APK verifier report::could not read verifier report: {problem}")
+              raise SystemExit(0)
+          for error in report.get("errors", []):
+              escaped = str(error).replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+              print(f"::error title=APK verifier::{escaped}")
+          for warning in report.get("warnings", []):
+              escaped = str(warning).replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+              print(f"::warning title=APK verifier::{escaped[:900]}")
+          PYEOF
+            exit "$VERIFY_CODE"
+          fi
+          sha256sum "${{ steps.apk.outputs.apk_path }}" > tv/android-tv/dist/ZeroPlay-TV-1.0.2-armeabi-v7a.sha256
+          unzip -l "${{ steps.apk.outputs.apk_path }}"
+
+      - name: Upload APK diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZeroPlay-TV-apk-diagnostics
+          if-no-files-found: warn
+          path: |
+            tv/android-tv/dist/**
+            tv/android-tv/app/build/reports/**
+            tv/android-tv/app/build/outputs/logs/**
+            tv/android-tv/app/build/outputs/mapping/**
+
+      - name: Upload APK and verification report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZeroPlay-TV-1.0.2-armeabi-v7a
+          path: |
+            tv/android-tv/dist/ZeroPlay-TV-1.0.2-armeabi-v7a.apk
+            tv/android-tv/dist/ZeroPlay-TV-1.0.2-armeabi-v7a.verify.json
+            tv/android-tv/dist/ZeroPlay-TV-1.0.2-armeabi-v7a.sha256
+            tv/android-tv/dist/factory-evidence/**
+          if-no-files-found: error
+
+  release:
+    name: Publish TV download release
+    needs: build
+    # Manual dispatch with publish_release=true, or any push whose head
+    # commit message carries the explicit [release-tv] marker.
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.publish_release) ||
+      (github.event_name == 'push' && contains(github.event.head_commit.message, '[release-tv]'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download the verified APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ZeroPlay-TV-1.0.2-armeabi-v7a
+          path: release-dist
+
+      - name: Publish GitHub release for TV Downloader
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="zeroplay-tv-v1.0.2"
+          APK=$(find release-dist -type f -name 'ZeroPlay-TV-1.0.2-armeabi-v7a.apk' | head -n 1)
+          SHA=$(find release-dist -type f -name '*.sha256' | head -n 1)
+          REPORT=$(find release-dist -type f -name '*.verify.json' | head -n 1)
+          test -n "$APK" || { echo "::error title=Release::verified APK missing from artifact"; exit 1; }
+          mkdir -p upload
+          # Short asset name: this URL is typed with a TV remote in Downloader.
+          cp "$APK" upload/zeroplay-tv.apk
+          cp "$APK" upload/ZeroPlay-TV-1.0.2-armeabi-v7a.apk
+          ASSETS=(upload/zeroplay-tv.apk upload/ZeroPlay-TV-1.0.2-armeabi-v7a.apk)
+          [ -n "$SHA" ] && ASSETS+=("$SHA")
+          [ -n "$REPORT" ] && ASSETS+=("$REPORT")
+          NOTES="ZeroPlay TV 1.0.2 for Xiaomi TV Box S (3rd Gen, MDZ-32-AA) — ARMv7 (armeabi-v7a), Android TV / Leanback.
+
+          Install on the TV with the Downloader app using this URL:
+          https://github.com/${{ github.repository }}/releases/download/${TAG}/zeroplay-tv.apk
+
+          Built and verified in CI from commit ${{ github.sha }} (package/Leanback/ABI/DEX/signature checks passed; see the .verify.json asset). Sideload build signed with the Android debug certificate."
+          if gh release view "$TAG" --repo "${{ github.repository }}" > /dev/null 2>&1; then
+            gh release upload "$TAG" "${ASSETS[@]}" --clobber --repo "${{ github.repository }}"
+            gh release edit "$TAG" --notes "$NOTES" --repo "${{ github.repository }}"
+          else
+            gh release create "$TAG" "${ASSETS[@]}" \
+              --repo "${{ github.repository }}" \
+              --target "${{ github.sha }}" \
+              --title "ZeroPlay TV 1.0.2 — Xiaomi TV Box S (ARMv7)" \
+              --notes "$NOTES" \
+              --prerelease
+          fi
+          URL="https://github.com/${{ github.repository }}/releases/download/${TAG}/zeroplay-tv.apk"
+          echo "::notice title=TV Downloader URL::${URL}"
+          {
+            echo "## TV Downloader URL"
+            echo ""
+            echo "Type this into the Downloader app on the TV:"
+            echo ""
+            echo "\`${URL}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

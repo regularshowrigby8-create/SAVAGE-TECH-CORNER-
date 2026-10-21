@@ -1,0 +1,14 @@
+{
+  "name": "ZeroPlay Web",
+  "short_name": "ZeroPlay",
+  "description": "Discover and watch movies and TV series with ZeroPlay Web.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#090a10",
+  "theme_color": "#090a10",
+  "icons": [
+    {"src":"/assets/icon.png","sizes":"any","type":"image/png","purpose":"any maskable"}
+  ],
+  "categories": ["entertainment"]
+}

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- ZeroPlay itself is loaded over HTTPS. Cleartext remains available only
+         so user-selected third-party media/embed hosts are not silently dead
+         inside WebView. Certificate trust stays system-only. -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

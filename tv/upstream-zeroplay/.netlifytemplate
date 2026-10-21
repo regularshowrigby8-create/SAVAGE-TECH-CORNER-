@@ -1,0 +1,5 @@
+[template]
+  incoming-hooks = ["ZeroPlay updates"]
+
+[template.environment]
+  TMDB_API_KEY = "Your TMDB API Key (v3 auth) — kept in the serverless function, not the public website"

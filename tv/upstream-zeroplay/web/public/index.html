@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self' https:; media-src https: blob:; frame-src https://vidstuck.cc https://zxcstream.cc https://embedwave.cc https://www.youtube.com https://www.youtube-nocookie.com; form-action 'self'; frame-ancestors 'self'; object-src 'none'; base-uri 'none'; upgrade-insecure-requests">
+  <meta name="description" content="ZeroPlay 2.2 Web — discover movies and TV series in a fast, cinematic ZeroPlay interface.">
+  <meta name="theme-color" content="#070a0d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="ZeroPlay">
+  <meta property="og:title" content="ZeroPlay 2.2 — Discover your next great watch">
+  <meta property="og:description" content="Discover movies and TV series with ZeroPlay.">
+  <meta property="og:image" content="/assets/icon.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="/assets/icon.ico">
+  <link rel="apple-touch-icon" href="/assets/icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <title>ZeroPlay 2.2 — Discover your next great watch</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/layouts.css">
+  <link rel="stylesheet" href="/enhancements.css">
+  <link rel="stylesheet" href="/zero22.css">
+  <link rel="stylesheet" href="/top10-today.css?v=20261016a">
+  <link rel="stylesheet" href="/zsflix-ui.css?v=20261014a">
+  <link rel="stylesheet" href="/singlebar.css?v=20261014d">
+  <link rel="stylesheet" href="/mobile-header-fix.css?v=20261020a">
+</head>
+<body>
+  <aside aria-label="Primary navigation">
+    <a class="brand" href="/" aria-label="ZeroPlay home">ZERO<span>PLAY</span><small>YOUR NEXT GREAT WATCH</small></a>
+    <div class="nav-label">DISCOVER</div>
+    <button data-nav="Home">⌂ <span>Home</span></button>
+    <button data-nav="Movies">▤ <span>Movies</span></button>
+    <button data-nav="Series">▣ <span>TV series</span></button>
+    <button data-nav="Search">⌕ <span>Search</span></button>
+    <div class="nav-label">YOUR SPACE</div>
+    <button data-nav="Library">♡ <span>My library</span></button>
+    <button data-action="settings">⚙ <span>Settings</span></button>
+    <div class="rail-bottom"><b>A little escape.<br>A great story.</b><p>Movie & TV discovery by TMDB</p><img src="/assets/tmdb-logo.svg" alt="TMDB"></div>
+  </aside>
+  <main>
+    <header>
+      <div><span id="eyebrow">WELCOME TO ZEROPLAY</span><h1 id="heading">Discover something great.</h1></div>
+      <form id="search-form"><span>⌕</span><input id="query" autocomplete="off" maxlength="200" placeholder="Search movies and TV series" aria-label="Search movies and series"><button type="submit">Search</button></form>
+      <button class="icon" data-action="settings" aria-label="Settings">⚙</button>
+      <button class="icon" data-action="toggle-theme" aria-label="Switch light and night mode">◐</button>
+      <button class="icon" data-action="refresh" aria-label="Refresh catalog">↻</button>
+    </header>
+    <div id="status" role="status"></div>
+    <section id="content"></section>
+    <footer>ZeroPlay 2.2 Web · Movie & TV discovery powered by TMDB · Press / to search.</footer>
+  </main>
+  <dialog id="detail"><button class="close" data-action="close" aria-label="Close details">×</button><div id="detail-body"></div></dialog>
+  <dialog id="settings"><button class="close" data-action="close-settings" aria-label="Close settings">×</button><div class="settings-body"><span class="eyebrow">MAKE IT YOURS</span><h2>Settings</h2><label>Playback source<select id="playback-source"><option value="vidstuck">VidStuck · Recommended</option><option value="zxcstream">ZXCStream (Beta)</option><option value="embedwave">Embedwave (BETA)</option></select></label><label>Interface<select id="ui-layout"><option value="classic">ZeroPlay 2.2</option></select></label><label>Appearance<select id="theme"><option value="dark">Night mode</option><option value="light">Light mode</option></select></label><label>Provider availability region<select id="region"><option>PH</option><option>US</option><option>GB</option><option>CA</option><option>AU</option><option>IN</option><option>JP</option></select></label><div class="actions"><button class="primary" data-action="save-settings">Save settings</button></div><p id="settings-status" role="status"></p><hr><img class="tmdb-logo" src="/assets/tmdb-logo.svg" alt="TMDB"><p>This product uses the TMDB API but is not endorsed or certified by TMDB. Web movie and series playback uses VidStuck, ZXCStream (Beta), or Embedwave (BETA).</p><p>Your library and history stay in this browser.</p><p id="version"></p></div></dialog>
+  <dialog id="web-player" aria-label="Video player"><div class="web-player-header"><b id="player-title"></b><div class="actions"><button id="open-player-source" aria-label="Open current playback source in a new tab" title="Open source">↗</button><button id="close-player" aria-label="Close player">×</button></div></div><div id="player-stage"></div><div class="player-exit-zone"><button type="button" id="player-exit-always" aria-label="Show player controls">⋮</button></div></dialog>
+  <div id="toast" role="status"></div>
+  <script src="/playback-sources.js"></script>
+  <script src="/web-native.js"></script>
+  <script src="/browser.js"></script>
+  <script src="/layouts.js"></script>
+  <script src="/app.js"></script>
+  <script src="/zero22.js"></script>
+  <script src="/top10-today.js?v=20261016a"></script>
+  <script src="/web-fixes.js"></script>
+  <script src="/infinite-scroll.js?v=20261013c"></script>
+  <script src="/web-enhancements.js"></script>
+  <script src="/web-polish-fixes.js"></script>
+  <script src="/web-router.js?v=20261014d"></script>
+  <script src="/hero-trailer.js?v=20261014d"></script>
+</body>
+</html>

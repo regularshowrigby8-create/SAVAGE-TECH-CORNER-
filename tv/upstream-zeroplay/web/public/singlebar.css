@@ -1,0 +1,178 @@
+/* ZeroPlay 2.2 website-only: one-bar navigation + hero trailer presentation */
+
+/* The nav and search controls share one physical 72px bar. */
+aside{
+  height:72px!important;
+  padding-right:clamp(520px,43vw,690px)!important;
+}
+aside [data-action="settings"]{display:none!important}
+
+main{padding-top:72px!important}
+header{
+  position:fixed!important;
+  top:0!important;
+  right:clamp(16px,3vw,52px)!important;
+  left:auto!important;
+  width:min(640px,42vw)!important;
+  height:72px!important;
+  min-height:72px!important;
+  margin:0!important;
+  padding:0!important;
+  gap:9px!important;
+  background:transparent!important;
+  border:0!important;
+  backdrop-filter:none!important;
+  z-index:40!important;
+}
+header>div{display:none!important}
+#search-form{
+  flex:1 1 auto!important;
+  width:auto!important;
+  min-width:210px!important;
+  margin:0!important;
+}
+header>.icon{flex:0 0 40px!important;width:40px!important;height:40px!important}
+#content{position:relative;padding-top:20px!important}
+
+/* Home utilities no longer form a third bar; they float quietly over the hero. */
+.tools{
+  position:absolute!important;
+  top:38px!important;
+  right:clamp(34px,5vw,74px)!important;
+  z-index:8!important;
+  width:auto!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:6px!important;
+  gap:6px!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+  border-radius:999px!important;
+  background:rgba(7,10,13,.52)!important;
+  backdrop-filter:blur(14px) saturate(135%);
+  box-shadow:0 12px 34px rgba(0,0,0,.2);
+}
+.tools .clock{display:none!important}
+.tools button{padding:8px 12px!important;font-size:11px!important;background:rgba(8,14,15,.64)!important}
+
+.hero{margin-top:0!important}
+
+/* Trailer layer sits above the fallback artwork and below all readable UI. */
+.hero-art{z-index:0!important;transition:opacity .7s ease,filter .7s ease!important}
+.hero-trailer{
+  position:absolute;
+  inset:-3%;
+  z-index:1;
+  overflow:hidden;
+  background:#050708;
+  opacity:0;
+  transition:opacity .65s ease;
+  pointer-events:none;
+}
+.hero-trailer iframe{
+  position:absolute;
+  width:118%;
+  height:118%;
+  left:-9%;
+  top:-9%;
+  border:0;
+  pointer-events:none;
+}
+.hero.trailer-ready .hero-trailer{opacity:1}
+.hero.trailer-ready .hero-art{opacity:.08!important;filter:saturate(.75) brightness(.65)!important}
+.hero-shade{z-index:2!important}
+.hero::after{z-index:2!important}
+.hero-content{z-index:4!important}
+.ranked{z-index:5!important}
+.hero-audio{
+  position:absolute;
+  right:28px;
+  top:28px;
+  z-index:7;
+  width:40px!important;
+  height:40px!important;
+  padding:0!important;
+  display:grid!important;
+  place-items:center;
+  border:1px solid rgba(255,255,255,.16)!important;
+  border-radius:50%!important;
+  background:rgba(5,8,10,.55)!important;
+  color:#fff!important;
+  backdrop-filter:blur(10px);
+  opacity:.88;
+}
+.hero-audio:hover{opacity:1;color:var(--zp-mint)!important;border-color:rgba(102,242,195,.35)!important}
+.hero-trailer-badge{
+  position:absolute;
+  right:78px;
+  top:35px;
+  z-index:7;
+  padding:5px 9px;
+  border-radius:999px;
+  background:rgba(5,8,10,.48);
+  color:#c9d5d2;
+  border:1px solid rgba(255,255,255,.1);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.11em;
+  backdrop-filter:blur(10px);
+}
+
+/* Use TMDB's official transparent title treatment when one exists. */
+.hero-title-logo{
+  display:block;
+  width:min(430px,72%);
+  max-height:150px;
+  object-fit:contain;
+  object-position:left center;
+  margin:14px 0 16px;
+  filter:drop-shadow(0 7px 20px rgba(0,0,0,.45));
+}
+.hero.has-title-logo .hero-content h2{display:none!important}
+
+@media(max-width:1280px){
+  aside{padding-right:470px!important}
+  header{width:445px!important;right:18px!important}
+  #search-form{min-width:160px!important}
+  aside button{padding-inline:10px!important}
+  aside button span{font-size:12px!important}
+}
+
+@media(max-width:980px){
+  aside{padding:0 12px!important;padding-right:330px!important}
+  .brand{margin-right:8px!important}
+  aside button{width:38px!important;padding:0!important;justify-content:center!important;font-size:17px!important}
+  aside button span{display:none!important}
+  header{width:310px!important;right:10px!important;gap:6px!important}
+  #search-form{min-width:160px!important;height:40px!important}
+  #search-form button{display:none!important}
+  header>.icon{width:36px!important;height:36px!important;flex-basis:36px!important}
+  header>[data-action="refresh"]{display:none!important}
+  .tools{right:28px!important;top:30px!important}
+  .tools [data-zero22-action="calendar"]{display:none!important}
+  .hero-title-logo{width:min(360px,72%);max-height:125px}
+}
+
+@media(max-width:650px){
+  aside{height:62px!important;padding:0 8px!important;padding-right:190px!important}
+  .brand::before,.brand>span::after{font-size:20px!important}
+  aside [data-nav="Search"],aside [data-nav="Library"]{display:none!important}
+  main{padding-top:62px!important}
+  header{height:62px!important;min-height:62px!important;width:180px!important;right:6px!important}
+  #search-form{height:38px!important;min-width:120px!important;padding-left:9px!important}
+  #search-form>span{font-size:18px!important}
+  #query{font-size:12px!important}
+  header>[data-action="settings"],header>[data-action="refresh"]{display:none!important}
+  header>.icon{width:34px!important;height:34px!important;flex-basis:34px!important}
+  #content{padding-top:12px!important}
+  .tools{top:22px!important;right:22px!important;padding:4px!important}
+  .tools [data-zero22-action="mood"],.tools [data-zero22-action="calendar"]{display:none!important}
+  .tools button{padding:7px 10px!important}
+  .hero-audio{right:18px;top:70px;width:36px!important;height:36px!important}
+  .hero-trailer-badge{display:none}
+  .hero-title-logo{width:min(300px,82%);max-height:105px;margin:10px 0 13px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .hero-trailer{display:none!important}
+  .hero-art{opacity:1!important}
+}
