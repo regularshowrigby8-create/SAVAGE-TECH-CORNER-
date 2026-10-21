@@ -1,0 +1,98 @@
+name: ZeroPlay Android TV APK
+
+on:
+  push:
+    branches:
+      - main
+      - arena/*
+    paths:
+      - 'tv/android-tv/**'
+      - 'tv/zeroplay-debrid/index.html'
+      - 'tv/zeroplay-debrid/package.json'
+      - 'tv/zeroplay-debrid/tests/**'
+      - '.github/workflows/zeroplay-android-tv.yml'
+  pull_request:
+    paths:
+      - 'tv/android-tv/**'
+      - 'tv/zeroplay-debrid/index.html'
+      - 'tv/zeroplay-debrid/package.json'
+      - 'tv/zeroplay-debrid/tests/**'
+      - '.github/workflows/zeroplay-android-tv.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: zeroplay-android-tv-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and verify ARMv7 TV APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run ZeroPlay web/TV tests
+        working-directory: tv/zeroplay-debrid
+        run: npm test --silent
+
+      - name: Build minified ARMv7 release APK
+        working-directory: tv/android-tv
+        run: |
+          chmod +x gradlew
+          ./gradlew clean :app:assembleRelease --stacktrace --no-daemon
+
+      - name: Locate and name the release APK
+        id: apk
+        run: |
+          set -euo pipefail
+          find tv/android-tv/app/build/outputs/apk/release -type f -name '*.apk' -print
+          SRC_APK=$(find tv/android-tv/app/build/outputs/apk/release -type f -iname '*armeabi-v7a*release*.apk' | head -n 1)
+          if [ -z "$SRC_APK" ]; then
+            echo 'ERROR: Gradle did not produce an armeabi-v7a release APK' >&2
+            exit 1
+          fi
+          mkdir -p tv/android-tv/dist
+          TARGET_APK="tv/android-tv/dist/ZeroPlay-TV-1.0.0-armeabi-v7a.apk"
+          cp "$SRC_APK" "$TARGET_APK"
+          echo "apk_path=$TARGET_APK" >> "$GITHUB_OUTPUT"
+          echo "Built $TARGET_APK from $SRC_APK"
+
+      - name: Verify package, Leanback contract, ABI, DEX and signature
+        run: |
+          python3 tv/android-tv/tools/verify_apk.py \
+            "${{ steps.apk.outputs.apk_path }}" \
+            --require-sdk-tools \
+            --json tv/android-tv/dist/ZeroPlay-TV-1.0.0-armeabi-v7a.verify.json
+          sha256sum "${{ steps.apk.outputs.apk_path }}" > tv/android-tv/dist/ZeroPlay-TV-1.0.0-armeabi-v7a.sha256
+          unzip -l "${{ steps.apk.outputs.apk_path }}"
+
+      - name: Upload APK and verification report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZeroPlay-TV-1.0.0-armeabi-v7a
+          path: |
+            tv/android-tv/dist/ZeroPlay-TV-1.0.0-armeabi-v7a.apk
+            tv/android-tv/dist/ZeroPlay-TV-1.0.0-armeabi-v7a.verify.json
+            tv/android-tv/dist/ZeroPlay-TV-1.0.0-armeabi-v7a.sha256
+          if-no-files-found: error

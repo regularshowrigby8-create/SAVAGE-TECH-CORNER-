@@ -5,13 +5,16 @@ This folder is the working area for the TV project.
 | Path | What it is |
 | --- | --- |
 | `upstream-zeroplay/` | Unmodified sparse reference clone of ZeroPlay (`web/`, `api/` and root files). |
-| `zeroplay-debrid/` | The deployed web prototype. The directory name is historical; Real-Debrid features have been removed from the app. |
+| `zeroplay-debrid/` | The deployed web app. The directory name is historical; Real-Debrid features have been removed from the app. |
+| `android-tv/` | Dependency-light Leanback shell and ARMv7 APK project for the Xiaomi TV Box S (3rd Gen). |
 
 **Live prototype:** https://zeroplay-rd.vercel.app
 (Vercel project `zeroplay-rd`, root directory `tv/zeroplay-debrid`.)
 
-**Status:** web prototype for review. Xiaomi TV Box 3rd-generation adaptation
-remains a later phase after user approval.
+**Status:** the web app now has a couch-first Android TV mode, and the
+separate Leanback APK project targets the Xiaomi TV Box S (3rd Gen) 32-bit
+`armeabi-v7a` userspace. See `android-tv/README.md` for build and sideloading
+details.
 
 ## Current discovery design
 
@@ -36,15 +39,29 @@ remains a later phase after user approval.
 - VidStuck/ZXCStream/Embedwave remain built-in, Embedwave is last resort,
   direct media uses embedded FastStream, torrents are hidden, and known files
   over the hard 5 GB ceiling are rejected.
-- The full Settings page and the menu drawer's Quick switches share one
-  persisted settings store. Settings contains Add Website, continuous
-  adding, FastStream configuration, download defaults, separate optional
-  feature switches, settings import/export and cache clearing.
+- The normal Sources/Settings path now leads with one of four states —
+  Ready, Searching, Found sources, or Problem. Detailed registry counts,
+  crawlers and playback internals are under Advanced/Diagnostics. The menu's
+  Quick settings list is intentionally short; the full Settings page retains
+  Add Website, downloads, import/export and the less common switches.
 - Title/detail, every episode row, the player and verified direct server
   rows expose Download actions. The Downloads page manages pause/resume jobs
   and M3U extraction; parallel work is used only for genuine Range files or
   independent HLS segments, with the limitation stated when a host supports
   neither.
+
+## Android TV experience
+
+- The Xiaomi target build is a split `armeabi-v7a` APK; the verifier rejects
+  arm64-only native libraries even though the shell normally bundles none.
+- Continue Watching comes before the hero in the TV shell. Rows are large,
+  artwork-led and text-light; text category lists and browse filters are not
+  part of the normal TV path.
+- Native Back/Menu/Search/media keys, launch focus, focus restoration and
+  trim-memory handling are wired between the shell and web app.
+- Posters/backdrops are completed with zero user configuration from
+  Cinemeta/MetaHub, TVmaze, AniList and Apple iTunes; candidates are
+  identity-matched and image-probed, then cached at TV-appropriate sizes.
 
 ## TV browsing and player polish
 

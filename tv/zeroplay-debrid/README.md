@@ -9,9 +9,10 @@ with real artwork. Visitors never enter an API key.
 
 ## Continuous searcher
 
-Open **Discover** and use the single **Start continuous search** button, or
-use **Settings → Continuous adding** for the same engine and its crawler
-controls. While the app is open, one engine rotates through independent
+Open **Sources**. In the normal path it says only **Ready**, **Searching**,
+**Found sources**, or **Problem**; use **Find more** to run the same engine.
+**Settings → Advanced sources** contains crawler choices, the provider list
+and detailed diagnostics. While the app is open, one engine rotates through independent
 crawlers:
 
 - Recursive Stremio `addon_catalog` graph crawling, starting with Cinemeta and
@@ -86,8 +87,8 @@ searched for that exact title/episode when playback is requested.
 
 ## TV browsing experience
 
-- The floating top bar includes Home, Movies, Series, Categories, Library,
-  Discover and Search, plus a slide-in menu and popular category strip.
+- The floating top bar includes Home, Movies, Series, Categories, Sources,
+  Downloads, Settings and Search, plus a slide-in menu.
 - `/categories` provides movie and series genre tiles; category chips and
   deep-linkable `?genre=` browse shelves keep the selected category in the URL.
 - Home includes category rails in addition to Continue Watching, Watchlist,
@@ -103,16 +104,39 @@ searched for that exact title/episode when playback is requested.
   buttons, menus and player controls. `Enter` opens a title and `P` quick-plays
   a focused card.
 
+### Android TV / Xiaomi TV Box S (3rd Gen)
+
+The separate app in `tv/android-tv` targets the MDZ-32-AA box's 32-bit
+`armeabi-v7a` userspace and 2 GB RAM. On that shell, ZeroPlay changes from a
+dense web layout into a couch-first interface:
+
+- an existing Continue Watching row is shown before the featured hero for
+  instant resume;
+- poster rows and category artwork are much larger, while ratings/year text,
+  filter forms, text category lists, extra hero actions and footer chrome are
+  removed from the normal path;
+- Sources and Settings open one useful job at a time, with source counters and
+  playback internals behind Advanced/Diagnostics;
+- native Back, Menu, Search and media keys are forwarded predictably, and
+  trim-memory signals stop previews/nonessential artwork work;
+- posters/backdrops use TV-sized renditions and are completed automatically
+  by keyless Cinemeta/MetaHub, TVmaze, AniList and Apple iTunes endpoints.
+  No visitor artwork API key exists or is required.
+
+Build and verification details are in `../android-tv/README.md`.
+
 ## Settings and switches
 
-The menu drawer has **Quick switches** for the features people most often
-need while browsing or watching. The full **Settings** page (`/settings`)
+The menu drawer has a deliberately short **Quick settings** list: automatic
+source search, trailer previews, failover, downloads, autoplay-next, missing
+poster lookup, and (inside the TV shell) the lighter-TV performance switch.
+The full Settings page retains the less common controls. The full **Settings** page (`/settings`)
 contains the same shared settings plus:
 
 - **Add Website** for lookup-only website servers and optional advanced URL
   templates;
-- the continuous-adding controls, discovery seeds, crawler choices and
-  provider feed;
+- the Advanced sources controls, discovery seeds, crawler choices, provider
+  feed and diagnostics;
 - separate switches for trailers, automatic switching, confirmed-stall
   switching, Embedwave automatic failover, FastStream preload/API probing,
   DNS warm-up, health sorting, downloads, multithreading, M3U extraction,
@@ -201,7 +225,7 @@ offering a dead download button.
   capability is probed for later streams, and HLS/DASH use the legacy embedded
   FastStream hash player inside the shell.
 - **ZeroPlay responsive player** and **FastStream web player only** remain
-  selectable in **Settings → FastStream configuration and playback**.
+  selectable in **Settings → Advanced playback**.
 - Quality selection is real where the engine exposes it: FastStream levels
   for API playback and actual returned direct-stream variants for file
   playback. A single fixed file has only its source quality. For third-party

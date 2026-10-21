@@ -443,6 +443,141 @@ body.reduce-motion .poster-card:hover,body.reduce-motion .poster-card:focus-visi
 .storage-meter i{display:block;height:100%;background:var(--gold)}
 @media(max-width:620px){.ep-download small{display:none}.download-job{padding:.85rem}.settings-hub-grid{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.poster-card:hover,.poster-card:focus-visible,.poster-card.is-previewing{transform:none}}
+
+/* Continue Watching: wide 16:9 resume cards designed to be scanned from the couch. */
+.continue-track .continue-card{flex:0 0 min(360px,78vw);scroll-snap-align:start}
+.continue-card{cursor:pointer;position:relative;transition:transform .16s ease;transform-origin:center 70%}
+.continue-card:focus-visible{outline:none;transform:scale(1.028);z-index:4}
+.continue-media{position:relative;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#08090b;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+.continue-media>img{display:block;width:100%;height:100%;object-fit:cover}
+.continue-shade{position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.52),transparent 58%),linear-gradient(90deg,rgba(0,0,0,.22),transparent)}
+.continue-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.28);color:#fff;font-size:1.15rem;padding-left:.18rem}
+.continue-card:hover .continue-play,.continue-card:focus-visible .continue-play{background:var(--primary)}
+.continue-remove{position:absolute;top:.5rem;right:.5rem;z-index:3;background:rgba(0,0,0,.62);color:#fff}
+.continue-meta{padding:.58rem .08rem .75rem}
+.continue-meta .t{color:var(--text-heading);font-weight:650;font-size:.94rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.continue-meta .s{color:var(--text-muted);font-size:.78rem;margin-top:.12rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.continue-progress{position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;height:5px;border-radius:99px;overflow:hidden;margin-top:.48rem}
+.continue-actions{display:flex;gap:.42rem;margin-top:.55rem;flex-wrap:wrap}
+.category-rail-track .category-rail-tile{flex:0 0 min(300px,72vw);min-height:150px;scroll-snap-align:start}
+body.hide-category-strip .home-category-rail{display:none!important}
+
+/* Episode rows lead with a real 16:9 still when TMDB, Cinemeta/MetaHub or TVmaze provides one. */
+.ep-thumb{position:relative;flex:0 0 118px;width:118px;aspect-ratio:16/9;border-radius:9px;overflow:hidden;background:#050607;box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
+.ep-thumb>img{display:block;width:100%;height:100%;object-fit:cover}
+.ep-num-badge{position:absolute;left:.35rem;bottom:.35rem;min-width:1.55rem;height:1.55rem;padding:0 .32rem;border-radius:999px;background:rgba(0,0,0,.72);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:.76rem;font-weight:800}
+.ep-main:focus-visible .ep-thumb{box-shadow:0 0 0 2px var(--focus)}
+@media(max-width:620px){.continue-track .continue-card{flex-basis:min(300px,82vw)}.ep-thumb{flex-basis:92px;width:92px}}
+
+/* Android TV / Xiaomi TV Box profile: fewer layers, no expensive blur, and focus that reads at 10 feet. */
+body.android-tv{overscroll-behavior:none}
+body.android-tv .footer{display:none}
+body.android-tv .rail-track{scrollbar-width:none}
+body.android-tv .rail-track::-webkit-scrollbar{display:none}
+body.android-tv .poster-card:focus-visible{transform:scale(1.06)}
+body.android-tv .continue-card:focus-visible{transform:scale(1.035)}
+body.tv-performance{scroll-behavior:auto}
+body.tv-performance *,body.tv-performance *::before,body.tv-performance *::after{scroll-behavior:auto!important}
+body.tv-performance .hero,body.tv-performance .rail,body.tv-performance .panel,body.tv-performance .modal,body.tv-performance .poster-card,body.tv-performance .server-option{animation:none!important}
+body.tv-performance .topbar,body.tv-performance .menu-scrim,body.tv-performance .control-btn,body.tv-performance .center-play{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+body.tv-performance .poster-card,body.tv-performance .continue-card,body.tv-performance .category-tile{transition:transform .12s ease,box-shadow .12s ease}
+body.tv-performance .poster-wrap>img,body.tv-performance .category-tile img{transition:none!important}
+body.tv-performance .poster-card{contain:layout style}
+body.tv-performance .hero{box-shadow:0 16px 36px rgba(0,0,0,.28)}
+body.tv-performance .rail-track{scroll-snap-type:x proximity}
+body.android-tv-low-ram .hero-logo{filter:none}
+@media(min-width:1500px){body.android-tv .rail-track .poster-card{flex-basis:190px}body.android-tv .continue-track .continue-card{flex-basis:420px}body.android-tv .category-rail-track .category-rail-tile{flex-basis:340px}}
+
+
+/* One-glance source state for the normal path. Detailed counters live in diagnostics. */
+.source-state-panel{display:flex;align-items:center;justify-content:space-between;gap:1.4rem;border-radius:20px!important;padding:1.35rem 1.5rem!important;background:linear-gradient(135deg,rgba(124,58,237,.18),rgba(255,255,255,.035) 55%)!important}
+.source-state-main{display:flex;align-items:center;gap:1rem;min-width:0}
+.source-state-dot{flex:0 0 18px;width:18px;height:18px;border-radius:50%;background:#35d07f;box-shadow:0 0 0 7px rgba(53,208,127,.14),0 0 28px rgba(53,208,127,.35)}
+.source-state-panel.is-searching .source-state-dot{background:#f0c66b;box-shadow:0 0 0 7px rgba(240,198,107,.14),0 0 28px rgba(240,198,107,.35);animation:zpStatePulse 1.15s ease-in-out infinite}
+.source-state-panel.is-problem .source-state-dot{background:#f85149;box-shadow:0 0 0 7px rgba(248,81,73,.14),0 0 28px rgba(248,81,73,.32)}
+.source-state-eyebrow{margin:0 0 .12rem;color:var(--gold);font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.source-state-panel h2{margin:0!important;font-size:1.65rem!important;letter-spacing:-.03em}
+.source-state-panel .section-desc{margin:.18rem 0 0!important;font-size:.98rem}
+.source-state-actions{display:flex;gap:.55rem;flex-wrap:wrap;justify-content:flex-end}
+.discovery-diagnostics{color:var(--text-muted);font-size:.84rem;line-height:1.5;margin:.2rem 0 1rem;word-break:break-word}
+@keyframes zpStatePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+@media(max-width:720px){.source-state-panel{align-items:flex-start;flex-direction:column}.source-state-actions{justify-content:flex-start}}
+
+/* Couch-first Android TV: artwork leads, words and choices step back. */
+body.android-tv{background:#050607}
+body.android-tv .page{max-width:none;padding:1rem clamp(1.4rem,3.2vw,3.4rem) 3.2rem}
+body.android-tv .page>h1{font-size:2.25rem;letter-spacing:-.04em;margin:.4rem 0 1.2rem}
+body.android-tv .page>.lede,body.android-tv .category-strip,body.android-tv #catalogModeChip{display:none!important}
+body.android-tv .topbar-inner{max-width:none;flex-wrap:nowrap;padding:.82rem clamp(1.2rem,3vw,3rem)}
+body.android-tv .nav{flex-wrap:nowrap}
+body.android-tv .nav button{font-size:1.02rem;padding:.72rem 1rem}
+body.android-tv .topbar-search{max-width:430px;margin-left:auto}
+body.android-tv .topbar-search input{min-height:46px;font-size:1rem}
+body.android-tv .topbar-search .btn{display:none}
+body.android-tv .logo-badge{font-size:1.3rem}
+body.android-tv .logo-mark{width:42px;height:42px;border-radius:13px}
+body.android-tv .hero{min-height:clamp(440px,60vh,660px);border-radius:26px;margin-bottom:2.7rem}
+body.android-tv .hero-body{max-width:820px;padding:clamp(2rem,4vw,3.6rem)}
+body.android-tv .hero-body h1{font-size:clamp(3rem,5.2vw,5.4rem);letter-spacing:-.055em}
+body.android-tv .hero-body p{font-size:1.14rem;line-height:1.55;-webkit-line-clamp:2}
+body.android-tv .hero-actions{gap:.8rem}
+body.android-tv .hero-actions .btn{min-height:56px;padding:.95rem 1.55rem;font-size:1.05rem;border-radius:999px}
+body.android-tv #heroServers,body.android-tv #heroList,body.android-tv .trailer-ctl{display:none!important}
+body.android-tv .rail{margin-bottom:2.65rem}
+body.android-tv .rail-head{margin-bottom:.85rem}
+body.android-tv .rail-head h2{font-size:1.72rem;letter-spacing:-.035em}
+body.android-tv .rail-arrows,body.android-tv .rail-progress{display:none!important}
+body.android-tv .rail-track{gap:1.15rem;padding:.5rem .2rem 1rem}
+body.android-tv .rail-track .poster-card{flex-basis:clamp(210px,15.5vw,264px)}
+body.android-tv .grid{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:1.45rem}
+body.android-tv .poster-wrap{border-radius:18px}
+body.android-tv .poster-badges,body.android-tv .preview-badge,body.android-tv .hover-actions,body.android-tv .card-overview{display:none!important}
+body.android-tv .poster-card:focus-visible .poster-wrap::after{content:"▶";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.58);border:1px solid rgba(255,255,255,.32);color:#fff;font-size:1.25rem;padding-left:.2rem}
+body.android-tv .poster-meta{padding:.72rem .12rem .8rem}
+body.android-tv .poster-meta .t{font-size:1.08rem}
+body.android-tv .poster-meta .s{display:none}
+body.android-tv .poster-rate{font-size:.92rem;padding:.32rem .55rem}
+body.android-tv .continue-rail{margin-top:.35rem}
+body.android-tv .continue-track .continue-card{flex-basis:clamp(430px,34vw,570px)}
+body.android-tv .continue-media{border-radius:22px}
+body.android-tv .continue-play{width:72px;height:72px;font-size:1.4rem}
+body.android-tv .continue-meta .t{font-size:1.18rem}
+body.android-tv .continue-meta .s{font-size:.94rem}
+body.android-tv .continue-actions{display:none}
+body.android-tv .category-rail-track .category-rail-tile{flex-basis:clamp(365px,27vw,470px);min-height:212px}
+body.android-tv .category-grid{grid-template-columns:repeat(auto-fill,minmax(365px,1fr));gap:1.35rem}
+body.android-tv .category-tile{min-height:212px;border-radius:22px}
+body.android-tv .category-tile b{margin-top:7.6rem;font-size:1.55rem}
+body.android-tv .category-tile span{font-size:.96rem}
+body.android-tv .filters,body.android-tv .menu-category-list,body.android-tv .menu-quick-note,body.android-tv #menuQuickSettings .settings-actions{display:none!important}
+body.android-tv .category-quick{gap:.65rem;margin-bottom:1.6rem}
+body.android-tv .chip-btn{min-height:48px;padding:.68rem 1.05rem;font-size:.98rem}
+body.android-tv .menu-drawer{width:min(440px,36vw);padding:1.4rem}
+body.android-tv .menu-link{min-height:54px;font-size:1.08rem;padding:.8rem .75rem}
+body.android-tv .setting-switch{padding:.85rem 0}
+body.android-tv .setting-copy label{font-size:1.02rem}
+body.android-tv .setting-copy small{display:none}
+body.android-tv .source-state-panel{padding:1.6rem 1.8rem!important;margin-bottom:1.4rem}
+body.android-tv .source-state-panel h2{font-size:2.2rem!important}
+body.android-tv .source-state-panel .section-desc{font-size:1.08rem}
+body.android-tv .source-state-actions .btn{min-height:52px;padding:.85rem 1.25rem;font-size:1rem}
+body.android-tv .modal{width:min(1500px,96vw);border-radius:24px}
+body.android-tv .detail-hero{min-height:390px}
+body.android-tv .detail-body{grid-template-columns:235px 1fr;gap:2rem;padding:2rem 2.4rem 2.2rem;margin-top:-110px}
+body.android-tv .detail-poster{width:235px;border-radius:16px}
+body.android-tv .detail-body h2{font-size:2.5rem}
+body.android-tv .detail-body .overview{font-size:1.08rem;line-height:1.6}
+body.android-tv .detail-actions .btn,body.android-tv .detail-actions .control-select{min-height:54px;font-size:1rem}
+body.android-tv .modal .help-text{display:none}
+body.android-tv .detail-section{padding:0 2.4rem 1.8rem}
+body.android-tv .detail-section h3{font-size:1.35rem}
+body.android-tv .ep-list{grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:.9rem}
+body.android-tv .ep-thumb{flex-basis:172px;width:172px;border-radius:12px}
+body.android-tv .ep .et{font-size:.98rem}
+body.android-tv .ep .es{font-size:.84rem}
+@media(min-width:1700px){body.android-tv .rail-track .poster-card{flex-basis:274px}body.android-tv .continue-track .continue-card{flex-basis:590px}}
+@media(max-width:1100px){body.android-tv .topbar-search{display:none}body.android-tv .detail-body{grid-template-columns:180px 1fr}body.android-tv .detail-poster{width:180px}}
+
 </style>
 </head>
 <body>
@@ -457,7 +592,7 @@ body.reduce-motion .poster-card:hover,body.reduce-motion .poster-card:focus-visi
       <button data-nav="series">Series</button>
       <button data-nav="categories">Categories</button>
       <button data-nav="library">Library</button>
-      <button data-nav="sources">Discover</button>
+      <button data-nav="sources">Sources</button>
     </nav>
     <form class="topbar-search" id="topSearch">
       <input type="search" id="topQuery" placeholder="Search movies and series" autocomplete="off" maxlength="200" aria-label="Search movies and TV series">
@@ -487,21 +622,21 @@ body.reduce-motion .poster-card:hover,body.reduce-motion .poster-card:focus-visi
     <button class="menu-link" type="button" data-menu-route="series"><span>Series</span><span>TV</span></button>
     <button class="menu-link" type="button" data-menu-route="categories"><span>Categories</span><span>Genres</span></button>
     <button class="menu-link" type="button" data-menu-route="library"><span>Library</span><span>Saved</span></button>
-    <button class="menu-link" type="button" data-menu-route="sources"><span>Discover</span><span>Servers</span></button>
+    <button class="menu-link" type="button" data-menu-route="sources"><span>Sources</span><span>Watch from</span></button>
     <button class="menu-link" type="button" data-menu-route="downloads"><span>Downloads</span><span id="menuDownloadCount">Offline</span></button>
     <button class="menu-link" type="button" data-menu-route="settings"><span>Settings</span><span>Controls</span></button>
   </div>
   <div class="menu-section" id="menuQuickSettings">
-    <h3>Quick switches</h3>
-    <p class="menu-quick-note">Optional features can be turned on or off here. The same controls are available with more detail in Settings.</p>
+    <h3>Quick settings</h3>
+    <p class="menu-quick-note">Only the essentials. Everything else is in Settings.</p>
     <div id="menuQuickSwitches"></div>
     <div class="settings-actions">
       <button class="btn btn-primary btn-sm" type="button" data-settings-section="add-website">Add website</button>
-      <button class="btn btn-secondary btn-sm" type="button" data-settings-section="faststream">FastStream</button>
-      <button class="btn btn-secondary btn-sm" type="button" data-settings-section="continuous">Continuous adding</button>
+      <button class="btn btn-secondary btn-sm" type="button" data-settings-section="faststream">Advanced playback</button>
+      <button class="btn btn-secondary btn-sm" type="button" data-settings-section="continuous">Advanced sources</button>
     </div>
   </div>
-  <div class="menu-section">
+  <div class="menu-section menu-category-list">
     <h3>Movie categories</h3>
     <button class="menu-link" type="button" data-category-type="movie" data-category-id="28"><span>Action</span><span>→</span></button>
     <button class="menu-link" type="button" data-category-type="movie" data-category-id="12"><span>Adventure</span><span>→</span></button>
@@ -513,7 +648,7 @@ body.reduce-motion .poster-card:hover,body.reduce-motion .poster-card:focus-visi
     <button class="menu-link" type="button" data-category-type="movie" data-category-id="878"><span>Science Fiction</span><span>→</span></button>
     <button class="menu-link" type="button" data-category-type="movie" data-category-id="53"><span>Thriller</span><span>→</span></button>
   </div>
-  <div class="menu-section">
+  <div class="menu-section menu-category-list">
     <h3>Series categories</h3>
     <button class="menu-link" type="button" data-category-type="tv" data-category-id="10759"><span>Action &amp; Adventure</span><span>→</span></button>
     <button class="menu-link" type="button" data-category-type="tv" data-category-id="16"><span>Animation</span><span>→</span></button>
@@ -528,18 +663,14 @@ body.reduce-motion .poster-card:hover,body.reduce-motion .poster-card:focus-visi
 
 <div class="demo-banner hidden" id="demoBanner">
   <div class="status-box info">
-    <span><strong>Offline demo data</strong> — the keyless catalogue is currently unreachable. Playback and continuous discovery remain available.</span>
-    <button class="btn btn-primary btn-xs" id="demoBannerBtn" type="button">Open Discover</button>
+    <span><strong>You are offline</strong> — saved titles, sources and downloads are still available.</span>
+    <button class="btn btn-primary btn-xs" id="demoBannerBtn" type="button">Open Sources</button>
   </div>
 </div>
 
 <main id="view"></main>
 
-<footer class="footer">
-  ZeroPlay · Movies and series with keyless continuous discovery.<br>
-  Catalogue: TMDB when configured server-side, otherwise Cinemeta · Players: VidStuck / ZXCStream / Embedwave (last resort) · Direct streams: <a href="https://faststream.online" target="_blank" rel="noopener">FastStream</a> · Discovery: <a href="https://stremio-addons.net" target="_blank" rel="noopener">stremio-addons.net</a>, Cinemeta and GitHub.<br>
-  This product uses the TMDB API but is not endorsed or certified by TMDB. ZeroPlay hosts no media files.
-</footer>
+<footer class="footer">ZeroPlay · Movies and series, ready to watch. ZeroPlay does not host media files.</footer>
 
 <div id="modalRoot"></div>
 <div id="streamsRoot"></div>
@@ -557,6 +688,14 @@ body.reduce-motion .poster-card:hover,body.reduce-motion .poster-card:focus-visi
    - A canonical title identifier verifies movie/series/episode candidates.
    ===================================================================== */
 
+/* ---------------- Android TV shell profile ---------------- */
+const APP_VERSION="4.3.0";
+const ZERO_PLAY_TV_PARAMS=new URLSearchParams(location.search||"");
+const ANDROID_TV_APP=/^(1|true|yes)$/i.test(ZERO_PLAY_TV_PARAMS.get("androidtv")||"")||/ZeroPlayTV\//i.test(navigator.userAgent||"")||!!window.ZeroPlayAndroidTV;
+const ANDROID_TV_PROFILE=(()=>{try{return ANDROID_TV_APP&&window.ZeroPlayAndroidTV&&typeof window.ZeroPlayAndroidTV.getProfileJson==="function"?JSON.parse(window.ZeroPlayAndroidTV.getProfileJson()||"{}"):{}}catch(_){return{}}})();
+const ANDROID_TV_TOTAL_RAM_MB=Math.round(Number(ANDROID_TV_PROFILE&&ANDROID_TV_PROFILE.totalMemoryMb||0));
+const ANDROID_TV_LOW_RAM=!!(ANDROID_TV_PROFILE&&(ANDROID_TV_PROFILE.lowRamDevice||(ANDROID_TV_TOTAL_RAM_MB>0&&ANDROID_TV_TOTAL_RAM_MB<=2560)));
+
 /* ---------------- storage ---------------- */
 const LS = { settings:"zp_rd_settings_v1", watchlist:"zp_rd_watchlist_v1", progress:"zp_rd_progress_v1" };
 const loadJSON = (k,f)=>{ try{ const v=JSON.parse(localStorage.getItem(k)); return v??f; }catch{ return f; } };
@@ -568,9 +707,9 @@ let settings = Object.assign({
 const LEGACY_SETTING_KEYS=["tmdbKey","rdToken","rdUser","addonBase","debrid","debridManifestUrl","siteCatalogues"];
 const hadLegacySettings=LEGACY_SETTING_KEYS.some(k=>Object.prototype.hasOwnProperty.call(settings,k));
 for(const k of LEGACY_SETTING_KEYS) delete settings[k]; /* no user API keys and no Real-Debrid configuration */
-settings.stream=Object.assign({preload:"smart",player:"auto",raceTimeoutSec:20,stallSwitch:true,stallTimeoutSec:45,quality:"auto",resolutions:["2160p","1080p","720p","480p"],maxFileSizeGb:5,dataSaver:"auto",dnsWarm:true,sortByHealth:true,trailerPreviews:true,volume:.9,muted:false,rate:1,autoFailover:true,embedwaveFailover:false,fastStreamApiProbe:true,nextEpisodeWarm:true,primeThreads:2,primeChunkKb:256,primeBudgetMb:2,bufferTargetSec:16},settings.stream||{});
-settings.ui=Object.assign({autoplayNext:true,reduceMotion:false,compactCards:false,showCategoryStrip:true},settings.ui||{});
-settings.downloads=Object.assign({enabled:true,multithreaded:true,threads:4,chunkMb:2,concurrent:1,m3uExtraction:true,autoSave:true,autoResume:false,refreshExpired:true,keepCompleted:true},settings.downloads||{});
+settings.stream=Object.assign({preload:"smart",player:"auto",raceTimeoutSec:20,stallSwitch:true,stallTimeoutSec:45,quality:"auto",resolutions:["2160p","1080p","720p","480p"],maxFileSizeGb:5,dataSaver:"auto",dnsWarm:true,sortByHealth:true,trailerPreviews:!ANDROID_TV_APP,volume:.9,muted:false,rate:1,autoFailover:true,embedwaveFailover:false,fastStreamApiProbe:true,nextEpisodeWarm:true,primeThreads:ANDROID_TV_APP?1:2,primeChunkKb:ANDROID_TV_APP?128:256,primeBudgetMb:ANDROID_TV_APP?1:2,bufferTargetSec:ANDROID_TV_APP?12:16},settings.stream||{});
+settings.ui=Object.assign({autoplayNext:true,reduceMotion:ANDROID_TV_APP,compactCards:false,showCategoryStrip:true,tvPerformanceMode:ANDROID_TV_APP,androidTvLaunchFocus:true},settings.ui||{});
+settings.downloads=Object.assign({enabled:true,multithreaded:true,threads:ANDROID_TV_APP?2:4,chunkMb:ANDROID_TV_APP?1:2,concurrent:1,m3uExtraction:true,autoSave:true,autoResume:false,refreshExpired:true,keepCompleted:true},settings.downloads||{});
 if(settings.stream.player==="faststream") settings.stream.player="auto"; /* FastStream is now integrated through its API with a responsive fallback. */
 if(!(Number(settings.stream.maxFileSizeGb)>0)||Number(settings.stream.maxFileSizeGb)>5) settings.stream.maxFileSizeGb=5;
 if(settings.source==="embedwave") settings.source="vidstuck"; /* Embedwave is last-resort only — never the saved default */
@@ -578,7 +717,7 @@ if(!Array.isArray(settings.customSources)) settings.customSources=[];
 if(!Array.isArray(settings.disabledSources)) settings.disabledSources=[];
 settings.feed=Object.assign({url:"",auto:true,intervalMin:15,lastCheck:0,healthAuto:true,addonsAuto:true,lastAddonCheck:0},settings.feed||{});
 settings.discovery=Object.assign({
-  autoStart:true, intervalSec:90, githubPausedUntil:0,
+  autoStart:true, intervalSec:ANDROID_TV_APP?180:90, githubPausedUntil:0,
   crawlers:{catalogGraph:true,stremioAddons:true,github:true,githubProbe:true,candidateIdentification:true,feeds:true,websites:true,health:true},
   githubQueries:["topic:stremio-addon","topic:stremio-addons","stremio addon in:name,description,readme","topic:stremio","topic:iptv","topic:m3u","topic:streaming-api","topic:anime-api","topic:subtitle-api"],
   cursors:{}, seeds:[], stats:{cycles:0,lastCycleAt:0,lastAdded:0,lastInstalled:0,lastIdentified:0,lastErrors:0,lastSummary:""}
@@ -594,6 +733,7 @@ if(!settings.health||typeof settings.health!=="object") settings.health={};
 if(!Array.isArray(settings.dlog)) settings.dlog=[];
 if(!Array.isArray(settings.sites)) settings.sites=[];
 if(!Array.isArray(settings.addons)) settings.addons=[];
+settings.artwork=Object.assign({enabled:true,cinemeta:true,tvmaze:true,anilist:true,itunes:true},settings.artwork||{});
 let watchlist = loadJSON(LS.watchlist,[]);
 let progress  = loadJSON(LS.progress,{});
 const saveSettings = ()=>saveJSON(LS.settings,settings);
@@ -614,28 +754,48 @@ function phSVG(title,seed,w,h){
   return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
 }
 const IMG = "https://image.tmdb.org/t/p/";
-function posterURL(it,size="w342"){ if(it&&it.poster_url) return effectiveSaver()? it.poster_url.replace("/poster/medium/","/poster/small/") : it.poster_url; if(effectiveSaver()) size={w500:"w342",w342:"w185"}[size]||size; return it&&it.poster_path ? IMG+size+it.poster_path : phSVG(titleOf(it),it&&it.id,342,513); }
-function backdropURL(it,size="w1280"){ if(it&&it.backdrop_url) return it.backdrop_url; if(effectiveSaver()&&size==="w1280") size="w780"; return it&&it.backdrop_path ? IMG+size+it.backdrop_path : (it&&it.poster_path ? IMG+size+it.poster_path : phSVG(titleOf(it),it&&it.id,1280,720)); }
-document.addEventListener("error",e=>{ const el=e.target; if(el&&el.tagName==="IMG"&&el.classList.contains("hero-logo")){ el.remove(); return; } if(el&&el.tagName==="IMG"&&!el.dataset.fb){ el.dataset.fb="1"; el.src=phSVG(el.alt||"ZeroPlay", el.dataset.seed||9, el.classList.contains("hero-bg")?1280:342, el.classList.contains("hero-bg")?720:513); } },true);
+function posterURL(it,size="w342"){
+  const cached=typeof cachedArtwork==="function"?cachedArtwork(it):null;
+  if(cached&&cached.poster) return cached.poster;
+  if(it&&it.poster_url) return typeof cleanArtworkUrl==="function"?(cleanArtworkUrl(it.poster_url,"poster")||phSVG(titleOf(it),it&&it.id,342,513)):it.poster_url;
+  if(ANDROID_TV_APP) size="w342"; else if(effectiveSaver()) size={w500:"w342",w342:"w185"}[size]||size;
+  return it&&it.poster_path ? IMG+size+it.poster_path : phSVG(titleOf(it),it&&it.id,342,513);
+}
+function backdropURL(it,size="w1280"){
+  const cached=typeof cachedArtwork==="function"?cachedArtwork(it):null;
+  if(cached&&cached.backdrop) return cached.backdrop;
+  if(it&&it.backdrop_url) return typeof cleanArtworkUrl==="function"?(cleanArtworkUrl(it.backdrop_url,"backdrop")||phSVG(titleOf(it),it&&it.id,1280,720)):it.backdrop_url;
+  if(cached&&cached.poster) return cached.poster;
+  if(it&&it.poster_url) return typeof cleanArtworkUrl==="function"?(cleanArtworkUrl(it.poster_url,"backdrop")||phSVG(titleOf(it),it&&it.id,1280,720)):it.poster_url;
+  if(effectiveSaver()&&size==="w1280") size="w780";
+  return it&&it.backdrop_path ? IMG+size+it.backdrop_path : (it&&it.poster_path ? IMG+size+it.poster_path : phSVG(titleOf(it),it&&it.id,1280,720));
+}
+document.addEventListener("error",e=>{ const el=e.target; if(el&&el.tagName==="IMG"&&el.classList.contains("hero-logo")){ el.remove(); return; } if(el&&el.tagName==="IMG"&&!el.dataset.fb){ const failed=el.getAttribute("src")||""; el.dataset.fb="1"; if(el.dataset.artworkItem&&failed&&!/^data:/i.test(failed)){ el.dataset.artworkFailedUrl=failed; el.dataset.artworkMissing="1"; if(typeof queueArtworkForImage==="function") setTimeout(()=>queueArtworkForImage(el,true),0); } el.src=phSVG(el.alt||"ZeroPlay", el.dataset.seed||9, (el.classList.contains("hero-bg")||el.classList.contains("episode-thumb-img"))?1280:342, (el.classList.contains("hero-bg")||el.classList.contains("episode-thumb-img"))?720:513); } },true);
 
 function titleOf(it){ return it ? (it.title||it.name||"Untitled") : "Untitled"; }
 function typeOf(it){ return it.media_type==="tv"||it.first_air_date!==undefined&&it.title===undefined ? "tv" : (it.media_type|| (it.title!==undefined?"movie":"tv")); }
 function yearOf(it){ const d=it.release_date||it.first_air_date||""; return d?String(d).slice(0,4):""; }
-function snap(it,type){ return {id:it.id,type:type||typeOf(it),title:titleOf(it),poster_path:it.poster_path||null,backdrop_path:it.backdrop_path||null,year:yearOf(it),rating:it.vote_average?Number(it.vote_average).toFixed(1):null,poster_url:it.poster_url||null,backdrop_url:it.backdrop_url||null,imdb_id:it.imdb_id||null,trailer_key:it.trailer_key||trailerKeyFromData(it)||null,logo_url:it.logo_url||null,genre_ids:Array.isArray(it.genre_ids)?it.genre_ids:(Array.isArray(it.genres)?it.genres.map(g=>Number(g&&g.id||0)).filter(Boolean):[]),overview:it.overview||""}; }
-function snapToItem(s){ if(!s) return null; const type=s.type||s.media_type||"movie"; return {id:s.id,media_type:type,title:type==="movie"?(s.title||s.name):undefined,name:type==="tv"?(s.title||s.name):undefined,poster_path:s.poster_path||null,backdrop_path:s.backdrop_path||null,poster_url:s.poster_url||null,backdrop_url:s.backdrop_url||null,imdb_id:s.imdb_id||null,release_date:s.year?s.year+"-01-01":(s.release_date||""),first_air_date:s.year?s.year+"-01-01":(s.first_air_date||""),vote_average:s.rating?Number(s.rating):(s.vote_average||0),trailer_key:s.trailer_key||null,logo_url:s.logo_url||null,genre_ids:s.genre_ids||[],overview:s.overview||""}; }
+function snap(it,type){ return {id:it.id,type:type||typeOf(it),title:titleOf(it),poster_path:it.poster_path||null,backdrop_path:it.backdrop_path||null,year:yearOf(it),rating:it.vote_average?Number(it.vote_average).toFixed(1):null,poster_url:it.poster_url||null,backdrop_url:it.backdrop_url||null,imdb_id:it.imdb_id||null,trailer_key:it.trailer_key||trailerKeyFromData(it)||null,logo_url:it.logo_url||null,artwork_provider:it.artwork_provider||null,genre_ids:Array.isArray(it.genre_ids)?it.genre_ids:(Array.isArray(it.genres)?it.genres.map(g=>Number(g&&g.id||0)).filter(Boolean):[]),overview:it.overview||""}; }
+function snapToItem(s){ if(!s) return null; const type=s.type||s.media_type||"movie"; return {id:s.id,media_type:type,title:type==="movie"?(s.title||s.name):undefined,name:type==="tv"?(s.title||s.name):undefined,poster_path:s.poster_path||null,backdrop_path:s.backdrop_path||null,poster_url:s.poster_url||null,backdrop_url:s.backdrop_url||null,imdb_id:s.imdb_id||null,release_date:s.year?s.year+"-01-01":(s.release_date||""),first_air_date:s.year?s.year+"-01-01":(s.first_air_date||""),vote_average:s.rating?Number(s.rating):(s.vote_average||0),trailer_key:s.trailer_key||null,logo_url:s.logo_url||null,artwork_provider:s.artwork_provider||null,genre_ids:s.genre_ids||[],overview:s.overview||""}; }
 const keyOf = (type,id)=>type+":"+id;
 const inWatchlist = (type,id)=>watchlist.some(w=>w.type===type&&w.id===id);
 function clampSettingNumber(value,min,max,fallback){ const n=Number(value); return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback; }
-function streamCfg(){ const st=settings.stream||(settings.stream={}); st.raceTimeoutSec=clampSettingNumber(st.raceTimeoutSec,15,60,20); st.stallTimeoutSec=clampSettingNumber(st.stallTimeoutSec,30,120,45); st.primeThreads=Math.round(clampSettingNumber(st.primeThreads,1,4,2)); st.primeChunkKb=Math.round(clampSettingNumber(st.primeChunkKb,64,1024,256)); st.primeBudgetMb=clampSettingNumber(st.primeBudgetMb,.25,8,2); st.bufferTargetSec=clampSettingNumber(st.bufferTargetSec,6,60,16); return st; }
-function downloadCfg(){ const d=settings.downloads||(settings.downloads={}); d.threads=Math.round(clampSettingNumber(d.threads,1,8,4)); d.chunkMb=clampSettingNumber(d.chunkMb,.25,8,2); d.concurrent=Math.round(clampSettingNumber(d.concurrent,1,3,1)); return d; }
+function tvPerformanceEnabled(){ return !!(typeof ANDROID_TV_APP!=="undefined"&&ANDROID_TV_APP&&settings.ui&&settings.ui.tvPerformanceMode!==false); }
+function streamCfg(){ const st=settings.stream||(settings.stream={}); st.raceTimeoutSec=clampSettingNumber(st.raceTimeoutSec,15,60,20); st.stallTimeoutSec=clampSettingNumber(st.stallTimeoutSec,30,120,45); st.primeThreads=Math.round(clampSettingNumber(st.primeThreads,1,4,2)); st.primeChunkKb=Math.round(clampSettingNumber(st.primeChunkKb,64,1024,256)); st.primeBudgetMb=clampSettingNumber(st.primeBudgetMb,.25,8,2); st.bufferTargetSec=clampSettingNumber(st.bufferTargetSec,6,60,16); if(tvPerformanceEnabled()){ st.primeThreads=Math.min(st.primeThreads,1); st.primeChunkKb=Math.min(st.primeChunkKb,128); st.primeBudgetMb=Math.min(st.primeBudgetMb,1); st.bufferTargetSec=Math.min(st.bufferTargetSec,12); } return st; }
+function downloadCfg(){ const d=settings.downloads||(settings.downloads={}); d.threads=Math.round(clampSettingNumber(d.threads,1,8,4)); d.chunkMb=clampSettingNumber(d.chunkMb,.25,8,2); d.concurrent=Math.round(clampSettingNumber(d.concurrent,1,3,1)); if(tvPerformanceEnabled()){ d.threads=Math.min(d.threads,2); d.chunkMb=Math.min(d.chunkMb,1); d.concurrent=1; } return d; }
 function embedLoadTimeoutMs(){ return streamCfg().raceTimeoutSec*1000; }
 function embedStallTimeoutMs(){ return streamCfg().stallTimeoutSec*1000; }
 function downloadsEnabled(){ return downloadCfg().enabled!==false; }
 function applyInterfaceSettings(){
   const ui=settings.ui||{};
+  const isAndroidTv=typeof ANDROID_TV_APP!=="undefined"&&ANDROID_TV_APP;
+  const isLowRamTv=typeof ANDROID_TV_LOW_RAM!=="undefined"&&ANDROID_TV_LOW_RAM;
   document.body.classList.toggle("reduce-motion",!!ui.reduceMotion);
   document.body.classList.toggle("compact-cards",!!ui.compactCards);
   document.body.classList.toggle("hide-category-strip",ui.showCategoryStrip===false);
+  document.body.classList.toggle("android-tv",isAndroidTv);
+  document.body.classList.toggle("tv-performance",tvPerformanceEnabled());
+  document.body.classList.toggle("android-tv-low-ram",!!(isAndroidTv&&isLowRamTv));
   syncFeatureToggles();
 }
 function getFeatureToggle(key){
@@ -662,6 +822,13 @@ function getFeatureToggle(key){
     case "reduceMotion": return !!ui.reduceMotion;
     case "compactCards": return !!ui.compactCards;
     case "categoryStrip": return ui.showCategoryStrip!==false;
+    case "tvPerformance": return ui.tvPerformanceMode!==false;
+    case "tvLaunchFocus": return ui.androidTvLaunchFocus!==false;
+    case "artworkFallback": return !settings.artwork||settings.artwork.enabled!==false;
+    case "artworkCinemeta": return !settings.artwork||settings.artwork.cinemeta!==false;
+    case "artworkTvmaze": return !settings.artwork||settings.artwork.tvmaze!==false;
+    case "artworkAnilist": return !settings.artwork||settings.artwork.anilist!==false;
+    case "artworkItunes": return !settings.artwork||settings.artwork.itunes!==false;
     default: return false;
   }
 }
@@ -689,6 +856,13 @@ function setFeatureToggle(key,checked){
     case "reduceMotion": ui.reduceMotion=checked; break;
     case "compactCards": ui.compactCards=checked; break;
     case "categoryStrip": ui.showCategoryStrip=checked; break;
+    case "tvPerformance": ui.tvPerformanceMode=checked; try{ if(checked){ stopCardPreview(); document.querySelectorAll(".hero-trailer.on").forEach(stopBackdropPreview); } }catch{} break;
+    case "tvLaunchFocus": ui.androidTvLaunchFocus=checked; break;
+    case "artworkFallback": (settings.artwork||(settings.artwork={})).enabled=checked; break;
+    case "artworkCinemeta": (settings.artwork||(settings.artwork={})).cinemeta=checked; break;
+    case "artworkTvmaze": (settings.artwork||(settings.artwork={})).tvmaze=checked; break;
+    case "artworkAnilist": (settings.artwork||(settings.artwork={})).anilist=checked; break;
+    case "artworkItunes": (settings.artwork||(settings.artwork={})).itunes=checked; break;
     default: return;
   }
   saveSettings(); applyInterfaceSettings();
@@ -1159,7 +1333,7 @@ async function cinemetaResponse(path, params){
     const meta = await cmMetaByTmdb(mm[1], Number(mm[2]));
     if(!meta) return null;
     const n = Number(mm[3]);
-    return {season_number:n, episodes:(meta.videos||[]).filter(v=>v.season===n).sort((a,b)=>a.episode-b.episode).map(v=>({episode_number:v.episode, name:v.name||("Episode "+v.episode), air_date:(v.released||"").slice(0,10), runtime:0, overview:v.overview||v.description||""}))};
+    return {season_number:n, episodes:(meta.videos||[]).filter(v=>v.season===n).sort((a,b)=>a.episode-b.episode).map(v=>({episode_number:v.episode, name:v.name||("Episode "+v.episode), air_date:(v.released||"").slice(0,10), runtime:0, overview:v.overview||v.description||"", still_url:v.thumbnail||v.still_url||"", thumbnail_url:v.thumbnail||"", still_path:v.still_path||null}))};
   }
   if(path==="/genre/movie/list"||path==="/genre/tv/list"){ const t=path.includes("movie")?"movie":"tv"; return {genres:Object.entries(CM_TMDB_GENRES[t]).map(([id,name])=>({id:Number(id),name}))}; }
   mm = path.match(/^\/(movie|tv)\/(\d+)$/);
@@ -1232,7 +1406,7 @@ async function probeFileSize(url){
   try{ const r=await fetch(url,{headers:{Range:"bytes=0-0"},signal:ctl.signal,credentials:"omit"}); const cr=r.headers.get("content-range"); let found=null; if(cr&&cr.includes("/")){ const total=Number(cr.split("/").pop()); if(total>0) found=total; } const len=Number(r.headers.get("content-length")); if(found==null&&r.status===200&&len>1) found=len; try{ if(r.body) await r.body.cancel(); }catch{} if(found) return found; }catch{} finally{ clearTimeout(to); }
   return null; /* size unknown (host blocks CORS probes) — playback allowed, marked unknown */
 }
-function effectiveSaver(){ const m=settings.stream.dataSaver; if(m==="on") return true; if(m==="off") return false; const c=navigator.connection||{}; return !!(c.saveData||/(^|-)2g$/.test(c.effectiveType||"")); }
+function effectiveSaver(){ if(tvPerformanceEnabled()) return true; const m=settings.stream.dataSaver; if(m==="on") return true; if(m==="off") return false; const c=navigator.connection||{}; return !!(c.saveData||/(^|-)2g$/.test(c.effectiveType||"")); }
 function connInfo(){ const c=navigator.connection||{}; return {type:c.effectiveType||"unknown",downlink:c.downlink||null,saveData:!!c.saveData,rtt:c.rtt||null}; }
 function routeNow(){ const r=(location.hash.replace(/^#\/?/,"").split("?")[0]||"home"); return r==="discover"||r==="settings"||r==="configure"||r==="debrid"?"sources":r; }
 
@@ -1283,7 +1457,7 @@ async function fetchImdbId(type,id){
   imdbCache[k]=out; return out;
 }
 async function resolveSourceURL(source, ctx){
-  if(!source) throw new Error("No playback source enabled — add one in Discover");
+  if(!source) throw new Error("No playback source enabled — add one in Sources");
   const identity=(ctx&&ctx.identity&&ctx.identity.version)?ctx.identity:buildTitleIdentity(ctx||{});
   const richCtx=Object.assign({},ctx||{},{identity,imdb:(ctx&&ctx.imdb)||identity.imdbId||"",title:identity.title||(ctx&&ctx.title)||"",altTitles:identity.titles||[],year:identity.year||(ctx&&ctx.year)||"",season:identity.season,episode:identity.episode});
   if(source.kind==="addon") return resolveAddonURL(source,richCtx);
@@ -1492,6 +1666,12 @@ function rememberCatalogItem(it){
   const type=typeOf(it), key=keyOf(type,Number(it.id));
   const prev=catalogItemCache.get(key)||{};
   const merged=Object.assign({},prev,it);
+  if(!merged.poster_url&&prev.poster_url) merged.poster_url=prev.poster_url;
+  if(!merged.backdrop_url&&prev.backdrop_url) merged.backdrop_url=prev.backdrop_url;
+  if(!merged.logo_url&&prev.logo_url) merged.logo_url=prev.logo_url;
+  if(!merged.imdb_id&&prev.imdb_id) merged.imdb_id=prev.imdb_id;
+  const cachedArt=typeof cachedArtwork==="function"?cachedArtwork(merged):null;
+  if(cachedArt){ if(cachedArt.poster) merged.poster_url=cachedArt.poster; if(cachedArt.backdrop) merged.backdrop_url=cachedArt.backdrop; if(cachedArt.logo) merged.logo_url=cachedArt.logo; if(cachedArt.provider) merged.artwork_provider=cachedArt.provider; if(cachedArt.imdb&&!merged.imdb_id) merged.imdb_id=cachedArt.imdb; }
   if(!merged.trailer_key) merged.trailer_key=trailerKeyFromData(merged);
   if(merged.trailer_key) trailerKeyCache.set(key,merged.trailer_key);
   catalogItemCache.set(key,merged);
@@ -1504,6 +1684,473 @@ function catalogItemFor(type,id){
   const w=watchlist.find(x=>x.type===type&&x.id===Number(id)); if(w) return snapToItem(w);
   return {id:Number(id),media_type:type,title:type==="movie"?"Title":undefined,name:type==="tv"?"Title":undefined};
 }
+/* ---------------- zero-config artwork providers ----------------
+   Poster/backdrop coverage intentionally does not depend on one catalogue.
+   Cinemeta/MetaHub, TVmaze, AniList and Apple iTunes are all used through
+   public keyless endpoints, so the TV app is ready on first launch and the
+   user is never asked to create or paste an artwork API key. Optional
+   deployment-side TMDB artwork remains the catalogue's direct artwork when
+   the host has configured it privately. Candidates are title/year matched
+   (or IMDb matched) and image-probed before they replace a placeholder. */
+const ARTWORK_CACHE_KEY="zp_artwork_cache_v1";
+const ARTWORK_FOUND_TTL_MS=30*24*60*60*1000;
+const ARTWORK_MISSING_TTL_MS=12*60*60*1000;
+let artworkCache=(()=>{ const raw=loadJSON(ARTWORK_CACHE_KEY,{}); return raw&&typeof raw==="object"&&!Array.isArray(raw)?raw:{}; })();
+const artworkInFlight=new Map();
+const artworkDomQueued=new WeakSet();
+const artworkDomQueue=[];
+let artworkDomActive=0;
+let artworkDomObserver=null;
+let artworkCacheSaveTimer=null;
+
+function artworkSetting(name){
+  const cfg=settings&&settings.artwork;
+  return !cfg||cfg[name]!==false;
+}
+function artworkFallbackEnabled(){ return artworkSetting("enabled"); }
+function artworkCacheKey(item){
+  if(!item) return "";
+  const type=typeOf(item);
+  const id=Number(item.id)||0;
+  if(id) return type+":"+id;
+  const imdb=String(item.imdb_id||item.imdb||"").toLowerCase();
+  if(/^tt\d+$/i.test(imdb)) return type+":imdb:"+imdb;
+  const title=identityNormalizeTitle(titleOf(item));
+  return title?type+":title:"+title+":"+(yearOf(item)||item.year||""):"";
+}
+function cleanArtworkUrl(raw,kind){
+  let value=String(raw||"").trim();
+  if(!value||/^data:/i.test(value)) return "";
+  if(value.startsWith("//")) value="https:"+value;
+  let url;
+  try{ url=new URL(value); }catch{ return ""; }
+  if(url.protocol!=="http:"&&url.protocol!=="https:") return "";
+  const lower=url.href.toLowerCase();
+  if(/(no[-_ ]?poster|poster[-_ ]?placeholder|image[-_ ]?not[-_ ]?available|missing[-_ ]?image|default[-_ ]?poster|placeholder)/i.test(lower)) return "";
+  const perf=typeof tvPerformanceEnabled==="function"&&tvPerformanceEnabled();
+  if(url.hostname.includes("metahub.space")){
+    if(kind==="backdrop") url.pathname=url.pathname.replace("/background/large/","/background/medium/").replace("/background/medium/",perf?"/background/small/":"/background/medium/");
+    else url.pathname=url.pathname.replace("/poster/large/","/poster/medium/").replace("/poster/small/","/poster/medium/");
+  }
+  if(/(mzstatic\.com|apple\.com)$/i.test(url.hostname)){
+    const size=kind==="backdrop"?"640x360":"342x513";
+    url.pathname=url.pathname.replace(/\/\d+x\d+(bb)?\.(jpg|jpeg|png)$/i,"/"+size+"bb.jpg");
+  }
+  return url.href;
+}
+function sanitizeArtworkResult(raw){
+  if(!raw||typeof raw!=="object") return null;
+  const poster=cleanArtworkUrl(raw.poster||raw.poster_url,"poster");
+  const backdrop=cleanArtworkUrl(raw.backdrop||raw.backdrop_url,"backdrop");
+  const logo=cleanArtworkUrl(raw.logo||raw.logo_url,"poster");
+  if(!poster&&!backdrop&&!logo) return null;
+  const providers=Array.isArray(raw.providers)?raw.providers.filter(Boolean).map(String):(raw.provider?[String(raw.provider)]:[]);
+  return {
+    poster,backdrop,logo,
+    provider:String(raw.provider||providers[0]||"catalogue"),
+    providers:providers.length?providers:[String(raw.provider||"catalogue")],
+    imdb:/^tt\d+$/i.test(String(raw.imdb||""))?String(raw.imdb).toLowerCase():"",
+    updatedAt:Number(raw.updatedAt)||Date.now(),
+    notFound:false
+  };
+}
+function cachedArtwork(item,opts){
+  opts=opts||{};
+  const key=artworkCacheKey(item);
+  if(!key||!artworkCache[key]) return null;
+  const entry=artworkCache[key];
+  const age=Date.now()-(Number(entry.updatedAt)||0);
+  const ttl=entry.notFound?ARTWORK_MISSING_TTL_MS:ARTWORK_FOUND_TTL_MS;
+  if(age>ttl){ delete artworkCache[key]; saveArtworkCacheSoon(); return null; }
+  if(entry.notFound) return opts.includeMissing?entry:null;
+  const clean=sanitizeArtworkResult(entry);
+  if(!clean){ delete artworkCache[key]; saveArtworkCacheSoon(); return null; }
+  const excluded=opts.excludeUrls instanceof Set?opts.excludeUrls:new Set();
+  if(excluded.size){
+    if(clean.poster&&excluded.has(clean.poster)) clean.poster="";
+    if(clean.backdrop&&excluded.has(clean.backdrop)) clean.backdrop="";
+    if(clean.logo&&excluded.has(clean.logo)) clean.logo="";
+    if(!clean.poster&&!clean.backdrop&&!clean.logo) return null;
+  }
+  return clean;
+}
+function saveArtworkCacheSoon(){
+  if(artworkCacheSaveTimer) return;
+  artworkCacheSaveTimer=setTimeout(()=>{
+    artworkCacheSaveTimer=null;
+    const entries=Object.entries(artworkCache).sort((a,b)=>(Number(b[1]&&b[1].updatedAt)||0)-(Number(a[1]&&a[1].updatedAt)||0)).slice(0,350);
+    artworkCache=Object.fromEntries(entries);
+    saveJSON(ARTWORK_CACHE_KEY,artworkCache);
+  },250);
+}
+function clearArtworkCache(){
+  artworkCache={};
+  artworkInFlight.clear();
+  artworkDomQueue.length=0;
+  try{ localStorage.removeItem(ARTWORK_CACHE_KEY); }catch{}
+}
+function clearArtworkRuntime(){
+  artworkDomQueue.length=0;
+  if(artworkDomObserver){ try{ artworkDomObserver.disconnect(); }catch{} artworkDomObserver=null; }
+}
+function artworkFromItem(item,excludeUrls){
+  if(!item) return null;
+  const excluded=excludeUrls instanceof Set?excludeUrls:new Set();
+  let poster=cleanArtworkUrl(item.poster_url,"poster");
+  let backdrop=cleanArtworkUrl(item.backdrop_url,"backdrop");
+  let logo=cleanArtworkUrl(item.logo_url,"poster");
+  if(!poster&&item.poster_path) poster=IMG+(tvPerformanceEnabled()?"w185":"w342")+item.poster_path;
+  if(!backdrop&&item.backdrop_path) backdrop=IMG+(tvPerformanceEnabled()?"w780":"w1280")+item.backdrop_path;
+  if(poster&&excluded.has(poster)) poster="";
+  if(backdrop&&excluded.has(backdrop)) backdrop="";
+  if(logo&&excluded.has(logo)) logo="";
+  return sanitizeArtworkResult({poster,backdrop,logo,provider:item.artwork_provider||"catalogue",imdb:item.imdb_id||item.imdb||""});
+}
+function artworkIdentity(item){
+  return buildTitleIdentity({type:typeOf(item),id:item&&item.id,title:titleOf(item),year:item&&(item.year||yearOf(item)),imdb_id:item&&(item.imdb_id||item.imdb||"")});
+}
+function artworkCandidateMatches(names,years,item){
+  const identity=artworkIdentity(item);
+  if(!identity.title||/^title$/i.test(identity.title)) return false;
+  let best=0;
+  for(const name of Array.isArray(names)?names:[names]){
+    if(!name) continue;
+    best=Math.max(best,identityTitleScore(String(name),identity).score);
+  }
+  if(best<86) return false;
+  const wanted=Number(identity.year)||0;
+  const found=(Array.isArray(years)?years:[years]).map(v=>Number(String(v||"").slice(0,4))).filter(v=>v>=1900&&v<=2100);
+  if(wanted&&found.length) return found.some(y=>Math.abs(y-wanted)<=1);
+  return best>=92;
+}
+function artworkProbeImage(url){
+  return new Promise(resolve=>{
+    if(!url||typeof Image!=="function"){ resolve(false); return; }
+    const img=new Image();
+    let done=false;
+    const finish=ok=>{ if(done) return; done=true; clearTimeout(timer); img.onload=null; img.onerror=null; resolve(!!ok); };
+    const timer=setTimeout(()=>finish(false),5500);
+    img.onload=()=>finish((img.naturalWidth||0)>=32&&(img.naturalHeight||0)>=32);
+    img.onerror=()=>finish(false);
+    try{ img.decoding="async"; }catch{}
+    img.src=url;
+  });
+}
+async function probeArtworkCandidate(candidate,needs,excludeUrls){
+  const clean=sanitizeArtworkResult(candidate);
+  if(!clean) return null;
+  const excluded=excludeUrls instanceof Set?excludeUrls:new Set();
+  if(clean.poster&&excluded.has(clean.poster)) clean.poster="";
+  if(clean.backdrop&&excluded.has(clean.backdrop)) clean.backdrop="";
+  if(clean.logo&&excluded.has(clean.logo)) clean.logo="";
+  if(needs.poster&&clean.poster&&!(await artworkProbeImage(clean.poster))) clean.poster="";
+  if(needs.backdrop&&clean.backdrop&&!(await artworkProbeImage(clean.backdrop))) clean.backdrop="";
+  if(clean.logo&&!(await artworkProbeImage(clean.logo))) clean.logo="";
+  return sanitizeArtworkResult(clean);
+}
+async function artworkFetchJson(url,opts){
+  opts=opts||{};
+  const timeoutMs=Math.max(2500,Math.min(15000,Number(opts.timeoutMs)||9000));
+  const request=async target=>{
+    const ctl=typeof AbortController==="function"?new AbortController():null;
+    const timer=ctl?setTimeout(()=>ctl.abort(),timeoutMs):null;
+    try{
+      const init={signal:ctl?ctl.signal:undefined,credentials:"omit",cache:"force-cache",headers:Object.assign({Accept:"application/json"},opts.headers||{})};
+      if(opts.method) init.method=opts.method;
+      if(opts.body!=null) init.body=opts.body;
+      const response=await fetch(target,init);
+      if(!response.ok){ const err=new Error("HTTP "+response.status); err.status=response.status; throw err; }
+      return await response.json();
+    }finally{ if(timer) clearTimeout(timer); }
+  };
+  try{ return await request(url); }
+  catch(err){
+    if((!opts.method||opts.method==="GET")&&typeof location!=="undefined"&&/^https?:$/.test(location.protocol)&&!/^\/api\//.test(url)){
+      return await request("/api/extract?mode=json&url="+encodeURIComponent(url));
+    }
+    throw err;
+  }
+}
+async function artworkFromCinemeta(item){
+  if(!artworkSetting("cinemeta")||typeof cinemetaFetch!=="function"||typeof CINEMETA==="undefined") return undefined;
+  const type=typeOf(item);
+  const imdb=String(item.imdb_id||item.imdb||(typeof lookupImdbByTmdb==="function"?lookupImdbByTmdb(Number(item.id)):"")||"").toLowerCase();
+  if(!/^tt\d+$/i.test(imdb)) return null;
+  try{
+    const data=await cinemetaFetch(CINEMETA+"/meta/"+(typeof cmType==="function"?cmType(type):(type==="tv"?"series":"movie"))+"/"+encodeURIComponent(imdb)+".json");
+    const meta=data&&data.meta;
+    if(!meta) return null;
+    const candidate=sanitizeArtworkResult({
+      poster:meta.poster?String(meta.poster).replace("/poster/small/","/poster/medium/"):"",
+      backdrop:meta.background||"",
+      logo:meta.logo||"",
+      provider:"Cinemeta / MetaHub",
+      imdb:meta.imdb_id||meta.id||imdb
+    });
+    return candidate||null;
+  }catch{ return undefined; }
+}
+function tvmazeArtworkCandidate(show,needs){
+  if(!show) return null;
+  const image=show.image||{};
+  return sanitizeArtworkResult({
+    poster:tvPerformanceEnabled()?(image.medium||image.original||""):(image.original||image.medium||""),
+    backdrop:"",
+    provider:"TVmaze",
+    imdb:show.externals&&show.externals.imdb||""
+  });
+}
+async function tvmazeShowForItem(item){
+  const imdb=String(item.imdb_id||item.imdb||(typeof lookupImdbByTmdb==="function"?lookupImdbByTmdb(Number(item.id)):"")||"").toLowerCase();
+  if(/^tt\d+$/i.test(imdb)){
+    try{
+      const show=await artworkFetchJson("https://api.tvmaze.com/lookup/shows?imdb="+encodeURIComponent(imdb),{timeoutMs:8000});
+      if(show&&show.id) return {show,trusted:true,definitive:true};
+    }catch(err){ if(!(err&&err.status===404)) return {show:null,trusted:false,definitive:false}; }
+  }
+  const title=titleOf(item);
+  if(!title||/^title$/i.test(title)) return {show:null,trusted:false,definitive:true};
+  try{
+    const rows=await artworkFetchJson("https://api.tvmaze.com/search/shows?q="+encodeURIComponent(title),{timeoutMs:9000});
+    const list=(Array.isArray(rows)?rows:[]).map(row=>row&&row.show).filter(Boolean);
+    const show=list.find(candidate=>artworkCandidateMatches([candidate.name],[candidate.premiered],item))||null;
+    return {show,trusted:false,definitive:true};
+  }catch(err){ return {show:null,trusted:false,definitive:!!(err&&err.status===404)}; }
+}
+async function artworkFromTvmaze(item,needs){
+  if(!artworkSetting("tvmaze")||typeOf(item)!=="tv") return undefined;
+  const found=await tvmazeShowForItem(item);
+  if(!found.show) return found.definitive?null:undefined;
+  const candidate=tvmazeArtworkCandidate(found.show,needs)||{poster:"",backdrop:"",logo:"",provider:"TVmaze",providers:["TVmaze"],imdb:found.show.externals&&found.show.externals.imdb||""};
+  if(needs.backdrop&&found.show.id){
+    try{
+      const images=await artworkFetchJson("https://api.tvmaze.com/shows/"+encodeURIComponent(found.show.id)+"/images",{timeoutMs:9000});
+      const backgrounds=(Array.isArray(images)?images:[]).filter(image=>image&&image.type==="background");
+      backgrounds.sort((a,b)=>(b.main===true)-(a.main===true));
+      const chosen=backgrounds[0];
+      const resolutions=chosen&&chosen.resolutions||{};
+      candidate.backdrop=(resolutions.original&&resolutions.original.url)||(resolutions.medium&&resolutions.medium.url)||"";
+    }catch{}
+  }
+  const clean=sanitizeArtworkResult(candidate);
+  return clean||null;
+}
+function artworkLooksAnime(item){
+  if(!item||typeOf(item)!=="tv") return false;
+  const ids=Array.isArray(item.genre_ids)?item.genre_ids.map(Number):[];
+  const genreNames=[...(Array.isArray(item.genres)?item.genres.map(g=>typeof g==="string"?g:(g&&g.name||"")):[]),...(Array.isArray(item.genre)?item.genre:[])].join(" ").toLowerCase();
+  const countries=[...(Array.isArray(item.origin_country)?item.origin_country:[]),item.country||""].join(" ").toUpperCase();
+  const language=String(item.original_language||item.language||"").toLowerCase();
+  if(ids.includes(16)&&(language==="ja"||countries.includes("JP"))) return true;
+  if(/\banime\b/.test(genreNames)) return true;
+  return ids.includes(16)&&!language&&!countries;
+}
+async function artworkFromAnilist(item){
+  if(!artworkSetting("anilist")||!artworkLooksAnime(item)) return undefined;
+  const title=titleOf(item);
+  if(!title||/^title$/i.test(title)) return null;
+  const year=Number(yearOf(item)||item.year)||null;
+  const query="query ($search:String,$year:Int){Page(page:1,perPage:6){media(search:$search,seasonYear:$year,type:ANIME,sort:SEARCH_MATCH){id format seasonYear startDate{year} title{romaji english native} synonyms coverImage{extraLarge large medium} bannerImage}}}";
+  const run=async variables=>{
+    const data=await artworkFetchJson("https://graphql.anilist.co",{method:"POST",timeoutMs:10000,headers:{"Content-Type":"application/json"},body:JSON.stringify({query,variables})});
+    if(data&&Array.isArray(data.errors)&&data.errors.length) throw new Error(data.errors[0].message||"AniList error");
+    return data&&data.data&&data.data.Page&&Array.isArray(data.data.Page.media)?data.data.Page.media:[];
+  };
+  try{
+    let rows=await run({search:title,year});
+    if(!rows.length&&year) rows=await run({search:title,year:null});
+    const media=rows.find(candidate=>{
+      const names=[candidate.title&&candidate.title.english,candidate.title&&candidate.title.romaji,candidate.title&&candidate.title.native,...(Array.isArray(candidate.synonyms)?candidate.synonyms:[])];
+      const years=[candidate.seasonYear,candidate.startDate&&candidate.startDate.year];
+      return artworkCandidateMatches(names,years,item);
+    });
+    if(!media) return null;
+    const cover=media.coverImage||{};
+    return sanitizeArtworkResult({
+      poster:tvPerformanceEnabled()?(cover.large||cover.medium||cover.extraLarge||""):(cover.extraLarge||cover.large||cover.medium||""),
+      backdrop:media.bannerImage||"",
+      provider:"AniList"
+    })||null;
+  }catch{ return undefined; }
+}
+async function artworkFromItunes(item){
+  if(!artworkSetting("itunes")) return undefined;
+  const title=titleOf(item);
+  if(!title||/^title$/i.test(title)) return null;
+  const type=typeOf(item);
+  const params=new URLSearchParams({term:title,media:type==="movie"?"movie":"tvShow",entity:type==="movie"?"movie":"tvSeason",limit:"10",country:"US"});
+  try{
+    const data=await artworkFetchJson("https://itunes.apple.com/search?"+params.toString(),{timeoutMs:9000});
+    const rows=data&&Array.isArray(data.results)?data.results:[];
+    const hit=rows.find(candidate=>{
+      const names=[candidate.trackName,candidate.collectionName,candidate.artistName&&candidate.collectionName?candidate.collectionName:""];
+      return artworkCandidateMatches(names,[candidate.releaseDate],item);
+    });
+    if(!hit) return null;
+    return sanitizeArtworkResult({poster:hit.artworkUrl100||hit.artworkUrl60||"",provider:"Apple iTunes"})||null;
+  }catch(err){ return err&&err.status===404?null:undefined; }
+}
+function mergeArtworkResults(base,candidate){
+  const cleanBase=sanitizeArtworkResult(base)||{poster:"",backdrop:"",logo:"",provider:"",providers:[],imdb:""};
+  const cleanCandidate=sanitizeArtworkResult(candidate);
+  if(!cleanCandidate) return sanitizeArtworkResult(cleanBase);
+  if(!cleanBase.poster&&cleanCandidate.poster) cleanBase.poster=cleanCandidate.poster;
+  if(!cleanBase.backdrop&&cleanCandidate.backdrop) cleanBase.backdrop=cleanCandidate.backdrop;
+  if(!cleanBase.logo&&cleanCandidate.logo) cleanBase.logo=cleanCandidate.logo;
+  if(!cleanBase.imdb&&cleanCandidate.imdb) cleanBase.imdb=cleanCandidate.imdb;
+  const providers=[];
+  [...(cleanBase.providers||[]),...(cleanCandidate.providers||[])].forEach(name=>{ if(name&&!providers.includes(name)) providers.push(name); });
+  cleanBase.providers=providers;
+  cleanBase.provider=providers[0]||cleanCandidate.provider||"catalogue";
+  cleanBase.updatedAt=Date.now();
+  return sanitizeArtworkResult(cleanBase);
+}
+function applyArtworkToItem(item,art){
+  if(!item||!art) return item;
+  if(art.poster) item.poster_url=art.poster;
+  if(art.backdrop) item.backdrop_url=art.backdrop;
+  if(art.logo) item.logo_url=art.logo;
+  if(art.provider) item.artwork_provider=art.providers&&art.providers.length?art.providers.join(" + "):art.provider;
+  if(art.imdb&&!item.imdb_id) item.imdb_id=art.imdb;
+  if(art.imdb&&typeof cinemetaByTmdb!=="undefined"&&item.id) cinemetaByTmdb.set(Number(item.id),art.imdb);
+  return item;
+}
+function persistArtworkSnapshot(item,art){
+  if(!item||!art) return;
+  const type=typeOf(item), id=Number(item.id), key=keyOf(type,id);
+  const update=snapshot=>{
+    if(!snapshot||Number(snapshot.id)!==id||(snapshot.type||snapshot.media_type)!==type) return false;
+    let changed=false;
+    if(art.poster&&snapshot.poster_url!==art.poster){ snapshot.poster_url=art.poster; changed=true; }
+    if(art.backdrop&&snapshot.backdrop_url!==art.backdrop){ snapshot.backdrop_url=art.backdrop; changed=true; }
+    if(art.logo&&snapshot.logo_url!==art.logo){ snapshot.logo_url=art.logo; changed=true; }
+    if(art.imdb&&!snapshot.imdb_id){ snapshot.imdb_id=art.imdb; changed=true; }
+    if(art.provider) snapshot.artwork_provider=art.providers&&art.providers.length?art.providers.join(" + "):art.provider;
+    return changed;
+  };
+  if(progress&&progress[key]&&update(progress[key])) saveProgress();
+  let watchChanged=false;
+  if(Array.isArray(watchlist)) watchlist.forEach(snapshot=>{ if(update(snapshot)) watchChanged=true; });
+  if(watchChanged) saveWatchlist();
+}
+function applyArtworkToDom(item,art){
+  if(!item||!art||typeof document==="undefined") return;
+  const type=typeOf(item), id=String(Number(item.id)||item.id||"");
+  $$("img[data-artwork-item]",document).forEach(img=>{
+    if(img.dataset.type!==type||img.dataset.id!==id) return;
+    const kind=img.dataset.artworkKind||"poster";
+    const url=kind==="backdrop"?(art.backdrop||art.poster):(art.poster||art.backdrop);
+    if(!url) return;
+    img.dataset.artworkResolved="1";
+    img.dataset.artworkMissing="";
+    delete img.dataset.artworkFailedUrl;
+    if(img.getAttribute("src")!==url){ delete img.dataset.fb; img.src=url; }
+  });
+}
+async function resolveArtwork(item,opts){
+  opts=opts||{};
+  if(!item||!artworkFallbackEnabled()) return null;
+  const key=artworkCacheKey(item);
+  if(!key) return null;
+  const excludeUrls=new Set([...(opts.excludeUrls||[]),...(opts.failedUrl?[opts.failedUrl]:[])].filter(Boolean).map(url=>cleanArtworkUrl(url,"poster")||String(url)));
+  const cached=opts.force?null:cachedArtwork(item,{excludeUrls});
+  const direct=artworkFromItem(item,excludeUrls);
+  let result=mergeArtworkResults(cached,direct);
+  const wantsPoster=opts.poster!==false;
+  const wantsBackdrop=opts.backdrop===true||opts.kind==="backdrop";
+  if(result&&(!wantsPoster||result.poster)&&(!wantsBackdrop||result.backdrop)){
+    applyArtworkToItem(item,result);
+    return result;
+  }
+  if(!opts.force){
+    const missing=cachedArtwork(item,{includeMissing:true});
+    if(missing&&missing.notFound&&!result) return null;
+  }
+  const flightKey=key+"|"+(wantsBackdrop?"backdrop":"poster")+"|"+[...excludeUrls].join("|");
+  if(artworkInFlight.has(flightKey)) return artworkInFlight.get(flightKey);
+  const promise=(async()=>{
+    let definitiveMisses=0, providerAttempts=0;
+    const providers=[
+      ["cinemeta",()=>artworkFromCinemeta(item)],
+      ["tvmaze",()=>artworkFromTvmaze(item,{poster:!result||!result.poster,backdrop:wantsBackdrop&&(!result||!result.backdrop)})],
+      ["anilist",()=>artworkFromAnilist(item)],
+      ["itunes",()=>artworkFromItunes(item)]
+    ];
+    for(const [name,load] of providers){
+      if(!artworkSetting(name)) continue;
+      if(result&&(!wantsPoster||result.poster)&&(!wantsBackdrop||result.backdrop)) break;
+      providerAttempts++;
+      let candidate;
+      try{ candidate=await load(); }catch{ candidate=undefined; }
+      if(candidate===null){ definitiveMisses++; continue; }
+      if(!candidate) continue;
+      const needs={poster:wantsPoster&&(!result||!result.poster),backdrop:wantsBackdrop&&(!result||!result.backdrop)};
+      candidate=await probeArtworkCandidate(candidate,needs,excludeUrls);
+      if(candidate) result=mergeArtworkResults(result,candidate);
+      else definitiveMisses++;
+    }
+    if(result){
+      artworkCache[key]=Object.assign({},result,{updatedAt:Date.now(),notFound:false});
+      saveArtworkCacheSoon();
+      applyArtworkToItem(item,result);
+      try{ rememberCatalogItem(item); }catch{}
+      persistArtworkSnapshot(item,result);
+      applyArtworkToDom(item,result);
+      return result;
+    }
+    if(providerAttempts&&definitiveMisses>=providerAttempts){
+      artworkCache[key]={poster:"",backdrop:"",logo:"",provider:"",providers:[],imdb:"",updatedAt:Date.now(),notFound:true};
+      saveArtworkCacheSoon();
+    }
+    return null;
+  })();
+  artworkInFlight.set(flightKey,promise);
+  promise.finally(()=>{ if(artworkInFlight.get(flightKey)===promise) artworkInFlight.delete(flightKey); });
+  return promise;
+}
+function artworkImgAttrs(item,kind,url){
+  if(!item) return "";
+  const missing=!url||/^data:image\/svg/i.test(String(url));
+  return ' data-artwork-item="1" data-artwork-kind="'+esc(kind||"poster")+'" data-type="'+esc(typeOf(item))+'" data-id="'+esc(String(item.id||""))+'" data-seed="'+esc(String(item.id||9))+'"'+(missing?' data-artwork-missing="1"':"");
+}
+async function resolveArtworkForImage(img){
+  if(!img||!img.isConnected) return;
+  const type=img.dataset.type||"movie";
+  const id=Number(img.dataset.id)||0;
+  if(!id) return;
+  const item=catalogItemFor(type,id);
+  const art=await resolveArtwork(item,{kind:img.dataset.artworkKind||"poster",failedUrl:img.dataset.artworkFailedUrl||"",force:!!img.dataset.artworkFailedUrl});
+  if(art) applyArtworkToDom(item,art);
+}
+function pumpArtworkDomQueue(){
+  const limit=tvPerformanceEnabled()?1:2;
+  while(artworkDomActive<limit&&artworkDomQueue.length){
+    const img=artworkDomQueue.shift();
+    if(!img||!img.isConnected||img.dataset.artworkResolved) continue;
+    artworkDomActive++;
+    resolveArtworkForImage(img).catch(()=>{}).finally(()=>{ artworkDomActive=Math.max(0,artworkDomActive-1); pumpArtworkDomQueue(); });
+  }
+}
+function queueArtworkForImage(img,force){
+  if(!img||!artworkFallbackEnabled()||img.dataset.artworkResolved) return;
+  if(!force&&artworkDomQueued.has(img)) return;
+  artworkDomQueued.add(img);
+  if(!artworkDomQueue.includes(img)) artworkDomQueue.push(img);
+  pumpArtworkDomQueue();
+}
+function bindArtworkFallbacks(root){
+  if(!artworkFallbackEnabled()||typeof document==="undefined") return;
+  const images=$$('img[data-artwork-item="1"][data-artwork-missing="1"]',root||document);
+  if(!images.length) return;
+  if(typeof IntersectionObserver!=="function"){ images.forEach(img=>queueArtworkForImage(img,false)); return; }
+  if(!artworkDomObserver){
+    artworkDomObserver=new IntersectionObserver(entries=>{
+      entries.forEach(entry=>{ if(entry.isIntersecting){ artworkDomObserver.unobserve(entry.target); queueArtworkForImage(entry.target,false); } });
+    },{root:null,rootMargin:"320px",threshold:0.01});
+  }
+  images.forEach(img=>{ if(!artworkDomQueued.has(img)) artworkDomObserver.observe(img); });
+}
+
 function trailersAllowed(){
   if(!settings.stream||settings.stream.trailerPreviews===false) return false;
   if(playerState||document.hidden||effectiveSaver()) return false;
@@ -1573,7 +2220,8 @@ function scheduleCardPreview(card,delay,opts){
   card.dataset.previewWanted="1";
   if(activeCardPreview&&activeCardPreview!==card) stopCardPreview(activeCardPreview);
   if(cardPreviewTimer) clearTimeout(cardPreviewTimer);
-  cardPreviewTimer=setTimeout(()=>startCardPreview(card,opts||{}),delay==null?620:delay);
+  const effectiveDelay=tvPerformanceEnabled()?Math.max(1600,delay==null?620:Number(delay)||620):(delay==null?620:delay);
+  cardPreviewTimer=setTimeout(()=>startCardPreview(card,opts||{}),effectiveDelay);
 }
 function clearCardPreviewIntent(card){
   if(!card) return;
@@ -1652,7 +2300,7 @@ async function startBackdropPreview(container,item,opts){
       container._previewObserver=new IntersectionObserver(entries=>{ if(entries[0]&&entries[0].intersectionRatio<0.22) stopBackdropPreview(container); },{threshold:[0,.22,.5]});
       container._previewObserver.observe(container);
     }
-  },opts.delay==null?900:opts.delay);
+  },tvPerformanceEnabled()?Math.max(2000,Number(opts.delay)||900):(opts.delay==null?900:opts.delay));
 }
 function toggleBackdropPreviewSound(container,item){
   if(!container) return;
@@ -1676,7 +2324,7 @@ function cardHTML(it,opts={}){
   const genres=(it.genre_ids||[]).map(id=>genreName(type,id)).filter(Boolean).slice(0,2).join(" · ");
   const index=Number.isFinite(Number(opts.index))?Math.max(0,Math.min(14,Number(opts.index))):0;
   return '<article class="poster-card" style="--i:'+index+'" data-type="'+type+'" data-id="'+it.id+'" tabindex="0" role="button" aria-label="'+esc(titleOf(it))+(it.trailer_key?". Trailer preview available":"")+'">'
-    +'<div class="poster-wrap"><img loading="lazy" src="'+esc(posterURL(it))+'" alt="'+esc(titleOf(it))+'" data-seed="'+it.id+'">'
+        +'<div class="poster-wrap"><img loading="lazy" src="'+esc(posterURL(it))+'" alt="'+esc(titleOf(it))+'"'+artworkImgAttrs(it,"poster",posterURL(it))+'>'
     +'<div class="trailer-layer" aria-hidden="true"></div><span class="preview-badge">Trailer</span>'
     +'<div class="poster-badges"><span class="chip violet">'+(type==="tv"?"Series":"Movie")+'</span></div>'
     +(it.vote_average?'<span class="poster-rate">★ '+Number(it.vote_average).toFixed(1)+"</span>":"")
@@ -1696,12 +2344,14 @@ function railHTML(title,items,opts={}){
 function skeletonRail(title){ return '<section class="rail"><div class="rail-head"><h2>'+esc(title)+'</h2></div><div class="rail-track">'+'<div class="skel" style="flex:0 0 154px"><div class="ph"></div></div>'.repeat(7)+"</div></section>"; }
 function bindCards(root){
   bindRailSpotlights(root);
+  bindArtworkFallbacks(root);
+  bindContinueWatching(root);
   if(root.dataset&&root.dataset.cardsBound) return;
   if(root.dataset) root.dataset.cardsBound="1";
   let intentTimer=null,intentKey="";
-  const intent=(e,previewDelay)=>{ const card=e.target.closest&&e.target.closest(".poster-card"); if(!card) return; const key=card.dataset.type+":"+card.dataset.id; if(key!==intentKey){ intentKey=key; clearTimeout(intentTimer); intentTimer=setTimeout(()=>{ if(card.dataset.previewWanted!=="1") return; const pr=progress[key]||{}; faststreamPreload({type:card.dataset.type,id:Number(card.dataset.id),season:pr.season||1,episode:pr.episode||1},defaultSourceId()); },1350); } scheduleCardPreview(card,previewDelay,{fetchDetail:true}); };
-  root.addEventListener("mouseover",e=>intent(e,680));
-  root.addEventListener("focusin",e=>intent(e,520));
+  const intent=(e,previewDelay)=>{ const card=e.target.closest&&e.target.closest(".poster-card"); if(!card) return; const key=card.dataset.type+":"+card.dataset.id; if(key!==intentKey){ intentKey=key; clearTimeout(intentTimer); intentTimer=setTimeout(()=>{ if(card.dataset.previewWanted!=="1") return; const pr=progress[key]||{}; faststreamPreload({type:card.dataset.type,id:Number(card.dataset.id),season:pr.season||1,episode:pr.episode||1},defaultSourceId()); },tvPerformanceEnabled()?2400:1350); } scheduleCardPreview(card,previewDelay,{fetchDetail:true}); };
+  root.addEventListener("mouseover",e=>intent(e,tvPerformanceEnabled()?1500:680));
+  root.addEventListener("focusin",e=>intent(e,tvPerformanceEnabled()?1700:520));
   root.addEventListener("mouseout",e=>{ const card=e.target.closest&&e.target.closest(".poster-card"); if(card&&!(e.relatedTarget&&card.contains(e.relatedTarget))){ intentKey=""; clearTimeout(intentTimer); clearCardPreviewIntent(card); } });
   root.addEventListener("focusout",e=>{ const card=e.target.closest&&e.target.closest(".poster-card"); if(card&&!(e.relatedTarget&&card.contains(e.relatedTarget))){ intentKey=""; clearTimeout(intentTimer); clearCardPreviewIntent(card); } });
   root.addEventListener("click",e=>{
@@ -1716,8 +2366,58 @@ function bindCards(root){
     if(card){ openDetail(card.dataset.type,Number(card.dataset.id)); return; }
     if(det){ const [t,id]=det.dataset.details.split(":"); openDetail(t,Number(id)); }
   });
-  root.addEventListener("keydown",e=>{ const card=e.target.closest&&e.target.closest(".poster-card"); if(!card) return; if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openDetail(card.dataset.type,Number(card.dataset.id)); } else if(e.key.toLowerCase()==="p"||e.key==="MediaPlayPause"){ e.preventDefault(); quickPlay(card.dataset.type,Number(card.dataset.id)); } });
+  root.addEventListener("keydown",e=>{ const card=e.target.closest&&e.target.closest(".poster-card"); if(!card) return; if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openDetail(card.dataset.type,Number(card.dataset.id)); } else if(e.key.toLowerCase()==="p"||["MediaPlayPause","MediaPlay","MediaPause"].includes(e.key)){ e.preventDefault(); quickPlay(card.dataset.type,Number(card.dataset.id)); } });
 }
+
+function continueProgressLabel(record,type){
+  if(!record) return type==="tv"?"Continue episode":"Continue watching";
+  const ep=type==="tv"?("S"+(record.season||1)+" E"+(record.episode||1)):"";
+  const pos=Number(record.timestamp||record.position)||0;
+  const duration=Number(record.duration)||0;
+  const pct=Number(record.percent)||(duration&&pos?Math.round(pos/duration*100):0);
+  let left="";
+  if(duration>pos&&pos>0) left=formatTime(duration-pos)+" left";
+  else if(pct>0) left=Math.round(pct)+"% watched";
+  return [ep,left].filter(Boolean).join(" · ")||"Resume";
+}
+function continueCardHTML(it){
+  it=rememberCatalogItem(it);
+  const type=typeOf(it), key=keyOf(type,it.id), record=progress[key]||{};
+  const pct=Math.max(0,Math.min(100,Math.round(Number(record.percent)||0)));
+  const artUrl=backdropURL(it,"w780");
+  const label=continueProgressLabel(record,type);
+  return '<article class="continue-card" data-type="'+type+'" data-id="'+it.id+'" tabindex="0" role="button" aria-label="Resume '+esc(titleOf(it))+". "+esc(label)+'">'
+    +'<div class="continue-media"><img loading="lazy" src="'+esc(artUrl)+'" alt="'+esc(titleOf(it))+'"'+artworkImgAttrs(it,"backdrop",artUrl)+'>'
+    +'<div class="continue-shade"></div><span class="continue-play" aria-hidden="true">▶</span>'
+    +'<button class="icon-btn continue-remove" type="button" data-continue-remove="'+key+'" aria-label="Remove '+esc(titleOf(it))+' from Continue Watching" title="Remove from Continue Watching">×</button>'
+    +'</div><div class="continue-meta"><div class="t">'+esc(titleOf(it))+'</div><div class="s">'+esc(label)+'</div>'
+    +(pct>0?'<div class="progress-track continue-progress"><div class="progress-fill" style="width:'+pct+'%"></div></div>':"")
+    +'<div class="continue-actions"><button class="btn btn-primary btn-xs" type="button" data-continue-play="'+key+'">▶ Resume</button><button class="btn btn-secondary btn-xs" type="button" data-continue-details="'+key+'">Details</button></div>'
+    +'</div></article>';
+}
+function continueRailHTML(items){
+  if(!items||!items.length) return "";
+  return '<section class="rail continue-rail"><div class="rail-head"><h2>Continue Watching</h2><div class="rail-arrows"><button class="icon-btn" data-scroll="-1" aria-label="Scroll Continue Watching left">‹</button><button class="icon-btn" data-scroll="1" aria-label="Scroll Continue Watching right">›</button></div></div><div class="rail-track continue-track">'+items.map(continueCardHTML).join("")+'</div><div class="rail-progress" aria-hidden="true"><i></i></div></section>';
+}
+function bindContinueWatching(root){
+  if(!root||!root.addEventListener||(root.dataset&&root.dataset.continueBound)) return;
+  if(root.dataset) root.dataset.continueBound="1";
+  root.addEventListener("click",e=>{
+    const remove=e.target.closest&&e.target.closest("[data-continue-remove]");
+    if(remove){ e.preventDefault(); e.stopPropagation(); const [type,id]=remove.dataset.continueRemove.split(":"); delete progress[keyOf(type,Number(id))]; saveProgress(); toast("Removed from Continue Watching"); render(); return; }
+    const details=e.target.closest&&e.target.closest("[data-continue-details]");
+    if(details){ e.preventDefault(); e.stopPropagation(); const [type,id]=details.dataset.continueDetails.split(":"); openDetail(type,Number(id)); return; }
+    const play=e.target.closest&&e.target.closest("[data-continue-play]");
+    const card=e.target.closest&&e.target.closest(".continue-card");
+    if(card&&(play||!e.target.closest("button"))){ e.preventDefault(); quickPlay(card.dataset.type,Number(card.dataset.id)); }
+  });
+  root.addEventListener("keydown",e=>{
+    const card=e.target.closest&&e.target.closest(".continue-card");
+    if(!card||e.target.closest("button")) return;
+    if(e.key==="Enter"||e.key===" "||["MediaPlayPause","MediaPlay","MediaPause"].includes(e.key)||String(e.key).toLowerCase()==="p"){ e.preventDefault(); quickPlay(card.dataset.type,Number(card.dataset.id)); }
+  });
+}
+
 function toggleWatchlist(type,id,cardEl,snapData){
   if(inWatchlist(type,id)){ watchlist=watchlist.filter(w=>!(w.type===type&&w.id===id)); toast("Removed from watchlist"); }
   else{
@@ -1866,6 +2566,7 @@ function setPlayerControlMode(mode){
   if(engine) engine.textContent=mode==="faststream-api"?"FastStream integrated":mode==="faststream-legacy"?"FastStream player":mode==="native"?"ZeroPlay player":mode==="embed"?"Embedded player":"Connecting";
   refreshPlayerQualityOptions();
   showPlayerChrome(true);
+  if(full&&ANDROID_TV_APP){ const active=document.activeElement; if(!active||!active.closest||!active.closest("#playerRoot")){ const play=document.getElementById("btnPlayPause"); if(play) setTimeout(()=>play.focus({preventScroll:true}),30); } }
 }
 function refreshPlayerQualityOptions(){
   const sel=document.getElementById("playerQuality"); if(!sel||!playerState) return;
@@ -2118,6 +2819,7 @@ function registerProgress(item,season,episode){
   saveProgress();
 }
 async function openPlayer(item,pos){
+  if(typeof rememberTvFocus==="function") rememberTvFocus(document.activeElement);
   pos=pos||{};
   const prev=progress[keyOf(item.type,item.id)]||{};
   stopCardPreview();
@@ -2206,7 +2908,7 @@ function bindPlayerChrome(){
     overlay.addEventListener("focusout",()=>showPlayerChrome(false));
   }
   setPlayerControlMode(st.engine||"loading");
-  if(document.body.classList.contains("tv-mode")){ const first=document.getElementById("btnPlayerServers")||document.getElementById("btnClosePlayer"); if(first) setTimeout(()=>first.focus({preventScroll:true}),40); }
+  if(ANDROID_TV_APP||document.body.classList.contains("tv-mode")){ const first=document.getElementById("btnPlayerServers")||document.getElementById("btnClosePlayer"); if(first) setTimeout(()=>first.focus({preventScroll:true}),40); }
 }
 function playerContext(st){
   st=st||playerState;
@@ -2223,7 +2925,6 @@ function updatePlayerMeta(source){
   parts.push("Cap "+capGb()+" GB");
   if(st.engine==="embed") parts.push(st.playbackConfirmed?"Playback confirmed":st.frameLoadedAt?"Player page loaded":"Connecting");
   if(st.playback&&st.playback.buffered) parts.push("Buffer "+Math.round(st.playback.buffered)+"s");
-  if(st.prime&&st.prime.mbps) parts.push("Warm-up "+st.prime.mbps.toFixed(1)+" MB/s");
   m.innerHTML=parts.join(" · ");
   const line=document.getElementById("playerSourceLine");
   if(line) line.textContent=(st.item&&st.item.type==="tv"?"Season "+st.season+" · Episode "+st.episode+" · ":"")+(src?src.name:"ZeroPlay player");
@@ -2232,7 +2933,7 @@ function updatePlayerMeta(source){
   updateFastBadge();
 }
 function playerErrorHTML(title,detail){
-  return '<div class="player-message"><div><div class="status-box error"><strong>'+esc(title)+'</strong><br>'+esc(detail||"")+'</div><div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem"><button class="btn btn-primary" id="btnPlayerFindServers" type="button">Find servers with this title</button><button class="btn btn-secondary" id="btnPlayerRetry" type="button">Retry</button><button class="btn btn-outline" id="btnPlayerDiscover" type="button">Open Discover</button></div></div></div>';
+  return '<div class="player-message"><div><div class="status-box error"><strong>'+esc(title)+'</strong><br>'+esc(detail||"")+'</div><div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem"><button class="btn btn-primary" id="btnPlayerFindServers" type="button">Find servers with this title</button><button class="btn btn-secondary" id="btnPlayerRetry" type="button">Retry</button><button class="btn btn-outline" id="btnPlayerDiscover" type="button">Open Sources</button></div></div></div>';
 }
 function bindPlayerErrorActions(){
   const st=playerState;
@@ -2274,7 +2975,7 @@ async function drawPlayer(prevProgress){
   document.body.classList.add("locked");
   bindPlayerChrome();
   const source=st.tempSource||getSource(st.source)||allSources()[0];
-  if(!source){ const stage=$("#playerStage"); if(stage) stage.innerHTML=playerErrorHTML("No playback server is enabled","Open Discover to enable or add a server."); bindPlayerErrorActions(); playerLoading(false); return; }
+  if(!source){ const stage=$("#playerStage"); if(stage) stage.innerHTML=playerErrorHTML("No playback server is enabled","Open Sources to add or turn on a source."); bindPlayerErrorActions(); playerLoading(false); return; }
   st.source=source.id; st.tried.add(source.id);
   const prev=prevProgress||progress[keyOf(it.type,it.id)]||{};
   const sameEpisode=prev.season===st.season&&prev.episode===st.episode;
@@ -2634,8 +3335,8 @@ function closePlayer(){
   $("#playerRoot").innerHTML=""; playerState=null;
   if(typeof discoveryRuntime!=="undefined"&&discoveryRuntime.running&&discoveryRuntime.deferredForPlayback){ discoveryRuntime.deferredForPlayback=false; setTimeout(()=>runDiscoveryCycle("after playback"),3000); }
   if(!detailState) document.body.classList.remove("locked");
-  if(st&&st.item&&st.item.id&&document.body.classList.contains("tv-mode")){
-    setTimeout(()=>{ const target=document.getElementById("btnPlay")||document.querySelector('.poster-card[data-type="'+st.item.type+'"][data-id="'+st.item.id+'"]'); if(target) target.focus({preventScroll:true}); },30);
+  if(st&&st.item&&st.item.id&&(ANDROID_TV_APP||document.body.classList.contains("tv-mode"))){
+    setTimeout(()=>{ const target=document.getElementById("btnPlay")||document.querySelector('.continue-card[data-type="'+st.item.type+'"][data-id="'+st.item.id+'"]')||document.querySelector('.poster-card[data-type="'+st.item.type+'"][data-id="'+st.item.id+'"]'); if(target) target.focus({preventScroll:true}); else if(typeof restoreTvFocus==="function") restoreTvFocus(); },30);
   }
 }
 
@@ -3383,7 +4084,7 @@ function downloadOptionsHTML(state){
     blocks.unshift('<div class="src-row"><div class="grow"><span class="nm">'+esc(state.serverName||"Current stream")+'</span> <span class="chip violet">Now playing</span><div class="provider-meta">Download the direct stream already loaded in the player.</div></div><div class="src-actions"><button class="btn btn-primary btn-sm" type="button" data-download-current="1">⬇ Download current stream</button></div></div>');
   }
   if(blocks.length) return blocks.join("");
-  return state.done?'<div class="status-box error"><strong>No downloadable direct stream was returned for this exact title.</strong><br>Embedded players cannot be downloaded from the parent page. Add another website/server or run continuous discovery, then try again.</div>':'<div class="server-skeleton"><span class="spinner"></span> Searching identified servers for a verified direct file or M3U/HLS stream…</div>';
+  return state.done?'<div class="status-box error"><strong>No downloadable direct stream was returned for this exact title.</strong><br>Embedded players cannot be downloaded from the parent page. Try Sources → Find more, then try again.</div>':'<div class="server-skeleton"><span class="spinner"></span> Looking for a downloadable file…</div>';
 }
 function renderDownloadModalOptions(){
   const state=downloadModalState; if(!state) return;
@@ -3543,6 +4244,7 @@ document.addEventListener("click",e=>{
 /* ---------------- detail modal ---------------- */
 let detailState=null;
 async function openDetail(type,id){
+  if(typeof rememberTvFocus==="function") rememberTvFocus(document.activeElement);
   stopCardPreview();
   document.querySelectorAll(".hero-trailer.on").forEach(stopBackdropPreview);
   detailState={type,id,season:null,episode:1,data:null};
@@ -3561,9 +4263,10 @@ async function openDetail(type,id){
     $("#btnCloseDetail").onclick=closeDetail;
   }
 }
-function closeDetail(){ const preview=document.getElementById("detailTrailer"); if(preview) stopBackdropPreview(preview); $("#modalRoot").innerHTML=""; detailState=null; if(!playerState) document.body.classList.remove("locked"); }
+function closeDetail(){ const preview=document.getElementById("detailTrailer"); if(preview) stopBackdropPreview(preview); $("#modalRoot").innerHTML=""; detailState=null; if(!playerState) document.body.classList.remove("locked"); if(typeof restoreTvFocus==="function") restoreTvFocus(); }
 function drawDetail(){
-  const d=detailState.data, type=detailState.type, isTV=type==="tv";
+  const d=rememberCatalogItem(Object.assign({},detailState.data,{media_type:detailState.type})); detailState.data=d;
+  const type=detailState.type, isTV=type==="tv";
   const genres=(d.genres||[]).map(g=>g.name).filter(Boolean);
   const runtime=isTV?((d.episode_run_time||[])[0]?d.episode_run_time[0]+" min/ep":""):(d.runtime?Math.floor(d.runtime/60)+"h "+(d.runtime%60)+"m":"");
   const trailer=(d.videos&&d.videos.results||[]).find(v=>v.site==="YouTube"&&v.type==="Trailer")||(d.videos&&d.videos.results||[]).find(v=>v.site==="YouTube");
@@ -3573,8 +4276,8 @@ function drawDetail(){
   const playLabel=isTV?("▶ Watch S"+(prev.season||detailState.season||1)+" E"+(prev.episode||1)):"▶ Watch Now";
   const seasons=(d.seasons||[]).filter(s=>s.season_number>=0);
   $(".modal").innerHTML='<button class="icon-btn modal-close" id="btnCloseDetail" aria-label="Close">×</button>'
-    +'<div class="detail-hero"><img class="hero-bg" src="'+esc(backdropURL(d))+'" alt="" data-seed="'+d.id+'"><div class="hero-trailer" id="detailTrailer" aria-hidden="true"></div><div class="hero-shade"></div></div>'
-    +'<div class="detail-body"><img class="detail-poster" src="'+esc(posterURL(d,"w500"))+'" alt="'+esc(titleOf(d))+'" data-seed="'+d.id+'"><div>'
+        +'<div class="detail-hero"><img class="hero-bg" src="'+esc(backdropURL(d))+'" alt=""'+artworkImgAttrs(d,"backdrop",backdropURL(d))+'><div class="hero-trailer" id="detailTrailer" aria-hidden="true"></div><div class="hero-shade"></div></div>'
+        +'<div class="detail-body"><img class="detail-poster" src="'+esc(posterURL(d,"w500"))+'" alt="'+esc(titleOf(d))+'"'+artworkImgAttrs(d,"poster",posterURL(d,"w500"))+'><div>'
     +'<span class="logo-badge" style="margin-bottom:.6rem">'+(isTV?"Series":"Movie")+'</span>'
     +"<h2>"+esc(titleOf(d))+"</h2>"
     +'<div class="hero-meta">'+(d.vote_average?'<span class="chip star">★ '+Number(d.vote_average).toFixed(1)+'</span>':"")+(yearOf(d)?'<span class="chip">'+esc(yearOf(d))+"</span>":"")+(runtime?'<span class="chip">'+esc(runtime)+"</span>":"")+(isTV&&d.number_of_seasons?'<span class="chip">'+d.number_of_seasons+" Seasons · "+(d.number_of_episodes||"?")+" Episodes</span>":"")+(d.status?'<span class="chip">'+esc(d.status)+"</span>":"")+'</div>'
@@ -3609,16 +4312,64 @@ function drawDetail(){
   }
   if(isTV){ $("#seasonSelect").onchange=e=>{ detailState.season=Number(e.target.value); loadEpisodes(); }; }
   const rec=$("#recSection"); if(rec) bindCards(rec);
+  bindArtworkFallbacks($(".modal"));
+  void resolveArtwork(d,{backdrop:true});
+  if(ANDROID_TV_APP) setTimeout(()=>{ const play=document.getElementById("btnPlay"); if(play&&detailState) play.focus({preventScroll:true}); },40);
   const da=document.querySelector(".detail-actions"); if(da&&!document.getElementById("fastBadge")){ const fb=document.createElement("span"); fb.className="chip violet"; fb.id="fastBadge"; da.appendChild(fb); }
   faststreamPreload({type,id:d.id,title:titleOf(d),year:yearOf(d),season:isTV?(prev.season||detailState.season||1):1,episode:isTV?(prev.episode||1):1,identity:identityFromDetail(d,type,isTV?(prev.season||detailState.season||1):1,isTV?(prev.episode||1):1)}, defaultSourceId());
 }
+
+const tvmazeEpisodeArtworkCache=new Map();
+function episodeStillInfo(ep,item){
+  let raw=ep&&(ep.still_url||ep.thumbnail_url||ep.thumbnail)||"";
+  if(!raw&&ep&&ep.still_path) raw=/^https?:\/\//i.test(String(ep.still_path))?String(ep.still_path):IMG+"w300"+ep.still_path;
+  const still=cleanArtworkUrl(raw,"backdrop");
+  if(still) return {url:still,missing:false};
+  const fallback=item?backdropURL(item,"w300"):"";
+  return {url:/^data:/i.test(fallback)?phSVG("Episode "+(ep&&ep.episode_number||""),(item&&item.id||9)+(ep&&ep.episode_number||0),640,360):fallback,missing:true};
+}
+async function fillEpisodeThumbnailsFromTvmaze(box,stateToken,season){
+  if(!box||!artworkFallbackEnabled()||!artworkSetting("tvmaze")||!stateToken||!stateToken.data) return;
+  const missing=$$('img[data-episode-thumb-missing="1"]',box);
+  if(!missing.length) return;
+  const item=snapToItem(snap(stateToken.data,"tv"));
+  const found=await tvmazeShowForItem(item);
+  if(!found.show||detailState!==stateToken||Number(detailState.season)!==Number(season)||!box.isConnected) return;
+  const showId=Number(found.show.id);
+  if(!showId) return;
+  if(!tvmazeEpisodeArtworkCache.has(showId)){
+    const promise=(async()=>{
+      const rows=await artworkFetchJson("https://api.tvmaze.com/shows/"+showId+"/episodes?specials=1",{timeoutMs:12000});
+      const map=new Map();
+      (Array.isArray(rows)?rows:[]).forEach(row=>{
+        const image=row&&row.image||{};
+        const url=cleanArtworkUrl(tvPerformanceEnabled()?(image.medium||image.original||""):(image.original||image.medium||""),"backdrop");
+        if(url) map.set(Number(row.season)+":"+Number(row.number),url);
+      });
+      return map;
+    })().catch(()=>new Map());
+    tvmazeEpisodeArtworkCache.set(showId,promise);
+  }
+  const map=await tvmazeEpisodeArtworkCache.get(showId);
+  if(detailState!==stateToken||Number(detailState.season)!==Number(season)||!box.isConnected) return;
+  for(const img of missing){
+    if(!img.isConnected) continue;
+    const url=map.get(Number(season)+":"+Number(img.dataset.episodeThumb||0));
+    if(url&&await artworkProbeImage(url)){ delete img.dataset.fb; img.dataset.episodeThumbMissing=""; img.src=url; }
+  }
+}
+
 async function loadEpisodes(){
   const box=$("#epList"); if(!box||!detailState) return;
+  const stateToken=detailState, season=detailState.season;
   try{
-    const data=await tmdb("/tv/"+detailState.id+"/season/"+detailState.season);
+    const data=await tmdb("/tv/"+detailState.id+"/season/"+season);
     const eps=data.episodes||[];
-    if(!detailState) return;
-    box.innerHTML=eps.length?'<div class="ep-list">'+eps.map(ep=>'<div class="ep" data-ep="'+ep.episode_number+'"><button class="ep-main" type="button" data-ep-play="'+ep.episode_number+'" aria-label="Play episode '+ep.episode_number+'"><span class="num">'+ep.episode_number+'</span><span class="ep-copy"><span class="et">'+esc(ep.name||("Episode "+ep.episode_number))+'</span><br><span class="es">'+esc(ep.air_date||"")+(ep.runtime?" · "+ep.runtime+" min":"")+'</span></span></button>'+(downloadsEnabled()?'<button class="ep-download" type="button" data-ep-download="'+ep.episode_number+'" aria-label="Download episode '+ep.episode_number+'" title="Download this episode">⬇<small>Download</small></button>':"")+"</div>").join("")+"</div>"
+    if(!detailState||detailState!==stateToken) return;
+    box.innerHTML=eps.length?'<div class="ep-list">'+eps.map(ep=>{
+      const still=episodeStillInfo(ep,detailState.data);
+      return '<div class="ep" data-ep="'+ep.episode_number+'"><button class="ep-main" type="button" data-ep-play="'+ep.episode_number+'" aria-label="Play episode '+ep.episode_number+'"><span class="ep-thumb"><img class="episode-thumb-img" loading="lazy" src="'+esc(still.url)+'" alt="" data-episode-thumb="'+ep.episode_number+'"'+(still.missing?' data-episode-thumb-missing="1"':"")+'><span class="ep-num-badge">'+ep.episode_number+'</span></span><span class="ep-copy"><span class="et">'+esc(ep.name||("Episode "+ep.episode_number))+'</span><br><span class="es">'+esc(ep.air_date||"")+(ep.runtime?" · "+ep.runtime+" min":"")+'</span></span></button>'+(downloadsEnabled()?'<button class="ep-download" type="button" data-ep-download="'+ep.episode_number+'" aria-label="Download episode '+ep.episode_number+'" title="Download this episode">⬇<small>Download</small></button>':"")+"</div>";
+    }).join("")+"</div>"
       :'<p style="color:var(--text-muted)">No episode data for this season.</p>';
     $$(".ep",box).forEach(row=>{
       const episodeNumber=Number(row.dataset.ep)||1;
@@ -3629,21 +4380,24 @@ async function loadEpisodes(){
       const download=row.querySelector("[data-ep-download]");
       if(download){ download.addEventListener("focus",mark); download.onclick=e=>{ e.preventDefault(); e.stopPropagation(); const identity=identityFromDetail(detailState.data,"tv",detailState.season,episodeNumber); openDownloadForContext({type:"tv",id:detailState.id,title:identity.title,altTitles:identity.titles,year:identity.year,season:identity.season,episode:identity.episode,imdb:identity.imdbId,identity,item:snap(detailState.data,"tv")}); }; }
     });
+    void fillEpisodeThumbnailsFromTvmaze(box,stateToken,season);
   }catch{ box.innerHTML='<div class="status-box error">Could not load episodes.</div>'; }
 }
 
 /* ---------------- views ---------------- */
 function continueItems(){
   return Object.values(progress).filter(p=>p.title&&(!p.percent||p.percent<98)).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).slice(0,14)
-    .map(p=>({id:p.id,media_type:p.type,title:p.type==="movie"?p.title:undefined,name:p.type==="tv"?p.title:undefined,poster_path:p.poster_path,poster_url:p.poster_url||null,backdrop_url:p.backdrop_url||null,imdb_id:p.imdb_id||null,backdrop_path:p.backdrop_path,release_date:p.year?p.year+"-01-01":"",first_air_date:p.year?p.year+"-01-01":"",vote_average:p.rating?Number(p.rating):0,trailer_key:p.trailer_key||null,logo_url:p.logo_url||null,genre_ids:p.genre_ids||[],overview:p.overview||""}));
+    .map(p=>snapToItem(p));
 }
 async function renderHome(){
-  view.innerHTML='<div class="page"><div id="heroSlot">'+skeletonRail("Featured")+"</div>"
-    +(continueItems().length?railHTML("Continue Watching",continueItems(),{remove:true}):"")
+  const resumeItems=continueItems();
+  const resumeHTML=resumeItems.length?continueRailHTML(resumeItems):"";
+  const heroHTML='<div id="heroSlot">'+skeletonRail("Featured")+"</div>";
+  view.innerHTML='<div class="page">'+(ANDROID_TV_APP&&resumeItems.length?resumeHTML+heroHTML:heroHTML+resumeHTML)
     +(watchlist.length?railHTML("My Watchlist",watchlist.map(w=>({id:w.id,media_type:w.type,title:w.type==="movie"?w.title:undefined,name:w.type==="tv"?w.title:undefined,poster_path:w.poster_path,poster_url:w.poster_url||null,backdrop_url:w.backdrop_url||null,imdb_id:w.imdb_id||null,release_date:w.year?w.year+"-01-01":"",first_air_date:w.year?w.year+"-01-01":"",vote_average:w.rating?Number(w.rating):0,trailer_key:w.trailer_key||null,logo_url:w.logo_url||null,genre_ids:w.genre_ids||[],overview:w.overview||""}))):"")
-    +'<div id="railTrending">'+skeletonRail("Trending Today")+'</div><div id="railMovies">'+skeletonRail("Popular Movies")+'</div><div id="railSeries">'+skeletonRail("Popular Series")+'</div><div id="railAction">'+skeletonRail("Action & Adventure")+'</div><div id="railAnimation">'+skeletonRail("Animated Worlds")+'</div><div id="railThriller">'+skeletonRail("After Dark: Thrillers")+'</div><div id="railTop">'+skeletonRail("Top Rated Movies")+'</div><div id="railNow">'+skeletonRail("Now Playing")+"</div></div>";
+    +'<div id="homeCategoryRail"></div><div id="railTrending">'+skeletonRail("Trending Today")+'</div><div id="railMovies">'+skeletonRail("Popular Movies")+'</div><div id="railSeries">'+skeletonRail("Popular Series")+'</div><div id="railAction">'+skeletonRail("Action & Adventure")+'</div><div id="railAnimation">'+skeletonRail("Animated Worlds")+'</div><div id="railThriller">'+skeletonRail("After Dark: Thrillers")+'</div><div id="railTop">'+skeletonRail("Top Rated Movies")+'</div><div id="railNow">'+skeletonRail("Now Playing")+"</div></div>";
   bindCards(view);
-  const fill=async(id,title,path,params,opts)=>{ try{ const d=await tmdb(path,params); const el=document.getElementById(id); if(el){ el.outerHTML=railHTML(title,(d.results||[]).filter(x=>typeOf(x)==="movie"||typeOf(x)==="tv").slice(0,16),opts); bindCards(view); } return d.results||[]; }catch{ const el=document.getElementById(id); if(el) el.innerHTML='<div class="status-box error">'+esc(title)+' failed to load. <button class="btn btn-secondary btn-xs" onclick="location.hash=\'#/home\';location.reload()">Retry</button></div>'; return []; } };
+  const fill=async(id,title,path,params,opts)=>{ try{ const d=await tmdb(path,params); const el=document.getElementById(id); if(el){ el.outerHTML=railHTML(title,(d.results||[]).filter(x=>typeOf(x)==="movie"||typeOf(x)==="tv").slice(0,tvPerformanceEnabled()?12:16),opts); bindCards(view); } return d.results||[]; }catch{ const el=document.getElementById(id); if(el) el.innerHTML='<div class="status-box error">'+esc(title)+' failed to load. <button class="btn btn-secondary btn-xs" onclick="location.hash=\'#/home\';location.reload()">Retry</button></div>'; return []; } };
   const trending=await fill("railTrending","Trending Today","/trending/all/day",{page:1});
   const hero=(trending||[]).find(x=>x.backdrop_path||x.backdrop_url)||(trending||[])[0];
   const hs=$("#heroSlot");
@@ -3651,7 +4405,7 @@ async function renderHome(){
     const type=typeOf(hero);
     const remembered=rememberCatalogItem(hero);
     const heroGenres=(remembered.genre_ids||[]).map(id=>genreName(type,id)).filter(Boolean).slice(0,3);
-    hs.innerHTML='<section class="hero"><img class="hero-bg" src="'+esc(backdropURL(hero))+'" alt="" data-seed="'+hero.id+'"><div class="hero-trailer" id="homeHeroTrailer" aria-hidden="true"></div><div class="hero-shade"></div><div class="hero-body">'
+        hs.innerHTML='<section class="hero"><img class="hero-bg" src="'+esc(backdropURL(hero))+'" alt=""'+artworkImgAttrs(remembered,"backdrop",backdropURL(hero))+'><div class="hero-trailer" id="homeHeroTrailer" aria-hidden="true"></div><div class="hero-shade"></div><div class="hero-body">'
       +'<span class="logo-badge">Featured</span>'+(remembered.logo_url?'<img class="hero-logo" id="heroLogo" src="'+esc(remembered.logo_url)+'" alt="" style="display:none">':"")+'<h1 id="heroTitle">'+esc(titleOf(hero))+"</h1>"
       +'<div class="hero-meta">'+(hero.vote_average?'<span class="chip star">★ '+Number(hero.vote_average).toFixed(1)+"</span>":"")+'<span class="chip">'+(type==="tv"?"TV Series":"Movie")+"</span>"+(yearOf(hero)?'<span class="chip">'+esc(yearOf(hero))+"</span>":"")+heroGenres.map(g=>'<span class="chip violet">'+esc(g)+"</span>").join("")+'</div>'
       +"<p>"+esc(hero.overview||"")+"</p>"
@@ -3664,8 +4418,17 @@ async function renderHome(){
     if(heroLogo){ heroLogo.addEventListener("load",()=>{ heroLogo.style.display="block"; if(heroTitle) heroTitle.style.display="none"; }); heroLogo.addEventListener("error",()=>heroLogo.remove()); if(heroLogo.complete&&heroLogo.naturalWidth){ heroLogo.style.display="block"; if(heroTitle) heroTitle.style.display="none"; } }
     const heroTrailer=$("#homeHeroTrailer"), soundBtn=$("#heroPreviewSound");
     if(soundBtn) soundBtn.onclick=()=>{ toggleBackdropPreviewSound(heroTrailer,remembered); soundBtn.textContent=heroTrailer&&heroTrailer.dataset.sound==="1"?"Mute trailer":"Trailer sound"; };
-    startBackdropPreview(heroTrailer,remembered,{delay:1000});
+    bindArtworkFallbacks(hs);
+    startBackdropPreview(heroTrailer,remembered,{delay:tvPerformanceEnabled()?2200:1000});
   } else if(hs){ hs.innerHTML=""; }
+
+  const homeCategorySlot=document.getElementById("homeCategoryRail");
+  if(homeCategorySlot){
+    const homePools={movie:[],tv:[]};
+    (trending||[]).forEach(item=>{ const t=typeOf(item); if(homePools[t]) homePools[t].push(item); });
+    homeCategorySlot.outerHTML=homeCategoryRailHTML(homePools);
+    bindCards(view);
+  }
   fill("railMovies","Popular Movies","/movie/popular",{page:1});
   fill("railSeries","Popular Series","/tv/popular",{page:1});
   fill("railAction","Action & Adventure","/discover/movie",{with_genres:28,sort_by:"popularity.desc",page:1});
@@ -3679,6 +4442,25 @@ const CATEGORY_GROUPS=[
   {type:"movie",title:"Movie categories",items:[[28,"Action"],[12,"Adventure"],[16,"Animation"],[35,"Comedy"],[80,"Crime"],[99,"Documentary"],[18,"Drama"],[10751,"Family"],[14,"Fantasy"],[27,"Horror"],[9648,"Mystery"],[10749,"Romance"],[878,"Science Fiction"],[53,"Thriller"],[10752,"War"],[37,"Western"]]},
   {type:"tv",title:"Series categories",items:[[10759,"Action & Adventure"],[16,"Animation"],[35,"Comedy"],[80,"Crime"],[99,"Documentary"],[18,"Drama"],[10751,"Family"],[10762,"Kids"],[9648,"Mystery"],[10764,"Reality"],[10765,"Sci-Fi & Fantasy"],[10766,"Soap"],[10767,"Talk"],[10768,"War & Politics"],[37,"Western"]]}
 ];
+
+const HOME_CATEGORY_TILES=[
+  ["movie",28,"Action"],["movie",35,"Comedy"],["movie",878,"Sci-Fi"],["movie",53,"Thriller"],
+  ["tv",18,"Drama"],["tv",16,"Animation"],["tv",80,"Crime"],["tv",9648,"Mystery"]
+];
+function categoryTileHTML(type,id,name,pool,index){
+  const list=Array.isArray(pool)?pool:[];
+  const rep=list.find(x=>(x.genre_ids||[]).includes(Number(id))&&(x.backdrop_path||x.backdrop_url||x.poster_path||x.poster_url))||list.find(x=>x.backdrop_path||x.backdrop_url||x.poster_path||x.poster_url)||list[index%Math.max(1,list.length)]||null;
+  const item=rep?rememberCatalogItem(rep):null;
+  const img=item?backdropURL(item,"w780"):phSVG(name,id,640,360);
+  const attrs=item?artworkImgAttrs(item,"backdrop",img):"";
+  return '<button class="category-tile category-rail-tile" type="button" data-category-type="'+type+'" data-category-id="'+id+'" aria-label="Browse '+esc(name)+' '+(type==="tv"?"series":"movies")+'"><img loading="lazy" src="'+esc(img)+'" alt=""'+attrs+'><b>'+esc(name)+'</b><span>'+(type==="tv"?"Series":"Movies")+' · Browse shelf →</span></button>';
+}
+function homeCategoryRailHTML(pools){
+  if(settings.ui&&settings.ui.showCategoryStrip===false) return "";
+  const tiles=HOME_CATEGORY_TILES.map(([type,id,name],index)=>categoryTileHTML(type,id,name,(pools&&pools[type])||[],index)).join("");
+  return '<section class="rail home-category-rail"><div class="rail-head"><h2>Browse by Category</h2><div class="rail-arrows"><button class="icon-btn" data-scroll="-1" aria-label="Scroll categories left">‹</button><button class="icon-btn" data-scroll="1" aria-label="Scroll categories right">›</button></div></div><div class="rail-track category-rail-track">'+tiles+'<button class="category-tile category-rail-tile category-all-tile" type="button" data-menu-route="categories"><img loading="lazy" src="'+esc(phSVG("All Categories",99,640,360))+'" alt=""><b>All Categories</b><span>Movies & series · Open →</span></button></div><div class="rail-progress" aria-hidden="true"><i></i></div></section>';
+}
+
 function categoryHash(type,id){ return "#/"+(type==="tv"?"series":"movies")+"?genre="+encodeURIComponent(id); }
 function navigateCategory(type,id){ closeMenuDrawer(); const target=categoryHash(type,id); if(location.hash===target) render(); else location.hash=target; }
 async function renderCategories(){
@@ -3692,12 +4474,9 @@ async function renderCategories(){
   const box=document.getElementById("categoryGroups"); if(!box) return;
   box.innerHTML=CATEGORY_GROUPS.map(group=>{
     const pool=pools[group.type]||[];
-    return '<section class="rail"><div class="rail-head"><h2>'+esc(group.title)+'</h2></div><div class="category-grid">'+group.items.map(([id,name],i)=>{
-      const rep=pool.find(x=>(x.genre_ids||[]).includes(id)&&(x.backdrop_path||x.backdrop_url))||pool[i%Math.max(1,pool.length)]||{};
-      const img=rep&&(rep.backdrop_url||rep.backdrop_path||rep.poster_path||rep.poster_url)?backdropURL(rep,"w780"):phSVG(name,id,640,360);
-      return '<button class="category-tile" type="button" data-category-type="'+group.type+'" data-category-id="'+id+'"><img loading="lazy" src="'+esc(img)+'" alt=""><b>'+esc(name)+'</b><span>'+(group.type==="tv"?"Series":"Movies")+' · Browse shelf →</span></button>';
-    }).join("")+"</div></section>";
+    return '<section class="rail"><div class="rail-head"><h2>'+esc(group.title)+'</h2></div><div class="category-grid">'+group.items.map(([id,name],i)=>categoryTileHTML(group.type,id,name,pool,i)).join("")+"</div></section>";
   }).join("");
+  bindArtworkFallbacks(box);
 }
 const browseState={type:"movie",page:1,total:1,items:[],genre:"",year:"",rating:"",sort:"popularity.desc",loading:false};
 function renderBrowse(type,initial){
@@ -3744,7 +4523,7 @@ async function loadBrowsePage(){
     const fresh=(d.results||[]).filter(x=>!seen.has(x.id));
     browseState.items.push(...fresh);
     if(grid){ if(browseState.page===1&&!fresh.length) grid.innerHTML='<div class="empty" style="grid-column:1/-1"><h3>Nothing found</h3><p>Try loosening the filters above.</p></div>';
-      else grid.insertAdjacentHTML("beforeend",fresh.map((it,i)=>cardHTML(Object.assign({},it,{media_type:browseState.type}),{index:i})).join("")); }
+      else { grid.insertAdjacentHTML("beforeend",fresh.map((it,i)=>cardHTML(Object.assign({},it,{media_type:browseState.type}),{index:i})).join("")); bindArtworkFallbacks(grid); } }
     if(btn) btn.style.display=browseState.page>=browseState.total?"none":"";
   }catch{ if(grid&&browseState.page===1) grid.innerHTML='<div class="status-box error" style="grid-column:1/-1">Catalog failed to load. Check your connection, then open Settings to review playback and discovery.</div>'; }
   browseState.loading=false; if(btn){ btn.disabled=false; btn.textContent="Load more"; }
@@ -3777,6 +4556,7 @@ function drawSearchResults(){
   const list=searchState.results.filter(x=>searchState.filter==="all"||x.media_type===searchState.filter);
   box.innerHTML=list.length?'<p class="lede">'+list.length+' result'+(list.length===1?"":"s")+' for “'+esc(searchState.q)+'”</p><div class="grid">'+list.map((it,i)=>cardHTML(it,{index:i})).join("")+"</div>"
     :'<div class="empty"><h3>No results</h3><p>Nothing matched “'+esc(searchState.q)+'”. Check the spelling or try another title.</p></div>';
+  bindArtworkFallbacks(box);
 }
 
 function renderLibrary(){
@@ -3784,7 +4564,7 @@ function renderLibrary(){
   const wl=watchlist.map(snapToItem);
   view.innerHTML='<div class="page"><h1>My Library</h1><p class="lede">Stored locally in this browser — no account needed.</p>'
     +'<section class="panel"><div class="panel-head"><div><h2>Downloads</h2><p class="section-desc" id="libraryDownloads">Checking stored downloads…</p></div><button class="btn btn-primary" type="button" data-menu-route="downloads">Open downloads</button></div></section>'
-    +(cont.length?railHTML("Continue Watching",cont,{remove:true}):"")
+    +(cont.length?continueRailHTML(cont):"")
     +(wl.length?'<section class="rail"><div class="rail-head"><h2>Watchlist</h2></div><div class="grid">'+wl.map(it=>cardHTML(it,{remove:true})).join("")+"</div></section>":"")
     +(!cont.length&&!wl.length?'<div class="empty"><h3>Your library is empty</h3><p>Press <strong>+ Watchlist</strong> on any title, or just start watching — progress lands here automatically.</p><p style="margin-top:1rem"><button class="btn btn-primary" id="libBrowse">Browse trending</button></p></div>':"")
     +((cont.length||wl.length)?'<div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem"><button class="btn btn-danger" id="clearHistory">Clear watch history</button><button class="btn btn-danger" id="clearList">Clear watchlist</button></div>':"")
@@ -3798,40 +4578,63 @@ function renderLibrary(){
 
 /* ---------------- Sources view: paste websites, discovery, FastStream optimiser ---------------- */
 let sourcesRenderMode={settingsPage:false,section:""};
+function sourceStatusPanelHTML(){
+  const state=sourceReadiness();
+  return '<section class="panel source-state-panel is-'+state.key+'" id="sourceStatePanel" data-state="'+state.key+'">'
+    +'<div class="source-state-main"><span class="source-state-dot" aria-hidden="true"></span><div><p class="source-state-eyebrow">Sources</p><h2 id="sourceStateTitle">'+esc(state.label)+'</h2><p class="section-desc" id="sourceStateDetail">'+esc(state.detail)+'</p></div></div>'
+    +'<div class="source-state-actions"><button class="btn btn-primary" id="btnSourceStateSearch" type="button"'+(discoveryRuntime.cycleRunning?" disabled":"")+'>'+(discoveryRuntime.cycleRunning?"Searching…":"Find more")+'</button><button class="btn btn-secondary" type="button" data-settings-section="add-website">Add website</button><button class="btn btn-outline" type="button" data-settings-section="continuous">Advanced</button></div>'
+    +'</section>';
+}
 function settingsHubHTML(){
-  return '<section class="panel" id="settingsHub"><div class="panel-head"><div><h2>Feature switches</h2><p class="section-desc">Every optional feature has its own switch. Changes save immediately and are shared with the menu drawer, player and download manager.</p></div><button class="btn btn-secondary" type="button" data-settings-section="add-website">Add a website</button></div>'
+  const profile=ANDROID_TV_PROFILE||{};
+  const abiText=Array.isArray(profile.supportedAbis)&&profile.supportedAbis.length?profile.supportedAbis.join(", "):(profile.primaryAbi||"armeabi-v7a target");
+  const ramText=ANDROID_TV_TOTAL_RAM_MB?(" · "+(ANDROID_TV_TOTAL_RAM_MB>=1024?(ANDROID_TV_TOTAL_RAM_MB/1024).toFixed(1).replace(/\.0$/,"")+" GB":ANDROID_TV_TOTAL_RAM_MB+" MB")+" RAM"):"";
+  const deviceText=ANDROID_TV_APP?"This TV is ready for remote control.":"Open ZeroPlay in the Android TV app for remote-first browsing.";
+  const deviceDetails=ANDROID_TV_APP?([profile.manufacturer,profile.model||profile.device].filter(Boolean).join(" ")+" · Android "+(profile.androidRelease||"TV")+" · "+abiText+ramText):"";
+  return '<section class="panel" id="settingsHub"><div class="panel-head"><div><h2>Everyday settings</h2><p class="section-desc">The few choices most people use. Changes save immediately.</p></div><button class="btn btn-secondary" type="button" data-settings-section="add-website">Add a website</button></div>'
     +'<div class="settings-hub-grid">'
-    +'<div><h3>Playback & FastStream</h3>'
-    +featureSwitchHTML("trailers","Trailer previews","Show muted trailers inside focused title blocks.","hub")
-    +featureSwitchHTML("preload","FastStream preload","Warm likely playback before you press Play.","hub")
-    +featureSwitchHTML("fastStreamProbe","FastStream control API","Use the responsive EmbedAPI bridge when the hosted player advertises it.","hub")
-    +featureSwitchHTML("nextEpisodeWarm","Next-episode warm-up","Prepare the next episode while the current one plays.","hub")
-    +featureSwitchHTML("autoFailover","Automatic server switching","Switch only after a server fails to resolve/load or confirmed playback stalls.","hub")
-    +featureSwitchHTML("stallSwitch","Switch after confirmed stalls","A frame merely loading is not treated as a stall.","hub")
-    +featureSwitchHTML("embedwaveFailover","Allow automatic Embedwave failover","Keep off to stop ZeroPlay drifting into Embedwave without asking.","hub")
-    +featureSwitchHTML("dnsWarm","DNS warm-up","Preconnect source and player hosts.","hub")
-    +featureSwitchHTML("sortByHealth","Sort by source health","Prefer sources that recently responded well.","hub")
-    +'<div class="settings-actions"><button class="btn btn-primary btn-sm" type="button" data-settings-section="faststream">Configure FastStream</button></div></div>'
-    +'<div><h3>Websites & continuous adding</h3>'
-    +featureSwitchHTML("discovery","Continuous adding","Crawl, identify and install new servers while the app is open.","hub")
-    +'<p>The crawler does not import titles or covers from added websites. At play time it checks whether the exact catalogue movie, series and episode exists on each identified server.</p>'
-    +'<div class="settings-actions"><button class="btn btn-primary btn-sm" type="button" data-settings-section="add-website">Add website</button><button class="btn btn-secondary btn-sm" type="button" data-settings-section="continuous">Continuous adding controls</button><button class="btn btn-outline btn-sm" id="btnSettingsRunDiscovery" type="button">Run one cycle now</button></div></div>'
-    +'<div><h3>Downloads & M3U</h3>'
-    +featureSwitchHTML("downloads","Downloads","Allow verified direct files and HLS playlists to be downloaded.","hub")
-    +featureSwitchHTML("multithreadedDownloads","Multithreaded downloads","Use parallel range requests or HLS segment workers when the server permits them.","hub")
-    +featureSwitchHTML("m3uExtraction","M3U extraction","Extract and inspect M3U/M3U8 links from pages and playlists.","hub")
-    +featureSwitchHTML("downloadAutoSave","Save completed downloads automatically","Open the browser save/download action when assembly finishes.","hub")
-    +featureSwitchHTML("downloadAutoResume","Resume downloads on app start","Continue interrupted jobs from chunks already stored in this browser.","hub")
-    +featureSwitchHTML("refreshExpiredDownloads","Refresh expired download links","Re-run the exact-title server search if a saved media link expires.","hub")
-    +featureSwitchHTML("keepCompletedDownloads","Keep completed files in browser","Keep assembled files available to Play or Save again until you delete them.","hub")
-    +'<div class="settings-actions"><button class="btn btn-primary btn-sm" type="button" data-menu-route="downloads">Open downloads & M3U extractor</button></div></div>'
-    +'<div><h3>Interface & data</h3>'
+    +'<div><h3>Watching</h3>'
+    +featureSwitchHTML("trailers","Trailer previews","Play a short preview when a title is focused.","hub")
+    +featureSwitchHTML("preload","Start faster","Prepare likely playback before you press Play.","hub")
+    +featureSwitchHTML("fastStreamProbe","Responsive player controls","Use ZeroPlay controls whenever the player supports them.","hub")
+    +featureSwitchHTML("nextEpisodeWarm","Prepare next episode","Get the next episode ready while this one plays.","hub")
+    +featureSwitchHTML("autoFailover","Switch if a source fails","Move only after playback really fails or gets stuck.","hub")
+    +featureSwitchHTML("stallSwitch","Switch if playback gets stuck","Waits until playback has really started, then watches for a stall.","hub")
+    +featureSwitchHTML("embedwaveFailover","Use Embedwave automatically","Keep off unless you want it as a final fallback.","hub")
+    +featureSwitchHTML("dnsWarm","Connect faster","Prepare source connections in advance.","hub")
+    +featureSwitchHTML("sortByHealth","Use reliable sources first","Prefer sources that worked well recently.","hub")
+    +'<div class="settings-actions"><button class="btn btn-primary btn-sm" type="button" data-settings-section="faststream">Advanced playback</button></div></div>'
+    +'<div><h3>Sources</h3>'
+    +featureSwitchHTML("discovery","Find sources automatically","Look for more places to watch while ZeroPlay is open.","hub")
+    +'<p>Added websites are only checked when you press Watch. Their titles and covers are not imported.</p>'
+    +'<div class="settings-actions"><button class="btn btn-primary btn-sm" type="button" data-settings-section="add-website">Add website</button><button class="btn btn-secondary btn-sm" type="button" data-settings-section="continuous">Advanced sources</button><button class="btn btn-outline btn-sm" id="btnSettingsRunDiscovery" type="button">Search now</button></div></div>'
+    +'<div><h3>Downloads</h3>'
+    +featureSwitchHTML("downloads","Downloads","Download episodes and movies when a direct file is available.","hub")
+    +featureSwitchHTML("multithreadedDownloads","Faster downloads","Use parallel parts when a server supports them.","hub")
+    +featureSwitchHTML("m3uExtraction","Playlist tools","Find and inspect M3U/M3U8 links.","hub")
+    +featureSwitchHTML("downloadAutoSave","Save finished downloads","Save a file as soon as its download completes.","hub")
+    +featureSwitchHTML("downloadAutoResume","Resume downloads","Continue interrupted downloads when ZeroPlay opens.","hub")
+    +featureSwitchHTML("refreshExpiredDownloads","Repair expired links","Find the same title again if a download link expires.","hub")
+    +featureSwitchHTML("keepCompletedDownloads","Keep finished files","Keep downloads available to play or save again.","hub")
+    +'<div class="settings-actions"><button class="btn btn-primary btn-sm" type="button" data-menu-route="downloads">Open downloads</button></div></div>'
+    +'<div><h3>Appearance & data</h3>'
     +featureSwitchHTML("autoplayNext","Autoplay next episode","Move to the next episode after the current one ends.","hub")
     +featureSwitchHTML("reduceMotion","Reduce motion","Disable decorative movement; useful on TV boxes.","hub")
     +featureSwitchHTML("compactCards","Compact posters","Fit more titles into rails and grids.","hub")
-    +featureSwitchHTML("categoryStrip","Top category strip","Show quick genre shortcuts under the top bar.","hub")
-    +'<div class="settings-actions"><button class="btn btn-secondary btn-sm" id="btnExportSettings" type="button">Export settings</button><label class="btn btn-outline btn-sm" for="importSettingsFile">Import settings</label><input class="sr-only" id="importSettingsFile" type="file" accept="application/json,.json"><button class="btn btn-outline btn-sm" id="btnClearPlaybackCaches" type="button">Clear health & server caches</button></div>'
+    +featureSwitchHTML("categoryStrip","Category shortcuts","Show the visual Browse by Category row on Home.","hub")
+    +'<div class="settings-actions"><button class="btn btn-secondary btn-sm" id="btnExportSettings" type="button">Export settings</button><label class="btn btn-outline btn-sm" for="importSettingsFile">Import settings</label><input class="sr-only" id="importSettingsFile" type="file" accept="application/json,.json"><button class="btn btn-outline btn-sm" id="btnClearPlaybackCaches" type="button">Clear temporary data</button></div>'
     +'<p>Export includes providers, websites, templates and feature settings. Watch history stays in Library and can be cleared there.</p></div>'
+    +'<div id="settingsAndroidTv"><h3>This TV</h3><p>'+esc(deviceText)+' D-pad OK opens titles, Play/Pause starts playback, Back closes one layer at a time, and the remote Menu button opens the drawer.</p>'
+    +featureSwitchHTML("tvPerformance","Make this TV run lighter","Recommended for Xiaomi and other 2 GB TV boxes.","hub")
+    +featureSwitchHTML("tvLaunchFocus","Start on the first title","Put remote focus ready to resume or browse when Home opens.","hub")
+    +'<p>Light mode also pauses decorative previews so browsing stays responsive.</p>'+(deviceDetails?'<details class="advanced"><summary tabindex="0">Device details</summary><div class="advanced-body"><p>'+esc(deviceDetails)+'</p></div></details>':"")+'</div>'
+    +'<div id="settingsArtwork"><h3>Posters & artwork</h3><p><strong>Ready to use — no keys to enter.</strong> If one place is missing a poster, ZeroPlay checks another and only uses an exact match.</p>'
+    +featureSwitchHTML("artworkFallback","Find missing posters","Fill missing posters and episode pictures automatically.","hub")
+    +featureSwitchHTML("artworkCinemeta","Cinemeta / MetaHub","Keyless posters, backdrops, logos and episode stills by IMDb id.","hub")
+    +featureSwitchHTML("artworkTvmaze","TVmaze","Keyless series posters, backgrounds and episode stills by IMDb id or exact title/year.","hub")
+    +featureSwitchHTML("artworkAnilist","AniList","Keyless anime covers and banners matched by title/year.","hub")
+    +featureSwitchHTML("artworkItunes","Apple iTunes","Keyless movie and TV-season poster fallback matched by title/year.","hub")
+    +'<div class="settings-actions"><button class="btn btn-outline btn-sm" id="btnClearArtworkCache" type="button">Clear artwork cache</button></div><p>Good matches are remembered on this TV.</p></div>'
     +'</div></section>';
 }
 function exportZeroPlaySettings(){
@@ -3844,9 +4647,9 @@ async function importZeroPlaySettings(file){
     const data=JSON.parse(await file.text());
     const incoming=data&&data.settings&&typeof data.settings==="object"?data.settings:data;
     if(!incoming||typeof incoming!=="object"||Array.isArray(incoming)) throw new Error("That file does not contain ZeroPlay settings");
-    const allowed=["source","disabledSources","stream","ui","downloads","feed","discovery","providers","providerTombstones","customSources","sites","addons","health","dlog"];
+    const allowed=["source","disabledSources","stream","ui","downloads","artwork","feed","discovery","providers","providerTombstones","customSources","sites","addons","health","dlog"];
     const arrayKeys=new Set(["disabledSources","providers","customSources","sites","addons","dlog"]);
-    const objectKeys=new Set(["stream","ui","downloads","feed","discovery","providerTombstones","health"]);
+    const objectKeys=new Set(["stream","ui","downloads","artwork","feed","discovery","providerTombstones","health"]);
     const staged={};
     for(const key of allowed){
       if(!Object.prototype.hasOwnProperty.call(incoming,key)) continue;
@@ -3869,6 +4672,13 @@ function clearPlaybackCaches(){
   try{ catalogItemCache.clear(); trailerKeyCache.clear(); trailerFetchCache.clear(); }catch{}
   try{ clearPreload(); }catch{}
   toast("Playback health and server caches cleared","success"); renderSources(true);
+}
+function applyTvSourcesLayout(settingsPage,sectionTarget){
+  if(!ANDROID_TV_APP||!view) return;
+  const page=view.querySelector(".page"); if(!page) return;
+  const targetBySection={"add-website":"settingsAddWebsite",continuous:"discoveryPanel",faststream:"settingsFastStream",sources:"settingsPlaybackSources",switches:"settingsHub",androidtv:"settingsHub",artwork:"settingsHub"};
+  const wanted=settingsPage?["sourceStatePanel",targetBySection[sectionTarget]||"settingsHub"]:["sourceStatePanel","settingsAddWebsite","settingsPlaybackSources"];
+  page.querySelectorAll(":scope > .panel").forEach(panel=>{ panel.hidden=!wanted.includes(panel.id); });
 }
 function renderSources(soft,opts){
   if(opts&&typeof opts==="object") sourcesRenderMode={settingsPage:!!opts.settingsPage,section:String(opts.section||"")};
@@ -3893,10 +4703,11 @@ function renderSources(soft,opts){
       +"</div></div>";
   }).join("");
   const logs=(settings.dlog||[]).map(e=>'<li><span>'+new Date(e.t).toLocaleTimeString()+"</span>"+esc(e.msg)+"</li>").join("");
-  view.innerHTML='<div class="page"><h1>'+(settingsPage?"Settings":"Discover")+'</h1><p class="lede">'+(settingsPage?"Add websites, control continuous adding, configure FastStream and downloads, and switch optional features from one place.":"Servers and addons are continuously found, identified and kept searchable. The title identifier checks every result before playback.")+' No torrents, no user API keys, and direct files are capped at '+capGb()+' GB.</p>'
-  +(settingsPage?settingsHubHTML():'<section class="panel"><div class="panel-head"><div><h2>Settings shortcuts</h2><p class="section-desc">Manage feature switches, websites, continuous adding, FastStream and downloads from the full Settings page.</p></div><div class="settings-actions"><button class="btn btn-primary btn-sm" type="button" data-settings-section="add-website">Add website</button><button class="btn btn-secondary btn-sm" type="button" data-settings-section="continuous">Continuous adding</button><button class="btn btn-secondary btn-sm" type="button" data-settings-section="faststream">FastStream</button><button class="btn btn-outline btn-sm" type="button" data-menu-route="downloads">Downloads & M3U</button></div></div></section>')
+  view.innerHTML='<div class="page"><h1>'+(settingsPage?"Settings":"Sources")+'</h1><p class="lede">'+(settingsPage?"Choose how ZeroPlay looks, plays and downloads. Most people never need Advanced.":"Sources are ready automatically. Add a website only if you want ZeroPlay to check it too.")+'</p>'
+  +sourceStatusPanelHTML()
+  +(settingsPage?settingsHubHTML():"")
 
-  +addonPanelHTML()+'<section class="panel" id="settingsAddWebsite"><h2>Add a website</h2><p class="section-desc"><strong>Default for every added website: lookup only.</strong> Paste the homepage or a title page from any website. ZeroPlay does <strong>not</strong> import that site’s covers or titles. It keeps the main catalogue’s cover/title, then checks whether that exact title or episode exists on the added site’s servers when you press Watch, and plays from there if found. URL templates below are an optional advanced alternative for sites with predictable TMDB/IMDb links.</p>'
+  +addonPanelHTML()+'<section class="panel" id="settingsAddWebsite"><h2>Add a website</h2><p class="section-desc">Paste a website. When you press Watch, ZeroPlay checks whether that exact movie or episode is there. It does not copy titles or posters from the site.</p>'
   +'<div class="form-group"><label for="pasteLink">Paste website link</label><div class="input-with-action"><input type="text" id="pasteLink" placeholder="https://example.com or https://example.com/watch/tt1375666/1/2"><button class="btn btn-secondary" id="btnDetect" type="button">Detect</button></div><div id="detectNote" class="status-box hidden"></div></div>'
   +'<div class="form-row"><div class="form-group"><label for="srcName">Source name</label><input type="text" id="srcName" placeholder="My Site"></div>'
   +'<div class="form-group"><label for="srcKind">Source type</label><select id="srcKind"><option value="embed">Website embed (iframe)</option><option value="direct">Direct media files (.mp4/.m3u8…)</option></select></div></div>'
@@ -3904,32 +4715,32 @@ function renderSources(soft,opts){
   +'<div class="form-group"><label for="srcTv">TV episode URL template (advanced, optional)</label><input type="text" id="srcTv" placeholder="https://example.com/embed/tv/{tmdb}/{season}/{episode}"></div>'
   +'<div style="display:flex;gap:.6rem;flex-wrap:wrap"><button class="btn btn-primary" id="btnAddWebsite" type="button">Add website lookup</button><button class="btn btn-secondary" id="btnAddSource" type="button">Add template source</button><button class="btn btn-outline" id="btnTestNew" type="button">▶ Test template with Inception</button></div></section>'
 
-  +'<section class="panel"><h2>Play a link now</h2><p class="section-desc">One-off playback: a direct .mp4/.m3u8 link opens in the built-in player (size-checked against the '+capGb()+' GB cap); any other link opens as a website embed. Some sites block embedding; ZeroPlay distinguishes a loaded page from confirmed playback and will explain if no progress arrives.</p>'
+  +'<section class="panel" id="settingsPlayLink"><h2>Play a link now</h2><p class="section-desc">One-off playback: a direct .mp4/.m3u8 link opens in the built-in player (size-checked against the '+capGb()+' GB cap); any other link opens as a website embed. Some sites block embedding; ZeroPlay distinguishes a loaded page from confirmed playback and will explain if no progress arrives.</p>'
   +'<div class="input-with-action"><input type="text" id="playLink" placeholder="Paste any video or website URL…"><button class="btn btn-primary" id="btnPlayLink" type="button">▶ Play link</button></div></section>'
 
-  +'<section class="panel" id="settingsPlaybackSources"><h2>Playback sources</h2><p class="section-desc">Built-in players, website lookup servers and your templates are listed here. Identified addon/server providers are managed in the registry above and are searched together from Servers with this title.</p><div id="srcList">'+(rows||'<div class="empty"><h3>No sources</h3><p>Add a website above.</p></div>')+"</div></section>"
+  +'<section class="panel" id="settingsPlaybackSources"><h2>Watch from</h2><p class="section-desc">Choose the places ZeroPlay can use. More are found automatically in the background.</p><div id="srcList">'+(rows||'<div class="empty"><h3>No sources</h3><p>Add a website above.</p></div>')+"</div></section>"
 
-  +'<section class="panel" id="settingsFastStream"><h2>FastStream configuration and playback</h2><p class="section-desc">Direct streams play in one ZeroPlay shell. FastStream is loaded inside that shell and, when its EmbedAPI is available, ZeroPlay’s own play, seek, volume, speed, PiP and quality controls drive it. If the hosted API is unavailable, media files use the responsive ZeroPlay engine and HLS/DASH use embedded FastStream. DNS warm-up, safe range priming, next-episode warm-up and title-specific failover remain active. Third-party embeds still choose their own internal quality.</p>'
+  +'<section class="panel" id="settingsFastStream"><h2>Advanced playback</h2><p class="section-desc">Fine-tune how playback starts and switches. Most people can leave this on Auto.</p>'
   +'<div class="stat-grid"><div class="stat"><div class="k">Connection</div><div class="v">'+esc(ci.type)+'</div></div><div class="stat"><div class="k">Est. downlink</div><div class="v">'+(ci.downlink?ci.downlink+" Mbps":"unknown")+'</div></div><div class="stat"><div class="k">Round-trip</div><div class="v">'+(ci.rtt?ci.rtt+" ms":"unknown")+'</div></div><div class="stat"><div class="k">Data saver (effective)</div><div class="v">'+(effectiveSaver()?"ON":"OFF")+'</div></div><div class="stat"><div class="k">Enabled sources</div><div class="v">'+allSources().length+'</div></div><div class="stat"><div class="k">File-size cap</div><div class="v">'+capGb()+' GB max</div></div></div>'
-  +'<div class="form-row"><div class="form-group"><label for="optPlayer">Direct-stream player</label><select id="optPlayer"><option value="auto"'+(st.player==="auto"||st.player==="faststream"?" selected":"")+'>Auto — FastStream API inside ZeroPlay, responsive fallback</option><option value="builtin"'+(st.player==="builtin"?" selected":"")+'>ZeroPlay responsive player</option><option value="faststream-only"'+(st.player==="faststream-only"?" selected":"")+'>FastStream web player only</option></select><small class="help-text">Auto uses FastStream’s EmbedAPI when the hosted player advertises it; otherwise files use the full ZeroPlay controls and HLS/DASH use embedded FastStream.</small></div>'+'<div class="form-row"><div class="form-group"><label for="optPreload">FastStream preload</label><select id="optPreload"><option value="off"'+(st.preload==="off"?" selected":"")+'>Off</option><option value="smart"'+(st.preload==="smart"?" selected":"")+'>Smart — DNS/connection warm-up + direct-file warm-up (recommended)</option><option value="aggressive"'+(st.preload==="aggressive"?" selected":"")+'>Aggressive — also pre-loads the embed player in the background</option></select><small class="help-text">Aggressive may start a provider player early in a hidden frame; if you ever hear background audio, switch back to Smart.</small></div>'
+  +'<div class="form-row"><div class="form-group"><label for="optPlayer">Direct-stream player</label><select id="optPlayer"><option value="auto"'+(st.player==="auto"||st.player==="faststream"?" selected":"")+'>Auto — best available player</option><option value="builtin"'+(st.player==="builtin"?" selected":"")+'>ZeroPlay responsive player</option><option value="faststream-only"'+(st.player==="faststream-only"?" selected":"")+'>FastStream web player only</option></select><small class="help-text">Auto keeps ZeroPlay controls whenever the stream supports them.</small></div>'+'<div class="form-row"><div class="form-group"><label for="optPreload">FastStream preload</label><select id="optPreload"><option value="off"'+(st.preload==="off"?" selected":"")+'>Off</option><option value="smart"'+(st.preload==="smart"?" selected":"")+'>Smart — recommended</option><option value="aggressive"'+(st.preload==="aggressive"?" selected":"")+'>Aggressive — also pre-loads the embed player in the background</option></select><small class="help-text">Aggressive may start a provider player early in a hidden frame; if you ever hear background audio, switch back to Smart.</small></div>'
   +'<div class="form-group"><label for="optQuality">Preferred quality (stability first)</label><select id="optQuality">'+[["auto","Auto — best available"],["2160p","4K UHD 2160p"],["1080p","Full HD 1080p"],["720p","HD 720p — most stable on slow links"],["480p","SD 480p — minimum buffering"]].map(([v,t])=>'<option value="'+v+'"'+(st.quality===v?" selected":"")+">"+t+"</option>").join("")+"</select><small class='help-text'>Used for direct-stream ranking and warm-up size. Embed players choose their own internal quality.</small></div></div>"
   +'<div class="form-row"><div class="form-group"><label for="optDefaultSource">Default first player/source</label><select id="optDefaultSource">'+sourceOptionsHTML(defaultSourceId(),true)+'</select><small class="help-text">Embedwave cannot be the saved default. Title-specific verified direct servers can still be chosen first at play time.</small></div>'
   +'<div class="form-group"><label for="optBufferTarget">Buffer target before easing warm-up (seconds)</label><input type="number" id="optBufferTarget" min="6" max="60" step="1" value="'+esc(st.bufferTargetSec)+'"><small class="help-text">Safe range priming stops once native direct playback is buffered beyond this target.</small></div></div>'
   +'<div class="form-row"><div class="form-group"><label for="optRace">Embed page must load within (seconds)</label><input type="number" id="optRace" min="15" max="60" value="'+esc(st.raceTimeoutSec)+'"><small class="help-text">This only detects a frame that never loads. A loaded VidStuck/ZXCStream page is given time for its own server checks and play button.</small></div>'
   +'<div class="form-group"><label for="optStallSec">Confirmed playback stall after (seconds)</label><input type="number" id="optStallSec" min="30" max="120" value="'+esc(st.stallTimeoutSec)+'"><small class="help-text">The stall timer starts only after the player reports real timestamp progress.</small></div></div>'
-  +'<div class="form-row"><div class="form-group"><label for="optPrimeThreads">FastStream warm-up threads</label><select id="optPrimeThreads">'+[1,2,3,4].map(n=>'<option value="'+n+'"'+(Number(st.primeThreads)===n?" selected":"")+'>'+n+' parallel range request'+(n>1?"s":"")+'</option>').join("")+'</select></div>'
-  +'<div class="form-group"><label for="optPrimeChunk">Warm-up chunk size</label><select id="optPrimeChunk">'+[128,256,512,1024].map(n=>'<option value="'+n+'"'+(Number(st.primeChunkKb)===n?" selected":"")+'>'+n+' KB</option>').join("")+'</select></div>'
-  +'<div class="form-group"><label for="optPrimeBudget">Warm-up data budget (MB)</label><input type="number" id="optPrimeBudget" min="0.25" max="8" step="0.25" value="'+esc(st.primeBudgetMb)+'"></div></div>'
+  +'<div class="form-row"><div class="form-group"><label for="optPrimeThreads">Preload connections</label><select id="optPrimeThreads">'+[1,2,3,4].map(n=>'<option value="'+n+'"'+(Number(st.primeThreads)===n?" selected":"")+'>'+n+' parallel range request'+(n>1?"s":"")+'</option>').join("")+'</select></div>'
+  +'<div class="form-group"><label for="optPrimeChunk">Preload size per request</label><select id="optPrimeChunk">'+[128,256,512,1024].map(n=>'<option value="'+n+'"'+(Number(st.primeChunkKb)===n?" selected":"")+'>'+n+' KB</option>').join("")+'</select></div>'
+  +'<div class="form-group"><label for="optPrimeBudget">Preload amount (MB)</label><input type="number" id="optPrimeBudget" min="0.25" max="8" step="0.25" value="'+esc(st.primeBudgetMb)+'"></div></div>'
   +'<div class="form-group"><label for="optCap">Maximum streamable file size: <strong id="optCapVal">'+capGb()+' GB</strong> (hard cap '+CAP_GB_HARD+' GB)</label><input type="range" id="optCap" min="1" max="5" step="0.5" value="'+capGb()+'"><small class="help-text">Direct files bigger than this are refused before playback. ZeroPlay enforces a hard maximum of 5 GB.</small></div>'
   +'<div class="form-row"><div class="form-group"><label for="optSaver">Data saver (smaller artwork, less preloading)</label><select id="optSaver"><option value="auto"'+(st.dataSaver==="auto"?" selected":"")+'>Auto (follow device/network)</option><option value="on"'+(st.dataSaver==="on"?" selected":"")+'>On</option><option value="off"'+(st.dataSaver==="off"?" selected":"")+'>Off</option></select></div>'
   +'</div><div class="settings-hub-grid"><div><h3>Player behaviour</h3>'
   +featureSwitchHTML("autoFailover","Automatic server switching","Master switch for all automatic source changes.","playback")
   +featureSwitchHTML("stallSwitch","Switch after confirmed stalls","Requires real playback progress before the stall clock can run.","playback")
   +featureSwitchHTML("embedwaveFailover","Automatic Embedwave last resort","Off keeps Embedwave manual-only during failover.","playback")
-  +featureSwitchHTML("fastStreamProbe","FastStream EmbedAPI probe","Try full ZeroPlay controls over FastStream before legacy mode.","playback")
+  +featureSwitchHTML("fastStreamProbe","Responsive FastStream controls","Use ZeroPlay controls whenever FastStream supports them.","playback")
   +featureSwitchHTML("nextEpisodeWarm","Warm next episode","Prepare the following episode while watching.","playback")
   +'</div><div><h3>Speed & interface</h3>'
-  +featureSwitchHTML("dnsWarm","DNS warm-up","Preconnect enabled player/website hosts and a first batch of addon hosts.","playback")
+  +featureSwitchHTML("dnsWarm","Connect faster","Prepare source connections in advance.","playback")
   +featureSwitchHTML("sortByHealth","Sort sources by health","Use recent response history when ranking servers.","playback")
   +featureSwitchHTML("trailers","Trailer previews","Muted, one at a time, inside title blocks.","playback")
   +featureSwitchHTML("autoplayNext","Autoplay next episode","Continue automatically when an episode ends.","playback")
@@ -4020,11 +4831,15 @@ function renderSources(soft,opts){
   const exportBtn=$("#btnExportSettings"); if(exportBtn) exportBtn.onclick=exportZeroPlaySettings;
   const importInput=$("#importSettingsFile"); if(importInput) importInput.onchange=()=>importZeroPlaySettings(importInput.files&&importInput.files[0]);
   const clearBtn=$("#btnClearPlaybackCaches"); if(clearBtn) clearBtn.onclick=clearPlaybackCaches;
-  const runBtn=$("#btnSettingsRunDiscovery"); if(runBtn) runBtn.onclick=async()=>{ runBtn.disabled=true; runBtn.innerHTML='<span class="spinner"></span> Searching…'; try{ await runDiscoveryCycle("settings"); }catch(e){ toast("Discovery cycle failed: "+(e.message||e),"error"); } finally{ renderSources(true); } };
+  const clearArtworkBtn=$("#btnClearArtworkCache"); if(clearArtworkBtn) clearArtworkBtn.onclick=()=>{ clearArtworkCache(); toast("Artwork cache cleared — visible posters will be checked again","success"); renderSources(true); };
+  const runBtn=$("#btnSettingsRunDiscovery"); if(runBtn) runBtn.onclick=async()=>{ runBtn.disabled=true; runBtn.innerHTML='<span class="spinner"></span> Searching…'; try{ await runDiscoveryCycle("settings"); }catch(e){ toast("Source search could not finish: "+(e.message||e),"error"); } finally{ renderSources(true); } };
+  const sourceStateBtn=$("#btnSourceStateSearch"); if(sourceStateBtn) sourceStateBtn.onclick=async()=>{ sourceStateBtn.disabled=true; sourceStateBtn.innerHTML='<span class="spinner"></span> Searching…'; refreshSourceStatePanel(); try{ await runDiscoveryCycle("source status"); }catch(e){ toast("Source search could not finish: "+(e.message||e),"error"); } finally{ renderSources(true); } };
   wireAddonPanel();
   syncFeatureToggles(view);
+  refreshSourceStatePanel();
+  applyTvSourcesLayout(settingsPage,sectionTarget);
   if(!soft){
-    const targets={"add-website":"settingsAddWebsite",continuous:"discoveryPanel",faststream:"settingsFastStream",sources:"settingsPlaybackSources",switches:"settingsHub"};
+    const targets={"add-website":"settingsAddWebsite",continuous:"discoveryPanel",faststream:"settingsFastStream",sources:"settingsPlaybackSources",switches:"settingsHub",androidtv:"settingsAndroidTv",artwork:"settingsArtwork"};
     const target=targets[sectionTarget]&&document.getElementById(targets[sectionTarget]);
     if(target) setTimeout(()=>target.scrollIntoView({block:"start",behavior:document.body.classList.contains("reduce-motion")?"auto":"smooth"}),40);
     else window.scrollTo({top:0});
@@ -4048,7 +4863,7 @@ const DEFAULT_GITHUB_QUERIES=[
   "topic:stremio-addon","topic:stremio-addons","stremio addon in:name,description,readme",
   "topic:stremio","topic:iptv","topic:m3u","topic:streaming-api","topic:anime-api","topic:subtitle-api"
 ];
-let discoveryRuntime={running:false,cycleRunning:false,timer:null,startedOnce:false,lastSummary:null,lastError:""};
+let discoveryRuntime={running:false,cycleRunning:false,timer:null,startedOnce:false,lastSummary:null,lastError:"",lastFoundAt:0,lastFoundCount:0,deferredForPlayback:false};
 let providerUi={category:"all",status:"all",query:"",limit:80};
 
 async function fetchJsonLoose(url, timeoutMs){
@@ -4085,7 +4900,8 @@ function discoveryCfg(){
   if(!Array.isArray(cfg.seeds)) cfg.seeds=[];
   if(!cfg.stats||typeof cfg.stats!=="object"||Array.isArray(cfg.stats)) cfg.stats={};
   for(const [key,value] of Object.entries(defaults.stats)) if(cfg.stats[key]===undefined) cfg.stats[key]=value;
-  cfg.intervalSec=Math.min(900,Math.max(20,Number(cfg.intervalSec)||90));
+  const tvPerf=typeof tvPerformanceEnabled==="function"&&tvPerformanceEnabled();
+  cfg.intervalSec=Math.min(900,Math.max(tvPerf?120:20,Number(cfg.intervalSec)||(tvPerf?180:90)));
   return cfg;
 }
 function cleanHttpUrl(raw){
@@ -4783,15 +5599,49 @@ async function crawlHealth(){
   result.seen=await runHealthChecks(false,20);
   return result;
 }
+function sourceReadiness(){
+  const counts=providerCounts();
+  const cfg=discoveryCfg(); const st=cfg.stats||{};
+  const enabled=typeof allSources==="function"?allSources():[];
+  const readyCount=Array.isArray(enabled)?enabled.length:0;
+  if(discoveryRuntime.cycleRunning) return {key:"searching",label:"Searching",detail:"Looking for more places to watch…",readyCount,counts};
+  if(readyCount<=0) return {key:"problem",label:"Problem",detail:"No sources are turned on.",readyCount,counts};
+  const foundCount=Number(discoveryRuntime.lastFoundCount)||0;
+  if(foundCount>0&&discoveryRuntime.lastFoundAt&&Date.now()-discoveryRuntime.lastFoundAt<10*60*1000){
+    return {key:"found",label:"Found sources",detail:foundCount+" new source"+(foundCount===1?" is":"s are")+" ready to use.",readyCount,counts};
+  }
+  if(discoveryRuntime.lastError&&counts.installed===0&&Number(st.lastErrors||0)>0){
+    return {key:"problem",label:"Problem",detail:"The last source search hit a problem. Your ready sources still work.",readyCount,counts};
+  }
+  if(!discoveryRuntime.running&&!cfg.autoStart) return {key:"ready",label:"Ready",detail:readyCount+" source"+(readyCount===1?" is":"s are")+" ready. Automatic search is off.",readyCount,counts};
+  return {key:"ready",label:"Ready",detail:readyCount+" source"+(readyCount===1?" is":"s are")+" ready to watch from.",readyCount,counts};
+}
 function discoveryStatusText(){
+  const state=sourceReadiness();
+  return state.label+" · "+state.detail;
+}
+function discoveryDiagnosticsText(){
   const cfg=discoveryCfg(); const counts=providerCounts(); const st=cfg.stats||{};
-  const state=discoveryRuntime.cycleRunning?"Searching now":discoveryRuntime.running?"Continuous search on":"Continuous search off";
-  const last=st.lastCycleAt?new Date(st.lastCycleAt).toLocaleTimeString():"never";
-  return state+" · "+counts.installed+" identified/installed · "+counts.candidate+" awaiting identification · "+counts.all+" total providers · cycle "+(st.cycles||0)+" · last "+last;
+  const last=st.lastCycleAt?new Date(st.lastCycleAt).toLocaleTimeString():"not run yet";
+  return "Diagnostics: "+counts.installed+" ready providers · "+counts.candidate+" being checked · "+counts.all+" saved · "+(st.cycles||0)+" searches · last "+last+(st.lastSummary?(" · "+st.lastSummary):"");
+}
+function refreshSourceStatePanel(){
+  const panel=document.getElementById("sourceStatePanel");
+  const diagnostics=document.getElementById("discoveryDiagnostics");
+  if(panel){
+    const state=sourceReadiness();
+    panel.dataset.state=state.key;
+    panel.className="panel source-state-panel is-"+state.key;
+    const title=document.getElementById("sourceStateTitle"); if(title) title.textContent=state.label;
+    const detail=document.getElementById("sourceStateDetail"); if(detail) detail.textContent=state.detail;
+    const button=document.getElementById("btnSourceStateSearch"); if(button){ button.disabled=!!discoveryRuntime.cycleRunning; button.textContent=discoveryRuntime.cycleRunning?"Searching…":"Find more"; }
+  }
+  if(diagnostics) diagnostics.textContent=discoveryDiagnosticsText();
 }
 function refreshDiscoveryUi(){
   const status=document.getElementById("discoveryStatus");
   if(status) status.textContent=discoveryStatusText();
+  refreshSourceStatePanel();
   if(routeNow()!=="sources") return;
   const active=document.activeElement;
   if(active&&/^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName||"")) return;
@@ -4803,7 +5653,7 @@ async function runDiscoveryCycle(reason){
   if(discoveryRuntime.cycleRunning) return discoveryRuntime.lastSummary;
   if(typeof playerState!=="undefined"&&playerState&&!playerState.trailer){ discoveryRuntime.deferredForPlayback=true; return discoveryRuntime.lastSummary; }
   discoveryRuntime.cycleRunning=true;
-  const status=document.getElementById("discoveryStatus"); if(status) status.textContent="Searching the web and identifying servers…";
+  const status=document.getElementById("discoveryStatus"); if(status) status.textContent="Searching · Looking for more places to watch…"; refreshSourceStatePanel();
   const started=Date.now();
   const totals={seen:0,added:0,installed:0,identified:0,candidates:0,errors:[],byCrawler:{}};
   const jobs=[
@@ -4837,6 +5687,7 @@ async function runDiscoveryCycle(reason){
   cfg.stats.lastSummary=totals.added+" new · "+totals.installed+" newly installed · "+totals.identified+" identified sightings · "+totals.errors.length+" crawler notes · "+Math.round((Date.now()-started)/1000)+"s";
   discoveryRuntime.lastSummary=totals;
   discoveryRuntime.lastError=totals.errors[0]||"";
+  if(totals.added||totals.installed){ discoveryRuntime.lastFoundAt=Date.now(); discoveryRuntime.lastFoundCount=(totals.added||0)+(totals.installed||0); }
   settings.feed.lastAddonCheck=cfg.stats.lastCycleAt;
   syncInstalledAddonsFromProviders(); saveSettings();
   if(totals.added||totals.installed) dlog("Continuous search: "+cfg.stats.lastSummary+" ("+(reason||"cycle")+")");
@@ -4850,7 +5701,7 @@ function startDiscoveryEngine(manual, immediate){
   discoveryRuntime.timer=setInterval(()=>{ runDiscoveryCycle("interval"); },Math.max(20,Number(cfg.intervalSec)||90)*1000);
   saveSettings();
   if(immediate!==false&&!discoveryRuntime.cycleRunning){
-    const delay=discoveryRuntime.startedOnce?0:1800;
+    const delay=discoveryRuntime.startedOnce?0:(tvPerformanceEnabled()?8000:1800);
     discoveryRuntime.startedOnce=true;
     setTimeout(()=>runDiscoveryCycle(manual?"manual start":"start"),delay);
   }else discoveryRuntime.startedOnce=true;
@@ -4861,7 +5712,7 @@ function stopDiscoveryEngine(manual){
   cfg.autoStart=false; discoveryRuntime.running=false;
   if(discoveryRuntime.timer) clearInterval(discoveryRuntime.timer);
   discoveryRuntime.timer=null; saveSettings(); refreshDiscoveryUi();
-  if(manual) toast("Continuous search stopped");
+  if(manual) toast("Automatic source search is off");
 }
 async function installProviderById(id){
   ensureProviderRegistry();
@@ -5382,7 +6233,7 @@ function renderTitleServerOptions(){
   const searching=!c._searchDone;
   const empty=(title,body)=>searching?'<div class="server-skeleton"><span class="spinner"></span> Checking servers for this exact title…</div>':'<div class="empty"><h3>'+esc(title)+'</h3><p>'+esc(body)+'</p></div>';
   const directBox=document.getElementById("serverDirect");
-  if(directBox) directBox.innerHTML=direct.length?direct.map(serverOptionHTML).join(""):empty("No verified direct server yet","No identified provider has returned a verified direct stream for this exact title. Continuous discovery keeps looking.");
+  if(directBox) directBox.innerHTML=direct.length?direct.map(serverOptionHTML).join(""):empty("No direct file yet","ZeroPlay is still looking for this exact title.");
   const siteBox=document.getElementById("serverWebsites");
   if(siteBox) siteBox.innerHTML=sites.length?sites.map(serverOptionHTML).join(""):empty("No website match yet","Added websites are listed only when they return and identity-verify this exact title.");
   const routeBox=document.getElementById("serverRoutes");
@@ -5530,7 +6381,7 @@ function providerRowsHTML(){
   const rows=visible.map(p=>{
     const idn=p.identification||{};
     const installed=p.status==="installed";
-    const status=p.enabled===false?"Disabled":installed?"Identified · installed":"Awaiting identification";
+    const status=p.enabled===false?"Off":installed?"Ready":"Being checked";
     const categoryText=(p.categories||[]).map(c=>{ const f=PROVIDER_CATEGORIES.find(x=>x[0]===c); return f?f[1]:c; }).join(", ")||"Uncategorised";
     const healthId=p.base&&(p.categories||[]).includes("streams")?("addon:"+p.base):p.id;
     const endpoint=p.repoUrl||p.manifestUrl||p.endpoint||p.base||p.home||"";
@@ -5559,7 +6410,7 @@ function refreshProviderList(){
   const list=document.getElementById("providerList");
   const counts=document.getElementById("providerCounts");
   if(list) list.innerHTML=providerRowsHTML();
-  if(counts){ const c=providerCounts(); counts.textContent=c.all+" providers in the registry · "+c.installed+" identified/installed · "+c.candidate+" awaiting identification · no registry cap is set by ZeroPlay."; }
+  if(counts){ const c=providerCounts(); counts.textContent=c.all+" saved · "+c.installed+" ready · "+c.candidate+" being checked."; }
   const status=document.getElementById("discoveryStatus"); if(status) status.textContent=discoveryStatusText();
 }
 function addonPanelHTML(){
@@ -5574,11 +6425,11 @@ function addonPanelHTML(){
   const categoryButtons=[["all","All"]].concat(PROVIDER_CATEGORIES).map(([id,label])=>'<button class="chip-btn'+(providerUi.category===id?" active":"")+'" type="button" data-provider-category="'+id+'">'+esc(label)+(id==="all"?"":" · "+(counts[id]||0))+"</button>").join("");
   const seeds=(cfg.seeds||[]).map((s,i)=>'<div class="src-row seed-row"><div class="grow"><span class="nm">'+esc(s.name||s.kind||"Seed")+'</span><code>'+esc(s.url)+(s.lastError?(" · "+s.lastError):"")+'</code></div><div class="src-actions"><button class="btn btn-danger btn-xs" type="button" data-seed-remove="'+i+'">Remove seed</button></div></div>').join("");
   return '<section class="panel" id="discoveryPanel">'
-    +'<div class="panel-head"><div><h2>Continuous discovery</h2><p class="section-desc">One searcher keeps crawling while this app is open. It identifies each server first—type, capabilities, searchable routes and movie/series support—then installs it for later use. At play time, the built-in title identifier still verifies the exact movie, series and episode before accepting a result.</p></div>'
-    +'<button class="btn '+(discoveryRuntime.running?"btn-secondary":"btn-primary")+'" id="btnDiscoveryToggle" type="button">'+(discoveryRuntime.running?"Stop continuous search":"Start continuous search")+'</button></div>'
+    +'<div class="panel-head"><div><h2>Advanced sources</h2><p class="section-desc">ZeroPlay looks for more places to watch in the background. You do not need to manage this to start watching.</p></div>'
+    +'<button class="btn '+(discoveryRuntime.running?"btn-secondary":"btn-primary")+'" id="btnDiscoveryToggle" type="button">'+(discoveryRuntime.running?"Automatic search: On":"Automatic search: Off")+'</button></div>'
     +'<div class="discovery-status" id="discoveryStatus" aria-live="polite">'+esc(discoveryStatusText())+'</div>'
-    +'<div class="discovery-stats"><span><strong>'+counts.installed+'</strong> identified &amp; installed</span><span><strong>'+counts.candidate+'</strong> awaiting identification</span><span><strong>'+counts.streams+'</strong> stream providers</span><span><strong>'+counts.websites+'</strong> website servers</span><span><strong>'+counts.projects+'</strong> GitHub projects</span></div>'
-    +'<div class="discovery-actions"><button class="btn btn-primary" id="btnDiscoveryNow" type="button"'+(discoveryRuntime.cycleRunning?" disabled":"")+'>Run a search cycle now</button><button class="btn btn-secondary" id="btnHealthNow" type="button">Check next health batch</button><span class="help-text">No API keys to enter. Public/keyless endpoints are used; optional TMDB remains a server-side deployment secret.</span></div>'
+    +'<details class="advanced tv-diagnostics"><summary tabindex="0">Advanced &amp; diagnostics</summary><div class="advanced-body"><div class="discovery-diagnostics" id="discoveryDiagnostics">'+esc(discoveryDiagnosticsText())+'</div><div class="discovery-stats"><span><strong>'+counts.installed+'</strong> ready</span><span><strong>'+counts.candidate+'</strong> being checked</span><span><strong>'+counts.streams+'</strong> can stream</span><span><strong>'+counts.websites+'</strong> websites</span><span><strong>'+counts.projects+'</strong> projects</span></div>'
+    +'<div class="discovery-actions"><button class="btn btn-primary" id="btnDiscoveryNow" type="button"'+(discoveryRuntime.cycleRunning?" disabled":"")+'>Search now</button><button class="btn btn-secondary" id="btnHealthNow" type="button">Check sources</button><span class="help-text">No keys to enter.</span></div>'
     +'<div class="seed-add"><div class="form-group grow"><label for="providerSeedUrl">Add a server, addon, GitHub project, feed or website</label><input type="text" id="providerSeedUrl" placeholder="Paste a manifest URL, server URL, github.com/owner/repo, JSON feed or website"></div><button class="btn btn-primary" id="btnAddProviderSeed" type="button">Identify &amp; add</button></div><div id="providerSeedStatus" class="status-box hidden"></div>'
     +'<details class="advanced"><summary>Crawlers, GitHub searches and feed</summary><div class="advanced-body">'
     +'<div class="crawler-grid">'+Object.keys(crawlerLabels).map(k=>'<label class="check-line"><input type="checkbox" data-crawler-toggle="'+k+'"'+(cfg.crawlers[k]!==false?" checked":"")+'><span>'+esc(crawlerLabels[k])+'</span></label>').join("")+'</div>'
@@ -5592,11 +6443,11 @@ function addonPanelHTML(){
     +'<h3 class="category-heading">Discovery activity</h3><ul class="log-list">'+(logs||'<li><span>—</span>No discovery events yet.</li>')+'</ul>'
     +'</div></details>'
     +'<div class="registry-head"><div><h3>Identified servers &amp; providers</h3><p class="section-desc">Installed providers are searchable later. Candidates stay out of playback until the identifier can prove what server they are and what they support.</p></div></div>'
-    +'<div class="provider-filters"><div class="form-group grow"><label for="providerSearch">Search providers</label><input type="search" id="providerSearch" placeholder="Name, host, GitHub repo, capability, category…" value="'+esc(providerUi.query)+'"></div><div class="form-group"><label for="providerStatus">Status</label><select id="providerStatus"><option value="all"'+(providerUi.status==="all"?" selected":"")+'>All</option><option value="installed"'+(providerUi.status==="installed"?" selected":"")+'>Identified/installed</option><option value="candidate"'+(providerUi.status==="candidate"?" selected":"")+'>Awaiting identification</option><option value="disabled"'+(providerUi.status==="disabled"?" selected":"")+'>Disabled</option></select></div></div>'
+    +'<div class="provider-filters"><div class="form-group grow"><label for="providerSearch">Search providers</label><input type="search" id="providerSearch" placeholder="Name, host, GitHub repo, capability, category…" value="'+esc(providerUi.query)+'"></div><div class="form-group"><label for="providerStatus">Status</label><select id="providerStatus"><option value="all"'+(providerUi.status==="all"?" selected":"")+'>All</option><option value="installed"'+(providerUi.status==="installed"?" selected":"")+'>Ready</option><option value="candidate"'+(providerUi.status==="candidate"?" selected":"")+'>Being checked</option><option value="disabled"'+(providerUi.status==="disabled"?" selected":"")+'>Disabled</option></select></div></div>'
     +'<div class="chip-row" id="providerCategories">'+categoryButtons+'</div>'
-    +'<p class="help-text" id="providerCounts">'+counts.all+' providers in the registry · '+counts.installed+' identified/installed · '+counts.candidate+' awaiting identification · no registry cap is set by ZeroPlay.</p>'
+    +'<p class="help-text" id="providerCounts">'+counts.all+' saved · '+counts.installed+' ready · '+counts.candidate+' being checked.</p>'
     +'<div id="providerList">'+providerRowsHTML()+'</div>'
-    +'<p class="help-text">Discovery data includes <a href="https://stremio-addons.net" target="_blank" rel="noopener">stremio-addons.net</a>, Cinemeta addon catalogues and the public GitHub API. Browser storage, CORS and upstream rate limits still apply.</p>'
+    +'<p class="help-text">Diagnostics only: results can come from public catalogues, websites and GitHub projects. Browser storage, CORS and rate limits still apply.</p></div></details>'
     +'</section>';
 }
 function wireAddonPanel(){
@@ -5613,7 +6464,7 @@ function wireAddonPanel(){
     saveSettings(); scheduleDiscovery();
   };
   const toggle=document.getElementById("btnDiscoveryToggle");
-  if(toggle) toggle.onclick=()=>{ if(discoveryRuntime.running) stopDiscoveryEngine(true); else { startDiscoveryEngine(true,true); toast("Continuous search started","success"); } };
+  if(toggle) toggle.onclick=()=>{ if(discoveryRuntime.running) stopDiscoveryEngine(true); else { startDiscoveryEngine(true,true); toast("Automatic source search is on","success"); } };
   const now=document.getElementById("btnDiscoveryNow");
   if(now) now.onclick=async e=>{ e.target.disabled=true; e.target.innerHTML='<span class="spinner"></span> Searching…'; await runDiscoveryCycle("manual"); };
   const health=document.getElementById("btnHealthNow");
@@ -5663,22 +6514,20 @@ let menuReturnFocus=null;
 function renderMenuQuickSwitches(){
   const box=document.getElementById("menuQuickSwitches");
   if(!box) return;
-  box.innerHTML=[
-    featureSwitchHTML("discovery","Continuous adding","Keep finding and identifying servers while ZeroPlay is open.","menu"),
-    featureSwitchHTML("trailers","Trailer previews","Muted previews inside focused title blocks.","menu"),
-    featureSwitchHTML("autoFailover","Automatic server switching","Move only after a server fails to resolve/load or confirmed playback stalls.","menu"),
-    featureSwitchHTML("embedwaveFailover","Embedwave auto last resort","Off by default: ZeroPlay will stop and ask instead of drifting into Embedwave.","menu"),
-    featureSwitchHTML("preload","FastStream preload","Warm the likely title or episode before you press play.","menu"),
-    featureSwitchHTML("fastStreamProbe","FastStream control API","Try the responsive FastStream bridge before the legacy player.","menu"),
-    featureSwitchHTML("dnsWarm","DNS warm-up","Preconnect known player and source hosts.","menu"),
-    featureSwitchHTML("downloads","Downloads","Enable episode and direct-stream downloads.","menu"),
-    featureSwitchHTML("m3uExtraction","M3U extraction","Extract playable M3U/M3U8 links from pages and playlists.","menu"),
-    featureSwitchHTML("autoplayNext","Autoplay next episode","Continue to the next episode when one finishes.","menu"),
-    featureSwitchHTML("reduceMotion","Reduce motion","Calmer interface animations for TV boxes and accessibility.","menu")
-  ].join("");
+  const switches=[
+    featureSwitchHTML("discovery","Find sources automatically","Look for more places to watch while ZeroPlay is open.","menu"),
+    featureSwitchHTML("trailers","Trailer previews","Short previews inside focused titles.","menu"),
+    featureSwitchHTML("autoFailover","Switch if a source fails","Move only after playback really fails or gets stuck.","menu"),
+    featureSwitchHTML("downloads","Downloads","Download movies and episodes when a direct file is available.","menu"),
+    featureSwitchHTML("autoplayNext","Autoplay next episode","Continue when an episode ends.","menu"),
+    featureSwitchHTML("artworkFallback","Find missing posters","Fill missing artwork automatically — no keys needed.","menu")
+  ];
+  if(ANDROID_TV_APP) switches.push(featureSwitchHTML("tvPerformance","Make this TV run lighter","Recommended for 2 GB TV boxes.","menu"));
+  box.innerHTML=switches.join("");
   syncFeatureToggles(box);
   if(typeof updateDownloadMenuCount==="function") updateDownloadMenuCount();
 }
+
 function openMenuDrawer(){
   const drawer=document.getElementById("menuDrawer"), scrim=document.getElementById("menuScrim"), btn=document.getElementById("btnMenu");
   if(!drawer||!scrim) return;
@@ -5727,6 +6576,7 @@ function render(){
   else if(route==="debrid"||route==="configure"){ setNav("sources"); renderSources(false,{settingsPage:true,section:""}); }
   else if(route.startsWith("title/")){ const [,t,id]=route.split("/"); setNav("home"); renderHome().then(()=>openDetail(t,Number(id))); }
   else { setNav("home"); renderHome(); }
+  scheduleTvInitialFocus();
 }
 $$(".nav button").forEach(b=>b.onclick=()=>goRoute(b.dataset.nav));
 $("#btnMenu").onclick=openMenuDrawer;
@@ -5742,6 +6592,51 @@ document.addEventListener("click",e=>{
 });
 $("#topSearch").addEventListener("submit",e=>{ e.preventDefault(); const q=$("#topQuery").value.trim(); const target="#/search?q="+encodeURIComponent(q); if(location.hash===target) render(); else location.hash=target; });
 $("#demoBannerBtn").onclick=()=>{ location.hash="#/sources"; };
+let lastTvFocusSelector="";
+let lastTvFocusElement=null;
+let tvInitialFocusTimer=null;
+function tvFocusSelectorFor(el){
+  if(!el||(!el.dataset&&!el.id)) return "";
+  if(el.id) return '[id="'+String(el.id).replace(/"/g,'\\"')+'"]';
+  if(el.classList&&el.classList.contains("continue-card")) return '.continue-card[data-type="'+el.dataset.type+'"][data-id="'+el.dataset.id+'"]';
+  if(el.classList&&el.classList.contains("poster-card")) return '.poster-card[data-type="'+el.dataset.type+'"][data-id="'+el.dataset.id+'"]';
+  if(el.dataset&&el.dataset.categoryType&&el.dataset.categoryId) return '[data-category-type="'+el.dataset.categoryType+'"][data-category-id="'+el.dataset.categoryId+'"]';
+  if(el.dataset&&el.dataset.nav) return '[data-nav="'+el.dataset.nav+'"]';
+  if(el.dataset&&el.dataset.menuRoute) return '[data-menu-route="'+el.dataset.menuRoute+'"]';
+  return "";
+}
+function rememberTvFocus(el){
+  el=el||document.activeElement;
+  if(!el||el===document.body||(el.closest&&el.closest("#playerRoot,#modalRoot,#streamsRoot,#downloadsRoot,#menuDrawer"))) return;
+  const selector=tvFocusSelectorFor(el);
+  if(selector){ lastTvFocusSelector=selector; lastTvFocusElement=el; }
+}
+function restoreTvFocus(){
+  if(!ANDROID_TV_APP) return false;
+  setTimeout(()=>{
+    let target=lastTvFocusElement&&lastTvFocusElement.isConnected?lastTvFocusElement:null;
+    if((!target||!isTvFocusable(target))&&lastTvFocusSelector){ try{ target=document.querySelector(lastTvFocusSelector); }catch{ target=null; } }
+    if(target&&isTvFocusable(target)){ target.focus({preventScroll:true}); target.scrollIntoView({block:"nearest",inline:"center",behavior:tvPerformanceEnabled()?"auto":"smooth"}); }
+  },40);
+  return true;
+}
+function focusInitialTvTarget(){
+  if(!ANDROID_TV_APP||!settings.ui||settings.ui.androidTvLaunchFocus===false) return false;
+  if(playerState||detailState||streamsCtx||(typeof downloadModalState!=="undefined"&&downloadModalState)) return false;
+  const drawer=document.getElementById("menuDrawer"); if(drawer&&drawer.classList.contains("open")) return false;
+  const active=document.activeElement;
+  if(active&&active!==document.body&&active.id!=="btnMenu"&&isTvFocusable(active)) return false;
+  const target=document.querySelector("#view .continue-card")||document.querySelector("#view .poster-card")||document.getElementById("heroPlay")||document.querySelector("#view .category-tile")||document.querySelector("#view button:not([disabled])");
+  if(!target||!isTvFocusable(target)) return false;
+  target.focus({preventScroll:true});
+  target.scrollIntoView({block:"nearest",inline:"center",behavior:tvPerformanceEnabled()?"auto":"smooth"});
+  return true;
+}
+function scheduleTvInitialFocus(){
+  if(!ANDROID_TV_APP) return;
+  if(tvInitialFocusTimer) clearTimeout(tvInitialFocusTimer);
+  tvInitialFocusTimer=setTimeout(()=>{ if(!focusInitialTvTarget()) setTimeout(focusInitialTvTarget,1400); },650);
+}
 function tvFocusableRoot(){
   if(typeof downloadModalState!=="undefined"&&downloadModalState) return document.getElementById("downloadsRoot");
   if(streamsCtx) return document.getElementById("streamsRoot");
@@ -5760,21 +6655,21 @@ function isTvFocusable(el){
 }
 function tvFocusables(){
   const root=tvFocusableRoot()||document;
-  return $$("button:not([disabled]), [href], input:not([type='hidden']), select, textarea, .poster-card, [tabindex]:not([tabindex='-1'])",root).filter(isTvFocusable);
+  return $$("button:not([disabled]), [href], input:not([type='hidden']), select, textarea, .poster-card, .continue-card, [tabindex]:not([tabindex='-1'])",root).filter(isTvFocusable);
 }
 function moveTvFocus(direction){
   const list=tvFocusables(); if(!list.length) return false;
   const current=document.activeElement;
   if(!current||!list.includes(current)){
-    const first=list.find(el=>el.id==="heroPlay")||list.find(el=>el.classList&&el.classList.contains("poster-card"))||list[0];
-    first.focus({preventScroll:true}); first.scrollIntoView({block:"nearest",inline:"nearest",behavior:"smooth"});
+    const first=list.find(el=>el.classList&&el.classList.contains("continue-card"))||list.find(el=>el.classList&&el.classList.contains("poster-card"))||list.find(el=>el.id==="heroPlay")||list[0];
+    first.focus({preventScroll:true}); first.scrollIntoView({block:"nearest",inline:"center",behavior:tvPerformanceEnabled()?"auto":"smooth"});
     return true;
   }
   const cr=current.getBoundingClientRect(), cx=cr.left+cr.width/2, cy=cr.top+cr.height/2;
   let best=null,bestScore=Infinity;
   for(const el of list){
     if(el===current) continue;
-    if(current.classList&&current.classList.contains("poster-card")&&current.contains(el)) continue;
+    if(current.classList&&(current.classList.contains("poster-card")||current.classList.contains("continue-card"))&&current.contains(el)) continue;
     const r=el.getBoundingClientRect(), x=r.left+r.width/2, y=r.top+r.height/2;
     const dx=x-cx, dy=y-cy;
     let primary=0, secondary=0;
@@ -5788,7 +6683,7 @@ function moveTvFocus(direction){
   }
   if(!best) return false;
   best.focus({preventScroll:true});
-  best.scrollIntoView({block:"nearest",inline:best.classList&&best.classList.contains("poster-card")?"center":"nearest",behavior:"smooth"});
+  best.scrollIntoView({block:"nearest",inline:best.classList&&(best.classList.contains("poster-card")||best.classList.contains("continue-card"))?"center":"nearest",behavior:tvPerformanceEnabled()?"auto":"smooth"});
   return true;
 }
 function handlePlayerKeyboard(e){
@@ -5797,6 +6692,16 @@ function handlePlayerKeyboard(e){
   if(/^(INPUT|TEXTAREA|SELECT)$/.test(tag)&&document.activeElement.id!=="seekRange"&&document.activeElement.id!=="volumeRange") return false;
   const full=st.engine==="native"||st.engine==="faststream-api";
   const key=e.key;
+  if(key==="MediaStop"){ e.preventDefault(); closePlayer(); return true; }
+  if(key==="MediaTrackNext"||key==="ChannelUp"||key==="MediaTrackPrevious"||key==="ChannelDown"){
+    const epBtn=document.getElementById(key==="MediaTrackNext"||key==="ChannelUp"?"btnNextEp":"btnPrevEp");
+    if(epBtn){ e.preventDefault(); epBtn.click(); return true; }
+    if(full){ e.preventDefault(); playerCommand("seekDelta",(key==="MediaTrackNext"||key==="ChannelUp")?60:-60); return true; }
+  }
+  if((key==="MediaFastForward"||key==="MediaRewind")&&full){ e.preventDefault(); playerCommand("seekDelta",key==="MediaFastForward"?30:-30); return true; }
+  if(key==="MediaPlay"&&full){ e.preventDefault(); if(st.playback&&st.playback.paused) playerCommand("toggle"); return true; }
+  if(key==="MediaPause"&&full){ e.preventDefault(); if(st.playback&&!st.playback.paused) playerCommand("toggle"); return true; }
+  if(/^Media/.test(key)&&!full){ e.preventDefault(); showPlayerChrome(true); const focusBtn=document.getElementById("btnFocusEmbed"); if(focusBtn&&focusBtn.style.display!=="none") focusBtn.focus({preventScroll:true}); return true; }
   if(key===" "||key.toLowerCase()==="k"||key==="MediaPlayPause"){
     if(!full) return false;
     e.preventDefault(); playerCommand("toggle"); return true;
@@ -5814,9 +6719,72 @@ function handlePlayerKeyboard(e){
   if(key==="Backspace"){ e.preventDefault(); closePlayer(); return true; }
   return false;
 }
+
+function handleZeroPlayTvBack(){
+  if(typeof downloadModalState!=="undefined"&&downloadModalState){ closeDownloadModal(); return true; }
+  if(streamsCtx){ closeStreams(); return true; }
+  const drawer=document.getElementById("menuDrawer");
+  if(drawer&&drawer.classList.contains("open")){ closeMenuDrawer(); return true; }
+  if(playerState){
+    if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); return true; }
+    closePlayer(); return true;
+  }
+  if(detailState){ closeDetail(); return true; }
+  const active=document.activeElement;
+  if(active&&/^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName||"")){ active.blur(); scheduleTvInitialFocus(); return true; }
+  if(routeNow()!=="home"){ location.hash="#/home"; return true; }
+  return false;
+}
+function handleZeroPlayTvMenu(){
+  document.body.classList.add("tv-mode");
+  if(playerState&&!streamsCtx){ showPlayerChrome(true); const servers=document.getElementById("btnPlayerServers"); if(servers) servers.focus({preventScroll:true}); return true; }
+  const drawer=document.getElementById("menuDrawer");
+  if(drawer&&drawer.classList.contains("open")) closeMenuDrawer(); else openMenuDrawer();
+  return true;
+}
+function handleZeroPlayTvSearch(){
+  document.body.classList.add("tv-mode");
+  if(playerState) closePlayer();
+  if(detailState) closeDetail();
+  closeMenuDrawer();
+  if(routeNow()!=="search") location.hash="#/search";
+  setTimeout(()=>{ const input=document.getElementById("searchInput")||document.getElementById("topQuery"); if(input) input.focus({preventScroll:true}); },80);
+  return true;
+}
+function handleZeroPlayTvMediaKey(key){
+  document.body.classList.add("tv-mode");
+  const event={key:String(key||""),shiftKey:false,preventDefault(){ this.defaultPrevented=true; }};
+  if(playerState) return handlePlayerKeyboard(event);
+  if(["MediaPlayPause","MediaPlay","MediaPause"].includes(event.key)){
+    const card=document.activeElement&&document.activeElement.closest?document.activeElement.closest(".poster-card,.continue-card"):null;
+    if(card){ quickPlay(card.dataset.type,Number(card.dataset.id)); return true; }
+    return focusInitialTvTarget();
+  }
+  return false;
+}
+function handleZeroPlayTvLowMemory(){
+  try{ stopCardPreview(); document.querySelectorAll(".hero-trailer.on").forEach(stopBackdropPreview); }catch{}
+  try{ clearArtworkRuntime(); }catch{}
+  try{
+    while(catalogItemCache.size>220){ const first=catalogItemCache.keys().next().value; if(first===undefined) break; catalogItemCache.delete(first); }
+    trailerFetchCache.clear();
+  }catch{}
+  return true;
+}
+window.handleZeroPlayTvBack=handleZeroPlayTvBack;
+window.handleZeroPlayTvMenu=handleZeroPlayTvMenu;
+window.handleZeroPlayTvSearch=handleZeroPlayTvSearch;
+window.handleZeroPlayTvMediaKey=handleZeroPlayTvMediaKey;
+window.handleZeroPlayTvLowMemory=handleZeroPlayTvLowMemory;
+window.addEventListener("zeroplay-android-tv-ready",()=>{ document.body.classList.add("tv-mode"); scheduleTvInitialFocus(); });
+document.addEventListener("focusin",e=>{ if(ANDROID_TV_APP) rememberTvFocus(e.target); });
+
 document.addEventListener("keydown",e=>{
   if(/^Arrow/.test(e.key)||e.key==="Tab") document.body.classList.add("tv-mode");
   const activeTag=(document.activeElement&&document.activeElement.tagName)||"";
+  if(["BrowserBack","GoBack","XF86Back"].includes(e.key)){ if(handleZeroPlayTvBack()) e.preventDefault(); return; }
+  if(e.key==="ContextMenu"||e.key==="Menu"){ e.preventDefault(); handleZeroPlayTvMenu(); return; }
+  if(e.key==="BrowserSearch"||e.key==="Search"){ e.preventDefault(); handleZeroPlayTvSearch(); return; }
   if(e.key==="Escape"){
     if(typeof downloadModalState!=="undefined"&&downloadModalState){ closeDownloadModal(); e.preventDefault(); return; }
     if(streamsCtx){ closeStreams(); e.preventDefault(); return; }
@@ -5827,12 +6795,20 @@ document.addEventListener("keydown",e=>{
   }
   if(e.key==="/"&&!/input|textarea|select/i.test(activeTag)){ e.preventDefault(); $("#topQuery").focus(); return; }
   if(handlePlayerKeyboard(e)) return;
-  if(/^(INPUT|TEXTAREA|SELECT)$/.test(activeTag)) return;
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test(activeTag)){
+    const active=document.activeElement;
+    if(ANDROID_TV_APP&&(e.key==="ArrowUp"||e.key==="ArrowDown")&&activeTag!=="SELECT"){
+      const tvDir=e.key.replace("Arrow","").toLowerCase();
+      if(moveTvFocus(tvDir)){ e.preventDefault(); return; }
+    }
+    return;
+  }
   if(/^Arrow/.test(e.key)){
     const active=document.activeElement;
-    if(!active||active===document.body||active.closest&&active.closest("button,a,.poster-card,.player-bar,.player-controls,.modal,#menuDrawer,.topbar,#view")){
+    if(!active||active===document.body||active.closest&&active.closest("button,a,.poster-card,.continue-card,.player-bar,.player-controls,.modal,#menuDrawer,.topbar,#view")){
       const dir=e.key.replace("Arrow","").toLowerCase();
       if(moveTvFocus(dir)) e.preventDefault();
+      else if(ANDROID_TV_APP&&dir==="left"&&!playerState&&!detailState&&!streamsCtx&&!(typeof downloadModalState!=="undefined"&&downloadModalState)){ openMenuDrawer(); e.preventDefault(); }
     }
   }
 });
@@ -5841,7 +6817,7 @@ window.addEventListener("hashchange",render);
 /* deep links from Netlify redirects: /movie/123, /tv/123 */
 (function init(){
   const m=location.pathname.match(/^\/(movie|tv)\/(\d+)\/?$/);
-  streamCfg(); downloadCfg(); saveSettings(); applyInterfaceSettings(); renderMenuQuickSwitches();
+  streamCfg(); downloadCfg(); saveSettings(); applyInterfaceSettings(); if(ANDROID_TV_APP) document.body.classList.add("tv-mode"); renderMenuQuickSwitches();
   ensureProviderRegistry();
   warmAllSources();
   scheduleDiscovery();
