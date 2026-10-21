@@ -216,16 +216,16 @@ offering a dead download button.
   seconds, volume/mute, playback speed, quality, PiP and fullscreen controls.
   Cross-origin embeds expose an explicit **Video controls** focus button
   because their internal controls cannot be driven from the parent page.
-- FastStream is embedded for direct media. In Auto mode ZeroPlay checks for
-  FastStream's EmbedAPI: when the hosted build sends `ready`, it subscribes
-  and drives FastStream with `load`, seek, volume, rate, PiP and
-  `getLevels`/`setVideoLevel`. At the time of writing the hosted player is
-  still the pre-EmbedAPI build, so Auto avoids delaying playable files:
-  MP4/WebM start in the responsive ZeroPlay engine while FastStream API
-  capability is probed for later streams, and HLS/DASH use the legacy embedded
-  FastStream hash player inside the shell.
-- **ZeroPlay responsive player** and **FastStream web player only** remain
-  selectable in **Settings → Advanced playback**.
+- FastStream is the default player for every verified direct stream returned by
+  a selected or discovered server. ZeroPlay first attempts FastStream's
+  EmbedAPI: when the hosted build sends `ready`, it subscribes and drives
+  FastStream with `load`, seek, volume, rate, PiP and
+  `getLevels`/`setVideoLevel`. If the API is unavailable, the hosted FastStream
+  player is used; only an explicit ZeroPlay player selection or a guarded
+  compatibility fallback uses the native responsive `<video>` engine.
+- **FastStream — default**, **Automatic fallback — FastStream first**, and
+  **ZeroPlay responsive player** remain selectable in **Settings → Advanced
+  playback**.
 - Quality selection is real where the engine exposes it: FastStream levels
   for API playback and actual returned direct-stream variants for file
   playback. A single fixed file has only its source quality. For third-party

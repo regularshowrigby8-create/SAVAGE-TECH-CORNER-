@@ -104,6 +104,7 @@ eq(sorted.map(x => x.id), ['direct:a', 'route:vidstuck', 'route:embedwave'], 've
     [html.includes('class="trailer-layer"') && html.includes('function startCardPreview'), 'trailer preview lives inside poster title blocks'],
     [html.includes('id="playerQuality"') && html.includes('setVideoLevel'), 'unified player exposes real FastStream quality selection'],
     [html.includes('frame.src="https://faststream.online/player/"') && html.includes('waitForFastStreamReady(4500)'), 'FastStream API handshake precedes fallback'],
+    [html.includes('player:"faststream-only"') && html.includes('const mode=String(settings.stream.player||"faststream-only")') && html.includes('settings.stream.player==="auto"||settings.stream.player==="faststream"'), 'FastStream is the default for selected and discovered direct servers'],
     [html.includes('https://faststream.online/player/#'), 'legacy FastStream HLS/DASH fallback retained'],
     [html.includes('r.status!==206') && html.includes('Math.min(4,Number(cfg.primeThreads)||2)') && html.includes('primeBudgetMb'), 'direct priming capped to genuine range responses and configured worker/budget limits'],
     [html.includes('async function tryNextDirectVariant(reason){\n  const st=playerState; if(!st) return false;\n  if(streamCfg().autoFailover===false) return false;') && html.includes('Confirmed direct playback stalled on ') && html.includes('hasAdvanced&&lastObservedAdvanceAt'), 'automatic switching master switch and confirmed native stall detection are wired'],
