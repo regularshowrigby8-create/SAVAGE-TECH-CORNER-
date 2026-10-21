@@ -41,7 +41,7 @@ The native shell exposes a small read-only profile bridge and forwards remote ke
 - **Left at the browsing edge** opens the menu.
 - Android trim-memory callbacks ask the web app to stop previews and shed nonessential image work.
 
-Cross-origin embedded players still control some of their own internal behaviour; the shell does not claim to reach inside them. For those players, choose **Video controls** in the ZeroPlay bar: the shell shows a D-pad cursor (move with the remote, tap with OK/Play-Pause, return with Back) so mouse/touch-only player buttons, subtitle menus and quality menus remain usable.
+Direct streams are loaded straight into the FastStream player surface for the selected server, and embedded servers keep their own surface; ZeroPlay does not keep a second persistent control bar over them. Control is handed to that surface automatically with the shell D-pad cursor (move with the remote, tap with OK/Play-Pause). **Back** first releases surface control and a second Back exits; **Menu** opens Servers. Local/downloaded files and the explicit built-in player setting use the native ZeroPlay video element, where visible-control arrows navigate buttons (including CC when a subtitle track exists) instead of seeking.
 
 Provider frames are deliberately **not** given an HTML `sandbox` attribute: several legitimate embedded players detect any sandboxed frame and refuse playback outright. The Android shell instead blocks top-level pop-up/redirect hijacks plus known “scan this QR code to prove you are not a robot” scam patterns. **Never scan a QR code shown by a video player.** If a server shows one, press Back/Menu and choose another server.
 
