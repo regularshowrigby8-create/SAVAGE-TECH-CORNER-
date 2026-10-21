@@ -230,11 +230,16 @@ jobs:
         run: |
           set -uo pipefail
           REPORT="tv/android-tv/dist/ZeroPlay-TV-1.0.0-armeabi-v7a.verify.json"
+          # GitHub's default bash invocation already enables -e. Disable it
+          # around the verifier so a failing report can be surfaced as
+          # annotations instead of only "exit code 1".
+          set +e
           python3 tv/android-tv/tools/verify_apk.py \
             "${{ steps.apk.outputs.apk_path }}" \
             --require-sdk-tools \
             --json "$REPORT"
           VERIFY_CODE=$?
+          set -e
           if [ "$VERIFY_CODE" -ne 0 ]; then
             python3 - "$REPORT" <<'PYEOF'
           import json
