@@ -264,6 +264,11 @@ const eq = (actual, expected, label) => { assert.strictEqual(actual, expected, l
     [html.includes('autoHighLevelId') && html.includes('autoHighBufferingSince'), 'FastStream auto quality starts at the highest level and steps down only on sustained buffering'],
     [html.includes('body.android-tv .settings-hub-grid{grid-template-columns:1fr}') && html.includes('body.android-tv .modal{width:min(980px,94vw)') && html.includes('#btnPlayerDownload'), 'TV layout keeps settings on-screen and hides tool clutter from the player bar'],
     [html.includes('body.android-tv *{backdrop-filter:none!important;') && html.includes('animation-duration:.12s!important'), 'TV mode strips backdrop blur and caps animation cost for 2 GB boxes'],
+    [html.includes('id=\"playerActionShelf\"') && html.includes('id=\"btnPlayerFastStream\"') && html.includes('id=\"btnPlayerM3u\"'), 'FastStream and M3U actions live inside the player action shelf'],
+    [html.includes('player-overlay.player-paused .player-action-shelf') && html.includes('chrome-hidden .player-action-shelf'), 'in-player tools appear on pause and disappear with playback chrome'],
+    [html.includes('function openM3uExtractorForContext') && html.includes('location.hash=\"#/downloads\"'), 'M3U button opens the real extractor workflow with current stream context'],
+    [html.includes('input,select,textarea{border-radius:14px}') && html.includes('setting-control,.setting-control input,.setting-control .slider{border-radius:999px}'), 'TV inputs and solid toggles use rounded controls'],
+    [((html.match(/in:name,description,readme/g)||[]).length >= 50), 'GitHub discovery registry contains at least 50 focused tool searches'],
   ];
   for (const [condition, label] of staticChecks) ok(condition, label);
 

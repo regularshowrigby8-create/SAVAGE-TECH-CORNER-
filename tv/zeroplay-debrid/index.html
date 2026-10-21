@@ -359,6 +359,16 @@ body.route-enter .page{animation:zpFade .32s ease both}
 .player-overlay{background:#000;animation:zpFade .22s ease both}
 .player-stage{position:absolute;inset:0;overflow:hidden;background:#000}
 .player-overlay>.player-frame{position:absolute;inset:0;width:100%;height:100%}
+/* Player actions live in the player surface, not in a blocking page overlay.
+   They are only exposed while paused or after the remote wakes the chrome. */
+.player-action-shelf{position:absolute;left:50%;bottom:clamp(5.8rem,11vh,8.5rem);z-index:18;display:flex;align-items:center;justify-content:center;gap:.55rem;max-width:min(92vw,980px);padding:.55rem .65rem;border:1px solid rgba(255,255,255,.15);border-radius:24px;background:rgba(7,9,12,.9);box-shadow:0 16px 44px rgba(0,0,0,.5);opacity:0;pointer-events:none;transform:translate(-50%,10px);transition:opacity .18s ease,transform .18s ease}
+.player-overlay.player-paused .player-action-shelf,.player-overlay.player-tools-awake .player-action-shelf{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+.player-overlay.chrome-hidden .player-action-shelf{opacity:0;pointer-events:none;transform:translate(-50%,10px)}
+.player-action-shelf .control-btn{min-width:132px;height:48px;padding:0 1rem;font-size:.86rem}
+.player-action-shelf .control-btn.primary{min-width:150px}
+.player-action-shelf .action-kicker{color:#aeb7bf;font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:0 .45rem}
+.player-overlay.player-paused .player-action-shelf .action-kicker{color:#c9b4ff}
+
 .media-shell{position:absolute;inset:0;background:#000}
 .media-shell iframe,.media-shell video{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
 .media-click{position:absolute;inset:0;z-index:4;border:0;background:transparent;cursor:pointer}
@@ -377,6 +387,10 @@ body.route-enter .page{animation:zpFade .32s ease both}
 .seek-row input[type="range"]{flex:1;accent-color:var(--primary);height:22px}
 .control-row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
 .control-btn{min-width:42px;height:42px;padding:0 .7rem;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(12,13,15,.72);color:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:.35rem;font-weight:700;backdrop-filter:blur(10px);transition:all .16s ease}
+input,select,textarea{border-radius:14px}
+input[type="range"]{border-radius:999px}
+.btn,.icon-btn,.chip-btn,.menu-link,.switch-label{border-radius:14px}
+.setting-control,.setting-control input,.setting-control .slider{border-radius:999px}
 .control-btn:hover{background:rgba(255,255,255,.13);transform:translateY(-1px)}
 .control-btn.primary{background:var(--primary);border-color:transparent;min-width:52px}
 .control-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
@@ -520,7 +534,11 @@ body.android-tv .modal{width:min(980px,94vw);max-height:92vh;overflow-y:auto}
 body.android-tv .settings-hub-grid{grid-template-columns:1fr}
 body.android-tv .panel,body.android-tv .form-group,body.android-tv .setting-switch,body.android-tv .form-row>*{min-width:0}
 body.android-tv .player-bar,body.android-tv .player-controls{padding-left:3vw;padding-right:3vw}
-body.android-tv .player-controls #btnPiP,body.android-tv .player-controls #playerRate,body.android-tv .player-controls .volume-wrap,body.android-tv .player-bar #btnPlayerDownload,body.android-tv .player-bar #btnPlayerDetails{display:none}
+body.android-tv .player-controls #btnPiP,body.android-tv .player-controls #playerRate,body.android-tv .player-controls .volume-wrap,body.android-tv .player-bar #btnPlayerDownload,body.android-tv .player-bar #btnPlayerDetails,body.android-tv #btnFocusEmbed{display:none}
+body.android-tv .player-action-shelf{bottom:clamp(6.4rem,13vh,10rem);max-width:94vw;padding:.7rem .8rem;border-radius:28px}
+body.android-tv .player-action-shelf .control-btn{min-width:160px;height:56px;font-size:1rem;border-radius:999px}
+body.android-tv .player-action-shelf .action-kicker{font-size:.78rem}
+body.android-tv .player-stage:focus{outline:0}
 body.android-tv [data-switch-label]:focus-visible{outline:3px solid var(--focus);outline-offset:3px;border-radius:999px}
 body.android-tv *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 body.android-tv *,body.android-tv *::before,body.android-tv *::after{transition-duration:.12s!important;animation-duration:.12s!important}
@@ -2556,6 +2574,9 @@ function playerLoading(on,text){
 function showPlayerChrome(sticky){
   const st=playerState, overlay=document.getElementById("playerOverlay"); if(!st||!overlay) return;
   overlay.classList.remove("chrome-hidden");
+  const paused=!!(st.playback&&st.playback.paused);
+  overlay.classList.toggle("player-paused",paused);
+  overlay.classList.add("player-tools-awake");
   if(st.chromeTimer) clearTimeout(st.chromeTimer);
   const playingNow=!!(st.playback&&!st.playback.paused&&!st.playback.buffering);
   // On TV the remote focus always sits on a chrome control, so a sticky
@@ -2574,6 +2595,7 @@ function showPlayerChrome(sticky){
       if(stage){ stage.setAttribute("tabindex","-1"); stage.focus({preventScroll:true}); }
     }
     overlay.classList.add("chrome-hidden");
+    overlay.classList.remove("player-tools-awake");
   },3000);
 }
 function setPlayerControlMode(mode){
@@ -2627,6 +2649,8 @@ function updatePlaybackUI(state,eventName){
   if(st.playback.buffering) playerLoading(true,"Buffering…");
   else if(eventName==="playing"||eventName==="canplay"||!st.playback.paused) playerLoading(false);
   savePlaybackProgress(false);
+  const overlay=document.getElementById("playerOverlay");
+  if(overlay){ overlay.classList.toggle("player-paused",!!st.playback.paused); if(st.playback.paused) overlay.classList.add("player-tools-awake"); else if(eventName==="playing") overlay.classList.remove("player-tools-awake"); }
   if(st.playback.paused) showPlayerChrome(true); else if(eventName==="playing") showPlayerChrome(false);
 }
 function currentPlaybackTime(){
@@ -2887,12 +2911,26 @@ function openTrailer(title,youtubeKey){
   document.body.classList.add("locked");
   $("#btnClosePlayer").onclick=closePlayer;
 }
+function openM3uExtractorForContext(ctx,url){
+  const target=String(url||"");
+  closePlayer();
+  location.hash="#/downloads";
+  setTimeout(()=>{
+    const input=document.getElementById("m3uUrl"), title=document.getElementById("m3uTitle");
+    if(input){ input.value=target; input.focus({preventScroll:true}); }
+    if(title) title.value=(ctx&&ctx.title)||"Current player stream";
+    const extractor=document.getElementById("m3uExtractor");
+    if(extractor) extractor.scrollIntoView({block:"start",behavior:tvPerformanceEnabled()?"auto":"smooth"});
+    toast(target?"M3U extractor ready for the current player stream":"M3U extractor ready — paste a playlist or watch-page URL");
+  },120);
+}
 function playerShell(msg){
   const st=withPlayerRuntime(playerState); playerState=st;
   const it=st.item, isTV=it.type==="tv";
   const rate=Number(st.playback&&st.playback.rate||1);
   return '<div class="player-overlay" id="playerOverlay">'
     +'<div class="player-stage" id="playerStage"><div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>'+esc(msg||"Connecting…")+'</strong><span style="color:#cbd2d8;font-size:.88rem">ZeroPlay is preparing this exact title.</span></div></div>'
+    +'<div class="player-action-shelf" id="playerActionShelf" aria-label="Paused player tools"><span class="action-kicker">Paused</span><button class="control-btn primary" id="btnPlayerResume" type="button">▶ Resume</button><button class="control-btn" id="btnPlayerFastStream" type="button">FastStream controls</button><button class="control-btn" id="btnPlayerM3u" type="button">M3U tools</button><button class="control-btn" id="btnPlayerDownloadStage" type="button">⬇ Download</button><button class="control-btn" id="btnPlayerServersStage" type="button">Servers</button></div>'
     +'<div class="player-bar"><button class="icon-btn" id="btnBackPlayer" type="button" aria-label="Back">‹</button><span class="logo-badge"><span class="logo-mark">▶</span><span>ZeroPlay</span></span>'
     +'<span class="pt">'+esc(titleOf(it))+'<span class="player-title-sub" id="playerSourceLine">'+(isTV?"Season "+st.season+" · Episode "+st.episode:"Movie")+'</span></span><span id="fastBadge" class="chip violet"></span><span style="flex:1"></span>'
     +(isTV?'<button class="control-btn" id="btnPrevEp" type="button">‹ Ep</button><button class="control-btn" id="btnNextEp" type="button">Ep ›</button>':"")
@@ -2920,7 +2958,14 @@ function bindPlayerChrome(){
     const identity=st.identity||buildTitleIdentity({item:st.item,type:st.item.type,id:st.item.id,title:titleOf(st.item),season:st.season,episode:st.episode});
     showStreamsModal({type:st.item.type,id:st.item.id,title:identity.title,altTitles:identity.titles,year:identity.year,season:st.season,episode:st.episode,imdb:identity.imdbId,identity,item:snap(st.item,st.item.type),fromPlayer:true});
   });
-  on("btnPlayerDownload","click",()=>openDownloadForContext(playerContext(st),{currentVariant:st.activeVariant||(st.directUrl?{url:st.directUrl,quality:(st.activeVariant||{}).quality}:null),currentUrl:st.directUrl||(st.direct?st.url:""),serverName:(getSource(st.source)||{}).name||"Current server"}));
+  const downloadOpts=()=>({currentVariant:st.activeVariant||(st.directUrl?{url:st.directUrl,quality:(st.activeVariant||{}).quality}:null),currentUrl:st.directUrl||(st.direct?st.url:""),serverName:(getSource(st.source)||{}).name||"Current server"});
+  const openDownload=()=>openDownloadForContext(playerContext(st),downloadOpts());
+  on("btnPlayerDownload","click",openDownload);
+  on("btnPlayerDownloadStage","click",openDownload);
+  on("btnPlayerServersStage","click",()=>document.getElementById("btnPlayerServers")?.click());
+  on("btnPlayerResume","click",()=>playerCommand("toggle"));
+  on("btnPlayerFastStream","click",()=>{ showPlayerChrome(true); if(st.engine==="faststream-api"||st.engine==="faststream-legacy"){ playerCommand("focusEmbed"); } else toast("ZeroPlay controls are active for this stream"); });
+  on("btnPlayerM3u","click",()=>openM3uExtractorForContext(playerContext(st),st.directUrl||(st.direct?st.url:"")));
   const changeEpisode=delta=>{
     if(delta<0&&st.episode<=1) return;
     savePlaybackProgress(true);
@@ -4902,9 +4947,24 @@ const PROVIDER_CATEGORIES=[
   ["discovery","Discovery"],["websites","Websites"],["projects","Projects"],["feeds","Feeds"]
 ];
 const DEFAULT_GITHUB_QUERIES=[
-  "topic:stremio-addon","topic:stremio-addons","stremio addon in:name,description,readme",
-  "topic:stremio","topic:iptv","topic:m3u","topic:streaming-api","topic:anime-api","topic:subtitle-api"
+  // Discovery and stream providers
+  "topic:stremio-addon","topic:stremio-addons","stremio addon in:name,description,readme","topic:stremio","topic:iptv","topic:m3u","topic:streaming-api","topic:anime-api","topic:subtitle-api","stremio stream addon in:name,description,readme","stremio provider in:name,description,readme","video streaming api in:name,description,readme",
+  // TV and remote navigation
+  "android tv webview in:name,description,readme","android tv dpad in:name,description,readme","android tv remote navigation in:name,description,readme","tv spatial navigation in:name,description,readme","dpad navigation javascript in:name,description,readme","focus management tv in:name,description,readme","10 foot ui in:name,description,readme","leanback web app in:name,description,readme","remote first ui in:name,description,readme","webview media player tv in:name,description,readme",
+  // Player controls and playback engines
+  "html5 video player controls in:name,description,readme","faststream player in:name,description,readme","hls player javascript in:name,description,readme","dash player javascript in:name,description,readme","video.js hls in:name,description,readme","shaka player tv in:name,description,readme","mpeg dash player in:name,description,readme","media source extensions in:name,description,readme","player keyboard shortcuts in:name,description,readme","video quality selector in:name,description,readme",
+  // Playlists, extraction, and downloads
+  "m3u8 extractor javascript in:name,description,readme","m3u playlist parser in:name,description,readme","hls downloader javascript in:name,description,readme","hls segment downloader in:name,description,readme","browser download manager indexeddb in:name,description,readme","resumable downloads javascript in:name,description,readme","range request downloader javascript in:name,description,readme","indexeddb media storage in:name,description,readme","playlist extractor web in:name,description,readme","streamlink web player in:name,description,readme",
+  // Catalogue, metadata, artwork, and subtitles
+  "tmdb catalogue api in:name,description,readme","cinemeta api in:name,description,readme","meta api streaming in:name,description,readme","tvmaze api artwork in:name,description,readme","anilist api artwork in:name,description,readme","movie metadata api javascript in:name,description,readme","episode metadata api in:name,description,readme","subtitle provider api in:name,description,readme","opensubtitles api javascript in:name,description,readme","anime metadata provider in:name,description,readme",
+  // Resilience, performance, and accessibility
+  "video failover javascript in:name,description,readme","stream health check javascript in:name,description,readme","cdn stream resolver in:name,description,readme","cors media proxy in:name,description,readme","web performance tv in:name,description,readme","low memory webview in:name,description,readme","reduced motion media ui in:name,description,readme","accessible video controls in:name,description,readme","focus trap modal javascript in:name,description,readme","scroll reveal focus javascript in:name,description,readme"
 ];
+// Upgrade older TV profiles in place: preserve custom searches, then add the built-in tool registry.
+if(Array.isArray(settings.discovery.githubQueries)){
+  const known=new Set(settings.discovery.githubQueries);
+  for(const query of DEFAULT_GITHUB_QUERIES) if(!known.has(query)){ settings.discovery.githubQueries.push(query); known.add(query); }
+}
 let discoveryRuntime={running:false,cycleRunning:false,timer:null,startedOnce:false,lastSummary:null,lastError:"",lastFoundAt:0,lastFoundCount:0,deferredForPlayback:false};
 let providerUi={category:"all",status:"all",query:"",limit:80};
 
