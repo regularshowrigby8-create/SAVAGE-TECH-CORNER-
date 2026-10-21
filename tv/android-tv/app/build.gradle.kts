@@ -13,15 +13,11 @@ android {
         versionCode = 1
         versionName = "1.0.0"
 
-        // Xiaomi TV Box S (3rd Gen, MDZ-32-AA) ships a 32-bit Android 14
-        // userspace. Keep the release explicitly scoped to armeabi-v7a even
-        // though this shell bundles no native libraries of its own.
-        ndk {
-            abiFilters += listOf("armeabi-v7a")
-        }
     }
 
-    // Produce one clearly named ARMv7 split APK instead of a universal APK.
+    // Xiaomi TV Box S (3rd Gen, MDZ-32-AA) ships a 32-bit Android 14
+    // userspace. Produce one clearly named ARMv7 split APK instead of a
+    // universal APK. AGP forbids combining this split with ndk.abiFilters.
     splits {
         abi {
             isEnable = true
