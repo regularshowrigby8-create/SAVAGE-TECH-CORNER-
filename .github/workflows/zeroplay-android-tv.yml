@@ -228,12 +228,45 @@ jobs:
 
       - name: Verify package, Leanback contract, ABI, DEX and signature
         run: |
+          set -uo pipefail
+          REPORT="tv/android-tv/dist/ZeroPlay-TV-1.0.0-armeabi-v7a.verify.json"
           python3 tv/android-tv/tools/verify_apk.py \
             "${{ steps.apk.outputs.apk_path }}" \
             --require-sdk-tools \
-            --json tv/android-tv/dist/ZeroPlay-TV-1.0.0-armeabi-v7a.verify.json
+            --json "$REPORT"
+          VERIFY_CODE=$?
+          if [ "$VERIFY_CODE" -ne 0 ]; then
+            python3 - "$REPORT" <<'PYEOF'
+          import json
+          import sys
+          try:
+              report = json.load(open(sys.argv[1], encoding="utf-8"))
+          except Exception as problem:
+              print(f"::error title=APK verifier report::could not read verifier report: {problem}")
+              raise SystemExit(0)
+          for error in report.get("errors", []):
+              escaped = str(error).replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+              print(f"::error title=APK verifier::{escaped}")
+          for warning in report.get("warnings", []):
+              escaped = str(warning).replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+              print(f"::warning title=APK verifier::{escaped[:900]}")
+          PYEOF
+            exit "$VERIFY_CODE"
+          fi
           sha256sum "${{ steps.apk.outputs.apk_path }}" > tv/android-tv/dist/ZeroPlay-TV-1.0.0-armeabi-v7a.sha256
           unzip -l "${{ steps.apk.outputs.apk_path }}"
+
+      - name: Upload APK diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZeroPlay-TV-apk-diagnostics
+          if-no-files-found: warn
+          path: |
+            tv/android-tv/dist/**
+            tv/android-tv/app/build/reports/**
+            tv/android-tv/app/build/outputs/logs/**
+            tv/android-tv/app/build/outputs/mapping/**
 
       - name: Upload APK and verification report
         uses: actions/upload-artifact@v4

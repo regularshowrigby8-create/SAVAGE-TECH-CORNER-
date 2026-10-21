@@ -257,17 +257,30 @@ def verify(apk_path: Path, require_sdk_tools: bool = False) -> dict:
             if unexpected_permissions:
                 warnings.append(f"Unexpected permissions present: {sorted(unexpected_permissions)}")
 
-        xmltree = run_tool([aapt2, "dump", "xmltree", str(apk_path), "AndroidManifest.xml"])
+        # aapt and aapt2 use different xmltree syntax: aapt takes the
+        # compiled XML name as a positional file, while aapt2 requires
+        # --file. Calling aapt2 the aapt way makes it look for a second APK.
+        xmltree_args = [aapt2, "dump", "xmltree", str(apk_path)]
+        if Path(aapt2).name.lower().startswith("aapt2"):
+            xmltree_args += ["--file", "AndroidManifest.xml"]
+        else:
+            xmltree_args.append("AndroidManifest.xml")
+        xmltree = run_tool(xmltree_args)
         metrics["aapt_xmltree_exit"] = xmltree.returncode
+        metrics["aapt_xmltree_command"] = xmltree_args
         if xmltree.returncode != 0:
             errors.append("aapt dump xmltree failed for AndroidManifest.xml")
+            warnings.append(xmltree.stdout[-1000:])
         else:
             xml = xmltree.stdout
             for label, needle in (
                 ("MainActivity", ".MainActivity"),
                 ("Leanback launcher category", "android.intent.category.LEANBACK_LAUNCHER"),
                 ("Leanback feature", "android.software.leanback"),
-                ("TV banner", "tv_banner"),
+                # Compiled resource references may be printed as numeric IDs,
+                # so prove the banner attribute here and prove the actual
+                # 320x180 tv_banner.png entry in the ZIP checks above.
+                ("TV banner attribute", "android:banner"),
             ):
                 if needle not in xml:
                     errors.append(f"Compiled manifest does not contain {label}: {needle}")
