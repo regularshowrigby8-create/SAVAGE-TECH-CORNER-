@@ -522,6 +522,16 @@ body.android-tv .panel,body.android-tv .form-group,body.android-tv .setting-swit
 body.android-tv .player-bar,body.android-tv .player-controls{padding-left:3vw;padding-right:3vw}
 body.android-tv .player-controls #btnPiP,body.android-tv .player-controls #playerRate,body.android-tv .player-controls .volume-wrap,body.android-tv .player-bar #btnPlayerDownload,body.android-tv .player-bar #btnPlayerDetails{display:none}
 body.android-tv [data-switch-label]:focus-visible{outline:3px solid var(--focus);outline-offset:3px;border-radius:999px}
+body.android-tv{scroll-behavior:auto!important}
+body.android-tv .rail-track{scroll-snap-type:none!important;scroll-behavior:auto!important}
+body.android-tv .poster-card,body.android-tv .continue-card,body.android-tv .category-tile{transition:none!important}
+body.android-tv .poster-card:focus-visible,body.android-tv .continue-card:focus-visible{transform:none!important}
+body.android-tv .poster-card:focus-visible .poster-wrap{box-shadow:0 0 0 3px var(--focus)}
+body.android-tv .continue-card:focus-visible{box-shadow:0 0 0 3px var(--focus)}
+body.android-tv .hover-actions{display:none!important}
+body.android-tv .media-click:focus-visible{outline:none!important;box-shadow:none!important}
+body.android-tv .player-overlay.chrome-hidden .player-bar,body.android-tv .player-overlay.chrome-hidden .player-controls{visibility:hidden!important}
+body.android-tv .player-overlay.embed-focused .player-bar,body.android-tv .player-overlay.embed-focused .player-controls,body.android-tv .player-overlay.embed-focused .center-play{visibility:hidden!important;pointer-events:none!important}
 body.android-tv *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 body.android-tv *,body.android-tv *::before,body.android-tv *::after{transition-duration:.12s!important;animation-duration:.12s!important}
 body.android-tv .spinner,body.android-tv .big-spinner{animation-duration:.85s!important}
@@ -1576,7 +1586,7 @@ async function faststreamPreload(ctx, sourceId){
   if(direct){ const w=await warmDirectMedia(url); preloadCache={key:preloadKey(ctx,source.id),url,mode:"direct file warmed ("+fmtBytes(w.got)+")",ms:Math.round(performance.now()-t0)}; }
   else if(mode==="aggressive"){
     const slot=preloadSlotEl(); slot.innerHTML="";
-    const f=document.createElement("iframe"); f.referrerPolicy=embedReferrerPolicyForUrl(url); f.src=url; f.setAttribute("allow","encrypted-media"); f.setAttribute("loading","eager"); f.title="FastStream preload";
+    const f=document.createElement("iframe"); f.referrerPolicy=embedReferrerPolicyForUrl(url); armProviderFrame(f); f.src=url; f.setAttribute("allow","encrypted-media"); f.setAttribute("loading","eager"); f.title="FastStream preload";
     slot.appendChild(f); preloadCache={key:preloadKey(ctx,source.id),url,mode:"player preloaded",frame:f,ms:Math.round(performance.now()-t0)};
   } else preloadCache={key:preloadKey(ctx,source.id),url,mode:"DNS + connection warmed",ms:Math.round(performance.now()-t0)};
   updateFastBadge();
@@ -2464,7 +2474,7 @@ function withPlayerRuntime(st){
     qualitySelection:(settings.stream&&settings.stream.quality)||"auto", availableServers:[], availabilityPromise:null,
     availabilityChecked:false, currentServerOptionId:"", triedUrls:new Set(), fsState:null,
     playback:{paused:true,buffering:true,currentTime:0,duration:0,buffered:0,volume:Number(settings.stream&&settings.stream.volume!=null?settings.stream.volume:.9),muted:!!(settings.stream&&settings.stream.muted),rate:Number(settings.stream&&settings.stream.rate||1)},
-    lastProgressSave:0, chromeTimer:null, switching:false, healthRecorded:false, mountedAt:0, frameLoadedAt:0, playbackSignalAt:0, playbackConfirmed:false, embedNoticeShown:false, prime:null,
+    lastProgressSave:0, chromeTimer:null, switching:false, healthRecorded:false, mountedAt:0, frameLoadedAt:0, playbackSignalAt:0, playbackConfirmed:false, embedNoticeShown:false, embedFocused:false, cursorMode:false, chromeHoldUntil:0, blockedScamHandled:false, prime:null,
   };
   for(const [key,value] of Object.entries(defaults)) if(target[key]===undefined) target[key]=value;
   return target;
@@ -2553,28 +2563,81 @@ function playerLoading(on,text){
   if(text){ const t=el.querySelector("[data-loading-text]"); if(t) t.textContent=text; }
   el.classList.toggle("hide",!on);
 }
-function showPlayerChrome(sticky){
-  const st=playerState, overlay=document.getElementById("playerOverlay"); if(!st||!overlay) return;
-  overlay.classList.remove("chrome-hidden");
+function setEmbedFocusMode(on,opts){
+  const st=playerState;
+  const cursor=!!(on&&opts&&opts.cursor);
+  if(st){ st.embedFocused=!!on; st.cursorMode=cursor; }
+  const overlay=document.getElementById("playerOverlay");
+  if(overlay){
+    overlay.classList.toggle("embed-focused",!!on);
+    if(on){
+      if(st&&st.chromeTimer) clearTimeout(st.chromeTimer);
+      overlay.classList.add("chrome-hidden");
+    }
+  }
+  try{
+    const bridge=window.ZeroPlayAndroidTV;
+    if(bridge&&typeof bridge.setTvCursorMode==="function") bridge.setTvCursorMode(cursor);
+  }catch{}
+}
+window.setEmbedFocusMode=setEmbedFocusMode;
+function focusEmbeddedPlayer(){
+  const st=playerState; if(!st||st.trailer) return;
+  const f=document.getElementById("playerFrame")||document.getElementById("fsFrame");
+  if(!f){ toast("The video player is still loading"); return; }
+  const bridge=window.ZeroPlayAndroidTV;
+  const canCursor=!!(ANDROID_TV_APP&&bridge&&typeof bridge.setTvCursorMode==="function");
+  setEmbedFocusMode(true,{cursor:canCursor});
+  try{ f.focus({preventScroll:true}); }catch{ try{ f.focus(); }catch{} }
+  try{ if(f.contentWindow&&f.contentWindow.focus) f.contentWindow.focus(); }catch{}
+  toast(canCursor?"Player cursor on: D-pad moves, OK taps, Back returns to ZeroPlay.":"Video controls focused. Press Back once to return to the ZeroPlay bar.");
+}
+function playerChromeIsHeld(st){
+  const active=document.activeElement;
+  return !!(
+    (typeof streamsCtx!=="undefined"&&streamsCtx)||
+    (typeof downloadModalState!=="undefined"&&downloadModalState)||
+    Date.now()<(Number(st&&st.chromeHoldUntil)||0)||
+    document.querySelector("#playerRoot .player-message")
+  );
+}
+function parkPlayerFocus(st){
+  const active=document.activeElement;
+  if(!active||!active.closest||!active.closest(".player-bar,.player-controls")) return;
+  const limited=st.engine==="embed"||st.engine==="faststream-legacy";
+  const target=limited?document.getElementById("playerStage"):(document.getElementById("mediaClick")||document.getElementById("playerStage"));
+  if(!target) return;
+  if(target.id==="playerStage") target.setAttribute("tabindex","-1");
+  try{ target.focus({preventScroll:true}); }catch{ try{ target.focus(); }catch{} }
+}
+function hidePlayerChrome(){
+  const st=playerState, overlay=document.getElementById("playerOverlay");
+  if(!st||!overlay) return;
+  if(st.chromeTimer){ clearTimeout(st.chromeTimer); st.chromeTimer=null; }
+  overlay.classList.add("chrome-hidden");
+  if(!st.embedFocused) parkPlayerFocus(st);
+}
+function schedulePlayerChromeHide(delay){
+  const st=playerState, overlay=document.getElementById("playerOverlay");
+  if(!st||!overlay||st.embedFocused||st.cursorMode) return;
   if(st.chromeTimer) clearTimeout(st.chromeTimer);
-  const playingNow=!!(st.playback&&!st.playback.paused&&!st.playback.buffering);
-  // On TV the remote focus always sits on a chrome control, so a sticky
-  // bar would cover the movie forever. While playing, always schedule
-  // the hide; any key press wakes the bar again.
-  if(sticky&&!(ANDROID_TV_APP&&playingNow)) return;
   st.chromeTimer=setTimeout(()=>{
     if(playerState!==st) return;
-    if(!(st.playback&&!st.playback.paused&&!st.playback.buffering)) return;
-    const active=document.activeElement;
-    if(active&&active.tagName==="SELECT"){ showPlayerChrome(true); return; }
-    if(active&&active.closest&&active.closest(".player-bar,.player-controls")&&!st.embedFocused){
-      // Park focus on the stage so focusin does not instantly re-show
-      // the bar and the next key lands on the wake-up handler.
-      const stage=document.getElementById("playerStage");
-      if(stage){ stage.setAttribute("tabindex","-1"); stage.focus({preventScroll:true}); }
-    }
-    overlay.classList.add("chrome-hidden");
-  },3000);
+    if(playerChromeIsHeld(st)){ schedulePlayerChromeHide(1200); return; }
+    hidePlayerChrome();
+  },Math.max(250,Number(delay)||2800));
+}
+function showPlayerChrome(sticky){
+  const st=playerState, overlay=document.getElementById("playerOverlay"); if(!st||!overlay) return;
+  if(st.embedFocused||st.cursorMode){ overlay.classList.add("chrome-hidden"); return; }
+  overlay.classList.remove("chrome-hidden");
+  if(st.chromeTimer) clearTimeout(st.chromeTimer);
+  const knownPaused=(st.engine==="native"||st.engine==="faststream-api")&&!!(st.playback&&st.playback.paused);
+  // A sticky call may keep a genuinely paused native/API player visible.
+  // Embedded players report no reliable paused state, so on TV they must
+  // time out like every real TV player instead of covering the video.
+  if(sticky&&(!ANDROID_TV_APP||knownPaused)) return;
+  schedulePlayerChromeHide(ANDROID_TV_APP?2800:3400);
 }
 function setPlayerControlMode(mode){
   const st=playerState; if(st) st.engine=mode||st.engine;
@@ -2588,9 +2651,12 @@ function setPlayerControlMode(mode){
   const engine=document.getElementById("playerEngine");
   if(engine) engine.textContent=mode==="faststream-api"?"FastStream integrated":mode==="faststream-legacy"?"FastStream player":mode==="native"?"ZeroPlay player":mode==="embed"?"Embedded player":"Connecting";
   refreshPlayerQualityOptions();
-  showPlayerChrome(true);
-  if(full&&ANDROID_TV_APP){ const active=document.activeElement; if(!active||!active.closest||!active.closest("#playerRoot")){ const play=document.getElementById("btnPlayPause"); if(play) setTimeout(()=>play.focus({preventScroll:true}),30); } }
-  else if(limited&&ANDROID_TV_APP){ const embedBtn=document.getElementById("btnFocusEmbed"); if(embedBtn) setTimeout(()=>embedBtn.focus({preventScroll:true}),30); showPlayerChrome(false); }
+  if(!full&&st&&st.embedFocused) setEmbedFocusMode(false);
+  showPlayerChrome(false);
+  if(ANDROID_TV_APP&&(full||limited)&&!streamsCtx){
+    const target=document.getElementById(full?"btnPlayPause":"btnFocusEmbed");
+    if(target) setTimeout(()=>{ if(playerState===st) target.focus({preventScroll:true}); },30);
+  }
 }
 function refreshPlayerQualityOptions(){
   const sel=document.getElementById("playerQuality"); if(!sel||!playerState) return;
@@ -2644,7 +2710,7 @@ function handlePlaybackEnded(){
 }
 async function playerCommand(action,value){
   const st=playerState; if(!st||st.trailer) return;
-  showPlayerChrome(true);
+  showPlayerChrome(false);
   const v=document.getElementById("pv");
   try{
     if(action==="fullscreen"){ await togglePlayerFullscreen(); return; }
@@ -2669,7 +2735,7 @@ async function playerCommand(action,value){
       const fresh=await fsCommand("getState",{},5000).catch(()=>null); if(fresh) updatePlaybackUI(normalizeFastStreamState(fresh));
       return;
     }
-    if(action==="focusEmbed"){ const f=document.getElementById("playerFrame")||document.getElementById("fsFrame"); if(f){ playerState.embedFocused=true; const ov=document.getElementById("playerOverlay"); if(ov) ov.classList.add("chrome-hidden"); f.focus(); toast("Video controls focused. Press Back once to return to the ZeroPlay bar."); } }
+    if(action==="focusEmbed"){ focusEmbeddedPlayer(); }
   }catch(err){ toast("Player control failed: "+(err&&err.message||err),"error"); }
 }
 async function togglePlayerFullscreen(){
@@ -2881,6 +2947,7 @@ function openSourceTest(tempSource,type){
 function openTrailer(title,youtubeKey){
   stopCardPreview(); resetFastStreamBridge(null);
   clearPlayerTimers();
+  setEmbedFocusMode(false);
   playerState={trailer:youtubeKey,item:{title:title+" — Trailer",type:"movie",id:0}};
   $("#playerRoot").innerHTML='<div class="player-overlay" id="playerOverlay"><div class="player-bar"><span class="logo-badge"><span class="logo-mark">▶</span><span>ZeroPlay</span></span><span class="pt">'+esc(title)+' — Trailer</span><span style="flex:1"></span><button class="btn btn-secondary" id="btnClosePlayer">× Close</button></div>'
     +'<iframe class="player-frame" src="https://www.youtube-nocookie.com/embed/'+esc(youtubeKey)+'?autoplay=1&rel=0" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen title="Trailer"></iframe></div>';
@@ -2892,7 +2959,7 @@ function playerShell(msg){
   const it=st.item, isTV=it.type==="tv";
   const rate=Number(st.playback&&st.playback.rate||1);
   return '<div class="player-overlay" id="playerOverlay">'
-    +'<div class="player-stage" id="playerStage"><div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>'+esc(msg||"Connecting…")+'</strong><span style="color:#cbd2d8;font-size:.88rem">ZeroPlay is preparing this exact title.</span></div></div>'
+    +'<div class="player-stage" id="playerStage" tabindex="-1"><div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>'+esc(msg||"Connecting…")+'</strong><span style="color:#cbd2d8;font-size:.88rem">ZeroPlay is preparing this exact title.</span></div></div>'
     +'<div class="player-bar"><button class="icon-btn" id="btnBackPlayer" type="button" aria-label="Back">‹</button><span class="logo-badge"><span class="logo-mark">▶</span><span>ZeroPlay</span></span>'
     +'<span class="pt">'+esc(titleOf(it))+'<span class="player-title-sub" id="playerSourceLine">'+(isTV?"Season "+st.season+" · Episode "+st.episode:"Movie")+'</span></span><span id="fastBadge" class="chip violet"></span><span style="flex:1"></span>'
     +(isTV?'<button class="control-btn" id="btnPrevEp" type="button">‹ Ep</button><button class="control-btn" id="btnNextEp" type="button">Ep ›</button>':"")
@@ -2937,20 +3004,21 @@ function bindPlayerChrome(){
   on("btnPiP","click",()=>playerCommand("pip"));
   on("btnFullscreen","click",()=>playerCommand("fullscreen"));
   on("btnFocusEmbed","click",()=>playerCommand("focusEmbed"));
-  on("seekRange","input",e=>{ const cur=document.getElementById("currentTime"); if(cur) cur.textContent=formatTime(Number(e.target.value)); showPlayerChrome(true); });
+  on("seekRange","input",e=>{ const cur=document.getElementById("currentTime"); if(cur) cur.textContent=formatTime(Number(e.target.value)); st.chromeHoldUntil=Date.now()+6000; showPlayerChrome(false); });
   on("seekRange","change",e=>playerCommand("seek",Number(e.target.value)));
   on("volumeRange","input",e=>{ settings.stream.volume=Number(e.target.value)/100; saveSettings(); playerCommand("volume",settings.stream.volume); });
   on("playerRate","change",e=>{ settings.stream.rate=Number(e.target.value)||1; saveSettings(); playerCommand("rate",settings.stream.rate); });
   on("playerQuality","change",e=>setPlayerQuality(e.target.value));
+  on("playerQuality","focus",()=>{ st.chromeHoldUntil=Date.now()+8000; showPlayerChrome(false); });
   const overlay=document.getElementById("playerOverlay");
   if(overlay){
     overlay.addEventListener("mousemove",()=>showPlayerChrome(false));
     overlay.addEventListener("touchstart",()=>showPlayerChrome(false),{passive:true});
-    overlay.addEventListener("focusin",()=>showPlayerChrome(false));
-    overlay.addEventListener("focusout",()=>showPlayerChrome(false));
+    overlay.addEventListener("focusin",e=>{ if(e.target&&e.target.closest&&e.target.closest(".player-bar,.player-controls")) showPlayerChrome(false); });
+    overlay.addEventListener("focusout",()=>schedulePlayerChromeHide(900));
   }
   setPlayerControlMode(st.engine||"loading");
-  if(ANDROID_TV_APP||document.body.classList.contains("tv-mode")){ const first=document.getElementById("btnPlayerServers")||document.getElementById("btnClosePlayer"); if(first) setTimeout(()=>first.focus({preventScroll:true}),40); }
+  if(ANDROID_TV_APP||document.body.classList.contains("tv-mode")){ setTimeout(()=>{ if(playerState!==st) return; const first=(st.engine==="embed"||st.engine==="faststream-legacy")?document.getElementById("btnFocusEmbed"):(st.engine==="native"||st.engine==="faststream-api")?document.getElementById("btnPlayPause"):(document.getElementById("btnPlayerServers")||document.getElementById("btnClosePlayer")); if(first) first.focus({preventScroll:true}); },40); }
 }
 function playerContext(st){
   st=st||playerState;
@@ -3054,6 +3122,7 @@ async function drawPlayer(prevProgress){
     if(!verdict.allowed){ const stage=$("#playerStage"); if(stage) stage.innerHTML=playerErrorHTML("Blocked by the "+capGb()+" GB cap","This file is "+fmtBytes(st.fileBytes)+". Choose another server or a smaller quality."); bindPlayerErrorActions(); updatePlayerMeta(source); return; }
   }
   /* Re-render once variants are known so the quality menu contains real options. */
+  setEmbedFocusMode(false);
   $("#playerRoot").innerHTML=playerShell(st.direct?"Connecting to the direct stream…":"Loading the embedded player…");
   bindPlayerChrome();
   const stage=$("#playerStage");
@@ -3066,11 +3135,15 @@ async function drawPlayer(prevProgress){
 function embedReferrerPolicyForUrl(url){
   try{ return new URL(String(url||"")).hostname.toLowerCase().endsWith("embedwave.cc")?"no-referrer":"strict-origin-when-cross-origin"; }catch{ return "strict-origin-when-cross-origin"; }
 }
+function armProviderFrame(f){
+  if(!f||!ANDROID_TV_APP) return;
+  try{ f.setAttribute("sandbox","allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock"); }catch{}
+}
 function mountEmbedPlayer(stage,url,source,loadT0,ctx){
   const st=playerState;
   if(!stage||!st) return;
   resetFastStreamBridge(null);
-  st.mountedAt=Date.now(); st.frameLoadedAt=0; st.playbackSignalAt=0; st.playbackConfirmed=false; st.embedNoticeShown=false; st.lastTs=0; st.lastAdvanceAt=0;
+  st.mountedAt=Date.now(); st.frameLoadedAt=0; st.playbackSignalAt=0; st.playbackConfirmed=false; st.embedNoticeShown=false; st.blockedScamHandled=false; st.embedSuspect=false; st.lastTs=0; st.lastAdvanceAt=0;
   stage.innerHTML='<div class="media-shell"></div><div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>Loading '+esc(source.name)+'…</strong><span style="color:#cbd2d8;font-size:.88rem">The player page is loading. ZeroPlay will not call this successful until playback actually progresses.</span></div>';
   const shell=stage.querySelector(".media-shell");
   const key=preloadKey({type:st.item.type,id:st.item.id,season:st.season,episode:st.episode},source.id);
@@ -3085,7 +3158,7 @@ function mountEmbedPlayer(stage,url,source,loadT0,ctx){
   };
   const armFrame=f=>{
     if(!f) return;
-    f.id="playerFrame"; f.className="player-frame"; f.setAttribute("tabindex","-1"); f.setAttribute("title",source.name+" video player");
+    f.id="playerFrame"; f.className="player-frame"; f.setAttribute("tabindex",ANDROID_TV_APP?"0":"-1"); f.setAttribute("title",source.name+" video player"); armProviderFrame(f);
     try{ f.referrerPolicy=embedReferrerPolicyForUrl(url); }catch{}
     f.addEventListener("load",()=>markFrameLoaded(false),{once:true});
   };
@@ -3105,10 +3178,10 @@ function mountEmbedPlayer(stage,url,source,loadT0,ctx){
   },raceMs));
   playerTimers.push(setTimeout(()=>{
     if(playerState!==st||st.engine!=="embed"||!st.frameLoadedAt||st.playbackConfirmed||st.embedNoticeShown) return;
-    st.embedNoticeShown=true;
+    st.embedNoticeShown=true; st.embedSuspect=true;
     updatePlayerMeta(source);
-    toast(source.name+" loaded, but ZeroPlay has not received playback progress yet. Its own server list or Play button may still be working; ZeroPlay will stay here instead of jumping away.","error");
-  },embedStallTimeoutMs()));
+    toast(ANDROID_TV_APP?(source.name+" hasn't started playing. If it shows a QR code or robot check, do not scan it — press Menu to choose another server."):(source.name+" loaded, but ZeroPlay has not received playback progress yet. Its own server list or Play button may still be working; ZeroPlay will stay here instead of jumping away."),"error");
+  },ANDROID_TV_APP?18000:embedStallTimeoutMs()));
   playerTimers.push(setInterval(()=>{
     if(playerState!==st||st.engine!=="embed"||!st.playbackConfirmed||!(Number(st.lastTs)>0)||!st.lastAdvanceAt) return;
     if(document.activeElement&&document.activeElement.id==="playerFrame") return;
@@ -3159,7 +3232,7 @@ async function mountFastStreamPlayer(stage,url,source,loadT0,resumeAt,opts){
   const beginLegacy=()=>{
     if(playerState!==st) return;
     resetFastStreamBridge(null);
-    stage.innerHTML='<div class="media-shell"><iframe class="player-frame" id="fsFrame" tabindex="-1" src="https://faststream.online/player/#'+encodeURI(url)+'" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen title="FastStream player"></iframe></div><div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>Loading FastStream…</strong><span style="color:#cbd2d8;font-size:.88rem">FastStream is running inside ZeroPlay. Servers and quality remain in the ZeroPlay bar.</span></div>';
+    stage.innerHTML='<div class="media-shell"><iframe class="player-frame" id="fsFrame" tabindex="'+(ANDROID_TV_APP?0:-1)+'" src="https://faststream.online/player/#'+encodeURI(url)+'" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen title="FastStream player"></iframe></div><div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>Loading FastStream…</strong><span style="color:#cbd2d8;font-size:.88rem">FastStream is running inside ZeroPlay. Servers and quality remain in the ZeroPlay bar.</span></div>';
     const f=document.getElementById("fsFrame");
     if(f) f.addEventListener("load",()=>{ st.frameLoadedAt=Date.now(); playerLoading(false); showPlayerChrome(false); updatePlayerMeta(source); },{once:true});
     setPlayerControlMode("faststream-legacy");
@@ -3187,7 +3260,7 @@ async function mountFastStreamPlayer(stage,url,source,loadT0,resumeAt,opts){
   const shell=stage.querySelector(".media-shell");
   const frame=document.createElement("iframe");
   frame.id="fsFrame"; frame.className="player-frame"; frame.title="FastStream player inside ZeroPlay";
-  frame.allow="autoplay; fullscreen; encrypted-media; picture-in-picture"; frame.allowFullscreen=true; frame.setAttribute("tabindex","-1");
+  frame.allow="autoplay; fullscreen; encrypted-media; picture-in-picture"; frame.allowFullscreen=true; frame.setAttribute("tabindex",ANDROID_TV_APP?"0":"-1");
   resetFastStreamBridge(frame);
   shell.appendChild(frame);
   st.engine="faststream-connecting";
@@ -3368,6 +3441,7 @@ function closePlayer(){
     savePlaybackProgress(true);
     if(st.primeCtl) try{st.primeCtl.abort();}catch{}
     if(st.chromeTimer) clearTimeout(st.chromeTimer);
+    setEmbedFocusMode(false);
     if(st.engine==="faststream-api") fsCommand("unsubscribe",{},1500).catch(()=>{});
   }
   if(document.pictureInPictureElement) document.exitPictureInPicture().catch(()=>{});
@@ -6661,7 +6735,7 @@ function restoreTvFocus(){
   setTimeout(()=>{
     let target=lastTvFocusElement&&lastTvFocusElement.isConnected?lastTvFocusElement:null;
     if((!target||!isTvFocusable(target))&&lastTvFocusSelector){ try{ target=document.querySelector(lastTvFocusSelector); }catch{ target=null; } }
-    if(target&&isTvFocusable(target)){ target.focus({preventScroll:true}); target.scrollIntoView({block:"nearest",inline:"center",behavior:tvPerformanceEnabled()?"auto":"smooth"}); }
+    if(target&&isTvFocusable(target)){ tvFocusAndReveal(target); }
   },40);
   return true;
 }
@@ -6675,8 +6749,7 @@ function focusInitialTvTarget(){
   if(lastTvFocusSelector){ try{ const remembered=document.querySelector(lastTvFocusSelector); if(remembered&&isTvFocusable(remembered)) target=remembered; }catch{} }
   target=target||document.querySelector("#view .continue-card")||document.querySelector("#view .poster-card")||document.getElementById("heroPlay")||document.querySelector("#view .category-tile")||document.querySelector("#view button:not([disabled])");
   if(!target||!isTvFocusable(target)) return false;
-  target.focus({preventScroll:true});
-  target.scrollIntoView({block:"nearest",inline:"center",behavior:tvPerformanceEnabled()?"auto":"smooth"});
+  tvFocusAndReveal(target);
   return true;
 }
 function scheduleTvInitialFocus(){
@@ -6693,77 +6766,187 @@ function tvFocusableRoot(){
   if(detailState) return document.getElementById("modalRoot");
   return document;
 }
-function isTvFocusable(el){
-  if(!el||el.disabled||el.getAttribute&&el.getAttribute("tabindex")==="-1") return false;
-  const style=window.getComputedStyle?getComputedStyle(el):null;
-  if(style&&(style.display==="none"||style.visibility==="hidden")) return false;
-  const rect=el.getBoundingClientRect();
-  return rect.width>2&&rect.height>2&&rect.bottom>-20&&rect.right>-20;
+let tvNavLastMoveAt=0;
+function tvMakeRect(el,index){
+  if(!el) return null;
+  const rects=el.getClientRects?el.getClientRects():null;
+  const r=rects&&rects.length?rects[0]:(el.getBoundingClientRect?el.getBoundingClientRect():null);
+  if(!r||!(r.width>2)||!(r.height>2)) return null;
+  const sx=window.scrollX||0, sy=window.scrollY||0;
+  return {el,index:index||0,left:r.left+sx,right:r.right+sx,top:r.top+sy,bottom:r.bottom+sy,x:r.left+sx+r.width/2,y:r.top+sy+r.height/2,w:r.width,h:r.height,viewportLeft:r.left,viewportTop:r.top,viewportRight:r.right,viewportBottom:r.bottom};
 }
-function tvFocusables(){
-  const root=tvFocusableRoot()||document;
-  return $$("button:not([disabled]), [href], input:not([type='hidden']), select, textarea, .poster-card, .continue-card, [tabindex]:not([tabindex='-1'])",root).filter(isTvFocusable);
+function tvCandidateRecord(el,index){
+  if(!el||el.disabled||el.hidden) return null;
+  if(el.getAttribute&&el.getAttribute("tabindex")==="-1") return null;
+  if(el.classList&&(el.classList.contains("media-click")||el.classList.contains("player-frame"))) return null;
+  if(ANDROID_TV_APP){
+    if(el.hasAttribute&&el.hasAttribute("data-scroll")) return null;
+    // One focus stop per title on TV. The nested hover buttons tripled the
+    // candidate list and made D-pad movement crawl on the 2 GB box.
+    if(el.tagName==="BUTTON"&&el.closest&&el.closest(".poster-card,.continue-card")) return null;
+    if(el.tagName==="INPUT"&&el.type==="checkbox"&&el.closest&&el.closest("[data-switch-label]")) return null;
+  }
+  if(el.closest&&el.closest("[hidden],details:not([open]),#menuDrawer:not(.open),[aria-hidden='true']")) return null;
+  return tvMakeRect(el,index);
 }
-function tvFocusAndReveal(el){
+function isTvFocusable(el){ return !!tvCandidateRecord(el,0); }
+function tvFocusRecords(root){
+  const scope=root||tvFocusableRoot()||document;
+  return $$("button:not([disabled]), [href], input:not([type='hidden']), select, textarea, .poster-card, .continue-card, [tabindex]:not([tabindex='-1'])",scope)
+    .map((el,i)=>tvCandidateRecord(el,i)).filter(Boolean);
+}
+function tvFocusables(){ return tvFocusRecords(tvFocusableRoot()).map(r=>r.el); }
+function tvRevealElement(el){
   if(!el) return;
-  el.focus({preventScroll:true});
-  const behavior=tvPerformanceEnabled()?"auto":"smooth";
-  try{ el.scrollIntoView({block:"nearest",inline:"nearest",behavior}); }catch{}
-  // WebView scrollIntoView can miss nested scrollers (menu drawer, rails,
-  // settings panels); reveal inside every scrollable ancestor manually.
-  let node=el.parentElement;
-  while(node&&node!==document.body){
-    const style=window.getComputedStyle?getComputedStyle(node):null;
-    if(style&&(/(auto|scroll)/.test(style.overflowY)||/(auto|scroll)/.test(style.overflowX))){
-      const nr=node.getBoundingClientRect(), r=el.getBoundingClientRect(), pad=18;
-      if(r.bottom>nr.bottom-pad) node.scrollTop+=r.bottom-nr.bottom+pad;
-      else if(r.top<nr.top+pad) node.scrollTop-=nr.top+pad-r.top;
-      if(r.right>nr.right-pad) node.scrollLeft+=r.right-nr.right+pad;
-      else if(r.left<nr.left+pad) node.scrollLeft-=nr.left+pad-r.left;
+  if(!ANDROID_TV_APP){ try{ el.scrollIntoView({block:"nearest",inline:"nearest",behavior:"smooth"}); }catch{} return; }
+  const pad=20;
+  let node=el.parentElement, guard=0;
+  while(node&&node!==document.body&&guard++<16){
+    const canY=node.scrollHeight>node.clientHeight+2;
+    const canX=node.scrollWidth>node.clientWidth+2;
+    if(canY||canX){
+      const nr=node.getBoundingClientRect(), r=el.getBoundingClientRect();
+      let top=node.scrollTop, left=node.scrollLeft;
+      if(canY){
+        if(r.bottom>nr.bottom-pad) top+=r.bottom-(nr.bottom-pad);
+        else if(r.top<nr.top+pad) top-=nr.top+pad-r.top;
+      }
+      if(canX){
+        if(r.right>nr.right-pad) left+=r.right-(nr.right-pad);
+        else if(r.left<nr.left+pad) left-=nr.left+pad-r.left;
+      }
+      if(top!==node.scrollTop||left!==node.scrollLeft) node.scrollTo({top:Math.max(0,top),left:Math.max(0,left),behavior:"auto"});
     }
     node=node.parentElement;
   }
+  const r=el.getBoundingClientRect();
+  const safeTop=88, safeBottom=window.innerHeight-16, safeLeft=10, safeRight=window.innerWidth-10;
+  let dx=0, dy=0;
+  if(r.height>=window.innerHeight-110) dy=r.top-safeTop;
+  else if(r.bottom>safeBottom) dy=r.bottom-safeBottom;
+  else if(r.top<safeTop) dy=r.top-safeTop;
+  if(r.right>safeRight) dx=r.right-safeRight;
+  else if(r.left<safeLeft) dx=r.left-safeLeft;
+  if(dx||dy) window.scrollTo({top:Math.max(0,(window.scrollY||0)+dy),left:Math.max(0,(window.scrollX||0)+dx),behavior:"auto"});
+}
+function tvFocusRecord(record){
+  if(!record||!record.el) return false;
+  tvRevealElement(record.el);
+  try{ record.el.focus({preventScroll:true}); }catch{ try{ record.el.focus(); }catch{} }
+  return true;
+}
+function tvFocusAndReveal(el){
+  if(!el) return;
+  tvRevealElement(el);
+  try{ el.focus({preventScroll:true}); }catch{ try{ el.focus(); }catch{} }
+}
+function tvChooseDirectionalRecord(records,origin,direction){
+  if(!records||!records.length||!origin) return null;
+  const contains=(a,b)=>!!(a&&b&&a.contains&&a.contains(b));
+  if(direction==="left"||direction==="right"){
+    let best=null,bestScore=Infinity;
+    for(const r of records){
+      if(r.el===origin.el||contains(origin.el,r.el)||contains(r.el,origin.el)) continue;
+      const overlap=Math.min(origin.bottom,r.bottom)-Math.max(origin.top,r.top);
+      const centerDy=Math.abs(r.y-origin.y);
+      if(overlap<=0&&centerDy>Math.max(34,origin.h*.8)) continue;
+      const gap=direction==="right"?r.left-origin.right:origin.left-r.right;
+      if(gap<-Math.min(24,origin.w*.35)) continue;
+      const score=Math.max(0,gap)+centerDy*1.7;
+      if(score<bestScore){ bestScore=score; best=r; }
+    }
+    return best;
+  }
+  if(direction!=="up"&&direction!=="down") return null;
+  const up=direction==="up";
+  const tolerance=Math.min(20,Math.max(6,origin.h*.28));
+  const options=[];
+  for(const r of records){
+    if(r.el===origin.el||contains(origin.el,r.el)||contains(r.el,origin.el)) continue;
+    let gap=up?origin.top-r.bottom:r.top-origin.bottom;
+    if(gap<-tolerance){
+      if(up?r.y>=origin.y-4:r.y<=origin.y+4) continue;
+      gap=0;
+    }
+    options.push({record:r,gap:Math.max(0,gap)});
+  }
+  if(!options.length) return null;
+  const minGap=Math.min.apply(null,options.map(o=>o.gap));
+  const bandLimit=minGap+Math.max(44,Math.min(150,origin.h*.85));
+  let best=null,bestScore=Infinity;
+  for(const option of options){
+    if(option.gap>bandLimit) continue;
+    const score=Math.abs(option.record.x-origin.x)+(option.gap-minGap)*.12;
+    if(score<bestScore){ bestScore=score; best=option.record; }
+  }
+  return best;
 }
 function moveTvFocus(direction){
-  const list=tvFocusables(); if(!list.length) return false;
-  const current=document.activeElement;
-  if(!current||!list.includes(current)){
-    // Focus was lost (view re-render detached the focused node). Recover
-    // where the viewer actually was instead of jumping back to the top.
+  const root=tvFocusableRoot()||document;
+  const records=tvFocusRecords(root);
+  if(!records.length) return false;
+  const byEl=new Map(records.map(r=>[r.el,r]));
+  const active=document.activeElement;
+  let origin=active?byEl.get(active)||null:null;
+  if(!origin&&active&&active.closest){
+    const card=active.closest(".poster-card,.continue-card");
+    if(card) origin=byEl.get(card)||null;
+  }
+  if(!origin&&active&&active!==document.body&&active.isConnected&&(root===document||(root.contains&&root.contains(active)))) origin=tvMakeRect(active,-1);
+  if(!origin){
     let target=null;
-    if(lastTvFocusSelector){ try{ const candidate=document.querySelector(lastTvFocusSelector); if(candidate&&list.includes(candidate)) target=candidate; }catch{} }
-    if(!target&&lastTvFocusPoint){
-      let nearest=null,nearestDist=Infinity;
-      for(const el of list){ const r=el.getBoundingClientRect(); const d=Math.hypot(r.left+r.width/2+window.scrollX-lastTvFocusPoint.x,r.top+r.height/2+window.scrollY-lastTvFocusPoint.y); if(d<nearestDist){ nearestDist=d; nearest=el; } }
-      if(nearest&&nearestDist<900) target=nearest;
+    if(lastTvFocusSelector){
+      try{
+        const candidate=document.querySelector(lastTvFocusSelector);
+        if(candidate) target=byEl.get(candidate)||(candidate.closest?byEl.get(candidate.closest(".poster-card,.continue-card")):null)||null;
+      }catch{}
     }
-    target=target||list.find(el=>el.classList&&el.classList.contains("continue-card"))||list.find(el=>el.classList&&el.classList.contains("poster-card"))||list.find(el=>el.id==="heroPlay")||list[0];
-    tvFocusAndReveal(target);
-    return true;
+    if(!target&&lastTvFocusPoint){
+      let nearestDist=Infinity;
+      for(const r of records){
+        const d=Math.hypot(r.x-lastTvFocusPoint.x,r.y-lastTvFocusPoint.y);
+        if(d<nearestDist){ nearestDist=d; target=r; }
+      }
+    }
+    target=target||records.find(r=>r.el.classList&&r.el.classList.contains("continue-card"))||records.find(r=>r.el.classList&&r.el.classList.contains("poster-card"))||records.find(r=>r.el.id==="heroPlay")||records[0];
+    return tvFocusRecord(target);
   }
-  const cr=current.getBoundingClientRect(), cx=cr.left+cr.width/2, cy=cr.top+cr.height/2;
-  const currentRail=current.closest?current.closest(".rail-track,.cast-track,.category-strip"):null;
-  let best=null,bestScore=Infinity;
-  for(const el of list){
-    if(el===current) continue;
-    if(current.classList&&(current.classList.contains("poster-card")||current.classList.contains("continue-card"))&&current.contains(el)) continue;
-    // Left/right inside a poster rail stays in that rail; at the rail edge
-    // focus stops instead of teleporting to a menu or another row.
-    if((direction==="left"||direction==="right")&&currentRail&&!currentRail.contains(el)) continue;
-    const r=el.getBoundingClientRect(), x=r.left+r.width/2, y=r.top+r.height/2;
-    const dx=x-cx, dy=y-cy;
-    let primary=0, secondary=0;
-    if(direction==="right"){ if(dx<=8) continue; primary=dx; secondary=Math.abs(dy); }
-    else if(direction==="left"){ if(dx>=-8) continue; primary=-dx; secondary=Math.abs(dy); }
-    else if(direction==="down"){ if(dy<=8) continue; primary=dy; secondary=Math.abs(dx); }
-    else if(direction==="up"){ if(dy>=-8) continue; primary=-dy; secondary=Math.abs(dx); }
-    else continue;
-    const score=primary+secondary*2.35+(secondary<8?-18:0);
-    if(score<bestScore){ bestScore=score; best=el; }
+  if(direction==="left"||direction==="right"){
+    const rail=origin.el&&origin.el.closest?origin.el.closest(".rail-track,.cast-track"):null;
+    if(rail){
+      const inRail=records.filter(r=>rail.contains(r.el));
+      const idx=inRail.findIndex(r=>r.el===origin.el);
+      if(idx>=0){
+        const next=inRail[idx+(direction==="right"?1:-1)];
+        return next?tvFocusRecord(next):false;
+      }
+    }
   }
-  if(!best) return false;
-  tvFocusAndReveal(best);
-  return true;
+  let pool=records;
+  if(direction==="up"||direction==="down"){
+    const originInTopbar=!!(origin.el&&origin.el.closest&&origin.el.closest(".topbar"));
+    pool=records.filter(r=>{
+      if(r.el===origin.el) return true;
+      const inTopbar=!!(r.el.closest&&r.el.closest(".topbar"));
+      if(inTopbar&&!originInTopbar) return direction==="up"&&origin.viewportTop<=240;
+      return true;
+    });
+  }
+  const best=tvChooseDirectionalRecord(pool,origin,direction);
+  if(best) return tvFocusRecord(best);
+  if(root===document&&(direction==="up"||direction==="down")){
+    const maxScroll=Math.max(0,document.documentElement.scrollHeight-window.innerHeight);
+    if(direction==="up"&&window.scrollY>2){ window.scrollTo({top:Math.max(0,window.scrollY-window.innerHeight*.75),behavior:"auto"}); return true; }
+    if(direction==="down"&&window.scrollY<maxScroll-2){ window.scrollTo({top:Math.min(maxScroll,window.scrollY+window.innerHeight*.75),behavior:"auto"}); return true; }
+  }
+  return false;
+}
+function moveTvFocusFromKey(direction,event){
+  const now=window.performance&&performance.now?performance.now():Date.now();
+  if(event&&event.repeat&&now-tvNavLastMoveAt<55) return true;
+  const moved=moveTvFocus(direction);
+  tvNavLastMoveAt=now;
+  return moved;
 }
 function handlePlayerKeyboard(e){
   const st=playerState; if(!st||st.trailer||streamsCtx||(typeof downloadModalState!=="undefined"&&downloadModalState)) return false;
@@ -6772,10 +6955,31 @@ function handlePlayerKeyboard(e){
   const full=st.engine==="native"||st.engine==="faststream-api";
   const key=e.key;
   const overlayEl=document.getElementById("playerOverlay");
-  if(overlayEl&&overlayEl.classList.contains("chrome-hidden")&&!st.embedFocused&&/^(Arrow|Enter|Channel)/.test(key)){
+  const activeEl=document.activeElement;
+  const activeInChrome=!!(activeEl&&activeEl.closest&&activeEl.closest(".player-bar,.player-controls"));
+  if(st.cursorMode){
+    // The Android shell consumes D-pad keys before WebView while the
+    // native cursor is up. If a key still reaches the page, never let it
+    // move focus behind the cursor.
+    if(/^(Arrow|Enter|NumpadEnter|Media|Channel)/.test(key)||key===" "){ e.preventDefault(); return true; }
+  }
+  if(overlayEl&&overlayEl.classList.contains("chrome-hidden")&&!st.embedFocused&&/^(Arrow|Channel)/.test(key)){
     e.preventDefault(); showPlayerChrome(false);
     const wake=document.getElementById(full?"btnPlayPause":"btnFocusEmbed")||document.getElementById("btnPlayerServers");
     if(wake&&wake.style.display!=="none"&&!wake.disabled) wake.focus({preventScroll:true});
+    return true;
+  }
+  if(key==="Enter"||key==="NumpadEnter"){
+    if(!activeInChrome||(activeEl&&activeEl.id==="mediaClick")){
+      e.preventDefault();
+      if(full) playerCommand("toggle"); else playerCommand("focusEmbed");
+      return true;
+    }
+  }
+  if((key==="ArrowUp"||key==="ArrowDown")&&(!activeInChrome||(activeEl&&activeEl.id==="mediaClick"))){
+    e.preventDefault(); showPlayerChrome(false);
+    const target=document.getElementById(key==="ArrowUp"?"btnPlayerServers":(full?"btnPlayPause":"btnFocusEmbed"));
+    if(target&&target.style.display!=="none"&&!target.disabled) target.focus({preventScroll:true});
     return true;
   }
   if(key==="MediaStop"){ e.preventDefault(); closePlayer(); return true; }
@@ -6787,9 +6991,9 @@ function handlePlayerKeyboard(e){
   if((key==="MediaFastForward"||key==="MediaRewind")&&full){ e.preventDefault(); playerCommand("seekDelta",key==="MediaFastForward"?30:-30); return true; }
   if(key==="MediaPlay"&&full){ e.preventDefault(); if(st.playback&&st.playback.paused) playerCommand("toggle"); return true; }
   if(key==="MediaPause"&&full){ e.preventDefault(); if(st.playback&&!st.playback.paused) playerCommand("toggle"); return true; }
-  if(/^Media/.test(key)&&!full){ e.preventDefault(); showPlayerChrome(true); const focusBtn=document.getElementById("btnFocusEmbed"); if(focusBtn&&focusBtn.style.display!=="none") focusBtn.focus({preventScroll:true}); return true; }
+  if(/^Media/.test(key)&&!full){ e.preventDefault(); if(key==="MediaPlayPause"||key==="MediaPlay"||key==="MediaPause") playerCommand("focusEmbed"); else { showPlayerChrome(false); const focusBtn=document.getElementById("btnFocusEmbed"); if(focusBtn&&focusBtn.style.display!=="none") focusBtn.focus({preventScroll:true}); } return true; }
   if(key===" "||key.toLowerCase()==="k"||key==="MediaPlayPause"){
-    if(!full) return false;
+    if(!full){ if(activeInChrome) return false; e.preventDefault(); playerCommand("focusEmbed"); return true; }
     e.preventDefault(); playerCommand("toggle"); return true;
   }
   if((key==="ArrowLeft"||key==="ArrowRight")&&full&&document.activeElement.id!=="seekRange"&&document.activeElement.id!=="volumeRange"){
@@ -6812,7 +7016,7 @@ function handleZeroPlayTvBack(){
   const drawer=document.getElementById("menuDrawer");
   if(drawer&&drawer.classList.contains("open")){ closeMenuDrawer(); return true; }
   if(playerState){
-    if(playerState.embedFocused){ playerState.embedFocused=false; showPlayerChrome(false); const backBtn=document.getElementById("btnFocusEmbed"); if(backBtn) backBtn.focus({preventScroll:true}); return true; }
+    if(playerState.embedFocused){ setEmbedFocusMode(false); showPlayerChrome(false); const backBtn=document.getElementById("btnFocusEmbed"); if(backBtn) backBtn.focus({preventScroll:true}); return true; }
     if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); return true; }
     closePlayer(); return true;
   }
@@ -6824,7 +7028,7 @@ function handleZeroPlayTvBack(){
 }
 function handleZeroPlayTvMenu(){
   document.body.classList.add("tv-mode");
-  if(playerState&&!streamsCtx){ showPlayerChrome(true); const servers=document.getElementById("btnPlayerServers"); if(servers) servers.focus({preventScroll:true}); return true; }
+  if(playerState&&!streamsCtx){ if(playerState.embedFocused) setEmbedFocusMode(false); showPlayerChrome(false); const servers=document.getElementById("btnPlayerServers"); if(servers) servers.focus({preventScroll:true}); return true; }
   const drawer=document.getElementById("menuDrawer");
   if(drawer&&drawer.classList.contains("open")) closeMenuDrawer(); else openMenuDrawer();
   return true;
@@ -6863,6 +7067,21 @@ window.handleZeroPlayTvMenu=handleZeroPlayTvMenu;
 window.handleZeroPlayTvSearch=handleZeroPlayTvSearch;
 window.handleZeroPlayTvMediaKey=handleZeroPlayTvMediaKey;
 window.handleZeroPlayTvLowMemory=handleZeroPlayTvLowMemory;
+function handleZeroPlayBlockedScam(host){
+  const st=playerState; if(!st||st.trailer) return false;
+  st.blockedScamHost=String(host||"");
+  const src=st.tempSource||getSource(st.source);
+  if(src&&src.id) recordHealth(src.id,false);
+  toast("Blocked a QR/robot-check page from this server. Do not scan QR codes shown by video players.","error");
+  if((st.engine==="embed"||st.engine==="faststream-legacy")&&!st.playbackConfirmed&&!st.blockedScamHandled){
+    st.blockedScamHandled=true;
+    if(streamCfg().autoFailover!==false) void failover("This server tried to open a QR/robot-check page",{embedBlockedScam:true});
+    else showPlayerChrome(false);
+  }
+  return true;
+}
+window.handleZeroPlayBlockedScam=handleZeroPlayBlockedScam;
+window.addEventListener("zeroplay-blocked-scam",e=>handleZeroPlayBlockedScam(e&&e.detail&&e.detail.host));
 window.addEventListener("zeroplay-android-tv-ready",()=>{ document.body.classList.add("tv-mode"); scheduleTvInitialFocus(); });
 document.addEventListener("focusin",e=>{ if(ANDROID_TV_APP) rememberTvFocus(e.target); });
 
@@ -6888,7 +7107,7 @@ document.addEventListener("keydown",e=>{
     const active=document.activeElement;
     if(ANDROID_TV_APP&&(e.key==="ArrowUp"||e.key==="ArrowDown")&&activeTag!=="SELECT"){
       const tvDir=e.key.replace("Arrow","").toLowerCase();
-      if(moveTvFocus(tvDir)){ e.preventDefault(); return; }
+      if(moveTvFocusFromKey(tvDir,e)){ e.preventDefault(); return; }
     }
     return;
   }
@@ -6896,7 +7115,7 @@ document.addEventListener("keydown",e=>{
     const active=document.activeElement;
     if(!active||active===document.body||active.closest&&active.closest("button,a,.poster-card,.continue-card,.player-bar,.player-controls,.modal,#menuDrawer,.topbar,#view")){
       const dir=e.key.replace("Arrow","").toLowerCase();
-      const movedTv=moveTvFocus(dir);
+      const movedTv=moveTvFocusFromKey(dir,e);
       if(movedTv||ANDROID_TV_APP) e.preventDefault();
       if(!movedTv&&ANDROID_TV_APP&&dir==="left"&&!playerState&&!detailState&&!streamsCtx&&!(typeof downloadModalState!=="undefined"&&downloadModalState)){ openMenuDrawer(); }
     }

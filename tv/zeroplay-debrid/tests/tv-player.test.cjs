@@ -110,7 +110,7 @@ eq(sorted.map(x => x.id), ['direct:a', 'route:vidstuck', 'route:embedwave'], 've
     [html.includes('servers appear only after a match') && html.includes('groupStreamsByServer'), 'server list is title-specific and grouped'],
     [!/id=\\"playerSource\\"(?!Line)/.test(html) && !html.includes('id="detailSource"'), 'all-server player/detail dropdowns removed'],
     [html.includes('function moveTvFocus') && html.includes('handlePlayerKeyboard'), 'TV spatial and player keyboard navigation present'],
-    [html.includes('tabindex="-1" src="https://faststream.online/player/#') || html.includes('f.setAttribute("tabindex","-1")'), 'cross-origin frames do not steal initial TV focus'],
+    [html.includes('ANDROID_TV_APP?"0":"-1"') && html.includes('full?"btnPlayPause":"btnFocusEmbed"'), 'cross-origin frames are TV-focusable on demand without stealing initial player focus'],
   ];
   for (const [cond, label] of statics) ok(cond, label);
   console.log(`\n${n} TV/player checks passed`);

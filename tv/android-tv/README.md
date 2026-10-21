@@ -41,7 +41,9 @@ The native shell exposes a small read-only profile bridge and forwards remote ke
 - **Left at the browsing edge** opens the menu.
 - Android trim-memory callbacks ask the web app to stop previews and shed nonessential image work.
 
-Cross-origin embedded players still control some of their own internal behaviour; the shell does not claim to reach inside them.
+Cross-origin embedded players still control some of their own internal behaviour; the shell does not claim to reach inside them. For those players, choose **Video controls** in the ZeroPlay bar: the shell shows a D-pad cursor (move with the remote, tap with OK/Play-Pause, return with Back) so mouse/touch-only player buttons, subtitle menus and quality menus remain usable.
+
+Provider frames are sandboxed on Android TV and the shell blocks top-level pop-up/redirect hijacks plus known “scan this QR code to prove you are not a robot” scam patterns. **Never scan a QR code shown by a video player.** If a server shows one, press Back/Menu and choose another server.
 
 ## Build from source
 
@@ -66,16 +68,16 @@ app/build/outputs/apk/release/
 The GitHub workflow copies and names the deliverable:
 
 ```text
-ZeroPlay-TV-1.0.0-armeabi-v7a.apk
+ZeroPlay-TV-1.0.2-armeabi-v7a.apk
 ```
 
 ## Verify an APK
 
 ```bash
 python3 tv/android-tv/tools/verify_apk.py \
-  tv/android-tv/dist/ZeroPlay-TV-1.0.0-armeabi-v7a.apk \
+  tv/android-tv/dist/ZeroPlay-TV-1.0.2-armeabi-v7a.apk \
   --require-sdk-tools \
-  --json tv/android-tv/dist/ZeroPlay-TV-1.0.0-armeabi-v7a.verify.json
+  --json tv/android-tv/dist/ZeroPlay-TV-1.0.2-armeabi-v7a.verify.json
 ```
 
 The verifier checks:
@@ -97,7 +99,7 @@ The verified APK is published as a GitHub Release asset with a direct,
 no-login download URL for the **Downloader** app on the TV:
 
 ```text
-https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/releases/download/zeroplay-tv-v1.0.1/zeroplay-tv.apk
+https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/releases/download/zeroplay-tv-v1.0.2/zeroplay-tv.apk
 ```
 
 1. Open **Downloader** on the Xiaomi TV Box and type the URL above into the URL box, then press **Go**.
