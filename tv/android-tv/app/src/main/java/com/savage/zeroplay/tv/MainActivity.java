@@ -6,7 +6,9 @@ import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -17,9 +19,11 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowInsets;
@@ -48,7 +52,9 @@ import android.widget.Toast;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
 import java.lang.ref.WeakReference;
+import java.util.Collections;
 import java.util.Locale;
 
 /**
@@ -61,6 +67,7 @@ import java.util.Locale;
  */
 public final class MainActivity extends Activity {
     private static final String APP_HOST = "zeroplay-rd.vercel.app";
+    private static final String APP_ALIAS_HOST = "zeroplay-rd-savage-coo.vercel.app";
     private static final String APP_URL = "https://" + APP_HOST + "/?androidtv=1&shell=" + BuildConfig.VERSION_NAME + "#/home";
     private static final String OFFLINE_URL = "file:///android_asset/offline.html";
     private static final int FILE_CHOOSER_REQUEST = 4107;
@@ -70,6 +77,13 @@ public final class MainActivity extends Activity {
     private FrameLayout root;
     private WebView webView;
     private View loadingOverlay;
+    private TvCursorView tvCursorView;
+    private boolean tvCursorMode;
+    private float tvCursorX;
+    private float tvCursorY;
+    private String lastBlockedScamHost = "";
+    private long lastBlockedScamAt;
+    private long lastBlockedToastAt;
     private View customView;
     private WebChromeClient.CustomViewCallback customViewCallback;
     private ValueCallback<Uri[]> fileChooserCallback;
@@ -102,6 +116,13 @@ public final class MainActivity extends Activity {
         webView.setScrollbarFadingEnabled(true);
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         root.addView(webView);
+
+        tvCursorView = new TvCursorView(this);
+        tvCursorView.setLayoutParams(new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+        tvCursorView.setVisibility(View.GONE);
+        root.addView(tvCursorView);
 
         loadingOverlay = buildLoadingOverlay();
         root.addView(loadingOverlay);
@@ -339,6 +360,113 @@ public final class MainActivity extends Activity {
         webView.evaluateJavascript(script, null);
     }
 
+    private void setTvCursorMode(boolean enabled) {
+        runOnUiThread(() -> {
+            tvCursorMode = enabled;
+            if (tvCursorView == null) return;
+            if (enabled) {
+                int width = root != null ? root.getWidth() : 0;
+                int height = root != null ? root.getHeight() : 0;
+                if (width <= 0) width = getResources().getDisplayMetrics().widthPixels;
+                if (height <= 0) height = getResources().getDisplayMetrics().heightPixels;
+                tvCursorX = width / 2f;
+                tvCursorY = height / 2f;
+                tvCursorView.setPosition(tvCursorX, tvCursorY);
+                tvCursorView.setVisibility(View.VISIBLE);
+                tvCursorView.bringToFront();
+                if (loadingOverlay != null && loadingOverlay.getVisibility() == View.VISIBLE) {
+                    loadingOverlay.bringToFront();
+                }
+            } else {
+                tvCursorView.setVisibility(View.GONE);
+            }
+        });
+    }
+
+    private void moveTvCursor(float dx, float dy) {
+        if (tvCursorView == null) return;
+        int width = root != null ? root.getWidth() : 0;
+        int height = root != null ? root.getHeight() : 0;
+        if (width <= 0) width = getResources().getDisplayMetrics().widthPixels;
+        if (height <= 0) height = getResources().getDisplayMetrics().heightPixels;
+        tvCursorX = Math.max(8f, Math.min(Math.max(8f, width - 8f), tvCursorX + dx));
+        tvCursorY = Math.max(8f, Math.min(Math.max(8f, height - 8f), tvCursorY + dy));
+        tvCursorView.setPosition(tvCursorX, tvCursorY);
+    }
+
+    private void tapTvCursor() {
+        if (webView == null) return;
+        final float x = tvCursorX;
+        final float y = tvCursorY;
+        final long downTime = SystemClock.uptimeMillis();
+        MotionEvent down = MotionEvent.obtain(downTime, downTime, MotionEvent.ACTION_DOWN, x, y, 0);
+        try { webView.dispatchTouchEvent(down); } finally { down.recycle(); }
+        mainHandler.postDelayed(() -> {
+            if (webView == null) return;
+            MotionEvent up = MotionEvent.obtain(downTime, downTime + 65, MotionEvent.ACTION_UP, x, y, 0);
+            try { webView.dispatchTouchEvent(up); } finally { up.recycle(); }
+        }, 65);
+    }
+
+    private boolean isTvCursorKey(int keyCode) {
+        return keyCode == KeyEvent.KEYCODE_DPAD_UP
+                || keyCode == KeyEvent.KEYCODE_DPAD_DOWN
+                || keyCode == KeyEvent.KEYCODE_DPAD_LEFT
+                || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT
+                || keyCode == KeyEvent.KEYCODE_DPAD_CENTER
+                || keyCode == KeyEvent.KEYCODE_ENTER
+                || keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER
+                || keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
+                || keyCode == KeyEvent.KEYCODE_MEDIA_PLAY
+                || keyCode == KeyEvent.KEYCODE_MEDIA_PAUSE;
+    }
+
+    private boolean isTrustedAppHost(String host) {
+        if (host == null) return false;
+        String clean = host.toLowerCase(Locale.US);
+        return APP_HOST.equals(clean) || APP_ALIAS_HOST.equals(clean);
+    }
+
+    private boolean isScamUrl(Uri uri) {
+        if (uri == null) return false;
+        String value = ((uri.getHost() == null ? "" : uri.getHost()) + "/"
+                + (uri.getEncodedPath() == null ? "" : uri.getEncodedPath()) + "?"
+                + (uri.getEncodedQuery() == null ? "" : uri.getEncodedQuery()))
+                .toLowerCase(Locale.US);
+        return value.contains("press-continue")
+                || value.contains("continue-to-watch")
+                || value.contains("scan-qr")
+                || value.contains("qr-code-to-confirm")
+                || value.contains("confirm-you-are-not-a-robot")
+                || value.contains("prove-you-are-not-a-robot")
+                || value.contains("not-a-robot")
+                || value.contains("not_a_robot")
+                || value.contains("o11qnji32yff.com");
+    }
+
+    private void notifyBlockedScam(Uri uri) {
+        if (uri == null) return;
+        String rawHost = uri.getHost() == null ? "" : uri.getHost().toLowerCase(Locale.US);
+        String safeHost = rawHost.replaceAll("[^a-z0-9.-]", "");
+        mainHandler.post(() -> {
+            long now = SystemClock.uptimeMillis();
+            if (safeHost.equals(lastBlockedScamHost) && now - lastBlockedScamAt < 4000) return;
+            lastBlockedScamHost = safeHost;
+            lastBlockedScamAt = now;
+            Toast.makeText(MainActivity.this, "Blocked a QR/robot-check pop-up", Toast.LENGTH_SHORT).show();
+            evaluate("window.dispatchEvent(new CustomEvent('zeroplay-blocked-scam',{detail:{host:'" + safeHost + "'}}));");
+        });
+    }
+
+    private void notifyBlockedExternalRedirect() {
+        mainHandler.post(() -> {
+            long now = SystemClock.uptimeMillis();
+            if (now - lastBlockedToastAt < 4000) return;
+            lastBlockedToastAt = now;
+            Toast.makeText(MainActivity.this, "Blocked an external pop-up/redirect", Toast.LENGTH_SHORT).show();
+        });
+    }
+
     private void handleNativeBack() {
         if (customView != null) {
             hideCustomView();
@@ -408,6 +536,38 @@ public final class MainActivity extends Activity {
             return true;
         }
 
+        if (tvCursorMode) {
+            if (action == KeyEvent.ACTION_DOWN) {
+                float density = getResources().getDisplayMetrics().density;
+                float step = (34f + Math.min(132f, event.getRepeatCount() * 11f)) * density;
+                switch (keyCode) {
+                    case KeyEvent.KEYCODE_DPAD_LEFT:
+                        moveTvCursor(-step, 0f);
+                        return true;
+                    case KeyEvent.KEYCODE_DPAD_RIGHT:
+                        moveTvCursor(step, 0f);
+                        return true;
+                    case KeyEvent.KEYCODE_DPAD_UP:
+                        moveTvCursor(0f, -step);
+                        return true;
+                    case KeyEvent.KEYCODE_DPAD_DOWN:
+                        moveTvCursor(0f, step);
+                        return true;
+                    case KeyEvent.KEYCODE_DPAD_CENTER:
+                    case KeyEvent.KEYCODE_ENTER:
+                    case KeyEvent.KEYCODE_NUMPAD_ENTER:
+                    case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+                    case KeyEvent.KEYCODE_MEDIA_PLAY:
+                    case KeyEvent.KEYCODE_MEDIA_PAUSE:
+                        if (event.getRepeatCount() == 0) tapTvCursor();
+                        return true;
+                    default:
+                        break;
+                }
+            }
+            if (isTvCursorKey(keyCode)) return true;
+        }
+
         if (action == KeyEvent.ACTION_DOWN) {
             if (keyCode == KeyEvent.KEYCODE_MENU || keyCode == KeyEvent.KEYCODE_GUIDE) {
                 evaluate("(function(){try{return typeof handleZeroPlayTvMenu==='function'&&handleZeroPlayTvMenu();}catch(e){return false;}})()");
@@ -432,6 +592,10 @@ public final class MainActivity extends Activity {
     }
 
     private void showCustomView(View view, WebChromeClient.CustomViewCallback callback) {
+        if (tvCursorMode) {
+            setTvCursorMode(false);
+            evaluate("(function(){try{if(typeof setEmbedFocusMode==='function')setEmbedFocusMode(false);}catch(e){}})()");
+        }
         if (customView != null) {
             if (customViewCallback != null) customViewCallback.onCustomViewHidden();
             root.removeView(customView);
@@ -501,6 +665,7 @@ public final class MainActivity extends Activity {
 
     @Override
     protected void onPause() {
+        setTvCursorMode(false);
         if (webView != null) {
             evaluate("(function(){try{if(typeof stopCardPreview==='function')stopCardPreview();document.querySelectorAll('.hero-trailer.on').forEach(function(el){if(typeof stopBackdropPreview==='function')stopBackdropPreview(el);});}catch(e){}})()");
             webView.onPause();
@@ -542,7 +707,18 @@ public final class MainActivity extends Activity {
     private final class ZeroPlayWebViewClient extends WebViewClient {
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-            return handleUrl(request == null ? null : request.getUrl());
+            return handleUrl(request == null ? null : request.getUrl(), request == null || request.isForMainFrame());
+        }
+
+        @Override
+        public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+            Uri uri = request == null ? null : request.getUrl();
+            if (isScamUrl(uri)) {
+                notifyBlockedScam(uri);
+                return new WebResourceResponse("text/plain", "utf-8", 204, "No Content",
+                        Collections.emptyMap(), new ByteArrayInputStream(new byte[0]));
+            }
+            return super.shouldInterceptRequest(view, request);
         }
 
         @Override
@@ -552,10 +728,26 @@ public final class MainActivity extends Activity {
         }
 
         private boolean handleUrl(Uri uri) {
+            return handleUrl(uri, true);
+        }
+
+        private boolean handleUrl(Uri uri, boolean mainFrame) {
             if (uri == null) return true;
             String scheme = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase(Locale.US);
-            if ("http".equals(scheme) || "https".equals(scheme) || "about".equals(scheme)
-                    || "blob".equals(scheme) || "data".equals(scheme)) {
+            if ("http".equals(scheme) || "https".equals(scheme)) {
+                if (isScamUrl(uri)) {
+                    notifyBlockedScam(uri);
+                    return true;
+                }
+                // Provider pages live in iframes. The top-level document must
+                // never be hijacked by an embed ad/pop-under navigation.
+                if (mainFrame && !isTrustedAppHost(uri.getHost())) {
+                    notifyBlockedExternalRedirect();
+                    return true;
+                }
+                return false;
+            }
+            if ("about".equals(scheme) || "blob".equals(scheme) || "data".equals(scheme)) {
                 return false;
             }
             if ("file".equals(scheme) && OFFLINE_URL.equals(uri.toString())) return false;
@@ -708,6 +900,50 @@ public final class MainActivity extends Activity {
     }
 
     /** Small, read-only bridge. It intentionally exposes no exit or file-system powers. */
+    private final class TvCursorView extends View {
+        private final Paint ring = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint shadow = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint dot = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private float cursorX;
+        private float cursorY;
+
+        TvCursorView(Context context) {
+            super(context);
+            setFocusable(false);
+            setLayerType(View.LAYER_TYPE_HARDWARE, null);
+            ring.setStyle(Paint.Style.STROKE);
+            ring.setColor(Color.WHITE);
+            shadow.setStyle(Paint.Style.STROKE);
+            shadow.setColor(Color.argb(190, 0, 0, 0));
+            dot.setStyle(Paint.Style.FILL);
+            dot.setColor(Color.WHITE);
+        }
+
+        void setPosition(float x, float y) {
+            cursorX = x;
+            cursorY = y;
+            invalidate();
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+            float density = getResources().getDisplayMetrics().density;
+            float x = cursorX > 0 ? cursorX : getWidth() / 2f;
+            float y = cursorY > 0 ? cursorY : getHeight() / 2f;
+            float radius = 27f * density;
+            shadow.setStrokeWidth(9f * density);
+            ring.setStrokeWidth(4f * density);
+            canvas.drawCircle(x, y, radius, shadow);
+            canvas.drawCircle(x, y, radius, ring);
+            canvas.drawLine(x - radius - 9f * density, y, x - radius + 7f * density, y, ring);
+            canvas.drawLine(x + radius - 7f * density, y, x + radius + 9f * density, y, ring);
+            canvas.drawLine(x, y - radius - 9f * density, x, y - radius + 7f * density, ring);
+            canvas.drawLine(x, y + radius - 7f * density, x, y + radius + 9f * density, ring);
+            canvas.drawCircle(x, y, 4f * density, dot);
+        }
+    }
+
     public static final class ZeroPlayTvBridge {
         private final WeakReference<MainActivity> activityRef;
 
@@ -737,6 +973,17 @@ public final class MainActivity extends Activity {
                     activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                 }
             });
+        }
+
+        @JavascriptInterface
+        public boolean hasTvCursor() {
+            return true;
+        }
+
+        @JavascriptInterface
+        public void setTvCursorMode(boolean enabled) {
+            MainActivity activity = activityRef.get();
+            if (activity != null) activity.setTvCursorMode(enabled);
         }
 
         @JavascriptInterface

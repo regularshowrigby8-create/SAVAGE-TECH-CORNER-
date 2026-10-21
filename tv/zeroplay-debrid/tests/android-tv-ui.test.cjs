@@ -131,6 +131,7 @@ vm.runInContext([
   between('let discoveryRuntime=', 'function defaultDiscoveryConfig()'),
   between('function sourceReadiness()', 'function refreshDiscoveryUi()'),
   between('function sourceStatusPanelHTML()', 'function settingsHubHTML()'),
+  between('function tvChooseDirectionalRecord(records,origin,direction)', 'function moveTvFocus(direction)'),
   'globalThis.__setDiscoveryRuntime = patch => Object.assign(discoveryRuntime, patch);',
 ].join('\n'), ctx, { filename: 'android-tv-extract.js' });
 
@@ -139,6 +140,24 @@ const ok = (condition, label) => { assert(condition, label); passed++; console.l
 const eq = (actual, expected, label) => { assert.strictEqual(actual, expected, label); passed++; console.log('PASS', label); };
 
 (async () => {
+  const navRec = (id, left, top, w = 180, h = 260) => ({ el: { id }, left, right: left + w, top, bottom: top + h, x: left + w / 2, y: top + h / 2, w, h });
+  const bottomCard = navRec('bottom', 520, 2200);
+  eq(
+    ctx.tvChooseDirectionalRecord([bottomCard, navRec('immediate-above', 40, 1880), navRec('aligned-far-above', 520, 1320)], bottomCard, 'up').el.id,
+    'immediate-above',
+    'Up from the bottom row selects the immediate row above instead of getting stuck',
+  );
+  eq(
+    ctx.tvChooseDirectionalRecord([bottomCard, navRec('left', 300, 2200), navRec('right', 740, 2200), navRec('below', 520, 2520)], bottomCard, 'right').el.id,
+    'right',
+    'horizontal TV navigation stays on the same visual row',
+  );
+  bottomCard.colIndex = 1;
+  eq(
+    ctx.tvNavChooseInRow({ records: [navRec('row-left', 40, 1880), navRec('row-middle', 520, 1880), navRec('row-right', 900, 1880)] }, bottomCard, { records: [navRec('origin-left', 300, 2200), bottomCard, navRec('origin-right', 740, 2200)] }).el.id,
+    'row-middle',
+    'dedicated row engine preserves the column anchor when moving up',
+  );
   eq(
     ctx.cleanArtworkUrl('https://images.metahub.space/poster/large/tt0903747/img.jpg', 'poster'),
     'https://images.metahub.space/poster/medium/tt0903747/img.jpg',
@@ -244,9 +263,9 @@ const eq = (actual, expected, label) => { assert.strictEqual(actual, expected, l
     [html.includes('ZeroPlayTV\\/') && html.includes('window.ZeroPlayAndroidTV'), 'native user-agent and bridge both activate TV mode'],
     [html.includes('settings.artwork=Object.assign({enabled:true,cinemeta:true,tvmaze:true,anilist:true,itunes:true}'), 'four artwork providers are ready with zero user configuration'],
     [!html.includes('settings.tmdbKey') && !html.includes('settings.artworkKey'), 'no user-entered artwork/TMDB API key exists'],
-    [html.includes('ANDROID_TV_APP&&resumeItems.length?resumeHTML+heroHTML'), 'Android TV puts instant resume before the featured hero'],
-    [html.includes('Couch-first Android TV') && html.includes('flex-basis:clamp(430px,34vw,570px)'), 'TV home uses large artwork-first rows instead of dashboard density'],
-    [html.includes('body.android-tv .menu-category-list') && html.includes('body.android-tv .filters'), 'text-heavy category/filter chrome is removed from the TV normal path'],
+    [html.includes('ANDROID_TV_APP?spotlightHTML+resumeHTML') && html.includes('function tvSpotlightHTML') && html.includes('id="tvAmbient"'), 'Android TV home opens with a selection spotlight, details and ambient backdrop'],
+    [html.includes('--tv-poster-w:clamp(124px,10vw,158px)') && html.includes('--tv-wide-w:clamp(228px,19vw,302px)') && html.includes('grid-template-columns:repeat(auto-fill,var(--tv-poster-w))'), 'TV cards use one smaller uniform poster and wide-card size system'],
+    [html.includes('id="btnNavSearch"') && html.includes('data-menu-route="search"') && html.includes('setNav("search")') && html.includes('body.android-tv .filters{display:grid!important'), 'TV exposes Search and real browse filters in the normal path'],
     [html.includes('function applyTvSourcesLayout') && html.includes('"sourceStatePanel","settingsAddWebsite","settingsPlaybackSources"'), 'TV Sources opens as status plus two useful panels, not every control'],
     [html.includes('Advanced &amp; diagnostics') && html.includes('id="discoveryDiagnostics"'), 'source counters are contained in an Advanced diagnostics disclosure'],
     [html.includes('featureSwitchHTML("discovery","Find sources automatically"') && !html.includes('featureSwitchHTML("dnsWarm","Connect faster","Prepare source connections in advance.","menu")'), 'menu quick settings keep engineering switches out'],
@@ -257,11 +276,15 @@ const eq = (actual, expected, label) => { assert.strictEqual(actual, expected, l
     [androidJava.includes('onTrimMemory') && androidJava.includes('handleZeroPlayTvLowMemory') && androidJava.includes('totalMemoryMb'), 'native shell reports memory and asks the web app to shed previews under pressure'],
     [fs.existsSync(path.join(repoRoot, 'tv/android-tv/app/src/main/res/drawable-xhdpi/tv_banner.png')) && fs.existsSync(path.join(repoRoot, 'tv/android-tv/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png')), 'TV launcher banner and icons are present'],
     [html.includes('tabindex="0" data-switch-label="1"') && html.includes('closest("[data-switch-label]")'), 'menu/settings switches are D-pad focusable and toggle with OK so menus can scroll'],
-    [html.includes('lastTvFocusPoint') && html.includes('nearestDist<900') && html.includes('function tvFocusAndReveal'), 'lost TV focus recovers near the last position instead of jumping to the top'],
-    [html.includes('currentRail&&!currentRail.contains(el)') && html.includes('if(movedTv||ANDROID_TV_APP) e.preventDefault()'), 'rail left/right stays in-row and TV arrows never fall through to native WebView focus jumps'],
-    [html.includes('if(sticky&&!(ANDROID_TV_APP&&playingNow)) return;') && html.includes('chrome-hidden') && html.includes('overlayEl.classList.contains("chrome-hidden")'), 'player menu auto-hides during TV playback and wakes on the next key press'],
-    [html.includes('playerState.embedFocused=true') && html.includes('if(playerState.embedFocused){ playerState.embedFocused=false;'), 'embedded players get a real D-pad focus mode and Back returns to the ZeroPlay bar first'],
-    [html.includes('if(e.key===\"Escape\")') && html.includes('if(handleZeroPlayTvBack()){ e.preventDefault(); return; }'), 'browser Escape mirrors native Android TV Back routing'],
+    [html.includes('lastTvFocusPoint') && html.includes('function tvChooseDirectionalRecord') && html.includes('function tvRevealElement') && html.includes('getClientRects'), 'lost TV focus recovers near the last position with one-pass document geometry'],
+    [html.includes('function tvNavRegistry') && html.includes('function tvNavBuildRows') && html.includes('function tvNavHoldTick') && html.includes('moveTvFocusFromKey') && html.includes('if(movedTv||ANDROID_TV_APP) e.preventDefault()'), 'dedicated cached row engine handles rails and held-repeat scrolling without native WebView jumps'],
+    [html.includes('outline:3px solid var(--tv-focus-ring);outline-offset:3px') && html.includes('content:none!important') && html.includes('function buildHomeRailQueue') && html.includes('function loadMoreHomeRails') && html.includes('browseMoreObserver'), 'poster-only focus ring, continuous home shelves and continuous browse pages are wired'],
+    [html.includes('function setPlayerSurfaceMode') && html.includes('.player-overlay.surface-only .player-bar') && html.includes('surfaceOnly:true,nativeFallback:false') && html.includes('Visible controls: arrows move focus, never seek') && html.includes('function cycleNativeSubtitles'), 'direct TV playback uses the FastStream surface and native fallback arrows navigate to real subtitle controls'],
+    [html.includes('function hidePlayerChrome') && html.includes('function schedulePlayerChromeHide') && html.includes('overlayEl.classList.contains("chrome-hidden")'), 'player menu auto-hides during TV playback and wakes on the next key press'],
+    [html.includes('function setEmbedFocusMode') && html.includes('function focusEmbeddedPlayer') && androidJava.includes('setTvCursorMode') && androidJava.includes('TvCursorView'), 'embedded players get a native D-pad cursor/focus mode and Back returns to the ZeroPlay bar first'],
+    [html.includes('function armProviderFrame') && html.includes('f.removeAttribute("sandbox")') && !html.includes('setAttribute("sandbox"') && androidJava.includes('shouldInterceptRequest') && androidJava.includes('isScamUrl') && androidJava.includes('isTrustedAppHost'), 'provider frames stay unsandboxed for player compatibility while QR/robot-check redirects are blocked natively'],
+    [html.includes('if(e.key==="Escape")') && html.includes('if(handleZeroPlayTvBack()){ e.preventDefault(); return; }'), 'browser Escape mirrors native Android TV Back routing'],
+    [html.includes('if(key==="Enter"||key==="NumpadEnter")') && html.includes('handleZeroPlayBlockedScam'), 'remote OK drives the native player and blocked scam pages are handled explicitly'],
     [html.includes('autoHighLevelId') && html.includes('autoHighBufferingSince'), 'FastStream auto quality starts at the highest level and steps down only on sustained buffering'],
     [html.includes('body.android-tv .settings-hub-grid{grid-template-columns:1fr}') && html.includes('body.android-tv .modal{width:min(980px,94vw)') && html.includes('#btnPlayerDownload'), 'TV layout keeps settings on-screen and hides tool clutter from the player bar'],
     [html.includes('body.android-tv *{backdrop-filter:none!important;') && html.includes('animation-duration:.12s!important'), 'TV mode strips backdrop blur and caps animation cost for 2 GB boxes'],

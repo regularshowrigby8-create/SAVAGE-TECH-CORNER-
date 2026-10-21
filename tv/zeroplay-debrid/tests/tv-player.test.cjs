@@ -104,14 +104,18 @@ eq(sorted.map(x => x.id), ['direct:a', 'route:vidstuck', 'route:embedwave'], 've
     [html.includes('class="trailer-layer"') && html.includes('function startCardPreview'), 'trailer preview lives inside poster title blocks'],
     [html.includes('id="playerQuality"') && html.includes('setVideoLevel'), 'unified player exposes real FastStream quality selection'],
     [html.includes('frame.src="https://faststream.online/player/"') && html.includes('waitForFastStreamReady(4500)'), 'FastStream API handshake precedes fallback'],
-    [html.includes('player:"faststream-only"') && html.includes('const mode=String(settings.stream.player||"faststream-only")') && html.includes('settings.stream.player==="auto"||settings.stream.player==="faststream"'), 'FastStream is the default for selected and discovered direct servers'],
+    // Merged-heads contract (tv 1fc5b40 + ae20 e8957f4): the default mode is
+    // "auto", and on Android TV "auto" routes every direct server straight
+    // into the FastStream surface — FastStream stays the default TV player
+    // without forcing legacy-only FastStream on desktop/local-file playback.
+    [html.includes('player:"auto"') && html.includes('const mode=String(settings.stream.player||"auto")') && html.includes('if(ANDROID_TV_APP||mode==="faststream-only")') && html.includes('settings.stream.player==="auto"||settings.stream.player==="faststream"'), 'FastStream is the default for selected and discovered direct servers'],
     [html.includes('https://faststream.online/player/#'), 'legacy FastStream HLS/DASH fallback retained'],
     [html.includes('r.status!==206') && html.includes('Math.min(4,Number(cfg.primeThreads)||2)') && html.includes('primeBudgetMb'), 'direct priming capped to genuine range responses and configured worker/budget limits'],
     [html.includes('async function tryNextDirectVariant(reason){\n  const st=playerState; if(!st) return false;\n  if(streamCfg().autoFailover===false) return false;') && html.includes('Confirmed direct playback stalled on ') && html.includes('hasAdvanced&&lastObservedAdvanceAt'), 'automatic switching master switch and confirmed native stall detection are wired'],
     [html.includes('servers appear only after a match') && html.includes('groupStreamsByServer'), 'server list is title-specific and grouped'],
     [!/id=\\"playerSource\\"(?!Line)/.test(html) && !html.includes('id="detailSource"'), 'all-server player/detail dropdowns removed'],
     [html.includes('function moveTvFocus') && html.includes('handlePlayerKeyboard'), 'TV spatial and player keyboard navigation present'],
-    [html.includes('tabindex="-1" src="https://faststream.online/player/#') || html.includes('f.setAttribute("tabindex","-1")'), 'cross-origin frames do not steal initial TV focus'],
+    [html.includes('ANDROID_TV_APP?"0":"-1"') && html.includes('full?"btnPlayPause":"btnFocusEmbed"'), 'cross-origin frames are TV-focusable on demand without stealing initial player focus'],
   ];
   for (const [cond, label] of statics) ok(cond, label);
   console.log(`\n${n} TV/player checks passed`);

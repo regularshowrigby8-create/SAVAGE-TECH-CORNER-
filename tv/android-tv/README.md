@@ -41,7 +41,9 @@ The native shell exposes a small read-only profile bridge and forwards remote ke
 - **Left at the browsing edge** opens the menu.
 - Android trim-memory callbacks ask the web app to stop previews and shed nonessential image work.
 
-Cross-origin embedded players still control some of their own internal behaviour; the shell does not claim to reach inside them.
+Direct streams are loaded straight into the FastStream player surface for the selected server, and embedded servers keep their own surface; ZeroPlay does not keep a second persistent control bar over them. Control is handed to that surface automatically with the shell D-pad cursor (move with the remote, tap with OK/Play-Pause). **Back** first releases surface control and a second Back exits; **Menu** opens Servers. Local/downloaded files and the explicit built-in player setting use the native ZeroPlay video element, where visible-control arrows navigate buttons (including CC when a subtitle track exists) instead of seeking.
+
+Provider frames are deliberately **not** given an HTML `sandbox` attribute: several legitimate embedded players detect any sandboxed frame and refuse playback outright. The Android shell instead blocks top-level pop-up/redirect hijacks plus known “scan this QR code to prove you are not a robot” scam patterns. **Never scan a QR code shown by a video player.** If a server shows one, press Back/Menu and choose another server.
 
 ## Build from source
 
@@ -66,16 +68,16 @@ app/build/outputs/apk/release/
 The GitHub workflow copies and names the deliverable:
 
 ```text
-ZeroPlay-TV-1.0.0-armeabi-v7a.apk
+ZeroPlay-TV-1.0.2-armeabi-v7a.apk
 ```
 
 ## Verify an APK
 
 ```bash
 python3 tv/android-tv/tools/verify_apk.py \
-  tv/android-tv/dist/ZeroPlay-TV-1.0.0-armeabi-v7a.apk \
+  tv/android-tv/dist/ZeroPlay-TV-1.0.2-armeabi-v7a.apk \
   --require-sdk-tools \
-  --json tv/android-tv/dist/ZeroPlay-TV-1.0.0-armeabi-v7a.verify.json
+  --json tv/android-tv/dist/ZeroPlay-TV-1.0.2-armeabi-v7a.verify.json
 ```
 
 The verifier checks:
@@ -97,7 +99,7 @@ The verified APK is published as a GitHub Release asset with a direct,
 no-login download URL for the **Downloader** app on the TV:
 
 ```text
-https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/releases/download/zeroplay-tv-v1.0.1/zeroplay-tv.apk
+https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/releases/download/zeroplay-tv-v1.0.2/zeroplay-tv.apk
 ```
 
 1. Open **Downloader** on the Xiaomi TV Box and type the URL above into the URL box, then press **Go**.
