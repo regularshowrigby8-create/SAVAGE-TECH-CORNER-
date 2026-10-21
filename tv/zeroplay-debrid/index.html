@@ -2445,6 +2445,9 @@ function tvSpotlightRouteAllowed(){
 function tvSpotlightTrailerAllowed(){
   if(!ANDROID_TV_APP||playerState||detailState||streamsCtx||(typeof downloadModalState!=="undefined"&&downloadModalState)||document.hidden) return false;
   if(!settings.stream||settings.stream.trailerPreviews===false) return false;
+  // An explicit Data Saver choice must also stop the spotlight's YouTube
+  // iframe - it is the heaviest browsing-surface element on 2 GB boxes.
+  if(settings.stream.dataSaver==="on") return false;
   if(settings.ui&&settings.ui.tvSpotlightTrailers===false) return false;
   try{ if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false; }catch{}
   const conn=navigator.connection||{};
@@ -2826,7 +2829,7 @@ function focusEmbeddedPlayer(opts){
   setEmbedFocusMode(true,{cursor:canCursor});
   try{ f.focus({preventScroll:true}); }catch{ try{ f.focus(); }catch{} }
   try{ if(f.contentWindow&&f.contentWindow.focus) f.contentWindow.focus(); }catch{}
-  if(!(opts&&opts.quiet)) toast(canCursor?"Player controls: D-pad moves the cursor, OK taps. Back releases controls · Menu opens Servers.":"Video controls focused. Back releases controls · Menu opens Servers.");
+  if(!(opts&&opts.quiet)) toast(canCursor?"Player controls: D-pad moves the cursor, OK taps. Back releases controls, then hold OK for Servers.":"Video controls focused. Back releases controls · hold OK opens Servers.");
 }
 function playerChromeIsHeld(st){
   const active=document.activeElement;
@@ -3557,7 +3560,7 @@ async function mountFastStreamPlayer(stage,url,source,loadT0,resumeAt,opts){
   const beginLegacy=()=>{
     if(playerState!==st) return;
     resetFastStreamBridge(null);
-    stage.innerHTML='<div class="media-shell"><iframe class="player-frame" id="fsFrame" tabindex="'+(ANDROID_TV_APP?0:-1)+'" src="https://faststream.online/player/#'+encodeURI(url)+'" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen title="FastStream player"></iframe></div><div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>Loading FastStream…</strong><span style="color:#cbd2d8;font-size:.88rem">FastStream is the player surface for this server. Menu opens Servers.</span></div>';
+    stage.innerHTML='<div class="media-shell"><iframe class="player-frame" id="fsFrame" tabindex="'+(ANDROID_TV_APP?0:-1)+'" src="https://faststream.online/player/#'+encodeURI(url)+'" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen title="FastStream player"></iframe></div><div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>Loading FastStream…</strong><span style="color:#cbd2d8;font-size:.88rem">FastStream is the player surface for this server. Hold OK for Servers.</span></div>';
     const f=document.getElementById("fsFrame");
     if(f) f.addEventListener("load",()=>{ st.frameLoadedAt=Date.now(); playerLoading(false); if(surfaceOnly){ hidePlayerChrome(); enterPlayerSurfaceControl(90); } else showPlayerChrome(false); updatePlayerMeta(source); },{once:true});
     setPlayerControlMode("faststream-legacy");
@@ -7506,23 +7509,27 @@ function tvNavNoteHold(direction,now){
   if(tvNavHoldDir!==direction){
     tvNavStopHold();
     tvNavHoldDir=direction;
-    tvNavHoldStartedAt=now;
-    tvNavHoldLastMoveAt=now;
+    // Age the hold from the initial press (last real move), not from the
+    // first OS repeat: Bluetooth remotes only start repeating after the
+    // system long-press delay, and the ramp must already be warm by then.
+    tvNavHoldStartedAt=(tvNavLastMoveAt&&now-tvNavLastMoveAt<2000)?tvNavLastMoveAt:now;
+    tvNavHoldLastMoveAt=tvNavLastMoveAt||now;
   }
   tvNavHoldLastRepeat=now;
   if(!tvNavHoldTimer) tvNavHoldTimer=setInterval(tvNavHoldTick,16);
 }
 function moveTvFocusFromKey(direction,event){
   const now=window.performance&&performance.now?performance.now():Date.now();
-  if(event&&event.repeat) tvNavNoteHold(direction,now);
-  else if(tvNavHoldDir&&tvNavHoldDir!==direction) tvNavStopHold();
-  if(tvNavPendingFrame){ tvNavPendingDir=direction; return true; }
-  if(event&&event.repeat&&now-tvNavLastMoveAt<34){
-    tvNavPendingDir=direction;
-    const run=()=>{ tvNavPendingFrame=0; const dir=tvNavPendingDir; tvNavPendingDir=""; if(dir){ tvNavMove(dir); const doneAt=window.performance&&performance.now?performance.now():Date.now(); tvNavLastMoveAt=doneAt; tvNavHoldLastMoveAt=doneAt; } };
-    tvNavPendingFrame=window.requestAnimationFrame?requestAnimationFrame(run):setTimeout(run,16);
+  if(event&&event.repeat){
+    // Held key: the smooth-scroll tick is the ONLY mover while a hold is
+    // active. Repeats just keep the hold alive - if they also moved focus
+    // directly, the tick and the raw OS repeat rate would drive focus at
+    // the same time and double-step on low-power TV WebViews.
+    tvNavNoteHold(direction,now);
     return true;
   }
+  if(tvNavHoldDir&&tvNavHoldDir!==direction) tvNavStopHold();
+  if(tvNavPendingFrame){ tvNavPendingDir=direction; return true; }
   const moved=tvNavMove(direction);
   tvNavLastMoveAt=now; tvNavHoldLastMoveAt=now;
   return moved;
@@ -7612,7 +7619,7 @@ function handleZeroPlayTvBack(){
       if(playerState.surfaceOnly){
         playerState.surfaceExitArmedUntil=Date.now()+2600;
         const stage=document.getElementById("playerStage"); if(stage) stage.focus({preventScroll:true});
-        toast("Player controls released. Back again to exit · Menu opens Servers");
+        toast("Player controls released. Back again to exit · hold OK opens Servers");
         return true;
       }
       showPlayerChrome(false); const backBtn=document.getElementById("btnFocusEmbed"); if(backBtn) backBtn.focus({preventScroll:true}); return true;
@@ -7637,6 +7644,14 @@ function handleZeroPlayTvMenu(){
   const drawer=document.getElementById("menuDrawer");
   if(drawer&&drawer.classList.contains("open")) closeMenuDrawer(); else openMenuDrawer();
   return true;
+}
+function handleZeroPlayTvLongOk(){
+  // Long-press OK only has one job today: opening Servers while the player
+  // surface/embed owns the remote (the Xiaomi remote has no Menu key).
+  // Everywhere else OK already activated the focused element on press, so
+  // a hold must not pile a second action on top of it.
+  if(!playerState||streamsCtx) return false;
+  return handleZeroPlayTvMenu();
 }
 function handleZeroPlayTvSearch(){
   document.body.classList.add("tv-mode");
@@ -7669,6 +7684,7 @@ function handleZeroPlayTvLowMemory(){
 }
 window.handleZeroPlayTvBack=handleZeroPlayTvBack;
 window.handleZeroPlayTvMenu=handleZeroPlayTvMenu;
+window.handleZeroPlayTvLongOk=handleZeroPlayTvLongOk;
 window.handleZeroPlayTvSearch=handleZeroPlayTvSearch;
 window.handleZeroPlayTvMediaKey=handleZeroPlayTvMediaKey;
 window.handleZeroPlayTvLowMemory=handleZeroPlayTvLowMemory;
@@ -7699,6 +7715,35 @@ document.addEventListener("focusin",e=>{
 
 document.addEventListener("keyup",e=>{ if(/^Arrow/.test(e.key)) tvNavStopHold(); });
 window.addEventListener("blur",tvNavStopHold);
+/* Long-press OK = Menu/Servers. The target Xiaomi TV Box S (3rd Gen) remote
+   has no Menu/Search/media keys at all - only D-pad, OK, Back and system
+   keys - so Servers must be reachable from OK alone while the player owns
+   the remote. In the APK the native shell owns this (it sees keys even
+   while an embed iframe has focus); this page-side copy keeps the plain
+   browser TV simulation (?androidtv=1 without the native bridge) at parity. */
+let zpOkLongPressAt=0,zpOkLongPressFired=false,zpSuppressOkClickUntil=0;
+document.addEventListener("keydown",e=>{
+  if(e.key!=="Enter"&&e.key!=="NumpadEnter") return;
+  if(!ANDROID_TV_APP||window.ZeroPlayAndroidTV) return;
+  const tag=(document.activeElement&&document.activeElement.tagName)||"";
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test(tag)) return;
+  const now=window.performance&&performance.now?performance.now():Date.now();
+  if(!e.repeat){ zpOkLongPressAt=now; zpOkLongPressFired=false; return; }
+  if(zpOkLongPressAt&&!zpOkLongPressFired&&now-zpOkLongPressAt>=550){
+    zpOkLongPressFired=true;
+    zpSuppressOkClickUntil=Date.now()+400;
+    e.preventDefault();
+    handleZeroPlayTvLongOk();
+  }
+},true);
+document.addEventListener("keyup",e=>{
+  if(e.key!=="Enter"&&e.key!=="NumpadEnter") return;
+  if(zpOkLongPressFired) e.preventDefault();
+  zpOkLongPressAt=0; zpOkLongPressFired=false;
+},true);
+document.addEventListener("click",e=>{
+  if(Date.now()<zpSuppressOkClickUntil){ zpSuppressOkClickUntil=0; e.preventDefault(); e.stopPropagation(); }
+},true);
 document.addEventListener("keydown",e=>{
   if(/^Arrow/.test(e.key)||e.key==="Tab") document.body.classList.add("tv-mode");
   const activeTag=(document.activeElement&&document.activeElement.tagName)||"";

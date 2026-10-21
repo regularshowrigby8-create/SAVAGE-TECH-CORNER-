@@ -89,6 +89,7 @@ public final class MainActivity extends Activity {
     private ValueCallback<Uri[]> fileChooserCallback;
     private String profileJson = "{}";
     private boolean offlineShown;
+    private boolean okLongPressFired;
     private boolean backEvaluationPending;
     private boolean firstPageLoaded;
 
@@ -477,6 +478,9 @@ public final class MainActivity extends Activity {
         webView.evaluateJavascript(
                 "(function(){try{return typeof handleZeroPlayTvBack==='function'&&handleZeroPlayTvBack()===true;}catch(e){return false;}})()",
                 value -> mainHandler.post(() -> {
+                    // The 900 ms watchdog may have already finished this Back
+                    // press; a late JS answer must not finish it a second time.
+                    if (!backEvaluationPending) return;
                     backEvaluationPending = false;
                     if ("true".equals(value)) return;
                     finishNativeBack();
@@ -534,6 +538,32 @@ public final class MainActivity extends Activity {
                 handleNativeBack();
             }
             return true;
+        }
+
+        // Long-press OK = Menu. The Xiaomi TV Box S (3rd Gen) remote has no
+        // Menu key, so this is the only remote path to Servers while an
+        // embedded/FastStream player surface owns the D-pad. The native
+        // layer must own it: Activity dispatch sees the key even while a
+        // cross-origin iframe has focus inside the WebView, and swallowing
+        // ACTION_UP stops WebView synthesising a click for the same press.
+        // Cursor mode is excluded: OK taps are dispatched on ACTION_DOWN
+        // there and cannot be taken back once a hold is detected.
+        if (!tvCursorMode
+                && (keyCode == KeyEvent.KEYCODE_DPAD_CENTER
+                || keyCode == KeyEvent.KEYCODE_ENTER
+                || keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER)) {
+            if (action == KeyEvent.ACTION_DOWN) {
+                if (!okLongPressFired && event.getRepeatCount() > 0
+                        && event.getEventTime() - event.getDownTime() >= 600) {
+                    okLongPressFired = true;
+                    evaluate("(function(){try{return typeof handleZeroPlayTvLongOk==='function'&&handleZeroPlayTvLongOk();}catch(e){return false;}})()");
+                }
+                if (okLongPressFired) return true;
+            } else if (action == KeyEvent.ACTION_UP) {
+                boolean fired = okLongPressFired;
+                okLongPressFired = false;
+                if (fired) return true;
+            }
         }
 
         if (tvCursorMode) {
