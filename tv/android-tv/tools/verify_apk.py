@@ -161,6 +161,13 @@ def verify(apk_path: Path, require_sdk_tools: bool = False) -> dict:
     metrics["sha256"] = sha256_file(apk_path)
 
     names: list[str] = []
+    resource_images: list[str] = []
+    banner_entries: list[str] = []
+    icon_entries: list[str] = []
+    banner_verified = False
+    icon_verified = False
+    banner_invalid_reported = False
+    icon_invalid_reported = False
     try:
         with apk_path.open("rb") as raw, zipfile.ZipFile(raw) as zf:
             bad_file = zf.testzip()
@@ -216,28 +223,32 @@ def verify(apk_path: Path, require_sdk_tools: bool = False) -> dict:
             resource_images = [name for name in names
                                if name.startswith("res/") and "/" in name
                                and name.rsplit(".", 1)[-1].lower() in {"png", "webp", "jpg", "jpeg"}]
-            banners = [name for name in resource_images if "/tv_banner." in name]
-            icons = [name for name in resource_images if "/ic_launcher." in name]
+            # Release resource optimization may shorten compiled paths from
+            # res/drawable-xhdpi-v4/tv_banner.png to res/FS.png. Named paths
+            # are therefore only the first identification route; AAPT badging
+            # below is authoritative for optimized resource names.
+            banner_entries = [name for name in resource_images if "/tv_banner." in name]
+            icon_entries = [name for name in resource_images if "/ic_launcher." in name]
+            resource_image_sizes = {name: image_size(zf.read(name)) for name in resource_images}
             metrics["resource_image_entries"] = resource_images
-            metrics["tv_banner_entries"] = banners
-            metrics["launcher_icon_entries"] = icons
-            if not banners:
-                errors.append(
-                    "No compiled tv_banner image found in the APK; resource images: "
-                    + ", ".join(resource_images[:20]))
-            for banner in banners:
-                dimensions = image_size(zf.read(banner))
+            metrics["resource_image_sizes"] = resource_image_sizes
+            metrics["tv_banner_entries"] = banner_entries
+            metrics["launcher_icon_entries"] = icon_entries
+            banner_verified = bool(banner_entries)
+            for banner in banner_entries:
+                dimensions = resource_image_sizes.get(banner)
                 metrics.setdefault("tv_banner_sizes", {})[banner] = dimensions
                 if dimensions != (320, 180):
+                    banner_verified = False
+                    banner_invalid_reported = True
                     errors.append(f"TV banner {banner} is {dimensions}, expected (320, 180)")
-            if not icons:
-                errors.append(
-                    "No compiled ic_launcher image found in the APK; resource images: "
-                    + ", ".join(resource_images[:20]))
-            for icon in icons:
-                dimensions = image_size(zf.read(icon))
+            icon_verified = bool(icon_entries)
+            for icon in icon_entries:
+                dimensions = resource_image_sizes.get(icon)
                 metrics.setdefault("launcher_icon_sizes", {})[icon] = dimensions
                 if not dimensions or dimensions[0] != dimensions[1] or dimensions[0] < 48:
+                    icon_verified = False
+                    icon_invalid_reported = True
                     errors.append(f"Launcher icon {icon} has invalid dimensions {dimensions}")
 
             for info in infos:
@@ -311,6 +322,62 @@ def verify(apk_path: Path, require_sdk_tools: bool = False) -> dict:
             if unexpected_permissions:
                 warnings.append(f"Unexpected permissions present: {sorted(unexpected_permissions)}")
 
+            # AAPT badging reports the actual compiled banner/icon paths,
+            # including the shortened res/xx.png names produced by release
+            # resource optimization. Use those paths when source basenames
+            # did not survive compilation.
+            badging_banner_paths: list[str] = []
+            banner_match = re.search(r"^application:.*?\bbanner='([^']+)'", output, re.M)
+            if banner_match:
+                badging_banner_paths.append(banner_match.group(1))
+            badging_icon_paths: list[str] = []
+            application_icon = re.search(r"^application:.*?\bicon='([^']+)'", output, re.M)
+            if application_icon:
+                badging_icon_paths.append(application_icon.group(1))
+            badging_icon_paths.extend(
+                re.findall(r"^application-icon-\d+:'([^']+)'", output, re.M))
+            badging_banner_paths = list(dict.fromkeys(badging_banner_paths))
+            badging_icon_paths = list(dict.fromkeys(badging_icon_paths))
+            metrics["aapt_banner_entries"] = badging_banner_paths
+            metrics["aapt_launcher_icon_entries"] = badging_icon_paths
+            try:
+                with zipfile.ZipFile(apk_path) as zf:
+                    for banner in badging_banner_paths:
+                        if banner not in names:
+                            banner_invalid_reported = True
+                            errors.append(f"AAPT banner path is not present in the APK: {banner}")
+                            continue
+                        if banner not in banner_entries:
+                            banner_entries.append(banner)
+                        dimensions = image_size(zf.read(banner))
+                        metrics.setdefault("tv_banner_sizes", {})[banner] = dimensions
+                        if dimensions == (320, 180):
+                            banner_verified = True
+                        else:
+                            banner_invalid_reported = True
+                            errors.append(f"TV banner {banner} is {dimensions}, expected (320, 180)")
+                    badging_icons_valid = bool(badging_icon_paths)
+                    for icon in badging_icon_paths:
+                        if icon not in names:
+                            badging_icons_valid = False
+                            icon_invalid_reported = True
+                            errors.append(f"AAPT launcher icon path is not present in the APK: {icon}")
+                            continue
+                        if icon not in icon_entries:
+                            icon_entries.append(icon)
+                        dimensions = image_size(zf.read(icon))
+                        metrics.setdefault("launcher_icon_sizes", {})[icon] = dimensions
+                        if not dimensions or dimensions[0] != dimensions[1] or dimensions[0] < 48:
+                            badging_icons_valid = False
+                            icon_invalid_reported = True
+                            errors.append(f"Launcher icon {icon} has invalid dimensions {dimensions}")
+                    if badging_icons_valid:
+                        icon_verified = True
+                metrics["tv_banner_entries"] = banner_entries
+                metrics["launcher_icon_entries"] = icon_entries
+            except Exception as exc:  # noqa: BLE001 - report malformed archives.
+                errors.append(f"Could not inspect AAPT-reported launcher images: {exc}")
+
         # aapt and aapt2 use different xmltree syntax: aapt takes the
         # compiled XML name as a positional file, while aapt2 requires
         # --file. Calling aapt2 the aapt way makes it look for a second APK.
@@ -366,6 +433,15 @@ def verify(apk_path: Path, require_sdk_tools: bool = False) -> dict:
         metrics["zipalign_exit"] = aligned.returncode
         if aligned.returncode != 0:
             errors.append("zipalign verification failed")
+
+    if not banner_verified and not banner_invalid_reported:
+        errors.append(
+            "No compiled TV banner image was identified by resource name or AAPT badging; "
+            "resource images: " + ", ".join(resource_images[:20]))
+    if not icon_verified and not icon_invalid_reported:
+        errors.append(
+            "No compiled launcher icon image was identified by resource name or AAPT badging; "
+            "resource images: " + ", ".join(resource_images[:20]))
 
     return {"passed": not errors, "errors": errors, "warnings": warnings, "metrics": metrics}
 
