@@ -1358,6 +1358,31 @@ async function cmCatalog(type, catalogId, extra){
   const data = await cinemetaFetch(CINEMETA + "/catalog/" + cmType(type) + "/" + catalogId + seg + ".json");
   return (data.metas || []).map(cmMapMeta).filter(Boolean);
 }
+/* Cinemeta SEARCH results are lightweight previews: verified live, they do
+   NOT include moviedb_id, and cmMapMeta drops everything without one - which
+   silently emptied every keyless search. Resolve each preview through the
+   full meta endpoint (same pattern Stremio addons use), keep Cinemeta
+   relevance order, and only then map. */
+async function cmSearchCatalog(type, q){
+  const data = await cinemetaFetch(CINEMETA + "/catalog/" + cmType(type) + "/top/search=" + encodeURIComponent(q) + ".json");
+  const previews = (data && data.metas || []).slice(0, 24);
+  const out = new Array(previews.length).fill(null);
+  let next = 0;
+  const worker = async()=>{
+    while(next < previews.length){
+      const i = next++; const m = previews[i]; let full = m;
+      if(!m.moviedb_id && (m.imdb_id || m.id)){
+        try{
+          const d = await cinemetaFetch(CINEMETA + "/meta/" + cmType(type) + "/" + encodeURIComponent(m.imdb_id || m.id) + ".json");
+          if(d && d.meta) full = d.meta;
+        }catch{}
+      }
+      out[i] = cmMapMeta(full);
+    }
+  };
+  await Promise.all(Array.from({length: Math.min(6, previews.length || 1)}, worker));
+  return out.filter(Boolean);
+}
 function cmWrap(results, page){
   return {page, total_pages: results.length >= 90 ? page + 2 : page, total_results: results.length, results};
 }
@@ -1428,8 +1453,8 @@ async function cinemetaResponse(path, params){
   if(path==="/search/multi"){
     const q = params.query||"";
     const [mv, tv] = await Promise.all([
-      cmCatalog("movie","top",{search:q}).catch(()=>[]),
-      cmCatalog("tv","top",{search:q}).catch(()=>[])
+      cmSearchCatalog("movie",q).catch(()=>[]),
+      cmSearchCatalog("tv",q).catch(()=>[])
     ]);
     return cmWrap([...mv.map(i=>({...i,media_type:"movie"})), ...tv.map(i=>({...i,media_type:"tv"}))], page);
   }
@@ -2898,8 +2923,9 @@ function setPlayerControlMode(mode){
   ["btnPlayPause","btnBack10","btnForward10","btnMute","btnPiP"].forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=!full; });
   ["seekRange","volumeRange","playerRate"].forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=!full; });
   const seek=document.querySelector(".seek-row"); if(seek) seek.style.display=limited?"none":"flex";
-  const subBtn=document.getElementById("btnSubtitles"); if(subBtn){ subBtn.style.display=mode==="native"?"inline-flex":"none"; subBtn.disabled=mode!=="native"; }
+  const subBtn=document.getElementById("btnSubtitles"); if(subBtn){ const subCapable=mode==="native"||mode==="faststream-api"; subBtn.style.display=subCapable?"inline-flex":"none"; subBtn.disabled=!subCapable; }
   if(mode==="native") refreshSubtitleButton();
+  else if(mode==="faststream-api"&&subBtn) subBtn.textContent="CC";
   const focusBtn=document.getElementById("btnFocusEmbed"); if(focusBtn){ focusBtn.style.display=limited?"inline-flex":"none"; focusBtn.textContent=(mode==="embed"&&ANDROID_TV_APP)?"Site controls · experimental":"Video controls"; }
   const engine=document.getElementById("playerEngine");
   if(engine) engine.textContent=mode==="faststream-api"?"FastStream integrated":mode==="faststream-legacy"?"FastStream player":mode==="native"?"ZeroPlay player":mode==="embed"?"Embedded player":"Connecting";
@@ -3001,6 +3027,15 @@ function handlePlaybackEnded(){
     playerTimers.push(setTimeout(()=>{ if(playerState!==st) return; st.episode++; st.directUrl=""; st.variants=[]; st.activeVariant=null; st.tried=new Set(); st.triedUrls=new Set(); registerProgress(st.item,st.season,st.episode); drawPlayer({}); },1200));
   }
 }
+async function cycleFastStreamSubtitles(){
+  const tracks=await fsCommand("getSubtitles",{},5000).catch(()=>null);
+  if(!Array.isArray(tracks)||!tracks.length){ toast("No subtitles in this stream"); return; }
+  const active=tracks.find(t=>t&&t.active);
+  if(active){ await fsCommand("setSubtitleTrack",{index:active.index,active:false},5000); toast("Subtitles off"); return; }
+  const first=tracks[0];
+  await fsCommand("setSubtitleTrack",{index:first.index,active:true},5000);
+  toast("Subtitles: "+(first.label||first.language||"on"));
+}
 async function playerCommand(action,value){
   const st=playerState; if(!st||st.trailer) return;
   showPlayerChrome(false);
@@ -3026,6 +3061,7 @@ async function playerCommand(action,value){
       else if(action==="mute") await fsCommand("setMuted",{muted:!(st.playback&&st.playback.muted)});
       else if(action==="rate") await fsCommand("setPlaybackRate",{rate:Number(value)||1});
       else if(action==="pip") await fsCommand("setPictureInPicture",{pictureInPicture:!(st.fsState&&st.fsState.pictureInPicture)});
+      else if(action==="subtitles") await cycleFastStreamSubtitles();
       const fresh=await fsCommand("getState",{},5000).catch(()=>null); if(fresh) updatePlaybackUI(normalizeFastStreamState(fresh));
       return;
     }
@@ -3047,7 +3083,7 @@ async function setPlayerQuality(value){
       if(String(value).startsWith("level:")) await fsCommand("setVideoLevel",{id:String(value).slice(6)});
       else if(value==="auto"){
         const state=await fsCommand("getState",{},5000).catch(()=>st.fsState||{});
-        await fsCommand("load",{url:st.url,autoPlay:true,time:Number(state.currentTime)||currentPlaybackTime()});
+        await fsCommand("load",{url:st.url,mode:fastStreamModeFor(st.url),autoPlay:true,time:Number(state.currentTime)||currentPlaybackTime()});
       }else await applyPreferredFastStreamLevel(value,true);
       playerLoading(false); toast("Quality set to "+(value==="auto"?"Auto":value.replace("level:","")),"success");
     }catch(e){ playerLoading(false); toast("FastStream could not switch quality: "+(e.message||e),"error"); }
@@ -3072,7 +3108,7 @@ async function switchDirectVariant(variant,opts){
   playerLoading(true,opts.reason==="quality"?"Switching quality…":"Trying another stream…");
   if(st.engine==="faststream-api"&&fsBridge.ready&&stage){
     try{
-      await fsCommand("load",{url:next.url,autoPlay:true,time:at>5?at:0},12000);
+      await fsCommand("load",{url:next.url,mode:fastStreamModeFor(next.url),autoPlay:true,time:at>5?at:0},12000);
       setTimeout(()=>refreshFastStreamLevels(true),300);
       updatePlayerMeta(source);
       return;
@@ -3104,10 +3140,10 @@ async function tryNextDirectVariant(reason){
 const FASTSTREAM_ORIGIN="https://faststream.online";
 let fastStreamApiStatus=(()=>{ try{ return JSON.parse(sessionStorage.getItem("zp_faststream_api_v1")||"null")||{state:"unknown",checkedAt:0}; }catch{ return {state:"unknown",checkedAt:0}; } })();
 let fastStreamProbeStarted=false;
-function effectiveFastStreamApiStatus(){ return Date.now()-Number(fastStreamApiStatus.checkedAt||0)<6*60*60*1000?String(fastStreamApiStatus.state||"unknown"):"unknown"; }
+function effectiveFastStreamApiStatus(){ const st=String(fastStreamApiStatus.state||"unknown"); const ttl=st==="available"?6*60*60*1000:10*60*1000; return Date.now()-Number(fastStreamApiStatus.checkedAt||0)<ttl?st:"unknown"; }
 function setFastStreamApiStatus(state){ fastStreamApiStatus={state,checkedAt:Date.now()}; try{ sessionStorage.setItem("zp_faststream_api_v1",JSON.stringify(fastStreamApiStatus)); }catch{} }
 function probeFastStreamApiInBackground(){
-  if(streamCfg().fastStreamApiProbe===false||fastStreamProbeStarted||effectiveFastStreamApiStatus()!=="unknown"||effectiveSaver()||document.hidden) return;
+  if(streamCfg().fastStreamApiProbe===false||fastStreamProbeStarted||effectiveFastStreamApiStatus()!=="unknown"||document.hidden) return;
   fastStreamProbeStarted=true;
   const frame=document.createElement("iframe");
   frame.hidden=true; frame.setAttribute("aria-hidden","true"); frame.title="FastStream API capability check";
@@ -3575,6 +3611,82 @@ async function mountDirectVideo(stage,url,source,loadT0,resume){
   }
   return mountFastStreamPlayer(stage,url,source,loadT0,resumeAt,{allowApi:true});
 }
+/* Self-hosted adaptive engines, imported from the official open-source
+   projects and lazy-loaded from our own origin (vendor/, pinned versions in
+   vendor/VENDOR.md): hls.js for HLS when the platform lacks native HLS, and
+   dash.js for MPEG-DASH. This guarantees HLS/DASH playback with full D-pad
+   control even if the hosted FastStream web build is unreachable. */
+function fastStreamModeFor(url){
+  const k=directMediaKind(url);
+  if(k==="hls") return "accelerated_hls";
+  if(k==="dash") return "accelerated_dash";
+  if(k==="file"&&/\.mp4$/i.test(String(url||"").split(/[?#]/)[0])) return "accelerated_mp4";
+  return undefined;
+}
+function vendorCanPlayDirect(url){
+  if(typeof MediaSource==="undefined") return false;
+  const kind=directMediaKind(url);
+  return kind==="dash"||kind==="hls";
+}
+const vendorLoaders={};
+function loadVendorScript(name){
+  if(vendorLoaders[name]) return vendorLoaders[name];
+  vendorLoaders[name]=new Promise((resolve,reject)=>{
+    const base=(location.protocol==="http:"||location.protocol==="https:")?"/vendor/":"vendor/";
+    const src=base+(name==="dash"?"dash.all.min.js":"hls.min.js");
+    const sc=document.createElement("script"); sc.src=src; sc.async=true;
+    sc.onload=()=>resolve(true);
+    sc.onerror=()=>{ delete vendorLoaders[name]; reject(new Error("Failed to load "+src)); };
+    document.head.appendChild(sc);
+  });
+  return vendorLoaders[name];
+}
+function destroyVendorPlayers(st){
+  if(!st) return;
+  if(st.hlsPlayer){ try{st.hlsPlayer.destroy();}catch{} st.hlsPlayer=null; }
+  if(st.dashPlayer){ try{st.dashPlayer.reset();}catch{} st.dashPlayer=null; }
+  st.vendorEngine="";
+}
+async function attachNativeSource(v,url,st){
+  const kind=directMediaKind(url);
+  const canNativeHls=!!(v.canPlayType&&v.canPlayType("application/vnd.apple.mpegurl"));
+  const useDash=kind==="dash"&&typeof MediaSource!=="undefined";
+  const useHls=kind==="hls"&&!canNativeHls&&typeof MediaSource!=="undefined";
+  if(!useDash&&!useHls){ st._mseEngine=""; v.src=url; return; }
+  st._mseEngine=useDash?"dashjs":"hlsjs";
+  const markEngine=()=>{ const eng=document.getElementById("playerEngine"); if(eng&&playerState===st&&st.vendorEngine) eng.textContent="ZeroPlay player · "+st.vendorEngine; };
+  try{
+    await loadVendorScript(useDash?"dash":"hls");
+    if(playerState!==st||!v.isConnected) return;
+    if(useDash){
+      const dashPlayer=window.dashjs.MediaPlayer().create();
+      dashPlayer.initialize(v,url,true);
+      try{ dashPlayer.updateSettings({streaming:{buffer:{stableBufferTime:ANDROID_TV_APP?14:20,bufferTimeAtTopQuality:30}}}); }catch{}
+      st.dashPlayer=dashPlayer; st.vendorEngine="dash.js";
+      dlog("Adaptive engine: dash.js (self-hosted)"); markEngine();
+      return;
+    }
+    if(window.Hls&&window.Hls.isSupported()){
+      const hls=new window.Hls({enableWorker:false,maxBufferLength:ANDROID_TV_APP?16:30,maxMaxBufferLength:60,capLevelToPlayerSize:true,startLevel:-1});
+      hls.loadSource(url); hls.attachMedia(v);
+      st.hlsPlayer=hls; st.vendorEngine="hls.js";
+      dlog("Adaptive engine: hls.js (self-hosted)"); markEngine();
+      hls.on(window.Hls.Events.ERROR,(evt,data)=>{
+        if(!data||!data.fatal||playerState!==st) return;
+        if(data.type===window.Hls.ErrorTypes.NETWORK_ERROR){ try{hls.startLoad();}catch{} return; }
+        if(data.type===window.Hls.ErrorTypes.MEDIA_ERROR){ try{hls.recoverMediaError();}catch{} return; }
+        try{hls.destroy();}catch{} st.hlsPlayer=null; st._mseEngine="";
+        const ev=document.createEvent("Event"); ev.initEvent("error",false,false); v.dispatchEvent(ev);
+      });
+      return;
+    }
+    throw new Error("MSE engine unavailable");
+  }catch(err){
+    if(playerState!==st) return;
+    dlog("Adaptive engine failed: "+(err&&err.message||err));
+    st._mseEngine=""; v.src=url; try{v.load();}catch{}
+  }
+}
 async function mountFastStreamPlayer(stage,url,source,loadT0,resumeAt,opts){
   const st=playerState; opts=opts||{};
   if(!stage||!st) return;
@@ -3582,9 +3694,10 @@ async function mountFastStreamPlayer(stage,url,source,loadT0,resumeAt,opts){
   const surfaceOnly=!tvShell&&!!(opts.surfaceOnly||st.surfaceOnly);
   if(tvShell&&st.surfaceOnly) setPlayerSurfaceMode(false);
   if(surfaceOnly) setPlayerSurfaceMode(true);
+  destroyVendorPlayers(st);
   const tvShellFallback=()=>{
     if(playerState!==st) return;
-    if(st._tvNativeAttemptedUrl!==url&&nativeCanPlayDirect(url)){ st._tvNativeAttemptedUrl=url; return mountNativeVideo(stage,url,source,loadT0,resumeAt,{fastStreamApiPending:true}); }
+    if(st._tvNativeAttemptedUrl!==url&&(nativeCanPlayDirect(url)||vendorCanPlayDirect(url))){ st._tvNativeAttemptedUrl=url; return mountNativeVideo(stage,url,source,loadT0,resumeAt,{fastStreamApiPending:true}); }
     playerLoading(false);
     stage.innerHTML=playerErrorHTML("This format cannot be controlled with a TV remote","On TV, FastStream is used through its control API only - its own player buttons need a mouse. The control API did not answer for this stream. Open Servers and choose another server or quality.");
     bindPlayerErrorActions(); setPlayerControlMode("native"); showPlayerChrome(false);
@@ -3605,8 +3718,8 @@ async function mountFastStreamPlayer(stage,url,source,loadT0,resumeAt,opts){
     beginLegacy(); return;
   }
   const apiStatus=effectiveFastStreamApiStatus();
-  if(!opts.legacyOnly&&apiStatus==="unavailable"){
-    if(!surfaceOnly&&nativeCanPlayDirect(url)) return mountNativeVideo(stage,url,source,loadT0,resumeAt,{fastStreamApiPending:true});
+  if(!opts.legacyOnly&&apiStatus==="unavailable"&&!(tvShell&&!nativeCanPlayDirect(url)&&!vendorCanPlayDirect(url))){
+    if(!surfaceOnly&&(nativeCanPlayDirect(url)||vendorCanPlayDirect(url))) return mountNativeVideo(stage,url,source,loadT0,resumeAt,{fastStreamApiPending:true});
     beginLegacy(); return;
   }
   if(!surfaceOnly&&!opts.legacyOnly&&apiStatus!=="available"&&nativeCanPlayDirect(url)){
@@ -3627,7 +3740,7 @@ async function mountFastStreamPlayer(stage,url,source,loadT0,resumeAt,opts){
   st.engine="faststream-connecting";
   setPlayerControlMode("faststream-connecting");
   frame.src="https://faststream.online/player/";
-  const ready=await waitForFastStreamReady(4500);
+  const ready=await waitForFastStreamReady(ANDROID_TV_APP?12000:6000);
   if(playerState!==st) return;
   if(!ready){
     setFastStreamApiStatus("unavailable");
@@ -3639,12 +3752,14 @@ async function mountFastStreamPlayer(stage,url,source,loadT0,resumeAt,opts){
   }
   try{
     await fsCommand("subscribe",{events:["canplay","durationchange","ended","error","loadedmetadata","manifestparsed","pause","play","playing","ratechange","seeked","seeking","timeupdate","waiting","sourcechange","volumechange"]},6000);
+    const fsInfo=await fsCommand("ping",{},5000).catch(()=>null);
+    if(fsInfo&&fsInfo.version){ st.fsVersion=String(fsInfo.version); dlog("FastStream API connected: "+st.fsVersion+" (EmbedAPI)"); }
     setFastStreamApiStatus("available");
     st.engine="faststream-api";
     setPlayerControlMode("faststream-api");
     if(!surfaceOnly){ const click=document.createElement("button"); click.className="media-click"; click.id="mediaClick"; click.type="button"; click.setAttribute("aria-label","Play or pause"); click.onclick=()=>playerCommand("toggle"); click.ondblclick=()=>playerCommand("fullscreen"); shell.appendChild(click); }
     playerLoading(true,"FastStream connected — loading stream…");
-    await fsCommand("load",{url,autoPlay:true,time:resumeAt>20?resumeAt:0},12000);
+    await fsCommand("load",{url,mode:fastStreamModeFor(url),autoPlay:true,time:resumeAt>20?resumeAt:0},12000);
     await fsCommand("setVolume",{volume:Number(settings.stream.volume==null?.9:settings.stream.volume)},5000).catch(()=>{});
     await fsCommand("setPlaybackRate",{rate:Number(settings.stream.rate||1)},5000).catch(()=>{});
     const state=await fsCommand("getState",{},5000).catch(()=>null);
@@ -3680,7 +3795,8 @@ function mountNativeVideo(stage,url,source,loadT0,resumeAt,opts){
   v.volume=Math.max(0,Math.min(1,Number(settings.stream.volume==null?.9:settings.stream.volume)));
   v.muted=!!settings.stream.muted; v.playbackRate=Number(settings.stream.rate||1);
   v.preload=(settings.stream.preload==="off"||effectiveSaver())?"metadata":"auto";
-  v.src=url;
+  destroyVendorPlayers(st);
+  attachNativeSource(v,url,st);
   setPlayerControlMode("native");
   updatePlayerMeta(source);
   v.addEventListener("loadedmetadata",()=>{
@@ -3723,7 +3839,7 @@ function mountNativeVideo(stage,url,source,loadT0,resumeAt,opts){
     if(st._nativeRetriedWithFastStream!==url){ st._nativeRetriedWithFastStream=url; toast("The browser could not play this file directly — retrying inside FastStream"); mountFastStreamPlayer(stage,url,source,performance.now(),currentPlaybackTime(),ANDROID_TV_APP?{allowApi:true,tvShell:true}:{allowApi:false}); return; }
     stage.innerHTML=playerErrorHTML("This stream could not be played","The browser reported a media/codec error. Try another quality or server with this exact title."); bindPlayerErrorActions(); setPlayerControlMode("native");
   },true);
-  try{v.load();}catch{}
+  if(!st._mseEngine) try{v.load();}catch{}
 }
 function primeDirectSafely(url,video,bufferedAhead){
   const st=playerState;
@@ -3809,6 +3925,7 @@ function closePlayer(){
     if(st.chromeTimer) clearTimeout(st.chromeTimer);
     setEmbedFocusMode(false);
     if(st.engine==="faststream-api") fsCommand("unsubscribe",{},1500).catch(()=>{});
+    destroyVendorPlayers(st);
   }
   if(document.pictureInPictureElement) document.exitPictureInPicture().catch(()=>{});
   if(document.fullscreenElement&&document.fullscreenElement.id==="playerOverlay") document.exitFullscreen().catch(()=>{});
@@ -5123,7 +5240,7 @@ function renderSearch(q){
   $("#searchForm").onsubmit=e=>{ e.preventDefault(); const v=$("#searchInput").value.trim(); location.hash="#/search?q="+encodeURIComponent(v); if(v===searchState.q) runSearch(); };
   $("#searchChips").addEventListener("click",e=>{ const b=e.target.closest("[data-f]"); if(!b) return; searchState.filter=b.dataset.f; $$("#searchChips .chip-btn").forEach(x=>x.classList.toggle("active",x===b)); drawSearchResults(); });
   if(searchState.q) runSearch(); else $("#searchResults").innerHTML='<div class="empty"><h3>Find your next watch</h3><p>Type a title above and press Search.</p></div>';
-  setTimeout(()=>{ const i=$("#searchInput"); if(i) i.focus(); },30);
+  setTimeout(()=>{ if(ANDROID_TV_APP&&searchState.q) return; const i=$("#searchInput"); if(i) i.focus(); },30);
 }
 async function runSearch(){
   const box=$("#searchResults"); if(!box) return;
@@ -5132,6 +5249,7 @@ async function runSearch(){
     const d=await tmdb("/search/multi",{query:searchState.q,page:1});
     searchState.results=(d.results||[]).filter(x=>x.media_type==="movie"||x.media_type==="tv");
     drawSearchResults();
+    if(ANDROID_TV_APP){ const first=box.querySelector(".poster-card"); if(first){ try{first.focus({preventScroll:true});}catch{} } }
   }catch{ box.innerHTML='<div class="status-box error">Search failed. Check your connection, then open Settings to review playback and discovery.</div>'; }
 }
 function drawSearchResults(){

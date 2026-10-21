@@ -16,6 +16,13 @@
 [functions]
   node_bundler = "esbuild"
 
+# Permanent Android TV APK channel (same asset the Vercel /tv.apk redirect serves)
+[[redirects]]
+  from = "/tv.apk"
+  to = "https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/releases/download/zeroplay-tv-v1.0.3/zeroplay-tv.apk"
+  status = 302
+  force = true
+
 # API proxies (ZeroPlay-compatible paths)
 [[redirects]]
   from = "/api/tmdb"

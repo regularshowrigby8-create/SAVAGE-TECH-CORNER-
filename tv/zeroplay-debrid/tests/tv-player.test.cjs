@@ -103,7 +103,7 @@ eq(sorted.map(x => x.id), ['direct:a', 'route:vidstuck', 'route:embedwave'], 've
     [html.includes('function renderCategories()') && html.includes('route==="categories"'), 'Categories route is wired'],
     [html.includes('class="trailer-layer"') && html.includes('function startCardPreview'), 'trailer preview lives inside poster title blocks'],
     [html.includes('id="playerQuality"') && html.includes('setVideoLevel'), 'unified player exposes real FastStream quality selection'],
-    [html.includes('frame.src="https://faststream.online/player/"') && html.includes('waitForFastStreamReady(4500)'), 'FastStream API handshake precedes fallback'],
+    [html.includes('frame.src="https://faststream.online/player/"') && html.includes('waitForFastStreamReady(ANDROID_TV_APP?12000:6000)'), 'FastStream API handshake precedes fallback'],
     // TV-shell contract: FastStream's own UI is not D-pad compatible, so on
     // Android TV our controls own the remote and FastStream is only driven
     // through its EmbedAPI (decoder), with the native engine for files and

@@ -328,3 +328,15 @@ buttons exist.
 
 ZeroPlay hosts no media files. This product uses the TMDB API when configured
 but is not endorsed or certified by TMDB.
+
+## Search & playback engines (2026-10-21)
+
+- Keyless search runs on Cinemeta: previews are hydrated through the full meta
+  endpoint because search previews omit `moviedb_id` (see `cmSearchCatalog`).
+- HLS/DASH playback: native platform HLS when available; otherwise self-hosted
+  hls.js 1.7.3 / dash.js 5.2.1 from `vendor/` (lazy-loaded); FastStream is
+  driven via its upstream EmbedAPI (`load` with explicit accelerated modes,
+  `ping` confirmation, API subtitles) inside our own D-pad control shell.
+- Android TV APK: `https://zeroplay-rd.vercel.app/tv.apk` always serves the
+  latest CI-built `zeroplay-tv.apk` (v1.0.3+). The web app itself updates from
+  Vercel on every launch — no reinstall needed for web changes.

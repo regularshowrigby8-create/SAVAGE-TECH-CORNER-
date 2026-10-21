@@ -243,3 +243,38 @@ dirs `tv/zeroplay-debrid/` (Vercel root), `tv/upstream-zeroplay/` (must stay
 — it's upstream's name), workflow file, icon/banner. A rename is therefore:
 display strings + store listing art (safe) · domain/project (redirects) ·
 package/keys (breaking, needs migration plan). Do it in that order.
+
+---
+
+## Update 2026-10-21 (evening): Search root cause, FastStream hardening, self-hosted engines, APK channel
+
+Device testing showed Search empty and FastStream not engaging. Findings and fixes:
+
+- **Search (proven root cause).** With no TMDB key on Vercel, `/api/tmdb` returns
+  `TMDB_NOT_CONFIGURED` and the client falls back to Cinemeta. Cinemeta *search*
+  works, but its preview metas **omit `moviedb_id`**, and `cmMapMeta()` drops
+  anything without one — so every keyless search rendered zero cards.
+  Fix: `cmSearchCatalog()` hydrates each preview via
+  `/meta/{movie|series}/{imdb_id}.json` (verified live: Avatar `tt0499549` →
+  `moviedb_id 19995`), concurrency-capped at 6, relevance order preserved.
+  TV: results take D-pad focus (first card) instead of a keyboard-less input.
+- **FastStream (protocol re-verified against upstream `EmbedAPI.mjs`).** Our
+  envelope/verbs already matched upstream. Real blockers fixed: the background
+  probe never ran under TV performance mode (`effectiveSaver()`), a failed probe
+  was cached 6h and skipped real mount attempts, the ready wait was 4.5s
+  (now 12s on TV), and `load` relied on URL mode inference — we now pass the
+  explicit upstream modes (`accelerated_hls` / `accelerated_dash` /
+  `accelerated_mp4`), confirm the session with `ping`, and wire subtitles via
+  `getSubtitles`/`setSubtitleTrack`. Whether the publicly hosted
+  `faststream.online` web build (v1.3.77.web) actually contains EmbedAPI still
+  cannot be proven headlessly — hence:
+- **Guaranteed adaptive playback (imported upstream code).** Self-hosted,
+  lazy-loaded `vendor/hls.min.js` (hls.js 1.7.3) and `vendor/dash.all.min.js`
+  (dash.js 5.2.1). HLS uses native platform HLS when present, else hls.js;
+  DASH uses FastStream API first on TV, dash.js as the certain fallback —
+  always inside our own D-pad-controlled player. The on-screen engine label
+  shows which engine is actually decoding.
+- **APK channel.** Native app bumped to **1.0.3 (versionCode 4)**;
+  `https://zeroplay-rd.vercel.app/tv.apk` permanently redirects to the CI-built
+  `zeroplay-tv.apk` release asset (Vercel + Netlify configs). Web changes keep
+  auto-loading from Vercel; only native APK changes need one confirmed install.
