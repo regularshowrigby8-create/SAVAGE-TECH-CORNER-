@@ -48,6 +48,52 @@ def png_size(data: bytes) -> tuple[int, int] | None:
     return struct.unpack(">II", data[16:24])
 
 
+def webp_size(data: bytes) -> tuple[int, int] | None:
+    """Return dimensions for the VP8, VP8L and VP8X WebP layouts AAPT2 emits."""
+    if len(data) < 30 or data[:4] != b"RIFF" or data[8:12] != b"WEBP":
+        return None
+    chunk = data[12:16]
+    if chunk == b"VP8X":
+        width = int.from_bytes(data[24:27], "little") + 1
+        height = int.from_bytes(data[27:30], "little") + 1
+        return width, height
+    if chunk == b"VP8L" and data[20] == 0x2F:
+        bits = int.from_bytes(data[21:25], "little")
+        return (bits & 0x3FFF) + 1, ((bits >> 14) & 0x3FFF) + 1
+    if chunk == b"VP8 " and data[23:26] == b"\x9d\x01\x2a":
+        width = struct.unpack_from("<H", data, 26)[0] & 0x3FFF
+        height = struct.unpack_from("<H", data, 28)[0] & 0x3FFF
+        return width, height
+    return None
+
+
+def jpeg_size(data: bytes) -> tuple[int, int] | None:
+    if len(data) < 4 or data[:2] != b"\xff\xd8":
+        return None
+    index = 2
+    sof_markers = {0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF}
+    while index + 9 < len(data):
+        if data[index] != 0xFF:
+            index += 1
+            continue
+        marker = data[index + 1]
+        if marker in (0xD8, 0x01) or 0xD0 <= marker <= 0xD7:
+            index += 2
+            continue
+        length = struct.unpack_from(">H", data, index + 2)[0]
+        if length < 2:
+            return None
+        if marker in sof_markers:
+            height, width = struct.unpack_from(">HH", data, index + 5)
+            return width, height
+        index += 2 + length
+    return None
+
+
+def image_size(data: bytes) -> tuple[int, int] | None:
+    return png_size(data) or webp_size(data) or jpeg_size(data)
+
+
 def candidate_sdk_roots() -> list[Path]:
     roots: list[Path] = []
     for env_name in ("ANDROID_HOME", "ANDROID_SDK_ROOT"):
@@ -167,21 +213,29 @@ def verify(apk_path: Path, require_sdk_tools: bool = False) -> dict:
                 if not present:
                     warnings.append(f"Binary-manifest fallback did not find {label}; SDK XML output is authoritative when available")
 
-            banners = [name for name in names if name.endswith("tv_banner.png")]
-            icons = [name for name in names if name.endswith("ic_launcher.png")]
+            resource_images = [name for name in names
+                               if name.startswith("res/") and "/" in name
+                               and name.rsplit(".", 1)[-1].lower() in {"png", "webp", "jpg", "jpeg"}]
+            banners = [name for name in resource_images if "/tv_banner." in name]
+            icons = [name for name in resource_images if "/ic_launcher." in name]
+            metrics["resource_image_entries"] = resource_images
             metrics["tv_banner_entries"] = banners
             metrics["launcher_icon_entries"] = icons
             if not banners:
-                errors.append("No compiled tv_banner.png found in the APK")
+                errors.append(
+                    "No compiled tv_banner image found in the APK; resource images: "
+                    + ", ".join(resource_images[:20]))
             for banner in banners:
-                dimensions = png_size(zf.read(banner))
+                dimensions = image_size(zf.read(banner))
                 metrics.setdefault("tv_banner_sizes", {})[banner] = dimensions
                 if dimensions != (320, 180):
                     errors.append(f"TV banner {banner} is {dimensions}, expected (320, 180)")
             if not icons:
-                errors.append("No compiled ic_launcher.png found in the APK")
+                errors.append(
+                    "No compiled ic_launcher image found in the APK; resource images: "
+                    + ", ".join(resource_images[:20]))
             for icon in icons:
-                dimensions = png_size(zf.read(icon))
+                dimensions = image_size(zf.read(icon))
                 metrics.setdefault("launcher_icon_sizes", {})[icon] = dimensions
                 if not dimensions or dimensions[0] != dimensions[1] or dimensions[0] < 48:
                     errors.append(f"Launcher icon {icon} has invalid dimensions {dimensions}")
