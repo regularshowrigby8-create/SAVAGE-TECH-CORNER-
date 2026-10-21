@@ -3136,8 +3136,12 @@ function embedReferrerPolicyForUrl(url){
   try{ return new URL(String(url||"")).hostname.toLowerCase().endsWith("embedwave.cc")?"no-referrer":"strict-origin-when-cross-origin"; }catch{ return "strict-origin-when-cross-origin"; }
 }
 function armProviderFrame(f){
-  if(!f||!ANDROID_TV_APP) return;
-  try{ f.setAttribute("sandbox","allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock"); }catch{}
+  if(!f) return;
+  // Never sandbox provider players: several legitimate embeds detect the
+  // sandbox attribute itself (document.domain assignment throws in any
+  // sandboxed frame) and refuse playback before any allow-* token can help.
+  // The Android shell still blocks top-level hijacks and known scam URLs.
+  try{ f.removeAttribute("sandbox"); }catch{}
 }
 function mountEmbedPlayer(stage,url,source,loadT0,ctx){
   const st=playerState;
@@ -7092,11 +7096,9 @@ document.addEventListener("keydown",e=>{
   if(e.key==="ContextMenu"||e.key==="Menu"){ e.preventDefault(); handleZeroPlayTvMenu(); return; }
   if(e.key==="BrowserSearch"||e.key==="Search"){ e.preventDefault(); handleZeroPlayTvSearch(); return; }
   if(e.key==="Escape"){
-    if(typeof downloadModalState!=="undefined"&&downloadModalState){ closeDownloadModal(); e.preventDefault(); return; }
-    if(streamsCtx){ closeStreams(); e.preventDefault(); return; }
-    const drawer=document.getElementById("menuDrawer"); if(drawer&&drawer.classList.contains("open")){ closeMenuDrawer(); e.preventDefault(); return; }
-    if(playerState){ closePlayer(); e.preventDefault(); return; }
-    if(detailState){ closeDetail(); e.preventDefault(); return; }
+    // Escape is the browser test equivalent of Android KEYCODE_BACK. Keep it
+    // on the exact same route/modal/player contract as the native wrapper.
+    if(handleZeroPlayTvBack()){ e.preventDefault(); return; }
     return;
   }
   if(e.key==="/"&&!/input|textarea|select/i.test(activeTag)){ e.preventDefault(); $("#topQuery").focus(); return; }

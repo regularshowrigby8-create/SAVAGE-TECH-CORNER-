@@ -43,7 +43,7 @@ The native shell exposes a small read-only profile bridge and forwards remote ke
 
 Cross-origin embedded players still control some of their own internal behaviour; the shell does not claim to reach inside them. For those players, choose **Video controls** in the ZeroPlay bar: the shell shows a D-pad cursor (move with the remote, tap with OK/Play-Pause, return with Back) so mouse/touch-only player buttons, subtitle menus and quality menus remain usable.
 
-Provider frames are sandboxed on Android TV and the shell blocks top-level pop-up/redirect hijacks plus known “scan this QR code to prove you are not a robot” scam patterns. **Never scan a QR code shown by a video player.** If a server shows one, press Back/Menu and choose another server.
+Provider frames are deliberately **not** given an HTML `sandbox` attribute: several legitimate embedded players detect any sandboxed frame and refuse playback outright. The Android shell instead blocks top-level pop-up/redirect hijacks plus known “scan this QR code to prove you are not a robot” scam patterns. **Never scan a QR code shown by a video player.** If a server shows one, press Back/Menu and choose another server.
 
 ## Build from source
 
