@@ -36,6 +36,15 @@ remains a later phase after user approval.
 - VidStuck/ZXCStream/Embedwave remain built-in, Embedwave is last resort,
   direct media uses embedded FastStream, torrents are hidden, and known files
   over the hard 5 GB ceiling are rejected.
+- The full Settings page and the menu drawer's Quick switches share one
+  persisted settings store. Settings contains Add Website, continuous
+  adding, FastStream configuration, download defaults, separate optional
+  feature switches, settings import/export and cache clearing.
+- Title/detail, every episode row, the player and verified direct server
+  rows expose Download actions. The Downloads page manages pause/resume jobs
+  and M3U extraction; parallel work is used only for genuine Range files or
+  independent HLS segments, with the limitation stated when a host supports
+  neither.
 
 ## TV browsing and player polish
 
@@ -62,9 +71,14 @@ remains a later phase after user approval.
   engine while capability is probed in the background, and HLS/DASH use the
   embedded FastStream player inside the same shell.
 - Player responsiveness protections include throttled progress writes,
-  parent-shell focus retention, safe 206-only range priming with a small
-  two-worker budget, cancellable server searches, and pausing continuous
-  discovery cycles while video is open.
+  parent-shell focus retention, safe 206-only range priming with configurable
+  1–4 worker/chunk/budget/buffer limits, cancellable server searches, and
+  pausing continuous discovery cycles while video is open.
+- Loading an embed page is not counted as playback success. VidStuck and
+  ZXCStream are given time for their own server checks after the frame loads;
+  only a frame that never loads, a failed resolve, or a stall after real
+  timestamp progress can fail over. Automatic Embedwave failover is a
+  separate opt-in switch and is off by default.
 
 See `zeroplay-debrid/README.md` for the full architecture, deployment and
 limitations.

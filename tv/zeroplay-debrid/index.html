@@ -401,6 +401,47 @@ body.route-enter .page{animation:zpFade .32s ease both}
 body.tv-mode .poster-card:focus-visible,body.tv-mode button:focus-visible{box-shadow:0 0 0 2px rgba(240,198,107,.45)}
 @media(min-width:1200px){.rail-track .poster-card{flex-basis:176px}.grid{grid-template-columns:repeat(auto-fill,minmax(176px,1fr))}.hero-body{padding:2.6rem}.hero-body h1{font-size:3rem}}
 @media(max-width:760px){.category-strip{display:none}.player-bar .pt{max-width:42vw}.player-bar .logo-badge>span:last-child{display:none}.player-status{display:none}.volume-wrap input{display:none}.control-select{min-width:104px}.hero{min-height:430px}.hero-trailer iframe{transform:scale(1.55)}}
+.setting-switch{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.62rem 0;border-bottom:1px solid rgba(255,255,255,.055)}
+.setting-switch:last-child{border-bottom:0}
+.setting-copy label{color:#eef1f3;font-weight:650;font-size:.9rem;cursor:pointer}
+.setting-copy small{display:block;color:var(--text-muted);line-height:1.35;margin-top:.15rem;max-width:560px}
+.setting-control{position:relative;display:inline-flex;flex:none;cursor:pointer;width:46px;height:24px}
+.setting-control input{width:46px;height:24px;cursor:pointer}
+.setting-control input:focus-visible+.slider{outline:2px solid var(--gold);outline-offset:2px}
+.settings-hub-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden;margin-top:1rem}
+.settings-hub-grid>div{background:#121518;padding:1rem}
+.settings-hub-grid h3{color:#fff;font-size:.98rem;margin-bottom:.35rem}
+.settings-hub-grid p{color:var(--text-muted);font-size:.84rem;line-height:1.5}
+.settings-actions{display:flex;gap:.55rem;flex-wrap:wrap;margin-top:.85rem}
+.menu-quick-note{color:var(--text-muted);font-size:.78rem;line-height:1.45;margin-bottom:.45rem}
+body.compact-cards .rail-track .poster-card{flex-basis:138px}
+body.compact-cards .grid{grid-template-columns:repeat(auto-fill,minmax(138px,1fr))}
+body.hide-category-strip .category-strip{display:none!important}
+body.reduce-motion *,body.reduce-motion *::before,body.reduce-motion *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+body.reduce-motion .poster-card:hover,body.reduce-motion .poster-card:focus-visible,body.reduce-motion .poster-card.is-previewing{transform:none}
+.ep{padding:.45rem}
+.ep-main{display:flex;gap:.7rem;align-items:center;flex:1;min-width:0;background:transparent;border:0;color:var(--text);text-align:left;cursor:pointer;padding:.15rem}
+.ep-main .ep-copy{min-width:0}
+.ep-download{flex:none;display:inline-flex;flex-direction:column;align-items:center;gap:.08rem;border:1px solid rgba(216,179,106,.35);background:rgba(216,179,106,.08);color:#f3d99b;border-radius:9px;padding:.45rem .55rem;cursor:pointer;font-weight:750;font-size:.9rem}
+.ep-download small{font-size:.62rem;letter-spacing:.02em}
+.ep-download:hover{background:rgba(216,179,106,.16);border-color:rgba(216,179,106,.65)}
+#downloadsRoot .overlay{z-index:150}
+.download-modal{max-width:900px}
+.download-list{display:grid;gap:.75rem}
+.download-job{background:#0d1114;border:1px solid rgba(255,255,255,.075);border-radius:14px;padding:1rem}
+.download-job-head{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;flex-wrap:wrap}
+.download-job h3{color:#fff;font-size:1rem;margin-bottom:.2rem}
+.download-meta{color:var(--text-muted);font-size:.8rem;line-height:1.5;word-break:break-word}
+.download-progress{height:9px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;margin:.75rem 0 .45rem}
+.download-progress i{display:block;height:100%;background:linear-gradient(90deg,var(--primary),var(--gold));border-radius:99px;transition:width .25s ease}
+.download-stats{display:flex;gap:.9rem;flex-wrap:wrap;color:#d8dde1;font-size:.8rem}
+.download-actions{display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.75rem}
+.download-empty{border:1px dashed rgba(255,255,255,.14);border-radius:14px;padding:1.2rem;color:var(--text-muted);text-align:center}
+.m3u-result{border-top:1px solid rgba(255,255,255,.07);padding:.8rem 0}
+.m3u-result code{display:block;word-break:break-all;color:#cfd5da;font-size:.74rem;margin:.25rem 0}
+.storage-meter{height:8px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;margin-top:.5rem}
+.storage-meter i{display:block;height:100%;background:var(--gold)}
+@media(max-width:620px){.ep-download small{display:none}.download-job{padding:.85rem}.settings-hub-grid{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.poster-card:hover,.poster-card:focus-visible,.poster-card.is-previewing{transform:none}}
 </style>
 </head>
@@ -447,6 +488,18 @@ body.tv-mode .poster-card:focus-visible,body.tv-mode button:focus-visible{box-sh
     <button class="menu-link" type="button" data-menu-route="categories"><span>Categories</span><span>Genres</span></button>
     <button class="menu-link" type="button" data-menu-route="library"><span>Library</span><span>Saved</span></button>
     <button class="menu-link" type="button" data-menu-route="sources"><span>Discover</span><span>Servers</span></button>
+    <button class="menu-link" type="button" data-menu-route="downloads"><span>Downloads</span><span id="menuDownloadCount">Offline</span></button>
+    <button class="menu-link" type="button" data-menu-route="settings"><span>Settings</span><span>Controls</span></button>
+  </div>
+  <div class="menu-section" id="menuQuickSettings">
+    <h3>Quick switches</h3>
+    <p class="menu-quick-note">Optional features can be turned on or off here. The same controls are available with more detail in Settings.</p>
+    <div id="menuQuickSwitches"></div>
+    <div class="settings-actions">
+      <button class="btn btn-primary btn-sm" type="button" data-settings-section="add-website">Add website</button>
+      <button class="btn btn-secondary btn-sm" type="button" data-settings-section="faststream">FastStream</button>
+      <button class="btn btn-secondary btn-sm" type="button" data-settings-section="continuous">Continuous adding</button>
+    </div>
   </div>
   <div class="menu-section">
     <h3>Movie categories</h3>
@@ -490,6 +543,7 @@ body.tv-mode .poster-card:focus-visible,body.tv-mode button:focus-visible{box-sh
 
 <div id="modalRoot"></div>
 <div id="streamsRoot"></div>
+<div id="downloadsRoot"></div>
 <div id="playerRoot"></div>
 <div id="toasts" aria-live="polite"></div>
 
@@ -514,7 +568,9 @@ let settings = Object.assign({
 const LEGACY_SETTING_KEYS=["tmdbKey","rdToken","rdUser","addonBase","debrid","debridManifestUrl","siteCatalogues"];
 const hadLegacySettings=LEGACY_SETTING_KEYS.some(k=>Object.prototype.hasOwnProperty.call(settings,k));
 for(const k of LEGACY_SETTING_KEYS) delete settings[k]; /* no user API keys and no Real-Debrid configuration */
-settings.stream=Object.assign({preload:"smart",player:"auto",raceTimeoutSec:8,stallSwitch:true,stallTimeoutSec:20,quality:"auto",resolutions:["2160p","1080p","720p","480p"],maxFileSizeGb:5,dataSaver:"auto",dnsWarm:true,sortByHealth:true,trailerPreviews:true,volume:.9,muted:false,rate:1},settings.stream||{});
+settings.stream=Object.assign({preload:"smart",player:"auto",raceTimeoutSec:20,stallSwitch:true,stallTimeoutSec:45,quality:"auto",resolutions:["2160p","1080p","720p","480p"],maxFileSizeGb:5,dataSaver:"auto",dnsWarm:true,sortByHealth:true,trailerPreviews:true,volume:.9,muted:false,rate:1,autoFailover:true,embedwaveFailover:false,fastStreamApiProbe:true,nextEpisodeWarm:true,primeThreads:2,primeChunkKb:256,primeBudgetMb:2,bufferTargetSec:16},settings.stream||{});
+settings.ui=Object.assign({autoplayNext:true,reduceMotion:false,compactCards:false,showCategoryStrip:true},settings.ui||{});
+settings.downloads=Object.assign({enabled:true,multithreaded:true,threads:4,chunkMb:2,concurrent:1,m3uExtraction:true,autoSave:true,autoResume:false,refreshExpired:true,keepCompleted:true},settings.downloads||{});
 if(settings.stream.player==="faststream") settings.stream.player="auto"; /* FastStream is now integrated through its API with a responsive fallback. */
 if(!(Number(settings.stream.maxFileSizeGb)>0)||Number(settings.stream.maxFileSizeGb)>5) settings.stream.maxFileSizeGb=5;
 if(settings.source==="embedwave") settings.source="vidstuck"; /* Embedwave is last-resort only — never the saved default */
@@ -569,6 +625,88 @@ function snap(it,type){ return {id:it.id,type:type||typeOf(it),title:titleOf(it)
 function snapToItem(s){ if(!s) return null; const type=s.type||s.media_type||"movie"; return {id:s.id,media_type:type,title:type==="movie"?(s.title||s.name):undefined,name:type==="tv"?(s.title||s.name):undefined,poster_path:s.poster_path||null,backdrop_path:s.backdrop_path||null,poster_url:s.poster_url||null,backdrop_url:s.backdrop_url||null,imdb_id:s.imdb_id||null,release_date:s.year?s.year+"-01-01":(s.release_date||""),first_air_date:s.year?s.year+"-01-01":(s.first_air_date||""),vote_average:s.rating?Number(s.rating):(s.vote_average||0),trailer_key:s.trailer_key||null,logo_url:s.logo_url||null,genre_ids:s.genre_ids||[],overview:s.overview||""}; }
 const keyOf = (type,id)=>type+":"+id;
 const inWatchlist = (type,id)=>watchlist.some(w=>w.type===type&&w.id===id);
+function clampSettingNumber(value,min,max,fallback){ const n=Number(value); return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback; }
+function streamCfg(){ const st=settings.stream||(settings.stream={}); st.raceTimeoutSec=clampSettingNumber(st.raceTimeoutSec,15,60,20); st.stallTimeoutSec=clampSettingNumber(st.stallTimeoutSec,30,120,45); st.primeThreads=Math.round(clampSettingNumber(st.primeThreads,1,4,2)); st.primeChunkKb=Math.round(clampSettingNumber(st.primeChunkKb,64,1024,256)); st.primeBudgetMb=clampSettingNumber(st.primeBudgetMb,.25,8,2); st.bufferTargetSec=clampSettingNumber(st.bufferTargetSec,6,60,16); return st; }
+function downloadCfg(){ const d=settings.downloads||(settings.downloads={}); d.threads=Math.round(clampSettingNumber(d.threads,1,8,4)); d.chunkMb=clampSettingNumber(d.chunkMb,.25,8,2); d.concurrent=Math.round(clampSettingNumber(d.concurrent,1,3,1)); return d; }
+function embedLoadTimeoutMs(){ return streamCfg().raceTimeoutSec*1000; }
+function embedStallTimeoutMs(){ return streamCfg().stallTimeoutSec*1000; }
+function downloadsEnabled(){ return downloadCfg().enabled!==false; }
+function applyInterfaceSettings(){
+  const ui=settings.ui||{};
+  document.body.classList.toggle("reduce-motion",!!ui.reduceMotion);
+  document.body.classList.toggle("compact-cards",!!ui.compactCards);
+  document.body.classList.toggle("hide-category-strip",ui.showCategoryStrip===false);
+  syncFeatureToggles();
+}
+function getFeatureToggle(key){
+  const st=streamCfg(), d=downloadCfg(), ui=settings.ui||{}, cfg=(settings.discovery||{});
+  switch(key){
+    case "discovery": return !!cfg.autoStart;
+    case "trailers": return st.trailerPreviews!==false;
+    case "autoFailover": return st.autoFailover!==false;
+    case "stallSwitch": return !!st.stallSwitch;
+    case "embedwaveFailover": return !!st.embedwaveFailover;
+    case "preload": return st.preload!=="off";
+    case "dnsWarm": return !!st.dnsWarm;
+    case "sortByHealth": return !!st.sortByHealth;
+    case "fastStreamProbe": return st.fastStreamApiProbe!==false;
+    case "nextEpisodeWarm": return st.nextEpisodeWarm!==false;
+    case "downloads": return d.enabled!==false;
+    case "multithreadedDownloads": return d.multithreaded!==false;
+    case "m3uExtraction": return d.m3uExtraction!==false;
+    case "downloadAutoSave": return d.autoSave!==false;
+    case "downloadAutoResume": return !!d.autoResume;
+    case "refreshExpiredDownloads": return d.refreshExpired!==false;
+    case "keepCompletedDownloads": return d.keepCompleted!==false;
+    case "autoplayNext": return ui.autoplayNext!==false;
+    case "reduceMotion": return !!ui.reduceMotion;
+    case "compactCards": return !!ui.compactCards;
+    case "categoryStrip": return ui.showCategoryStrip!==false;
+    default: return false;
+  }
+}
+function setFeatureToggle(key,checked){
+  const st=streamCfg(), d=downloadCfg(), ui=settings.ui||(settings.ui={});
+  switch(key){
+    case "discovery": if(checked) startDiscoveryEngine(true,true); else stopDiscoveryEngine(true); break;
+    case "trailers": st.trailerPreviews=checked; if(!checked){ try{ stopCardPreview(); document.querySelectorAll(".hero-trailer.on").forEach(stopBackdropPreview); }catch{} } break;
+    case "autoFailover": st.autoFailover=checked; break;
+    case "stallSwitch": st.stallSwitch=checked; break;
+    case "embedwaveFailover": st.embedwaveFailover=checked; break;
+    case "preload": if(checked) st.preload=st.preloadLastMode==="aggressive"?"aggressive":"smart"; else { if(st.preload&&st.preload!=="off") st.preloadLastMode=st.preload; st.preload="off"; } break;
+    case "dnsWarm": st.dnsWarm=checked; if(checked) setTimeout(()=>{ try{ warmAllSources(); }catch{} },0); break;
+    case "sortByHealth": st.sortByHealth=checked; break;
+    case "fastStreamProbe": st.fastStreamApiProbe=checked; break;
+    case "nextEpisodeWarm": st.nextEpisodeWarm=checked; break;
+    case "downloads": d.enabled=checked; if(!checked&&typeof pauseAllDownloads==="function") pauseAllDownloads("Downloads were turned off in Settings"); if(checked&&typeof scheduleDownloads==="function") setTimeout(()=>scheduleDownloads(),0); break;
+    case "multithreadedDownloads": d.multithreaded=checked; break;
+    case "m3uExtraction": d.m3uExtraction=checked; break;
+    case "downloadAutoSave": d.autoSave=checked; break;
+    case "downloadAutoResume": d.autoResume=checked; break;
+    case "refreshExpiredDownloads": d.refreshExpired=checked; break;
+    case "keepCompletedDownloads": d.keepCompleted=checked; break;
+    case "autoplayNext": ui.autoplayNext=checked; break;
+    case "reduceMotion": ui.reduceMotion=checked; break;
+    case "compactCards": ui.compactCards=checked; break;
+    case "categoryStrip": ui.showCategoryStrip=checked; break;
+    default: return;
+  }
+  saveSettings(); applyInterfaceSettings();
+  if(key==="discovery") refreshDiscoveryUi();
+}
+function syncFeatureToggles(root){
+  $$("[data-feature-toggle]",root||document).forEach(input=>{ input.checked=getFeatureToggle(input.dataset.featureToggle); });
+}
+function featureSwitchHTML(key,label,description,idSuffix){
+  const id="feature-"+key+(idSuffix?"-"+idSuffix:"");
+  return '<div class="setting-switch"><div class="setting-copy"><label for="'+id+'">'+esc(label)+'</label>'+(description?'<small>'+esc(description)+'</small>':"")+'</div><label class="switch-label setting-control" for="'+id+'"><input type="checkbox" id="'+id+'" data-feature-toggle="'+esc(key)+'"'+(getFeatureToggle(key)?" checked":"")+'><span class="slider"></span></label></div>';
+}
+document.addEventListener("change",e=>{
+  const input=e.target&&e.target.closest?e.target.closest("[data-feature-toggle]"):null;
+  if(!input) return;
+  setFeatureToggle(input.dataset.featureToggle,input.checked);
+  syncFeatureToggles();
+});
 
 /* ---------------- built-in title identifier ----------------
    The catalogue item is converted into one canonical identity: TMDB id,
@@ -769,10 +907,6 @@ function identifyTitleCandidate(candidate, identity, options){
   const accepted=score>=threshold;
   const verdict=score>=95?"exact":accepted?"verified":score>=65?"possible":"rejected";
   return {score,verdict,accepted,hardReject:false,reasons,matchedTitle:title.matchedTitle||identity.title,candidateIds:ids,episodeInfo,threshold};
-}
-function identityBadgeText(result){
-  if(!result) return "";
-  return (result.verdict==="exact"?"Exact match":result.accepted?"Verified match":"Identity "+result.score+"%")+(result.score?(" · "+result.score+"%"):"");
 }
 
 
@@ -1070,9 +1204,9 @@ function sourceURL(item,position={},provider){
   const suffix=item.type+"/"+item.id+(item.type==="tv"?"/"+season+"/"+episode:"");
   const host=id==="embedwave"?"embedwave.cc":id==="zxcstream"?"zxcstream.cc":"vidstuck.cc";
   const u=id==="zxcstream"?new URL("https://"+host+"/player/"+suffix):new URL("https://"+host+"/embed/"+suffix);
-  if(id==="zxcstream"){ u.searchParams.set("domainAd","zeroplay"); u.searchParams.set("color","8A2BE2"); u.searchParams.set("autoplay","true"); }
+  if(id==="zxcstream"){ u.searchParams.set("domainAd","zeroplay"); u.searchParams.set("color","65E6CC"); u.searchParams.set("autoplay","true"); }
   if(id==="vidstuck"){
-    for(const [k,v] of Object.entries({branding:"ZeroPlay",color:"7C3AED",subtitle:"english",overlay:"true"})) u.searchParams.set(k,v);
+    for(const [k,v] of Object.entries({branding:"ZeroPlay",color:"65E6CC",subtitle:"english",overlay:"true"})) u.searchParams.set(k,v);
     if(item.type==="tv") for(const k of ["nextEpisode","episodeSelector","autoplayNextEpisode"]) u.searchParams.set(k,"true");
     if(Number.isFinite(position.timestamp)&&position.timestamp>30&&Number(position.percent)<95) u.searchParams.set("progress",String(Math.floor(position.timestamp)));
   }
@@ -1100,7 +1234,7 @@ async function probeFileSize(url){
 }
 function effectiveSaver(){ const m=settings.stream.dataSaver; if(m==="on") return true; if(m==="off") return false; const c=navigator.connection||{}; return !!(c.saveData||/(^|-)2g$/.test(c.effectiveType||"")); }
 function connInfo(){ const c=navigator.connection||{}; return {type:c.effectiveType||"unknown",downlink:c.downlink||null,saveData:!!c.saveData,rtt:c.rtt||null}; }
-function routeNow(){ const r=(location.hash.replace(/^#\/?/,"").split("?")[0]||"home"); return r==="discover"?"sources":r; }
+function routeNow(){ const r=(location.hash.replace(/^#\/?/,"").split("?")[0]||"home"); return r==="discover"||r==="settings"||r==="configure"||r==="debrid"?"sources":r; }
 
 /* ---- source registry: ZeroPlay built-ins + your websites ---- */
 const LAST_RESORT=new Set(["embedwave"]); /* always tried only after every other enabled source */
@@ -1256,7 +1390,7 @@ async function faststreamPreload(ctx, sourceId){
   if(direct){ const w=await warmDirectMedia(url); preloadCache={key:preloadKey(ctx,source.id),url,mode:"direct file warmed ("+fmtBytes(w.got)+")",ms:Math.round(performance.now()-t0)}; }
   else if(mode==="aggressive"){
     const slot=preloadSlotEl(); slot.innerHTML="";
-    const f=document.createElement("iframe"); f.src=url; f.setAttribute("allow","encrypted-media"); f.setAttribute("loading","eager"); f.title="FastStream preload";
+    const f=document.createElement("iframe"); f.referrerPolicy=embedReferrerPolicyForUrl(url); f.src=url; f.setAttribute("allow","encrypted-media"); f.setAttribute("loading","eager"); f.title="FastStream preload";
     slot.appendChild(f); preloadCache={key:preloadKey(ctx,source.id),url,mode:"player preloaded",frame:f,ms:Math.round(performance.now()-t0)};
   } else preloadCache={key:preloadKey(ctx,source.id),url,mode:"DNS + connection warmed",ms:Math.round(performance.now()-t0)};
   updateFastBadge();
@@ -1324,7 +1458,21 @@ window.addEventListener("message",e=>{
   progress[k]=Object.assign({},prev,{id:ev.id,type:ev.type,timestamp:ev.timestamp,duration:ev.duration,percent,
     season:Number.isInteger(ev.season)?ev.season:prev.season, episode:Number.isInteger(ev.episode)?ev.episode:prev.episode, updatedAt:Date.now()});
   saveProgress();
-  if(playerState&&!playerState.trailer&&playerState.item&&playerState.item.id===ev.id&&playerState.item.type===ev.type&&ev.timestamp>playerState.lastTs){ playerState.lastTs=ev.timestamp; playerState.lastAdvanceAt=Date.now(); }
+  if(playerState&&!playerState.trailer&&playerState.item&&playerState.item.id===ev.id&&playerState.item.type===ev.type){
+    const previousTs=Number(playerState.lastTs)||0;
+    playerState.playbackSignalAt=Date.now();
+    if(ev.timestamp>0&&ev.timestamp>previousTs){
+      playerState.lastTs=ev.timestamp; playerState.lastAdvanceAt=Date.now();
+      if(previousTs>0||ev.timestamp>1){
+        playerState.playback=Object.assign({},playerState.playback||{},{paused:false,buffering:false,currentTime:ev.timestamp,duration:ev.duration||(playerState.playback&&playerState.playback.duration)||0});
+        const firstConfirmation=!playerState.playbackConfirmed;
+        playerState.playbackConfirmed=true; playerLoading(false);
+        if(firstConfirmation&&!playerState.healthRecorded){ playerState.healthRecorded=true; const src=getSource(playerState.source); if(src) recordHealth(src.id,true,Math.max(1,Date.now()-(playerState.frameLoadedAt||playerState.mountedAt||Date.now()))); }
+        if(firstConfirmation) updatePlayerMeta();
+      }
+    }
+    if(ev.duration>0) playerState.playback=Object.assign({},playerState.playback||{},{currentTime:ev.timestamp||0,duration:ev.duration});
+  }
 });
 
 /* ---------------- catalogue cache + trailer previews ----------------
@@ -1604,7 +1752,7 @@ function withPlayerRuntime(st){
     qualitySelection:(settings.stream&&settings.stream.quality)||"auto", availableServers:[], availabilityPromise:null,
     availabilityChecked:false, currentServerOptionId:"", triedUrls:new Set(), fsState:null,
     playback:{paused:true,buffering:true,currentTime:0,duration:0,buffered:0,volume:Number(settings.stream&&settings.stream.volume!=null?settings.stream.volume:.9),muted:!!(settings.stream&&settings.stream.muted),rate:Number(settings.stream&&settings.stream.rate||1)},
-    lastProgressSave:0, chromeTimer:null, switching:false, healthRecorded:false,
+    lastProgressSave:0, chromeTimer:null, switching:false, healthRecorded:false, mountedAt:0, frameLoadedAt:0, playbackSignalAt:0, playbackConfirmed:false, embedNoticeShown:false, prime:null,
   };
   for(const [key,value] of Object.entries(defaults)) if(target[key]===undefined) target[key]=value;
   return target;
@@ -1741,7 +1889,7 @@ function updatePlaybackUI(state,eventName){
   const st=playerState; if(!st||st.trailer||!state) return;
   const prev=st.playback||{};
   st.playback=Object.assign({},prev,state);
-  if(Number(st.playback.currentTime)>0){ st.lastTs=Number(st.playback.currentTime); st.lastAdvanceAt=Date.now(); }
+  if(Number(st.playback.currentTime)>0&&Number(st.playback.currentTime)>(Number(st.lastTs)||0)+.2){ st.lastTs=Number(st.playback.currentTime); st.lastAdvanceAt=Date.now(); st.playbackConfirmed=true; }
   const play=document.getElementById("btnPlayPause"); if(play) play.textContent=st.playback.paused?"▶":"❚❚";
   const center=document.getElementById("btnCenterPlay"); if(center){ center.hidden=!st.playback.paused||st.playback.buffering; center.textContent="▶"; }
   const seek=document.getElementById("seekRange");
@@ -1764,7 +1912,7 @@ function currentPlaybackTime(){
 function handlePlaybackEnded(){
   const st=playerState; if(!st||st.trailer) return;
   savePlaybackProgress(true); showPlayerChrome(true);
-  if(st.item&&st.item.type==="tv"&&!st.noProgress&&!st.tempSource){
+  if(st.item&&st.item.type==="tv"&&!st.noProgress&&!st.tempSource&&(!settings.ui||settings.ui.autoplayNext!==false)){
     toast("Episode finished — starting the next episode");
     playerTimers.push(setTimeout(()=>{ if(playerState!==st) return; st.episode++; st.directUrl=""; st.variants=[]; st.activeVariant=null; st.tried=new Set(); st.triedUrls=new Set(); registerProgress(st.item,st.season,st.episode); drawPlayer({}); },1200));
   }
@@ -1860,6 +2008,7 @@ async function switchDirectVariant(variant,opts){
 }
 async function tryNextDirectVariant(reason){
   const st=playerState; if(!st) return false;
+  if(streamCfg().autoFailover===false) return false;
   st.triedUrls=st.triedUrls||new Set(); if(st.url) st.triedUrls.add(st.url);
   const next=(st.variants||[]).map(v=>normalizeVariant(v)).find(v=>v&&!st.triedUrls.has(v.url))||(st.directQueue||[]).map(v=>normalizeVariant(v)).find(v=>v&&!st.triedUrls.has(v.url));
   if(!next) return false;
@@ -1873,7 +2022,7 @@ let fastStreamProbeStarted=false;
 function effectiveFastStreamApiStatus(){ return Date.now()-Number(fastStreamApiStatus.checkedAt||0)<6*60*60*1000?String(fastStreamApiStatus.state||"unknown"):"unknown"; }
 function setFastStreamApiStatus(state){ fastStreamApiStatus={state,checkedAt:Date.now()}; try{ sessionStorage.setItem("zp_faststream_api_v1",JSON.stringify(fastStreamApiStatus)); }catch{} }
 function probeFastStreamApiInBackground(){
-  if(fastStreamProbeStarted||effectiveFastStreamApiStatus()!=="unknown"||effectiveSaver()||document.hidden) return;
+  if(streamCfg().fastStreamApiProbe===false||fastStreamProbeStarted||effectiveFastStreamApiStatus()!=="unknown"||effectiveSaver()||document.hidden) return;
   fastStreamProbeStarted=true;
   const frame=document.createElement("iframe");
   frame.hidden=true; frame.setAttribute("aria-hidden","true"); frame.title="FastStream API capability check";
@@ -2003,7 +2152,7 @@ function playerShell(msg){
     +'<div class="player-bar"><button class="icon-btn" id="btnBackPlayer" type="button" aria-label="Back">‹</button><span class="logo-badge"><span class="logo-mark">▶</span><span>ZeroPlay</span></span>'
     +'<span class="pt">'+esc(titleOf(it))+'<span class="player-title-sub" id="playerSourceLine">'+(isTV?"Season "+st.season+" · Episode "+st.episode:"Movie")+'</span></span><span id="fastBadge" class="chip violet"></span><span style="flex:1"></span>'
     +(isTV?'<button class="control-btn" id="btnPrevEp" type="button">‹ Ep</button><button class="control-btn" id="btnNextEp" type="button">Ep ›</button>':"")
-    +'<button class="control-btn" id="btnPlayerServers" type="button">Servers</button><button class="control-btn" id="btnPlayerDetails" type="button">Details</button><button class="control-btn" id="btnClosePlayer" type="button" aria-label="Close player">×</button></div>'
+    +'<button class="control-btn" id="btnPlayerServers" type="button">Servers</button>'+(downloadsEnabled()?'<button class="control-btn" id="btnPlayerDownload" type="button" aria-label="Download this title or episode">⬇</button>':"")+'<button class="control-btn" id="btnPlayerDetails" type="button">Details</button><button class="control-btn" id="btnClosePlayer" type="button" aria-label="Close player">×</button></div>'
     +'<button class="center-play" id="btnCenterPlay" type="button" aria-label="Play" hidden>▶</button>'
     +'<div class="player-controls" id="playerControls" data-mode="loading">'
     +'<div class="seek-row"><span id="currentTime">0:00</span><input id="seekRange" type="range" min="0" max="100" value="0" step="1" aria-label="Seek"><span id="durationTime">0:00</span></div>'
@@ -2027,6 +2176,7 @@ function bindPlayerChrome(){
     const identity=st.identity||buildTitleIdentity({item:st.item,type:st.item.type,id:st.item.id,title:titleOf(st.item),season:st.season,episode:st.episode});
     showStreamsModal({type:st.item.type,id:st.item.id,title:identity.title,altTitles:identity.titles,year:identity.year,season:st.season,episode:st.episode,imdb:identity.imdbId,identity,item:snap(st.item,st.item.type),fromPlayer:true});
   });
+  on("btnPlayerDownload","click",()=>openDownloadForContext(playerContext(st),{currentVariant:st.activeVariant||(st.directUrl?{url:st.directUrl,quality:(st.activeVariant||{}).quality}:null),currentUrl:st.directUrl||(st.direct?st.url:""),serverName:(getSource(st.source)||{}).name||"Current server"}));
   const changeEpisode=delta=>{
     if(delta<0&&st.episode<=1) return;
     savePlaybackProgress(true);
@@ -2071,7 +2221,9 @@ function updatePlayerMeta(source){
   if(st.activeVariant&&st.activeVariant.quality) parts.push(esc(String(st.activeVariant.quality).replace("2160p","4K")));
   if(st.direct&&st.fileBytes) parts.push(fmtBytes(st.fileBytes));
   parts.push("Cap "+capGb()+" GB");
+  if(st.engine==="embed") parts.push(st.playbackConfirmed?"Playback confirmed":st.frameLoadedAt?"Player page loaded":"Connecting");
   if(st.playback&&st.playback.buffered) parts.push("Buffer "+Math.round(st.playback.buffered)+"s");
+  if(st.prime&&st.prime.mbps) parts.push("Warm-up "+st.prime.mbps.toFixed(1)+" MB/s");
   m.innerHTML=parts.join(" · ");
   const line=document.getElementById("playerSourceLine");
   if(line) line.textContent=(st.item&&st.item.type==="tv"?"Season "+st.season+" · Episode "+st.episode+" · ":"")+(src?src.name:"ZeroPlay player");
@@ -2117,7 +2269,7 @@ async function drawPlayer(prevProgress){
   const it=st.item, isTV=it.type==="tv";
   stopCardPreview();
   document.querySelectorAll(".hero-trailer.on").forEach(stopBackdropPreview);
-  st.engine="loading"; st.healthRecorded=false; st.levels=[]; st.playback=Object.assign({},st.playback,{paused:true,buffering:true,currentTime:0,duration:0,buffered:0});
+  st.engine="loading"; st.healthRecorded=false; st.levels=[]; st.frameLoadedAt=0; st.playbackSignalAt=0; st.playbackConfirmed=false; st.embedNoticeShown=false; st.prime=null; st.playback=Object.assign({},st.playback,{paused:true,buffering:true,currentTime:0,duration:0,buffered:0});
   $("#playerRoot").innerHTML=playerShell("Finding this title on the selected server…");
   document.body.classList.add("locked");
   bindPlayerChrome();
@@ -2154,7 +2306,7 @@ async function drawPlayer(prevProgress){
   st.directQueue=st.variants.filter(v=>v.url!==st.url);
   if(st.activeVariant&&st.activeVariant.bytes) st.fileBytes=st.activeVariant.bytes;
   if(st.direct){
-    if(!st.fileBytes&&!/\.(m3u8|mpd)(\?|#|$)/i.test(st.url)) st.fileBytes=await probeFileSize(st.url);
+    if(!st.fileBytes&&!/^blob:/i.test(st.url)&&!/\.(m3u8|mpd)(\?|#|$)/i.test(st.url)) st.fileBytes=await probeFileSize(st.url);
     const verdict=decideSizeCap(st.fileBytes,capBytes());
     if(!verdict.allowed){ const stage=$("#playerStage"); if(stage) stage.innerHTML=playerErrorHTML("Blocked by the "+capGb()+" GB cap","This file is "+fmtBytes(st.fileBytes)+". Choose another server or a smaller quality."); bindPlayerErrorActions(); updatePlayerMeta(source); return; }
   }
@@ -2166,37 +2318,62 @@ async function drawPlayer(prevProgress){
   if(st.direct) await mountDirectVideo(stage,st.url,source,loadT0,resumeSeconds);
   else mountEmbedPlayer(stage,st.url,source,loadT0,ctx);
   updatePlayerMeta(source);
-  if(isTV&&settings.stream.preload!=="off"&&!st.noProgress) playerTimers.push(setTimeout(()=>{ if(playerState===st&&!document.hidden) faststreamPreload({type:it.type,id:it.id,title:titleOf(it),season:st.season,episode:st.episode+1},source.id); },9000));
+  if(isTV&&settings.stream.preload!=="off"&&streamCfg().nextEpisodeWarm!==false&&!st.noProgress) playerTimers.push(setTimeout(()=>{ if(playerState===st&&!document.hidden) faststreamPreload({type:it.type,id:it.id,title:titleOf(it),season:st.season,episode:st.episode+1},source.id); },9000));
+}
+function embedReferrerPolicyForUrl(url){
+  try{ return new URL(String(url||"")).hostname.toLowerCase().endsWith("embedwave.cc")?"no-referrer":"strict-origin-when-cross-origin"; }catch{ return "strict-origin-when-cross-origin"; }
 }
 function mountEmbedPlayer(stage,url,source,loadT0,ctx){
   const st=playerState;
   if(!stage||!st) return;
   resetFastStreamBridge(null);
-  stage.innerHTML='<div class="media-shell"></div><div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>Loading '+esc(source.name)+'…</strong><span style="color:#cbd2d8;font-size:.88rem">ZeroPlay controls stay available above and below the video.</span></div>';
+  st.mountedAt=Date.now(); st.frameLoadedAt=0; st.playbackSignalAt=0; st.playbackConfirmed=false; st.embedNoticeShown=false; st.lastTs=0; st.lastAdvanceAt=0;
+  stage.innerHTML='<div class="media-shell"></div><div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>Loading '+esc(source.name)+'…</strong><span style="color:#cbd2d8;font-size:.88rem">The player page is loading. ZeroPlay will not call this successful until playback actually progresses.</span></div>';
   const shell=stage.querySelector(".media-shell");
   const key=preloadKey({type:st.item.type,id:st.item.id,season:st.season,episode:st.episode},source.id);
   const pre=takePreloadedFrame(key,url);
-  let loaded=false;
+  const markFrameLoaded=(preloaded)=>{
+    if(playerState!==st||st.frameLoadedAt) return;
+    st.frameLoadedAt=Date.now();
+    playerLoading(false);
+    showPlayerChrome(false);
+    updatePlayerMeta(source);
+    if(preloaded) toast("Preloaded "+source.name+" page attached — waiting for playback");
+  };
   const armFrame=f=>{
     if(!f) return;
     f.id="playerFrame"; f.className="player-frame"; f.setAttribute("tabindex","-1"); f.setAttribute("title",source.name+" video player");
-    f.addEventListener("load",()=>{ loaded=true; playerLoading(false); if(!st.healthRecorded){ st.healthRecorded=true; recordHealth(source.id,true,performance.now()-loadT0); } showPlayerChrome(false); },{once:true});
+    try{ f.referrerPolicy=embedReferrerPolicyForUrl(url); }catch{}
+    f.addEventListener("load",()=>markFrameLoaded(false),{once:true});
   };
-  if(pre){ armFrame(pre); shell.appendChild(pre); loaded=true; playerLoading(false); recordHealth(source.id,true,performance.now()-loadT0); toast("Preloaded player attached"); }
+  if(pre){ armFrame(pre); shell.appendChild(pre); markFrameLoaded(true); }
   else{
     const f=document.createElement("iframe");
-    f.src=url; f.allow="autoplay; fullscreen; encrypted-media; picture-in-picture"; f.allowFullscreen=true; f.referrerPolicy="origin";
-    armFrame(f); shell.appendChild(f);
+    f.allow="autoplay; fullscreen; encrypted-media; picture-in-picture"; f.allowFullscreen=true; f.referrerPolicy=embedReferrerPolicyForUrl(url);
+    armFrame(f); shell.appendChild(f); f.src=url;
   }
   setPlayerControlMode("embed");
   updatePlayerMeta(source);
-  const raceMs=Math.max(4,Number(settings.stream.raceTimeoutSec)||8)*1000;
-  playerTimers.push(setTimeout(()=>{ if(!loaded&&playerState===st&&st.engine==="embed"){ recordHealth(source.id,false,raceMs); void failover(source.name+" took over "+Math.round(raceMs/1000)+"s to load"); } },raceMs));
-  st.lastAdvanceAt=Date.now();
+  const raceMs=embedLoadTimeoutMs();
+  playerTimers.push(setTimeout(()=>{
+    if(playerState!==st||st.engine!=="embed"||st.frameLoadedAt) return;
+    recordHealth(source.id,false,raceMs);
+    void failover(source.name+" player page did not load within "+Math.round(raceMs/1000)+"s",{frameNeverLoaded:true});
+  },raceMs));
+  playerTimers.push(setTimeout(()=>{
+    if(playerState!==st||st.engine!=="embed"||!st.frameLoadedAt||st.playbackConfirmed||st.embedNoticeShown) return;
+    st.embedNoticeShown=true;
+    updatePlayerMeta(source);
+    toast(source.name+" loaded, but ZeroPlay has not received playback progress yet. Its own server list or Play button may still be working; ZeroPlay will stay here instead of jumping away.","error");
+  },embedStallTimeoutMs()));
   playerTimers.push(setInterval(()=>{
-    if(playerState!==st||st.engine!=="embed") return;
-    const limit=Math.max(10,Number(settings.stream.stallTimeoutSec)||20)*1000;
-    if(st.lastTs>=0&&Date.now()-st.lastAdvanceAt>limit){ st.stalls++; st.lastAdvanceAt=Date.now(); if(settings.stream.stallSwitch) void failover("Playback stalled on "+source.name); else toast("Playback seems stalled — open Servers to switch","error"); }
+    if(playerState!==st||st.engine!=="embed"||!st.playbackConfirmed||!(Number(st.lastTs)>0)||!st.lastAdvanceAt) return;
+    if(document.activeElement&&document.activeElement.id==="playerFrame") return;
+    if(Date.now()-st.lastAdvanceAt>embedStallTimeoutMs()){
+      st.stalls++; st.lastAdvanceAt=Date.now();
+      if(streamCfg().stallSwitch) void failover("Confirmed playback stalled on "+source.name,{confirmedStall:true});
+      else toast("Playback progress has stalled on "+source.name+" — open Servers to switch","error");
+    }
   },5000));
 }
 function directMediaKind(url){
@@ -2241,11 +2418,15 @@ async function mountFastStreamPlayer(stage,url,source,loadT0,resumeAt,opts){
     resetFastStreamBridge(null);
     stage.innerHTML='<div class="media-shell"><iframe class="player-frame" id="fsFrame" tabindex="-1" src="https://faststream.online/player/#'+encodeURI(url)+'" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen title="FastStream player"></iframe></div><div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>Loading FastStream…</strong><span style="color:#cbd2d8;font-size:.88rem">FastStream is running inside ZeroPlay. Servers and quality remain in the ZeroPlay bar.</span></div>';
     const f=document.getElementById("fsFrame");
-    if(f) f.addEventListener("load",()=>{ playerLoading(false); if(!st.healthRecorded){ st.healthRecorded=true; recordHealth(source.id,true,performance.now()-loadT0); } showPlayerChrome(false); },{once:true});
+    if(f) f.addEventListener("load",()=>{ st.frameLoadedAt=Date.now(); playerLoading(false); showPlayerChrome(false); updatePlayerMeta(source); },{once:true});
     setPlayerControlMode("faststream-legacy");
     updatePlayerMeta(source);
   };
   if(opts.allowApi===false){ beginLegacy(); return; }
+  if(streamCfg().fastStreamApiProbe===false){
+    if(!opts.legacyOnly&&nativeCanPlayDirect(url)) return mountNativeVideo(stage,url,source,loadT0,resumeAt,{fastStreamApiPending:true});
+    beginLegacy(); return;
+  }
   const apiStatus=effectiveFastStreamApiStatus();
   if(!opts.legacyOnly&&apiStatus==="unavailable"){
     if(nativeCanPlayDirect(url)) return mountNativeVideo(stage,url,source,loadT0,resumeAt,{fastStreamApiPending:true});
@@ -2318,6 +2499,7 @@ function mountNativeVideo(stage,url,source,loadT0,resumeAt,opts){
   };
   v.volume=Math.max(0,Math.min(1,Number(settings.stream.volume==null?.9:settings.stream.volume)));
   v.muted=!!settings.stream.muted; v.playbackRate=Number(settings.stream.rate||1);
+  v.preload=(settings.stream.preload==="off"||effectiveSaver())?"metadata":"auto";
   v.src=url;
   setPlayerControlMode("native");
   updatePlayerMeta(source);
@@ -2335,6 +2517,23 @@ function mountNativeVideo(stage,url,source,loadT0,resumeAt,opts){
   v.addEventListener("volumechange",()=>{ settings.stream.volume=v.volume; settings.stream.muted=v.muted; saveSettings(); sync("volumechange",true); });
   v.addEventListener("ratechange",()=>sync("ratechange",true));
   v.addEventListener("ended",()=>{ sync("ended",true); handlePlaybackEnded(); });
+  let lastObservedTime=0,lastObservedAdvanceAt=0,hasAdvanced=false;
+  const noteObservedTime=()=>{ lastObservedTime=Number(v.currentTime)||0; lastObservedAdvanceAt=Date.now(); };
+  v.addEventListener("seeking",noteObservedTime);
+  v.addEventListener("seeked",noteObservedTime);
+  const stallTimer=setInterval(()=>{
+    if(playerState!==st||!v.isConnected){ clearInterval(stallTimer); return; }
+    if(v.paused||v.ended||document.hidden){ lastObservedAdvanceAt=Date.now(); return; }
+    const t=Number(v.currentTime)||0;
+    if(t>lastObservedTime+.2){ lastObservedTime=t; lastObservedAdvanceAt=Date.now(); if(t>.5) hasAdvanced=true; return; }
+    if(t<lastObservedTime-.5){ noteObservedTime(); return; }
+    if(hasAdvanced&&lastObservedAdvanceAt&&Date.now()-lastObservedAdvanceAt>embedStallTimeoutMs()){
+      lastObservedAdvanceAt=Date.now(); st.stalls++;
+      if(streamCfg().stallSwitch) void failover("Confirmed direct playback stalled on "+source.name,{confirmedStall:true});
+      else toast("Direct playback has stalled on "+source.name+" — open Servers to switch","error");
+    }
+  },5000);
+  playerTimers.push(stallTimer);
   v.addEventListener("error",async()=>{
     if(playerState!==st) return;
     recordHealth(source.id,false);
@@ -2348,19 +2547,20 @@ function primeDirectSafely(url,video,bufferedAhead){
   const st=playerState;
   if(!st||st._primeStartedFor===url||settings.stream.preload==="off"||effectiveSaver()||directMediaKind(url)!=="file") return;
   st._primeStartedFor=url;
-  /* The old primer could download an entire file repeatedly when a host
-     ignored Range. This version accepts only real 206 range responses,
-     uses at most two workers, has a small hard budget, and cancels as
-     soon as the player already has a healthy buffer. */
+  /* The primer accepts only real 206 range responses, uses the configured
+     FastStream worker/chunk/budget limits, and cancels as soon as the player
+     reaches the configured buffer target. */
   setTimeout(async()=>{
-    if(playerState!==st||!video||video.paused||bufferedAhead()>14) return;
+    const cfg=streamCfg(), bufferTarget=Number(cfg.bufferTargetSec)||16;
+    if(playerState!==st||!video||video.paused||bufferedAhead()>bufferTarget) return;
     const conn=navigator.connection||{};
-    const budget=conn.downlink&&conn.downlink<1.5?512*1024:(qualityRank(settings.stream.quality)>=3?2*1048576:1536*1024);
-    const chunk=256*1024; let off=0,got=0; const t0=performance.now();
+    const configuredBudget=Math.round(Number(cfg.primeBudgetMb||2)*1048576);
+    const budget=conn.downlink&&conn.downlink<1.5?Math.min(configuredBudget,512*1024):configuredBudget;
+    const chunk=Math.round(Number(cfg.primeChunkKb||256)*1024); let off=0,got=0; const t0=performance.now();
     st.primeCtl=new AbortController();
     const worker=async()=>{
       while(off<budget&&playerState===st&&!document.hidden){
-        if(bufferedAhead()>16) break;
+        if(bufferedAhead()>bufferTarget) break;
         const start=off; off+=chunk;
         try{
           const r=await fetch(url,{headers:{Range:"bytes="+start+"-"+(start+chunk-1)},signal:st.primeCtl.signal,credentials:"omit"});
@@ -2368,16 +2568,28 @@ function primeDirectSafely(url,video,bufferedAhead){
           if(!r.body) break;
           const rd=r.body.getReader(); let local=0;
           for(;;){ const part=await rd.read(); if(part.done) break; local+=part.value.length; got+=part.value.length; if(local>=chunk||got>=budget){ try{await rd.cancel();}catch{} break; } }
-          const sec=(performance.now()-t0)/1000; st.prime={mb:got/1048576,mbps:sec>0?(got/1048576)/sec:0};
+          const sec=(performance.now()-t0)/1000; st.prime={mb:got/1048576,mbps:sec>0?(got/1048576)/sec:0}; updatePlayerMeta();
         }catch{ break; }
       }
     };
-    await Promise.all([worker(),worker()]);
+    await Promise.all(Array.from({length:Math.max(1,Math.min(4,Number(cfg.primeThreads)||2))},()=>worker()));
   },1400);
 }
 
-async function failover(reason){
-  const st=playerState; if(!st||st.trailer||st.switching) return;
+function isEmbedwaveOption(option){
+  if(!option) return false;
+  const text=String([option.id||"",option.sourceId||"",option.name||"",option.url||""].join(" ")).toLowerCase();
+  return text.includes("embedwave");
+}
+async function failover(reason,opts){
+  opts=opts||{};
+  const st=playerState; if(!st||st.trailer||st.switching) return false;
+  if(!opts.manual&&streamCfg().autoFailover===false){
+    toast((reason||"Playback problem")+" — automatic server switching is off. Open Servers to choose another server.","error");
+    const stage=document.getElementById("playerStage");
+    if(stage&&(opts.frameNeverLoaded||st.engine==="loading")){ stage.innerHTML=playerErrorHTML("This server did not start",(reason||"Playback problem")+" Automatic server switching is off in Settings, so ZeroPlay stayed on this server."); bindPlayerErrorActions(); playerLoading(false); }
+    return false;
+  }
   st.switching=true;
   try{
     if(st.currentServerOptionId) st.tried.add(st.currentServerOptionId);
@@ -2391,15 +2603,20 @@ async function failover(reason){
       if(playerState!==st) return;
       options=result.options||[]; st.availableServers=options; st.availabilityChecked=true;
     }
-    const next=options.find(o=>o&&!st.tried.has(o.id)&&!(o.sourceId&&st.tried.has(o.sourceId))&&(!(o.url&&st.triedUrls&&st.triedUrls.has(o.url))||(o.variants||[]).some(v=>!st.triedUrls.has(v.url))));
+    const untried=options.filter(o=>o&&!st.tried.has(o.id)&&!(o.sourceId&&st.tried.has(o.sourceId))&&(!(o.url&&st.triedUrls&&st.triedUrls.has(o.url))||(o.variants||[]).some(v=>!st.triedUrls.has(v.url))));
+    const allowEmbedwave=!!(opts.allowEmbedwave||opts.manual||streamCfg().embedwaveFailover);
+    const next=untried.find(o=>allowEmbedwave||!isEmbedwaveOption(o));
     if(!next){
-      toast((reason||"Playback problem")+" — no other server returned this exact title","error");
+      const onlyEmbedwave=untried.length&&untried.every(isEmbedwaveOption);
+      const message=onlyEmbedwave?"Only Embedwave remains, and automatic Embedwave failover is off. Open Servers if you want to choose it manually.":"No other server returned this exact title.";
+      toast((reason||"Playback problem")+" — "+message,"error");
       const stage=document.getElementById("playerStage");
-      if(stage&&(st.engine==="loading"||st.engine==="embed"||!st.healthRecorded)){ stage.innerHTML=playerErrorHTML("No other server returned this exact title",reason||"Open Servers to run a fresh title-specific search."); bindPlayerErrorActions(); }
-      return;
+      if(stage&&(opts.frameNeverLoaded||st.engine==="loading"||!st.healthRecorded)){ stage.innerHTML=playerErrorHTML(onlyEmbedwave?"ZeroPlay stopped before Embedwave":"No other server returned this exact title",(reason||"")+" "+message); bindPlayerErrorActions(); playerLoading(false); }
+      return false;
     }
     toast((reason||"Switching server")+" — "+next.name+" has this title");
     await playTitleServerOption(next,playerContext(st),{fromPlayer:true,keepTime:true});
+    return true;
   }finally{ if(playerState===st) st.switching=false; }
 }
 function closePlayer(){
@@ -2413,6 +2630,7 @@ function closePlayer(){
   if(document.pictureInPictureElement) document.exitPictureInPicture().catch(()=>{});
   if(document.fullscreenElement&&document.fullscreenElement.id==="playerOverlay") document.exitFullscreen().catch(()=>{});
   clearPlayerTimers(); resetFastStreamBridge(null); clearPreload();
+  if(typeof activeDownloadObjectUrl!=="undefined"&&activeDownloadObjectUrl&&st&&(st.url===activeDownloadObjectUrl||st.directUrl===activeDownloadObjectUrl)){ URL.revokeObjectURL(activeDownloadObjectUrl); activeDownloadObjectUrl=""; }
   $("#playerRoot").innerHTML=""; playerState=null;
   if(typeof discoveryRuntime!=="undefined"&&discoveryRuntime.running&&discoveryRuntime.deferredForPlayback){ discoveryRuntime.deferredForPlayback=false; setTimeout(()=>runDiscoveryCycle("after playback"),3000); }
   if(!detailState) document.body.classList.remove("locked");
@@ -2420,6 +2638,907 @@ function closePlayer(){
     setTimeout(()=>{ const target=document.getElementById("btnPlay")||document.querySelector('.poster-card[data-type="'+st.item.type+'"][data-id="'+st.item.id+'"]'); if(target) target.focus({preventScroll:true}); },30);
   }
 }
+
+/* ---------------- downloads + M3U extraction ----------------
+   Downloads are deliberately honest about browser/network limits. A file can
+   only be parallelised when CORS and HTTP Range are available; an HLS stream
+   can be parallelised at segment level. Completed chunks/segments are kept in
+   IndexedDB, so Pause and browser restarts resume from stored parts whenever
+   the remote file/playlist is still the same. Cross-origin embed players are
+   never downloadable from the parent page: ZeroPlay first searches for a
+   verified direct file/HLS result for the exact title/episode. */
+const DOWNLOAD_DB_NAME="zeroplay-downloads-v1";
+let downloadDbPromise=null;
+const downloadFallbackStores={jobs:new Map(),chunks:new Map(),files:new Map()};
+let downloadJobs=new Map();
+let downloadControllers=new Map();
+let deletedDownloadIds=new Set();
+let downloadPersistTimers=new Map();
+let downloadsLoaded=false;
+let downloadsLoadPromise=null;
+let downloadUiTimer=0;
+let downloadUiSignature="";
+let downloadModalState=null;
+let m3uResultsState=[];
+let activeDownloadObjectUrl="";
+const hlsKeyCache=new Map();
+function makeDownloadId(){ try{ if(crypto&&crypto.randomUUID) return "dl-"+crypto.randomUUID(); }catch{} return "dl-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,10); }
+function downloadStoreKey(store,value){ return store==="chunks"?value.key:value.id; }
+function downloadRequestPromise(request){ return new Promise((resolve,reject)=>{ request.onsuccess=()=>resolve(request.result); request.onerror=()=>reject(request.error||new Error("IndexedDB request failed")); }); }
+function downloadTxPromise(tx){ return new Promise((resolve,reject)=>{ tx.oncomplete=()=>resolve(true); tx.onerror=()=>reject(tx.error||new Error("IndexedDB transaction failed")); tx.onabort=()=>reject(tx.error||new Error("IndexedDB transaction aborted")); }); }
+function openDownloadDb(){
+  if(downloadDbPromise) return downloadDbPromise;
+  downloadDbPromise=new Promise(resolve=>{
+    try{
+      if(typeof indexedDB==="undefined"){ resolve(null); return; }
+      const req=indexedDB.open(DOWNLOAD_DB_NAME,1);
+      req.onupgradeneeded=()=>{
+        const db=req.result;
+        if(!db.objectStoreNames.contains("jobs")) db.createObjectStore("jobs",{keyPath:"id"});
+        if(!db.objectStoreNames.contains("files")) db.createObjectStore("files",{keyPath:"id"});
+        if(!db.objectStoreNames.contains("chunks")){ const store=db.createObjectStore("chunks",{keyPath:"key"}); store.createIndex("jobId","jobId",{unique:false}); }
+      };
+      req.onsuccess=()=>resolve(req.result);
+      req.onerror=()=>resolve(null);
+      req.onblocked=()=>resolve(null);
+    }catch{ resolve(null); }
+  });
+  return downloadDbPromise;
+}
+async function downloadDb(){ try{ return await openDownloadDb(); }catch{ return null; } }
+async function dlPut(store,value){
+  const db=await downloadDb();
+  if(db){ const tx=db.transaction(store,"readwrite"); const req=tx.objectStore(store).put(value); await Promise.all([downloadRequestPromise(req),downloadTxPromise(tx)]); return value; }
+  downloadFallbackStores[store].set(downloadStoreKey(store,value),value); return value;
+}
+async function dlGet(store,key){
+  const db=await downloadDb();
+  if(db) return downloadRequestPromise(db.transaction(store,"readonly").objectStore(store).get(key));
+  return downloadFallbackStores[store].get(key)||null;
+}
+async function dlGetAll(store){
+  const db=await downloadDb();
+  if(db) return downloadRequestPromise(db.transaction(store,"readonly").objectStore(store).getAll());
+  return [...downloadFallbackStores[store].values()];
+}
+async function dlDelete(store,key){
+  const db=await downloadDb();
+  if(db){ const tx=db.transaction(store,"readwrite"); const req=tx.objectStore(store).delete(key); await Promise.all([downloadRequestPromise(req),downloadTxPromise(tx)]); return; }
+  downloadFallbackStores[store].delete(key);
+}
+async function dlDeleteJobChunks(jobId){
+  const db=await downloadDb();
+  if(db){
+    const keys=await downloadRequestPromise(db.transaction("chunks","readonly").objectStore("chunks").index("jobId").getAllKeys(IDBKeyRange.only(jobId)));
+    if(keys.length){ const tx=db.transaction("chunks","readwrite"); const store=tx.objectStore("chunks"); keys.forEach(key=>store.delete(key)); await downloadTxPromise(tx); }
+    return;
+  }
+  for(const [key,chunk] of [...downloadFallbackStores.chunks.entries()]) if(chunk.jobId===jobId) downloadFallbackStores.chunks.delete(key);
+}
+function completedDownloadSet(job){
+  if(!(job._completedSet instanceof Set)) job._completedSet=new Set((job.completedChunks||[]).map(Number).filter(Number.isInteger));
+  return job._completedSet;
+}
+function firstMissingDownloadIndex(job){
+  const done=completedDownloadSet(job); let index=0;
+  while(done.has(index)) index++;
+  return index;
+}
+function downloadPartIndexes(job){
+  if(job&&Number(job.chunksTotal)>0) return Array.from({length:Number(job.chunksTotal)},(_,i)=>i);
+  return [...completedDownloadSet(job)].sort((a,b)=>a-b);
+}
+function serializableDownloadJob(job){
+  const out={};
+  for(const [key,value] of Object.entries(job||{})){
+    if(key.startsWith("_")||typeof value==="function") continue;
+    out[key]=value;
+  }
+  out.completedChunks=[...completedDownloadSet(job)].sort((a,b)=>a-b);
+  return out;
+}
+function persistDownloadJob(job,force){
+  if(!job||deletedDownloadIds.has(job.id)) return;
+  job.updatedAt=Date.now();
+  queueDownloadUiRefresh();
+  const old=downloadPersistTimers.get(job.id);
+  if(old&&!force) return;
+  if(old) clearTimeout(old);
+  const run=()=>{ downloadPersistTimers.delete(job.id); dlPut("jobs",serializableDownloadJob(job)).catch(()=>{}); };
+  if(force) run(); else downloadPersistTimers.set(job.id,setTimeout(run,750));
+}
+function downloadChunkLength(job,index){
+  if(job.kind!=="file"||!job.totalBytes) return Number(job.partSizes&&job.partSizes[index])||0;
+  const start=index*job.chunkSize; return Math.max(0,Math.min(job.chunkSize,job.totalBytes-start));
+}
+function recalcDownloadBytes(job){
+  const done=completedDownloadSet(job); let total=0;
+  for(const index of done) total+=downloadChunkLength(job,index);
+  if(total||job.kind==="file") job.downloadedBytes=total;
+  return Number(job.downloadedBytes)||0;
+}
+function downloadProgress(job){
+  if(job.totalBytes>0) return Math.max(0,Math.min(100,(Number(job.downloadedBytes)||0)/job.totalBytes*100));
+  if(job.chunksTotal>0) return Math.max(0,Math.min(100,completedDownloadSet(job).size/job.chunksTotal*100));
+  return job.status==="complete"?100:0;
+}
+function formatDownloadEta(job){
+  if(job.status==="complete") return "Complete";
+  if(!(job.speedBps>0)) return job.status==="running"?"Calculating…":"—";
+  const remaining=job.totalBytes>0?Math.max(0,job.totalBytes-(job.downloadedBytes||0)):null;
+  if(remaining==null) return "—";
+  const seconds=remaining/job.speedBps;
+  if(seconds<60) return Math.ceil(seconds)+" sec left";
+  if(seconds<3600) return Math.ceil(seconds/60)+" min left";
+  return (seconds/3600).toFixed(1)+" hr left";
+}
+function noteDownloadBytes(job,bytes){
+  const now=performance.now();
+  if(!job._speedStartedAt){ job._speedStartedAt=now; job._speedBytes=0; }
+  job._speedBytes=(job._speedBytes||0)+(Number(bytes)||0);
+  const elapsed=(now-job._speedStartedAt)/1000;
+  if(elapsed>.35) job.speedBps=job._speedBytes/elapsed;
+  persistDownloadJob(job,false);
+}
+function downloadContextFrom(ctx){
+  ctx=ctx||{};
+  const identity=(ctx.identity&&ctx.identity.version)?ctx.identity:buildTitleIdentity(ctx);
+  return {type:identity.type,id:identity.tmdbId||ctx.id||0,title:identity.title||ctx.title||"Download",altTitles:identity.titles||[],year:identity.year||ctx.year||"",season:identity.season||ctx.season||1,episode:identity.episode||ctx.episode||1,imdb:identity.imdbId||ctx.imdb||"",identity,item:ctx.item||(identity.tmdbId?snap(catalogItemFor(identity.type,identity.tmdbId),identity.type):null)};
+}
+function sanitizeDownloadName(value){ return String(value||"ZeroPlay download").replace(/[<>:"/\\|?*\u0000-\u001f]/g," ").replace(/\s+/g," ").trim().slice(0,150)||"ZeroPlay download"; }
+function extensionForDownload(url,mime,kind){
+  const path=String(url||"").split(/[?#]/)[0].toLowerCase();
+  const ext=(path.match(/\.(mp4|m4v|webm|mov|mkv|ts|m2ts|aac|mp3)$/)||[])[1];
+  if(ext) return ext;
+  const m=String(mime||"").toLowerCase();
+  if(m.includes("mp4")) return "mp4"; if(m.includes("webm")) return "webm"; if(m.includes("quicktime")) return "mov"; if(m.includes("matroska")) return "mkv"; if(m.includes("mp2t")) return "ts"; if(m.includes("aac")) return "aac"; if(m.includes("mpeg")&&m.includes("audio")) return "mp3";
+  return kind==="hls"?"ts":"mp4";
+}
+function makeDownloadFilename(ctx,variant,kind,url,mime){
+  const cleanCtx=downloadContextFrom(ctx||{});
+  const ep=cleanCtx.type==="tv"?" S"+String(cleanCtx.season||1).padStart(2,"0")+"E"+String(cleanCtx.episode||1).padStart(2,"0"):"";
+  const q=variant&&variant.quality&&variant.quality!=="source"?" "+variant.quality:"";
+  return sanitizeDownloadName(cleanCtx.title+ep+q)+"."+extensionForDownload(url,mime,kind);
+}
+function parseM3uAttributes(text){
+  const out={}; const re=/([A-Z0-9-]+)=("[^"]*"|[^,]*)/gi; let m;
+  while((m=re.exec(String(text||"")))){ out[m[1].toUpperCase()]=String(m[2]||"").replace(/^"|"$/g,""); }
+  return out;
+}
+function resolvePlaylistUrl(raw,base){ try{ return new URL(String(raw||"").trim(),base).href; }catch{ return ""; } }
+function parseByteRangeValue(value,previousEnd){
+  const m=String(value||"").trim().match(/^(\d+)(?:@(\d+))?$/); if(!m) return null;
+  const length=Number(m[1]); const start=m[2]!=null?Number(m[2]):(previousEnd==null?0:previousEnd+1);
+  return {start,end:start+length-1,length};
+}
+function parseM3uPlaylist(text,baseUrl){
+  const clean=String(text||"").replace(/^\uFEFF/,"");
+  if(!/^#EXTM3U/i.test(clean.trim())) throw new Error("The response is not an M3U/M3U8 playlist");
+  const lines=clean.split(/\r?\n/), variants=[], segments=[], parts=[];
+  let mediaSequence=0, sequence=0, targetDuration=0, live=true, pendingDuration=0, pendingRangeText="", currentKey=null, map=null, pendingVariant=null;
+  const rangeEnds=new Map();
+  const applyRange=(rangeText,url)=>{
+    if(!rangeText) return null;
+    const prev=rangeEnds.has(url)?rangeEnds.get(url):null; const range=parseByteRangeValue(rangeText,prev);
+    if(range) rangeEnds.set(url,range.end); return range;
+  };
+  for(const rawLine of lines){
+    const line=rawLine.trim(); if(!line) continue;
+    if(line.startsWith("#EXT-X-MEDIA-SEQUENCE:")){ mediaSequence=Number(line.split(":")[1])||0; sequence=mediaSequence; continue; }
+    if(line.startsWith("#EXT-X-TARGETDURATION:")){ targetDuration=Number(line.split(":")[1])||0; continue; }
+    if(line==="#EXT-X-ENDLIST"){ live=false; continue; }
+    if(line.startsWith("#EXT-X-STREAM-INF:")){ pendingVariant=parseM3uAttributes(line.slice(line.indexOf(":")+1)); continue; }
+    if(line.startsWith("#EXT-X-MAP:")){ const a=parseM3uAttributes(line.slice(line.indexOf(":")+1)); const url=resolvePlaylistUrl(a.URI,baseUrl); map={url,byterange:applyRange(a.BYTERANGE||"",url),init:true,duration:0}; parts.push(map); continue; }
+    if(line.startsWith("#EXT-X-KEY:")){ const a=parseM3uAttributes(line.slice(line.indexOf(":")+1)); currentKey=String(a.METHOD||"NONE").toUpperCase()==="NONE"?null:{method:String(a.METHOD||"").toUpperCase(),uri:a.URI?resolvePlaylistUrl(a.URI,baseUrl):"",iv:a.IV||""}; continue; }
+    if(line.startsWith("#EXTINF:")){ pendingDuration=Number(line.slice(8).split(",")[0])||0; continue; }
+    if(line.startsWith("#EXT-X-BYTERANGE:")){ pendingRangeText=line.slice(line.indexOf(":")+1); continue; }
+    if(line.startsWith("#")){ if(!line.startsWith("#EXT-X-STREAM-INF")) pendingVariant=pendingVariant; continue; }
+    const url=resolvePlaylistUrl(line,baseUrl); if(!url) continue;
+    if(pendingVariant){
+      const res=String(pendingVariant.RESOLUTION||"").match(/(\d+)x(\d+)/i);
+      variants.push({url,bandwidth:Number(pendingVariant.BANDWIDTH||pendingVariant["AVERAGE-BANDWIDTH"])||0,width:res?Number(res[1]):0,height:res?Number(res[2]):0,codecs:pendingVariant.CODECS||"",frameRate:Number(pendingVariant["FRAME-RATE"])||0});
+      pendingVariant=null; continue;
+    }
+    const segment={url,duration:pendingDuration||0,sequence:sequence++,byterange:applyRange(pendingRangeText,url),key:currentKey?Object.assign({},currentKey):null}; segments.push(segment); parts.push(segment);
+    pendingDuration=0; pendingRangeText="";
+  }
+  return {isMaster:variants.length>0,variants,segments,parts,map,live:segments.length?live:false,targetDuration,mediaSequence,duration:segments.reduce((n,s)=>n+(Number(s.duration)||0),0),encrypted:segments.some(s=>!!s.key)};
+}
+function chooseM3uVariant(variants,quality){
+  const list=(variants||[]).slice().sort((a,b)=>(b.height||0)-(a.height||0)||(b.bandwidth||0)-(a.bandwidth||0));
+  if(!list.length) return null;
+  const wanted=qualityHeight(quality||settings.stream.quality||"auto");
+  if(!wanted) return list[0];
+  return list.find(v=>(v.height||0)===wanted)||list.filter(v=>(v.height||0)<=wanted).sort((a,b)=>(b.height||0)-(a.height||0))[0]||list[list.length-1];
+}
+function extractM3uUrls(text,baseUrl){
+  const clean=String(text||"").replace(/\\\//g,"/").replace(/&amp;/g,"&").replace(/\\u0026/gi,"&");
+  const out=[], seen=new Set(), re=/(?:https?:\/\/[^\s"'<>]+|(?:\.\.?\/|\/)[^\s"'<>]+?)\.m3u8(?:\?[^\s"'<>]*)?/gi; let m;
+  while((m=re.exec(clean))){ const url=resolvePlaylistUrl(m[0].replace(/[),.;]+$/,""),baseUrl||location.href); if(url&&!seen.has(url)){ seen.add(url); out.push(url); } }
+  return out;
+}
+async function fetchPlaylistText(url){
+  const target=cleanHttpUrl(url)||String(url||"");
+  try{
+    const r=await fetch(target,{credentials:"omit",cache:"no-store",headers:{Accept:"application/vnd.apple.mpegurl,application/x-mpegURL,text/plain,*/*"}});
+    if(r.ok){ const text=await r.text(); if(/^#EXTM3U/i.test(text.trim())) return {text,finalUrl:r.url||target}; }
+  }catch{}
+  const data=await resolverCall({mode:"text",url:target});
+  if(!data||!data.text) throw new Error("Playlist could not be fetched directly or through the ZeroPlay resolver");
+  return {text:data.text,finalUrl:data.url||target};
+}
+async function resolveHlsPlan(url,quality,depth){
+  depth=depth||0;
+  const fetched=await fetchPlaylistText(url);
+  const playlist=parseM3uPlaylist(fetched.text,fetched.finalUrl);
+  if(playlist.isMaster){
+    if(depth>=3) throw new Error("M3U master playlist nesting is too deep");
+    const chosen=chooseM3uVariant(playlist.variants,quality);
+    if(!chosen) throw new Error("M3U master playlist has no playable variant");
+    const media=await resolveHlsPlan(chosen.url,quality,depth+1);
+    media.masterUrl=fetched.finalUrl; media.variants=playlist.variants; media.chosenVariant=chosen;
+    return media;
+  }
+  if(!playlist.segments.length) throw new Error("M3U playlist contains no media segments");
+  if(playlist.live) throw new Error("This is a live M3U playlist without an end marker, so it cannot be completed as one downloadable file");
+  playlist.playlistUrl=fetched.finalUrl; playlist.variants=[]; playlist.chosenVariant=null;
+  return playlist;
+}
+async function loadDownloadJobs(){
+  if(downloadsLoaded) return downloadJobs;
+  if(downloadsLoadPromise) return downloadsLoadPromise;
+  downloadsLoadPromise=(async()=>{
+    try{
+      const records=await dlGetAll("jobs");
+      records.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+      for(const rec of records){
+        if(!rec||!rec.id) continue;
+        const job=Object.assign({},rec); job._completedSet=new Set((rec.completedChunks||[]).map(Number).filter(Number.isInteger)); job.partSizes=job.partSizes||{}; recalcDownloadBytes(job);
+        if(job.status==="running"||job.status==="assembling"){ job.status="paused"; job.error=""; job.note="Interrupted — stored chunks are ready to resume."; }
+        downloadJobs.set(job.id,job);
+      }
+    }catch{}
+    downloadsLoaded=true; updateDownloadMenuCount(); queueDownloadUiRefresh();
+    if(downloadsEnabled()&&downloadCfg().autoResume){
+      for(const job of downloadJobs.values()) if(["queued","paused"].includes(job.status)&&completedDownloadSet(job).size<(job.chunksTotal||Infinity)) job.status="queued";
+      scheduleDownloads();
+    }
+    return downloadJobs;
+  })();
+  return downloadsLoadPromise;
+}
+function sortedDownloadJobs(){ return [...downloadJobs.values()].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)); }
+function updateDownloadMenuCount(){
+  const el=document.getElementById("menuDownloadCount"); if(!el) return;
+  const jobs=sortedDownloadJobs(), active=jobs.filter(j=>["running","queued"].includes(j.status)).length, done=jobs.filter(j=>j.status==="complete").length;
+  el.textContent=active?active+" active":done?done+" saved":"Offline";
+}
+async function probeDownloadTarget(url){
+  const out={totalBytes:null,supportsRange:false,mime:"",etag:"",lastModified:""};
+  const readHeaders=r=>{ out.mime=r.headers.get("content-type")||out.mime; out.etag=r.headers.get("etag")||""; out.lastModified=r.headers.get("last-modified")||""; const range=r.headers.get("content-range"); if(range&&range.includes("/")){ const n=Number(range.split("/").pop()); if(n>0) out.totalBytes=n; } const len=Number(r.headers.get("content-length")); if(out.totalBytes==null&&len>0&&r.status!==206) out.totalBytes=len; if((r.headers.get("accept-ranges")||"").toLowerCase().includes("bytes")) out.supportsRange=true; };
+  try{
+    const r=await fetch(url,{headers:{Range:"bytes=0-0"},credentials:"omit",cache:"no-store"});
+    readHeaders(r); if(r.status===206) out.supportsRange=true;
+    try{ if(r.body) await r.body.cancel(); }catch{}
+    if(r.ok||r.status===206) return out;
+  }catch{}
+  try{ const r=await fetch(url,{method:"HEAD",credentials:"omit",cache:"no-store"}); readHeaders(r); }catch{}
+  return out;
+}
+function findExistingDownload(url,ctx){
+  const key=ctx&&ctx.identity?ctx.identity.fingerprint:"";
+  return [...downloadJobs.values()].find(job=>job.status!=="cancelled"&&job.url===url&&(!key||(job.ctx&&job.ctx.identity&&job.ctx.identity.fingerprint===key)))||null;
+}
+async function createDownloadJob(variant,ctx,serverName){
+  await loadDownloadJobs();
+  const cfg=downloadCfg();
+  if(cfg.enabled===false) throw new Error("Downloads are turned off in Settings");
+  const cleanCtx=downloadContextFrom(ctx||{});
+  const sourceVariant=normalizeVariant(variant)||(variant&&variant.url?{url:variant.url,quality:normalizeQualityLabel(variant.quality||"source")}:null);
+  if(!sourceVariant||!/^https?:\/\//i.test(sourceVariant.url)) throw new Error("Only a direct HTTP(S) media or M3U8 link can be downloaded");
+  const existing=findExistingDownload(sourceVariant.url,cleanCtx);
+  if(existing){
+    if(["paused","error"].includes(existing.status)){ toast("Existing download found — resuming from stored parts","success"); resumeDownload(existing); }
+    else toast(existing.status==="complete"?"That exact download is already complete":"That exact download is already in Downloads");
+    return existing;
+  }
+  const kind=directMediaKind(sourceVariant.url);
+  if(kind==="dash") throw new Error("DASH (.mpd) can play in FastStream, but this downloader assembles direct files and HLS/M3U only");
+  const now=Date.now(), base={id:makeDownloadId(),title:cleanCtx.title,ctx:cleanCtx,url:sourceVariant.url,quality:sourceVariant.quality||"source",serverName:serverName||sourceVariant.addonName||"Direct server",status:"queued",createdAt:now,updatedAt:now,downloadedBytes:0,totalBytes:Number(sourceVariant.bytes)||null,speedBps:0,error:"",note:"",threads:cfg.multithreaded===false?1:cfg.threads,partSizes:{},completedChunks:[],fileStored:false,chunksStored:true,retries:0};
+  let job;
+  if(kind==="hls"){
+    if(cfg.m3uExtraction===false) throw new Error("M3U extraction is turned off in Settings");
+    const plan=await resolveHlsPlan(sourceVariant.url,sourceVariant.quality);
+    const estimatedBytes=plan.chosenVariant&&plan.chosenVariant.bandwidth&&plan.duration?Math.ceil(plan.chosenVariant.bandwidth*plan.duration/8):null;
+    if(estimatedBytes&&!decideSizeCap(estimatedBytes,capBytes()).allowed) throw new Error("This M3U variant is estimated at "+fmtBytes(estimatedBytes)+", above the "+capGb()+" GB cap. Choose a lower quality.");
+    const firstSegment=plan.segments[0]||{}; const outputKind=plan.map||/\.m4s(?:\?|#|$)/i.test(firstSegment.url||"")?"mp4":/\.aac(?:\?|#|$)/i.test(firstSegment.url||"")?"aac":"ts";
+    job=Object.assign({},base,{kind:"hls",playlistUrl:plan.playlistUrl,masterUrl:plan.masterUrl||"",segments:plan.parts,chunksTotal:plan.parts.length,durationSec:plan.duration,mime:outputKind==="mp4"?"video/mp4":outputKind==="aac"?"audio/aac":"video/mp2t",filename:makeDownloadFilename(cleanCtx,sourceVariant,"hls",firstSegment.url||sourceVariant.url,outputKind==="mp4"?"video/mp4":"video/mp2t"),quality:plan.chosenVariant&&plan.chosenVariant.height?plan.chosenVariant.height+"p":base.quality,encrypted:!!plan.encrypted,note:plan.encrypted?"AES-128 HLS: segments are decrypted in this browser when the key is fetchable.":"HLS segments download in parallel and are assembled in order."});
+    if(outputKind==="aac") job.filename=job.filename.replace(/\.[^.]+$/,".aac");
+  }else{
+    const probe=await probeDownloadTarget(sourceVariant.url);
+    const total=Number(probe.totalBytes||sourceVariant.bytes)||null;
+    const verdict=decideSizeCap(total,capBytes()); if(!verdict.allowed) throw new Error("This file is "+fmtBytes(total)+", above the "+capGb()+" GB cap");
+    const chunkSize=Math.round(cfg.chunkMb*1024*1024);
+    job=Object.assign({},base,{kind:total&&probe.supportsRange?"file":"stream",totalBytes:total,mime:probe.mime||"",etag:probe.etag||"",lastModified:probe.lastModified||"",supportsRange:!!probe.supportsRange,chunkSize,chunksTotal:total&&probe.supportsRange?Math.ceil(total/chunkSize):0,filename:makeDownloadFilename(cleanCtx,sourceVariant,kind,sourceVariant.url,probe.mime),note:total&&probe.supportsRange?"Range requests confirmed: pause/resume and parallel chunks are available.":"The server did not confirm Range support. ZeroPlay will save sequential parts and try a range resume; if the server restarts the file, it will say so."});
+  }
+  job._completedSet=new Set();
+  downloadJobs.set(job.id,job); persistDownloadJob(job,true); updateDownloadMenuCount();
+  toast("Download queued: "+job.filename,"success");
+  scheduleDownloads();
+  return job;
+}
+function scheduleDownloads(){
+  if(!downloadsEnabled()) return;
+  loadDownloadJobs().then(()=>{
+    const max=Math.max(1,downloadCfg().concurrent||1);
+    let active=[...downloadJobs.values()].filter(job=>job.status==="running").length;
+    for(const job of sortedDownloadJobs().slice().reverse()){
+      if(active>=max) break;
+      if(job.status!=="queued") continue;
+      active++; void runDownloadJob(job);
+    }
+    updateDownloadMenuCount();
+  }).catch(()=>{});
+}
+function pauseDownload(jobOrId,silent){
+  const job=typeof jobOrId==="string"?downloadJobs.get(jobOrId):jobOrId; if(!job) return;
+  const ctl=downloadControllers.get(job.id); if(ctl) try{ctl.abort();}catch{}
+  if(job.status==="running"||job.status==="queued"){ job.status="paused"; job.speedBps=0; persistDownloadJob(job,true); }
+  if(!silent) toast("Download paused — completed chunks are stored");
+  queueDownloadUiRefresh(); updateDownloadMenuCount();
+}
+function pauseAllDownloads(reason){ for(const job of downloadJobs.values()) if(job.status==="running"||job.status==="queued") pauseDownload(job,true); if(reason) toast(reason,"error"); }
+function resumeDownload(jobOrId){
+  const job=typeof jobOrId==="string"?downloadJobs.get(jobOrId):jobOrId; if(!job) return;
+  if(!downloadsEnabled()){ toast("Downloads are turned off in Settings","error"); return; }
+  if(job.status==="complete") return;
+  job.status="queued"; job.error=""; job._refreshedThisRun=false; persistDownloadJob(job,true); scheduleDownloads();
+}
+async function deleteDownload(jobOrId,opts){
+  opts=opts||{};
+  const job=typeof jobOrId==="string"?downloadJobs.get(jobOrId):jobOrId; if(!job) return;
+  deletedDownloadIds.add(job.id);
+  pauseDownload(job,true);
+  for(let i=0;i<100&&downloadControllers.has(job.id);i++) await new Promise(resolve=>setTimeout(resolve,50));
+  await dlDeleteJobChunks(job.id).catch(()=>{}); await dlDelete("files",job.id).catch(()=>{}); await dlDelete("jobs",job.id).catch(()=>{});
+  downloadJobs.delete(job.id); if(!opts.silent) toast("Download and stored chunks deleted"); queueDownloadUiRefresh(); updateDownloadMenuCount(); scheduleDownloads();
+}
+async function clearCompletedDownloads(){
+  const done=sortedDownloadJobs().filter(job=>job.status==="complete");
+  for(const job of done) await deleteDownload(job,{silent:true});
+  if(done.length) toast("Completed downloads cleared");
+}
+function fetchError(message,status,code){ const e=new Error(message); e.status=status||0; e.code=code||""; return e; }
+async function fetchArrayBufferForDownload(url,options){
+  options=options||{}; const retries=options.retries==null?3:options.retries;
+  let last=null;
+  for(let attempt=0;attempt<=retries;attempt++){
+    try{
+      const r=await fetch(url,{headers:options.headers||{},signal:options.signal,credentials:"omit",cache:"no-store"});
+      if(options.validate){ const verdict=options.validate(r); if(verdict!==true){ try{ if(r.body) await r.body.cancel(); }catch{} throw fetchError(verdict||("Unexpected response HTTP "+r.status),r.status,options.code||"BAD_RESPONSE"); } }
+      if(!r.ok){ try{ if(r.body) await r.body.cancel(); }catch{} throw fetchError("Download request failed with HTTP "+r.status,r.status); }
+      return {buffer:await r.arrayBuffer(),response:r};
+    }catch(e){
+      last=e;
+      if(options.signal&&options.signal.aborted) throw e;
+      if(e&&e.code==="RANGE_UNSUPPORTED") throw e;
+      if(e&&e.status&&e.status>=400&&e.status<500&&![408,425,429].includes(e.status)) throw e;
+      if(attempt<retries) await new Promise(resolve=>setTimeout(resolve,450*Math.pow(2,attempt)));
+    }
+  }
+  throw last||new Error("Download request failed");
+}
+function downloadReservedBytes(job){ return Object.values(job._reservedParts||{}).reduce((n,v)=>n+(Number(v)||0),0); }
+function reserveDownloadBytes(job,index,bytes){
+  if(deletedDownloadIds.has(job.id)) throw new Error("This download was deleted");
+  const done=completedDownloadSet(job); if(done.has(index)) return false;
+  job._reservedParts=job._reservedParts||{}; if(job._reservedParts[index]!=null) return false;
+  const projected=recalcDownloadBytes(job)+downloadReservedBytes(job)+(Number(bytes)||0);
+  if(projected>capBytes()) throw new Error("This download exceeds the "+capGb()+" GB cap and was stopped before storing more data");
+  job._reservedParts[index]=Number(bytes)||0; return true;
+}
+function releaseDownloadBytes(job,index){ if(job._reservedParts) delete job._reservedParts[index]; }
+function effectiveDownloadThreads(job){ const cfg=downloadCfg(); return cfg.multithreaded===false?1:Math.max(1,Math.min(8,Number(cfg.threads)||Number(job&&job.threads)||1)); }
+async function saveDownloadPart(job,index,buffer){
+  const data=buffer instanceof ArrayBuffer?buffer:new Uint8Array(buffer).buffer;
+  const reserved=reserveDownloadBytes(job,index,data.byteLength);
+  try{
+    await dlPut("chunks",{key:job.id+":"+index,jobId:job.id,index,data,bytes:data.byteLength});
+    if(deletedDownloadIds.has(job.id)) return;
+    const done=completedDownloadSet(job); const wasDone=done.has(index); done.add(index);
+    job.partSizes=job.partSizes||{}; job.partSizes[index]=data.byteLength;
+    if(!wasDone){ recalcDownloadBytes(job); noteDownloadBytes(job,data.byteLength); }
+    job.chunksStored=true;
+  }finally{ if(reserved) releaseDownloadBytes(job,index); }
+}
+async function runRangeDownload(job,signal){
+  const done=completedDownloadSet(job); let cursor=0;
+  const claim=()=>{ while(cursor<job.chunksTotal&&done.has(cursor)) cursor++; return cursor<job.chunksTotal?cursor++:-1; };
+  const worker=async()=>{
+    for(;;){
+      if(signal.aborted) return;
+      const index=claim(); if(index<0) return;
+      const start=index*job.chunkSize, end=Math.min(job.totalBytes-1,start+job.chunkSize-1);
+      const {buffer}=await fetchArrayBufferForDownload(job.url,{signal,headers:{Range:"bytes="+start+"-"+end},code:"RANGE_UNSUPPORTED",validate:r=>{
+        if(r.status!==206) return r.status===200?"The server stopped honouring byte ranges, so parallel resume is unavailable for this file":"Download chunk request failed with HTTP "+r.status;
+        const cr=r.headers.get("content-range")||""; const m=cr.match(/bytes\s+(\d+)-(\d+)\/(\d+|\*)/i);
+        if(m&&Number(m[1])!==start) return "The server returned the wrong byte range";
+        return true;
+      }});
+      if(buffer.byteLength!==end-start+1) throw new Error("A downloaded chunk was incomplete; it will be retried on resume");
+      await saveDownloadPart(job,index,buffer);
+    }
+  };
+  const threads=Math.max(1,Math.min(effectiveDownloadThreads(job),job.chunksTotal||1));
+  const settled=await Promise.allSettled(Array.from({length:threads},()=>worker())); const failed=settled.find(r=>r.status==="rejected"); if(failed) throw failed.reason;
+}
+function concatUint8Parts(parts){
+  const total=parts.reduce((n,p)=>n+p.length,0); const out=new Uint8Array(total); let off=0;
+  for(const part of parts){ out.set(part,off); off+=part.length; }
+  return out;
+}
+async function runStreamDownload(job,signal){
+  let startBytes=Number(job.downloadedBytes)||0;
+  if(firstMissingDownloadIndex(job)<completedDownloadSet(job).size){
+    await dlDeleteJobChunks(job.id); completedDownloadSet(job).clear(); job.partSizes={}; job.downloadedBytes=0; startBytes=0;
+    job.note="Stored sequential parts were not contiguous, so ZeroPlay restarted this file instead of assembling a corrupt download."; persistDownloadJob(job,true);
+  }
+  const headers=startBytes>0?{Range:"bytes="+startBytes+"-"}:{};
+  const r=await fetch(job.url,{headers,signal,credentials:"omit",cache:"no-store"});
+  if(startBytes>0&&r.status===200){
+    await dlDeleteJobChunks(job.id); completedDownloadSet(job).clear(); job.partSizes={}; job.downloadedBytes=0; startBytes=0; job.note="The server ignored the resume range and restarted this file; ZeroPlay did not splice two different responses together."; persistDownloadJob(job,true);
+  }
+  if(!r.ok&&r.status!==206){ try{ if(r.body) await r.body.cancel(); }catch{} throw fetchError("Download request failed with HTTP "+r.status,r.status); }
+  job.supportsRange=r.status===206;
+  const rangeStart=(r.headers.get("content-range")||"").match(/bytes\s+(\d+)-/i);
+  if(r.status===206&&rangeStart&&Number(rangeStart[1])!==startBytes){ try{ if(r.body) await r.body.cancel(); }catch{} throw fetchError("The server returned a different resume offset, so ZeroPlay stopped instead of corrupting the file",r.status); }
+  const len=Number(r.headers.get("content-length"));
+  const rangeTotal=(r.headers.get("content-range")||"").split("/").pop();
+  if(Number(rangeTotal)>0) job.totalBytes=Number(rangeTotal); else if(len>0) job.totalBytes=startBytes+len;
+  const verdict=decideSizeCap(job.totalBytes,capBytes()); if(!verdict.allowed){ try{ if(r.body) await r.body.cancel(); }catch{} throw new Error("This file exceeds the "+capGb()+" GB cap"); }
+  job.mime=r.headers.get("content-type")||job.mime||"";
+  const targetPart=Math.round(downloadCfg().chunkMb*1024*1024);
+  let nextIndex=firstMissingDownloadIndex(job);
+  const flush=async(parts)=>{ if(!parts.length) return; const merged=concatUint8Parts(parts); await saveDownloadPart(job,nextIndex++,merged.buffer); };
+  if(!r.body||!r.body.getReader){ const buf=await r.arrayBuffer(); await flush([new Uint8Array(buf)]); job.chunksTotal=completedDownloadSet(job).size; return; }
+  const reader=r.body.getReader(); let parts=[], buffered=0;
+  for(;;){
+    const part=await reader.read(); if(part.done) break;
+    parts.push(part.value); buffered+=part.value.length;
+    if(buffered>=targetPart){ await flush(parts); parts=[]; buffered=0; }
+  }
+  await flush(parts); job.chunksTotal=completedDownloadSet(job).size;
+}
+function hlsIvBytes(segment){
+  const iv=new Uint8Array(16); const raw=segment&&segment.key&&segment.key.iv;
+  if(raw){ const hex=String(raw).replace(/^0x/i,"").padStart(32,"0").slice(-32); for(let i=0;i<16;i++) iv[i]=parseInt(hex.slice(i*2,i*2+2),16)||0; return iv; }
+  const seq=Number(segment&&segment.sequence)||0; new DataView(iv.buffer).setUint32(12,seq>>>0,false); return iv;
+}
+async function decryptHlsSegment(job,segment,buffer,signal){
+  if(!segment.key) return buffer;
+  if(String(segment.key.method||"").toUpperCase()!=="AES-128") throw new Error("This M3U uses "+segment.key.method+" encryption, which the browser downloader does not support");
+  if(!window.crypto||!crypto.subtle) throw new Error("AES-128 HLS decryption requires a secure browser context");
+  if(!segment.key.uri) throw new Error("The M3U encryption key URL is missing");
+  if(!hlsKeyCache.has(segment.key.uri)){
+    hlsKeyCache.set(segment.key.uri,(async()=>{
+      const keyData=await fetchArrayBufferForDownload(segment.key.uri,{signal,retries:2});
+      if(keyData.buffer.byteLength!==16) throw new Error("The M3U AES key is not 16 bytes");
+      return crypto.subtle.importKey("raw",keyData.buffer,{name:"AES-CBC"},false,["decrypt"]);
+    })().catch(e=>{ hlsKeyCache.delete(segment.key.uri); throw e; }));
+  }
+  const key=await hlsKeyCache.get(segment.key.uri);
+  return crypto.subtle.decrypt({name:"AES-CBC",iv:hlsIvBytes(segment)},key,buffer);
+}
+async function runHlsDownload(job,signal){
+  const done=completedDownloadSet(job); let cursor=0;
+  const segments=job.segments||[]; job.chunksTotal=segments.length;
+  const claim=()=>{ while(cursor<segments.length&&done.has(cursor)) cursor++; return cursor<segments.length?cursor++:-1; };
+  const worker=async()=>{
+    for(;;){
+      if(signal.aborted) return;
+      const index=claim(); if(index<0) return;
+      const segment=segments[index]; const headers=segment.byterange?{Range:"bytes="+segment.byterange.start+"-"+segment.byterange.end}:{};
+      const {buffer,response}=await fetchArrayBufferForDownload(segment.url,{signal,headers,validate:r=>!segment.byterange||r.status===206||r.status===200?true:"An HLS byte-range segment returned HTTP "+r.status});
+      let segmentBuffer=buffer;
+      if(segment.byterange){
+        if(response.status===200&&buffer.byteLength>segment.byterange.length) segmentBuffer=buffer.slice(segment.byterange.start,segment.byterange.end+1);
+        if(segmentBuffer.byteLength!==segment.byterange.length) throw new Error("An HLS byte-range segment had the wrong length; resume to retry it");
+      }
+      const plain=await decryptHlsSegment(job,segment,segmentBuffer,signal);
+      await saveDownloadPart(job,index,plain);
+    }
+  };
+  const threads=Math.max(1,Math.min(effectiveDownloadThreads(job),segments.length||1));
+  const settled=await Promise.allSettled(Array.from({length:threads},()=>worker())); const failed=settled.find(r=>r.status==="rejected"); if(failed) throw failed.reason;
+}
+async function refreshDownloadUrl(job){
+  if(!job||!job.ctx||downloadCfg().refreshExpired===false) return false;
+  try{
+    const result=await findTitleServers(job.ctx,{bypassCache:true,shouldContinue:()=>downloadJobs.get(job.id)===job});
+    const candidates=[];
+    for(const option of result.options||[]){
+      if(option.kind!=="direct") continue;
+      for(const variant of option.variants||[]) candidates.push({variant,option});
+      if(option.url&&isDirectMedia(option.url)) candidates.push({variant:{url:option.url,quality:"source"},option});
+    }
+    const wantedKind=job.kind==="hls"?"hls":"file";
+    candidates.sort((a,b)=>{
+      const score=x=>((x.option.name===job.serverName)?30:0)+((normalizeQualityLabel(x.variant.quality)===normalizeQualityLabel(job.quality))?20:0)+((directMediaKind(x.variant.url)===wantedKind||wantedKind==="file"&&directMediaKind(x.variant.url)!=="hls")?15:0);
+      return score(b)-score(a);
+    });
+    const chosen=candidates.find(x=>wantedKind==="hls"?directMediaKind(x.variant.url)==="hls":directMediaKind(x.variant.url)!=="hls"&&directMediaKind(x.variant.url)!=="dash");
+    if(!chosen) return false;
+    if(job.kind!=="hls"){
+      const probe=await probeDownloadTarget(chosen.variant.url);
+      if(job.totalBytes&&probe.totalBytes&&Number(probe.totalBytes)!==Number(job.totalBytes)) return false;
+      job.url=chosen.variant.url; job.serverName=chosen.option.name||job.serverName; job.note="The old media link expired; ZeroPlay re-found the same title/episode and will continue from stored chunks."; persistDownloadJob(job,true); return true;
+    }
+    const plan=await resolveHlsPlan(chosen.variant.url,job.quality);
+    const oldPaths=(job.segments||[]).map(s=>{ try{return new URL(s.url).pathname;}catch{return s.url;} });
+    const newPaths=plan.parts.map(s=>{ try{return new URL(s.url).pathname;}catch{return s.url;} });
+    if(oldPaths.length!==newPaths.length||oldPaths.some((value,i)=>value!==newPaths[i])) return false;
+    job.url=chosen.variant.url; job.playlistUrl=plan.playlistUrl; job.segments=plan.parts; job.serverName=chosen.option.name||job.serverName; job.note="The old M3U link expired; the same segment sequence was re-found, so completed segments were kept."; persistDownloadJob(job,true); return true;
+  }catch{ return false; }
+}
+async function finalizeDownload(job){
+  recalcDownloadBytes(job);
+  if(!completedDownloadSet(job).size||!(Number(job.downloadedBytes)>0)) throw new Error("The server returned an empty download");
+  if(job.chunksTotal&&(completedDownloadSet(job).size<job.chunksTotal||firstMissingDownloadIndex(job)<job.chunksTotal)) return false;
+  if(job.kind==="file"&&job.totalBytes&&Number(job.downloadedBytes)!==Number(job.totalBytes)) throw new Error("Downloaded bytes do not match the server file size; resume to repair the missing chunks");
+  job.status="complete"; job.completedAt=Date.now(); job.speedBps=0; job.error=""; persistDownloadJob(job,true); updateDownloadMenuCount(); queueDownloadUiRefresh();
+  toast("Download complete: "+job.filename,"success");
+  if(downloadCfg().autoSave!==false){ try{ await saveDownloadedFile(job,{automatic:true}); }catch(e){ job.note="The file is complete in Downloads. Automatic saving was blocked: "+(e.message||e); persistDownloadJob(job,true); } }
+  return true;
+}
+async function runDownloadJob(job){
+  if(!job||downloadControllers.has(job.id)||job.status==="complete") return;
+  if(!downloadsEnabled()){ job.status="paused"; persistDownloadJob(job,true); return; }
+  const controller=new AbortController(); downloadControllers.set(job.id,controller);
+  job.status="running"; job.error=""; job._speedStartedAt=performance.now(); job._speedBytes=0; persistDownloadJob(job,true); updateDownloadMenuCount();
+  try{
+    if(job.kind==="hls") await runHlsDownload(job,controller.signal);
+    else if(job.kind==="file") await runRangeDownload(job,controller.signal);
+    else await runStreamDownload(job,controller.signal);
+    if(controller.signal.aborted){ if(job.status==="running") job.status="paused"; }
+    else if(await finalizeDownload(job)===false){ job.status="paused"; job.error="Some stored parts are still missing; resume to continue without discarding completed parts."; }
+  }catch(e){
+    if(controller.signal.aborted||(e&&e.name==="AbortError")){ if(job.status==="running") job.status="paused"; }
+    else if(e&&[401,403,404,410].includes(Number(e.status))&&!job._refreshedThisRun){
+      job._refreshedThisRun=true;
+      const refreshed=await refreshDownloadUrl(job);
+      if(refreshed){ job.status="queued"; job.error=""; }
+      else { job.status="error"; job.error=(e.message||String(e))+" ZeroPlay could not safely refresh the same file/playlist."; }
+    }else{
+      job.status="error"; job.error=e&&e.message||String(e); job.retries=(job.retries||0)+1;
+      if(e&&e.code==="RANGE_UNSUPPORTED") job.note="Parallel resume is unavailable for this host. Resume will retry; if the host keeps rejecting ranges, use another server/quality.";
+    }
+  }finally{
+    downloadControllers.delete(job.id); job.speedBps=0; recalcDownloadBytes(job); persistDownloadJob(job,true); updateDownloadMenuCount(); queueDownloadUiRefresh();
+    setTimeout(scheduleDownloads,60);
+  }
+}
+async function assembleDownloadBlob(job){
+  const existing=await dlGet("files",job.id).catch(()=>null);
+  if(existing&&existing.blob) return existing.blob;
+  const indexes=downloadPartIndexes(job);
+  if(!indexes.length) throw new Error("No stored download parts were found");
+  const parts=[];
+  for(const index of indexes){
+    const chunk=await dlGet("chunks",job.id+":"+index);
+    if(!chunk||!chunk.data) throw new Error("A stored download chunk is missing. Resume the download to repair it.");
+    parts.push(chunk.data);
+  }
+  const blob=new Blob(parts,{type:job.mime||"application/octet-stream"});
+  if(downloadCfg().keepCompleted!==false){
+    try{
+      await dlPut("files",{id:job.id,blob,filename:job.filename,mime:job.mime||blob.type,size:blob.size,createdAt:Date.now()});
+      job.fileStored=true; await dlDeleteJobChunks(job.id); job.chunksStored=false; persistDownloadJob(job,true);
+    }catch{ job.note="The assembled file could not also be stored as one browser file (storage may be full), so its chunks were kept."; persistDownloadJob(job,true); }
+  }
+  return blob;
+}
+async function cleanupSavedDownload(job){
+  await dlDeleteJobChunks(job.id).catch(()=>{}); await dlDelete("files",job.id).catch(()=>{});
+  job.fileStored=false; job.chunksStored=false; job.note="Saved to this device and removed from browser storage because “Keep completed files in browser” is off."; persistDownloadJob(job,true);
+}
+async function writeDownloadToFileHandle(job,handle){
+  const writable=await handle.createWritable();
+  try{
+    const existing=await dlGet("files",job.id).catch(()=>null);
+    if(existing&&existing.blob){ await writable.write(existing.blob); }
+    else{
+      for(const index of downloadPartIndexes(job)){
+        const chunk=await dlGet("chunks",job.id+":"+index);
+        if(!chunk||!chunk.data) throw new Error("A stored download chunk is missing. Resume the download to repair it.");
+        await writable.write(chunk.data);
+      }
+    }
+    await writable.close();
+  }catch(e){ try{ await writable.abort(); }catch{} throw e; }
+}
+async function saveDownloadedFile(job,options){
+  options=options||{};
+  if(!job||job.status!=="complete") throw new Error("This download is not complete yet");
+  if(!job.fileStored&&!job.chunksStored) throw new Error("This file was already saved and cleaned from browser storage");
+  if(!options.automatic&&window.showSaveFilePicker){
+    try{
+      const ext="."+(job.filename.split(".").pop()||"mp4").toLowerCase();
+      const handle=await window.showSaveFilePicker({suggestedName:job.filename,types:[{description:"ZeroPlay media",accept:{[job.mime||"application/octet-stream"]:[ext]}}]});
+      await writeDownloadToFileHandle(job,handle);
+      if(downloadCfg().keepCompleted===false) await cleanupSavedDownload(job);
+      toast("Saved "+job.filename,"success"); return true;
+    }catch(e){ if(e&&e.name==="AbortError") return false; }
+  }
+  const blob=await assembleDownloadBlob(job);
+  const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=job.filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+  if(downloadCfg().keepCompleted===false) setTimeout(()=>cleanupSavedDownload(job).catch(()=>{}),1800);
+  if(!options.automatic) toast("Saved "+job.filename,"success");
+  return true;
+}
+async function playDownloadedFile(job){
+  if(!job||job.status!=="complete") return;
+  const blob=await assembleDownloadBlob(job);
+  const mime=String(blob.type||job.mime||"").toLowerCase();
+  if(mime.includes("mp2t")){
+    const probe=document.createElement("video");
+    if(!(probe.canPlayType&&probe.canPlayType(mime))){ toast("This browser cannot play an assembled .ts file directly. Use Save file to play it in a media player.","error"); return; }
+  }
+  if(activeDownloadObjectUrl) URL.revokeObjectURL(activeDownloadObjectUrl);
+  activeDownloadObjectUrl=URL.createObjectURL(blob);
+  closeDownloadModal();
+  const ctx=job.ctx||{}, item=ctx.item?snapToItem(ctx.item):{id:0,type:"movie",title:job.title||job.filename};
+  playResolvedURL(activeDownloadObjectUrl,item,"Downloaded file",[],{ctx,identity:ctx.identity||null,season:ctx.season||1,episode:ctx.episode||1,noProgress:!ctx.item,activeVariant:{url:activeDownloadObjectUrl,quality:job.quality,bytes:blob.size}});
+}
+function downloadStatusLabel(job){
+  return {queued:"Queued",running:"Downloading",paused:"Paused",complete:"Complete",error:"Needs attention",cancelled:"Cancelled"}[job.status]||job.status||"Download";
+}
+function downloadStatsHTML(job){
+  const progress=downloadProgress(job), done=completedDownloadSet(job).size;
+  const mode=job.kind==="hls"?"M3U/HLS segments":job.kind==="file"?"Parallel byte ranges":"Sequential parts";
+  const threadCount=effectiveDownloadThreads(job); const threadText=job.kind==="stream"?"1 stream":threadCount+" thread"+(threadCount>1?"s":"");
+  return '<span>'+progress.toFixed(1)+'%</span><span>'+fmtBytes(job.downloadedBytes||0)+(job.totalBytes?' / '+fmtBytes(job.totalBytes):" downloaded")+'</span><span>'+done+(job.chunksTotal?' / '+job.chunksTotal:"")+' parts</span><span>'+esc(mode)+' · '+esc(threadText)+'</span>'+(job.status==="running"?'<span>'+fmtBytes(Math.round(job.speedBps||0))+'/s</span><span>'+esc(formatDownloadEta(job))+'</span>':"");
+}
+function downloadJobHTML(job){
+  const progress=downloadProgress(job), done=completedDownloadSet(job).size;
+  const isActive=job.status==="running"||job.status==="queued", canResume=["paused","error"].includes(job.status), canUse=job.status==="complete"&&(job.fileStored||job.chunksStored);
+  return '<article class="download-job" data-download-job="'+esc(job.id)+'"><div class="download-job-head"><div><h3>'+esc(job.filename||job.title||"Download")+'</h3><div class="download-meta">'+esc(job.title||"")+(job.ctx&&job.ctx.type==="tv"?" · S"+(job.ctx.season||1)+" E"+(job.ctx.episode||1):"")+' · '+esc(job.serverName||"Direct server")+(job.quality?' · '+esc(job.quality):"")+'</div></div><span class="chip '+(job.status==="complete"?"rd":job.status==="error"?"":"violet")+'" data-download-status>'+esc(downloadStatusLabel(job))+'</span></div>'
+    +'<div class="download-progress" aria-label="Download progress"><i style="width:'+progress.toFixed(1)+'%"></i></div>'
+    +'<div class="download-stats" data-download-stats>'+downloadStatsHTML(job)+'</div>'
+    +(job.note?'<p class="help-text">'+esc(job.note)+'</p>':"")+(job.error?'<div class="status-box error" style="margin-top:.6rem">'+esc(job.error)+'</div>':"")
+    +'<div class="download-actions">'
+    +(isActive?'<button class="btn btn-secondary btn-sm" type="button" data-download-action="pause" data-download-id="'+esc(job.id)+'">Pause</button>':"")
+    +(canResume?'<button class="btn btn-primary btn-sm" type="button" data-download-action="resume" data-download-id="'+esc(job.id)+'">'+(job.status==="error"?"Retry / resume":"Resume")+'</button>':"")
+    +(canUse?'<button class="btn btn-primary btn-sm" type="button" data-download-action="save" data-download-id="'+esc(job.id)+'">Save file</button><button class="btn btn-secondary btn-sm" type="button" data-download-action="play" data-download-id="'+esc(job.id)+'">▶ Play downloaded</button>':"")
+    +'<button class="btn btn-outline btn-sm" type="button" data-download-action="copy" data-download-id="'+esc(job.id)+'">Copy source link</button>'
+    +'<button class="btn btn-danger btn-sm" type="button" data-download-action="delete" data-download-id="'+esc(job.id)+'">Delete</button>'
+    +'</div></article>';
+}
+function downloadJobsListHTML(){
+  const jobs=sortedDownloadJobs();
+  if(!jobs.length) return '<div class="download-empty"><h3>No downloads yet</h3><p>Use the Download button beside an episode, on a title page, or in the player. ZeroPlay will search for a verified direct file or M3U/HLS stream for that exact title first.</p></div>';
+  return '<div class="download-list">'+jobs.map(downloadJobHTML).join("")+'</div>';
+}
+function renderDownloadJobLists(){
+  const signature=sortedDownloadJobs().map(job=>[job.id,job.status,job.fileStored,job.chunksStored,job.filename,job.note||"",job.error||"",job.chunksTotal||0,job.totalBytes||0].join(":")).join("|");
+  const containers=["downloadJobsList","downloadModalJobs"].map(id=>document.getElementById(id)).filter(Boolean);
+  if(!containers.length){ downloadUiSignature=signature; updateDownloadMenuCount(); return; }
+  if(signature!==downloadUiSignature){
+    downloadUiSignature=signature;
+    containers.forEach(el=>{ el.innerHTML=downloadJobsListHTML(); });
+  }else{
+    for(const job of sortedDownloadJobs()){
+      containers.forEach(container=>{
+        const row=container.querySelector('[data-download-job="'+String(job.id).replace(/["\\]/g,"\\$&")+'"]'); if(!row) return;
+        const bar=row.querySelector(".download-progress i"); if(bar) bar.style.width=downloadProgress(job).toFixed(1)+"%";
+        const stats=row.querySelector("[data-download-stats]");
+        if(stats) stats.innerHTML=downloadStatsHTML(job);
+      });
+    }
+  }
+  const summary=document.getElementById("downloadSummary");
+  if(summary){ const jobs=sortedDownloadJobs(); summary.textContent=jobs.filter(j=>j.status==="running").length+" downloading · "+jobs.filter(j=>j.status==="paused").length+" paused · "+jobs.filter(j=>j.status==="complete").length+" complete · "+fmtBytes(jobs.reduce((n,j)=>n+(Number(j.downloadedBytes)||0),0))+" stored/downloaded"; }
+  updateDownloadMenuCount();
+}
+function queueDownloadUiRefresh(){
+  if(downloadUiTimer) return;
+  downloadUiTimer=setTimeout(()=>{ downloadUiTimer=0; renderDownloadJobLists(); },350);
+}
+async function copyTextToClipboard(text,label){
+  try{ await navigator.clipboard.writeText(text); toast((label||"Link")+" copied","success"); return true; }catch{}
+  const ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select();
+  let ok=false; try{ ok=document.execCommand("copy"); }catch{}
+  ta.remove(); toast(ok?(label||"Link")+" copied":"Copy failed — the browser blocked clipboard access",ok?"success":"error"); return ok;
+}
+async function handleDownloadAction(action,id,button){
+  const job=downloadJobs.get(id); if(!job) return;
+  try{
+    if(button) button.disabled=true;
+    if(action==="pause") pauseDownload(job);
+    else if(action==="resume") resumeDownload(job);
+    else if(action==="delete"){ if(window.confirm("Delete this download and its stored chunks?")) await deleteDownload(job); }
+    else if(action==="save") await saveDownloadedFile(job);
+    else if(action==="play") await playDownloadedFile(job);
+    else if(action==="copy") await copyTextToClipboard(job.kind==="hls"?(job.playlistUrl||job.url):job.url,"Source link");
+  }catch(e){ toast(e.message||String(e),"error"); }
+  finally{ if(button&&button.isConnected) button.disabled=false; queueDownloadUiRefresh(); }
+}
+function directOptionsForDownload(options){
+  const out=[];
+  for(const option of options||[]){
+    if(!option||option.kind!=="direct") continue;
+    const variants=(option.variants&&option.variants.length?option.variants:(option.url?[{url:option.url,quality:"source"}]:[])).map(v=>normalizeVariant(v,option.name)).filter(v=>v&&isDirectMedia(v.url)&&directMediaKind(v.url)!=="dash");
+    if(variants.length) out.push(Object.assign({},option,{variants}));
+  }
+  return out;
+}
+function downloadOptionsHTML(state){
+  const options=directOptionsForDownload(state.options||[]);
+  const seen=new Set(options.flatMap(o=>o.variants.map(v=>v.url)));
+  const blocks=options.map((option,index)=>{
+    const selectId="downloadVariant-"+index;
+    return '<div class="src-row"><div class="grow"><span class="nm">'+esc(option.name||"Direct server")+'</span> <span class="chip rd">'+(option.verified?"Verified direct":"Exact-ID direct route")+'</span><div class="provider-meta">'+(option.verified?"Exact title match":"Direct route addressed by this title ID")+(option.identityScore?' · identity '+Math.round(option.identityScore)+"%":"")+' · '+(option.variants.some(v=>directMediaKind(v.url)==="hls")?"M3U/HLS available":"Direct media")+'</div></div><div class="src-actions"><label class="sr-only" for="'+selectId+'">Quality</label><select class="server-quality-select" id="'+selectId+'">'+option.variants.map((v,i)=>'<option value="'+i+'">'+esc(v.quality||"Source")+(v.bytes?' · '+fmtBytes(v.bytes):"")+(directMediaKind(v.url)==="hls"?' · M3U8':"")+'</option>').join("")+'</select><button class="btn btn-primary btn-sm" type="button" data-download-option="'+index+'">⬇ Download</button></div></div>';
+  });
+  if(state.currentUrl&&/^https?:\/\//i.test(state.currentUrl)&&isDirectMedia(state.currentUrl)&&!seen.has(state.currentUrl)){
+    blocks.unshift('<div class="src-row"><div class="grow"><span class="nm">'+esc(state.serverName||"Current stream")+'</span> <span class="chip violet">Now playing</span><div class="provider-meta">Download the direct stream already loaded in the player.</div></div><div class="src-actions"><button class="btn btn-primary btn-sm" type="button" data-download-current="1">⬇ Download current stream</button></div></div>');
+  }
+  if(blocks.length) return blocks.join("");
+  return state.done?'<div class="status-box error"><strong>No downloadable direct stream was returned for this exact title.</strong><br>Embedded players cannot be downloaded from the parent page. Add another website/server or run continuous discovery, then try again.</div>':'<div class="server-skeleton"><span class="spinner"></span> Searching identified servers for a verified direct file or M3U/HLS stream…</div>';
+}
+function renderDownloadModalOptions(){
+  const state=downloadModalState; if(!state) return;
+  const box=document.getElementById("downloadOptions"); if(box) box.innerHTML=downloadOptionsHTML(state);
+  const status=document.getElementById("downloadSearchStatus");
+  if(status){
+    const count=directOptionsForDownload(state.options||[]).reduce((n,o)=>n+o.variants.length,0);
+    status.textContent=state.done?(count?count+" downloadable stream"+(count===1?"":"s")+" found for this exact title.":"Search complete."):"Searching only servers that can return this exact "+(state.ctx.type==="tv"?"episode":"movie")+"…";
+  }
+}
+async function startDownloadFromModalOption(index){
+  const state=downloadModalState; if(!state) return;
+  const option=directOptionsForDownload(state.options||[])[index]; if(!option) return;
+  const select=document.getElementById("downloadVariant-"+index); const variant=option.variants[Number(select&&select.value)||0]||option.variants[0];
+  await createDownloadJob(variant,state.ctx,option.name);
+  renderDownloadJobLists();
+}
+async function startDownloadCurrent(){
+  const state=downloadModalState; if(!state||!state.currentUrl) return;
+  await createDownloadJob(state.currentVariant||{url:state.currentUrl,quality:"source"},state.ctx,state.serverName||"Current stream");
+  renderDownloadJobLists();
+}
+async function openDownloadForContext(ctx,opts){
+  opts=opts||{};
+  if(!downloadsEnabled()){ toast("Downloads are turned off in Settings","error"); return; }
+  await loadDownloadJobs();
+  const cleanCtx=downloadContextFrom(ctx||{});
+  const token=Date.now()+"-"+Math.random().toString(36).slice(2,7);
+  downloadModalState={ctx:cleanCtx,token,options:[],done:false,currentUrl:opts.currentUrl||"",currentVariant:opts.currentVariant||null,serverName:opts.serverName||""};
+  const root=document.getElementById("downloadsRoot");
+  root.innerHTML='<div class="overlay" id="downloadOverlay"><div class="modal download-modal" role="dialog" aria-modal="true" aria-label="Download title"><button class="icon-btn modal-close" id="btnCloseDownloads" type="button" aria-label="Close downloads">×</button>'
+    +'<p class="eyebrow">Download</p><h2 style="color:var(--text-heading)">'+esc(cleanCtx.title)+(cleanCtx.type==="tv"?' <span class="chip violet">S'+(cleanCtx.season||1)+' · E'+(cleanCtx.episode||1)+'</span>':"")+'</h2>'
+    +'<p class="section-desc">ZeroPlay only offers downloads when an identified server returns a direct file or M3U/HLS stream for this exact '+(cleanCtx.type==="tv"?"episode":"movie")+'. Parallel chunks/segments, pause and resume are used when the remote server permits them; completed parts stay in this browser.</p>'
+    +'<div class="discovery-status" id="downloadSearchStatus">Preparing title-specific download search…</div><div id="downloadOptions"></div>'
+    +'<h3 style="color:#fff;margin:1.2rem 0 .6rem">Your downloads</h3><div id="downloadModalJobs"></div>'
+    +'<div class="settings-actions"><button class="btn btn-secondary" id="btnOpenDownloadsPage" type="button">Open download manager & M3U extractor</button><button class="btn btn-outline" type="button" data-settings-section="add-website">Add another website</button></div>'
+    +'</div></div>';
+  document.body.classList.add("locked");
+  document.getElementById("btnCloseDownloads").onclick=closeDownloadModal;
+  document.getElementById("downloadOverlay").addEventListener("click",e=>{ if(e.target.id==="downloadOverlay") closeDownloadModal(); });
+  document.getElementById("btnOpenDownloadsPage").onclick=()=>{ closeDownloadModal(); location.hash="#/downloads"; };
+  renderDownloadModalOptions(); renderDownloadJobLists();
+  if(document.body.classList.contains("tv-mode")) setTimeout(()=>{ const first=document.getElementById("btnCloseDownloads"); if(first) first.focus({preventScroll:true}); },30);
+  const optionsBox=document.getElementById("downloadOptions");
+  optionsBox.addEventListener("click",async e=>{
+    const current=e.target.closest("[data-download-current]"); const optionBtn=e.target.closest("[data-download-option]");
+    try{
+      if(current){ current.disabled=true; await startDownloadCurrent(); }
+      else if(optionBtn){ optionBtn.disabled=true; await startDownloadFromModalOption(Number(optionBtn.dataset.downloadOption)); }
+    }catch(err){ toast(err.message||String(err),"error"); }
+    finally{ const btn=current||optionBtn; if(btn&&btn.isConnected) btn.disabled=false; }
+  });
+  try{
+    const result=await findTitleServers(cleanCtx,{shouldContinue:()=>!!downloadModalState&&downloadModalState.token===token,onUpdate:partial=>{ if(downloadModalState&&downloadModalState.token===token){ downloadModalState.options=partial.options||[]; renderDownloadModalOptions(); } }});
+    if(downloadModalState&&downloadModalState.token===token){ downloadModalState.options=result.options||[]; downloadModalState.done=true; renderDownloadModalOptions(); }
+  }catch(e){
+    if(downloadModalState&&downloadModalState.token===token){ downloadModalState.done=true; renderDownloadModalOptions(); toast("Download search failed: "+(e.message||e),"error"); }
+  }
+}
+function closeDownloadModal(){
+  const root=document.getElementById("downloadsRoot"); if(root) root.innerHTML="";
+  downloadModalState=null;
+  if(!playerState&&!detailState&&!streamsCtx) document.body.classList.remove("locked");
+}
+function m3uResultHTML(item,index){
+  const actions=item.localOnly?"":'<div class="settings-actions"><button class="btn btn-secondary btn-sm" type="button" data-m3u-action="inspect" data-m3u-index="'+index+'">Inspect</button><button class="btn btn-primary btn-sm" type="button" data-m3u-action="download" data-m3u-index="'+index+'">⬇ Download</button><button class="btn btn-outline btn-sm" type="button" data-m3u-action="play" data-m3u-index="'+index+'">▶ Play</button><button class="btn btn-outline btn-sm" type="button" data-m3u-action="copy" data-m3u-index="'+index+'">Copy M3U link</button></div>';
+  return '<div class="m3u-result"><span class="nm">'+esc(item.label||"M3U playlist")+'</span>'+(item.summary?' <span class="chip violet">'+esc(item.summary)+'</span>':"")+'<code>'+esc(item.url)+'</code>'+actions+'<div class="help-text" data-m3u-detail>'+esc(item.detail||"")+'</div></div>';
+}
+function renderM3uResults(){
+  const box=document.getElementById("m3uResults"); if(!box) return;
+  box.innerHTML=m3uResultsState.length?m3uResultsState.map(m3uResultHTML).join(""):'<p class="help-text">No M3U/M3U8 links extracted yet.</p>';
+}
+async function inspectM3uUrl(url,quality){
+  const plan=await resolveHlsPlan(url,quality||settings.stream.quality);
+  const variantText=plan.chosenVariant?"Selected "+(plan.chosenVariant.height?plan.chosenVariant.height+"p":"variant")+(plan.chosenVariant.bandwidth?" · "+(plan.chosenVariant.bandwidth/1000000).toFixed(1)+" Mb/s":"")+" · ":"";
+  return {plan,summary:plan.segments.length+" segments",detail:variantText+Math.round(plan.duration||0)+" sec playlist duration"+(plan.encrypted?" · AES-128 encryption declared":" · unencrypted")+(plan.variants&&plan.variants.length?" · "+plan.variants.length+" quality variants":"")};
+}
+async function runM3uExtraction(){
+  if(downloadCfg().m3uExtraction===false){ toast("M3U extraction is turned off in Settings","error"); return; }
+  const status=document.getElementById("m3uStatus"), input=document.getElementById("m3uUrl"), pasted=document.getElementById("m3uText");
+  const setStatus=(text,type)=>{ if(status){ status.textContent=text; status.className="status-box "+(type||"info"); status.classList.remove("hidden"); } };
+  try{
+    setStatus("Extracting M3U/M3U8 links…","info"); m3uResultsState=[];
+    if(pasted&&pasted.value.trim().startsWith("#EXTM3U")){
+      const base=input&&/^https?:\/\//i.test(input.value.trim())?input.value.trim():location.href;
+      const plan=parseM3uPlaylist(pasted.value,base);
+      const urls=plan.isMaster?plan.variants.map(v=>v.url):extractM3uUrls(pasted.value,base);
+      if(!plan.isMaster&&plan.segments.length) m3uResultsState.push({url:base,label:"Pasted media playlist",summary:plan.segments.length+" segments",localOnly:directMediaKind(base)!=="hls",detail:directMediaKind(base)==="hls"?"The URL above is the hosted playlist, so it can be inspected, played or downloaded.":"Parsed locally from pasted text. Enter the real hosted playlist URL above to inspect, play or download it."});
+      for(const url of urls) if(/^https?:\/\//i.test(url)) m3uResultsState.push({url,label:plan.isMaster?"Master playlist variant":"Extracted M3U link"});
+    }else{
+      const raw=(input&&input.value||"").trim(); const url=cleanHttpUrl(raw.includes("://")?raw:"https://"+raw);
+      if(!url) throw new Error("Paste a website, watch-page, or M3U/M3U8 URL first");
+      if(directMediaKind(url)==="hls"){
+        const inspected=await inspectM3uUrl(url);
+        m3uResultsState.push({url,label:"M3U/HLS playlist",summary:inspected.summary,detail:inspected.detail});
+        for(const variant of inspected.plan.variants||[]) if(variant.url!==inspected.plan.playlistUrl) m3uResultsState.push({url:variant.url,label:"Quality variant",summary:(variant.height?variant.height+"p":"Variant")+(variant.bandwidth?" · "+(variant.bandwidth/1000000).toFixed(1)+" Mb/s":"")});
+      }else{
+        const data=await resolverCall({mode:"m3u",url});
+        const seen=new Set();
+        for(const found of (data.playlists||[]).concat((data.direct||[]).filter(u=>directMediaKind(u)==="hls"))){ const link=typeof found==="string"?found:found.url; if(link&&!seen.has(link)){ seen.add(link); m3uResultsState.push({url:link,label:found.label||"Extracted M3U link",summary:found.summary||"",detail:found.detail||""}); } }
+        if(!m3uResultsState.length&&data.embeds&&data.embeds.length) setStatus("The page exposes embedded players but no direct M3U link. Those embeds cannot be converted to M3U from the parent page.","error");
+      }
+    }
+    renderM3uResults();
+    if(m3uResultsState.length) setStatus(m3uResultsState.length+" M3U/M3U8 link"+(m3uResultsState.length===1?"":"s")+" extracted.","success");
+    else if(status&&status.className.includes("info")) setStatus("No M3U/M3U8 link was found on that page.","error");
+  }catch(e){ renderM3uResults(); setStatus("M3U extraction failed: "+(e.message||e),"error"); }
+}
+async function handleM3uAction(action,index,button){
+  const item=m3uResultsState[index]; if(!item) return;
+  try{
+    if(button) button.disabled=true;
+    if(action==="copy"){ await copyTextToClipboard(item.url,"M3U link"); return; }
+    if(action==="inspect"){
+      const inspected=await inspectM3uUrl(item.url); item.summary=inspected.summary; item.detail=inspected.detail; renderM3uResults(); return;
+    }
+    if(action==="play"){
+      playResolvedURL(item.url,{id:0,type:"movie",title:item.label||"M3U stream"},"M3U extractor",[],{noProgress:true,activeVariant:{url:item.url,quality:"source"}}); return;
+    }
+    if(action==="download"){
+      const titleInput=document.getElementById("m3uTitle"); const title=(titleInput&&titleInput.value.trim())||"Extracted M3U stream";
+      await createDownloadJob({url:item.url,quality:settings.stream.quality},{type:"movie",id:0,title,item:null},"M3U extractor"); renderDownloadJobLists();
+    }
+  }catch(e){ toast(e.message||String(e),"error"); }
+  finally{ if(button&&button.isConnected) button.disabled=false; }
+}
+async function updateDownloadStorageMeter(){
+  const text=document.getElementById("downloadStorageText"), bar=document.getElementById("downloadStorageBar");
+  if(!text) return;
+  try{
+    if(navigator.storage&&navigator.storage.estimate){ const est=await navigator.storage.estimate(); const used=Number(est.usage)||0, quota=Number(est.quota)||0; text.textContent=fmtBytes(used)+" used by this site"+(quota?" of about "+fmtBytes(quota)+" browser quota":""); if(bar) bar.style.width=quota?Math.min(100,used/quota*100)+"%":"0%"; return; }
+  }catch{}
+  text.textContent="Browser storage estimate is unavailable in this browser.";
+}
+function renderDownloadsPage(){
+  const dl=downloadCfg();
+  view.innerHTML='<div class="page"><p class="eyebrow">Offline & extraction</p><h1>Downloads</h1><p class="lede">Pause and resume verified direct downloads from stored chunks or HLS segments. Multithreading is enabled only where the remote server actually supports byte ranges or independent segments.</p>'
+    +'<section class="panel"><div class="panel-head"><div><h2>Download manager</h2><p class="section-desc" id="downloadSummary">Loading downloads…</p><div id="downloadStorageText" class="help-text">Checking browser storage…</div><div class="storage-meter"><i id="downloadStorageBar"></i></div></div><div class="settings-actions"><button class="btn btn-secondary" id="btnClearCompletedDownloads" type="button">Clear completed</button><button class="btn btn-primary" type="button" data-settings-section="faststream">Download & FastStream settings</button></div></div>'
+    +'<div class="settings-hub-grid"><div>'+featureSwitchHTML("downloads","Downloads enabled","Turning this off pauses active jobs but keeps stored chunks.","downloads")+featureSwitchHTML("multithreadedDownloads","Multithreaded downloads","Parallel ranges/segments where supported.","downloads")+'</div><div>'+featureSwitchHTML("downloadAutoResume","Resume on app start","Continue paused/interrupted jobs automatically.","downloads")+featureSwitchHTML("downloadAutoSave","Auto-save completed files","Save after final assembly finishes.","downloads")+'</div><div><h3>Current speed defaults</h3><p>'+esc(dl.threads)+' threads per job · '+esc(dl.chunkMb)+' MB parts · '+esc(dl.concurrent)+' download(s) at once. Change these in Settings → FastStream configuration and playback.</p><div class="settings-actions"><button class="btn btn-outline btn-sm" type="button" data-settings-section="faststream">Change speed defaults</button></div></div></div>'
+    +'<div id="downloadJobsList" style="margin-top:1rem"><span class="spinner"></span> Loading stored downloads…</div></section>'
+    +'<section class="panel" id="m3uExtractor"><div class="panel-head"><div><h2>M3U extraction</h2><p class="section-desc">Paste a website/watch page or an M3U/M3U8 URL. ZeroPlay extracts playlist links, can inspect quality variants and segment counts, and can download the assembled HLS file. A cross-origin embed alone cannot be converted into an M3U.</p></div>'+featureSwitchHTML("m3uExtraction","M3U extraction enabled","","downloads")+'</div>'
+    +'<div class="form-row"><div class="form-group grow"><label for="m3uUrl">Website, watch-page or M3U/M3U8 URL</label><input type="text" id="m3uUrl" placeholder="https://example.com/watch/... or https://cdn.example/stream.m3u8"></div><div class="form-group"><label for="m3uTitle">Download title (optional)</label><input type="text" id="m3uTitle" placeholder="My extracted stream"></div></div>'
+    +'<details class="advanced"><summary>Paste playlist text instead</summary><div class="advanced-body"><div class="form-group"><label for="m3uText">M3U/M3U8 text</label><textarea id="m3uText" rows="7" placeholder="#EXTM3U\n#EXT-X-STREAM-INF:..."></textarea><small class="help-text">Relative links are resolved against the URL above. To download a pasted media playlist, its real hosted URL must be entered above.</small></div></div></details>'
+    +'<button class="btn btn-primary" id="btnExtractM3u" type="button">Extract M3U links</button><div id="m3uStatus" class="status-box hidden"></div><div id="m3uResults"></div></section></div>';
+  document.getElementById("btnExtractM3u").onclick=runM3uExtraction;
+  document.getElementById("btnClearCompletedDownloads").onclick=()=>clearCompletedDownloads();
+  renderM3uResults(); syncFeatureToggles(view); updateDownloadStorageMeter();
+  loadDownloadJobs().then(()=>{ renderDownloadJobLists(); updateDownloadStorageMeter(); });
+}
+document.addEventListener("click",e=>{
+  const downloadBtn=e.target.closest&&e.target.closest("[data-download-action][data-download-id]");
+  if(downloadBtn){ e.preventDefault(); handleDownloadAction(downloadBtn.dataset.downloadAction,downloadBtn.dataset.downloadId,downloadBtn); return; }
+  const m3uBtn=e.target.closest&&e.target.closest("[data-m3u-action][data-m3u-index]");
+  if(m3uBtn){ e.preventDefault(); handleM3uAction(m3uBtn.dataset.m3uAction,Number(m3uBtn.dataset.m3uIndex),m3uBtn); }
+});
 
 /* ---------------- detail modal ---------------- */
 let detailState=null;
@@ -2464,6 +3583,7 @@ function drawDetail(){
     +'<div class="detail-actions"><button class="btn btn-primary btn-large" id="btnPlay">'+esc(playLabel)+"</button>"
     +(trailer?'<button class="btn btn-secondary" id="btnTrailer">▶ Trailer</button><button class="btn btn-outline" id="btnDetailPreviewSound">Preview sound</button>':"")
     +'<button class="btn btn-secondary" id="btnStreams">Servers with this title</button>'
+    +(downloadsEnabled()?'<button class="btn btn-secondary" id="btnDownloadTitle" type="button">⬇ Download'+(isTV?" episode":"")+'</button>':"")
     +'<button class="btn btn-outline" id="btnWatchlist" data-type="'+type+'" data-id="'+d.id+'">'+(inWatchlist(type,d.id)?"✓ In Library":"+ Watchlist")+"</button>"
     +'<label class="sr-only" for="detailQuality">Preferred quality</label><select id="detailQuality" class="control-select" aria-label="Preferred quality">'+[["auto","Auto quality"],["2160p","4K 2160p"],["1080p","1080p"],["720p","720p"],["480p","480p"]].map(([v,t])=>'<option value="'+v+'"'+(settings.stream.quality===v?" selected":"")+">"+t+"</option>").join("")+"</select></div>"
     +'<div class="help-text">Servers are checked against this exact title'+(isTV?" and episode":"")+' — ZeroPlay only lists servers that return a match.</div>'
@@ -2476,6 +3596,8 @@ function drawDetail(){
   $("#btnPlay").onclick=()=>{ const q=$("#detailQuality"); if(q){ settings.stream.quality=q.value; applyQualityPreset(q.value); saveSettings(); } openPlayer(snap(d,type),{season:isTV?(prev.season||detailState.season||1):undefined,episode:isTV?(prev.episode||1):undefined,source:defaultSourceId()}); };
   const dq=$("#detailQuality"); if(dq) dq.onchange=e=>{ settings.stream.quality=e.target.value; applyQualityPreset(e.target.value); saveSettings(); toast("Quality preference: "+e.target.value); };
   $("#btnStreams").onclick=()=>{ const identity=identityFromDetail(d,type,isTV?(detailState.season||prev.season||1):1,isTV?(detailState.episode||prev.episode||1):1); showStreamsModal({type,id:d.id,title:identity.title,altTitles:identity.titles,year:identity.year,season:identity.season,episode:identity.episode,imdb:identity.imdbId,identity,item:snap(d,type)}); };
+  const downloadTitleBtn=$("#btnDownloadTitle");
+  if(downloadTitleBtn) downloadTitleBtn.onclick=()=>{ const identity=identityFromDetail(d,type,isTV?(detailState.season||prev.season||1):1,isTV?(detailState.episode||prev.episode||1):1); openDownloadForContext({type,id:d.id,title:identity.title,altTitles:identity.titles,year:identity.year,season:identity.season,episode:identity.episode,imdb:identity.imdbId,identity,item:snap(d,type)}); };
   $("#btnWatchlist").onclick=()=>toggleWatchlist(type,d.id,null,snap(d,type));
   if(trailer){
     $("#btnTrailer").onclick=()=>openTrailer(titleOf(d),trailer.key);
@@ -2496,9 +3618,17 @@ async function loadEpisodes(){
     const data=await tmdb("/tv/"+detailState.id+"/season/"+detailState.season);
     const eps=data.episodes||[];
     if(!detailState) return;
-    box.innerHTML=eps.length?'<div class="ep-list">'+eps.map(ep=>'<button class="ep" data-ep="'+ep.episode_number+'"><span class="num">'+ep.episode_number+'</span><span><span class="et">'+esc(ep.name||("Episode "+ep.episode_number))+'</span><br><span class="es">'+esc(ep.air_date||"")+(ep.runtime?" · "+ep.runtime+" min":"")+"</span></span></button>").join("")+"</div>"
+    box.innerHTML=eps.length?'<div class="ep-list">'+eps.map(ep=>'<div class="ep" data-ep="'+ep.episode_number+'"><button class="ep-main" type="button" data-ep-play="'+ep.episode_number+'" aria-label="Play episode '+ep.episode_number+'"><span class="num">'+ep.episode_number+'</span><span class="ep-copy"><span class="et">'+esc(ep.name||("Episode "+ep.episode_number))+'</span><br><span class="es">'+esc(ep.air_date||"")+(ep.runtime?" · "+ep.runtime+" min":"")+'</span></span></button>'+(downloadsEnabled()?'<button class="ep-download" type="button" data-ep-download="'+ep.episode_number+'" aria-label="Download episode '+ep.episode_number+'" title="Download this episode">⬇<small>Download</small></button>':"")+"</div>").join("")+"</div>"
       :'<p style="color:var(--text-muted)">No episode data for this season.</p>';
-    $$(".ep",box).forEach(b=>{ const mark=()=>{ detailState.episode=Number(b.dataset.ep)||1; }; b.addEventListener("focus",mark); b.addEventListener("mouseenter",mark); b.onclick=()=>openPlayer(snap(detailState.data,"tv"),{season:detailState.season,episode:Number(b.dataset.ep),source:defaultSourceId()}); });
+    $$(".ep",box).forEach(row=>{
+      const episodeNumber=Number(row.dataset.ep)||1;
+      const mark=()=>{ detailState.episode=episodeNumber; };
+      row.addEventListener("mouseenter",mark);
+      const play=row.querySelector("[data-ep-play]");
+      if(play){ play.addEventListener("focus",mark); play.onclick=()=>openPlayer(snap(detailState.data,"tv"),{season:detailState.season,episode:episodeNumber,source:defaultSourceId()}); }
+      const download=row.querySelector("[data-ep-download]");
+      if(download){ download.addEventListener("focus",mark); download.onclick=e=>{ e.preventDefault(); e.stopPropagation(); const identity=identityFromDetail(detailState.data,"tv",detailState.season,episodeNumber); openDownloadForContext({type:"tv",id:detailState.id,title:identity.title,altTitles:identity.titles,year:identity.year,season:identity.season,episode:identity.episode,imdb:identity.imdbId,identity,item:snap(detailState.data,"tv")}); }; }
+    });
   }catch{ box.innerHTML='<div class="status-box error">Could not load episodes.</div>'; }
 }
 
@@ -2616,7 +3746,7 @@ async function loadBrowsePage(){
     if(grid){ if(browseState.page===1&&!fresh.length) grid.innerHTML='<div class="empty" style="grid-column:1/-1"><h3>Nothing found</h3><p>Try loosening the filters above.</p></div>';
       else grid.insertAdjacentHTML("beforeend",fresh.map((it,i)=>cardHTML(Object.assign({},it,{media_type:browseState.type}),{index:i})).join("")); }
     if(btn) btn.style.display=browseState.page>=browseState.total?"none":"";
-  }catch{ if(grid&&browseState.page===1) grid.innerHTML='<div class="status-box error" style="grid-column:1/-1">Catalog failed to load. Check your connection in Discover → section 5.</div>'; }
+  }catch{ if(grid&&browseState.page===1) grid.innerHTML='<div class="status-box error" style="grid-column:1/-1">Catalog failed to load. Check your connection, then open Settings to review playback and discovery.</div>'; }
   browseState.loading=false; if(btn){ btn.disabled=false; btn.textContent="Load more"; }
 }
 
@@ -2640,7 +3770,7 @@ async function runSearch(){
     const d=await tmdb("/search/multi",{query:searchState.q,page:1});
     searchState.results=(d.results||[]).filter(x=>x.media_type==="movie"||x.media_type==="tv");
     drawSearchResults();
-  }catch{ box.innerHTML='<div class="status-box error">Search failed. Check your connection in Discover → section 5.</div>'; }
+  }catch{ box.innerHTML='<div class="status-box error">Search failed. Check your connection, then open Settings to review playback and discovery.</div>'; }
 }
 function drawSearchResults(){
   const box=$("#searchResults"); if(!box) return;
@@ -2653,6 +3783,7 @@ function renderLibrary(){
   const cont=continueItems();
   const wl=watchlist.map(snapToItem);
   view.innerHTML='<div class="page"><h1>My Library</h1><p class="lede">Stored locally in this browser — no account needed.</p>'
+    +'<section class="panel"><div class="panel-head"><div><h2>Downloads</h2><p class="section-desc" id="libraryDownloads">Checking stored downloads…</p></div><button class="btn btn-primary" type="button" data-menu-route="downloads">Open downloads</button></div></section>'
     +(cont.length?railHTML("Continue Watching",cont,{remove:true}):"")
     +(wl.length?'<section class="rail"><div class="rail-head"><h2>Watchlist</h2></div><div class="grid">'+wl.map(it=>cardHTML(it,{remove:true})).join("")+"</div></section>":"")
     +(!cont.length&&!wl.length?'<div class="empty"><h3>Your library is empty</h3><p>Press <strong>+ Watchlist</strong> on any title, or just start watching — progress lands here automatically.</p><p style="margin-top:1rem"><button class="btn btn-primary" id="libBrowse">Browse trending</button></p></div>':"")
@@ -2662,11 +3793,87 @@ function renderLibrary(){
   const b=$("#libBrowse"); if(b) b.onclick=()=>location.hash="#/home";
   const ch=$("#clearHistory"); if(ch) ch.onclick=()=>{ progress={}; saveProgress(); toast("Watch history cleared"); renderLibrary(); };
   const cl=$("#clearList"); if(cl) cl.onclick=()=>{ watchlist=[]; saveWatchlist(); toast("Watchlist cleared"); renderLibrary(); };
+  loadDownloadJobs().then(()=>{ const el=$("#libraryDownloads"); if(el){ const jobs=sortedDownloadJobs(); el.textContent=jobs.length?jobs.filter(j=>j.status==="complete").length+" complete · "+jobs.filter(j=>["running","queued"].includes(j.status)).length+" active · "+jobs.filter(j=>j.status==="paused").length+" paused/resumable":"No downloads yet. Episode and title Download buttons appear when downloads are enabled."; } });
 }
 
 /* ---------------- Sources view: paste websites, discovery, FastStream optimiser ---------------- */
-function renderSources(soft){
-  const st=settings.stream, fd=settings.feed, ci=connInfo();
+let sourcesRenderMode={settingsPage:false,section:""};
+function settingsHubHTML(){
+  return '<section class="panel" id="settingsHub"><div class="panel-head"><div><h2>Feature switches</h2><p class="section-desc">Every optional feature has its own switch. Changes save immediately and are shared with the menu drawer, player and download manager.</p></div><button class="btn btn-secondary" type="button" data-settings-section="add-website">Add a website</button></div>'
+    +'<div class="settings-hub-grid">'
+    +'<div><h3>Playback & FastStream</h3>'
+    +featureSwitchHTML("trailers","Trailer previews","Show muted trailers inside focused title blocks.","hub")
+    +featureSwitchHTML("preload","FastStream preload","Warm likely playback before you press Play.","hub")
+    +featureSwitchHTML("fastStreamProbe","FastStream control API","Use the responsive EmbedAPI bridge when the hosted player advertises it.","hub")
+    +featureSwitchHTML("nextEpisodeWarm","Next-episode warm-up","Prepare the next episode while the current one plays.","hub")
+    +featureSwitchHTML("autoFailover","Automatic server switching","Switch only after a server fails to resolve/load or confirmed playback stalls.","hub")
+    +featureSwitchHTML("stallSwitch","Switch after confirmed stalls","A frame merely loading is not treated as a stall.","hub")
+    +featureSwitchHTML("embedwaveFailover","Allow automatic Embedwave failover","Keep off to stop ZeroPlay drifting into Embedwave without asking.","hub")
+    +featureSwitchHTML("dnsWarm","DNS warm-up","Preconnect source and player hosts.","hub")
+    +featureSwitchHTML("sortByHealth","Sort by source health","Prefer sources that recently responded well.","hub")
+    +'<div class="settings-actions"><button class="btn btn-primary btn-sm" type="button" data-settings-section="faststream">Configure FastStream</button></div></div>'
+    +'<div><h3>Websites & continuous adding</h3>'
+    +featureSwitchHTML("discovery","Continuous adding","Crawl, identify and install new servers while the app is open.","hub")
+    +'<p>The crawler does not import titles or covers from added websites. At play time it checks whether the exact catalogue movie, series and episode exists on each identified server.</p>'
+    +'<div class="settings-actions"><button class="btn btn-primary btn-sm" type="button" data-settings-section="add-website">Add website</button><button class="btn btn-secondary btn-sm" type="button" data-settings-section="continuous">Continuous adding controls</button><button class="btn btn-outline btn-sm" id="btnSettingsRunDiscovery" type="button">Run one cycle now</button></div></div>'
+    +'<div><h3>Downloads & M3U</h3>'
+    +featureSwitchHTML("downloads","Downloads","Allow verified direct files and HLS playlists to be downloaded.","hub")
+    +featureSwitchHTML("multithreadedDownloads","Multithreaded downloads","Use parallel range requests or HLS segment workers when the server permits them.","hub")
+    +featureSwitchHTML("m3uExtraction","M3U extraction","Extract and inspect M3U/M3U8 links from pages and playlists.","hub")
+    +featureSwitchHTML("downloadAutoSave","Save completed downloads automatically","Open the browser save/download action when assembly finishes.","hub")
+    +featureSwitchHTML("downloadAutoResume","Resume downloads on app start","Continue interrupted jobs from chunks already stored in this browser.","hub")
+    +featureSwitchHTML("refreshExpiredDownloads","Refresh expired download links","Re-run the exact-title server search if a saved media link expires.","hub")
+    +featureSwitchHTML("keepCompletedDownloads","Keep completed files in browser","Keep assembled files available to Play or Save again until you delete them.","hub")
+    +'<div class="settings-actions"><button class="btn btn-primary btn-sm" type="button" data-menu-route="downloads">Open downloads & M3U extractor</button></div></div>'
+    +'<div><h3>Interface & data</h3>'
+    +featureSwitchHTML("autoplayNext","Autoplay next episode","Move to the next episode after the current one ends.","hub")
+    +featureSwitchHTML("reduceMotion","Reduce motion","Disable decorative movement; useful on TV boxes.","hub")
+    +featureSwitchHTML("compactCards","Compact posters","Fit more titles into rails and grids.","hub")
+    +featureSwitchHTML("categoryStrip","Top category strip","Show quick genre shortcuts under the top bar.","hub")
+    +'<div class="settings-actions"><button class="btn btn-secondary btn-sm" id="btnExportSettings" type="button">Export settings</button><label class="btn btn-outline btn-sm" for="importSettingsFile">Import settings</label><input class="sr-only" id="importSettingsFile" type="file" accept="application/json,.json"><button class="btn btn-outline btn-sm" id="btnClearPlaybackCaches" type="button">Clear health & server caches</button></div>'
+    +'<p>Export includes providers, websites, templates and feature settings. Watch history stays in Library and can be cleared there.</p></div>'
+    +'</div></section>';
+}
+function exportZeroPlaySettings(){
+  const blob=new Blob([JSON.stringify({app:"ZeroPlay",version:1,exportedAt:new Date().toISOString(),settings},null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="zeroplay-settings.json"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+async function importZeroPlaySettings(file){
+  if(!file) return;
+  try{
+    const data=JSON.parse(await file.text());
+    const incoming=data&&data.settings&&typeof data.settings==="object"?data.settings:data;
+    if(!incoming||typeof incoming!=="object"||Array.isArray(incoming)) throw new Error("That file does not contain ZeroPlay settings");
+    const allowed=["source","disabledSources","stream","ui","downloads","feed","discovery","providers","providerTombstones","customSources","sites","addons","health","dlog"];
+    const arrayKeys=new Set(["disabledSources","providers","customSources","sites","addons","dlog"]);
+    const objectKeys=new Set(["stream","ui","downloads","feed","discovery","providerTombstones","health"]);
+    const staged={};
+    for(const key of allowed){
+      if(!Object.prototype.hasOwnProperty.call(incoming,key)) continue;
+      const value=incoming[key];
+      if(key==="source"&&typeof value!=="string") throw new Error("Imported settings have an invalid default source");
+      if(arrayKeys.has(key)&&!Array.isArray(value)) throw new Error("Imported settings have an invalid "+key+" list");
+      if(objectKeys.has(key)&&(!value||typeof value!=="object"||Array.isArray(value))) throw new Error("Imported settings have an invalid "+key+" section");
+      staged[key]=value;
+    }
+    for(const [key,value] of Object.entries(staged)) settings[key]=objectKeys.has(key)?Object.assign({},settings[key]||{},value):value;
+    for(const key of LEGACY_SETTING_KEYS) delete settings[key];
+    streamCfg(); downloadCfg(); saveSettings(); applyInterfaceSettings(); scheduleDiscovery();
+    toast("Settings imported","success"); renderSources(true);
+  }catch(e){ toast("Settings import failed: "+(e.message||e),"error"); }
+}
+function clearPlaybackCaches(){
+  settings.health={}; saveSettings();
+  try{ titleServerCache.clear(); }catch{}
+  try{ siteLookupCache.clear(); }catch{}
+  try{ catalogItemCache.clear(); trailerKeyCache.clear(); trailerFetchCache.clear(); }catch{}
+  try{ clearPreload(); }catch{}
+  toast("Playback health and server caches cleared","success"); renderSources(true);
+}
+function renderSources(soft,opts){
+  if(opts&&typeof opts==="object") sourcesRenderMode={settingsPage:!!opts.settingsPage,section:String(opts.section||"")};
+  const settingsPage=!!sourcesRenderMode.settingsPage, sectionTarget=String(sourcesRenderMode.section||"");
+  const st=streamCfg(), fd=settings.feed, ci=connInfo(), dl=downloadCfg();
   const rows=allSources(true).filter(s=>s.kind!=="addon").map(s=>{
     const dis=new Set(settings.disabledSources||[]);
     const tplTxt=s.kind==="builtin"?"Built-in ZeroPlay embed · "+esc(sourceHost(s)):s.kind==="site"?("Dynamic title lookup at play time · no titles/covers imported · "+s.base):s.kind==="addon"?("Stremio addon streams · "+s.base):[s.movieTpl?("Movie: "+s.movieTpl):"",s.tvTpl?("TV: "+s.tvTpl):""].filter(Boolean).join("\n");
@@ -2686,9 +3893,10 @@ function renderSources(soft){
       +"</div></div>";
   }).join("");
   const logs=(settings.dlog||[]).map(e=>'<li><span>'+new Date(e.t).toLocaleTimeString()+"</span>"+esc(e.msg)+"</li>").join("");
-  view.innerHTML='<div class="page"><h1>Discover</h1><p class="lede">Servers and addons are continuously found, identified and kept searchable. The title identifier checks every result before playback. No torrents, no user API keys, and direct files are capped at '+capGb()+' GB.</p>'
+  view.innerHTML='<div class="page"><h1>'+(settingsPage?"Settings":"Discover")+'</h1><p class="lede">'+(settingsPage?"Add websites, control continuous adding, configure FastStream and downloads, and switch optional features from one place.":"Servers and addons are continuously found, identified and kept searchable. The title identifier checks every result before playback.")+' No torrents, no user API keys, and direct files are capped at '+capGb()+' GB.</p>'
+  +(settingsPage?settingsHubHTML():'<section class="panel"><div class="panel-head"><div><h2>Settings shortcuts</h2><p class="section-desc">Manage feature switches, websites, continuous adding, FastStream and downloads from the full Settings page.</p></div><div class="settings-actions"><button class="btn btn-primary btn-sm" type="button" data-settings-section="add-website">Add website</button><button class="btn btn-secondary btn-sm" type="button" data-settings-section="continuous">Continuous adding</button><button class="btn btn-secondary btn-sm" type="button" data-settings-section="faststream">FastStream</button><button class="btn btn-outline btn-sm" type="button" data-menu-route="downloads">Downloads & M3U</button></div></div></section>')
 
-  +addonPanelHTML()+'<section class="panel"><h2>Add a website</h2><p class="section-desc"><strong>Default for every added website: lookup only.</strong> Paste the homepage or a title page from any website. ZeroPlay does <strong>not</strong> import that site’s covers or titles. It keeps the main catalogue’s cover/title, then checks whether that exact title or episode exists on the added site’s servers when you press Watch, and plays from there if found. URL templates below are an optional advanced alternative for sites with predictable TMDB/IMDb links.</p>'
+  +addonPanelHTML()+'<section class="panel" id="settingsAddWebsite"><h2>Add a website</h2><p class="section-desc"><strong>Default for every added website: lookup only.</strong> Paste the homepage or a title page from any website. ZeroPlay does <strong>not</strong> import that site’s covers or titles. It keeps the main catalogue’s cover/title, then checks whether that exact title or episode exists on the added site’s servers when you press Watch, and plays from there if found. URL templates below are an optional advanced alternative for sites with predictable TMDB/IMDb links.</p>'
   +'<div class="form-group"><label for="pasteLink">Paste website link</label><div class="input-with-action"><input type="text" id="pasteLink" placeholder="https://example.com or https://example.com/watch/tt1375666/1/2"><button class="btn btn-secondary" id="btnDetect" type="button">Detect</button></div><div id="detectNote" class="status-box hidden"></div></div>'
   +'<div class="form-row"><div class="form-group"><label for="srcName">Source name</label><input type="text" id="srcName" placeholder="My Site"></div>'
   +'<div class="form-group"><label for="srcKind">Source type</label><select id="srcKind"><option value="embed">Website embed (iframe)</option><option value="direct">Direct media files (.mp4/.m3u8…)</option></select></div></div>'
@@ -2696,23 +3904,45 @@ function renderSources(soft){
   +'<div class="form-group"><label for="srcTv">TV episode URL template (advanced, optional)</label><input type="text" id="srcTv" placeholder="https://example.com/embed/tv/{tmdb}/{season}/{episode}"></div>'
   +'<div style="display:flex;gap:.6rem;flex-wrap:wrap"><button class="btn btn-primary" id="btnAddWebsite" type="button">Add website lookup</button><button class="btn btn-secondary" id="btnAddSource" type="button">Add template source</button><button class="btn btn-outline" id="btnTestNew" type="button">▶ Test template with Inception</button></div></section>'
 
-  +'<section class="panel"><h2>Play a link now</h2><p class="section-desc">One-off playback: a direct .mp4/.m3u8 link opens in the built-in player (size-checked against the '+capGb()+' GB cap); any other link opens as a website embed (some sites block embedding — switch source if the player stays blank).</p>'
+  +'<section class="panel"><h2>Play a link now</h2><p class="section-desc">One-off playback: a direct .mp4/.m3u8 link opens in the built-in player (size-checked against the '+capGb()+' GB cap); any other link opens as a website embed. Some sites block embedding; ZeroPlay distinguishes a loaded page from confirmed playback and will explain if no progress arrives.</p>'
   +'<div class="input-with-action"><input type="text" id="playLink" placeholder="Paste any video or website URL…"><button class="btn btn-primary" id="btnPlayLink" type="button">▶ Play link</button></div></section>'
 
-  +'<section class="panel"><h2>Playback sources</h2><p class="section-desc">Built-in players, website lookup servers and your templates are listed here. Identified addon/server providers are managed in the registry above and are searched together from Servers with this title.</p><div id="srcList">'+(rows||'<div class="empty"><h3>No sources</h3><p>Add a website above.</p></div>')+"</div></section>"
+  +'<section class="panel" id="settingsPlaybackSources"><h2>Playback sources</h2><p class="section-desc">Built-in players, website lookup servers and your templates are listed here. Identified addon/server providers are managed in the registry above and are searched together from Servers with this title.</p><div id="srcList">'+(rows||'<div class="empty"><h3>No sources</h3><p>Add a website above.</p></div>')+"</div></section>"
 
-  +'<section class="panel"><h2>FastStream and playback</h2><p class="section-desc">Direct streams play in one ZeroPlay shell. FastStream is loaded inside that shell and, when its EmbedAPI is available, ZeroPlay’s own play, seek, volume, speed, PiP and quality controls drive it. If the hosted API is unavailable, media files use the responsive ZeroPlay engine and HLS/DASH use embedded FastStream. DNS warm-up, safe range priming, next-episode warm-up and title-specific failover remain active. Third-party embeds still choose their own internal quality.</p>'
+  +'<section class="panel" id="settingsFastStream"><h2>FastStream configuration and playback</h2><p class="section-desc">Direct streams play in one ZeroPlay shell. FastStream is loaded inside that shell and, when its EmbedAPI is available, ZeroPlay’s own play, seek, volume, speed, PiP and quality controls drive it. If the hosted API is unavailable, media files use the responsive ZeroPlay engine and HLS/DASH use embedded FastStream. DNS warm-up, safe range priming, next-episode warm-up and title-specific failover remain active. Third-party embeds still choose their own internal quality.</p>'
   +'<div class="stat-grid"><div class="stat"><div class="k">Connection</div><div class="v">'+esc(ci.type)+'</div></div><div class="stat"><div class="k">Est. downlink</div><div class="v">'+(ci.downlink?ci.downlink+" Mbps":"unknown")+'</div></div><div class="stat"><div class="k">Round-trip</div><div class="v">'+(ci.rtt?ci.rtt+" ms":"unknown")+'</div></div><div class="stat"><div class="k">Data saver (effective)</div><div class="v">'+(effectiveSaver()?"ON":"OFF")+'</div></div><div class="stat"><div class="k">Enabled sources</div><div class="v">'+allSources().length+'</div></div><div class="stat"><div class="k">File-size cap</div><div class="v">'+capGb()+' GB max</div></div></div>'
   +'<div class="form-row"><div class="form-group"><label for="optPlayer">Direct-stream player</label><select id="optPlayer"><option value="auto"'+(st.player==="auto"||st.player==="faststream"?" selected":"")+'>Auto — FastStream API inside ZeroPlay, responsive fallback</option><option value="builtin"'+(st.player==="builtin"?" selected":"")+'>ZeroPlay responsive player</option><option value="faststream-only"'+(st.player==="faststream-only"?" selected":"")+'>FastStream web player only</option></select><small class="help-text">Auto uses FastStream’s EmbedAPI when the hosted player advertises it; otherwise files use the full ZeroPlay controls and HLS/DASH use embedded FastStream.</small></div>'+'<div class="form-row"><div class="form-group"><label for="optPreload">FastStream preload</label><select id="optPreload"><option value="off"'+(st.preload==="off"?" selected":"")+'>Off</option><option value="smart"'+(st.preload==="smart"?" selected":"")+'>Smart — DNS/connection warm-up + direct-file warm-up (recommended)</option><option value="aggressive"'+(st.preload==="aggressive"?" selected":"")+'>Aggressive — also pre-loads the embed player in the background</option></select><small class="help-text">Aggressive may start a provider player early in a hidden frame; if you ever hear background audio, switch back to Smart.</small></div>'
   +'<div class="form-group"><label for="optQuality">Preferred quality (stability first)</label><select id="optQuality">'+[["auto","Auto — best available"],["2160p","4K UHD 2160p"],["1080p","Full HD 1080p"],["720p","HD 720p — most stable on slow links"],["480p","SD 480p — minimum buffering"]].map(([v,t])=>'<option value="'+v+'"'+(st.quality===v?" selected":"")+">"+t+"</option>").join("")+"</select><small class='help-text'>Used for direct-stream ranking and warm-up size. Embed players choose their own internal quality.</small></div></div>"
-  +'<div class="form-row"><div class="form-group"><label for="optRace">Slow-source failover after (seconds)</label><input type="number" id="optRace" min="4" max="30" value="'+esc(st.raceTimeoutSec)+'"></div>'
-  +'<div class="form-group"><label for="optStallSec">Stall detected after (seconds)</label><input type="number" id="optStallSec" min="10" max="60" value="'+esc(st.stallTimeoutSec)+'"></div></div>'
+  +'<div class="form-row"><div class="form-group"><label for="optDefaultSource">Default first player/source</label><select id="optDefaultSource">'+sourceOptionsHTML(defaultSourceId(),true)+'</select><small class="help-text">Embedwave cannot be the saved default. Title-specific verified direct servers can still be chosen first at play time.</small></div>'
+  +'<div class="form-group"><label for="optBufferTarget">Buffer target before easing warm-up (seconds)</label><input type="number" id="optBufferTarget" min="6" max="60" step="1" value="'+esc(st.bufferTargetSec)+'"><small class="help-text">Safe range priming stops once native direct playback is buffered beyond this target.</small></div></div>'
+  +'<div class="form-row"><div class="form-group"><label for="optRace">Embed page must load within (seconds)</label><input type="number" id="optRace" min="15" max="60" value="'+esc(st.raceTimeoutSec)+'"><small class="help-text">This only detects a frame that never loads. A loaded VidStuck/ZXCStream page is given time for its own server checks and play button.</small></div>'
+  +'<div class="form-group"><label for="optStallSec">Confirmed playback stall after (seconds)</label><input type="number" id="optStallSec" min="30" max="120" value="'+esc(st.stallTimeoutSec)+'"><small class="help-text">The stall timer starts only after the player reports real timestamp progress.</small></div></div>'
+  +'<div class="form-row"><div class="form-group"><label for="optPrimeThreads">FastStream warm-up threads</label><select id="optPrimeThreads">'+[1,2,3,4].map(n=>'<option value="'+n+'"'+(Number(st.primeThreads)===n?" selected":"")+'>'+n+' parallel range request'+(n>1?"s":"")+'</option>').join("")+'</select></div>'
+  +'<div class="form-group"><label for="optPrimeChunk">Warm-up chunk size</label><select id="optPrimeChunk">'+[128,256,512,1024].map(n=>'<option value="'+n+'"'+(Number(st.primeChunkKb)===n?" selected":"")+'>'+n+' KB</option>').join("")+'</select></div>'
+  +'<div class="form-group"><label for="optPrimeBudget">Warm-up data budget (MB)</label><input type="number" id="optPrimeBudget" min="0.25" max="8" step="0.25" value="'+esc(st.primeBudgetMb)+'"></div></div>'
   +'<div class="form-group"><label for="optCap">Maximum streamable file size: <strong id="optCapVal">'+capGb()+' GB</strong> (hard cap '+CAP_GB_HARD+' GB)</label><input type="range" id="optCap" min="1" max="5" step="0.5" value="'+capGb()+'"><small class="help-text">Direct files bigger than this are refused before playback. ZeroPlay enforces a hard maximum of 5 GB.</small></div>'
   +'<div class="form-row"><div class="form-group"><label for="optSaver">Data saver (smaller artwork, less preloading)</label><select id="optSaver"><option value="auto"'+(st.dataSaver==="auto"?" selected":"")+'>Auto (follow device/network)</option><option value="on"'+(st.dataSaver==="on"?" selected":"")+'>On</option><option value="off"'+(st.dataSaver==="off"?" selected":"")+'>Off</option></select></div>'
-  +'<div class="form-group toggle-group"><label class="switch-label" for="optStall" style="position:relative"><span>Auto-switch source on stall</span><input type="checkbox" id="optStall"'+(st.stallSwitch?" checked":"")+'><span class="slider"></span></label></div></div>'
-  +'<div class="form-row"><div class="form-group toggle-group"><label class="switch-label" for="optDns" style="position:relative"><span>DNS warm-up (preconnect all source hosts)</span><input type="checkbox" id="optDns"'+(st.dnsWarm?" checked":"")+'><span class="slider"></span></label></div>'
-  +'<div class="form-group toggle-group"><label class="switch-label" for="optSort" style="position:relative"><span>Sort sources by health score</span><input type="checkbox" id="optSort"'+(st.sortByHealth?" checked":"")+'><span class="slider"></span></label></div></div>'
-  +'<div class="form-row"><div class="form-group toggle-group"><label class="switch-label" for="optTrailers" style="position:relative"><span>Trailer previews inside title blocks</span><input type="checkbox" id="optTrailers"'+(st.trailerPreviews!==false?" checked":"")+'><span class="slider"></span></label><small class="help-text">Muted, one at a time, and automatically paused by Data Saver or reduced-motion settings.</small></div></div>'
+  +'</div><div class="settings-hub-grid"><div><h3>Player behaviour</h3>'
+  +featureSwitchHTML("autoFailover","Automatic server switching","Master switch for all automatic source changes.","playback")
+  +featureSwitchHTML("stallSwitch","Switch after confirmed stalls","Requires real playback progress before the stall clock can run.","playback")
+  +featureSwitchHTML("embedwaveFailover","Automatic Embedwave last resort","Off keeps Embedwave manual-only during failover.","playback")
+  +featureSwitchHTML("fastStreamProbe","FastStream EmbedAPI probe","Try full ZeroPlay controls over FastStream before legacy mode.","playback")
+  +featureSwitchHTML("nextEpisodeWarm","Warm next episode","Prepare the following episode while watching.","playback")
+  +'</div><div><h3>Speed & interface</h3>'
+  +featureSwitchHTML("dnsWarm","DNS warm-up","Preconnect enabled player/website hosts and a first batch of addon hosts.","playback")
+  +featureSwitchHTML("sortByHealth","Sort sources by health","Use recent response history when ranking servers.","playback")
+  +featureSwitchHTML("trailers","Trailer previews","Muted, one at a time, inside title blocks.","playback")
+  +featureSwitchHTML("autoplayNext","Autoplay next episode","Continue automatically when an episode ends.","playback")
+  +featureSwitchHTML("reduceMotion","Reduce motion","Calmer transitions on TV and low-power devices.","playback")
+  +'</div><div><h3>Download defaults</h3>'
+  +'<div class="form-row"><div class="form-group"><label for="optDownloadThreads">Threads per download</label><select id="optDownloadThreads">'+[1,2,3,4,6,8].map(n=>'<option value="'+n+'"'+(Number(dl.threads)===n?" selected":"")+'>'+n+'</option>').join("")+'</select></div>'
+  +'<div class="form-group"><label for="optDownloadChunk">Chunk / part size</label><select id="optDownloadChunk">'+[.25,.5,1,2,4,8].map(n=>'<option value="'+n+'"'+(Number(dl.chunkMb)===n?" selected":"")+'>'+n+' MB</option>').join("")+'</select></div>'
+  +'<div class="form-group"><label for="optDownloadConcurrent">Downloads at once</label><select id="optDownloadConcurrent">'+[1,2,3].map(n=>'<option value="'+n+'"'+(Number(dl.concurrent)===n?" selected":"")+'>'+n+'</option>').join("")+'</select></div></div>'
+  +featureSwitchHTML("downloads","Downloads enabled","Show and run verified direct/HLS downloads.","playback")
+  +featureSwitchHTML("multithreadedDownloads","Multithreaded mode","Parallel ranges/segments where the remote server allows them.","playback")
+  +featureSwitchHTML("m3uExtraction","M3U extraction","Allow page and playlist extraction tools.","playback")
+  +featureSwitchHTML("downloadAutoResume","Auto-resume on start","Continue stored chunks after the app reloads.","playback")
+  +'</div></div>'
   +'<button class="btn btn-primary btn-large" id="btnOptSave" type="button" style="width:100%">Save playback settings</button></section></div>';
 
   /* ---- wire up ---- */
@@ -2766,22 +3996,39 @@ function renderSources(soft){
   });
   $("#optCap").addEventListener("input",e=>{ $("#optCapVal").textContent=Number(e.target.value).toFixed(1).replace(/\.0$/,"")+" GB"; });
   $("#btnOptSave").onclick=()=>{
-    settings.stream.player=$("#optPlayer").value; settings.stream.preload=$("#optPreload").value;
-    settings.stream.raceTimeoutSec=Math.min(30,Math.max(4,Number($("#optRace").value)||8));
-    settings.stream.stallTimeoutSec=Math.min(60,Math.max(10,Number($("#optStallSec").value)||20));
-    settings.stream.stallSwitch=$("#optStall").checked;
-    settings.stream.maxFileSizeGb=Math.min(CAP_GB_HARD,Math.max(1,Number($("#optCap").value)||CAP_GB_HARD));
-    settings.stream.dataSaver=$("#optSaver").value;
-    settings.stream.dnsWarm=$("#optDns").checked;
-    settings.stream.sortByHealth=$("#optSort").checked;
-    settings.stream.trailerPreviews=$("#optTrailers").checked;
-    if(!settings.stream.trailerPreviews){ stopCardPreview(); document.querySelectorAll(".hero-trailer.on").forEach(stopBackdropPreview); }
+    const stNow=streamCfg(), dlNow=downloadCfg();
+    stNow.player=$("#optPlayer").value; stNow.preload=$("#optPreload").value; if(stNow.preload!=="off") stNow.preloadLastMode=stNow.preload;
+    const requestedDefault=$("#optDefaultSource")?.value||"";
+    if(requestedDefault&&getSource(requestedDefault)&&!LAST_RESORT.has(requestedDefault)) settings.source=requestedDefault;
+    stNow.raceTimeoutSec=clampSettingNumber($("#optRace").value,15,60,20);
+    stNow.stallTimeoutSec=clampSettingNumber($("#optStallSec").value,30,120,45);
+    stNow.bufferTargetSec=clampSettingNumber($("#optBufferTarget").value,6,60,16);
+    stNow.primeThreads=Math.round(clampSettingNumber($("#optPrimeThreads").value,1,4,2));
+    stNow.primeChunkKb=Math.round(clampSettingNumber($("#optPrimeChunk").value,64,1024,256));
+    stNow.primeBudgetMb=clampSettingNumber($("#optPrimeBudget").value,.25,8,2);
+    stNow.maxFileSizeGb=Math.min(CAP_GB_HARD,Math.max(1,Number($("#optCap").value)||CAP_GB_HARD));
+    stNow.dataSaver=$("#optSaver").value;
+    dlNow.threads=Math.round(clampSettingNumber($("#optDownloadThreads").value,1,8,4));
+    dlNow.chunkMb=clampSettingNumber($("#optDownloadChunk").value,.25,8,2);
+    dlNow.concurrent=Math.round(clampSettingNumber($("#optDownloadConcurrent").value,1,3,1));
+    if(stNow.trailerPreviews===false){ stopCardPreview(); document.querySelectorAll(".hero-trailer.on").forEach(stopBackdropPreview); }
     applyQualityPreset($("#optQuality").value);
-    saveSettings(); warmedHosts.clear(); warmAllSources();
-    toast("Streaming optimiser saved","success"); renderSources(true);
+    saveSettings(); applyInterfaceSettings(); warmedHosts.clear(); warmAllSources();
+    if(typeof scheduleDownloads==="function") scheduleDownloads();
+    toast("Playback, FastStream and download settings saved","success"); renderSources(true);
   };
+  const exportBtn=$("#btnExportSettings"); if(exportBtn) exportBtn.onclick=exportZeroPlaySettings;
+  const importInput=$("#importSettingsFile"); if(importInput) importInput.onchange=()=>importZeroPlaySettings(importInput.files&&importInput.files[0]);
+  const clearBtn=$("#btnClearPlaybackCaches"); if(clearBtn) clearBtn.onclick=clearPlaybackCaches;
+  const runBtn=$("#btnSettingsRunDiscovery"); if(runBtn) runBtn.onclick=async()=>{ runBtn.disabled=true; runBtn.innerHTML='<span class="spinner"></span> Searching…'; try{ await runDiscoveryCycle("settings"); }catch(e){ toast("Discovery cycle failed: "+(e.message||e),"error"); } finally{ renderSources(true); } };
   wireAddonPanel();
-  if(!soft) window.scrollTo({top:0});
+  syncFeatureToggles(view);
+  if(!soft){
+    const targets={"add-website":"settingsAddWebsite",continuous:"discoveryPanel",faststream:"settingsFastStream",sources:"settingsPlaybackSources",switches:"settingsHub"};
+    const target=targets[sectionTarget]&&document.getElementById(targets[sectionTarget]);
+    if(target) setTimeout(()=>target.scrollIntoView({block:"start",behavior:document.body.classList.contains("reduce-motion")?"auto":"smooth"}),40);
+    else window.scrollTo({top:0});
+  }
 }
 
 /* ---------------- continuous discovery + server identification ----------------
@@ -2920,10 +4167,6 @@ function manifestInfo(manifest){
   };
   return {valid,resources,resourceMap,types,idPrefixes,categories,catalogDefs,addonCatalogs,searchCatalogs,stream,playableStream,identification};
 }
-function manifestStreamInfo(manifest){
-  const info=manifestInfo(manifest);
-  return {stream:info.stream,types:info.types,idPrefixes:info.idPrefixes,resources:info.resources,categories:info.categories};
-}
 function providerFromManifest(manifestUrl, manifest, meta){
   meta=meta||{};
   const cleanManifest=cleanHttpUrl(manifestUrl||meta.manifestUrl||"");
@@ -2963,10 +4206,6 @@ function providerToAddon(provider){
     identification:provider.identification||null, stars:provider.stars||0, from:provider.source||provider.from||"",
     enabled:provider.enabled!==false, kind:"addon"
   };
-}
-function normalizeAddon(manifestUrl, manifest, stars, from){
-  const provider=providerFromManifest(manifestUrl,manifest,{stars,from});
-  return provider?providerToAddon(provider):null;
 }
 function upsertProvider(rec, opts){
   opts=opts||{};
@@ -3624,11 +4863,6 @@ function stopDiscoveryEngine(manual){
   discoveryRuntime.timer=null; saveSettings(); refreshDiscoveryUi();
   if(manual) toast("Continuous search stopped");
 }
-async function discoverAddons(manual){
-  const totals=await runDiscoveryCycle(manual?"manual":"compatibility");
-  if(manual) toast("Discovery cycle complete: "+discoveryCfg().stats.lastSummary,"success");
-  return enabledAddons().length||((totals&&totals.installed)||0);
-}
 async function installProviderById(id){
   ensureProviderRegistry();
   const p=getProvider(id);
@@ -4021,7 +5255,6 @@ async function resolverCall(params){
   if(!r.ok||!data||data.ok===false) throw new Error((data&&data.error)||("Website lookup service unavailable (HTTP "+r.status+")"));
   return data;
 }
-async function extractCall(mode, url){ return resolverCall({mode,url}); }
 async function registerWebsiteSource(rawUrl, manual, preferredName, opts){
   opts=opts||{};
   let u=null;
@@ -4051,9 +5284,6 @@ function canonicalCatalogueTitle(ctx){
   return String((ctx&&ctx.title)||"").replace(/\s*\(source test\)\s*$/i,"").trim();
 }
 const siteLookupCache=new Map();
-function siteLookupKey(source,ctx,title){
-  return [source.id,ctx.type||"movie",ctx.id||title,ctx.season||1,ctx.episode||1].join(":");
-}
 async function findOnWebsite(source, ctx){
   const site=(settings.sites||[]).find(x=>x.id===source.id)||source;
   const identity=(ctx&&ctx.identity&&ctx.identity.version)?ctx.identity:buildTitleIdentity(ctx||{});
@@ -4140,7 +5370,7 @@ function serverOptionHTML(option){
   return '<div class="src-row server-option"><div class="grow"><span class="nm">'+esc(option.name)+'</span> '+badge+(option.sourceId==="embedwave"?'<span class="chip">LAST RESORT</span> ':"")+(option.sourceId?healthBadge(option.sourceId):"")
     +'<code>'+esc(best?(best.label+(best.sub?(" — "+best.sub):"")):(option.evidence||""))+'</code>'+variantMeta
     +(option.evidence&&best?'<div class="help-text">'+esc(option.evidence)+'</div>':"")
-    +'</div><div class="src-actions">'+qualitySelect+'<button class="btn btn-primary btn-xs" data-server-option="'+esc(option.id)+'">▶ Play</button></div></div>';
+    +'</div><div class="src-actions">'+qualitySelect+'<button class="btn btn-primary btn-xs" data-server-option="'+esc(option.id)+'">▶ Play</button>'+(downloadsEnabled()&&option.kind==="direct"&&variants.some(v=>directMediaKind(v.url)!=="dash")?'<button class="btn btn-secondary btn-xs" type="button" data-server-download="'+esc(option.id)+'">⬇ Download</button>':"")+'</div></div>';
 }
 function renderTitleServerOptions(){
   const c=streamsCtx; if(!c) return;
@@ -4201,6 +5431,18 @@ async function showStreamsModal(ctx){
   $("#btnCloseStreams").onclick=closeStreams;
   $("#streamsOverlay").addEventListener("click",async e=>{
     if(e.target.id==="streamsOverlay"){ closeStreams(); return; }
+    const downloadBtn=e.target.closest&&e.target.closest("[data-server-download]");
+    if(downloadBtn&&streamsCtx&&streamsCtx._token===token){
+      const option=(streamsCtx._options||[]).find(o=>o.id===downloadBtn.dataset.serverDownload); if(!option) return;
+      const qualitySel=[...document.querySelectorAll("[data-server-quality]")].find(el=>el.dataset.serverQuality===option.id);
+      const variant=chooseVariantForQuality(option.variants||[],qualitySel?qualitySel.value:settings.stream.quality,"")||(option.variants||[])[0];
+      if(!variant){ toast("That server did not return a downloadable direct variant","error"); return; }
+      downloadBtn.disabled=true;
+      try{ await createDownloadJob(variant,streamsCtx,option.name); toast("Download started in the background — open Downloads to pause or resume it","success"); }
+      catch(err){ toast(err.message||String(err),"error"); }
+      finally{ if(downloadBtn.isConnected) downloadBtn.disabled=false; }
+      return;
+    }
     const play=e.target.closest&&e.target.closest("[data-server-option]");
     if(!play||!streamsCtx||streamsCtx._token!==token) return;
     const option=(streamsCtx._options||[]).find(o=>o.id===play.dataset.serverOption);
@@ -4248,9 +5490,6 @@ async function showStreamsModal(ctx){
   $("#btnRefreshServers").onclick=()=>runSearch(true);
   if(document.body.classList.contains("tv-mode")) setTimeout(()=>{ const first=$("#btnCloseStreams"); if(first) first.focus({preventScroll:true}); },30);
   await runSearch(false);
-}
-function polluteProgressFromStream(ctx){ /* register continue-watching for addon-stream plays of real TMDB titles */
-  if(ctx&&ctx.item&&Number.isInteger(ctx.item.id)) registerProgress(ctx.item, ctx.season, ctx.episode);
 }
 
 function providerSearchText(p){
@@ -4421,9 +5660,29 @@ function wireAddonPanel(){
 /* ---------------- router, menu drawer and TV navigation ---------------- */
 function setNav(name){ $$(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.nav===name)); }
 let menuReturnFocus=null;
+function renderMenuQuickSwitches(){
+  const box=document.getElementById("menuQuickSwitches");
+  if(!box) return;
+  box.innerHTML=[
+    featureSwitchHTML("discovery","Continuous adding","Keep finding and identifying servers while ZeroPlay is open.","menu"),
+    featureSwitchHTML("trailers","Trailer previews","Muted previews inside focused title blocks.","menu"),
+    featureSwitchHTML("autoFailover","Automatic server switching","Move only after a server fails to resolve/load or confirmed playback stalls.","menu"),
+    featureSwitchHTML("embedwaveFailover","Embedwave auto last resort","Off by default: ZeroPlay will stop and ask instead of drifting into Embedwave.","menu"),
+    featureSwitchHTML("preload","FastStream preload","Warm the likely title or episode before you press play.","menu"),
+    featureSwitchHTML("fastStreamProbe","FastStream control API","Try the responsive FastStream bridge before the legacy player.","menu"),
+    featureSwitchHTML("dnsWarm","DNS warm-up","Preconnect known player and source hosts.","menu"),
+    featureSwitchHTML("downloads","Downloads","Enable episode and direct-stream downloads.","menu"),
+    featureSwitchHTML("m3uExtraction","M3U extraction","Extract playable M3U/M3U8 links from pages and playlists.","menu"),
+    featureSwitchHTML("autoplayNext","Autoplay next episode","Continue to the next episode when one finishes.","menu"),
+    featureSwitchHTML("reduceMotion","Reduce motion","Calmer interface animations for TV boxes and accessibility.","menu")
+  ].join("");
+  syncFeatureToggles(box);
+  if(typeof updateDownloadMenuCount==="function") updateDownloadMenuCount();
+}
 function openMenuDrawer(){
   const drawer=document.getElementById("menuDrawer"), scrim=document.getElementById("menuScrim"), btn=document.getElementById("btnMenu");
   if(!drawer||!scrim) return;
+  renderMenuQuickSwitches();
   menuReturnFocus=document.activeElement;
   scrim.hidden=false; drawer.classList.add("open"); drawer.setAttribute("aria-hidden","false");
   if(btn) btn.setAttribute("aria-expanded","true");
@@ -4444,6 +5703,7 @@ function goRoute(route){
   if(location.hash===target) render(); else location.hash=target;
 }
 function render(){
+  if(typeof downloadModalState!=="undefined"&&downloadModalState) closeDownloadModal();
   if(streamsCtx) closeStreams();
   closeMenuDrawer();
   closeDetail();
@@ -4461,8 +5721,10 @@ function render(){
   else if(route==="categories"){ setNav("categories"); renderCategories(); }
   else if(route==="search"){ setNav(""); renderSearch(params.get("q")||""); }
   else if(route==="library"){ setNav("library"); renderLibrary(); }
-  else if(route==="sources"||route==="discover"){ setNav("sources"); renderSources(); }
-  else if(route==="debrid"||route==="configure"){ setNav("sources"); renderSources(); }
+  else if(route==="sources"||route==="discover"){ setNav("sources"); renderSources(false,{settingsPage:false,section:""}); }
+  else if(route==="settings"){ setNav("sources"); renderSources(false,{settingsPage:true,section:params.get("section")||""}); }
+  else if(route==="downloads"){ setNav(""); renderDownloadsPage(); }
+  else if(route==="debrid"||route==="configure"){ setNav("sources"); renderSources(false,{settingsPage:true,section:""}); }
   else if(route.startsWith("title/")){ const [,t,id]=route.split("/"); setNav("home"); renderHome().then(()=>openDetail(t,Number(id))); }
   else { setNav("home"); renderHome(); }
 }
@@ -4473,12 +5735,15 @@ $("#menuScrim").onclick=closeMenuDrawer;
 document.addEventListener("click",e=>{
   const cat=e.target.closest&&e.target.closest("[data-category-type][data-category-id]");
   if(cat){ e.preventDefault(); navigateCategory(cat.dataset.categoryType,cat.dataset.categoryId); return; }
+  const settingsBtn=e.target.closest&&e.target.closest("[data-settings-section]");
+  if(settingsBtn){ e.preventDefault(); closeMenuDrawer(); const target="#/settings?section="+encodeURIComponent(settingsBtn.dataset.settingsSection||""); if(location.hash===target) render(); else location.hash=target; return; }
   const routeBtn=e.target.closest&&e.target.closest("[data-menu-route]");
   if(routeBtn){ e.preventDefault(); goRoute(routeBtn.dataset.menuRoute); }
 });
 $("#topSearch").addEventListener("submit",e=>{ e.preventDefault(); const q=$("#topQuery").value.trim(); const target="#/search?q="+encodeURIComponent(q); if(location.hash===target) render(); else location.hash=target; });
 $("#demoBannerBtn").onclick=()=>{ location.hash="#/sources"; };
 function tvFocusableRoot(){
+  if(typeof downloadModalState!=="undefined"&&downloadModalState) return document.getElementById("downloadsRoot");
   if(streamsCtx) return document.getElementById("streamsRoot");
   if(playerState) return document.getElementById("playerRoot");
   const drawer=document.getElementById("menuDrawer");
@@ -4527,7 +5792,7 @@ function moveTvFocus(direction){
   return true;
 }
 function handlePlayerKeyboard(e){
-  const st=playerState; if(!st||st.trailer||streamsCtx) return false;
+  const st=playerState; if(!st||st.trailer||streamsCtx||(typeof downloadModalState!=="undefined"&&downloadModalState)) return false;
   const tag=(document.activeElement&&document.activeElement.tagName)||"";
   if(/^(INPUT|TEXTAREA|SELECT)$/.test(tag)&&document.activeElement.id!=="seekRange"&&document.activeElement.id!=="volumeRange") return false;
   const full=st.engine==="native"||st.engine==="faststream-api";
@@ -4553,6 +5818,7 @@ document.addEventListener("keydown",e=>{
   if(/^Arrow/.test(e.key)||e.key==="Tab") document.body.classList.add("tv-mode");
   const activeTag=(document.activeElement&&document.activeElement.tagName)||"";
   if(e.key==="Escape"){
+    if(typeof downloadModalState!=="undefined"&&downloadModalState){ closeDownloadModal(); e.preventDefault(); return; }
     if(streamsCtx){ closeStreams(); e.preventDefault(); return; }
     const drawer=document.getElementById("menuDrawer"); if(drawer&&drawer.classList.contains("open")){ closeMenuDrawer(); e.preventDefault(); return; }
     if(playerState){ closePlayer(); e.preventDefault(); return; }
@@ -4575,13 +5841,16 @@ window.addEventListener("hashchange",render);
 /* deep links from Netlify redirects: /movie/123, /tv/123 */
 (function init(){
   const m=location.pathname.match(/^\/(movie|tv)\/(\d+)\/?$/);
+  streamCfg(); downloadCfg(); saveSettings(); applyInterfaceSettings(); renderMenuQuickSwitches();
   ensureProviderRegistry();
   warmAllSources();
   scheduleDiscovery();
+  void loadDownloadJobs();
   if(m&&!location.hash){ history.replaceState(null,"","/"); location.hash="#/title/"+m[1]+"/"+m[2]; }
-  const cleanRoutes={movies:"movies",series:"series",library:"library",categories:"categories",discover:"sources",sources:"sources"};
+  const cleanRoutes={movies:"movies",series:"series",library:"library",categories:"categories",discover:"sources",sources:"sources",settings:"settings",downloads:"downloads"};
   const cleanRoute=cleanRoutes[location.pathname.replace(/^\/|\/$/g,"")];
-  if(cleanRoute&&!location.hash){ history.replaceState(null,"","/"); location.hash="#/"+cleanRoute+(location.search||""); }
+  const cleanSearch=location.search||"";
+  if(cleanRoute&&!location.hash){ history.replaceState(null,"","/"); location.hash="#/"+cleanRoute+cleanSearch; }
   if(location.pathname==="/search"&&!location.hash){ const q=new URLSearchParams(location.search).get("q")||""; history.replaceState(null,"","/"); location.hash="#/search?q="+encodeURIComponent(q); }
   render();
 })();

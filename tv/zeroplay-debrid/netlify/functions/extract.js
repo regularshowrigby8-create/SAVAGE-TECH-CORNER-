@@ -6,6 +6,8 @@
  *                website, then resolve its public watch/embed/direct URL.
  * mode=watch   : inspect one known watch page for public embed/direct URLs.
  * mode=json    : fetch a JSON URL server-side (CORS fallback for addons).
+ * mode=text    : return a validated M3U/M3U8 playlist without truncation.
+ * mode=m3u     : extract M3U/M3U8 links/variants from a page or playlist.
  *
  * Safety: http(s) only, private/loopback hosts blocked, 1.5 MB response cap,
  * bounded search requests and timeouts. This parses public pages only; it
@@ -52,9 +54,31 @@ async function fetchDocument(url, wantJson, timeoutMs) {
     const finalUrl = r.url || url;
     const final = guardUrl(finalUrl);
     if (!final) throw new Error('Blocked redirect');
-    const buf = Buffer.from(await r.arrayBuffer());
-    const text = (buf.length > MAX_BYTES ? buf.subarray(0, MAX_BYTES) : buf).toString('utf8');
-    return { text, finalUrl: final.href, status: r.status };
+    let buf;
+    if (r.body && typeof r.body.getReader === 'function') {
+      const reader = r.body.getReader();
+      const chunks = [];
+      let total = 0;
+      while (total <= MAX_BYTES) {
+        const part = await reader.read();
+        if (part.done) break;
+        if (!part.value) continue;
+        const room = MAX_BYTES + 1 - total;
+        const slice = part.value.byteLength > room ? part.value.subarray(0, room) : part.value;
+        chunks.push(Buffer.from(slice));
+        total += slice.byteLength;
+        if (part.value.byteLength > room || total > MAX_BYTES) {
+          try { await reader.cancel(); } catch {}
+          break;
+        }
+      }
+      buf = Buffer.concat(chunks, total);
+    } else {
+      buf = Buffer.from(await r.arrayBuffer());
+    }
+    const truncated = buf.length > MAX_BYTES;
+    const text = (truncated ? buf.subarray(0, MAX_BYTES) : buf).toString('utf8');
+    return { text, finalUrl: final.href, status: r.status, truncated };
   } finally { clearTimeout(to); }
 }
 
@@ -142,7 +166,7 @@ function parseWatch(html, base) {
     const candidate = abs(decodeEntities(m[1] || ''), base);
     if (candidate && (embedScore(candidate) >= 30 || /\.(?:m3u8|mp4|mpd)(?:\?|#|$)/i.test(candidate))) addEmbedCandidate(candidate);
   }
-  const normalizedHtml = html.replace(/\\\//g, '/');
+  const normalizedHtml = html.replace(/\\\//g, '/').replace(/\\u0026/gi, '&').replace(/&amp;/g, '&');
   for (const m of normalizedHtml.matchAll(/https?:\/\/[^\s"'<>]+/gi)) {
     const candidate = m[0];
     if (/\/(?:embed|player)(?:\/|\?|#|[-_])/i.test(candidate) || /[?&](?:embed|player|video)=/i.test(candidate)) addEmbedCandidate(candidate);
@@ -166,6 +190,74 @@ function parseWatch(html, base) {
     direct,
     servers: serverNames(html),
     embedHosts: iframeHosts(html),
+  };
+}
+
+function isM3uText(text) {
+  return /^#EXTM3U/i.test(String(text || '').trim());
+}
+
+function m3uPlaylistInfo(text, base) {
+  const clean = String(text || '');
+  const lines = clean.split(/\r?\n/).map(line => line.trim());
+  const variants = [];
+  let pendingVariant = false;
+  let pendingDuration = 0;
+  let segmentCount = 0;
+  let duration = 0;
+  let encrypted = false;
+  let live = true;
+  for (const line of lines) {
+    if (!line) continue;
+    if (line.startsWith('#EXT-X-STREAM-INF:')) { pendingVariant = true; continue; }
+    if (line.startsWith('#EXTINF:')) { pendingDuration = Number(line.slice(8).split(',')[0]) || 0; continue; }
+    if (line.startsWith('#EXT-X-KEY:') && !/METHOD=NONE/i.test(line)) encrypted = true;
+    if (line === '#EXT-X-ENDLIST') live = false;
+    if (line.startsWith('#')) continue;
+    const url = abs(line, base);
+    if (!url) continue;
+    if (pendingVariant) { variants.push(url); pendingVariant = false; continue; }
+    segmentCount += 1;
+    duration += pendingDuration;
+    pendingDuration = 0;
+  }
+  if (!segmentCount) live = false;
+  return { variants: [...new Set(variants)], segmentCount, duration: Math.round(duration), encrypted, live };
+}
+
+function extractM3u(text, base) {
+  const source = String(text || '');
+  if (isM3uText(source)) {
+    const info = m3uPlaylistInfo(source, base);
+    const isMaster = info.variants.length > 0;
+    const summary = isMaster ? `${info.variants.length} variants` : `${info.segmentCount} segments`;
+    const detail = isMaster
+      ? 'Master playlist. Choose Download to select a quality variant and assemble its segments.'
+      : `${info.duration} sec playlist duration${info.encrypted ? ' · encryption declared' : ' · unencrypted'}${info.live ? ' · live/no end marker' : ''}`;
+    return {
+      title: 'M3U playlist',
+      playlists: [{ url: base, label: isMaster ? 'M3U master playlist' : 'M3U media playlist', summary, detail }]
+        .concat(info.variants.filter(url => url !== base).map(url => ({ url, label: 'M3U quality variant', summary: '', detail: '' }))),
+      direct: [base],
+      embeds: [],
+      playlist: info,
+    };
+  }
+  const watch = parseWatch(source, base);
+  const found = new Set((watch.direct || []).filter(url => /\.m3u8(?:\?|#|$)/i.test(url)));
+  const normalized = decodeEntities(source).replace(/\\\//g, '/').replace(/\\u0026/gi, '&');
+  for (const m of normalized.matchAll(/(?:https?:\/\/[^\s"'<>]+|(?:\.\.?\/|\/)[^\s"'<>]+?)\.m3u8(?:\?[^\s"'<>]*)?/gi)) {
+    const url = abs(String(m[0] || '').replace(/[),.;]+$/, ''), base);
+    if (url && guardUrl(url)) found.add(url);
+    if (found.size >= 20) break;
+  }
+  return {
+    title: watch.title || '',
+    playlists: [...found].map(url => ({ url, label: 'Extracted M3U link', summary: '', detail: '' })),
+    direct: watch.direct || [],
+    embeds: watch.embeds || [],
+    embed: watch.embed || '',
+    servers: watch.servers || [],
   };
 }
 
@@ -673,7 +765,15 @@ async function handle(mode, rawUrl, query) {
       return { status: 200, body };
     }
     const doc = await fetchDocument(u.href, false, 10000);
-    return { status: 200, body: { ok: true, mode: 'watch', url: doc.finalUrl, ...parseWatch(doc.text, doc.finalUrl) } };
+    if (mode === 'text') {
+      if (!isM3uText(doc.text)) return { status: 415, body: { ok: false, error: 'Remote did not return an M3U/M3U8 playlist' } };
+      if (doc.truncated) return { status: 413, body: { ok: false, error: 'Remote playlist is larger than the resolver safety limit' } };
+      return { status: 200, body: { ok: true, mode: 'text', url: doc.finalUrl, text: doc.text } };
+    }
+    if (mode === 'm3u') {
+      return { status: 200, body: { ok: true, mode: 'm3u', url: doc.finalUrl, truncated: !!doc.truncated, ...extractM3u(doc.text, doc.finalUrl) } };
+    }
+    return { status: 200, body: { ok: true, mode: 'watch', url: doc.finalUrl, truncated: !!doc.truncated, ...parseWatch(doc.text, doc.finalUrl) } };
   } catch (e) {
     return { status: 502, body: { ok: false, error: 'Site lookup failed: ' + (e && e.message || e) } };
   }
@@ -684,9 +784,9 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'GET') return { statusCode: 405, headers: H, body: JSON.stringify({ ok: false, error: 'Method not allowed' }) };
   const q = event.queryStringParameters || {};
   const mode = String(q.mode || 'profile');
-  if (!['profile', 'find', 'watch', 'json'].includes(mode)) return { statusCode: 400, headers: H, body: JSON.stringify({ ok: false, error: 'Unknown mode' }) };
+  if (!['profile', 'find', 'watch', 'json', 'text', 'm3u'].includes(mode)) return { statusCode: 400, headers: H, body: JSON.stringify({ ok: false, error: 'Unknown mode' }) };
   const out = await handle(mode, String(q.url || ''), q);
   return { statusCode: out.status, headers: H, body: JSON.stringify(out.body) };
 };
-exports._parse = { parseWatch, parseResultLinks, guardUrl, serverNames, normalizeTitle, titleScore, identifyTitleCandidate, explicitEpisodeInfo, extractCandidateIds, searchTemplatesFromHtml, commonSearchTemplates, buildSearchUrl, adjustEpisodeInUrl, findEpisodeUrl, episodeCandidateUrls };
+exports._parse = { parseWatch, extractM3u, isM3uText, parseResultLinks, guardUrl, serverNames, normalizeTitle, titleScore, identifyTitleCandidate, explicitEpisodeInfo, extractCandidateIds, searchTemplatesFromHtml, commonSearchTemplates, buildSearchUrl, adjustEpisodeInUrl, findEpisodeUrl, episodeCandidateUrls };
 exports._find = { profileSite, findTitleOnSite, handle };

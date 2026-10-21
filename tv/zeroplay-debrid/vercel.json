@@ -44,6 +44,14 @@
     {
       "source": "/configure",
       "destination": "/index.html"
+    },
+    {
+      "source": "/settings",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/downloads",
+      "destination": "/index.html"
     }
   ],
   "headers": [

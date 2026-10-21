@@ -9,8 +9,10 @@ with real artwork. Visitors never enter an API key.
 
 ## Continuous searcher
 
-Open **Discover** and use the single **Start continuous search** button. While
-the app is open, one engine rotates through independent crawlers:
+Open **Discover** and use the single **Start continuous search** button, or
+use **Settings → Continuous adding** for the same engine and its crawler
+controls. While the app is open, one engine rotates through independent
+crawlers:
 
 - Recursive Stremio `addon_catalog` graph crawling, starting with Cinemeta and
   continuing through catalogues exposed by newly identified addons.
@@ -101,10 +103,88 @@ searched for that exact title/episode when playback is requested.
   buttons, menus and player controls. `Enter` opens a title and `P` quick-plays
   a focused card.
 
+## Settings and switches
+
+The menu drawer has **Quick switches** for the features people most often
+need while browsing or watching. The full **Settings** page (`/settings`)
+contains the same shared settings plus:
+
+- **Add Website** for lookup-only website servers and optional advanced URL
+  templates;
+- the continuous-adding controls, discovery seeds, crawler choices and
+  provider feed;
+- separate switches for trailers, automatic switching, confirmed-stall
+  switching, Embedwave automatic failover, FastStream preload/API probing,
+  DNS warm-up, health sorting, downloads, multithreading, M3U extraction,
+  download auto-resume/auto-save/link-refresh/retention, autoplay-next,
+  reduced motion, compact cards and the category strip;
+- FastStream configuration for the direct-stream engine, preload mode,
+  preferred quality, default source, buffer target, embed-load and
+  confirmed-stall timing, safe range-priming workers/chunks/budget, the file
+  cap and Data Saver;
+- download defaults for threads, part size and concurrent jobs;
+- settings export/import and playback health/server-cache clearing.
+
+Switch changes save immediately and synchronize between the menu, Settings,
+player and Downloads. The numeric FastStream/download controls are clamped
+to safe ranges when read and when saved.
+
+## Downloads and M3U extraction
+
+A **Download** button appears on the title/detail actions, beside every
+episode in the episode selector, in the player, and beside downloadable
+direct variants in **Servers with this title**. Episode download buttons use
+that episode's exact canonical identity; they never reuse whichever episode
+happens to be selected for playback.
+
+Downloads are offered only when an identified server returns a direct media
+file or an M3U/HLS playlist for the exact movie/episode. The **Downloads**
+page (`/downloads`) is the job manager and M3U extractor:
+
+- Known-size files with genuine HTTP Range/`206` support download in parallel
+  chunks (1–8 configured threads). Completed chunks are stored in IndexedDB,
+  so Pause and a browser restart can resume only the missing chunks.
+- HLS media playlists download independently fetchable segments in parallel
+  and assemble them in playlist order, including ordered `EXT-X-MAP` sections
+  and byte-range segments. Fetchable AES-128 segments are decrypted in the
+  browser.
+- If a host does not confirm Range support, ZeroPlay saves sequential parts
+  and attempts a validated range resume. If the host restarts with HTTP 200
+  or returns the wrong offset, ZeroPlay says so instead of splicing unlike
+  responses together.
+- Expired direct links can be re-found only when the replacement file has the
+  same known size; expired HLS links only when the segment path sequence is
+  the same. Otherwise the job stops safely.
+- Completed jobs can be saved to the device or played from the assembled
+  browser file when the browser supports that container. Jobs can be paused,
+  resumed, retried, copied, deleted or cleared in bulk.
+- The M3U extractor accepts a website/watch page, a hosted M3U/M3U8 URL, or
+  pasted playlist text. It lists variants, segment counts and playlist
+  duration, and can inspect, copy, play or download a hosted playlist. A
+  pasted media playlist without its real hosted URL is parsed locally only;
+  ZeroPlay does not pretend the app URL is a downloadable playlist.
+- The configured file cap (hard maximum 5 GB) is checked before download when
+  size or HLS bandwidth/duration makes it estimable, and while unknown-size
+  parts are being stored.
+
+Cross-origin embedded players cannot be downloaded from the parent page.
+When only embeds are returned, ZeroPlay explains that limitation instead of
+offering a dead download button.
+
 ## Playback rules
 
 - VidStuck, ZXCStream and Embedwave remain the built-in embed focus.
-- Embedwave is always last resort.
+- Embedwave is always last resort. Automatic failover into Embedwave is off
+  by default and has its own switch; without it, ZeroPlay stops and lets the
+  user choose Embedwave manually from Servers.
+- An embed iframe merely loading is **not** treated as successful playback.
+  ZeroPlay separates “player page loaded” from provider progress messages
+  whose timestamp actually advances. A page that never loads can fail over
+  after the configured 15–60 second timeout; a loaded VidStuck/ZXCStream page
+  is left alone for its own server checks/Play button, and only confirmed
+  timestamp progress can start the 30–120 second stall clock. Embed referrer
+  policy matches the upstream players (`no-referrer` for Embedwave,
+  `strict-origin-when-cross-origin` for the others).
 - Every playback mode opens in the same ZeroPlay shell. The shell keeps Back,
   Servers, Details, episode controls and Close in the parent page so a
   cross-origin iframe cannot trap the whole interface.
@@ -121,7 +201,7 @@ searched for that exact title/episode when playback is requested.
   capability is probed for later streams, and HLS/DASH use the legacy embedded
   FastStream hash player inside the shell.
 - **ZeroPlay responsive player** and **FastStream web player only** remain
-  selectable in Discover playback settings.
+  selectable in **Settings → FastStream configuration and playback**.
 - Quality selection is real where the engine exposes it: FastStream levels
   for API playback and actual returned direct-stream variants for file
   playback. A single fixed file has only its source quality. For third-party
@@ -130,11 +210,14 @@ searched for that exact title/episode when playback is requested.
 - Switching a direct quality/server preserves the current timestamp where the
   active engine reports it.
 - Failover searches the title-specific server set instead of cycling blindly
-  through every registered source.
+  through every registered source. The automatic-switching master switch also
+  gates automatic direct-variant fallback; manual quality/server choices are
+  unaffected. Native direct playback uses the same confirmed-progress rule
+  before a stall can trigger switching.
 - Progress persistence and playback UI updates are throttled. Direct priming
-  accepts only genuine `206` range responses, uses at most two workers and a
-  small byte budget, and stops when the buffer is healthy. Continuous
-  discovery cycles are deferred while the player is open.
+  accepts only genuine `206` range responses and uses the configured
+  FastStream limits (1–4 workers, chunk size, data budget and buffer target).
+  Continuous discovery cycles are deferred while the player is open.
 - Torrent and external-player streams are hidden.
 - Known direct files over the selected cap are rejected; the hard maximum is
   5 GB.
@@ -160,7 +243,10 @@ Use this folder as the project root (`tv/zeroplay-debrid` in this repository).
 The serverless functions are:
 
 - `api/tmdb.js` — optional server-side TMDB proxy;
-- `api/extract.js` — guarded website lookup and JSON relay.
+- `api/extract.js` — guarded website lookup, JSON relay, validated playlist
+  text (`mode=text`) and page/playlist M3U extraction (`mode=m3u`). Remote
+  documents are read with a streamed 1.5 MB safety cap; oversized playlists
+  are refused for `mode=text` instead of being silently truncated.
 
 ### Netlify
 
@@ -169,6 +255,18 @@ The serverless functions are:
 
 An optional TMDB environment variable can be set by the deployer; it is not
 required for the live keyless catalogue.
+
+## Tests
+
+```bash
+npm test
+npm run build
+```
+
+`npm test` runs identity/discovery, crawler, regression, TV/player, and
+download/M3U/settings suites. The download suite exercises the real inline
+functions with mocked range/HLS responses rather than only checking that
+buttons exist.
 
 ## Honest limitations
 
@@ -186,7 +284,18 @@ required for the live keyless catalogue.
 - Trailer previews depend on catalogue trailer metadata and YouTube embed
   availability; titles without a trailer keep their poster/backdrop.
 - The 5 GB cap is exact when usable size metadata/headers exist; otherwise
-  the app labels size as unknown instead of inventing it.
+  the app labels size as unknown instead of inventing it. Unknown-size
+  downloads are stopped as stored bytes reach the configured cap.
+- Browser downloads require the remote host to permit CORS. Parallelism and
+  pause/resume additionally require HTTP Range/`206` responses or
+  independently fetchable HLS segments. Browser/IndexedDB quota can still
+  limit how much can be stored; if IndexedDB is unavailable, the in-memory
+  fallback cannot survive a browser restart.
+- HLS downloads do not support DRM or SAMPLE-AES, live playlists without an
+  end marker cannot be completed as one file, separate audio renditions are
+  not muxed into the selected video playlist, and DASH is playback-only in
+  this downloader. An assembled `.ts` may need to be saved and played by a
+  media player that supports MPEG-TS if the browser itself cannot play it.
 - Public crawlers can be rate-limited or changed by their operators.
 
 ZeroPlay hosts no media files. This product uses the TMDB API when configured

@@ -29,6 +29,7 @@ const context = {
   RegExp,
   Promise,
   watchlist: [],
+  document: { addEventListener() {}, querySelectorAll() { return []; }, body: { classList: { toggle() {} } } },
   settings: {
     providers: [], providerTombstones: {}, addons: [], sites: [],
     discovery: { crawlers: {}, cursors: {}, seeds: [], stats: {}, githubQueries: [] },
@@ -47,7 +48,7 @@ vm.createContext(context);
 const code = [
   between('function titleOf(it)', '/* ---------------- built-in title identifier'),
   between('/* ---------------- built-in title identifier', '/* ---------------- demo catalog'),
-  between('const DEFAULT_GITHUB_QUERIES=', 'function normalizeAddon'),
+  between('const DEFAULT_GITHUB_QUERIES=', 'function upsertProvider(rec, opts)'),
   between('function upsertProvider(rec, opts)', 'function identifyWebsiteProvider'),
   between('function getProvider(id)', 'function providerCounts'),
   between('function streamIdsForAddon(addon, identity, imdb)', 'function enabledAddons'),
