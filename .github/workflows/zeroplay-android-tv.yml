@@ -21,6 +21,11 @@ on:
       - 'factories/factory-3/**'
       - '.github/workflows/zeroplay-android-tv.yml'
   workflow_dispatch:
+    inputs:
+      publish_release:
+        description: 'Publish the verified APK as a GitHub Release (public TV Downloader link)'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -283,3 +288,61 @@ jobs:
             tv/android-tv/dist/ZeroPlay-TV-1.0.0-armeabi-v7a.sha256
             tv/android-tv/dist/factory-evidence/**
           if-no-files-found: error
+
+  release:
+    name: Publish TV download release
+    needs: build
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download the verified APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ZeroPlay-TV-1.0.0-armeabi-v7a
+          path: release-dist
+
+      - name: Publish GitHub release for TV Downloader
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="zeroplay-tv-v1.0.0"
+          APK=$(find release-dist -type f -name 'ZeroPlay-TV-1.0.0-armeabi-v7a.apk' | head -n 1)
+          SHA=$(find release-dist -type f -name '*.sha256' | head -n 1)
+          REPORT=$(find release-dist -type f -name '*.verify.json' | head -n 1)
+          test -n "$APK" || { echo "::error title=Release::verified APK missing from artifact"; exit 1; }
+          mkdir -p upload
+          # Short asset name: this URL is typed with a TV remote in Downloader.
+          cp "$APK" upload/zeroplay-tv.apk
+          cp "$APK" upload/ZeroPlay-TV-1.0.0-armeabi-v7a.apk
+          ASSETS=(upload/zeroplay-tv.apk upload/ZeroPlay-TV-1.0.0-armeabi-v7a.apk)
+          [ -n "$SHA" ] && ASSETS+=("$SHA")
+          [ -n "$REPORT" ] && ASSETS+=("$REPORT")
+          NOTES="ZeroPlay TV 1.0.0 for Xiaomi TV Box S (3rd Gen, MDZ-32-AA) — ARMv7 (armeabi-v7a), Android TV / Leanback.
+
+          Install on the TV with the Downloader app using this URL:
+          https://github.com/${{ github.repository }}/releases/download/${TAG}/zeroplay-tv.apk
+
+          Built and verified in CI from commit ${{ github.sha }} (package/Leanback/ABI/DEX/signature checks passed; see the .verify.json asset). Sideload build signed with the Android debug certificate."
+          if gh release view "$TAG" --repo "${{ github.repository }}" > /dev/null 2>&1; then
+            gh release upload "$TAG" "${ASSETS[@]}" --clobber --repo "${{ github.repository }}"
+            gh release edit "$TAG" --notes "$NOTES" --repo "${{ github.repository }}"
+          else
+            gh release create "$TAG" "${ASSETS[@]}" \
+              --repo "${{ github.repository }}" \
+              --target "${{ github.sha }}" \
+              --title "ZeroPlay TV 1.0.0 — Xiaomi TV Box S (ARMv7)" \
+              --notes "$NOTES" \
+              --prerelease
+          fi
+          URL="https://github.com/${{ github.repository }}/releases/download/${TAG}/zeroplay-tv.apk"
+          echo "::notice title=TV Downloader URL::${URL}"
+          {
+            echo "## TV Downloader URL"
+            echo ""
+            echo "Type this into the Downloader app on the TV:"
+            echo ""
+            echo "\`${URL}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
