@@ -41,7 +41,25 @@ The native shell exposes a small read-only profile bridge and forwards remote ke
 - **Left at the browsing edge** opens the menu.
 - Android trim-memory callbacks ask the web app to stop previews and shed nonessential image work.
 
-Direct streams are loaded straight into the FastStream player surface for the selected server, and embedded servers keep their own surface; ZeroPlay does not keep a second persistent control bar over them. Control is handed to that surface automatically with the shell D-pad cursor (move with the remote, tap with OK/Play-Pause). **Back** first releases surface control and a second Back exits; **Menu** opens Servers. Local/downloaded files and the explicit built-in player setting use the native ZeroPlay video element, where visible-control arrows navigate buttons (including CC when a subtitle track exists) instead of seeking.
+**TV shell rule: our player bar is the only thing the D-pad ever focuses.**
+FastStream's own player UI is built for mouse/touch and is not D-pad
+compatible, so on Android TV FastStream is a decoder only: files and
+WebView-playable streams play in the native ZeroPlay video element, and DASH
+(plus HLS once its control API is known to answer) plays through FastStream's
+EmbedAPI — `load`, play/pause, seek, volume, rate, PiP and quality levels are
+all driven by the ZeroPlay control bar over `postMessage`. The FastStream
+iframe is `tabindex="-1"`, pointer-blocked and covered by our media-click
+layer; it can never receive remote focus. If the FastStream control API does
+not answer for a format the native engine also cannot play, the player says
+so and routes you to Servers instead of dropping you into a mouse-only UI.
+Embed sites (exact-ID players) cannot be driven this way, so on TV they are
+labelled **EXPERIMENTAL ON TV**: they open under our bar and only take over
+when you explicitly choose **Site controls · experimental** (the shell D-pad
+cursor: move with arrows, tap with OK). **Back** releases site controls
+first, then reveals our controls if hidden, then exits. The Xiaomi remote has
+no Menu key — **hold OK** opens Servers. In visible controls, arrows navigate
+buttons (including CC when the native engine exposes a subtitle track)
+instead of seeking.
 
 Provider frames are deliberately **not** given an HTML `sandbox` attribute: several legitimate embedded players detect any sandboxed frame and refuse playback outright. The Android shell instead blocks top-level pop-up/redirect hijacks plus known “scan this QR code to prove you are not a robot” scam patterns. **Never scan a QR code shown by a video player.** If a server shows one, press Back/Menu and choose another server.
 
