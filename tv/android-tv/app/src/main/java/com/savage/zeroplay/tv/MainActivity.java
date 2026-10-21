@@ -3,7 +3,6 @@ package com.savage.zeroplay.tv;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.DownloadManager;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -655,7 +654,7 @@ public final class MainActivity extends Activity {
                 }
                 startActivityForResult(intent, FILE_CHOOSER_REQUEST);
                 return true;
-            } catch (ActivityNotFoundException | RuntimeException ignored) {
+            } catch (RuntimeException ignored) {
                 fileChooserCallback = null;
                 callback.onReceiveValue(null);
                 Toast.makeText(MainActivity.this, "No file picker is available on this TV", Toast.LENGTH_SHORT).show();

@@ -1,27 +1,32 @@
 #!/bin/sh
-# Real Gradle Wrapper bootstrap script
-set -e
-ROOT_DIR=$(cd "$(dirname "$0")" && pwd)
+# Gradle Wrapper launcher for ZeroPlay TV.
+#
+# The checked-in wrapper JAR is authoritative: a random system Gradle must
+# never silently replace the version pinned in gradle-wrapper.properties.
+set -eu
+
+ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 WRAPPER_DIR="$ROOT_DIR/gradle/wrapper"
 WRAPPER_JAR="$WRAPPER_DIR/gradle-wrapper.jar"
-PROPERTIES="$WRAPPER_DIR/gradle-wrapper.properties"
-
-# If gradle is already installed on the system, invoke it directly
-if command -v gradle >/dev/null 2>&1; then
-    exec gradle "$@"
-fi
-
-# Fallback: Download official Gradle wrapper if missing and curl exists
-if [ ! -f "$WRAPPER_JAR" ] && command -v curl >/dev/null 2>&1; then
-    mkdir -p "$WRAPPER_DIR"
-    curl -sSL -o "$WRAPPER_JAR" "https://raw.githubusercontent.com/gradle/gradle/v8.7.0/gradle/wrapper/gradle-wrapper.jar" 2>/dev/null || true
-fi
 
 if [ -f "$WRAPPER_JAR" ] && command -v java >/dev/null 2>&1; then
     exec java -jar "$WRAPPER_JAR" "$@"
 fi
 
-# If neither gradle nor wrapper jar can run in this environment, fail honestly
-echo "ERROR: Neither Gradle nor Java wrapper could execute task '$*'." >&2
-echo "Please install Java 17 and Gradle, or ensure Android SDK is provisioned." >&2
+# Recovery path for a damaged checkout: fetch the matching official wrapper
+# JAR, then still launch through the pinned wrapper properties.
+if [ ! -f "$WRAPPER_JAR" ] && command -v curl >/dev/null 2>&1 && command -v java >/dev/null 2>&1; then
+    mkdir -p "$WRAPPER_DIR"
+    if curl -fsSL -o "$WRAPPER_JAR" \
+        "https://raw.githubusercontent.com/gradle/gradle/v8.7.0/gradle/wrapper/gradle-wrapper.jar"; then
+        exec java -jar "$WRAPPER_JAR" "$@"
+    fi
+fi
+
+if command -v gradle >/dev/null 2>&1; then
+    echo "WARNING: gradle-wrapper.jar is unavailable; falling back to system Gradle." >&2
+    exec gradle "$@"
+fi
+
+echo "ERROR: Java 17 and gradle-wrapper.jar are required to run '$*'." >&2
 exit 1
