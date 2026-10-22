@@ -117,6 +117,14 @@ eq(sorted.map(x => x.id), ['direct:a', 'route:vidstuck', 'route:embedwave'], 've
     [!/id=\\"playerSource\\"(?!Line)/.test(html) && !html.includes('id="detailSource"'), 'all-server player/detail dropdowns removed'],
     [html.includes('function moveTvFocus') && html.includes('handlePlayerKeyboard'), 'TV spatial and player keyboard navigation present'],
     [html.includes('f.setAttribute("tabindex","-1")') && html.includes('frame.setAttribute("tabindex","-1")') && html.includes('full?"btnPlayPause":"btnFocusEmbed"'), 'cross-origin frames stay out of the TV focus order; embed frames focus only on explicit experimental request'],
+    [html.includes('subtitleTracks') && html.includes('subtitleDisplay') && html.includes('SUBTITLE_TRACKS_UPDATED'), 'hls.js subtitle tracks drive the ZeroPlay CC button'],
+    [html.includes('getTracksFor("text")') && html.includes('setTextTrack') && html.includes('TEXT_TRACKS_ADDED'), 'dash.js text tracks drive the ZeroPlay CC button'],
+    [html.includes('focusedSelect.id==="playerQuality"') && html.includes('focusedSelect.dispatchEvent'), 'focused player quality and rate selects consume D-pad left/right to change value'],
+    [html.includes('document.activeElement!==rate'), 'playback UI never overwrites the focused rate select'],
+    [html.includes('fullscreenBtn.style.display=hideFullscreen?"none":"inline-flex"'), 'fullscreen stays out of TV and limited player modes'],
+    [html.includes('cs.display==="none"') && html.includes('cs.visibility==="hidden"'), 'computed-hidden controls cannot receive D-pad focus'],
+    [html.includes('queueSettingsSave(700)'), 'volume persistence is debounced'],
+    [html.includes('tvAuditDefaultsVersion') && html.includes('warmAllSourcesTimer=setTimeout(run,20000)'), 'TV background warming and discovery quiet defaults are deferred'],
   ];
   for (const [cond, label] of statics) ok(cond, label);
   console.log(`\n${n} TV/player checks passed`);

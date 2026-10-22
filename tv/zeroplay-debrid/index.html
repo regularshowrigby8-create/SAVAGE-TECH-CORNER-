@@ -534,7 +534,7 @@ body.android-tv .modal{width:min(980px,94vw);max-height:92vh;overflow-y:auto}
 body.android-tv .settings-hub-grid{grid-template-columns:1fr}
 body.android-tv .panel,body.android-tv .form-group,body.android-tv .setting-switch,body.android-tv .form-row>*{min-width:0}
 body.android-tv .player-bar,body.android-tv .player-controls{padding-left:3vw;padding-right:3vw}
-body.android-tv .player-controls #btnPiP,body.android-tv .player-controls #playerRate,body.android-tv .player-controls .volume-wrap,body.android-tv .player-bar #btnPlayerDownload,body.android-tv .player-bar #btnPlayerDetails,body.android-tv #btnFocusEmbed{display:none}
+body.android-tv .player-controls #btnPiP,body.android-tv .player-controls #playerRate,body.android-tv .player-controls .volume-wrap,body.android-tv .player-bar #btnPlayerDownload,body.android-tv .player-bar #btnPlayerDetails,body.android-tv #btnFocusEmbed,body.android-tv .player-controls #btnFullscreen{display:none}
 body.android-tv .player-action-shelf{bottom:clamp(6.4rem,13vh,10rem);max-width:94vw;padding:.7rem .8rem;border-radius:28px}
 body.android-tv .player-action-shelf .control-btn{min-width:160px;height:56px;font-size:1rem;border-radius:999px}
 body.android-tv .player-action-shelf .action-kicker{font-size:.78rem}
@@ -821,9 +821,9 @@ let settings = Object.assign({
 const LEGACY_SETTING_KEYS=["tmdbKey","rdToken","rdUser","addonBase","debrid","debridManifestUrl","siteCatalogues"];
 const hadLegacySettings=LEGACY_SETTING_KEYS.some(k=>Object.prototype.hasOwnProperty.call(settings,k));
 for(const k of LEGACY_SETTING_KEYS) delete settings[k]; /* no user API keys and no Real-Debrid configuration */
-settings.stream=Object.assign({preload:"smart",player:"auto",raceTimeoutSec:20,stallSwitch:true,stallTimeoutSec:45,quality:"auto",resolutions:["2160p","1080p","720p","480p"],maxFileSizeGb:5,dataSaver:"auto",dnsWarm:true,sortByHealth:true,trailerPreviews:true,volume:.9,muted:false,rate:1,autoFailover:true,embedwaveFailover:false,fastStreamApiProbe:true,nextEpisodeWarm:true,primeThreads:ANDROID_TV_APP?1:2,primeChunkKb:ANDROID_TV_APP?128:256,primeBudgetMb:ANDROID_TV_APP?1:2,bufferTargetSec:ANDROID_TV_APP?12:16},settings.stream||{});
-settings.ui=Object.assign({autoplayNext:true,reduceMotion:ANDROID_TV_APP,compactCards:false,showCategoryStrip:true,tvPerformanceMode:ANDROID_TV_APP,androidTvLaunchFocus:true,tvSpotlightTrailers:true,tvSpotlightMigrated:false},settings.ui||{});
-if(ANDROID_TV_APP&&!settings.ui.tvSpotlightMigrated){ settings.ui.tvSpotlightMigrated=true; settings.ui.tvSpotlightTrailers=true; settings.stream.trailerPreviews=true; }
+settings.stream=Object.assign({preload:"smart",player:"auto",raceTimeoutSec:20,stallSwitch:true,stallTimeoutSec:45,quality:"auto",resolutions:["2160p","1080p","720p","480p"],maxFileSizeGb:5,dataSaver:"auto",dnsWarm:true,sortByHealth:true,trailerPreviews:!ANDROID_TV_APP,subtitleLanguage:"en",volume:.9,muted:false,rate:1,autoFailover:true,embedwaveFailover:false,fastStreamApiProbe:true,nextEpisodeWarm:true,primeThreads:ANDROID_TV_APP?1:2,primeChunkKb:ANDROID_TV_APP?128:256,primeBudgetMb:ANDROID_TV_APP?1:2,bufferTargetSec:ANDROID_TV_APP?12:16},settings.stream||{});
+settings.ui=Object.assign({autoplayNext:true,reduceMotion:ANDROID_TV_APP,compactCards:false,showCategoryStrip:true,tvPerformanceMode:ANDROID_TV_APP,androidTvLaunchFocus:true,tvSpotlightTrailers:!ANDROID_TV_APP,tvSpotlightMigrated:false,tvAuditDefaultsVersion:0},settings.ui||{});
+if(ANDROID_TV_APP&&!settings.ui.tvSpotlightMigrated){ settings.ui.tvSpotlightMigrated=true; settings.ui.tvSpotlightTrailers=false; settings.stream.trailerPreviews=false; }
 settings.downloads=Object.assign({enabled:true,multithreaded:true,threads:ANDROID_TV_APP?2:4,chunkMb:ANDROID_TV_APP?1:2,concurrent:1,m3uExtraction:true,autoSave:true,autoResume:false,refreshExpired:true,keepCompleted:true},settings.downloads||{});
 if(settings.stream.player==="auto"||settings.stream.player==="faststream") settings.stream.player="faststream-only"; /* FastStream is the default for every verified direct stream; native playback remains an explicit fallback. */
 if(!(Number(settings.stream.maxFileSizeGb)>0)||Number(settings.stream.maxFileSizeGb)>5) settings.stream.maxFileSizeGb=5;
@@ -832,7 +832,7 @@ if(!Array.isArray(settings.customSources)) settings.customSources=[];
 if(!Array.isArray(settings.disabledSources)) settings.disabledSources=[];
 settings.feed=Object.assign({url:"",auto:true,intervalMin:15,lastCheck:0,healthAuto:true,addonsAuto:true,lastAddonCheck:0},settings.feed||{});
 settings.discovery=Object.assign({
-  autoStart:true, intervalSec:ANDROID_TV_APP?180:90, githubPausedUntil:0,
+  autoStart:!ANDROID_TV_APP, intervalSec:ANDROID_TV_APP?300:90, githubPausedUntil:0,
   crawlers:{catalogGraph:true,stremioAddons:true,github:true,githubProbe:true,candidateIdentification:true,feeds:true,websites:true,health:true},
   githubQueries:["topic:stremio-addon","topic:stremio-addons","stremio addon in:name,description,readme","topic:stremio","topic:iptv","topic:m3u","topic:streaming-api","topic:anime-api","topic:subtitle-api"],
   cursors:{}, seeds:[], stats:{cycles:0,lastCycleAt:0,lastAdded:0,lastInstalled:0,lastIdentified:0,lastErrors:0,lastSummary:""}
@@ -842,6 +842,7 @@ if(!Array.isArray(settings.discovery.githubQueries)||!settings.discovery.githubQ
 if(!settings.discovery.cursors||typeof settings.discovery.cursors!=="object") settings.discovery.cursors={};
 if(!Array.isArray(settings.discovery.seeds)) settings.discovery.seeds=[];
 settings.discovery.stats=Object.assign({cycles:0,lastCycleAt:0,lastAdded:0,lastInstalled:0,lastIdentified:0,lastErrors:0,lastSummary:""},settings.discovery.stats||{});
+if(ANDROID_TV_APP&&settings.ui.tvAuditDefaultsVersion!==1){ settings.ui.tvAuditDefaultsVersion=1; settings.ui.tvSpotlightTrailers=false; settings.stream.trailerPreviews=false; settings.discovery.autoStart=false; }
 if(!Array.isArray(settings.providers)) settings.providers=[];
 if(!settings.providerTombstones||typeof settings.providerTombstones!=="object") settings.providerTombstones={};
 if(!settings.health||typeof settings.health!=="object") settings.health={};
@@ -1309,7 +1310,10 @@ const CM_TMDB_GENRES={
 function cmGenreName(type,id){ return (CM_TMDB_GENRES[type]||{})[id] || ""; }
 const CM_GENRE_ALIAS = {"Science Fiction":"Sci-Fi","Action & Adventure":"Action","Sci-Fi & Fantasy":"Sci-Fi","War & Politics":"War","Reality":"Reality-TV","Talk":"Talk-Show","News":null,"TV Movie":null,"Kids":"Family","Soap":null};
 
-async function cinemetaFetch(url){
+async function cinemetaFetch(url,opts){
+  opts = opts || {};
+  const directTimeout = Number(opts.timeoutMs) || 9000;
+  const relayTimeout = Number(opts.relayTimeoutMs) || 12000;
   const hit = cinemetaCache.get(url);
   if(hit && Date.now()-hit.t < 300000) return hit.data;
   const fetchJson = async(target, timeoutMs)=>{
@@ -1321,12 +1325,13 @@ async function cinemetaFetch(url){
     } finally { clearTimeout(to); }
   };
   let data;
-  try{ data = await fetchJson(url, 9000); }
+  try{ data = await fetchJson(url, directTimeout); }
   catch(directErr){
+    if(opts.directOnly) throw directErr;
     // Online launches without a bundled TMDB env key can still reach the
     // keyless catalogue through this deployment's own JSON relay if the
     // browser/network cannot reach Cinemeta directly.
-    data = await fetchJson("/api/extract?mode=json&url=" + encodeURIComponent(url), 12000);
+    data = await fetchJson("/api/extract?mode=json&url=" + encodeURIComponent(url), relayTimeout);
   }
   cinemetaCache.set(url, {t: Date.now(), data});
   return data;
@@ -1364,8 +1369,11 @@ async function cmCatalog(type, catalogId, extra){
    full meta endpoint (same pattern Stremio addons use), keep Cinemeta
    relevance order, and only then map. */
 async function cmSearchCatalog(type, q){
-  const data = await cinemetaFetch(CINEMETA + "/catalog/" + cmType(type) + "/top/search=" + encodeURIComponent(q) + ".json");
-  const previews = (data && data.metas || []).slice(0, 24);
+  const tv = typeof ANDROID_TV_APP !== "undefined" && ANDROID_TV_APP;
+  const limit = tv ? 16 : 24;
+  const workers = tv ? 4 : 6;
+  const data = await cinemetaFetch(CINEMETA + "/catalog/" + cmType(type) + "/top/search=" + encodeURIComponent(q) + ".json", {timeoutMs: tv ? 6000 : 9000, relayTimeoutMs: tv ? 7000 : 12000});
+  const previews = (data && data.metas || []).slice(0, limit);
   const out = new Array(previews.length).fill(null);
   let next = 0;
   const worker = async()=>{
@@ -1373,14 +1381,14 @@ async function cmSearchCatalog(type, q){
       const i = next++; const m = previews[i]; let full = m;
       if(!m.moviedb_id && (m.imdb_id || m.id)){
         try{
-          const d = await cinemetaFetch(CINEMETA + "/meta/" + cmType(type) + "/" + encodeURIComponent(m.imdb_id || m.id) + ".json");
+          const d = await cinemetaFetch(CINEMETA + "/meta/" + cmType(type) + "/" + encodeURIComponent(m.imdb_id || m.id) + ".json", {timeoutMs: 4500, directOnly: true});
           if(d && d.meta) full = d.meta;
         }catch{}
       }
       out[i] = cmMapMeta(full);
     }
   };
-  await Promise.all(Array.from({length: Math.min(6, previews.length || 1)}, worker));
+  await Promise.all(Array.from({length: Math.min(workers, previews.length || 1)}, worker));
   return out.filter(Boolean);
 }
 function cmWrap(results, page){
@@ -1456,7 +1464,12 @@ async function cinemetaResponse(path, params){
       cmSearchCatalog("movie",q).catch(()=>[]),
       cmSearchCatalog("tv",q).catch(()=>[])
     ]);
-    return cmWrap([...mv.map(i=>({...i,media_type:"movie"})), ...tv.map(i=>({...i,media_type:"tv"}))], page);
+    const mixed=[];
+    for(let idx=0; idx<Math.max(mv.length,tv.length); idx++){
+      if(mv[idx]) mixed.push({...mv[idx],media_type:"movie"});
+      if(tv[idx]) mixed.push({...tv[idx],media_type:"tv"});
+    }
+    return cmWrap(mixed, page);
   }
   if(path==="/discover/movie"||path==="/discover/tv"){
     const type = path.endsWith("movie") ? "movie" : "tv";
@@ -1650,11 +1663,23 @@ function parsePastedLink(raw){
 function validateTemplate(t){ if(!t) return true; try{ const u=new URL(t.replace(/\{[^}]+\}/g,"1")); return u.protocol==="https:"||u.protocol==="http:"; }catch{ return false; } }
 
 /* ---- health scoring + reachability ---- */
+let settingsSaveTimer=0;
+function queueSettingsSave(delay){
+  if(settingsSaveTimer) return;
+  settingsSaveTimer=setTimeout(()=>{ settingsSaveTimer=0; saveSettings(); },Math.max(50,Number(delay)||600));
+}
+let healthSaveTimer=0,lastHealthSaveAt=0;
+function queueHealthSave(){
+  const now=Date.now(), minGap=ANDROID_TV_APP?4000:1000;
+  if(now-lastHealthSaveAt>=minGap){ lastHealthSaveAt=now; saveSettings(); return; }
+  if(healthSaveTimer) return;
+  healthSaveTimer=setTimeout(()=>{ healthSaveTimer=0; lastHealthSaveAt=Date.now(); saveSettings(); },minGap-(now-lastHealthSaveAt));
+}
 function recordHealth(id, ok, ms){
   const h=settings.health[id]||(settings.health[id]={ok:0,fail:0,avgMs:0,last:0,lastOk:0});
   h.last=Date.now();
   if(ok){ h.ok++; h.lastOk=h.last; if(ms>0) h.avgMs=h.avgMs?Math.round(h.avgMs*0.6+ms*0.4):Math.round(ms); } else h.fail++;
-  saveSettings();
+  queueHealthSave();
 }
 function healthScore(id){ const h=settings.health[id]; if(!h||(!h.ok&&!h.fail)) return 50; const ratio=h.ok/Math.max(1,h.ok+h.fail); let s=ratio*80; if(h.avgMs) s+=Math.max(0,20-Math.min(20,h.avgMs/100)); return Math.round(Math.max(0,Math.min(100,s))); }
 function healthBadge(id){ const h=settings.health[id]; const sc=healthScore(id); const untouched=!h||(!h.ok&&!h.fail); const cls=untouched?"unk":sc>=70?"ok":sc>=40?"slow":"bad"; const label=untouched?"not checked":sc+" · "+(h.avgMs?h.avgMs+" ms":"—"); return '<span class="health"><span class="health-dot '+cls+'"></span>'+esc(label)+"</span>"; }
@@ -1681,7 +1706,24 @@ function warmHost(origin){
   try{ const l=document.createElement("link"); l.rel="preconnect"; l.href=origin; l.crossOrigin="anonymous"; document.head.appendChild(l); const d=document.createElement("link"); d.rel="dns-prefetch"; d.href=origin; document.head.appendChild(d); }catch{}
   return pingHost(origin);
 }
-function warmAllSources(){ if(!settings.stream.dnsWarm) return; const all=allSources(); const batch=all.filter(s=>s.kind!=="addon").concat(all.filter(s=>s.kind==="addon").slice(0,24)); batch.forEach(s=>{ const o=sourceOrigin(s); if(o) warmHost(o).then(r=>{ if(r) recordHealth(s.id,r.ok,r.ms); }); }); }
+let warmAllSourcesTimer=0;
+function warmAllSources(){
+  if(!settings.stream.dnsWarm) return;
+  const run=()=>{
+    warmAllSourcesTimer=0;
+    if(document.hidden||playerState) return;
+    const all=allSources();
+    const batch=ANDROID_TV_APP
+      ? all.filter(s=>s.kind!=="addon").slice(0,6).concat(all.filter(s=>s.kind==="addon").slice(0,4))
+      : all.filter(s=>s.kind!=="addon").concat(all.filter(s=>s.kind==="addon").slice(0,24));
+    batch.forEach((s,i)=>{
+      const warm=()=>{ if(document.hidden||playerState) return; const o=sourceOrigin(s); if(o) warmHost(o).then(r=>{ if(r) recordHealth(s.id,r.ok,r.ms); }); };
+      if(ANDROID_TV_APP) setTimeout(warm,i*1500); else warm();
+    });
+  };
+  if(ANDROID_TV_APP){ if(warmAllSourcesTimer) return; warmAllSourcesTimer=setTimeout(run,20000); return; }
+  run();
+}
 async function warmDirectMedia(url){
   const q=settings.stream.quality; const bytes=(q==="480p"||effectiveSaver())?256*1024:q==="2160p"?2*1024*1024:1024*1024;
   const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(),10000); const t0=performance.now();
@@ -1747,8 +1789,24 @@ async function checkFeed(manual){
 function dlog(msg){ if(!Array.isArray(settings.dlog)) settings.dlog=[]; settings.dlog.unshift({t:Date.now(),msg:String(msg)}); settings.dlog=settings.dlog.slice(0,100); saveSettings(); }
 let discoveryTimer=null;
 function scheduleDiscovery(){
-  ensureProviderRegistry();
   const cfg=discoveryCfg();
+  if(ANDROID_TV_APP){
+    if(!cfg.autoStart){
+      if(discoveryTimer){ clearTimeout(discoveryTimer); discoveryTimer=null; }
+      if(discoveryRuntime.running||discoveryRuntime.timer) stopDiscoveryEngine(false);
+      else refreshDiscoveryUi();
+      return;
+    }
+    if(discoveryTimer||discoveryRuntime.running) return;
+    discoveryTimer=setTimeout(()=>{
+      discoveryTimer=null;
+      if(document.hidden||playerState||discoveryRuntime.running||!discoveryCfg().autoStart) return;
+      ensureProviderRegistry();
+      startDiscoveryEngine(false,true);
+    },45000);
+    return;
+  }
+  ensureProviderRegistry();
   if(cfg.autoStart) startDiscoveryEngine(false,!discoveryRuntime.startedOnce);
   else stopDiscoveryEngine(false);
 }
@@ -2293,6 +2351,7 @@ function bindArtworkFallbacks(root){
 
 function trailersAllowed(){
   if(!settings.stream||settings.stream.trailerPreviews===false) return false;
+  if(ANDROID_TV_APP&&(!settings.ui||settings.ui.tvSpotlightTrailers===false)) return false;
   if(playerState||document.hidden||effectiveSaver()) return false;
   try{ if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false; }catch{}
   const conn=navigator.connection||{};
@@ -2920,8 +2979,11 @@ function setPlayerControlMode(mode){
   const controls=document.getElementById("playerControls"); if(controls) controls.dataset.mode=mode||"";
   const full=mode==="native"||mode==="faststream-api";
   const limited=mode==="embed"||mode==="faststream-legacy";
-  ["btnPlayPause","btnBack10","btnForward10","btnMute","btnPiP"].forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=!full; });
-  ["seekRange","volumeRange","playerRate"].forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=!full; });
+  ["btnPlayPause","btnBack10","btnForward10","btnMute"].forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=!full; });
+  const pipBtn=document.getElementById("btnPiP"); if(pipBtn) pipBtn.disabled=!full||ANDROID_TV_APP;
+  const fullscreenBtn=document.getElementById("btnFullscreen"); if(fullscreenBtn){ const hideFullscreen=ANDROID_TV_APP||limited||!full; fullscreenBtn.disabled=hideFullscreen; fullscreenBtn.style.display=hideFullscreen?"none":"inline-flex"; }
+  const seekRange=document.getElementById("seekRange"); if(seekRange) seekRange.disabled=!full;
+  ["volumeRange","playerRate"].forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=!full||ANDROID_TV_APP; });
   const seek=document.querySelector(".seek-row"); if(seek) seek.style.display=limited?"none":"flex";
   const subBtn=document.getElementById("btnSubtitles"); if(subBtn){ const subCapable=mode==="native"||mode==="faststream-api"; subBtn.style.display=subCapable?"inline-flex":"none"; subBtn.disabled=!subCapable; }
   if(mode==="native") refreshSubtitleButton();
@@ -2969,7 +3031,7 @@ function updatePlaybackUI(state,eventName){
   const dur=document.getElementById("durationTime"); if(dur) dur.textContent=formatTime(st.playback.duration);
   const vol=document.getElementById("volumeRange"); if(vol&&document.activeElement!==vol) vol.value=String(Math.round((st.playback.volume==null?1:st.playback.volume)*100));
   const mute=document.getElementById("btnMute"); if(mute) mute.textContent=st.playback.muted||st.playback.volume===0?"🔇":"🔊";
-  const rate=document.getElementById("playerRate"); if(rate&&st.playback.rate) rate.value=String(st.playback.rate);
+  const rate=document.getElementById("playerRate"); if(rate&&document.activeElement!==rate&&st.playback.rate) rate.value=String(st.playback.rate);
   if(st.playback.buffering) playerLoading(true,"Buffering…");
   else if(eventName==="playing"||eventName==="canplay"||!st.playback.paused) playerLoading(false);
   savePlaybackProgress(false);
@@ -2983,36 +3045,117 @@ function nativeSubtitleTracks(){
   if(!v||!v.textTracks) return [];
   try{ return Array.from(v.textTracks).filter(t=>/subtitle|caption/i.test(String(t.kind||""))); }catch{ return []; }
 }
+function subtitleLangKey(value){
+  const raw=String(value||"").trim().toLowerCase().replace(/_/g,"-");
+  if(!raw) return "";
+  const base=raw.split("-")[0].split(" ")[0].replace(/[^a-z]/g,"");
+  const aliases={eng:"en",english:"en",spa:"es",spanish:"es",esp:"es",fre:"fr",fra:"fr",french:"fr",ger:"de",deu:"de",german:"de",ita:"it",italian:"it",por:"pt",portuguese:"pt",dut:"nl",nld:"nl",dutch:"nl",ara:"ar",arabic:"ar",hin:"hi",hindi:"hi",jpn:"ja",japanese:"ja",kor:"ko",korean:"ko",chi:"zh",zho:"zh",chinese:"zh",rus:"ru",russian:"ru",tur:"tr",turkish:"tr",pol:"pl",polish:"pl",ukr:"uk",ukrainian:"uk",swe:"sv",swedish:"sv",nor:"no",norwegian:"no",nob:"no",nno:"no",dan:"da",danish:"da",fin:"fi",finnish:"fi",ces:"cs",cze:"cs",czech:"cs",hun:"hu",hungarian:"hu",ron:"ro",rum:"ro",romanian:"ro",ell:"el",gre:"el",greek:"el",heb:"he",hebrew:"he",ind:"id",indonesian:"id",tha:"th",thai:"th",vie:"vi",vietnamese:"vi",afr:"af",afrikaans:"af"};
+  return aliases[raw]||aliases[base]||base;
+}
+function subtitleTrackRawLang(track){ return String((track&&(track.language||track.lang||track.srclang))||""); }
+function subtitleTrackLabel(track){
+  if(!track) return "On";
+  const labels=track.labels||track.labelList;
+  if(Array.isArray(labels)&&labels.length){ const first=labels[0]; return String((first&&(first.text||first.value))||first||track.lang||track.language||"On"); }
+  const label=track.label||track.name||track.language||track.lang||"";
+  if(Array.isArray(label)&&label.length){ const first=label[0]; return String((first&&(first.text||first.value))||first||"On"); }
+  return String(label||"On");
+}
+function nativeEngineSubtitleState(){
+  const st=playerState;
+  const native=nativeSubtitleTracks();
+  const nativeActive=native.findIndex(t=>t.mode==="showing");
+  if(!st) return {kind:"native",tracks:native,active:nativeActive};
+  if(st.hlsPlayer){
+    const tracks=Array.isArray(st.hlsPlayer.subtitleTracks)?st.hlsPlayer.subtitleTracks:[];
+    if(!tracks.length) return {kind:"hls",tracks:native,active:nativeActive};
+    let active=Number(st.hlsPlayer.subtitleTrack);
+    if(st.hlsPlayer.subtitleDisplay===false) active=-1;
+    return {kind:"hls",tracks,active:Number.isInteger(active)?active:-1};
+  }
+  if(st.dashPlayer){
+    let tracks=[];
+    try{ tracks=typeof st.dashPlayer.getTracksFor==="function"?(st.dashPlayer.getTracksFor("text")||[]):[]; }catch{ tracks=[]; }
+    if(!tracks.length) return {kind:"dash",tracks:native,active:nativeActive};
+    let current=null;
+    try{ current=typeof st.dashPlayer.getCurrentTrackFor==="function"?st.dashPlayer.getCurrentTrackFor("text"):null; }catch{}
+    if(current==null){ try{ current=typeof st.dashPlayer.getCurrentTextTrack==="function"?st.dashPlayer.getCurrentTextTrack():null; }catch{} }
+    if(typeof current==="number") return {kind:"dash",tracks,active:current};
+    let active=current?tracks.indexOf(current):-1;
+    if(active<0&&current){
+      const lang=subtitleLangKey(subtitleTrackRawLang(current)||subtitleTrackLabel(current));
+      active=tracks.findIndex(t=>subtitleLangKey(subtitleTrackRawLang(t)||subtitleTrackLabel(t))===lang);
+    }
+    if(active<0&&nativeActive>=0&&nativeActive<tracks.length) active=nativeActive;
+    return {kind:"dash",tracks,active};
+  }
+  return {kind:"native",tracks:native,active:nativeActive};
+}
+function setNativeEngineSubtitle(index,state){
+  const st=playerState; if(!st) return false;
+  const info=state||nativeEngineSubtitleState();
+  const tracks=info.tracks||[];
+  const target=index>=0&&index<tracks.length?tracks[index]:null;
+  let applied=info.kind==="native";
+  try{
+    if(info.kind==="hls"&&st.hlsPlayer){
+      if(target){ if("subtitleDisplay" in st.hlsPlayer) st.hlsPlayer.subtitleDisplay=true; st.hlsPlayer.subtitleTrack=index; }
+      else { if("subtitleDisplay" in st.hlsPlayer) st.hlsPlayer.subtitleDisplay=false; st.hlsPlayer.subtitleTrack=-1; }
+      applied=true;
+    }else if(info.kind==="dash"&&st.dashPlayer){
+      const isNativeTrack=!!(target&&typeof target.mode==="string"&&"kind" in target);
+      if(target){
+        if(typeof st.dashPlayer.enableText==="function") st.dashPlayer.enableText(true);
+        if(!isNativeTrack&&typeof st.dashPlayer.setCurrentTrack==="function") st.dashPlayer.setCurrentTrack(target);
+        else if(typeof st.dashPlayer.setTextTrack==="function") st.dashPlayer.setTextTrack(Number.isInteger(target.index)?target.index:index);
+      }else{
+        if(typeof st.dashPlayer.enableText==="function") st.dashPlayer.enableText(false);
+        else if(typeof st.dashPlayer.setTextTrack==="function") st.dashPlayer.setTextTrack(-1);
+      }
+      applied=true;
+    }
+  }catch{}
+  const native=nativeSubtitleTracks();
+  native.forEach((t,i)=>{ try{ t.mode=i===index?"showing":"hidden"; }catch{} });
+  if(native.length) applied=true;
+  if(!applied){ refreshSubtitleButton(); return false; }
+  settings.stream.subtitleLanguage=target?String(subtitleTrackRawLang(target)||subtitleTrackLabel(target)||""):"";
+  saveSettings();
+  refreshSubtitleButton();
+  return true;
+}
 function refreshSubtitleButton(){
   const btn=document.getElementById("btnSubtitles");
   if(!btn||!playerState) return;
-  const tracks=playerState.engine==="native"?nativeSubtitleTracks():[];
-  const active=tracks.find(t=>t.mode==="showing");
-  btn.style.display=playerState.engine==="native"?"inline-flex":"none";
-  btn.disabled=!tracks.length;
+  const isNative=playerState.engine==="native";
+  btn.style.display=isNative?"inline-flex":"none";
+  if(!isNative){ btn.disabled=true; btn.setAttribute("aria-pressed","false"); return; }
+  const info=nativeEngineSubtitleState();
+  const active=info.active>=0?info.tracks[info.active]:null;
+  btn.disabled=!info.tracks.length;
   btn.textContent=active?"CC On":"CC";
   btn.setAttribute("aria-pressed",active?"true":"false");
-  btn.title=tracks.length?("Subtitles: "+(active?(active.label||active.language||"On"):"Off")):"No subtitle track in this stream";
+  btn.title=info.tracks.length?("Subtitles: "+(active?subtitleTrackLabel(active):"Off")):"No subtitle track in this stream";
 }
 function applyPreferredSubtitles(){
-  const tracks=nativeSubtitleTracks();
-  if(!tracks.length){ refreshSubtitleButton(); return; }
-  const pref=String(settings.stream.subtitleLanguage||"");
-  if(pref){
-    const match=tracks.find(t=>String(t.language||"")===pref||String(t.label||"")===pref);
-    if(match) tracks.forEach(t=>{ try{ t.mode=t===match?"showing":"hidden"; }catch{} });
-  }
-  refreshSubtitleButton();
+  const info=nativeEngineSubtitleState();
+  if(!info.tracks.length){ refreshSubtitleButton(); return; }
+  const prefRaw=String((settings.stream&&settings.stream.subtitleLanguage)||"");
+  if(!prefRaw){ refreshSubtitleButton(); return; }
+  const pref=subtitleLangKey(prefRaw);
+  let idx=info.tracks.findIndex(t=>subtitleLangKey(subtitleTrackRawLang(t))===pref);
+  if(idx<0) idx=info.tracks.findIndex(t=>subtitleLangKey(subtitleTrackLabel(t))===pref);
+  if(idx<0) idx=info.tracks.findIndex(t=>subtitleTrackLabel(t).toLowerCase().includes(prefRaw.toLowerCase()));
+  if(idx>=0&&idx!==info.active) setNativeEngineSubtitle(idx,info);
+  else refreshSubtitleButton();
 }
 function cycleNativeSubtitles(){
-  const tracks=nativeSubtitleTracks();
-  if(!tracks.length){ toast("No subtitle track was provided by this stream","error"); refreshSubtitleButton(); return; }
-  const current=tracks.findIndex(t=>t.mode==="showing");
-  const next=current+1;
-  tracks.forEach((t,i)=>{ try{ t.mode=i===next?"showing":"hidden"; }catch{} });
-  settings.stream.subtitleLanguage=next<tracks.length?String(tracks[next].language||tracks[next].label||""):"";
-  saveSettings(); refreshSubtitleButton();
-  toast(next<tracks.length?("Subtitles: "+(tracks[next].label||tracks[next].language||"On")):"Subtitles off");
+  const info=nativeEngineSubtitleState();
+  if(!info.tracks.length){ toast("No subtitle track was provided by this stream","error"); refreshSubtitleButton(); return; }
+  const next=info.active+1;
+  const index=next<info.tracks.length?next:-1;
+  if(!setNativeEngineSubtitle(index,info)){ toast("Subtitles could not be changed for this stream","error"); refreshSubtitleButton(); return; }
+  toast(index>=0?("Subtitles: "+subtitleTrackLabel(info.tracks[index])):"Subtitles off");
 }
 function currentPlaybackTime(){
   const st=playerState; if(!st) return 0;
@@ -3358,8 +3501,9 @@ function bindPlayerChrome(){
   on("btnSubtitles","click",()=>playerCommand("subtitles"));
   on("seekRange","input",e=>{ const cur=document.getElementById("currentTime"); if(cur) cur.textContent=formatTime(Number(e.target.value)); st.chromeHoldUntil=Date.now()+6000; showPlayerChrome(false); });
   on("seekRange","change",e=>playerCommand("seek",Number(e.target.value)));
-  on("volumeRange","input",e=>{ settings.stream.volume=Number(e.target.value)/100; saveSettings(); playerCommand("volume",settings.stream.volume); });
+  on("volumeRange","input",e=>{ settings.stream.volume=Number(e.target.value)/100; queueSettingsSave(700); playerCommand("volume",settings.stream.volume); });
   on("playerRate","change",e=>{ settings.stream.rate=Number(e.target.value)||1; saveSettings(); playerCommand("rate",settings.stream.rate); });
+  on("playerRate","focus",()=>{ st.chromeHoldUntil=Date.now()+8000; showPlayerChrome(false); });
   on("playerQuality","change",e=>setPlayerQuality(e.target.value));
   on("playerQuality","focus",()=>{ st.chromeHoldUntil=Date.now()+8000; showPlayerChrome(false); });
   const overlay=document.getElementById("playerOverlay");
@@ -3664,6 +3808,13 @@ async function attachNativeSource(v,url,st){
       try{ dashPlayer.updateSettings({streaming:{buffer:{stableBufferTime:ANDROID_TV_APP?14:20,bufferTimeAtTopQuality:30}}}); }catch{}
       st.dashPlayer=dashPlayer; st.vendorEngine="dash.js";
       dlog("Adaptive engine: dash.js (self-hosted)"); markEngine();
+      try{
+        const onDashTracks=()=>{ if(playerState===st) applyPreferredSubtitles(); };
+        const dashEvents=(window.dashjs&&window.dashjs.MediaPlayer&&window.dashjs.MediaPlayer.events)||{};
+        const dashTrackEvents=new Set([dashEvents.TEXT_TRACKS_ADDED,dashEvents.TEXT_TRACK_ADDED,"textTracksAdded","textTrackAdded"].filter(Boolean));
+        dashTrackEvents.forEach(name=>{ try{ dashPlayer.on(name,onDashTracks); }catch{} });
+      }catch{}
+      setTimeout(()=>{ if(playerState===st) applyPreferredSubtitles(); },0);
       return;
     }
     if(window.Hls&&window.Hls.isSupported()){
@@ -3671,6 +3822,12 @@ async function attachNativeSource(v,url,st){
       hls.loadSource(url); hls.attachMedia(v);
       st.hlsPlayer=hls; st.vendorEngine="hls.js";
       dlog("Adaptive engine: hls.js (self-hosted)"); markEngine();
+      try{
+        const onHlsTracks=()=>{ if(playerState===st) applyPreferredSubtitles(); };
+        if(window.Hls.Events.SUBTITLE_TRACKS_UPDATED) hls.on(window.Hls.Events.SUBTITLE_TRACKS_UPDATED,onHlsTracks);
+        if(window.Hls.Events.MANIFEST_PARSED) hls.on(window.Hls.Events.MANIFEST_PARSED,onHlsTracks);
+        if(window.Hls.Events.SUBTITLE_TRACK_SWITCH) hls.on(window.Hls.Events.SUBTITLE_TRACK_SWITCH,()=>{ if(playerState===st) refreshSubtitleButton(); });
+      }catch{}
       hls.on(window.Hls.Events.ERROR,(evt,data)=>{
         if(!data||!data.fatal||playerState!==st) return;
         if(data.type===window.Hls.ErrorTypes.NETWORK_ERROR){ try{hls.startLoad();}catch{} return; }
@@ -3805,13 +3962,13 @@ function mountNativeVideo(stage,url,source,loadT0,resumeAt,opts){
     sync("loadedmetadata",true);
     const p=v.play(); if(p&&p.catch) p.catch(()=>{ playerLoading(false); updatePlaybackUI({paused:true,buffering:false,currentTime:v.currentTime,duration:v.duration||0},"pause"); toast("Press Play to start"); });
   });
-  v.addEventListener("canplay",()=>{ playerLoading(false); refreshSubtitleButton(); sync("canplay",true); primeDirectSafely(url,v,bufferedAhead); });
+  v.addEventListener("canplay",()=>{ playerLoading(false); applyPreferredSubtitles(); sync("canplay",true); primeDirectSafely(url,v,bufferedAhead); });
   v.addEventListener("playing",()=>{ playerLoading(false); if(!st.healthRecorded){ st.healthRecorded=true; recordHealth(source.id,true,performance.now()-loadT0); } sync("playing",true); updatePlayerMeta(source); });
   v.addEventListener("pause",()=>{ sync("pause",true); savePlaybackProgress(true); });
   v.addEventListener("waiting",()=>{ st.stalls++; playerLoading(true,"Buffering…"); sync("waiting",true); });
   v.addEventListener("progress",()=>sync("progress"));
   v.addEventListener("timeupdate",()=>sync("timeupdate"));
-  v.addEventListener("volumechange",()=>{ settings.stream.volume=v.volume; settings.stream.muted=v.muted; saveSettings(); sync("volumechange",true); });
+  v.addEventListener("volumechange",()=>{ settings.stream.volume=v.volume; settings.stream.muted=v.muted; queueSettingsSave(700); sync("volumechange",true); });
   v.addEventListener("ratechange",()=>sync("ratechange",true));
   if(v.textTracks&&v.textTracks.addEventListener){ const onTracks=()=>{ applyPreferredSubtitles(); }; v.textTracks.addEventListener("addtrack",onTracks); v.textTracks.addEventListener("removetrack",onTracks); v.textTracks.addEventListener("change",refreshSubtitleButton); }
   v.addEventListener("ended",()=>{ sync("ended",true); handlePlaybackEnded(); });
@@ -6412,14 +6569,14 @@ async function runDiscoveryCycle(reason){
 }
 function startDiscoveryEngine(manual, immediate){
   const cfg=discoveryCfg();
-  cfg.autoStart=true; discoveryRuntime.running=true;
+  if(manual) cfg.autoStart=true; discoveryRuntime.running=true;
   if(discoveryRuntime.timer) clearInterval(discoveryRuntime.timer);
-  discoveryRuntime.timer=setInterval(()=>{ runDiscoveryCycle("interval"); },Math.max(20,Number(cfg.intervalSec)||90)*1000);
+  discoveryRuntime.timer=setInterval(()=>{ if(ANDROID_TV_APP&&(document.hidden||playerState)) return; runDiscoveryCycle("interval"); },Math.max(20,Number(cfg.intervalSec)||90)*1000);
   saveSettings();
   if(immediate!==false&&!discoveryRuntime.cycleRunning){
     const delay=discoveryRuntime.startedOnce?0:(tvPerformanceEnabled()?8000:1800);
     discoveryRuntime.startedOnce=true;
-    setTimeout(()=>runDiscoveryCycle(manual?"manual start":"start"),delay);
+    setTimeout(()=>{ if(!ANDROID_TV_APP||(!document.hidden&&!playerState)) runDiscoveryCycle(manual?"manual start":"start"); },delay);
   }else discoveryRuntime.startedOnce=true;
   refreshDiscoveryUi();
 }
@@ -7398,6 +7555,12 @@ function tvCandidateRecord(el,index){
     if(el.tagName==="INPUT"&&el.type==="checkbox"&&el.closest&&el.closest("[data-switch-label]")) return null;
   }
   if(el.closest&&el.closest("[hidden],details:not([open]),#menuDrawer:not(.open),[aria-hidden='true']")) return null;
+  try{
+    if(ANDROID_TV_APP&&window.getComputedStyle){
+      const cs=window.getComputedStyle(el);
+      if(!cs||cs.display==="none"||cs.visibility==="hidden"||cs.visibility==="collapse") return null;
+    }
+  }catch{}
   return tvMakeRect(el,index);
 }
 function isTvFocusable(el){ return !!tvCandidateRecord(el,0); }
@@ -7690,6 +7853,19 @@ function moveTvFocusFromKey(direction,event){
 function handlePlayerKeyboard(e){
   const st=playerState; if(!st||st.trailer||streamsCtx||(typeof downloadModalState!=="undefined"&&downloadModalState)) return false;
   const tag=(document.activeElement&&document.activeElement.tagName)||"";
+  const focusedSelect=document.activeElement;
+  if(focusedSelect&&focusedSelect.tagName==="SELECT"&&(focusedSelect.id==="playerQuality"||focusedSelect.id==="playerRate")&&(e.key==="ArrowLeft"||e.key==="ArrowRight")){
+    if(focusedSelect.disabled){ e.preventDefault(); return true; }
+    const opts=Array.from(focusedSelect.options||[]).filter(option=>!option.disabled);
+    if(opts.length>1){
+      const current=Math.max(0,opts.indexOf(focusedSelect.options[focusedSelect.selectedIndex]));
+      const next=opts[(current+(e.key==="ArrowRight"?1:-1)+opts.length)%opts.length];
+      if(next&&next.value!==focusedSelect.value){ focusedSelect.value=next.value; focusedSelect.dispatchEvent(new Event("change",{bubbles:true})); }
+    }
+    showPlayerChrome(false);
+    e.preventDefault();
+    return true;
+  }
   if(/^(INPUT|TEXTAREA|SELECT)$/.test(tag)&&document.activeElement.id!=="seekRange"&&document.activeElement.id!=="volumeRange") return false;
   const full=st.engine==="native"||st.engine==="faststream-api";
   const key=e.key;
@@ -7751,7 +7927,7 @@ function handlePlayerKeyboard(e){
     e.preventDefault(); playerCommand("toggle"); return true;
   }
   if((key==="ArrowUp"||key==="ArrowDown")&&full&&e.shiftKey){
-    e.preventDefault(); const next=Math.max(0,Math.min(1,Number(st.playback.volume||0)+(key==="ArrowUp"?.1:-.1))); settings.stream.volume=next; saveSettings(); playerCommand("volume",next); return true;
+    e.preventDefault(); const next=Math.max(0,Math.min(1,Number(st.playback.volume||0)+(key==="ArrowUp"?.1:-.1))); settings.stream.volume=next; queueSettingsSave(700); playerCommand("volume",next); return true;
   }
   if(key.toLowerCase()==="f"){ e.preventDefault(); playerCommand("fullscreen"); return true; }
   if(key.toLowerCase()==="m"&&full){ e.preventDefault(); playerCommand("mute"); return true; }
@@ -7929,9 +8105,10 @@ document.addEventListener("keydown",e=>{
     const active=document.activeElement;
     if(ANDROID_TV_APP&&/^Arrow/.test(e.key)){
       const tvDir=e.key.replace("Arrow","").toLowerCase();
-      if(activeTag==="SELECT"||e.key==="ArrowUp"||e.key==="ArrowDown"){
+      const playerSelect=active&&(active.id==="playerQuality"||active.id==="playerRate");
+      if((activeTag==="SELECT"&&!playerSelect)||e.key==="ArrowUp"||e.key==="ArrowDown"){
         if(moveTvFocusFromKey(tvDir,e)){ e.preventDefault(); return; }
-        if(activeTag==="SELECT") e.preventDefault();
+        if(activeTag==="SELECT"&&!playerSelect) e.preventDefault();
       }
     }
     return;
@@ -7953,8 +8130,8 @@ window.addEventListener("hashchange",render);
   const m=location.pathname.match(/^\/(movie|tv)\/(\d+)\/?$/);
   streamCfg(); downloadCfg(); saveSettings(); applyInterfaceSettings(); if(ANDROID_TV_APP) document.body.classList.add("tv-mode"); renderMenuQuickSwitches();
   ensureProviderRegistry();
-  warmAllSources();
-  scheduleDiscovery();
+  if(ANDROID_TV_APP) setTimeout(()=>{ warmAllSources(); scheduleDiscovery(); },2500);
+  else { warmAllSources(); scheduleDiscovery(); }
   void loadDownloadJobs();
   if(m&&!location.hash){ history.replaceState(null,"","/"); location.hash="#/title/"+m[1]+"/"+m[2]; }
   const cleanRoutes={movies:"movies",series:"series",library:"library",categories:"categories",discover:"sources",sources:"sources",settings:"settings",downloads:"downloads"};
