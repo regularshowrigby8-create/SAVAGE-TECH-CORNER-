@@ -278,3 +278,38 @@ Device testing showed Search empty and FastStream not engaging. Findings and fix
   `https://zeroplay-rd.vercel.app/tv.apk` permanently redirects to the CI-built
   `zeroplay-tv.apk` release asset (Vercel + Netlify configs). Web changes keep
   auto-loading from Vercel; only native APK changes need one confirmed install.
+
+---
+
+## Update 2026-10-22: full audit after on-device test (APK 1.0.3)
+
+On-device report: playback starts, but controls/seek/subtitles misbehave and the
+app feels heavy/unfinished. Full audit of search, player, focus and background
+work; fixes shipped as commit `0f8ee292c4cd5a6b19cf88b5a423e3b772ba8b36`,
+production deployment `dpl_C8tfto3iaXKHfx26ykvY2ym6ymLG` (READY/PROMOTED):
+
+- **Subtitles (root cause).** The CC button only knew `video.textTracks`, so
+  hls.js/dash.js (MSE) subtitle tracks were invisible. Subtitles are now
+  engine-aware (hls.js `subtitleTracks`, dash.js text tracks, native
+  fallback), match languages loosely (`eng`/`en-US`/"English"), remember the
+  chosen language and explicit Off, and apply when track lists arrive
+  (hls.js track events, dash.js text-track events, native `canplay`).
+- **Controls & focus.** Focused Quality/Rate selects now change value on
+  D-pad Left/Right instead of moving focus; live playback UI no longer
+  overwrites the focused Rate select; PiP/Fullscreen are removed/disabled
+  where they cannot work on TV while Seek stays enabled; CSS-hidden controls
+  can no longer receive D-pad focus.
+- **Background load (2 GB box).** One-time TV migration turns spotlight/card
+  trailer previews and discovery auto-start off (user can re-enable);
+  source warming is deferred, capped and staggered; discovery waits ~45s
+  and skips while hidden or playing; health/volume settings writes are
+  debounced; first render no longer competes with background work.
+- **Search speed.** Meta hydration is direct-to-Cinemeta only (no slow relay
+  per result), TV hydrates fewer previews with fewer workers, and
+  movie/series results are interleaved by relevance instead of movies-first.
+
+Verification: 281/281 automated checks, inline-script syntax check, an
+HLS/DASH/native subtitle state simulation, local static serve check, and the
+live production page + `/vendor/hls.min.js` fetched successfully. Actual
+stream playback still needs confirming on the Xiaomi box itself — it cannot
+be proven headlessly. No APK rebuild: the app loads this web build directly.
