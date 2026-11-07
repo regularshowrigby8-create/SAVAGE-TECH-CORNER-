@@ -92,6 +92,13 @@ The server drawer does not dump the whole registry into the player. Direct
 providers appear only after they return identity-verified streams for the
 selected movie/episode, grouped by server with their actual returned quality
 variants. Added websites appear only after an identity-verified lookup match.
+The drawer also runs ten MIT-licensed GitHub-imported CDrake-SE search
+adapters (AOL, Ask, Bing, Google, Qwant, autocomplete, Wikipedia, Yahoo, Yep,
+and YouTube) plus a niche/alternate-title pass. Those browser workers run in
+parallel with the 100-worker provider scan. Global results are displayed only
+when title identity verifies them and remain web leads—not installed or
+playable servers. The continuously adding provider crawler runs on its own
+timer; title lookup never starts it.
 Built-in/custom embed templates that can address the exact catalogue ID are
 shown in a separate **Exact-ID players** section: a hosting page cannot prove
 a cross-origin player's internal library before that player loads, so ZeroPlay

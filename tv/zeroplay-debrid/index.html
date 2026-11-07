@@ -6511,6 +6511,31 @@ async function runTitleChecks(items,limit,fn){
   await Promise.all(workers);
 }
 const titleServerCache=new Map();
+const GLOBAL_SEARCH_ENGINE_POOL=[
+  {id:"aol",name:"AOL"},{id:"ask",name:"Ask"},{id:"bing",name:"Bing"},{id:"google",name:"Google"},
+  {id:"qwant",name:"Qwant Images"},{id:"suggest",name:"Multi-engine suggestions"},{id:"wikipedia",name:"Wikipedia"},
+  {id:"yahoo",name:"Yahoo"},{id:"yep",name:"Yep"},{id:"youtube",name:"YouTube"},{id:"niche",name:"Niche-title pass"}
+];
+function globalSearchQuery(identity,niche){
+  const quote=value=>'"'+String(value||"").replace(/"/g," ").replace(/\s+/g," ").trim().slice(0,120)+'"';
+  if(niche){
+    const titles=identityUnique(identity.titles||[identity.title]).filter(Boolean).slice(0,3).map(quote);
+    return titles.join(" OR ")+" "+[identity.year,identity.imdbId,identity.tmdbId?("TMDB "+identity.tmdbId):""].filter(Boolean).join(" ");
+  }
+  return quote(identity.title)+" "+[identity.year,identity.type==="tv"?("season "+(identity.season||1)+" episode "+(identity.episode||1)):""].filter(Boolean).join(" ");
+}
+async function requestGlobalSearchEngine(engine,query,language,signal){
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),7200);
+  const abort=()=>controller.abort();
+  if(signal){ if(signal.aborted) abort(); else signal.addEventListener("abort",abort,{once:true}); }
+  try{
+    const params=new URLSearchParams({engine,q:query,lang:language||"en-US"});
+    const response=await fetch("/api/global-search?"+params.toString(),{signal:controller.signal,headers:{Accept:"application/json"},cache:"no-store"});
+    if(!response.ok) throw new Error("search unavailable");
+    const data=await response.json();
+    return data&&data.ok?data:{ok:false,results:[]};
+  }finally{ clearTimeout(timer); if(signal) signal.removeEventListener("abort",abort); }
+}
 async function findTitleServers(ctx,opts){
   opts=opts||{};
   ctx=Object.assign({},ctx||{});
@@ -6523,10 +6548,10 @@ async function findTitleServers(ctx,opts){
     const cached=titleServerCache.get(cacheKey);
     if(cached&&Date.now()-cached.t<180000){ if(opts.onUpdate) opts.onUpdate(Object.assign({},cached.data,{complete:true,cached:true})); return cached.data; }
   }
-  const byId=new Map();
-  const stats={checkedRoutes:0,checkedWebsites:0,matchedWebsites:0,queriedProviders:0,totalProviders:enabledAddons().length,concurrency:Math.max(1,Math.min(100,Math.floor(Number(opts.concurrency)||100)||1,enabledAddons().length||1)),titleCandidatesQueried:0,titleCandidatesTotal:titleSearchCandidates(100).length,titleCandidatesAvailable:titleCandidatePool().length,titleCandidatesMatched:0,titleCandidateConcurrency:0,identityVerified:0,identityRejected:0,torrents:0,oversize:0,external:0,catalogMatches:0,complete:false};
+  const byId=new Map(),globalLeadsByUrl=new Map();
+  const stats={checkedRoutes:0,checkedWebsites:0,matchedWebsites:0,queriedProviders:0,totalProviders:enabledAddons().length,concurrency:Math.max(1,Math.min(100,Math.floor(Number(opts.concurrency)||100)||1,enabledAddons().length||1)),titleCandidatesQueried:0,titleCandidatesTotal:titleSearchCandidates(100).length,titleCandidatesAvailable:titleCandidatePool().length,titleCandidatesMatched:0,titleCandidateConcurrency:0,globalEnginesComplete:0,globalEnginesTotal:GLOBAL_SEARCH_ENGINE_POOL.length,globalSearchLeads:0,globalEnginesFailed:0,identityVerified:0,identityRejected:0,torrents:0,oversize:0,external:0,catalogMatches:0,complete:false};
   let embedwaveOption=null;
-  const snapshot=complete=>({options:sortTitleServerOptions([...byId.values()].concat(complete&&embedwaveOption?[embedwaveOption]:[])),stats:Object.assign({},stats,{complete:!!complete}),identity});
+  const snapshot=complete=>({options:sortTitleServerOptions([...byId.values()].concat(complete&&embedwaveOption?[embedwaveOption]:[])),globalLeads:[...globalLeadsByUrl.values()],stats:Object.assign({},stats,{complete:!!complete}),identity});
   const emit=()=>{ if(opts.onUpdate){ try{ opts.onUpdate(snapshot(false)); }catch{} } };
   const addOption=option=>{ if(!option) return; if(option.sourceId==="embedwave"){ embedwaveOption=option; return; } byId.set(option.id,option); emit(); };
   /* 1) Built-in/custom exact-ID routes. These are not dumped blindly: a
@@ -6578,6 +6603,31 @@ async function findTitleServers(ctx,opts){
     });
     emit();
   })();
+  const runGlobalSearch=(async()=>{
+    const language=String((typeof navigator!=="undefined"&&navigator.language)||"en-US").replace(/^([a-z]{2})-([a-z]{2})$/i,(_,a,b)=>a.toLowerCase()+"-"+b.toUpperCase());
+    const tasks=GLOBAL_SEARCH_ENGINE_POOL.map(async engine=>{
+      if(opts.signal&&opts.signal.aborted) return;
+      const query=globalSearchQuery(identity,engine.id==="niche");
+      try{
+        const data=await requestGlobalSearchEngine(engine.id,query,language,opts.signal);
+        if(!data||!data.ok) stats.globalEnginesFailed++;
+        for(const row of data&&data.results||[]){
+          const href=cleanHttpUrl(row.href||"");
+          if(!href||!isPublicHttpsProviderBase(href)) continue;
+          const verdict=identifyTitleCandidate({title:row.title||"",description:row.body||"",url:href,year:identity.year},identity,{threshold:85});
+          if(!verdict.accepted) continue;
+          const key=href.toLowerCase();
+          const lead={href,title:String(row.title||identity.title).slice(0,220),body:String(row.body||"").slice(0,420),engine:row.engine||engine.id,engineName:(GLOBAL_SEARCH_ENGINE_POOL.find(item=>item.id===(row.engine||engine.id))||engine).name,identity:verdict};
+          const existing=globalLeadsByUrl.get(key);
+          if(!existing||lead.identity.score>existing.identity.score) globalLeadsByUrl.set(key,lead);
+        }
+      }catch{ stats.globalEnginesFailed++; }
+      stats.globalEnginesComplete++; stats.globalSearchLeads=globalLeadsByUrl.size;
+      emit();
+    });
+    await Promise.allSettled(tasks);
+    return [...globalLeadsByUrl.values()];
+  })();
   /* 3) Identified addon/direct servers: only servers returning verified
         streams for this exact movie/episode become options, grouped by
         server with their real quality variants. */
@@ -6608,15 +6658,18 @@ async function findTitleServers(ctx,opts){
     for(const stream of candidateAgg.direct||[]) if(stream&&stream.url&&!providerAgg.direct.some(existing=>existing.url===stream.url)) providerAgg.direct.push(stream);
     return providerAgg;
   });
+  const runAllSearches=Promise.all([runTitleCandidates,runGlobalSearch]).then(([providerAgg])=>providerAgg);
   let agg=null;
   if(opts.quick){
+    /* Quick playback failover races only the direct-provider scan; slower web
+       engines continue alongside it and update the open modal independently. */
     agg=await Promise.race([runTitleCandidates,new Promise(resolve=>setTimeout(()=>resolve(null),Math.max(5000,Number(opts.quickTimeoutMs)||10000)))]);
-    if(!agg){
-      /* A quick caller may consume the partial list, but the provider scan is
-         never cancelled at the deadline. Keep filling its live results until
-         every enabled provider settles (or the caller explicitly cancels). */
+    if(!agg||stats.globalEnginesComplete<stats.globalEnginesTotal){
+      /* A quick caller can consume playable results without waiting on web
+         engines. Provider/global workers keep running and emit live results;
+         only the caller's explicit abort stops the foreground web requests. */
       quickSearchDetached=true;
-      runTitleCandidates.then(async fullAgg=>{
+      runAllSearches.then(async fullAgg=>{
         addonSearchActive=false;
         await Promise.allSettled([routeTask,websiteTask]);
         stats.queriedProviders=fullAgg.queried; stats.totalProviders=fullAgg.totalAddons; stats.concurrency=fullAgg.concurrency;
@@ -6630,7 +6683,7 @@ async function findTitleServers(ctx,opts){
       const partial=snapshot(false); partial.agg=null;
       return partial;
     }
-  }else agg=await runTitleCandidates;
+  }else agg=await runAllSearches;
   addonSearchActive=false;
   await Promise.allSettled([routeTask,websiteTask]);
   if(agg){
@@ -6802,6 +6855,7 @@ async function addWebsiteSourceFlow(){
 /* ---- Title-specific servers modal: only matched servers/routes are listed ---- */
 let streamsCtx=null;
 function closeStreams(){
+  if(streamsCtx&&streamsCtx._searchAbort) streamsCtx._searchAbort.abort();
   $("#streamsRoot").innerHTML=""; streamsCtx=null;
   if(!playerState&&!detailState) document.body.classList.remove("locked");
   if(document.body.classList.contains("tv-mode")) setTimeout(()=>{ const target=document.getElementById("btnPlayerServers")||document.getElementById("btnStreams"); if(target) target.focus({preventScroll:true}); },30);
@@ -6819,6 +6873,11 @@ function serverOptionHTML(option){
     +(option.evidence&&best?'<div class="help-text">'+esc(option.evidence)+'</div>':"")
     +'</div><div class="src-actions">'+qualitySelect+'<button class="btn btn-primary btn-xs" data-server-option="'+esc(option.id)+'">▶ Play</button>'+(downloadsEnabled()&&option.kind==="direct"&&variants.some(v=>directMediaKind(v.url)!=="dash")?'<button class="btn btn-secondary btn-xs" type="button" data-server-download="'+esc(option.id)+'">⬇ Download</button>':"")+'</div></div>';
 }
+function globalSearchLeadHTML(lead){
+  const href=cleanHttpUrl(lead&&lead.href||"");
+  if(!href||!isPublicHttpsProviderBase(href)) return "";
+  return '<div class="src-row server-option"><div class="grow"><span class="nm">'+esc(lead.title||"Title-matched page")+'</span> <span class="chip">'+esc(lead.engineName||"Global search")+'</span><code>'+esc(lead.identity&&lead.identity.verdict||"title matched")+' · '+(Number(lead.identity&&lead.identity.score)||0)+'% identity</code>'+(lead.body?'<div class="help-text">'+esc(lead.body)+'</div>':"")+'</div><div class="src-actions"><a class="btn btn-secondary btn-xs" href="'+esc(href)+'" target="_blank" rel="noopener noreferrer nofollow">Open page</a></div></div>';
+}
 function renderTitleServerOptions(){
   const c=streamsCtx; if(!c) return;
   const options=sortTitleServerOptions(c._options||[]);
@@ -6834,6 +6893,12 @@ function renderTitleServerOptions(){
   if(directBox) directBox.innerHTML=direct.length?direct.map(serverOptionHTML).join(""):empty("No direct file yet","ZeroPlay is still looking for this exact title.");
   const siteBox=document.getElementById("serverWebsites");
   if(siteBox) siteBox.innerHTML=sites.length?sites.map(serverOptionHTML).join(""):enabledSiteCount?empty("No website match yet","None of your enabled website lookups returned an identity-verified match for this title. Direct provider and exact-ID server searches run separately."):empty(configuredSites.length?"Website lookup is disabled":"No website lookup sources added",configuredSites.length?"Enable a website lookup source in More to check it. Direct provider and exact-ID server searches are separate.":"This optional section checks websites you add. Direct provider and exact-ID server searches are separate and continue independently.");
+  const globalBox=document.getElementById("serverGlobal");
+  const globalLeads=Array.isArray(c._globalLeads)?c._globalLeads:[];
+  if(globalBox){
+    const globalRows=globalLeads.map(globalSearchLeadHTML).filter(Boolean).join("");
+    globalBox.innerHTML=globalRows?globalRows:searching?'<div class="server-skeleton"><span class="spinner"></span> Global search '+((c._stats&&c._stats.globalEnginesComplete)||0)+'/'+((c._stats&&c._stats.globalEnginesTotal)||11)+' engines, including the niche-title pass…</div>':'<div class="empty"><h3>No title-matched web leads</h3><p>The global engines returned no pages that identity-verify this title. Web leads are not playable servers and are never auto-installed.</p></div>';
+  }
   const routeBox=document.getElementById("serverRoutes");
   if(routeBox) routeBox.innerHTML=routes.length?routes.map(serverOptionHTML).join(""):empty("No exact-ID player route","No enabled player template can address this title ID.");
   const race=document.getElementById("btnRace"); if(race) race.disabled=!direct.length;
@@ -6841,13 +6906,13 @@ function renderTitleServerOptions(){
   if(status){
     const stats=c._stats||{};
     status.innerHTML=searching
-      ? '<span class="spinner"></span> Searching only for <strong>'+esc(c.title||"this title")+'</strong>'+(stats.queriedProviders?(' · checked '+stats.queriedProviders+'/'+(stats.totalProviders|| enabledAddons().length)+' direct providers'):"")+(stats.concurrency?' · '+stats.concurrency+' active workers, scanning every enabled provider (100-worker max)':' · scanning every enabled provider (100-worker max)')+(stats.titleCandidatesTotal?' · checking up to '+stats.titleCandidatesTotal+' of '+stats.titleCandidatesAvailable+' title-scoped candidates; only exact-title stream matches are saved':"")+' · matches appear as they arrive'
-      : '<strong>'+(direct.length+sites.length)+'</strong> verified server option'+((direct.length+sites.length)===1?"":"s")+' · <strong>'+routes.length+'</strong> exact-ID player route'+(routes.length===1?"":"s")+' · scanned all '+(stats.queriedProviders||stats.totalProviders||0)+' enabled direct providers'+(stats.titleCandidatesQueried?' · checked '+stats.titleCandidatesQueried+' title candidates and saved '+stats.titleCandidatesMatched+' title-matched provider'+(stats.titleCandidatesMatched===1?"":"s"):"")+' · unrelated servers hidden';
+      ? '<span class="spinner"></span> Searching only for <strong>'+esc(c.title||"this title")+'</strong>'+(stats.queriedProviders?(' · checked '+stats.queriedProviders+'/'+(stats.totalProviders|| enabledAddons().length)+' direct providers'):"")+(stats.concurrency?' · '+stats.concurrency+' active workers, scanning every enabled provider (100-worker max)':' · scanning every enabled provider (100-worker max)')+(stats.titleCandidatesTotal?' · checking up to '+stats.titleCandidatesTotal+' of '+stats.titleCandidatesAvailable+' title-scoped candidates; only exact-title stream matches are saved':"")+(stats.globalEnginesTotal?' · global web engines '+stats.globalEnginesComplete+'/'+stats.globalEnginesTotal:'')+' · matches appear as they arrive'
+      : '<strong>'+(direct.length+sites.length)+'</strong> verified server option'+((direct.length+sites.length)===1?"":"s")+' · <strong>'+routes.length+'</strong> exact-ID player route'+(routes.length===1?"":"s")+' · scanned all '+(stats.queriedProviders||stats.totalProviders||0)+' enabled direct providers'+(stats.titleCandidatesQueried?' · checked '+stats.titleCandidatesQueried+' title candidates and saved '+stats.titleCandidatesMatched+' title-matched provider'+(stats.titleCandidatesMatched===1?"":"s"):"")+' · '+(stats.globalSearchLeads||0)+' title-matched global web lead'+((stats.globalSearchLeads||0)===1?"":"s")+' · unrelated servers hidden';
   }
   const cnt=document.getElementById("streamCounts");
   if(cnt&&c._stats){
     const s=c._stats;
-    cnt.textContent="Checked "+s.checkedRoutes+" exact-ID routes · "+s.checkedWebsites+" website lookup servers ("+s.matchedWebsites+" matched) · "+(s.queriedProviders||0)+"/"+(s.totalProviders||0)+" enabled direct providers · "+(s.titleCandidatesQueried||0)+" checked this pass from "+(s.titleCandidatesAvailable||0)+" title candidates ("+(s.titleCandidatesMatched||0)+" matched and saved) · "+(s.identityVerified||0)+" verified streams · "+(s.identityRejected||0)+" rejected as wrong title/episode · "+(s.torrents||0)+" torrents hidden · "+(s.oversize||0)+" over the "+capGb()+" GB cap hidden.";
+    cnt.textContent="Checked "+s.checkedRoutes+" exact-ID routes · "+s.checkedWebsites+" website lookup servers ("+s.matchedWebsites+" matched) · "+(s.queriedProviders||0)+"/"+(s.totalProviders||0)+" enabled direct providers · "+(s.titleCandidatesQueried||0)+" checked this pass from "+(s.titleCandidatesAvailable||0)+" title candidates ("+(s.titleCandidatesMatched||0)+" matched and saved) · "+(s.globalEnginesComplete||0)+"/"+(s.globalEnginesTotal||11)+" global search engines · "+(s.globalSearchLeads||0)+" title-matched web leads (not playable/installed) · "+(s.identityVerified||0)+" verified streams · "+(s.identityRejected||0)+" rejected as wrong title/episode · "+(s.torrents||0)+" torrents hidden · "+(s.oversize||0)+" over the "+capGb()+" GB cap hidden.";
   }
   if(playerState&&c.fromPlayer){ playerState.availableServers=options; playerState.availabilityChecked=!!c._searchDone; updatePlayerMeta(); }
 }
@@ -6863,17 +6928,18 @@ async function showStreamsModal(ctx){
   ctx.imdb=ctx.identity.imdbId||ctx.imdb||"";
   if(!ctx.item) ctx.item=snap(catalogItemFor(ctx.type||ctx.identity.type,ctx.id||ctx.identity.tmdbId),ctx.identity.type);
   const token=Date.now().toString(36)+Math.random().toString(36).slice(2);
-  streamsCtx=Object.assign(ctx,{_token:token,_options:[],_direct:[],_searchDone:false,_stats:null});
+  streamsCtx=Object.assign(ctx,{_token:token,_options:[],_direct:[],_globalLeads:[],_searchDone:false,_stats:null});
   if(playerState&&ctx.fromPlayer&&Array.isArray(playerState.availableServers)&&playerState.availableServers.length) streamsCtx._options=playerState.availableServers.slice();
   document.body.classList.add("locked");
   $("#streamsRoot").innerHTML='<div class="overlay" id="streamsOverlay"><div class="modal"><button class="icon-btn modal-close" id="btnCloseStreams" aria-label="Close">×</button>'
     +'<div style="padding:1.6rem 1.8rem 1.8rem"><div class="streams-hero"><img src="'+esc(posterURL(ctx.item,"w185"))+'" alt="" data-seed="'+esc(ctx.id||"")+'"><div><span class="logo-badge" style="margin-bottom:.6rem">Servers with this title</span>'
     +'<h2 style="color:var(--text-heading)">'+esc(ctx.title||"Stream")+(ctx.type==='tv'?' <span class="chip violet">S'+(ctx.season||1)+' · E'+(ctx.episode||1)+'</span>':'')+(ctx.year?' <span class="chip">'+esc(ctx.year)+'</span>':'')+'</h2>'
-    +'<p class="section-desc" style="margin-bottom:0">ZeroPlay checks the canonical TMDB/IMDb identity, year, title variants and episode. Direct and website servers appear only when they return this exact work.</p></div></div>'
+    +'<p class="section-desc" style="margin-bottom:0">ZeroPlay checks the canonical TMDB/IMDb identity, year, title variants and episode. The 100-worker provider scan, 11 global web-search workers, and continuous provider crawler are separate.</p></div></div>'
     +'<div class="status-box info" id="serverSearchStatus"><span class="spinner"></span> Searching for this exact title…</div>'
     +'<div class="streams-toolbar"><div class="form-group"><label for="streamQuality">Preferred quality</label><select id="streamQuality">'+[["auto","Auto — best stable"],["2160p","4K 2160p"],["1080p","1080p"],["720p","720p"],["480p","480p"]].map(([v,t])=>'<option value="'+v+'"'+(settings.stream.quality===v?' selected':'')+'>'+t+'</option>').join("")+'</select></div><button class="btn btn-primary" id="btnRace" disabled>Race verified streams</button><button class="btn btn-secondary" id="btnRefreshServers">Search again</button><span id="raceStatus" class="help-text" style="display:inline"></span></div>'
     +'<h3 class="category-heading">Verified direct servers</h3><div id="serverDirect"></div>'
     +'<h3 class="category-heading">Verified website servers</h3><p class="help-text">Optional: this section checks only website sources you add. It is separate from direct provider and exact-ID server searches.</p><div id="serverWebsites"></div>'
+    +'<h3 class="category-heading">Global web search leads</h3><p class="help-text">Ten GitHub-imported search engines plus a niche-title pass run concurrently. These are title-matched web pages, not verified streams; they are never auto-installed.</p><div id="serverGlobal"></div>'
     +'<h3 class="category-heading">Exact-ID players</h3><p class="help-text">These players can address this exact catalogue ID. Cross-origin players cannot prove their library before loading, so ZeroPlay does not falsely label them “verified”. Embedwave remains last.</p><div id="serverRoutes"></div>'
     +'<div id="streamCounts" class="help-text"></div></div></div></div>';
   renderTitleServerOptions();
@@ -6924,16 +6990,19 @@ async function showStreamsModal(ctx){
   };
   const runSearch=async bypassCache=>{
     if(!streamsCtx||streamsCtx._token!==token) return;
+    if(streamsCtx._searchAbort) streamsCtx._searchAbort.abort();
+    const searchController=new AbortController(); streamsCtx._searchAbort=searchController;
     streamsCtx._searchDone=false; renderTitleServerOptions();
-    const result=await findTitleServers(ctx,{bypassCache:!!bypassCache,shouldContinue:()=>!!streamsCtx&&streamsCtx._token===token,onUpdate:partial=>{
-      if(!streamsCtx||streamsCtx._token!==token) return;
+    const result=await findTitleServers(ctx,{signal:searchController.signal,bypassCache:!!bypassCache,shouldContinue:()=>!!streamsCtx&&streamsCtx._token===token&&streamsCtx._searchAbort===searchController,onUpdate:partial=>{
+      if(!streamsCtx||streamsCtx._token!==token||streamsCtx._searchAbort!==searchController) return;
       streamsCtx._options=partial.options||[];
+      streamsCtx._globalLeads=partial.globalLeads||[];
       streamsCtx._stats=partial.stats||{};
       streamsCtx._direct=(partial.options||[]).filter(o=>o.kind==="direct").flatMap(o=>o.variants||[]);
       renderTitleServerOptions();
     }});
-    if(!streamsCtx||streamsCtx._token!==token) return;
-    streamsCtx._options=result.options||[]; streamsCtx._stats=result.stats||{}; streamsCtx._direct=(result.options||[]).filter(o=>o.kind==="direct").flatMap(o=>o.variants||[]); streamsCtx._searchDone=true;
+    if(!streamsCtx||streamsCtx._token!==token||streamsCtx._searchAbort!==searchController) return;
+    streamsCtx._options=result.options||[]; streamsCtx._globalLeads=result.globalLeads||[]; streamsCtx._stats=result.stats||{}; streamsCtx._direct=(result.options||[]).filter(o=>o.kind==="direct").flatMap(o=>o.variants||[]); streamsCtx._searchDone=true;
     renderTitleServerOptions();
   };
   $("#btnRefreshServers").onclick=()=>runSearch(true);
