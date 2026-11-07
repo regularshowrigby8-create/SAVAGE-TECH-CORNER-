@@ -359,15 +359,7 @@ body.route-enter .page{animation:zpFade .32s ease both}
 .player-overlay{background:#000;animation:zpFade .22s ease both}
 .player-stage{position:absolute;inset:0;overflow:hidden;background:#000}
 .player-overlay>.player-frame{position:absolute;inset:0;width:100%;height:100%}
-/* Player actions live in the player surface, not in a blocking page overlay.
-   They are only exposed while paused or after the remote wakes the chrome. */
-.player-action-shelf{position:absolute;left:50%;bottom:clamp(5.8rem,11vh,8.5rem);z-index:18;display:flex;align-items:center;justify-content:center;gap:.55rem;max-width:min(92vw,980px);padding:.55rem .65rem;border:1px solid rgba(255,255,255,.15);border-radius:24px;background:rgba(7,9,12,.9);box-shadow:0 16px 44px rgba(0,0,0,.5);opacity:0;pointer-events:none;transform:translate(-50%,10px);transition:opacity .18s ease,transform .18s ease}
-.player-overlay.player-paused .player-action-shelf,.player-overlay.player-tools-awake .player-action-shelf{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
-.player-overlay.chrome-hidden .player-action-shelf{opacity:0;pointer-events:none;transform:translate(-50%,10px)}
-.player-action-shelf .control-btn{min-width:132px;height:48px;padding:0 1rem;font-size:.86rem}
-.player-action-shelf .control-btn.primary{min-width:150px}
-.player-action-shelf .action-kicker{color:#aeb7bf;font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:0 .45rem}
-.player-overlay.player-paused .player-action-shelf .action-kicker{color:#c9b4ff}
+/* Playback controls stay inside the player and can be hidden for embedded players. */
 
 .media-shell{position:absolute;inset:0;background:#000}
 .media-shell iframe,.media-shell video{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
@@ -379,6 +371,12 @@ body.route-enter .page{animation:zpFade .32s ease both}
 .player-bar .pt{max-width:46vw;font-size:1rem}
 .player-title-sub{display:block;color:#c8ced3;font-size:.76rem;font-weight:550;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .player-controls{position:absolute;left:0;right:0;bottom:0;z-index:20;padding:2.2rem clamp(.8rem,2vw,1.4rem) .9rem;background:linear-gradient(0deg,rgba(0,0,0,.92),rgba(0,0,0,.55) 62%,transparent);transition:transform .25s ease,opacity .25s ease}
+
+.player-hide-btn{border-color:rgba(216,179,106,.4);color:#f0d69c}
+.player-chrome-restore{display:none;position:absolute;left:12px;top:50%;z-index:30;width:44px;height:44px;border:1px solid rgba(255,255,255,.35);border-radius:50%;background:rgba(9,11,14,.68);color:#fff;cursor:pointer;opacity:.32;transition:opacity .16s ease,transform .16s ease}
+.player-chrome-restore:hover,.player-chrome-restore:focus-visible{opacity:1;transform:scale(1.06)}
+.player-overlay.chrome-hidden .player-chrome-restore{display:inline-flex;align-items:center;justify-content:center}
+
 .player-overlay.chrome-hidden{cursor:none}
 .player-overlay.chrome-hidden .player-bar{transform:translateY(-108%);opacity:0;pointer-events:none}
 .player-overlay.chrome-hidden .player-controls{transform:translateY(108%);opacity:0;pointer-events:none}
@@ -535,9 +533,6 @@ body.android-tv .settings-hub-grid{grid-template-columns:1fr}
 body.android-tv .panel,body.android-tv .form-group,body.android-tv .setting-switch,body.android-tv .form-row>*{min-width:0}
 body.android-tv .player-bar,body.android-tv .player-controls{padding-left:3vw;padding-right:3vw}
 body.android-tv .player-controls #btnPiP,body.android-tv .player-controls #playerRate,body.android-tv .player-controls .volume-wrap,body.android-tv .player-bar #btnPlayerDownload,body.android-tv .player-bar #btnPlayerDetails,body.android-tv #btnFocusEmbed{display:none}
-body.android-tv .player-action-shelf{bottom:clamp(6.4rem,13vh,10rem);max-width:94vw;padding:.7rem .8rem;border-radius:28px}
-body.android-tv .player-action-shelf .control-btn{min-width:160px;height:56px;font-size:1rem;border-radius:999px}
-body.android-tv .player-action-shelf .action-kicker{font-size:.78rem}
 body.android-tv .player-stage:focus{outline:0}
 body.android-tv [data-switch-label]:focus-visible{outline:3px solid var(--focus);outline-offset:3px;border-radius:999px}
 body.android-tv *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
@@ -712,65 +707,46 @@ html.font-xl{font-size:19px}
   body.theme-warm .mobile-bottom-nav{background:rgba(30,24,19,.96)}
 }
 
+
+
+.search-recents{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap;margin:.1rem 0 1rem}
+.search-recent-label{font-size:.78rem;color:var(--text-dim);font-weight:750;margin-right:.2rem}
+.search-recent{font-size:.78rem;min-height:34px}
+.search-skeleton{display:grid;grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:1rem;margin:.8rem 0}
+.search-skeleton .skel{height:244px;border-radius:14px;background:linear-gradient(100deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.1) 38%,rgba(255,255,255,.04) 62%);background-size:400% 100%;animation:shimmer 1.3s ease infinite}
+
+/* One navigation dropdown: no persistent rail, tab bar, or category strip. */
+.zp-sidebar,.mobile-bottom-nav,.category-strip{display:none!important}
+body:not(.android-tv) .topbar .nav{display:none!important}
+body:not(.android-tv) .topbar .logo-badge{display:inline-flex}
+body:not(.android-tv) .topbar{width:auto;margin:0}
+body:not(.android-tv) #view,body:not(.android-tv) .footer{margin-left:0}
+body:not(.android-tv) .topbar-inner{max-width:1680px;padding:.72rem clamp(.8rem,2vw,1.6rem)}
+body:not(.android-tv) #view>.page{max-width:1680px;padding:1.6rem clamp(1rem,2.6vw,2.2rem) 2.5rem}
+body:not(.android-tv) .footer{text-align:center;padding:1.2rem}
+.menu-scrim{background:transparent;backdrop-filter:none}
+.menu-drawer{top:calc(env(safe-area-inset-top) + 4.6rem);left:clamp(.75rem,2vw,1.5rem);bottom:auto;width:min(390px,calc(100vw - 1.5rem));max-height:calc(100dvh - 5.4rem);border:1px solid rgba(255,255,255,.13);border-radius:18px;box-shadow:0 24px 64px rgba(0,0,0,.55);transform:translateY(-8px) scale(.98);transform-origin:top left;opacity:0;transition:opacity .18s ease,transform .18s ease,visibility 0s linear .18s}
+.menu-drawer.open{transform:translateY(0) scale(1);opacity:1}
+body.theme-light .menu-drawer{border-color:#d8dde3}
+@media(max-width:620px){body:not(.android-tv) .topbar-inner{padding:.62rem .78rem;gap:.6rem}body:not(.android-tv) .topbar-search{order:3;flex-basis:100%;min-width:0}body:not(.android-tv) .topbar-search input{min-height:44px}body:not(.android-tv) #view{padding-bottom:1.5rem}}
+
 </style>
 </head>
 <body>
 
-<aside class="zp-sidebar" id="desktopRail" aria-label="ZeroPlay navigation">
-  <a class="zp-sidebar-brand" href="#/home" aria-label="ZeroPlay home"><span class="zp-brand-mark" aria-hidden="true">▶</span><span>ZeroPlay<small>DISCOVER · WATCH · REPEAT</small></span></a>
-  <div class="zp-sidebar-label">Browse</div>
-  <nav class="nav zp-rail-nav" aria-label="Main navigation">
-    <button class="zp-rail-link" type="button" data-nav="home"><span class="zp-rail-icon">⌂</span><span>Home</span></button>
-    <button class="zp-rail-link" type="button" data-nav="movies"><span class="zp-rail-icon">▣</span><span>Movies</span></button>
-    <button class="zp-rail-link" type="button" data-nav="series"><span class="zp-rail-icon">▤</span><span>Series</span></button>
-    <button class="zp-rail-link" type="button" data-nav="categories"><span class="zp-rail-icon">◈</span><span>Categories</span></button>
-  </nav>
-  <div class="zp-sidebar-label zp-sidebar-label-spaced">Your space</div>
-  <nav class="nav zp-rail-nav" aria-label="Your library and tools">
-    <button class="zp-rail-link" type="button" data-nav="library"><span class="zp-rail-icon">♡</span><span>My Library</span></button>
-    <button class="zp-rail-link" type="button" data-menu-route="downloads"><span class="zp-rail-icon">⇩</span><span>Downloads</span></button>
-    <button class="zp-rail-link" type="button" data-nav="sources"><span class="zp-rail-icon">⌕</span><span>Sources</span></button>
-  </nav>
-  <div class="zp-sidebar-label zp-sidebar-label-spaced">Quick genres</div>
-  <div class="zp-sidebar-genres">
-    <button type="button" data-category-type="movie" data-category-id="28">Action</button>
-    <button type="button" data-category-type="movie" data-category-id="35">Comedy</button>
-    <button type="button" data-category-type="movie" data-category-id="878">Sci-fi</button>
-  </div>
-  <div class="zp-sidebar-spacer"></div>
-  <div class="zp-sidebar-footcard"><span class="zp-footcard-orb">✦</span><div><strong>Made for your screen</strong><small>Remote-friendly. No account needed.</small></div></div>
-  <button class="zp-rail-link zp-settings-link" type="button" data-menu-route="settings"><span class="zp-rail-icon">⚙</span><span>Settings</span></button>
-</aside>
+
 
 <header class="topbar" id="topbar">
   <div class="topbar-inner">
     <button class="menu-button" id="btnMenu" type="button" aria-label="Open menu" aria-controls="menuDrawer" aria-expanded="false">☰</button>
     <a class="logo-badge" href="#/home" title="ZeroPlay home"><span class="logo-mark" aria-hidden="true">▶</span><span>ZeroPlay</span></a>
-    <nav class="nav" aria-label="Primary">
-      <button data-nav="home">Home</button>
-      <button data-nav="movies">Movies</button>
-      <button data-nav="series">Series</button>
-      <button data-nav="categories">Categories</button>
-      <button data-nav="library">Library</button>
-      <button data-nav="sources">Sources</button>
-    </nav>
     <form class="topbar-search" id="topSearch">
       <input type="search" id="topQuery" placeholder="Search movies and series" autocomplete="off" maxlength="200" aria-label="Search movies and TV series">
       <button class="btn btn-secondary" type="submit">Search</button>
     </form>
     <span class="catalog-state" id="catalogModeChip" title="Active catalogue source">TMDB</span>
   </div>
-  <div class="category-strip" aria-label="Popular categories">
-    <button type="button" data-category-type="movie" data-category-id="28">Action</button>
-    <button type="button" data-category-type="movie" data-category-id="16">Animation</button>
-    <button type="button" data-category-type="movie" data-category-id="35">Comedy</button>
-    <button type="button" data-category-type="movie" data-category-id="18">Drama</button>
-    <button type="button" data-category-type="movie" data-category-id="27">Horror</button>
-    <button type="button" data-category-type="movie" data-category-id="10749">Romance</button>
-    <button type="button" data-category-type="movie" data-category-id="878">Sci-Fi</button>
-    <button type="button" data-category-type="movie" data-category-id="53">Thriller</button>
-    <button type="button" data-menu-route="categories">All categories →</button>
-  </div>
+
 </header>
 <div class="menu-scrim" id="menuScrim" hidden></div>
 <aside class="menu-drawer" id="menuDrawer" aria-label="ZeroPlay menu" aria-hidden="true">
@@ -778,6 +754,7 @@ html.font-xl{font-size:19px}
   <div class="menu-section">
     <h3>Browse</h3>
     <button class="menu-link" type="button" data-menu-route="home"><span>Home</span><span>⌂</span></button>
+    <button class="menu-link" type="button" data-menu-route="search"><span>Search</span><span>⌕</span></button>
     <button class="menu-link" type="button" data-menu-route="movies"><span>Movies</span><span>Film</span></button>
     <button class="menu-link" type="button" data-menu-route="series"><span>Series</span><span>TV</span></button>
     <button class="menu-link" type="button" data-menu-route="categories"><span>Categories</span><span>Genres</span></button>
@@ -830,13 +807,7 @@ html.font-xl{font-size:19px}
 
 <main id="view"></main>
 
-<nav class="nav mobile-bottom-nav" aria-label="Mobile navigation">
-  <button type="button" data-nav="home"><span>⌂</span><small>Home</small></button>
-  <button type="button" data-nav="movies"><span>▣</span><small>Movies</small></button>
-  <button type="button" data-nav="series"><span>▤</span><small>Series</small></button>
-  <button type="button" data-nav="library"><span>♡</span><small>Library</small></button>
-  <button type="button" id="btnMobileMore" aria-label="Open menu"><span>☰</span><small>More</small></button>
-</nav>
+
 
 <footer class="footer">ZeroPlay · Movies and series, ready to watch. ZeroPlay does not host media files.</footer>
 
@@ -1386,20 +1357,22 @@ const CM_TMDB_GENRES={
 function cmGenreName(type,id){ return (CM_TMDB_GENRES[type]||{})[id] || ""; }
 const CM_GENRE_ALIAS = {"Science Fiction":"Sci-Fi","Action & Adventure":"Action","Sci-Fi & Fantasy":"Sci-Fi","War & Politics":"War","Reality":"Reality-TV","Talk":"Talk-Show","News":null,"TV Movie":null,"Kids":"Family","Soap":null};
 
-async function cinemetaFetch(url){
+async function cinemetaFetch(url, externalSignal){
   const hit = cinemetaCache.get(url);
   if(hit && Date.now()-hit.t < 300000) return hit.data;
   const fetchJson = async(target, timeoutMs)=>{
     const ctl = new AbortController(); const to = setTimeout(()=>ctl.abort(), timeoutMs);
+    const abortExternal=()=>ctl.abort(); if(externalSignal){ if(externalSignal.aborted) ctl.abort(); else externalSignal.addEventListener("abort",abortExternal,{once:true}); }
     try{
       const r = await fetch(target, {signal: ctl.signal, headers:{Accept:"application/json"}});
       if(!r.ok) throw new Error("HTTP "+r.status);
       return await r.json();
-    } finally { clearTimeout(to); }
+    } finally { clearTimeout(to); if(externalSignal) externalSignal.removeEventListener("abort",abortExternal); }
   };
   let data;
   try{ data = await fetchJson(url, 9000); }
   catch(directErr){
+    if(externalSignal&&externalSignal.aborted) throw directErr;
     // Online launches without a bundled TMDB env key can still reach the
     // keyless catalogue through this deployment's own JSON relay if the
     // browser/network cannot reach Cinemeta directly.
@@ -1430,9 +1403,9 @@ function cmMapMeta(m){
   cinemetaByTmdb.set(item.id, item.imdb_id);
   return item;
 }
-async function cmCatalog(type, catalogId, extra){
+async function cmCatalog(type, catalogId, extra, signal){
   const seg = extra ? "/" + Object.entries(extra).map(([k,v])=>k+"="+encodeURIComponent(v)).join("&") : "";
-  const data = await cinemetaFetch(CINEMETA + "/catalog/" + cmType(type) + "/" + catalogId + seg + ".json");
+  const data = await cinemetaFetch(CINEMETA + "/catalog/" + cmType(type) + "/" + catalogId + seg + ".json", signal);
   return (data.metas || []).map(cmMapMeta).filter(Boolean);
 }
 function cmWrap(results, page){
@@ -2515,7 +2488,7 @@ function cardHTML(it,opts={}){
   const listed=inWatchlist(type,it.id);
   const genres=(it.genre_ids||[]).map(id=>genreName(type,id)).filter(Boolean).slice(0,2).join(" · ");
   const index=Number.isFinite(Number(opts.index))?Math.max(0,Math.min(14,Number(opts.index))):0;
-  return '<article class="poster-card" style="--i:'+index+'" data-type="'+type+'" data-id="'+it.id+'" tabindex="0" role="button" aria-label="'+esc(titleOf(it))+(it.trailer_key?". Trailer preview available":"")+'">'
+  return '<article class="poster-card" style="--i:'+index+'" data-type="'+type+'" data-id="'+it.id+'"'+(it.search_provider?' data-search-provider="'+esc(it.search_provider)+'"':'')+' tabindex="0" role="button" aria-label="'+esc(titleOf(it))+(it.trailer_key?". Trailer preview available":"")+'">'
         +'<div class="poster-wrap"><img loading="lazy" src="'+esc(posterURL(it))+'" alt="'+esc(titleOf(it))+'"'+artworkImgAttrs(it,"poster",posterURL(it))+'>'
     +'<div class="trailer-layer" aria-hidden="true"></div><span class="preview-badge">Trailer</span>'
     +'<div class="poster-badges"><span class="chip violet">'+(type==="tv"?"Series":"Movie")+'</span></div>'
@@ -2541,7 +2514,7 @@ function bindCards(root){
   if(root.dataset&&root.dataset.cardsBound) return;
   if(root.dataset) root.dataset.cardsBound="1";
   let intentTimer=null,intentKey="";
-  const intent=(e,previewDelay)=>{ const card=e.target.closest&&e.target.closest(".poster-card"); if(!card) return; const key=card.dataset.type+":"+card.dataset.id; if(key!==intentKey){ intentKey=key; clearTimeout(intentTimer); intentTimer=setTimeout(()=>{ if(card.dataset.previewWanted!=="1") return; const pr=progress[key]||{}; faststreamPreload({type:card.dataset.type,id:Number(card.dataset.id),season:pr.season||1,episode:pr.episode||1},defaultSourceId()); },tvPerformanceEnabled()?2400:1350); } scheduleCardPreview(card,previewDelay,{fetchDetail:true}); };
+  const intent=(e,previewDelay)=>{ const card=e.target.closest&&e.target.closest(".poster-card"); if(!card||card.dataset.searchProvider) return; const key=card.dataset.type+":"+card.dataset.id; if(key!==intentKey){ intentKey=key; clearTimeout(intentTimer); intentTimer=setTimeout(()=>{ if(card.dataset.previewWanted!=="1") return; const pr=progress[key]||{}; faststreamPreload({type:card.dataset.type,id:Number(card.dataset.id),season:pr.season||1,episode:pr.episode||1},defaultSourceId()); },tvPerformanceEnabled()?2400:1350); } scheduleCardPreview(card,previewDelay,{fetchDetail:true}); };
   root.addEventListener("mouseover",e=>intent(e,tvPerformanceEnabled()?1500:680));
   root.addEventListener("focusin",e=>intent(e,tvPerformanceEnabled()?1700:520));
   root.addEventListener("mouseout",e=>{ const card=e.target.closest&&e.target.closest(".poster-card"); if(card&&!(e.relatedTarget&&card.contains(e.relatedTarget))){ intentKey=""; clearTimeout(intentTimer); clearCardPreviewIntent(card); } });
@@ -2733,9 +2706,14 @@ function playerLoading(on,text){
   if(text){ const t=el.querySelector("[data-loading-text]"); if(t) t.textContent=text; }
   el.classList.toggle("hide",!on);
 }
-function showPlayerChrome(sticky){
+function hidePlayerChrome(){
   const st=playerState, overlay=document.getElementById("playerOverlay"); if(!st||!overlay) return;
-  overlay.classList.remove("chrome-hidden");
+  st.chromeUserHidden=true; if(st.chromeTimer) clearTimeout(st.chromeTimer);
+  overlay.classList.add("chrome-hidden"); overlay.classList.remove("player-tools-awake");
+}
+function showPlayerChrome(sticky,force){
+  const st=playerState, overlay=document.getElementById("playerOverlay"); if(!st||!overlay||st.chromeUserHidden&&!force) return;
+  st.chromeUserHidden=false; overlay.classList.remove("chrome-hidden");
   const paused=!!(st.playback&&st.playback.paused);
   overlay.classList.toggle("player-paused",paused);
   overlay.classList.add("player-tools-awake");
@@ -2769,12 +2747,19 @@ function setPlayerControlMode(mode){
   ["seekRange","volumeRange","playerRate"].forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=!full; });
   const seek=document.querySelector(".seek-row"); if(seek) seek.style.display=limited?"none":"flex";
   const focusBtn=document.getElementById("btnFocusEmbed"); if(focusBtn) focusBtn.style.display=limited?"inline-flex":"none";
+  const centerPlay=document.getElementById("btnCenterPlay"); if(centerPlay){ centerPlay.hidden=limited; centerPlay.disabled=limited; }
   const engine=document.getElementById("playerEngine");
   if(engine) engine.textContent=mode==="faststream-api"?"FastStream integrated":mode==="faststream-legacy"?"FastStream player":mode==="native"?"ZeroPlay player":mode==="embed"?"Embedded player":"Connecting";
   refreshPlayerQualityOptions();
-  showPlayerChrome(true);
-  if(full&&ANDROID_TV_APP){ const active=document.activeElement; if(!active||!active.closest||!active.closest("#playerRoot")){ const play=document.getElementById("btnPlayPause"); if(play) setTimeout(()=>play.focus({preventScroll:true}),30); } }
-  else if(limited&&ANDROID_TV_APP){ const embedBtn=document.getElementById("btnFocusEmbed"); if(embedBtn) setTimeout(()=>embedBtn.focus({preventScroll:true}),30); showPlayerChrome(false); }
+  if(limited){
+    // Embedded players have their own controls. Keep ZeroPlay chrome out of
+    // their way by default; the small edge restore button can bring it back.
+    if(ANDROID_TV_APP) setTimeout(()=>{ if(playerState===st) st.chromeUserHidden=false; playerCommand("focusEmbed"); },40);
+    hidePlayerChrome();
+  }else{
+    showPlayerChrome(true);
+    if(full&&ANDROID_TV_APP){ const active=document.activeElement; if(!active||!active.closest||!active.closest("#playerRoot")){ const play=document.getElementById("btnPlayPause"); if(play) setTimeout(()=>play.focus({preventScroll:true}),30); } }
+  }
 }
 function refreshPlayerQualityOptions(){
   const sel=document.getElementById("playerQuality"); if(!sel||!playerState) return;
@@ -2800,7 +2785,7 @@ function updatePlaybackUI(state,eventName){
   st.playback=Object.assign({},prev,state);
   if(Number(st.playback.currentTime)>0&&Number(st.playback.currentTime)>(Number(st.lastTs)||0)+.2){ st.lastTs=Number(st.playback.currentTime); st.lastAdvanceAt=Date.now(); st.playbackConfirmed=true; }
   const play=document.getElementById("btnPlayPause"); if(play) play.textContent=st.playback.paused?"▶":"❚❚";
-  const center=document.getElementById("btnCenterPlay"); if(center){ center.hidden=!st.playback.paused||st.playback.buffering; center.textContent="▶"; }
+  const center=document.getElementById("btnCenterPlay"); if(center){ const embedControls=st.engine==="embed"||st.engine==="faststream-legacy"; center.hidden=embedControls||!st.playback.paused||st.playback.buffering; center.disabled=embedControls; center.textContent="▶"; }
   const seek=document.getElementById("seekRange");
   if(seek&&document.activeElement!==seek&&st.playback.duration>0){ seek.max=String(Math.floor(st.playback.duration)); seek.value=String(Math.floor(st.playback.currentTime||0)); }
   const cur=document.getElementById("currentTime"); if(cur) cur.textContent=formatTime(st.playback.currentTime);
@@ -3092,11 +3077,11 @@ function playerShell(msg){
   const rate=Number(st.playback&&st.playback.rate||1);
   return '<div class="player-overlay" id="playerOverlay">'
     +'<div class="player-stage" id="playerStage"><div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>'+esc(msg||"Connecting…")+'</strong><span style="color:#cbd2d8;font-size:.88rem">ZeroPlay is preparing this exact title.</span></div></div>'
-    +'<div class="player-action-shelf" id="playerActionShelf" aria-label="Paused player tools"><span class="action-kicker">Paused</span><button class="control-btn primary" id="btnPlayerResume" type="button">▶ Resume</button><button class="control-btn" id="btnPlayerFastStream" type="button">FastStream controls</button><button class="control-btn" id="btnPlayerM3u" type="button">M3U tools</button><button class="control-btn" id="btnPlayerDownloadStage" type="button">⬇ Download</button><button class="control-btn" id="btnPlayerServersStage" type="button">Servers</button></div>'
+    +'<button class="player-chrome-restore" id="btnRestorePlayerChrome" type="button" aria-label="Show ZeroPlay controls" title="Show ZeroPlay controls">☰</button>'
     +'<div class="player-bar"><button class="icon-btn" id="btnBackPlayer" type="button" aria-label="Back">‹</button><span class="logo-badge"><span class="logo-mark">▶</span><span>ZeroPlay</span></span>'
     +'<span class="pt">'+esc(titleOf(it))+'<span class="player-title-sub" id="playerSourceLine">'+(isTV?"Season "+st.season+" · Episode "+st.episode:"Movie")+'</span></span><span id="fastBadge" class="chip violet"></span><span style="flex:1"></span>'
     +(isTV?'<button class="control-btn" id="btnPrevEp" type="button">‹ Ep</button><button class="control-btn" id="btnNextEp" type="button">Ep ›</button>':"")
-    +'<button class="control-btn" id="btnPlayerServers" type="button">Servers</button>'+(downloadsEnabled()?'<button class="control-btn" id="btnPlayerDownload" type="button" aria-label="Download this title or episode">⬇</button>':"")+'<button class="control-btn" id="btnPlayerDetails" type="button">Details</button><button class="control-btn" id="btnClosePlayer" type="button" aria-label="Close player">×</button></div>'
+    +'<button class="control-btn" id="btnPlayerServers" type="button">Servers</button>'+(downloadsEnabled()?'<button class="control-btn" id="btnPlayerDownload" type="button" aria-label="Download this title or episode">⬇</button>':"")+'<button class="control-btn" id="btnPlayerDetails" type="button">Details</button><button class="control-btn" id="btnPlayerFastStream" type="button">FastStream controls</button><button class="control-btn" id="btnPlayerM3u" type="button">M3U tools</button><button class="control-btn player-hide-btn" id="btnHidePlayerChrome" type="button" aria-label="Hide ZeroPlay controls" title="Hide ZeroPlay controls">Hide controls</button><button class="control-btn" id="btnClosePlayer" type="button" aria-label="Close player">×</button></div>'
     +'<button class="center-play" id="btnCenterPlay" type="button" aria-label="Play" hidden>▶</button>'
     +'<div class="player-controls" id="playerControls" data-mode="loading">'
     +'<div class="seek-row"><span id="currentTime">0:00</span><input id="seekRange" type="range" min="0" max="100" value="0" step="1" aria-label="Seek"><span id="durationTime">0:00</span></div>'
@@ -3123,11 +3108,11 @@ function bindPlayerChrome(){
   const downloadOpts=()=>({currentVariant:st.activeVariant||(st.directUrl?{url:st.directUrl,quality:(st.activeVariant||{}).quality}:null),currentUrl:st.directUrl||(st.direct?st.url:""),serverName:(getSource(st.source)||{}).name||"Current server"});
   const openDownload=()=>openDownloadForContext(playerContext(st),downloadOpts());
   on("btnPlayerDownload","click",openDownload);
-  on("btnPlayerDownloadStage","click",openDownload);
-  on("btnPlayerServersStage","click",()=>document.getElementById("btnPlayerServers")?.click());
-  on("btnPlayerResume","click",()=>playerCommand("toggle"));
-  on("btnPlayerFastStream","click",()=>{ showPlayerChrome(true); if(st.engine==="faststream-api"||st.engine==="faststream-legacy"){ playerCommand("focusEmbed"); } else toast("ZeroPlay controls are active for this stream"); });
+  on("btnHidePlayerChrome","click",hidePlayerChrome);
+  on("btnPlayerFastStream","click",()=>{ showPlayerChrome(true,true); if(st.engine==="faststream-api"||st.engine==="faststream-legacy"){ playerCommand("focusEmbed"); } else toast("ZeroPlay controls are active for this stream"); });
   on("btnPlayerM3u","click",()=>openM3uExtractorForContext(playerContext(st),st.directUrl||(st.direct?st.url:"")));
+  on("btnRestorePlayerChrome","click",()=>showPlayerChrome(true,true));
+
   const changeEpisode=delta=>{
     if(delta<0&&st.episode<=1) return;
     savePlaybackProgress(true);
@@ -3151,8 +3136,8 @@ function bindPlayerChrome(){
   on("playerQuality","change",e=>setPlayerQuality(e.target.value));
   const overlay=document.getElementById("playerOverlay");
   if(overlay){
-    overlay.addEventListener("mousemove",()=>showPlayerChrome(false));
-    overlay.addEventListener("touchstart",()=>showPlayerChrome(false),{passive:true});
+    overlay.addEventListener("mousemove",()=>showPlayerChrome(false,true));
+    overlay.addEventListener("touchstart",()=>showPlayerChrome(false,true),{passive:true});
     overlay.addEventListener("focusin",()=>showPlayerChrome(false));
     overlay.addEventListener("focusout",()=>showPlayerChrome(false));
   }
@@ -4503,11 +4488,16 @@ async function openDetail(type,id){
   $("#btnCloseDetail").onclick=closeDetail;
   $("#detailOverlay").addEventListener("click",e=>{ if(e.target.id==="detailOverlay") closeDetail(); });
   try{
-    const d=await tmdb("/"+type+"/"+id,{append_to_response:"credits,videos,recommendations,external_ids,alternative_titles"});
+    let externalItem=searchResultItems.get(keyOf(type,Number(id)))||null;
+    if(!externalItem&&Number(id)>=900000000){
+      const saved=watchlist.find(item=>item.type===type&&Number(item.id)===Number(id))||progress[keyOf(type,Number(id))];
+      if(saved) externalItem=snapToItem(saved);
+    }
+    const d=externalItem?Object.assign({},externalItem,{id:Number(id),media_type:type,credits:{cast:[]},videos:{results:[]},recommendations:{results:[]},external_ids:{imdb_id:externalItem.imdb_id||""}}):await tmdb("/"+type+"/"+id,{append_to_response:"credits,videos,recommendations,external_ids,alternative_titles"});
     detailState.data=d;
     if(type==="tv"){ const prev=progress[keyOf(type,id)]; const seasons=(d.seasons||[]).filter(s=>s.season_number>0); detailState.season=(prev&&prev.season)||(seasons[0]&&seasons[0].season_number)||1; detailState.episode=(prev&&prev.season===detailState.season&&prev.episode)||1; }
     drawDetail();
-    if(type==="tv") loadEpisodes();
+    if(type==="tv"&&!externalItem) loadEpisodes();
   }catch(err){
     $(".modal").innerHTML='<button class="icon-btn modal-close" id="btnCloseDetail" aria-label="Close">×</button><div style="padding:2.5rem"><div class="status-box error">Could not load this title. Check your connection and try again.</div></div>';
     $("#btnCloseDetail").onclick=closeDetail;
@@ -4542,7 +4532,7 @@ function drawDetail(){
     +'<div class="help-text">Servers are checked against this exact title'+(isTV?" and episode":"")+' — ZeroPlay only lists servers that return a match.</div>'
     +(prev.percent?'<div class="help-text">Resume available — '+Math.round(prev.percent)+"% watched"+(isTV?" (S"+(prev.season||1)+" E"+(prev.episode||1)+")":"")+".</div>":"")
     +"</div></div>"
-    +(isTV?'<div class="detail-section"><h3>Episodes</h3><div class="season-row"><div class="form-group"><label for="seasonSelect">Season</label><select id="seasonSelect">'+seasons.map(s=>'<option value="'+s.season_number+'"'+(s.season_number===detailState.season?" selected":"")+">"+esc(s.name||("Season "+s.season_number))+(s.episode_count?" ("+s.episode_count+")":"")+"</option>").join("")+'</select></div></div><div id="epList"><span class="spinner"></span> <span style="color:var(--text-muted)">Loading episodes…</span></div></div>':"")
+    +(isTV&&seasons.length?'<div class="detail-section"><h3>Episodes</h3><div class="season-row"><div class="form-group"><label for="seasonSelect">Season</label><select id="seasonSelect">'+seasons.map(s=>'<option value="'+s.season_number+'"'+(s.season_number===detailState.season?" selected":"")+">"+esc(s.name||("Season "+s.season_number))+(s.episode_count?" ("+s.episode_count+")":"")+"</option>").join("")+'</select></div></div><div id="epList"><span class="spinner"></span> <span style="color:var(--text-muted)">Loading episodes…</span></div></div>':"")
     +(cast.length?'<div class="detail-section"><h3>Cast</h3><div class="cast-track">'+cast.map(c=>'<div class="cast">'+(c.profile_path?'<img loading="lazy" src="'+IMG+"w185"+esc(c.profile_path)+'" alt="'+esc(c.name)+'">':'<div class="avatar">'+esc(initials(c.name))+'</div>')+'<div class="n">'+esc(c.name)+'</div><div class="c">'+esc(c.character||"")+"</div></div>").join("")+"</div></div>":"")
     +(recs.length?'<div class="detail-section" id="recSection"><h3>More Like This</h3><div class="rail-track">'+recs.map(r=>cardHTML(Object.assign({},r,{media_type:type}))).join("")+"</div></div>":"");
   $("#btnCloseDetail").onclick=closeDetail;
@@ -4780,33 +4770,119 @@ async function loadBrowsePage(){
 }
 
 const searchState={q:"",filter:"all",results:[]};
+let searchSequence=0, searchController=null, searchTimer=null;
+const SEARCH_RECENTS_KEY="zp_rd_search_recent_v1";
+const searchResultItems=new Map();
+function searchRecentItems(){ const value=loadJSON(SEARCH_RECENTS_KEY,[]); return Array.isArray(value)?value.filter(x=>typeof x==="string").slice(0,10):[]; }
+function searchNormTitle(value){ return String(value||"").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g," ").trim(); }
+function searchHash(value){ let h=2166136261; for(const c of String(value)){ h^=c.charCodeAt(0); h=Math.imul(h,16777619); } return 900000000+((h>>>0)%3000000000); }
+const searchFetchCache=new Map();
+async function searchFetchJson(url,signal,options){
+  const ttl=options&&Number.isFinite(options.ttl)?options.ttl:300000;
+  const cacheKey=options&&options.cacheKey||url, cached=searchFetchCache.get(cacheKey);
+  if(cached&&Date.now()-cached.time<ttl) return cached.data;
+  if(signal&&signal.aborted) throw new DOMException("Search superseded","AbortError");
+  const controller=new AbortController(), timer=setTimeout(()=>controller.abort(),10000);
+  const abort=()=>controller.abort();
+  if(signal) signal.addEventListener("abort",abort,{once:true});
+  try{
+    const requestOptions=options&&options.fetchOptions||{};
+    const response=await fetch(url,Object.assign({},requestOptions,{signal:controller.signal,headers:Object.assign({Accept:"application/json"},requestOptions.headers||{})}));
+    if(!response.ok) throw new Error("HTTP "+response.status);
+    const data=await response.json(); if(ttl>0){ searchFetchCache.set(cacheKey,{time:Date.now(),data}); while(searchFetchCache.size>100) searchFetchCache.delete(searchFetchCache.keys().next().value); } return data;
+  }finally{ clearTimeout(timer); if(signal) signal.removeEventListener("abort",abort); }
+}
+function searchExternalItem(input,provider,providerId){
+  if(!input||!input.title) return null;
+  const type=input.type==="movie"||input.media_type==="movie"?"movie":"tv";
+  const id=searchHash(provider+":"+providerId+":"+type);
+  const year=Number(input.year)||0, date=year?year+"-01-01":"";
+  const item={id,media_type:type,title:type==="movie"?input.title:undefined,name:type==="tv"?input.title:undefined,
+    release_date:type==="movie"?date:"",first_air_date:type==="tv"?date:"",poster_url:input.poster||null,backdrop_url:input.backdrop||null,
+    vote_average:Number(input.rating)||0,overview:input.desc||"",imdb_id:input.imdb||null,genre_ids:[],search_provider:provider,search_provider_id:String(providerId||"")};
+  searchResultItems.set(keyOf(type,id),item); while(searchResultItems.size>180) searchResultItems.delete(searchResultItems.keys().next().value); return item;
+}
+function normalizeSearchCinemeta(meta,type){
+  if(!meta||!meta.name) return null;
+  const t=type==="movie"?"movie":"tv";
+  if(meta.moviedb_id){ const mapped=cmMapMeta(meta); if(mapped) return mapped; }
+  return searchExternalItem({title:String(meta.name),type:t,year:String(meta.releaseInfo||"").slice(0,4),poster:meta.poster,desc:meta.description,rating:meta.imdbRating,imdb:meta.imdb_id||(String(meta.id||"").startsWith("tt")?meta.id:"")},"Cinemeta",meta.id||meta.name);
+}
+function searchFuzzyMatch(item,q){
+  const query=searchNormTitle(q), haystack=searchNormTitle(titleOf(item)+" "+(item.overview||""));
+  return !query||query.split(" ").every(word=>haystack.includes(word));
+}
+async function searchAllCatalogs(q,signal){
+  const encoded=encodeURIComponent(q);
+  const cm=(type)=>searchFetchJson(CINEMETA+"/catalog/"+cmType(type)+"/top/search="+encoded+".json",signal).then(data=>(data.metas||[]).map(meta=>normalizeSearchCinemeta(meta,type)).filter(Boolean)).catch(error=>{if(signal&&signal.aborted) throw error;return[];});
+  const tvmaze=searchFetchJson("https://api.tvmaze.com/search/shows?q="+encoded,signal).then(data=>(data||[]).map(({show})=>{
+    if(!show) return null;
+    return searchExternalItem({title:show.name,type:"tv",year:String(show.premiered||"").slice(0,4),poster:show.image&&(show.image.medium||show.image.original),desc:String(show.summary||"").replace(/<[^>]*>/g," "),rating:show.rating&&show.rating.average,imdb:show.externals&&show.externals.imdb},"TVmaze",show.id);
+  }).filter(Boolean)).catch(error=>{if(signal&&signal.aborted) throw error;return[];});
+  const anilistQuery="query($q:String){Page(page:1,perPage:20){media(search:$q,type:ANIME){id seasonYear description(asHtml:false) coverImage{large} title{english romaji}}}}";
+  const anilist=searchFetchJson("https://graphql.anilist.co",signal,{ttl:600000,cacheKey:"anilist:"+searchNormTitle(q),fetchOptions:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:anilistQuery,variables:{q}})}}).then(data=>((((data||{}).data||{}).Page||{}).media||[]).map(anime=>searchExternalItem({title:(anime.title&&(anime.title.english||anime.title.romaji))||"Untitled",type:"tv",year:anime.seasonYear,poster:anime.coverImage&&anime.coverImage.large,desc:String(anime.description||"").replace(/<[^>]*>/g," ")},"AniList",anime.id)).filter(Boolean)).catch(error=>{if(signal&&signal.aborted) throw error;return[];});
+  const groups=await Promise.all([cm("movie"),cm("tv"),tvmaze,anilist]);
+  if(signal.aborted) throw new DOMException("Search superseded","AbortError");
+  const merged=new Map();
+  for(const item of groups.flat()){
+    if(!item||!titleOf(item)) continue;
+    const type=typeOf(item), year=yearOf(item), title=searchNormTitle(titleOf(item));
+    const key=title+"|"+year+"|"+type, previous=merged.get(key);
+    const score=x=>(x.id&&x.id<900000000?4:0)+(x.poster_url?2:0)+(x.imdb_id?1:0);
+    if(!previous||score(item)>score(previous)) merged.set(key,item);
+  }
+  return [...merged.values()].filter(item=>searchFuzzyMatch(item,q)).sort((a,b)=>(Number(b.vote_average)||0)-(Number(a.vote_average)||0)).slice(0,60);
+}
 function renderSearch(q){
-  searchState.q=q||""; searchState.filter="all";
-  view.innerHTML='<div class="page"><h1>Search</h1><p class="lede">Search the full TMDB catalog of movies and TV series.</p>'
-    +'<form id="searchForm" class="input-with-action" style="margin-bottom:1rem"><input type="search" id="searchInput" placeholder="Search movies and TV series…" maxlength="200" value="'+esc(searchState.q)+'"><button class="btn btn-primary" type="submit">Search</button></form>'
-    +'<div class="chip-row" id="searchChips"><button class="chip-btn active" data-f="all">All</button><button class="chip-btn" data-f="movie">Movies</button><button class="chip-btn" data-f="tv">TV Series</button></div>'
-    +'<div id="searchResults"></div></div>';
-  bindCards(view);
-  $("#searchForm").onsubmit=e=>{ e.preventDefault(); const v=$("#searchInput").value.trim(); location.hash="#/search?q="+encodeURIComponent(v); if(v===searchState.q) runSearch(); };
-  $("#searchChips").addEventListener("click",e=>{ const b=e.target.closest("[data-f]"); if(!b) return; searchState.filter=b.dataset.f; $$("#searchChips .chip-btn").forEach(x=>x.classList.toggle("active",x===b)); drawSearchResults(); });
-  if(searchState.q) runSearch(); else $("#searchResults").innerHTML='<div class="empty"><h3>Find your next watch</h3><p>Type a title above and press Search.</p></div>';
-  setTimeout(()=>{ const i=$("#searchInput"); if(i) i.focus(); },30);
+  if(searchController) searchController.abort(); clearTimeout(searchTimer); searchSequence++;
+  searchState.q=q||""; searchState.filter="all"; searchState.results=[];
+  view.innerHTML='<div class="page"><h1>Search</h1><p class="lede">Search movies and series across Cinemeta, TVmaze, and AniList.</p>'
+    +'<form id="searchForm" class="input-with-action" style="margin-bottom:1rem"><input type="search" id="searchInput" placeholder="Search movies and TV series…" autocomplete="off" maxlength="200" value="'+esc(searchState.q)+'" aria-label="Search movies and TV series"><button class="btn btn-primary" type="submit">Search</button></form>'
+    +'<div class="search-recents" id="searchRecents" aria-label="Recent searches"></div>'
+    +'<div class="chip-row" id="searchChips"><button class="chip-btn active" data-f="all" type="button">All</button><button class="chip-btn" data-f="movie" type="button">Movies</button><button class="chip-btn" data-f="tv" type="button">TV Series &amp; anime</button></div>'
+    +'<div id="searchResults" aria-live="polite" aria-busy="false"></div></div>';
+  bindCards(view); renderSearchRecents();
+  const input=$("#searchInput");
+  $("#searchForm").onsubmit=e=>{e.preventDefault();searchState.q=input.value.trim();const target="#/search?q="+encodeURIComponent(searchState.q);if(location.hash===target)runSearch();else location.hash=target;};
+  input.addEventListener("input",()=>{searchState.q=input.value.trim();clearTimeout(searchTimer);if(!searchState.q){if(searchController)searchController.abort();searchState.results=[];drawSearchResults();renderSearchRecents();return;}searchTimer=setTimeout(()=>runSearch(),350);});
+  $("#searchChips").addEventListener("click",e=>{const b=e.target.closest("[data-f]");if(!b)return;searchState.filter=b.dataset.f;$$('#searchChips .chip-btn').forEach(x=>x.classList.toggle("active",x===b));drawSearchResults();});
+  $("#searchRecents").addEventListener("click",e=>{const b=e.target.closest("[data-search-recent]");if(!b)return;input.value=b.dataset.searchRecent;searchState.q=input.value;runSearch();input.focus({preventScroll:true});});
+  if(searchState.q) runSearch(); else drawSearchResults();
+  setTimeout(()=>{const field=$("#searchInput");if(field)field.focus({preventScroll:true});},30);
 }
 async function runSearch(){
-  const box=$("#searchResults"); if(!box) return;
-  box.innerHTML='<p style="color:var(--text-muted)"><span class="spinner"></span> Searching…</p>';
+  const input=$("#searchInput"),box=$("#searchResults"); if(!box||!input)return;
+  const q=input.value.trim(); searchState.q=q;
+  if(searchController) searchController.abort();
+  const sequence=++searchSequence;
+  if(!q){searchState.results=[];drawSearchResults();return;}
+  searchController=new AbortController(); box.setAttribute("aria-busy","true");
+  box.innerHTML='<div class="search-skeleton" aria-label="Searching">'+'<span class="skel"></span>'.repeat(6)+'</div><p class="lede">Searching available catalogues…</p>';
   try{
-    const d=await tmdb("/search/multi",{query:searchState.q,page:1});
-    searchState.results=(d.results||[]).filter(x=>x.media_type==="movie"||x.media_type==="tv");
-    drawSearchResults();
-  }catch{ box.innerHTML='<div class="status-box error">Search failed. Check your connection, then open Settings to review playback and discovery.</div>'; }
+    const results=await searchAllCatalogs(q,searchController.signal);
+    if(sequence!==searchSequence)return;
+    searchState.results=results;
+    const recents=searchRecentItems(),normalized=searchNormTitle(q);
+    saveJSON(SEARCH_RECENTS_KEY,[q,...recents.filter(item=>searchNormTitle(item)!==normalized)].slice(0,10));
+    renderSearchRecents(); drawSearchResults();
+  }catch(error){
+    if(error&&error.name==="AbortError")return;
+    if(sequence!==searchSequence)return;
+    box.innerHTML='<div class="status-box error">Search could not reach the catalogues. Check your connection and try again.</div>';
+  }finally{if(sequence===searchSequence)box.setAttribute("aria-busy","false");}
+}
+function renderSearchRecents(){
+  const host=$("#searchRecents");if(!host)return;
+  const recents=searchRecentItems();host.innerHTML=recents.length?'<span class="search-recent-label">Recent</span>'+recents.map(q=>'<button class="chip-btn search-recent" type="button" data-search-recent="'+esc(q)+'">'+esc(q)+'</button>').join(""):"";
 }
 function drawSearchResults(){
-  const box=$("#searchResults"); if(!box) return;
-  const list=searchState.results.filter(x=>searchState.filter==="all"||x.media_type===searchState.filter);
-  box.innerHTML=list.length?'<p class="lede">'+list.length+' result'+(list.length===1?"":"s")+' for “'+esc(searchState.q)+'”</p><div class="grid">'+list.map((it,i)=>cardHTML(it,{index:i})).join("")+"</div>"
-    :'<div class="empty"><h3>No results</h3><p>Nothing matched “'+esc(searchState.q)+'”. Check the spelling or try another title.</p></div>';
-  bindArtworkFallbacks(box);
+  const box=$("#searchResults");if(!box)return;
+  const q=searchState.q;
+  if(!q){box.setAttribute("aria-busy","false");box.innerHTML='<div class="empty"><h3>Find your next watch</h3><p>Type a title and results will appear automatically.</p></div>';return;}
+  const list=searchState.results.filter(item=>searchState.filter==="all"||typeOf(item)===searchState.filter);
+  box.innerHTML=list.length?'<p class="lede">'+list.length+' result'+(list.length===1?"":"s")+' for “'+esc(q)+'” — merged across Cinemeta, TVmaze, and AniList.</p><div class="grid">'+list.map((item,index)=>cardHTML(item,{index})).join("")+"</div>"
+    :'<div class="empty"><h3>No matches yet</h3><p>Try another spelling or title; results are combined from the available catalogues.</p></div>';
+  box.setAttribute("aria-busy","false");bindArtworkFallbacks(box);
 }
 
 function renderLibrary(){
@@ -6776,7 +6852,7 @@ function wireAddonPanel(){
 }
 
 /* ---------------- router, menu drawer and TV navigation ---------------- */
-function setNav(name){ $$(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.nav===name)); }
+function setNav(name){ $$(".nav button,.menu-link[data-menu-route]").forEach(b=>b.classList.toggle("active",(b.dataset.nav||b.dataset.menuRoute)===name)); }
 let menuReturnFocus=null;
 function renderMenuQuickSwitches(){
   const box=document.getElementById("menuQuickSwitches");
@@ -6835,7 +6911,7 @@ function render(){
   if(route==="movies"){ setNav("movies"); renderBrowse("movie",browseParams); }
   else if(route==="series"){ setNav("series"); renderBrowse("tv",browseParams); }
   else if(route==="categories"){ setNav("categories"); renderCategories(); }
-  else if(route==="search"){ setNav(""); renderSearch(params.get("q")||""); }
+  else if(route==="search"){ setNav("search"); renderSearch(params.get("q")||""); }
   else if(route==="library"){ setNav("library"); renderLibrary(); }
   else if(route==="sources"||route==="discover"){ setNav("sources"); renderSources(false,{settingsPage:false,section:""}); }
   else if(route==="settings"){ setNav("sources"); renderSources(false,{settingsPage:true,section:params.get("section")||""}); }
@@ -6847,7 +6923,7 @@ function render(){
 }
 $$(".nav button").forEach(b=>b.onclick=()=>goRoute(b.dataset.nav));
 $("#btnMenu").onclick=openMenuDrawer;
-const mobileMoreButton=$("#btnMobileMore"); if(mobileMoreButton) mobileMoreButton.onclick=openMenuDrawer;
+
 $("#btnCloseMenu").onclick=closeMenuDrawer;
 $("#menuScrim").onclick=closeMenuDrawer;
 document.addEventListener("click",e=>{
@@ -6998,8 +7074,8 @@ function handlePlayerKeyboard(e){
   const full=st.engine==="native"||st.engine==="faststream-api";
   const key=e.key;
   const overlayEl=document.getElementById("playerOverlay");
-  if(overlayEl&&overlayEl.classList.contains("chrome-hidden")&&!st.embedFocused&&/^(Arrow|Enter|Channel)/.test(key)){
-    e.preventDefault(); showPlayerChrome(false);
+  if(overlayEl&&overlayEl.classList.contains("chrome-hidden")&&(!st.embedFocused||st.chromeUserHidden)&&/^(Arrow|Enter|Channel|Escape| )/.test(key)){
+    e.preventDefault(); showPlayerChrome(false,true);
     const wake=document.getElementById(full?"btnPlayPause":"btnFocusEmbed")||document.getElementById("btnPlayerServers");
     if(wake&&wake.style.display!=="none"&&!wake.disabled) wake.focus({preventScroll:true});
     return true;

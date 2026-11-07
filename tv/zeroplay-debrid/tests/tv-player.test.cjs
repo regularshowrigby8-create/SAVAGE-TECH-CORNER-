@@ -99,7 +99,7 @@ eq(sorted.map(x => x.id), ['direct:a', 'route:vidstuck', 'route:embedwave'], 've
   eq(state.rate, 1.25, 'FastStream playback rate normalized');
 
   const statics = [
-    [html.includes('id="menuDrawer"') && html.includes('data-nav="categories"'), 'TV menu drawer and Categories navigation present'],
+    [html.includes('id="menuDrawer"') && html.includes('data-menu-route="categories"'), 'TV menu drawer and Categories navigation present'],
     [html.includes('function renderCategories()') && html.includes('route==="categories"'), 'Categories route is wired'],
     [html.includes('class="trailer-layer"') && html.includes('function startCardPreview'), 'trailer preview lives inside poster title blocks'],
     [html.includes('id="playerQuality"') && html.includes('setVideoLevel'), 'unified player exposes real FastStream quality selection'],
