@@ -90,37 +90,31 @@ season/episode-specific catalogue search.
 
 ## Multi-tier Server Finder
 
-The free-tier Vercel project exposes the Server Finder as an MCP Streamable HTTP
-endpoint at `/api/mcp`. It is stateless and implements `finder_health` and
-`find_title_servers`; the browser calls `find_title_servers` over the same-origin
-MCP endpoint. The hosted handler runs in Vercel, not on the TV/device. The current
-Vercel project applies SSO protection to preview deployments, so external MCP
-clients must be authorized for that deployment before they can connect. The
-optional local Node sidecar also exposes `/api/mcp` for development; its MCP
-route uses the bounded async implementation. The older `/api/find` route stays
-available for compatibility. If MCP is unavailable, existing browser
-provider/catalog/GitHub discovery remains the fallback.
+`server.js` is an optional local Node.js sidecar. Run it with `npm start`; it
+serves the existing app and the same-origin `/api/find` route on `0.0.0.0:8787`
+(or `PORT`). The browser only calls relative `/api/find` URLs—there is no
+`localhost` URL baked into browser code. When ZeroPlay is served by Vercel or
+Netlify, the matching serverless route uses the same candidate-discovery core
+as a bounded async pool; the local process uses Node `worker_threads`. If the
+API is unavailable, the existing in-browser provider/catalog/GitHub crawlers
+continue independently.
 
-The current reviewed discovery pool has three allowlisted sources: the Stremio
-addon catalogue, the Cinemeta community/official addon graph, and GitHub
-repository metadata/README links. It inspects public HTTPS manifests only,
-never executes GitHub-discovered code, and returns uninstalled candidates—not
-verified streams. Each request checks at most 8 manifests per source (24
-candidates total); the candidate registry cap is 1,000 records. A candidate is
-promoted only after the existing title-scoped playback scan returns an
-identity-verified direct stream for the selected IMDb/TMDB title and episode.
-The finder reports per-source status and uses the app's persisted provider
-registry as its cache.
+The discovery pool uses three bounded, allowlisted sources: the Stremio addon
+catalogue, the Cinemeta community/official addon graph, and GitHub repository
+metadata/README links. It inspects public HTTPS manifests only, never executes
+GitHub-discovered code, and returns candidates—not streams or installable
+providers. The pool can retain up to 1,000 candidates; each request checks at
+most 8 manifests per source (24 candidates total) and the title scanner still
+checks at most 100 candidates with 12 workers per pass. A candidate is promoted
+only after the existing title-scoped playback scan returns an identity-verified
+direct stream for the selected IMDb/TMDB title and episode. The finder reports
+source status and uses the app's persisted provider registry as its cache.
 
-This free Vercel deployment does **not** run 10,000 live OS threads or claim a
-10,000-engine registry. Free serverless hosting cannot safely guarantee that
-level of continuously active compute. The MCP boundary keeps discovery work off
-the playback device, but the current catalog engine list remains the three
-reviewed sources above and hosted fan-out is bounded. Adding a genuine large
-engine fleet would require its source definitions plus a separate queue/worker
-host with an explicit compute budget; it must not be emulated as 10,000 threads
-on a TV or a free serverless invocation. The local `/api/health` endpoint
-reports the legacy local mode. Build and run locally with:
+This deliberately does not start 1,000 OS threads or import 1,000 arbitrary
+scraper modules: that would be unsafe and can overload free-tier hosting. Local
+worker-thread fan-out is one worker per discovery source; hosted requests stay
+within the bounded async pool. The local `/api/health` endpoint reports the
+active mode. Build and run locally with:
 
 ```sh
 npm ci

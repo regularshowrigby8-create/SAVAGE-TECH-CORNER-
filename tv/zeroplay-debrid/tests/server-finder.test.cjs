@@ -99,7 +99,7 @@ function responseStub() {
   } finally { global.fetch = originalFetch; }
 
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-  assert(html.includes('fetch("/api/mcp"'), 'browser uses a same-origin MCP finder URL instead of hard-coded localhost');
+  assert(html.includes('fetch("/api/find"'), 'browser uses a same-origin finder URL instead of hard-coded localhost');
   assert(html.includes('serverFinderProgressHTML') && html.includes('serverFinderSourceStatus'), 'finder source progress appears separately in the title-search UI');
   assert(html.includes('result.identityVerified>0') && html.includes('status:"installed"'), 'browser retains exact-match-only candidate promotion');
 
