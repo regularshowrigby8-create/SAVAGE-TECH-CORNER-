@@ -6210,10 +6210,13 @@ async function collectAllStreams(ctx,opts){
   const identity=(ctx&&ctx.identity&&ctx.identity.version)?ctx.identity:buildTitleIdentity(ctx||{});
   const richCtx=Object.assign({},ctx||{},{identity});
   const addons=enabledAddons().slice().sort((a,b)=>healthScore(b.id)-healthScore(a.id)||((b.stars||0)-(a.stars||0)));
-  const agg={direct:[],torrents:0,oversize:0,external:0,identityRejected:0,identityVerified:0,catalogMatches:0,queried:0,totalAddons:addons.length};
+  const agg={direct:[],torrents:0,oversize:0,external:0,identityRejected:0,identityVerified:0,catalogMatches:0,queried:0,totalAddons:addons.length,concurrency:0,searchLimited:false};
   const seen=new Set();
-  const waveSize=Math.max(4,Math.min(20,Number(opts.waveSize)||12));
+  const requestedWorkers=Number(opts.concurrency)||(opts.quick?12:20);
+  const concurrency=Math.max(1,Math.min(32,addons.length||1,Math.floor(requestedWorkers)||1));
   const maxDirect=Math.max(4,Number(opts.maxDirect)||24);
+  const stopAfterServers=Math.max(0,Math.min(24,Math.floor(Number(opts.stopAfterServers==null?8:opts.stopAfterServers)||0)));
+  agg.concurrency=concurrency;
   const qualityPenalty=v=>{
     const pref=normalizeQualityLabel(settings.stream.quality||"auto");
     const prefH=pref==="auto"?2160:qualityHeight(pref), h=qualityHeight(v&&v.quality);
@@ -6221,24 +6224,35 @@ async function collectAllStreams(ctx,opts){
     return h>prefH?(h-prefH)/90+12:(prefH-h)/720;
   };
   const sortDirect=()=>agg.direct.sort((a,b)=>((b.identityScore||0)-(a.identityScore||0))||(qualityPenalty(a)-qualityPenalty(b))||((b.seeders||0)-(a.seeders||0))||((Number(a.bytes)||0)-(Number(b.bytes)||0)));
-  for(let i=0;i<addons.length;i+=waveSize){
-    if(opts.shouldContinue&&!opts.shouldContinue()){ agg.aborted=true; break; }
-    const wave=addons.slice(i,i+waveSize);
-    const results=await Promise.allSettled(wave.map(a=>queryAddonStreams(a,richCtx)));
-    if(opts.shouldContinue&&!opts.shouldContinue()){ agg.aborted=true; break; }
-    agg.queried+=wave.length;
-    for(const r of results){
-      if(r.status!=="fulfilled") continue;
-      const v=r.value;
-      agg.torrents+=v.torrents||0; agg.oversize+=v.oversize||0; agg.external+=v.external||0;
-      agg.identityRejected+=v.identityRejected||0; agg.identityVerified+=v.identityVerified||0;
-      if(v.catalogMatch) agg.catalogMatches++;
-      for(const stream of (v.direct||[])){ if(seen.has(stream.url)) continue; seen.add(stream.url); agg.direct.push(stream); }
+  const matchedServerCount=()=>new Set(agg.direct.map(stream=>stream.addonBase||stream.addonName||"direct")).size;
+  let cursor=0, stopped=false;
+  const mayContinue=()=>!stopped&&(!opts.shouldContinue||opts.shouldContinue())&&!(opts.signal&&opts.signal.aborted);
+  const worker=async()=>{
+    while(mayContinue()){
+      const index=cursor++;
+      if(index>=addons.length) return;
+      const addon=addons[index];
+      let result=null;
+      try{ result=await queryAddonStreams(addon,richCtx,{signal:opts.signal}); }catch{}
+      if(result){
+        agg.queried++;
+        agg.torrents+=result.torrents||0; agg.oversize+=result.oversize||0; agg.external+=result.external||0;
+        agg.identityRejected+=result.identityRejected||0; agg.identityVerified+=result.identityVerified||0;
+        if(result.catalogMatch) agg.catalogMatches++;
+        for(const stream of (result.direct||[])){ if(stream&&stream.url&&!seen.has(stream.url)){ seen.add(stream.url); agg.direct.push(stream); } }
+        sortDirect();
+        if(opts.onProgress){ try{ opts.onProgress(agg); }catch{} }
+        if(agg.direct.length>=maxDirect||(stopAfterServers>0&&matchedServerCount()>=stopAfterServers)){
+          agg.searchLimited=cursor<addons.length; stopped=true;
+        }
+      }else{
+        agg.queried++;
+        if(opts.onProgress){ try{ opts.onProgress(agg); }catch{} }
+      }
     }
-    sortDirect();
-    if(opts.onProgress){ try{ opts.onProgress(agg); }catch{} }
-    if(agg.direct.length>=maxDirect) break;
-  }
+  };
+  await Promise.all(Array.from({length:concurrency},()=>worker()));
+  if(opts.signal&&opts.signal.aborted||opts.shouldContinue&&!opts.shouldContinue()) agg.aborted=true;
   sortDirect();
   return agg;
 }
@@ -6339,7 +6353,7 @@ async function findTitleServers(ctx,opts){
     if(cached&&Date.now()-cached.t<180000){ if(opts.onUpdate) opts.onUpdate(Object.assign({},cached.data,{complete:true,cached:true})); return cached.data; }
   }
   const byId=new Map();
-  const stats={checkedRoutes:0,checkedWebsites:0,matchedWebsites:0,queriedProviders:0,totalProviders:enabledAddons().length,identityVerified:0,identityRejected:0,torrents:0,oversize:0,external:0,catalogMatches:0,complete:false};
+  const stats={checkedRoutes:0,checkedWebsites:0,matchedWebsites:0,queriedProviders:0,totalProviders:enabledAddons().length,concurrency:Math.max(1,Math.min(32,Math.floor(Number(opts.concurrency)||(opts.quick?12:20))||1,enabledAddons().length||1)),identityVerified:0,identityRejected:0,torrents:0,oversize:0,external:0,catalogMatches:0,complete:false};
   let embedwaveOption=null;
   const snapshot=complete=>({options:sortTitleServerOptions([...byId.values()].concat(complete&&embedwaveOption?[embedwaveOption]:[])),stats:Object.assign({},stats,{complete:!!complete}),identity});
   const emit=()=>{ if(opts.onUpdate){ try{ opts.onUpdate(snapshot(false)); }catch{} } };
@@ -6349,55 +6363,62 @@ async function findTitleServers(ctx,opts){
         episode). Cross-origin embeds cannot prove catalogue availability
         before loading, so the UI labels them honestly as exact-ID routes. */
   const routeSources=allSources().filter(s=>s.kind!=="addon"&&s.kind!=="site");
-  await Promise.allSettled(routeSources.map(async source=>{
-    stats.checkedRoutes++;
-    const support=sourceSupportsTitle(source,identity);
-    if(!support.supported) return;
-    const playback=await resolveSourcePlayback(source,richCtx);
-    if(!playback||!playback.url) return;
-    addOption({
-      id:(playback.direct?"direct-route:":"route:")+source.id,
-      kind:playback.direct?"direct":"route", status:playback.direct?"direct-route":"route", verified:false,
-      name:source.name, sourceId:source.id, source, url:playback.url,
-      variants:playback.variants||[], activeVariant:playback.activeVariant||null,
-      score:45+Math.max(-20,Math.min(35,healthScore(source.id)/4)),
-      evidence:support.reason,
-    });
-  }));
-  emit();
-  /* 2) Website lookup servers: only identity-matched websites appear. */
+  const routeTask=(async()=>{
+    await Promise.allSettled(routeSources.map(async source=>{
+      if(opts.signal&&opts.signal.aborted) return;
+      stats.checkedRoutes++;
+      const support=sourceSupportsTitle(source,identity);
+      if(!support.supported) return;
+      const playback=await resolveSourcePlayback(source,richCtx);
+      if(!playback||!playback.url) return;
+      addOption({
+        id:(playback.direct?"direct-route:":"route:")+source.id,
+        kind:playback.direct?"direct":"route", status:playback.direct?"direct-route":"route", verified:false,
+        name:source.name, sourceId:source.id, source, url:playback.url,
+        variants:playback.variants||[], activeVariant:playback.activeVariant||null,
+        score:45+Math.max(-20,Math.min(35,healthScore(source.id)/4)),
+        evidence:support.reason,
+      });
+    }));
+    emit();
+  })();
+  /* 2) Website checks and addon checks run together; return partial matches as
+        each provider finishes instead of waiting for a whole category. */
   const sites=allSources().filter(s=>s.kind==="site");
-  await runTitleChecks(sites,3,async source=>{
-    stats.checkedWebsites++;
-    const found=await checkWebsiteAvailability(source,richCtx).catch(()=>null);
-    if(!found||!found.matched){
-      emit(); return;
-    }
-    stats.matchedWebsites++;
-    const direct=sortVariantsForQuality((found.direct||[]).map(url=>({url,addonName:source.name,label:found.pageTitle||found.watchTitle||source.name})),settings.stream.quality);
-    if(found.playUrl&&isDirectMedia(found.playUrl)&&!direct.some(v=>v.url===found.playUrl)) direct.unshift(normalizeVariant({url:found.playUrl,addonName:source.name,label:found.pageTitle||source.name},source.name));
-    addOption({
-      id:"site:"+source.id,
-      kind:direct.length&&isDirectMedia(found.playUrl||direct[0].url)?"direct":"site",
-      status:"verified", verified:true,
-      name:source.name, sourceId:source.id, source, url:found.playUrl||found.watchUrl||found.embed||"",
-      variants:direct, activeVariant:direct.find(v=>v.url===found.playUrl)||direct[0]||null,
-      identityScore:Number(found.identity&&found.identity.score)||0, identityVerdict:found.identity&&found.identity.verdict||"website identity verified",
-      score:70+(Number(found.identity&&found.identity.score)||0)/4,
-      evidence:"website returned and identity-verified this title",
+  const websiteTask=(async()=>{
+    await runTitleChecks(sites,Math.max(1,Math.min(12,Number(opts.websiteConcurrency)||6)),async source=>{
+      if(opts.signal&&opts.signal.aborted) return;
+      stats.checkedWebsites++;
+      const found=await checkWebsiteAvailability(source,richCtx).catch(()=>null);
+      if(!found||!found.matched){ emit(); return; }
+      stats.matchedWebsites++;
+      const direct=sortVariantsForQuality((found.direct||[]).map(url=>({url,addonName:source.name,label:found.pageTitle||found.watchTitle||source.name})),settings.stream.quality);
+      if(found.playUrl&&isDirectMedia(found.playUrl)&&!direct.some(v=>v.url===found.playUrl)) direct.unshift(normalizeVariant({url:found.playUrl,addonName:source.name,label:found.pageTitle||source.name},source.name));
+      addOption({
+        id:"site:"+source.id,
+        kind:direct.length&&isDirectMedia(found.playUrl||direct[0].url)?"direct":"site",
+        status:"verified", verified:true,
+        name:source.name, sourceId:source.id, source, url:found.playUrl||found.watchUrl||found.embed||"",
+        variants:direct, activeVariant:direct.find(v=>v.url===found.playUrl)||direct[0]||null,
+        identityScore:Number(found.identity&&found.identity.score)||0, identityVerdict:found.identity&&found.identity.verdict||"website identity verified",
+        score:70+(Number(found.identity&&found.identity.score)||0)/4,
+        evidence:"website returned and identity-verified this title",
+      });
     });
-  });
-  emit();
+    emit();
+  })();
   /* 3) Identified addon/direct servers: only servers returning verified
         streams for this exact movie/episode become options, grouped by
         server with their real quality variants. */
   let addonSearchActive=true;
   const runAddons=collectAllStreams(richCtx,{
     maxDirect:opts.maxDirect||40,
-    waveSize:opts.quick?10:12,
+    concurrency:opts.concurrency||(opts.quick?12:20),
+    stopAfterServers:opts.stopAfterServers==null?(opts.quick?2:8):opts.stopAfterServers,
+    signal:opts.signal,
     shouldContinue:()=>addonSearchActive&&(!opts.shouldContinue||opts.shouldContinue()),
     onProgress:agg=>{
-      stats.queriedProviders=agg.queried; stats.totalProviders=agg.totalAddons; stats.identityVerified=agg.identityVerified; stats.identityRejected=agg.identityRejected; stats.torrents=agg.torrents; stats.oversize=agg.oversize; stats.external=agg.external; stats.catalogMatches=agg.catalogMatches;
+      stats.queriedProviders=agg.queried; stats.totalProviders=agg.totalAddons; stats.concurrency=agg.concurrency; stats.searchLimited=agg.searchLimited; stats.identityVerified=agg.identityVerified; stats.identityRejected=agg.identityRejected; stats.torrents=agg.torrents; stats.oversize=agg.oversize; stats.external=agg.external; stats.catalogMatches=agg.catalogMatches;
       for(const group of groupStreamsByServer(agg.direct)) byId.set(group.id,group);
       emit();
     }
@@ -6408,7 +6429,8 @@ async function findTitleServers(ctx,opts){
     if(!agg) runAddons.catch(()=>{});
   }else agg=await runAddons;
   addonSearchActive=false;
-  if(agg){ stats.queriedProviders=agg.queried; stats.identityVerified=agg.identityVerified; stats.identityRejected=agg.identityRejected; stats.torrents=agg.torrents; stats.oversize=agg.oversize; stats.external=agg.external; stats.catalogMatches=agg.catalogMatches; for(const group of groupStreamsByServer(agg.direct)) byId.set(group.id,group); }
+  await Promise.allSettled([routeTask,websiteTask]);
+  if(agg){ stats.queriedProviders=agg.queried; stats.concurrency=agg.concurrency; stats.searchLimited=agg.searchLimited; stats.identityVerified=agg.identityVerified; stats.identityRejected=agg.identityRejected; stats.torrents=agg.torrents; stats.oversize=agg.oversize; stats.external=agg.external; stats.catalogMatches=agg.catalogMatches; for(const group of groupStreamsByServer(agg.direct)) byId.set(group.id,group); }
   const result=snapshot(true);
   result.agg=agg;
   if(!opts.quick&&!(agg&&agg.aborted)) titleServerCache.set(cacheKey,{t:Date.now(),data:result});
@@ -6604,8 +6626,8 @@ function renderTitleServerOptions(){
   if(status){
     const stats=c._stats||{};
     status.innerHTML=searching
-      ? '<span class="spinner"></span> Searching only for <strong>'+esc(c.title||"this title")+'</strong>'+(stats.queriedProviders?(' · checked '+stats.queriedProviders+'/'+(stats.totalProviders|| enabledAddons().length)+' direct providers'):"")+' · servers appear only after a match'
-      : '<strong>'+(direct.length+sites.length)+'</strong> verified server option'+((direct.length+sites.length)===1?"":"s")+' · <strong>'+routes.length+'</strong> exact-ID player route'+(routes.length===1?"":"s")+' · unrelated servers hidden';
+      ? '<span class="spinner"></span> Searching only for <strong>'+esc(c.title||"this title")+'</strong>'+(stats.queriedProviders?(' · checked '+stats.queriedProviders+'/'+(stats.totalProviders|| enabledAddons().length)+' direct providers'):"")+(stats.concurrency?' · up to '+stats.concurrency+' parallel workers':'')+' · servers appear only after a match'
+      : '<strong>'+(direct.length+sites.length)+'</strong> verified server option'+((direct.length+sites.length)===1?"":"s")+' · <strong>'+routes.length+'</strong> exact-ID player route'+(routes.length===1?"":"s")+' · unrelated servers hidden'+(stats.searchLimited?' · early results shown; Search again to scan more providers':'');
   }
   const cnt=document.getElementById("streamCounts");
   if(cnt&&c._stats){
