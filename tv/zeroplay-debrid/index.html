@@ -6467,11 +6467,11 @@ async function findTitleServers(ctx,opts){
   /* 3) Identified addon/direct servers: only servers returning verified
         streams for this exact movie/episode become options, grouped by
         server with their real quality variants. */
-  let addonSearchActive=true;
+  let addonSearchActive=true, quickSearchDetached=false;
   const runAddons=collectAllStreams(richCtx,{
     concurrency:opts.concurrency||(opts.quick?16:32),
     signal:opts.signal,
-    shouldContinue:()=>addonSearchActive&&(!opts.shouldContinue||opts.shouldContinue()),
+    shouldContinue:()=>addonSearchActive&&(quickSearchDetached||!opts.shouldContinue||opts.shouldContinue()),
     onProgress:agg=>{
       stats.queriedProviders=agg.queried; stats.totalProviders=agg.totalAddons; stats.concurrency=agg.concurrency; stats.identityVerified=agg.identityVerified; stats.identityRejected=agg.identityRejected; stats.torrents=agg.torrents; stats.oversize=agg.oversize; stats.external=agg.external; stats.catalogMatches=agg.catalogMatches;
       for(const group of groupStreamsByServer(agg.direct)) byId.set(group.id,group);
@@ -6485,6 +6485,7 @@ async function findTitleServers(ctx,opts){
       /* A quick caller may consume the partial list, but the provider scan is
          never cancelled at the deadline. Keep filling its live results until
          every enabled provider settles (or the caller explicitly cancels). */
+      quickSearchDetached=true;
       runAddons.then(async fullAgg=>{
         addonSearchActive=false;
         await Promise.allSettled([routeTask,websiteTask]);
