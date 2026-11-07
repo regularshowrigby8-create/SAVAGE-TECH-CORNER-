@@ -4,7 +4,8 @@ const path = require('path');
 const vm = require('vm');
 const api = require('../api/global-search.js');
 const { ENGINE_IDS, runEngine, normRows, externalUrl } = api._test;
-const enginesDir = path.join(__dirname, '..', 'api/vendor/cdrake-se/Engines');
+const enginesDir = path.join(__dirname, '..', 'lib/vendor/cdrake-se/Engines');
+assert(!fs.existsSync(path.join(__dirname, '..', 'api/vendor')), 'vendored adapter modules stay outside Vercel function discovery to respect Hobby function limits');
 
 function responseStub() {
   return {
@@ -20,9 +21,9 @@ function responseStub() {
   for (const engine of ['Aol', 'Ask', 'Bing', 'Google', 'Qwant', 'Suggest', 'Wikipedia', 'Yahoo', 'Yep', 'Youtube']) {
     assert(fs.existsSync(path.join(enginesDir, engine + '.js')), engine + ' adapter is vendored from the inspected GitHub source');
   }
-  const upstream = fs.readFileSync(path.join(__dirname, '..', 'api/vendor/cdrake-se/UPSTREAM_COMMIT'), 'utf8').trim();
+  const upstream = fs.readFileSync(path.join(__dirname, '..', 'lib/vendor/cdrake-se/UPSTREAM_COMMIT'), 'utf8').trim();
   assert.strictEqual(upstream, 'db68decc20f1fa4c164d1c35df971c8670a56c79', 'vendored upstream is pinned to a reviewed commit');
-  assert(fs.readFileSync(path.join(__dirname, '..', 'api/vendor/cdrake-se/LICENSE'), 'utf8').includes('MIT'), 'upstream MIT license is retained');
+  assert(fs.readFileSync(path.join(__dirname, '..', 'lib/vendor/cdrake-se/LICENSE'), 'utf8').includes('MIT'), 'upstream MIT license is retained');
 
   assert.strictEqual(externalUrl('http://example.com/watch'), '', 'global leads reject non-HTTPS pages');
   assert.strictEqual(externalUrl('https://127.0.0.1/private'), '', 'global leads reject loopback destinations');
@@ -31,7 +32,7 @@ function responseStub() {
   assert.strictEqual(normalized.length, 1, 'search results normalize from upstream schema');
   assert.strictEqual(normalized[0].href, 'https://example.com/title', 'normalized result keeps its safe URL');
 
-  const Aol = require('../api/vendor/cdrake-se/Engines/Aol');
+  const Aol = require('../lib/vendor/cdrake-se/Engines/Aol');
   const oldAolSearch = Aol.prototype.Search;
   Aol.prototype.Search = async function () {
     assert.strictEqual(this.Query, encodeURIComponent('Reference title 2011'), 'engine query is URL-encoded before calling upstream scraper');
@@ -43,7 +44,7 @@ function responseStub() {
     assert.strictEqual(found.results[0].engine, 'aol', 'results retain their engine provenance');
   } finally { Aol.prototype.Search = oldAolSearch; }
 
-  const Google = require('../api/vendor/cdrake-se/Engines/Google');
+  const Google = require('../lib/vendor/cdrake-se/Engines/Google');
   const wikipediaApi = require('wikipedia');
   const oldGoogleSearch = Google.prototype.Search;
   const oldWikiSetLang = wikipediaApi.setLang;

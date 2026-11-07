@@ -4,19 +4,19 @@
  * ZeroPlay global-search adapter. The per-title browser scheduler calls this
  * same-origin function once per GitHub-imported CDrake-SE engine; browser
  * workers own the fan-out so this never shares the continuous provider crawler.
- * Upstream CDrake-SE source is vendored under api/vendor/cdrake-se (MIT).
+ * Upstream CDrake-SE source is vendored under lib/vendor/cdrake-se (MIT).
  */
-const Aol = require('./vendor/cdrake-se/Engines/Aol');
-const Ask = require('./vendor/cdrake-se/Engines/Ask');
-const Bing = require('./vendor/cdrake-se/Engines/Bing');
-const Google = require('./vendor/cdrake-se/Engines/Google');
-const Qwant = require('./vendor/cdrake-se/Engines/Qwant');
-const Suggest = require('./vendor/cdrake-se/Engines/Suggest');
-const Wikipedia = require('./vendor/cdrake-se/Engines/Wikipedia');
-const Yahoo = require('./vendor/cdrake-se/Engines/Yahoo');
-const Yep = require('./vendor/cdrake-se/Engines/Yep');
-const Youtube = require('./vendor/cdrake-se/Engines/Youtube');
-const { kAxiosOptions } = require('./vendor/cdrake-se/Global');
+const Aol = require('../lib/vendor/cdrake-se/Engines/Aol');
+const Ask = require('../lib/vendor/cdrake-se/Engines/Ask');
+const Bing = require('../lib/vendor/cdrake-se/Engines/Bing');
+const Google = require('../lib/vendor/cdrake-se/Engines/Google');
+const Qwant = require('../lib/vendor/cdrake-se/Engines/Qwant');
+const Suggest = require('../lib/vendor/cdrake-se/Engines/Suggest');
+const Wikipedia = require('../lib/vendor/cdrake-se/Engines/Wikipedia');
+const Yahoo = require('../lib/vendor/cdrake-se/Engines/Yahoo');
+const Yep = require('../lib/vendor/cdrake-se/Engines/Yep');
+const Youtube = require('../lib/vendor/cdrake-se/Engines/Youtube');
+const { kAxiosOptions } = require('../lib/vendor/cdrake-se/Global');
 const axios = require('axios');
 
 const REQUEST_TIMEOUT_MS = 4500;
