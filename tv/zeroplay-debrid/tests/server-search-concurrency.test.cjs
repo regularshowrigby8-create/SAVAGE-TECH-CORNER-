@@ -16,7 +16,7 @@ const completed = [];
 const updates = [];
 const ctx = {
   settings: { stream: { quality: 'auto' }, addons },
-  enabledAddons() { return addons; },
+  enabledAddons() { return ctx.settings.addons; },
   healthScore() { return 50; },
   normalizeQualityLabel(value) { return value; },
   qualityHeight(value) { return Number.parseInt(value, 10) || 0; },
@@ -41,29 +41,31 @@ vm.runInContext(script.slice(start, end), ctx, { filename: 'collect-all-streams.
 (async () => {
   const result = await ctx.collectAllStreams({ title: 'Series', type: 'tv' }, {
     concurrency: 3,
-    stopAfterServers: 0,
     onProgress(snapshot) { updates.push(snapshot.queried); },
   });
   assert.strictEqual(maxActive, 3, 'uses configured provider concurrency');
   assert.strictEqual(result.concurrency, 3, 'reports actual concurrency');
-  assert.strictEqual(result.queried, addons.length, 'all providers are queried when no early stop is configured');
-  assert.strictEqual(result.direct.length, addons.length, 'all verified matching streams are preserved');
+  assert.strictEqual(result.queried, addons.length, 'queries every enabled provider');
+  assert.strictEqual(result.direct.length, addons.length, 'preserves every verified matching stream');
   assert.strictEqual(updates.length, addons.length, 'reports progress per provider, not per completed batch');
   assert.strictEqual(updates[0], 1, 'first provider completion is emitted immediately');
-  assert.notStrictEqual(completed[0], 'provider-0', 'fast providers are not held behind a slow provider in the first batch');
+  assert.notStrictEqual(completed[0], 'provider-0', 'fast providers are not held behind a slow provider');
   assert.strictEqual(result.identityVerified, addons.length, 'aggregates verified stream counts');
 
+  const allEighty = Array.from({ length: 80 }, (_, i) => ({ id: `vod-${i}`, name: `VOD ${i}` }));
+  ctx.settings.addons = allEighty;
   let started = 0;
-  ctx.enabledAddons = () => addons;
   ctx.queryAddonStreams = async addon => {
     started++;
-    await new Promise(resolve => setTimeout(resolve, 4));
-    return { direct: [{ url: `https://cdn.test/limited-${addon.id}`, addonName: addon.name, addonBase: `https://${addon.id}.test` }] };
+    await new Promise(resolve => setTimeout(resolve, 1));
+    return { direct: [{ url: `https://cdn.test/${addon.id}.mp4`, addonName: addon.name, addonBase: `https://${addon.id}.test` }] };
   };
-  const limited = await ctx.collectAllStreams({ title: 'Series', type: 'tv' }, { concurrency: 3, stopAfterServers: 2 });
-  assert(started >= 2 && started <= 4, 'stops scheduling once enough distinct matching servers have returned');
-  assert(limited.searchLimited, 'marks an early-completed provider scan');
-  assert(limited.direct.length >= 2, 'retains the matching servers found before stopping');
-  console.log('PASS bounded server search concurrency and immediate provider progress');
-  console.log('PASS early stopping after enough distinct server matches');
+  const fullScan = await ctx.collectAllStreams({ title: 'Series', type: 'tv' }, {});
+  assert.strictEqual(fullScan.concurrency, 32, 'uses the optimized default worker count across a large VOD provider list');
+  assert.strictEqual(started, 80, 'does not stop provider scheduling after finding matching servers');
+  assert.strictEqual(fullScan.queried, 80, 'scans the complete enabled VOD provider list');
+  assert.strictEqual(fullScan.totalAddons, 80, 'reports the full provider inventory');
+  assert.strictEqual(fullScan.direct.length, 80, 'does not cap verified direct results');
+  console.log('PASS bounded concurrent workers and immediate per-provider progress');
+  console.log('PASS uncapped VOD provider scan returns all matching servers');
 })().catch(error => { console.error(error); process.exit(1); });

@@ -6273,12 +6273,10 @@ async function collectAllStreams(ctx,opts){
   const identity=(ctx&&ctx.identity&&ctx.identity.version)?ctx.identity:buildTitleIdentity(ctx||{});
   const richCtx=Object.assign({},ctx||{},{identity});
   const addons=enabledAddons().slice().sort((a,b)=>healthScore(b.id)-healthScore(a.id)||((b.stars||0)-(a.stars||0)));
-  const agg={direct:[],torrents:0,oversize:0,external:0,identityRejected:0,identityVerified:0,catalogMatches:0,queried:0,totalAddons:addons.length,concurrency:0,searchLimited:false};
+  const agg={direct:[],torrents:0,oversize:0,external:0,identityRejected:0,identityVerified:0,catalogMatches:0,queried:0,totalAddons:addons.length,concurrency:0};
   const seen=new Set();
-  const requestedWorkers=Number(opts.concurrency)||(opts.quick?12:20);
+  const requestedWorkers=Number(opts.concurrency)||(opts.quick?16:32);
   const concurrency=Math.max(1,Math.min(32,addons.length||1,Math.floor(requestedWorkers)||1));
-  const maxDirect=Math.max(4,Number(opts.maxDirect)||24);
-  const stopAfterServers=Math.max(0,Math.min(24,Math.floor(Number(opts.stopAfterServers==null?8:opts.stopAfterServers)||0)));
   agg.concurrency=concurrency;
   const qualityPenalty=v=>{
     const pref=normalizeQualityLabel(settings.stream.quality||"auto");
@@ -6287,9 +6285,8 @@ async function collectAllStreams(ctx,opts){
     return h>prefH?(h-prefH)/90+12:(prefH-h)/720;
   };
   const sortDirect=()=>agg.direct.sort((a,b)=>((b.identityScore||0)-(a.identityScore||0))||(qualityPenalty(a)-qualityPenalty(b))||((b.seeders||0)-(a.seeders||0))||((Number(a.bytes)||0)-(Number(b.bytes)||0)));
-  const matchedServerCount=()=>new Set(agg.direct.map(stream=>stream.addonBase||stream.addonName||"direct")).size;
-  let cursor=0, stopped=false;
-  const mayContinue=()=>!stopped&&(!opts.shouldContinue||opts.shouldContinue())&&!(opts.signal&&opts.signal.aborted);
+  let cursor=0;
+  const mayContinue=()=>(!opts.shouldContinue||opts.shouldContinue())&&!(opts.signal&&opts.signal.aborted);
   const worker=async()=>{
     while(mayContinue()){
       const index=cursor++;
@@ -6305,9 +6302,6 @@ async function collectAllStreams(ctx,opts){
         for(const stream of (result.direct||[])){ if(stream&&stream.url&&!seen.has(stream.url)){ seen.add(stream.url); agg.direct.push(stream); } }
         sortDirect();
         if(opts.onProgress){ try{ opts.onProgress(agg); }catch{} }
-        if(agg.direct.length>=maxDirect||(stopAfterServers>0&&matchedServerCount()>=stopAfterServers)){
-          agg.searchLimited=cursor<addons.length; stopped=true;
-        }
       }else{
         agg.queried++;
         if(opts.onProgress){ try{ opts.onProgress(agg); }catch{} }
@@ -6416,7 +6410,7 @@ async function findTitleServers(ctx,opts){
     if(cached&&Date.now()-cached.t<180000){ if(opts.onUpdate) opts.onUpdate(Object.assign({},cached.data,{complete:true,cached:true})); return cached.data; }
   }
   const byId=new Map();
-  const stats={checkedRoutes:0,checkedWebsites:0,matchedWebsites:0,queriedProviders:0,totalProviders:enabledAddons().length,concurrency:Math.max(1,Math.min(32,Math.floor(Number(opts.concurrency)||(opts.quick?12:20))||1,enabledAddons().length||1)),identityVerified:0,identityRejected:0,torrents:0,oversize:0,external:0,catalogMatches:0,complete:false};
+  const stats={checkedRoutes:0,checkedWebsites:0,matchedWebsites:0,queriedProviders:0,totalProviders:enabledAddons().length,concurrency:Math.max(1,Math.min(32,Math.floor(Number(opts.concurrency)||(opts.quick?16:32))||1,enabledAddons().length||1)),identityVerified:0,identityRejected:0,torrents:0,oversize:0,external:0,catalogMatches:0,complete:false};
   let embedwaveOption=null;
   const snapshot=complete=>({options:sortTitleServerOptions([...byId.values()].concat(complete&&embedwaveOption?[embedwaveOption]:[])),stats:Object.assign({},stats,{complete:!!complete}),identity});
   const emit=()=>{ if(opts.onUpdate){ try{ opts.onUpdate(snapshot(false)); }catch{} } };
@@ -6475,25 +6469,38 @@ async function findTitleServers(ctx,opts){
         server with their real quality variants. */
   let addonSearchActive=true;
   const runAddons=collectAllStreams(richCtx,{
-    maxDirect:opts.maxDirect||40,
-    concurrency:opts.concurrency||(opts.quick?12:20),
-    stopAfterServers:opts.stopAfterServers==null?(opts.quick?2:8):opts.stopAfterServers,
+    concurrency:opts.concurrency||(opts.quick?16:32),
     signal:opts.signal,
     shouldContinue:()=>addonSearchActive&&(!opts.shouldContinue||opts.shouldContinue()),
     onProgress:agg=>{
-      stats.queriedProviders=agg.queried; stats.totalProviders=agg.totalAddons; stats.concurrency=agg.concurrency; stats.searchLimited=agg.searchLimited; stats.identityVerified=agg.identityVerified; stats.identityRejected=agg.identityRejected; stats.torrents=agg.torrents; stats.oversize=agg.oversize; stats.external=agg.external; stats.catalogMatches=agg.catalogMatches;
+      stats.queriedProviders=agg.queried; stats.totalProviders=agg.totalAddons; stats.concurrency=agg.concurrency; stats.identityVerified=agg.identityVerified; stats.identityRejected=agg.identityRejected; stats.torrents=agg.torrents; stats.oversize=agg.oversize; stats.external=agg.external; stats.catalogMatches=agg.catalogMatches;
       for(const group of groupStreamsByServer(agg.direct)) byId.set(group.id,group);
       emit();
     }
   });
   let agg=null;
   if(opts.quick){
-    agg=await Promise.race([runAddons,new Promise(resolve=>setTimeout(()=>{ addonSearchActive=false; resolve(null); },Math.max(5000,Number(opts.quickTimeoutMs)||10000)))]);
-    if(!agg) runAddons.catch(()=>{});
+    agg=await Promise.race([runAddons,new Promise(resolve=>setTimeout(()=>resolve(null),Math.max(5000,Number(opts.quickTimeoutMs)||10000)))]);
+    if(!agg){
+      /* A quick caller may consume the partial list, but the provider scan is
+         never cancelled at the deadline. Keep filling its live results until
+         every enabled provider settles (or the caller explicitly cancels). */
+      runAddons.then(async fullAgg=>{
+        addonSearchActive=false;
+        await Promise.allSettled([routeTask,websiteTask]);
+        stats.queriedProviders=fullAgg.queried; stats.totalProviders=fullAgg.totalAddons; stats.concurrency=fullAgg.concurrency;
+        stats.identityVerified=fullAgg.identityVerified; stats.identityRejected=fullAgg.identityRejected; stats.torrents=fullAgg.torrents; stats.oversize=fullAgg.oversize; stats.external=fullAgg.external; stats.catalogMatches=fullAgg.catalogMatches;
+        for(const group of groupStreamsByServer(fullAgg.direct)) byId.set(group.id,group);
+        const completed=snapshot(true); completed.agg=fullAgg;
+        if(opts.onUpdate){ try{ opts.onUpdate(completed); }catch{} }
+      }).catch(()=>{});
+      const partial=snapshot(false); partial.agg=null;
+      return partial;
+    }
   }else agg=await runAddons;
   addonSearchActive=false;
   await Promise.allSettled([routeTask,websiteTask]);
-  if(agg){ stats.queriedProviders=agg.queried; stats.concurrency=agg.concurrency; stats.searchLimited=agg.searchLimited; stats.identityVerified=agg.identityVerified; stats.identityRejected=agg.identityRejected; stats.torrents=agg.torrents; stats.oversize=agg.oversize; stats.external=agg.external; stats.catalogMatches=agg.catalogMatches; for(const group of groupStreamsByServer(agg.direct)) byId.set(group.id,group); }
+  if(agg){ stats.queriedProviders=agg.queried; stats.concurrency=agg.concurrency; stats.identityVerified=agg.identityVerified; stats.identityRejected=agg.identityRejected; stats.torrents=agg.torrents; stats.oversize=agg.oversize; stats.external=agg.external; stats.catalogMatches=agg.catalogMatches; for(const group of groupStreamsByServer(agg.direct)) byId.set(group.id,group); }
   const result=snapshot(true);
   result.agg=agg;
   if(!opts.quick&&!(agg&&agg.aborted)) titleServerCache.set(cacheKey,{t:Date.now(),data:result});
@@ -6689,8 +6696,8 @@ function renderTitleServerOptions(){
   if(status){
     const stats=c._stats||{};
     status.innerHTML=searching
-      ? '<span class="spinner"></span> Searching only for <strong>'+esc(c.title||"this title")+'</strong>'+(stats.queriedProviders?(' · checked '+stats.queriedProviders+'/'+(stats.totalProviders|| enabledAddons().length)+' direct providers'):"")+(stats.concurrency?' · up to '+stats.concurrency+' parallel workers':'')+' · servers appear only after a match'
-      : '<strong>'+(direct.length+sites.length)+'</strong> verified server option'+((direct.length+sites.length)===1?"":"s")+' · <strong>'+routes.length+'</strong> exact-ID player route'+(routes.length===1?"":"s")+' · unrelated servers hidden'+(stats.searchLimited?' · early results shown; Search again to scan more providers':'');
+      ? '<span class="spinner"></span> Searching only for <strong>'+esc(c.title||"this title")+'</strong>'+(stats.queriedProviders?(' · checked '+stats.queriedProviders+'/'+(stats.totalProviders|| enabledAddons().length)+' direct providers'):"")+(stats.concurrency?' · '+stats.concurrency+' active workers, scanning every enabled provider':' · scanning every enabled provider')+' · matches appear as they arrive'
+      : '<strong>'+(direct.length+sites.length)+'</strong> verified server option'+((direct.length+sites.length)===1?"":"s")+' · <strong>'+routes.length+'</strong> exact-ID player route'+(routes.length===1?"":"s")+' · unrelated servers hidden';
   }
   const cnt=document.getElementById("streamCounts");
   if(cnt&&c._stats){
