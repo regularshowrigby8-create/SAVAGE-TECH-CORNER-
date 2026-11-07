@@ -6546,6 +6546,51 @@ async function requestGlobalSearchEngine(engine,query,language,signal){
     return data&&data.ok?data:{ok:false,results:[]};
   }finally{ clearTimeout(timer); if(signal) signal.removeEventListener("abort",abort); }
 }
+function mergeServerFinderCandidates(records){
+  const candidates=Array.isArray(records)?records:[],tombstones=settings.providerTombstones||{};
+  let added=0,seen=0;
+  const existingCandidates=(settings.providers||[]).filter(p=>p&&p.status==="candidate").length;
+  const maxNew=Math.max(0,1000-existingCandidates);
+  for(const record of candidates){
+    if(seen>=maxNew) break;
+    if(!record||record.status!=="candidate"||record.titleScopedDiscovery!==true||!record.base||!record.manifestUrl) continue;
+    const base=String(record.base).replace(/\/$/,"");
+    if(!isPublicHttpsProviderBase(base)||!isPublicHttpsProviderBase(record.manifestUrl)) continue;
+    const supports=record.identification&&record.identification.supports||{};
+    if(!supports.streams&&!((record.resources||[]).includes("stream"))) continue;
+    const id=String(record.id||"");
+    if(id&&tombstones[id]) continue;
+    record.base=base; record.enabled=record.enabled!==false; record.status="candidate"; record.titleScopedDiscovery=true;
+    const result=upsertProvider(record);
+    if(result){ seen++; if(result.added) added++; }
+  }
+  if(seen) saveSettings();
+  return {added,seen};
+}
+async function requestServerFinder(identity,opts){
+  opts=opts||{};
+  const now=Date.now(),discovery=discoveryCfg();
+  if(!opts.bypassCache&&Number(discovery.serverFinderLastAt||0)&&now-Number(discovery.serverFinderLastAt)<180000){
+    return {cached:true,candidates:[],sources:[],candidateCount:0,mode:"browser-cache"};
+  }
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),18000);
+  const abort=()=>controller.abort();
+  if(opts.signal){ if(opts.signal.aborted) abort(); else opts.signal.addEventListener("abort",abort,{once:true}); }
+  try{
+    const response=await fetch("/api/find",{method:"POST",signal:controller.signal,headers:{Accept:"application/json","Content-Type":"application/json"},cache:"no-store",credentials:"same-origin",body:JSON.stringify({identity:{title:identity.title,titles:identity.titles,type:identity.type,year:identity.year,season:identity.season,episode:identity.episode,imdbId:identity.imdbId,tmdbId:identity.tmdbId}})});
+    if(!response.ok) throw new Error("finder unavailable");
+    const data=await response.json();
+    if(!data||!data.ok||!Array.isArray(data.candidates)) throw new Error("invalid finder response");
+    const merged=mergeServerFinderCandidates(data.candidates);
+    discovery.serverFinderLastAt=Date.now(); discovery.serverFinderCandidateCount=Number(data.candidateCount)||0; discovery.serverFinderMode=String(data.mode||"hosted");
+    saveSettings();
+    return Object.assign({},data,{added:merged.added,merged:merged.seen,cached:false});
+  }catch(error){
+    discovery.serverFinderLastAt=Date.now(); discovery.serverFinderCandidateCount=0; discovery.serverFinderMode="browser fallback";
+    saveSettings();
+    throw error;
+  }finally{ clearTimeout(timer); if(opts.signal) opts.signal.removeEventListener("abort",abort); }
+}
 async function findTitleServers(ctx,opts){
   opts=opts||{};
   ctx=Object.assign({},ctx||{});
@@ -6559,11 +6604,27 @@ async function findTitleServers(ctx,opts){
     if(cached&&Date.now()-cached.t<180000){ if(opts.onUpdate) opts.onUpdate(Object.assign({},cached.data,{complete:true,cached:true})); return cached.data; }
   }
   const byId=new Map(),globalLeadsByUrl=new Map();
-  const stats={checkedRoutes:0,checkedWebsites:0,matchedWebsites:0,queriedProviders:0,totalProviders:enabledAddons().length,concurrency:Math.max(1,Math.min(100,Math.floor(Number(opts.concurrency)||100)||1,enabledAddons().length||1)),titleCandidatesQueried:0,titleCandidatesTotal:titleSearchCandidates(100).length,titleCandidatesAvailable:titleCandidatePool().length,titleCandidatesMatched:0,titleCandidateConcurrency:0,globalEnginesComplete:0,globalEnginesTotal:GLOBAL_SEARCH_ENGINE_POOL.length,globalSearchLeads:0,globalEnginesFailed:0,globalEngineStatus:GLOBAL_SEARCH_ENGINE_POOL.map(engine=>({id:engine.id,name:engine.name,status:"queued",results:0,leads:0})),identityVerified:0,identityRejected:0,torrents:0,oversize:0,external:0,catalogMatches:0,complete:false};
+  const stats={checkedRoutes:0,checkedWebsites:0,matchedWebsites:0,queriedProviders:0,totalProviders:enabledAddons().length,concurrency:Math.max(1,Math.min(100,Math.floor(Number(opts.concurrency)||100)||1,enabledAddons().length||1)),titleCandidatesQueried:0,titleCandidatesTotal:titleSearchCandidates(100).length,titleCandidatesAvailable:titleCandidatePool().length,titleCandidatesMatched:0,titleCandidateConcurrency:0,globalEnginesComplete:0,globalEnginesTotal:GLOBAL_SEARCH_ENGINE_POOL.length,globalSearchLeads:0,globalEnginesFailed:0,globalEngineStatus:GLOBAL_SEARCH_ENGINE_POOL.map(engine=>({id:engine.id,name:engine.name,status:"queued",results:0,leads:0})),serverFinderStatus:"queued",serverFinderSourcesComplete:0,serverFinderSourcesTotal:3,serverFinderCandidates:0,serverFinderAdded:0,serverFinderMode:"",serverFinderError:"",serverFinderSourceStatus:[],identityVerified:0,identityRejected:0,torrents:0,oversize:0,external:0,catalogMatches:0,complete:false};
   let embedwaveOption=null;
   const snapshot=complete=>({options:sortTitleServerOptions([...byId.values()].concat(complete&&embedwaveOption?[embedwaveOption]:[])),globalLeads:[...globalLeadsByUrl.values()],stats:Object.assign({},stats,{globalEngineStatus:stats.globalEngineStatus.map(engine=>Object.assign({},engine)),complete:!!complete}),identity});
   const emit=()=>{ if(opts.onUpdate){ try{ opts.onUpdate(snapshot(false)); }catch{} } };
   const addOption=option=>{ if(!option) return; if(option.sourceId==="embedwave"){ embedwaveOption=option; return; } byId.set(option.id,option); emit(); };
+  const runServerFinder=(async()=>{
+    stats.serverFinderStatus="running"; stats.serverFinderError=""; emit();
+    try{
+      const found=await requestServerFinder(identity,{signal:opts.signal,bypassCache:!!opts.bypassCache});
+      stats.serverFinderStatus=found.cached?"cached":"complete";
+      stats.serverFinderSourcesComplete=Number(found.sourcesComplete)||0; stats.serverFinderSourcesTotal=Number(found.sourcesTotal)||3;
+      stats.serverFinderCandidates=Number(found.candidateCount)||Number(discoveryCfg().serverFinderCandidateCount)||0;
+      stats.serverFinderAdded=Number(found.added)||0; stats.serverFinderMode=String(found.mode||""); stats.serverFinderSourceStatus=Array.isArray(found.sources)?found.sources:[];
+      if(found.sourcesFailed) stats.serverFinderError=found.sourcesFailed+" source"+(found.sourcesFailed===1?"":"s")+" unavailable";
+    }catch(error){
+      stats.serverFinderStatus=opts.signal&&opts.signal.aborted?"cancelled":"fallback";
+      stats.serverFinderMode="browser fallback";
+      stats.serverFinderError=opts.signal&&opts.signal.aborted?"Search cancelled":"Server Finder offline; browser discovery continues";
+    }
+    emit();
+  })();
   /* 1) Built-in/custom exact-ID routes. These are not dumped blindly: a
         route appears only when it can address this TMDB/IMDb title (and
         episode). Cross-origin embeds cannot prove catalogue availability
@@ -6662,7 +6723,7 @@ async function findTitleServers(ctx,opts){
   });
   /* Candidate search reads only the current registry snapshot. The separate
      continuous crawler discovers and identifies new servers on its own timer. */
-  const runCandidates=collectTitleCandidateStreams(richCtx,{
+  const runCandidates=runServerFinder.then(()=>collectTitleCandidateStreams(richCtx,{
     limit:100,concurrency:12,signal:opts.signal,
     shouldContinue:()=>addonSearchActive&&(quickSearchDetached||!opts.shouldContinue||opts.shouldContinue()),
     onProgress:found=>{
@@ -6670,7 +6731,7 @@ async function findTitleServers(ctx,opts){
       for(const group of groupStreamsByServer(found.direct)) byId.set(group.id,group);
       emit();
     }
-  });
+  }));
   const runTitleCandidates=Promise.all([runAddons,runCandidates]).then(([providerAgg,candidateAgg])=>{
     providerAgg.titleCandidateAgg=candidateAgg;
     for(const stream of candidateAgg.direct||[]) if(stream&&stream.url&&!providerAgg.direct.some(existing=>existing.url===stream.url)) providerAgg.direct.push(stream);
@@ -6906,7 +6967,22 @@ function globalSearchProgressHTML(stats,searching){
   const summary=searching?complete+"/"+total+" engines complete · "+failed+" unavailable":complete+"/"+total+" engines finished · "+failed+" unavailable";
   return '<div class="global-search-progress" role="status" aria-live="polite"><div class="global-search-progress-head"><strong>Global search progress</strong><span>'+esc(summary)+'</span></div><progress max="'+total+'" value="'+complete+'" aria-label="'+esc(summary)+'"></progress><div class="global-engine-statuses">'+statuses+'</div></div>';
 }
+function serverFinderProgressHTML(stats){
+  stats=stats||{};
+  const status=String(stats.serverFinderStatus||"queued"),total=Math.max(1,Number(stats.serverFinderSourcesTotal)||3);
+  const complete=Math.min(total,Number(stats.serverFinderSourcesComplete)||0),count=Number(stats.serverFinderCandidates)||0;
+  const active=status==="running";
+  const headline=status==="running"?"Searching discovery sources":status==="complete"?"Server discovery complete":status==="cached"?"Using recent candidate cache":status==="fallback"?"Browser-only fallback active":status==="cancelled"?"Server discovery cancelled":"Server discovery queued";
+  const detail=status==="running"?"Three bounded sources · worker pool · candidate registry capped at 1,000":status==="complete"?count+" stream-capable candidates found · title verification still required":status==="cached"?count+" saved candidates available · continuing exact-title scan":status==="fallback"?"Server API unavailable · existing browser crawlers continue independently":status==="cancelled"?"The title search was cancelled":"Local sidecar or hosted API will discover public server manifests";
+  const progress=active?'<progress max="'+total+'" value="'+complete+'" aria-label="'+esc(complete+" of "+total+" crawler sources finished")+'"></progress>':"";
+  const sourceNames={"stremio-addons":"Stremio Addons","catalog-graph":"Catalog graph",github:"GitHub"};
+  const sources=(stats.serverFinderSourceStatus||[]).map(source=>'<span class="global-engine-status '+esc(source.status||"queued")+'">'+esc(sourceNames[source.id]||source.id)+' · '+(source.status==="failed"?"unavailable":source.status==="partial"?"partial · "+Number(source.candidates||0)+" candidates":Number(source.candidates||0)+" candidates")+'</span>').join("");
+  return '<div class="global-search-progress" role="status" aria-live="polite"><div class="global-search-progress-head"><strong>'+esc(headline)+'</strong><span>'+esc(active?complete+"/"+total+" sources":(stats.serverFinderMode||"server finder"))+'</span></div>'+progress+'<div class="help-text">'+esc(stats.serverFinderError||detail)+'</div>'+(sources?'<div class="global-engine-statuses">'+sources+'</div>':"")+'</div>';
+}
 function renderTitleServerOptions(){
+  const finderBox=document.getElementById("serverFinderProgress");
+  if(finderBox) finderBox.innerHTML=serverFinderProgressHTML(streamsCtx&&streamsCtx._stats||{});
+
   const c=streamsCtx; if(!c) return;
   const options=sortTitleServerOptions(c._options||[]);
   c._options=options;
@@ -6969,7 +7045,7 @@ async function showStreamsModal(ctx){
     +'<div style="padding:1.6rem 1.8rem 1.8rem"><div class="streams-hero"><img src="'+esc(posterURL(ctx.item,"w185"))+'" alt="" data-seed="'+esc(ctx.id||"")+'"><div><span class="logo-badge" style="margin-bottom:.6rem">Servers with this title</span>'
     +'<h2 style="color:var(--text-heading)">'+esc(ctx.title||"Stream")+(ctx.type==='tv'?' <span class="chip violet">S'+(ctx.season||1)+' · E'+(ctx.episode||1)+'</span>':'')+(ctx.year?' <span class="chip">'+esc(ctx.year)+'</span>':'')+'</h2>'
     +'<p class="section-desc" style="margin-bottom:0">ZeroPlay checks the canonical TMDB/IMDb identity, year, title variants and episode. The 100-worker provider scan, 21 global web-search workers, and continuous provider crawler are separate.</p></div></div>'
-    +'<div class="status-box info" id="serverSearchStatus"><span class="spinner"></span> Searching for this exact title…</div>'
+    +'<div class="status-box info" id="serverSearchStatus"><span class="spinner"></span> Searching for this exact title…</div><div id="serverFinderProgress"></div>'
     +'<div class="streams-toolbar"><div class="form-group"><label for="streamQuality">Preferred quality</label><select id="streamQuality">'+[["auto","Auto — best stable"],["2160p","4K 2160p"],["1080p","1080p"],["720p","720p"],["480p","480p"]].map(([v,t])=>'<option value="'+v+'"'+(settings.stream.quality===v?' selected':'')+'>'+t+'</option>').join("")+'</select></div><button class="btn btn-primary" id="btnRace" disabled>Race verified streams</button><button class="btn btn-secondary" id="btnRefreshServers">Search again</button><span id="raceStatus" class="help-text" style="display:inline"></span></div>'
     +'<h3 class="category-heading">Verified direct servers</h3><div id="serverDirect"></div>'
     +'<h3 class="category-heading">Verified website servers</h3><p class="help-text">Optional: this section checks only website sources you add. It is separate from direct provider and exact-ID server searches.</p><div id="serverWebsites"></div>'

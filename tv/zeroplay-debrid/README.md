@@ -88,6 +88,40 @@ fixture “My Heart Beats for Lola Volcán” verifies TMDB `35281`, IMDb
 `tt1929755`, the original title “Mi corazón insiste en Lola Volcán”, and its
 season/episode-specific catalogue search.
 
+## Multi-tier Server Finder
+
+`server.js` is an optional local Node.js sidecar. Run it with `npm start`; it
+serves the existing app and the same-origin `/api/find` route on `0.0.0.0:8787`
+(or `PORT`). The browser only calls relative `/api/find` URLs—there is no
+`localhost` URL baked into browser code. When ZeroPlay is served by Vercel or
+Netlify, the matching serverless route uses the same candidate-discovery core
+as a bounded async pool; the local process uses Node `worker_threads`. If the
+API is unavailable, the existing in-browser provider/catalog/GitHub crawlers
+continue independently.
+
+The discovery pool uses three bounded, allowlisted sources: the Stremio addon
+catalogue, the Cinemeta community/official addon graph, and GitHub repository
+metadata/README links. It inspects public HTTPS manifests only, never executes
+GitHub-discovered code, and returns candidates—not streams or installable
+providers. The pool can retain up to 1,000 candidates; each request checks at
+most 8 manifests per source (24 candidates total) and the title scanner still
+checks at most 100 candidates with 12 workers per pass. A candidate is promoted
+only after the existing title-scoped playback scan returns an identity-verified
+direct stream for the selected IMDb/TMDB title and episode. The finder reports
+source status and uses the app's persisted provider registry as its cache.
+
+This deliberately does not start 1,000 OS threads or import 1,000 arbitrary
+scraper modules: that would be unsafe and can overload free-tier hosting. Local
+worker-thread fan-out is one worker per discovery source; hosted requests stay
+within the bounded async pool. The local `/api/health` endpoint reports the
+active mode. Build and run locally with:
+
+```sh
+npm ci
+npm run build
+npm start
+```
+
 The server drawer does not dump the whole registry into the player. Direct
 providers appear only after they return identity-verified streams for the
 selected movie/episode, grouped by server with their actual returned quality

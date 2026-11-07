@@ -29,6 +29,12 @@
   status = 200
   force = true
 
+[[redirects]]
+  from = "/api/find"
+  to = "/.netlify/functions/find"
+  status = 200
+  force = true
+
 # Shareable deep links → single-file app (JS converts them to hash routes)
 [[redirects]]
   from = "/movie/*"
