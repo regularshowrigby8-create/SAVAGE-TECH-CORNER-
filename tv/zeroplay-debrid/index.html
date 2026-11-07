@@ -4567,7 +4567,8 @@ function drawDetail(){
     if(soundBtn) soundBtn.onclick=()=>{ toggleBackdropPreviewSound(detailTrailer,detailItem); soundBtn.textContent=detailTrailer&&detailTrailer.dataset.sound==="1"?"Mute preview":"Preview sound"; };
     startBackdropPreview(detailTrailer,detailItem,{delay:750});
   }
-  if(isTV){ $("#seasonSelect").onchange=e=>{ detailState.season=Number(e.target.value); loadEpisodes(); }; }
+  const seasonSelect=$("#seasonSelect");
+  if(isTV&&seasonSelect) seasonSelect.onchange=e=>{ detailState.season=Number(e.target.value); loadEpisodes(); };
   const rec=$("#recSection"); if(rec) bindCards(rec);
   bindArtworkFallbacks($(".modal"));
   void resolveArtwork(d,{backdrop:true});

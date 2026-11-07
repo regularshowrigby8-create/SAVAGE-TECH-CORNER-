@@ -16,6 +16,7 @@ const checks = [
   ["embedded-player mode hides ZeroPlay chrome and disables center-play overlays", /if\(limited\)\{[\s\S]*?hidePlayerChrome\(\);/.test(html) && html.includes('center.hidden=embedControls||!st.playback.paused')],
   ["hidden chrome stays hidden on pointer movement and touch until explicitly restored", html.includes('overlay.addEventListener("mousemove",()=>showPlayerChrome(false));') && html.includes('overlay.addEventListener("touchstart",()=>showPlayerChrome(false),{passive:true})') && html.includes('on("btnRestorePlayerChrome","click",()=>showPlayerChrome(true,true))')],
   ["search-result details fall back to cached result metadata if the detail API fails", html.includes('const hasLocalTitle=!!(localItem&&localItem.id') && html.includes('if(hasLocalTitle&&(!remoteUsable||!remoteMatchesLocal)){ d=localItem; usedLocalFallback=true; }')],
+  ["series results without season metadata do not bind a missing selector", html.includes('const seasonSelect=$("#seasonSelect");') && html.includes('if(isTV&&seasonSelect) seasonSelect.onchange=')],
 ];
 
 for (const [name, passed] of checks) {
