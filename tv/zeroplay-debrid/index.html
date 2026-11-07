@@ -6388,23 +6388,6 @@ function titleCandidateAddon(provider){
     stars:provider.stars||0,from:provider.source||provider.from||"provider registry",enabled:true,kind:"addon"
   };
 }
-async function refreshTitleScopedCandidates(){
-  const cfg=discoveryCfg(),cursors=cfg.cursors||(cfg.cursors={}),now=Date.now();
-  if(discoveryRuntime.cycleRunning||titleSearchCandidates(100).length>=100||now-Number(cursors.titleScopedRefreshAt||0)<10*60*1000) return 0;
-  cursors.titleScopedRefreshAt=now; saveSettings();
-  try{ await crawlStremioAddonsNet(); }catch{}
-  const pending=(settings.providers||[]).filter(p=>p&&p.status==="candidate"&&p.titleScopedDiscovery&&p.manifestUrl&&!(p.identification&&p.identification.supports&&p.identification.supports.streams)).slice(0,8);
-  let identified=0;
-  for(const provider of pending){
-    try{
-      const rec=await probeManifestUrl(provider.manifestUrl,{id:provider.id,status:"candidate",deferInstall:true,from:provider.source||"title-scoped candidate refresh",stars:provider.stars||0,tags:provider.tags||[]});
-      if(rec){ absorbProvider({seen:0,added:0,installed:0,identified:0,candidates:0},Object.assign({},rec,{id:provider.id,titleScopedDiscovery:!!rec.identification&&!!rec.identification.supports&&!!rec.identification.supports.streams&&!!rec.identification.playableStream})); identified++; }
-    }catch{}
-    await discoveryDelay(100);
-  }
-  syncInstalledAddonsFromProviders(); saveSettings();
-  return identified;
-}
 async function collectTitleCandidateStreams(ctx,opts){
   opts=opts||{};
   const pool=titleCandidatePool(),cfg=discoveryCfg(),cursors=cfg.cursors||(cfg.cursors={});
@@ -6609,22 +6592,17 @@ async function findTitleServers(ctx,opts){
       emit();
     }
   });
-  const runCandidates=(async()=>{
-    if(addonSearchActive&&(quickSearchDetached||!opts.shouldContinue||opts.shouldContinue())&&!(opts.signal&&opts.signal.aborted)){
-      await refreshTitleScopedCandidates();
-      stats.titleCandidatesTotal=titleSearchCandidates(100).length; stats.titleCandidatesAvailable=titleCandidatePool().length;
+  /* Candidate search reads only the current registry snapshot. The separate
+     continuous crawler discovers and identifies new servers on its own timer. */
+  const runCandidates=collectTitleCandidateStreams(richCtx,{
+    limit:100,concurrency:12,signal:opts.signal,
+    shouldContinue:()=>addonSearchActive&&(quickSearchDetached||!opts.shouldContinue||opts.shouldContinue()),
+    onProgress:found=>{
+      stats.titleCandidatesQueried=found.queried; stats.titleCandidatesTotal=found.totalCandidates; stats.titleCandidatesAvailable=found.availableCandidates; stats.titleCandidatesMatched=found.matchedProviders; stats.titleCandidateConcurrency=found.concurrency;
+      for(const group of groupStreamsByServer(found.direct)) byId.set(group.id,group);
       emit();
     }
-    return collectTitleCandidateStreams(richCtx,{
-      limit:100,concurrency:12,signal:opts.signal,
-      shouldContinue:()=>addonSearchActive&&(quickSearchDetached||!opts.shouldContinue||opts.shouldContinue()),
-      onProgress:found=>{
-        stats.titleCandidatesQueried=found.queried; stats.titleCandidatesTotal=found.totalCandidates; stats.titleCandidatesAvailable=found.availableCandidates; stats.titleCandidatesMatched=found.matchedProviders; stats.titleCandidateConcurrency=found.concurrency;
-        for(const group of groupStreamsByServer(found.direct)) byId.set(group.id,group);
-        emit();
-      }
-    });
-  })();
+  });
   const runTitleCandidates=Promise.all([runAddons,runCandidates]).then(([providerAgg,candidateAgg])=>{
     providerAgg.titleCandidateAgg=candidateAgg;
     for(const stream of candidateAgg.direct||[]) if(stream&&stream.url&&!providerAgg.direct.some(existing=>existing.url===stream.url)) providerAgg.direct.push(stream);

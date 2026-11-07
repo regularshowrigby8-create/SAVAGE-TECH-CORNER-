@@ -55,9 +55,11 @@ batch across larger candidate registries, and keeps no more than 12 candidate
 checks in flight at once. A candidate is promoted into the installed
 provider list only when it returns a direct stream that passes the app's
 existing title/episode identity checks. This bounded candidate scan runs in
-parallel with the installed-provider search, so newly discovered servers do
-not wait for the full installed-provider queue to finish. Unmatched candidates
-are not imported into playback sources. Manual seeds and configured feeds keep
+parallel with the 100-worker installed-provider search, using the current
+candidate-registry snapshot. The title search never starts the continuous
+crawler; the crawler has its own timer and updates the registry independently.
+Newly discovered servers are available to the next title search. Unmatched
+candidates are not imported into playback sources. Manual seeds and configured feeds keep
 their existing behavior. GitHub projects without a hosted declarative
 endpoint/manifest remain candidates; arbitrary repository code is never
 executed. Any provider can be

@@ -8,6 +8,13 @@ const script = html.slice(html.indexOf('<script>') + 8, html.lastIndexOf('</scri
 const start = script.indexOf('async function collectAllStreams(ctx,opts)');
 const end = script.indexOf('\nasync function measureSpeed', start);
 assert(start >= 0 && end > start, 'collectAllStreams must exist');
+const titleSearchStart = script.indexOf('async function findTitleServers(ctx,opts)');
+const titleSearchEnd = script.indexOf('\nasync function playTitleServerOption', titleSearchStart);
+assert(titleSearchStart >= 0 && titleSearchEnd > titleSearchStart, 'title server search must exist');
+const titleSearchCode = script.slice(titleSearchStart, titleSearchEnd);
+assert(!titleSearchCode.includes('runDiscoveryCycle(') && !titleSearchCode.includes('crawlStremioAddonsNet(') && !titleSearchCode.includes('crawlCatalogGraph('), '100-worker title lookup does not start the independent continuous discovery crawler');
+assert(titleSearchCode.includes('collectAllStreams(richCtx') && titleSearchCode.includes('collectTitleCandidateStreams(richCtx'), 'title lookup scans installed providers and the current candidate snapshot');
+assert(script.includes('setInterval(()=>{ runDiscoveryCycle("interval"); }'), 'continuous provider discovery keeps its independent timer');
 
 const addons = Array.from({ length: 7 }, (_, i) => ({ id: `provider-${i}`, name: `Provider ${i}` }));
 let active = 0;
