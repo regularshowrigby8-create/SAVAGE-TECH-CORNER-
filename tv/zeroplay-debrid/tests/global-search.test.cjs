@@ -105,7 +105,16 @@ function responseStub() {
   assert(titleSearch.includes('Promise.race([runTitleCandidates,'), 'quick playback failover is not delayed by global web engines');
   assert(titleSearch.includes('collectAllStreams(richCtx'), '100-worker provider search remains in its own path');
   assert(!titleSearch.includes('runDiscoveryCycle(') && !titleSearch.includes('crawlStremioAddonsNet('), 'global and provider title searches never start the continuous crawler');
-  assert(html.includes('Global web search leads') && html.includes('Web leads are not playable servers and are never auto-installed'), 'global pages are explicitly separated from playable/installed servers');
+  assert(html.includes('Global web search leads') && html.includes('Web leads are never playable or auto-installed'), 'global pages are explicitly separated from playable/installed servers');
+  assert(inlineScript.includes('function globalSearchProgressHTML(stats,searching)') && inlineScript.includes('globalEngineStatus.map(engine=>') && inlineScript.includes('aria-live="polite"'), 'global search always shows live per-engine progress, completion, and failure state');
+  assert(inlineScript.includes('engine requests failed or were blocked'), 'an empty result state distinguishes engine outages from completed searches with no title matches');
+  const progressStart = inlineScript.indexOf('function globalSearchProgressHTML(stats,searching)');
+  const progressEnd = inlineScript.indexOf('\nfunction renderTitleServerOptions', progressStart);
+  const progressContext = { GLOBAL_SEARCH_ENGINE_POOL: [{ id: 'a', name: 'Alpha' }, { id: 'b', name: 'Beta' }], esc: value => String(value) };
+  vm.createContext(progressContext);
+  vm.runInContext(inlineScript.slice(progressStart, progressEnd) + '\nthis.renderGlobalProgress=globalSearchProgressHTML;', progressContext);
+  const progressMarkup = progressContext.renderGlobalProgress({ globalEnginesTotal: 2, globalEnginesComplete: 1, globalEnginesFailed: 1, globalEngineStatus: [{ id: 'a', name: 'Alpha', status: 'running' }, { id: 'b', name: 'Beta', status: 'failed' }] }, true);
+  assert(progressMarkup.includes('1/2 engines complete') && progressMarkup.includes('Alpha · searching') && progressMarkup.includes('Beta · unavailable') && progressMarkup.includes('value="1"'), 'progress panel communicates completed count and per-engine running/failure states');
 
   console.log('PASS 10 keyless global search engines plus niche-title pass, zero-key relay, and separate browser worker pools');
 })().catch(error => { console.error(error); process.exit(1); });

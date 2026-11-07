@@ -404,6 +404,15 @@ input[type="range"]{border-radius:999px}
 .streams-hero{display:flex;gap:1rem;align-items:center;margin-bottom:1rem}
 .streams-hero img{width:58px;height:84px;object-fit:cover;border-radius:9px;background:#111}
 .server-skeleton{display:flex;align-items:center;gap:.7rem;color:var(--text-muted);padding:1rem 0;border-bottom:1px solid var(--surface-border)}
+.global-search-progress{padding:.75rem;border:1px solid var(--surface-border);border-radius:12px;background:var(--surface-2);margin:.65rem 0 1rem;color:var(--text-muted);font-size:.85rem}
+.global-search-progress-head{display:flex;justify-content:space-between;gap:.6rem;flex-wrap:wrap;color:var(--text-heading)}
+.global-search-progress progress{display:block;width:100%;height:8px;margin:.55rem 0 .65rem;accent-color:var(--primary)}
+.global-engine-statuses{display:flex;gap:.35rem;flex-wrap:wrap}
+.global-engine-status{border:1px solid var(--surface-border);border-radius:99px;padding:.2rem .5rem;font-size:.72rem}
+.global-engine-status.running{color:var(--primary)}
+.global-engine-status.failed{color:var(--danger,#ff8585)}
+.global-engine-status.complete{color:var(--text-heading)}
+.global-engine-status.complete{color:var(--text-muted)}
 .server-option{animation:zpRise .3s var(--ease-out) both}
 .server-quality-select{width:auto!important;min-width:128px;padding:.42rem .6rem!important}
 .variant-chips{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.35rem}
@@ -6549,9 +6558,9 @@ async function findTitleServers(ctx,opts){
     if(cached&&Date.now()-cached.t<180000){ if(opts.onUpdate) opts.onUpdate(Object.assign({},cached.data,{complete:true,cached:true})); return cached.data; }
   }
   const byId=new Map(),globalLeadsByUrl=new Map();
-  const stats={checkedRoutes:0,checkedWebsites:0,matchedWebsites:0,queriedProviders:0,totalProviders:enabledAddons().length,concurrency:Math.max(1,Math.min(100,Math.floor(Number(opts.concurrency)||100)||1,enabledAddons().length||1)),titleCandidatesQueried:0,titleCandidatesTotal:titleSearchCandidates(100).length,titleCandidatesAvailable:titleCandidatePool().length,titleCandidatesMatched:0,titleCandidateConcurrency:0,globalEnginesComplete:0,globalEnginesTotal:GLOBAL_SEARCH_ENGINE_POOL.length,globalSearchLeads:0,globalEnginesFailed:0,identityVerified:0,identityRejected:0,torrents:0,oversize:0,external:0,catalogMatches:0,complete:false};
+  const stats={checkedRoutes:0,checkedWebsites:0,matchedWebsites:0,queriedProviders:0,totalProviders:enabledAddons().length,concurrency:Math.max(1,Math.min(100,Math.floor(Number(opts.concurrency)||100)||1,enabledAddons().length||1)),titleCandidatesQueried:0,titleCandidatesTotal:titleSearchCandidates(100).length,titleCandidatesAvailable:titleCandidatePool().length,titleCandidatesMatched:0,titleCandidateConcurrency:0,globalEnginesComplete:0,globalEnginesTotal:GLOBAL_SEARCH_ENGINE_POOL.length,globalSearchLeads:0,globalEnginesFailed:0,globalEngineStatus:GLOBAL_SEARCH_ENGINE_POOL.map(engine=>({id:engine.id,name:engine.name,status:"queued",results:0,leads:0})),identityVerified:0,identityRejected:0,torrents:0,oversize:0,external:0,catalogMatches:0,complete:false};
   let embedwaveOption=null;
-  const snapshot=complete=>({options:sortTitleServerOptions([...byId.values()].concat(complete&&embedwaveOption?[embedwaveOption]:[])),globalLeads:[...globalLeadsByUrl.values()],stats:Object.assign({},stats,{complete:!!complete}),identity});
+  const snapshot=complete=>({options:sortTitleServerOptions([...byId.values()].concat(complete&&embedwaveOption?[embedwaveOption]:[])),globalLeads:[...globalLeadsByUrl.values()],stats:Object.assign({},stats,{globalEngineStatus:stats.globalEngineStatus.map(engine=>Object.assign({},engine)),complete:!!complete}),identity});
   const emit=()=>{ if(opts.onUpdate){ try{ opts.onUpdate(snapshot(false)); }catch{} } };
   const addOption=option=>{ if(!option) return; if(option.sourceId==="embedwave"){ embedwaveOption=option; return; } byId.set(option.id,option); emit(); };
   /* 1) Built-in/custom exact-ID routes. These are not dumped blindly: a
@@ -6605,23 +6614,31 @@ async function findTitleServers(ctx,opts){
   })();
   const runGlobalSearch=(async()=>{
     const language=String((typeof navigator!=="undefined"&&navigator.language)||"en-US").replace(/^([a-z]{2})-([a-z]{2})$/i,(_,a,b)=>a.toLowerCase()+"-"+b.toUpperCase());
+    for(const status of stats.globalEngineStatus) status.status="running";
+    emit();
     const tasks=GLOBAL_SEARCH_ENGINE_POOL.map(async engine=>{
       if(opts.signal&&opts.signal.aborted) return;
+      const engineStatus=stats.globalEngineStatus.find(status=>status.id===engine.id);
       const query=globalSearchQuery(identity,engine.id==="niche");
+      let failed=false, resultCount=0, matchedCount=0;
       try{
         const data=await requestGlobalSearchEngine(engine.id,query,language,opts.signal);
-        if(!data||!data.ok) stats.globalEnginesFailed++;
-        for(const row of data&&data.results||[]){
+        if(!data||!data.ok){ stats.globalEnginesFailed++; failed=true; }
+        const rows=data&&Array.isArray(data.results)?data.results:[];
+        resultCount=rows.length;
+        for(const row of rows){
           const href=cleanHttpUrl(row.href||"");
           if(!href||!isPublicHttpsProviderBase(href)) continue;
           const verdict=identifyTitleCandidate({title:row.title||"",description:row.body||"",url:href,year:identity.year},identity,{threshold:85});
           if(!verdict.accepted) continue;
+          matchedCount++;
           const key=href.toLowerCase();
           const lead={href,title:String(row.title||identity.title).slice(0,220),body:String(row.body||"").slice(0,420),engine:row.engine||engine.id,engineName:(GLOBAL_SEARCH_ENGINE_POOL.find(item=>item.id===(row.engine||engine.id))||engine).name,identity:verdict};
           const existing=globalLeadsByUrl.get(key);
           if(!existing||lead.identity.score>existing.identity.score) globalLeadsByUrl.set(key,lead);
         }
-      }catch{ stats.globalEnginesFailed++; }
+      }catch{ stats.globalEnginesFailed++; failed=true; }
+      if(engineStatus){ engineStatus.status=failed?"failed":"complete"; engineStatus.results=resultCount; engineStatus.leads=matchedCount; }
       stats.globalEnginesComplete++; stats.globalSearchLeads=globalLeadsByUrl.size;
       emit();
     });
@@ -6878,6 +6895,16 @@ function globalSearchLeadHTML(lead){
   if(!href||!isPublicHttpsProviderBase(href)) return "";
   return '<div class="src-row server-option"><div class="grow"><span class="nm">'+esc(lead.title||"Title-matched page")+'</span> <span class="chip">'+esc(lead.engineName||"Global search")+'</span><code>'+esc(lead.identity&&lead.identity.verdict||"title matched")+' · '+(Number(lead.identity&&lead.identity.score)||0)+'% identity</code>'+(lead.body?'<div class="help-text">'+esc(lead.body)+'</div>':"")+'</div><div class="src-actions"><a class="btn btn-secondary btn-xs" href="'+esc(href)+'" target="_blank" rel="noopener noreferrer nofollow">Open page</a></div></div>';
 }
+function globalSearchProgressHTML(stats,searching){
+  stats=stats||{};
+  const total=Math.max(1,Number(stats.globalEnginesTotal)||GLOBAL_SEARCH_ENGINE_POOL.length);
+  const complete=Math.min(total,Number(stats.globalEnginesComplete)||0);
+  const failed=Math.min(complete,Number(stats.globalEnginesFailed)||0);
+  const engines=Array.isArray(stats.globalEngineStatus)&&stats.globalEngineStatus.length?stats.globalEngineStatus:GLOBAL_SEARCH_ENGINE_POOL.map(engine=>({id:engine.id,name:engine.name,status:searching?"queued":"complete",results:0,leads:0}));
+  const statuses=engines.map(engine=>'<span class="global-engine-status '+esc(engine.status||"queued")+'">'+esc(engine.name||engine.id)+' · '+(engine.status==="running"?"searching":engine.status==="failed"?"unavailable":engine.status==="complete"?(Number(engine.results)||0)+" pages":"queued")+(Number(engine.leads)?" · "+Number(engine.leads)+" leads":"")+'</span>').join("");
+  const summary=searching?complete+"/"+total+" engines complete · "+failed+" unavailable":complete+"/"+total+" engines finished · "+failed+" unavailable";
+  return '<div class="global-search-progress" role="status" aria-live="polite"><div class="global-search-progress-head"><strong>Global search progress</strong><span>'+esc(summary)+'</span></div><progress max="'+total+'" value="'+complete+'" aria-label="'+esc(summary)+'"></progress><div class="global-engine-statuses">'+statuses+'</div></div>';
+}
 function renderTitleServerOptions(){
   const c=streamsCtx; if(!c) return;
   const options=sortTitleServerOptions(c._options||[]);
@@ -6896,8 +6923,14 @@ function renderTitleServerOptions(){
   const globalBox=document.getElementById("serverGlobal");
   const globalLeads=Array.isArray(c._globalLeads)?c._globalLeads:[];
   if(globalBox){
+    const globalStats=c._stats||{};
     const globalRows=globalLeads.map(globalSearchLeadHTML).filter(Boolean).join("");
-    globalBox.innerHTML=globalRows?globalRows:searching?'<div class="server-skeleton"><span class="spinner"></span> Global search '+((c._stats&&c._stats.globalEnginesComplete)||0)+'/'+((c._stats&&c._stats.globalEnginesTotal)||11)+' engines, including the niche-title pass…</div>':'<div class="empty"><h3>No title-matched web leads</h3><p>The global engines returned no pages that identity-verify this title. Web leads are not playable servers and are never auto-installed.</p></div>';
+    const failed=Math.min(Number(globalStats.globalEnginesComplete)||0,Number(globalStats.globalEnginesFailed)||0);
+    const total=Number(globalStats.globalEnginesTotal)||GLOBAL_SEARCH_ENGINE_POOL.length;
+    const emptyCopy=failed>=total
+      ? 'All '+total+' engine requests failed or were blocked. Check the connection and retry; each engine reports independently.'
+      : failed?'No title-matched pages yet; '+failed+' of '+total+' engine requests failed. Web leads are never playable or auto-installed.':'The engines finished without finding a page that identity-verifies this title. Web leads are never playable or auto-installed.';
+    globalBox.innerHTML=globalSearchProgressHTML(globalStats,searching)+(globalRows?globalRows:searching?'':'<div class="empty"><h3>No title-matched web leads</h3><p>'+esc(emptyCopy)+'</p></div>');
   }
   const routeBox=document.getElementById("serverRoutes");
   if(routeBox) routeBox.innerHTML=routes.length?routes.map(serverOptionHTML).join(""):empty("No exact-ID player route","No enabled player template can address this title ID.");
@@ -6939,7 +6972,7 @@ async function showStreamsModal(ctx){
     +'<div class="streams-toolbar"><div class="form-group"><label for="streamQuality">Preferred quality</label><select id="streamQuality">'+[["auto","Auto — best stable"],["2160p","4K 2160p"],["1080p","1080p"],["720p","720p"],["480p","480p"]].map(([v,t])=>'<option value="'+v+'"'+(settings.stream.quality===v?' selected':'')+'>'+t+'</option>').join("")+'</select></div><button class="btn btn-primary" id="btnRace" disabled>Race verified streams</button><button class="btn btn-secondary" id="btnRefreshServers">Search again</button><span id="raceStatus" class="help-text" style="display:inline"></span></div>'
     +'<h3 class="category-heading">Verified direct servers</h3><div id="serverDirect"></div>'
     +'<h3 class="category-heading">Verified website servers</h3><p class="help-text">Optional: this section checks only website sources you add. It is separate from direct provider and exact-ID server searches.</p><div id="serverWebsites"></div>'
-    +'<h3 class="category-heading">Global web search leads</h3><p class="help-text">Ten GitHub-imported search engines plus a niche-title pass run concurrently. These are title-matched web pages, not verified streams; they are never auto-installed.</p><div id="serverGlobal"></div>'
+    +'<h3 class="category-heading">Global web search leads</h3><p class="help-text">Ten keyless global search engines plus a niche-title pass run concurrently. Per-engine progress and failures are shown below. These are title-matched web pages, not verified streams; they are never auto-installed.</p><div id="serverGlobal"></div>'
     +'<h3 class="category-heading">Exact-ID players</h3><p class="help-text">These players can address this exact catalogue ID. Cross-origin players cannot prove their library before loading, so ZeroPlay does not falsely label them “verified”. Embedwave remains last.</p><div id="serverRoutes"></div>'
     +'<div id="streamCounts" class="help-text"></div></div></div></div>';
   renderTitleServerOptions();
