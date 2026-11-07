@@ -14,6 +14,8 @@ const checks = [
   ["player has an explicit hide button and a restore affordance", html.includes('id="btnHidePlayerChrome"') && html.includes('id="btnRestorePlayerChrome"') && html.includes("function hidePlayerChrome()")],
   ["paused resume action shelf no longer overlays embedded controls", !html.includes("player-action-shelf") && !html.includes("btnPlayerResume")],
   ["embedded-player mode hides ZeroPlay chrome and disables center-play overlays", /if\(limited\)\{[\s\S]*?hidePlayerChrome\(\);/.test(html) && html.includes('center.hidden=embedControls||!st.playback.paused')],
+  ["hidden chrome stays hidden on pointer movement and touch until explicitly restored", html.includes('overlay.addEventListener("mousemove",()=>showPlayerChrome(false));') && html.includes('overlay.addEventListener("touchstart",()=>showPlayerChrome(false),{passive:true})') && html.includes('on("btnRestorePlayerChrome","click",()=>showPlayerChrome(true,true))')],
+  ["search-result details fall back to cached result metadata if the detail API fails", html.includes('const hasLocalTitle=!!(localItem&&localItem.id') && html.includes('if(hasLocalTitle&&(!remoteUsable||!remoteMatchesLocal)){ d=localItem; usedLocalFallback=true; }')],
 ];
 
 for (const [name, passed] of checks) {

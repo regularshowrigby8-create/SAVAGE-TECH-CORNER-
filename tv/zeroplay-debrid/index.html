@@ -3136,8 +3136,10 @@ function bindPlayerChrome(){
   on("playerQuality","change",e=>setPlayerQuality(e.target.value));
   const overlay=document.getElementById("playerOverlay");
   if(overlay){
-    overlay.addEventListener("mousemove",()=>showPlayerChrome(false,true));
-    overlay.addEventListener("touchstart",()=>showPlayerChrome(false,true),{passive:true});
+    // Pointer movement/taps are not an opt-in to restore ZeroPlay chrome.
+    // The explicit restore button or keyboard wake command handles that.
+    overlay.addEventListener("mousemove",()=>showPlayerChrome(false));
+    overlay.addEventListener("touchstart",()=>showPlayerChrome(false),{passive:true});
     overlay.addEventListener("focusin",()=>showPlayerChrome(false));
     overlay.addEventListener("focusout",()=>showPlayerChrome(false));
   }
@@ -4489,15 +4491,30 @@ async function openDetail(type,id){
   $("#detailOverlay").addEventListener("click",e=>{ if(e.target.id==="detailOverlay") closeDetail(); });
   try{
     let externalItem=searchResultItems.get(keyOf(type,Number(id)))||null;
+    let localItem=catalogItemFor(type,Number(id));
+    const hasLocalTitle=!!(localItem&&localItem.id&&titleOf(localItem)!=="Title"&&titleOf(localItem)!=="Untitled");
     if(!externalItem&&Number(id)>=900000000){
-      const saved=watchlist.find(item=>item.type===type&&Number(item.id)===Number(id))||progress[keyOf(type,Number(id))];
-      if(saved) externalItem=snapToItem(saved);
+      if(hasLocalTitle) externalItem=localItem;
+      else{
+        const saved=watchlist.find(item=>item.type===type&&Number(item.id)===Number(id))||progress[keyOf(type,Number(id))];
+        if(saved){ externalItem=snapToItem(saved); localItem=externalItem; }
+      }
     }
-    const d=externalItem?Object.assign({},externalItem,{id:Number(id),media_type:type,credits:{cast:[]},videos:{results:[]},recommendations:{results:[]},external_ids:{imdb_id:externalItem.imdb_id||""}}):await tmdb("/"+type+"/"+id,{append_to_response:"credits,videos,recommendations,external_ids,alternative_titles"});
+    let d,usedLocalFallback=!!externalItem;
+    if(externalItem) d=externalItem;
+    else{
+      try{ d=await tmdb("/"+type+"/"+id,{append_to_response:"credits,videos,recommendations,external_ids,alternative_titles"}); }catch{}
+      const remoteUsable=!!(d&&Number(d.id)===Number(id)&&titleOf(d)!=="Title"&&titleOf(d)!=="Untitled");
+      const remoteMatchesLocal=!hasLocalTitle||remoteUsable&&searchNormTitle(titleOf(d))===searchNormTitle(titleOf(localItem));
+      if(hasLocalTitle&&(!remoteUsable||!remoteMatchesLocal)){ d=localItem; usedLocalFallback=true; }
+      else if(remoteUsable&&remoteMatchesLocal) d=Object.assign({},hasLocalTitle?localItem:{},d);
+      else throw new Error("No title metadata is available");
+    }
+    d=Object.assign({credits:{cast:[]},videos:{results:[]},recommendations:{results:[]},external_ids:{imdb_id:""}},d,{id:Number(id),media_type:type});
     detailState.data=d;
     if(type==="tv"){ const prev=progress[keyOf(type,id)]; const seasons=(d.seasons||[]).filter(s=>s.season_number>0); detailState.season=(prev&&prev.season)||(seasons[0]&&seasons[0].season_number)||1; detailState.episode=(prev&&prev.season===detailState.season&&prev.episode)||1; }
     drawDetail();
-    if(type==="tv"&&!externalItem) loadEpisodes();
+    if(type==="tv"&&!usedLocalFallback) loadEpisodes();
   }catch(err){
     $(".modal").innerHTML='<button class="icon-btn modal-close" id="btnCloseDetail" aria-label="Close">×</button><div style="padding:2.5rem"><div class="status-box error">Could not load this title. Check your connection and try again.</div></div>';
     $("#btnCloseDetail").onclick=closeDetail;
