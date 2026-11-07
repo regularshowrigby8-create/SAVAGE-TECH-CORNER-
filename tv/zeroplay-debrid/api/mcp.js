@@ -72,7 +72,7 @@ function createMcpServer(finder = findCandidates) {
       maxManifestsPerSource: MAX_PER_SOURCE,
       registeredCandidatePoolCap: MAX_CANDIDATES,
       activeOsWorkerThreads: 0,
-      note: 'Discovery runs in the MCP server process; the client only sends bounded requests and does not spawn crawler threads.',
+      note: 'Discovery runs on the hosted server; no crawler worker threads are started on the client device.',
     };
     return { content: [{ type: 'text', text: JSON.stringify(status) }], structuredContent: status };
   });
