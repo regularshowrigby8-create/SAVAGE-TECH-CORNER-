@@ -92,9 +92,10 @@ The server drawer does not dump the whole registry into the player. Direct
 providers appear only after they return identity-verified streams for the
 selected movie/episode, grouped by server with their actual returned quality
 variants. Added websites appear only after an identity-verified lookup match.
-The drawer also runs ten MIT-licensed GitHub-imported CDrake-SE search
-adapters (AOL, Ask, Bing, Google, Qwant, autocomplete, Wikipedia, Yahoo, Yep,
-and YouTube) plus a niche/alternate-title pass. Those browser workers run in
+The drawer also runs ten keyless global search engines in parallel: nine
+MIT-licensed GitHub-imported CDrake-SE adapters (AOL, Ask, Bing, Google,
+Qwant, Wikipedia, Yahoo, Yep, and YouTube), a DuckDuckGo HTML search adapter,
+and a niche/alternate-title pass. Those browser workers run in
 parallel with the 100-worker provider scan. Global results are displayed only
 when title identity verifies them and remain web leads—not installed or
 playable servers. The continuously adding provider crawler runs on its own

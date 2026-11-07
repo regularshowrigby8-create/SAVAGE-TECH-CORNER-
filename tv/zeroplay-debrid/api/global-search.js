@@ -11,18 +11,18 @@ const Ask = require('../lib/vendor/cdrake-se/Engines/Ask');
 const Bing = require('../lib/vendor/cdrake-se/Engines/Bing');
 const Google = require('../lib/vendor/cdrake-se/Engines/Google');
 const Qwant = require('../lib/vendor/cdrake-se/Engines/Qwant');
-const Suggest = require('../lib/vendor/cdrake-se/Engines/Suggest');
 const Wikipedia = require('../lib/vendor/cdrake-se/Engines/Wikipedia');
 const Yahoo = require('../lib/vendor/cdrake-se/Engines/Yahoo');
 const Yep = require('../lib/vendor/cdrake-se/Engines/Yep');
 const Youtube = require('../lib/vendor/cdrake-se/Engines/Youtube');
 const { kAxiosOptions } = require('../lib/vendor/cdrake-se/Global');
 const axios = require('axios');
+const cheerio = require('cheerio');
 
 const REQUEST_TIMEOUT_MS = 4500;
 kAxiosOptions.timeout = REQUEST_TIMEOUT_MS;
 axios.defaults.timeout = REQUEST_TIMEOUT_MS;
-const ENGINE_IDS = Object.freeze(['aol', 'ask', 'bing', 'google', 'qwant', 'suggest', 'wikipedia', 'yahoo', 'yep', 'youtube', 'niche']);
+const ENGINE_IDS = Object.freeze(['aol', 'ask', 'bing', 'google', 'qwant', 'duckduckgo', 'wikipedia', 'yahoo', 'yep', 'youtube', 'niche']);
 const cleanText = (value, max = 500) => String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 
 function externalUrl(raw) {
@@ -56,6 +56,30 @@ function normRows(engine, payload) {
   }
   return rows;
 }
+async function searchDuckDuckGo(query) {
+  const response = await axios.get('https://html.duckduckgo.com/html/', {
+    params: { q: query }, timeout: REQUEST_TIMEOUT_MS,
+    headers: { ...kAxiosOptions.headers, Accept: 'text/html' },
+  });
+  const $ = cheerio.load(response.data || '');
+  const rows = [];
+  $('.result').each((_, element) => {
+    const result = $(element);
+    const anchor = result.find('.result__a').first();
+    let href = String(anchor.attr('href') || '').trim();
+    try {
+      const parsed = new URL(href, 'https://html.duckduckgo.com');
+      if (/(^|\.)duckduckgo\.com$/i.test(parsed.hostname) && parsed.pathname === '/l/') {
+        href = parsed.searchParams.get('uddg') || '';
+      } else href = parsed.href;
+    } catch { href = ''; }
+    const safeHref = externalUrl(href);
+    const title = cleanText(anchor.text(), 220);
+    const body = cleanText(result.find('.result__snippet').text(), 500);
+    if (safeHref && title) rows.push({ Title: title, Link: safeHref, Description: body });
+  });
+  return { Results: rows.slice(0, 12) };
+}
 function queryForEngine(engine, query, language) {
   const encoded = encodeURIComponent(query);
   switch (engine) {
@@ -64,7 +88,7 @@ function queryForEngine(engine, query, language) {
     case 'bing': return new Bing({ Query: encoded, Page: 1, Language: language }).Search();
     case 'google': return new Google({ Query: encoded, Page: 1, Language: language }).Search();
     case 'qwant': return new Qwant({ Query: encoded }).Images();
-    case 'suggest': return Suggest(query);
+    case 'duckduckgo': return searchDuckDuckGo(query);
     case 'wikipedia': return new Wikipedia({ Query: query, Language: language }).Suggest();
     case 'yahoo': return new Yahoo({ Query: encoded, Page: 1, Language: language }).Search();
     case 'yep': return new Yep({ Query: encoded, Page: 1, Language: language }).Search();

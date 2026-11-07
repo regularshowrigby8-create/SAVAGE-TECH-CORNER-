@@ -2,6 +2,7 @@ const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
+const axios = require('axios');
 const api = require('../api/global-search.js');
 const { ENGINE_IDS, runEngine, normRows, externalUrl } = api._test;
 const enginesDir = path.join(__dirname, '..', 'lib/vendor/cdrake-se/Engines');
@@ -17,7 +18,8 @@ function responseStub() {
 }
 
 (async () => {
-  assert.strictEqual(ENGINE_IDS.length, 11, 'ten GitHub-imported engine adapters plus one niche-title pass are registered');
+  assert.strictEqual(ENGINE_IDS.length, 11, 'ten global search engines plus one niche-title pass are registered');
+  assert(ENGINE_IDS.includes('duckduckgo') && !ENGINE_IDS.includes('suggest'), 'the pool includes a full-text DuckDuckGo worker instead of autocomplete-only suggestions');
   for (const engine of ['Aol', 'Ask', 'Bing', 'Google', 'Qwant', 'Suggest', 'Wikipedia', 'Yahoo', 'Yep', 'Youtube']) {
     assert(fs.existsSync(path.join(enginesDir, engine + '.js')), engine + ' adapter is vendored from the inspected GitHub source');
   }
@@ -31,6 +33,16 @@ function responseStub() {
   const normalized = normRows('google', { Results: [{ Title: 'Exact title', Link: 'https://example.com/title', Description: '2011 series' }] });
   assert.strictEqual(normalized.length, 1, 'search results normalize from upstream schema');
   assert.strictEqual(normalized[0].href, 'https://example.com/title', 'normalized result keeps its safe URL');
+  const originalAxiosGet = axios.get;
+  axios.get = async (url, options) => {
+    assert.strictEqual(url, 'https://html.duckduckgo.com/html/', 'DuckDuckGo uses its keyless HTML search endpoint');
+    assert(options.params.q.includes('niche title'), 'DuckDuckGo receives the title query');
+    return { data: '<div class="result"><a class="result__a" href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fexample.com%2Fshow">Niche title page</a><a class="result__snippet">Exact title from 2011</a></div>' };
+  };
+  try {
+    const duck = await runEngine('duckduckgo', 'niche title 2011', 'en-US');
+    assert(duck.ok && duck.results[0].href === 'https://example.com/show' && duck.results[0].engine === 'duckduckgo', 'DuckDuckGo redirect links normalize to the original HTTPS page');
+  } finally { axios.get = originalAxiosGet; }
 
   const Aol = require('../lib/vendor/cdrake-se/Engines/Aol');
   const oldAolSearch = Aol.prototype.Search;
@@ -95,5 +107,5 @@ function responseStub() {
   assert(!titleSearch.includes('runDiscoveryCycle(') && !titleSearch.includes('crawlStremioAddonsNet('), 'global and provider title searches never start the continuous crawler');
   assert(html.includes('Global web search leads') && html.includes('Web leads are not playable servers and are never auto-installed'), 'global pages are explicitly separated from playable/installed servers');
 
-  console.log('PASS 10 GitHub adapters plus niche-title pass, zero-key serverless relay, and separate browser worker pools');
+  console.log('PASS 10 keyless global search engines plus niche-title pass, zero-key relay, and separate browser worker pools');
 })().catch(error => { console.error(error); process.exit(1); });
