@@ -6,6 +6,7 @@ const path = require('node:path');
 const { URL } = require('node:url');
 const { findCandidates, normalizeIdentity } = require('./lib/server-finder/core');
 const findApi = require('./api/find');
+const mcpApi = require('./api/mcp');
 
 const APP_ROOT = __dirname;
 const MAX_BODY_BYTES = 16 * 1024;
@@ -105,6 +106,13 @@ async function handleFind(req, res, url) {
 async function handleApi(req, res, url, pathname) {
   if (pathname === '/api/health') return jsonResponse(res, 200, { ok: true, service: 'ZeroPlay Server Finder', mode: 'local-worker-threads', sources: 3, maxCandidatePool: 1000, workerThreads: true });
   if (pathname === '/api/find') return handleFind(req, res, url);
+  if (pathname === '/api/mcp') {
+    if (req.method === 'POST') {
+      try { req.body = await readBody(req); }
+      catch (error) { return jsonResponse(res, error.message === 'Request body too large' ? 413 : 400, { error: error.message }); }
+    }
+    return mcpApi(req, res);
+  }
   const handler = API_HANDLERS[pathname];
   if (!handler) return jsonResponse(res, 404, { ok: false, error: 'Not found' });
   let body = null;

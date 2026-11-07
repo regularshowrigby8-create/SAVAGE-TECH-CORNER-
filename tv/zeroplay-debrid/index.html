@@ -6567,6 +6567,36 @@ function mergeServerFinderCandidates(records){
   if(seen) saveSettings();
   return {added,seen};
 }
+async function postServerFinderMcp(payload,signal,protocolVersion){
+  const headers={Accept:"application/json, text/event-stream","Content-Type":"application/json"};
+  if(protocolVersion) headers["MCP-Protocol-Version"]=protocolVersion;
+  const response=await fetch("/api/mcp",{method:"POST",signal,headers,cache:"no-store",credentials:"same-origin",body:JSON.stringify(payload)});
+  if(!response.ok) throw new Error("MCP Server Finder unavailable");
+  if(response.status===202) return null;
+  const type=String(response.headers.get("content-type")||"").toLowerCase();
+  if(type.includes("text/event-stream")){
+    const text=await response.text(),data=text.split(/\r?\n/).filter(line=>line.startsWith("data:")).map(line=>line.slice(5).trim()).join("\n");
+    return data?JSON.parse(data):null;
+  }
+  return response.json();
+}
+async function callServerFinderMcp(identity,signal){
+  const protocolVersion="2025-03-26";
+  const initialized=await postServerFinderMcp({jsonrpc:"2.0",id:1,method:"initialize",params:{protocolVersion,capabilities:{},clientInfo:{name:"ZeroPlay",version:"1.0.0"}}},signal);
+  if(!initialized||initialized.error||!initialized.result) throw new Error("MCP initialization failed");
+  await postServerFinderMcp({jsonrpc:"2.0",method:"notifications/initialized",params:{}},signal,protocolVersion);
+  const args={title:identity.title,titles:identity.titles,type:identity.type,year:identity.year,season:identity.season,episode:identity.episode,imdbId:identity.imdbId,tmdbId:identity.tmdbId};
+  for(const key of Object.keys(args)) if(args[key]===null||args[key]===undefined||args[key]==="") delete args[key];
+  const response=await postServerFinderMcp({jsonrpc:"2.0",id:2,method:"tools/call",params:{name:"find_title_servers",arguments:args}},signal,protocolVersion);
+  if(!response||response.error||!response.result||response.result.isError) throw new Error("MCP title search failed");
+  let data=response.result.structuredContent;
+  if(!data&&Array.isArray(response.result.content)){
+    const text=response.result.content.find(item=>item&&item.type==="text")?.text;
+    if(text){ try{ data=JSON.parse(text); }catch{} }
+  }
+  if(!data||!data.ok||!Array.isArray(data.candidates)) throw new Error("Invalid MCP Server Finder response");
+  return data;
+}
 async function requestServerFinder(identity,opts){
   opts=opts||{};
   const now=Date.now(),discovery=discoveryCfg();
@@ -6577,10 +6607,7 @@ async function requestServerFinder(identity,opts){
   const abort=()=>controller.abort();
   if(opts.signal){ if(opts.signal.aborted) abort(); else opts.signal.addEventListener("abort",abort,{once:true}); }
   try{
-    const response=await fetch("/api/find",{method:"POST",signal:controller.signal,headers:{Accept:"application/json","Content-Type":"application/json"},cache:"no-store",credentials:"same-origin",body:JSON.stringify({identity:{title:identity.title,titles:identity.titles,type:identity.type,year:identity.year,season:identity.season,episode:identity.episode,imdbId:identity.imdbId,tmdbId:identity.tmdbId}})});
-    if(!response.ok) throw new Error("finder unavailable");
-    const data=await response.json();
-    if(!data||!data.ok||!Array.isArray(data.candidates)) throw new Error("invalid finder response");
+    const data=await callServerFinderMcp(identity,controller.signal);
     const merged=mergeServerFinderCandidates(data.candidates);
     discovery.serverFinderLastAt=Date.now(); discovery.serverFinderCandidateCount=Number(data.candidateCount)||0; discovery.serverFinderMode=String(data.mode||"hosted");
     saveSettings();
