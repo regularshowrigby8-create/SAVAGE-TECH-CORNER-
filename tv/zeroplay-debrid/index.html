@@ -715,26 +715,81 @@ html.font-xl{font-size:19px}
 .search-skeleton{display:grid;grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:1rem;margin:.8rem 0}
 .search-skeleton .skel{height:244px;border-radius:14px;background:linear-gradient(100deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.1) 38%,rgba(255,255,255,.04) 62%);background-size:400% 100%;animation:shimmer 1.3s ease infinite}
 
-/* One navigation dropdown: no persistent rail, tab bar, or category strip. */
-.zp-sidebar,.mobile-bottom-nav,.category-strip{display:none!important}
+/* Combined user-provided TV previews: premium violet/gold surfaces with
+   cyan/teal focus cues. Persistent navigation contains browse routes only;
+   optional tools remain behind the explicit menu button. */
+:root{--zp-electric:#00d09c;--zp-cyan:#0aa9ff;--zp-focus:#00e5ff}
+body:not(.theme-light):not(.theme-warm):not(.theme-oled){--bg:#0b0f13;--surface:#11171d;--surface2:#151d25;--surface-border:#24313a;--text:#dce5e9;--text-heading:#f3f7f8;--text-muted:#93a4ae;--text-dim:#71828c;background:radial-gradient(1000px 460px at 18% -12%,rgba(0,208,156,.08),transparent 62%),radial-gradient(1100px 520px at 96% 2%,rgba(124,58,237,.13),transparent 60%),#0b0f13}
+.zp-sidebar{display:none;box-sizing:border-box}
+.zp-sidebar-brand{color:var(--text-heading);text-decoration:none}
+.zp-sidebar-brand .zp-brand-mark{background:linear-gradient(145deg,#00d09c,#0aa9ff);color:#04120f;box-shadow:0 8px 24px rgba(0,208,156,.22)}
+.zp-sidebar-label{color:var(--text-dim)}
+.zp-sidebar .zp-rail-link{min-height:48px;border-radius:13px;color:var(--text-muted)}
+.zp-sidebar .zp-rail-link:hover{background:rgba(0,208,156,.08);color:var(--text-heading)}
+.zp-sidebar .zp-rail-link.active{color:var(--text-heading);background:linear-gradient(90deg,rgba(0,208,156,.14),rgba(124,58,237,.08));border-color:rgba(0,208,156,.15);box-shadow:inset 3px 0 var(--zp-electric)}
+.zp-rail-icon{color:var(--zp-electric)}
+.zp-sidebar-more{width:100%;min-height:46px;display:flex;align-items:center;gap:.8rem;margin-top:.3rem;padding:.65rem .8rem;border:1px solid rgba(0,208,156,.19);border-radius:13px;background:rgba(0,208,156,.07);color:var(--text-heading);font-weight:700;cursor:pointer}
+.zp-sidebar-more:hover{background:rgba(0,208,156,.13)}
+.zp-sidebar-footcard{border-color:rgba(0,208,156,.12);background:linear-gradient(135deg,rgba(0,208,156,.08),rgba(124,58,237,.07))}
+.zp-sidebar-footcard .zp-footcard-orb{background:rgba(0,208,156,.14);color:#55e6bd}
+.zp-sidebar button:focus-visible,.mobile-bottom-nav button:focus-visible{outline:3px solid var(--zp-focus);outline-offset:3px}
+body:not(.theme-light):not(.theme-warm):not(.theme-oled) .panel{border-color:rgba(112,150,159,.13);background:linear-gradient(145deg,rgba(20,29,36,.97),rgba(13,19,24,.98));box-shadow:0 14px 34px rgba(0,0,0,.24)}
+body:not(.theme-light):not(.theme-warm):not(.theme-oled) .hero{border:1px solid rgba(0,208,156,.12);background-color:#10171c}
+body:not(.theme-light):not(.theme-warm):not(.theme-oled) .poster-wrap{box-shadow:0 8px 26px rgba(0,0,0,.24),inset 0 0 0 1px rgba(0,208,156,.09)}
+body:not(.theme-light):not(.theme-warm):not(.theme-oled) .btn-primary{background:linear-gradient(135deg,#7c3aed,#5b31c6)}
+body:not(.theme-light):not(.theme-warm):not(.theme-oled) .btn:focus-visible,body:not(.theme-light):not(.theme-warm):not(.theme-oled) .poster-card:focus-visible,body:not(.theme-light):not(.theme-warm):not(.theme-oled) .continue-card:focus-visible{outline:3px solid var(--zp-focus);outline-offset:4px}
+body:not(.theme-light):not(.theme-warm):not(.theme-oled) .chip.rd{border-color:rgba(0,208,156,.32);color:#66e5c0;background:rgba(0,208,156,.09)}
+body:not(.theme-light):not(.theme-warm):not(.theme-oled) .status-box.success{border-color:rgba(0,208,156,.32)}
 body:not(.android-tv) .topbar .nav{display:none!important}
-body:not(.android-tv) .topbar .logo-badge{display:inline-flex}
-body:not(.android-tv) .topbar{width:auto;margin:0}
-body:not(.android-tv) #view,body:not(.android-tv) .footer{margin-left:0}
-body:not(.android-tv) .topbar-inner{max-width:1680px;padding:.72rem clamp(.8rem,2vw,1.6rem)}
-body:not(.android-tv) #view>.page{max-width:1680px;padding:1.6rem clamp(1rem,2.6vw,2.2rem) 2.5rem}
-body:not(.android-tv) .footer{text-align:center;padding:1.2rem}
+body:not(.android-tv) .topbar-inner{max-width:none;padding:.72rem clamp(1rem,2.4vw,2rem)}
+body:not(.android-tv) .topbar-search{max-width:800px}
+body:not(.android-tv) #view>.page{max-width:none;padding:1.6rem clamp(1.2rem,3vw,3rem) 2.5rem}
 .menu-scrim{background:transparent;backdrop-filter:none}
 .menu-drawer{top:calc(env(safe-area-inset-top) + 4.6rem);left:clamp(.75rem,2vw,1.5rem);bottom:auto;width:min(390px,calc(100vw - 1.5rem));max-height:calc(100dvh - 5.4rem);border:1px solid rgba(255,255,255,.13);border-radius:18px;box-shadow:0 24px 64px rgba(0,0,0,.55);transform:translateY(-8px) scale(.98);transform-origin:top left;opacity:0;transition:opacity .18s ease,transform .18s ease,visibility 0s linear .18s}
 .menu-drawer.open{transform:translateY(0) scale(1);opacity:1}
 body.theme-light .menu-drawer{border-color:#d8dde3}
-@media(max-width:620px){body:not(.android-tv) .topbar-inner{padding:.62rem .78rem;gap:.6rem}body:not(.android-tv) .topbar-search{order:3;flex-basis:100%;min-width:0}body:not(.android-tv) .topbar-search input{min-height:44px}body:not(.android-tv) #view{padding-bottom:1.5rem}}
+@media(min-width:980px){
+  .zp-sidebar{position:fixed;inset:0 auto 0 0;z-index:70;width:246px;display:flex;flex-direction:column;padding:1.1rem .85rem 1rem;background:linear-gradient(180deg,#0b1217,#0c1116 62%,#0a0e12);border-right:1px solid rgba(90,126,135,.16);box-shadow:12px 0 40px rgba(0,0,0,.17);overflow-y:auto}
+  body:not(.theme-light):not(.theme-warm):not(.theme-oled) .zp-sidebar{background:linear-gradient(180deg,#0a1217,#0b1015 62%,#090d11)}
+  .topbar{width:calc(100% - 246px);margin-left:246px}
+  #view,.footer{margin-left:246px}
+  .topbar .logo-badge{display:none}
+  body.theme-light .zp-sidebar{background:linear-gradient(180deg,#fff,#f5f6f8);border-right-color:#d6dce3}
+  body.theme-oled .zp-sidebar{background:#050505;border-right-color:#1b1b1b}
+  body.theme-warm .zp-sidebar{background:linear-gradient(180deg,#211b16,#171411);border-right-color:#4a3c30}
+}
+@media(max-width:979px){
+  .zp-sidebar{display:none!important}
+  .mobile-bottom-nav{position:fixed;inset:auto 0 0;z-index:72;display:flex;justify-content:space-around;gap:.2rem;padding:.4rem .35rem calc(.4rem + env(safe-area-inset-bottom));border-top:1px solid rgba(0,208,156,.18);background:rgba(10,15,19,.96);box-shadow:0 -8px 28px rgba(0,0,0,.28)}
+  .mobile-bottom-nav button{flex:1;min-width:0;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.12rem;border:0;border-radius:11px;background:transparent;color:var(--text-dim);font-size:1.12rem;cursor:pointer}
+  .mobile-bottom-nav button.active{color:#55e6bd;background:rgba(0,208,156,.1)}
+  .mobile-bottom-nav small{font-size:.62rem;font-weight:700}
+  #view{padding-bottom:5.5rem}
+  .footer{padding-bottom:6rem!important}
+  body.theme-light .mobile-bottom-nav{background:rgba(250,250,252,.97);border-color:#d8dde3}
+  body.theme-oled .mobile-bottom-nav{background:rgba(0,0,0,.97)}
+  body.theme-warm .mobile-bottom-nav{background:rgba(30,24,19,.97)}
+}
+@media(max-width:620px){body:not(.android-tv) .topbar-inner{padding:.62rem .78rem;gap:.6rem}body:not(.android-tv) .topbar-search{order:3;flex-basis:100%;min-width:0}body:not(.android-tv) .topbar-search input{min-height:44px}body:not(.android-tv) #view{padding-bottom:6rem}}
 
 </style>
 </head>
 <body>
-
-
+<aside class="zp-sidebar" id="zpSidebar" aria-label="Primary navigation">
+  <a class="zp-sidebar-brand" href="#/home" aria-label="ZeroPlay home"><span class="zp-brand-mark" aria-hidden="true">▶</span><span>ZeroPlay<small>WATCH &amp; DISCOVER</small></span></a>
+  <div class="zp-sidebar-label">Discover</div>
+  <nav class="zp-rail-nav" aria-label="Browse ZeroPlay">
+    <button class="zp-rail-link" type="button" data-menu-route="home"><span class="zp-rail-icon" aria-hidden="true">⌂</span>Home</button>
+    <button class="zp-rail-link" type="button" data-menu-route="search"><span class="zp-rail-icon" aria-hidden="true">⌕</span>Search</button>
+    <button class="zp-rail-link" type="button" data-menu-route="movies"><span class="zp-rail-icon" aria-hidden="true">▣</span>Movies</button>
+    <button class="zp-rail-link" type="button" data-menu-route="series"><span class="zp-rail-icon" aria-hidden="true">▤</span>Series</button>
+    <button class="zp-rail-link" type="button" data-menu-route="categories"><span class="zp-rail-icon" aria-hidden="true">✣</span>Categories</button>
+    <button class="zp-rail-link" type="button" data-menu-route="library"><span class="zp-rail-icon" aria-hidden="true">♡</span>My Library</button>
+  </nav>
+  <div class="zp-sidebar-spacer"></div>
+  <div class="zp-sidebar-footcard"><span class="zp-footcard-orb" aria-hidden="true">✦</span><span><strong>Find your next watch</strong><small>Search across titles &amp; series</small></span></div>
+  <button class="zp-sidebar-more" id="zpSidebarMore" type="button" aria-label="Open menu for sources and tools"><span class="zp-rail-icon" aria-hidden="true">☰</span>More &amp; settings</button>
+</aside>
 
 <header class="topbar" id="topbar">
   <div class="topbar-inner">
@@ -810,6 +865,14 @@ body.theme-light .menu-drawer{border-color:#d8dde3}
 
 
 <footer class="footer">ZeroPlay · Movies and series, ready to watch. ZeroPlay does not host media files.</footer>
+
+<nav class="mobile-bottom-nav" aria-label="Primary navigation on small screens">
+  <button type="button" data-menu-route="home"><span aria-hidden="true">⌂</span><small>Home</small></button>
+  <button type="button" data-menu-route="search"><span aria-hidden="true">⌕</span><small>Search</small></button>
+  <button type="button" data-menu-route="movies"><span aria-hidden="true">▣</span><small>Movies</small></button>
+  <button type="button" data-menu-route="series"><span aria-hidden="true">▤</span><small>Series</small></button>
+  <button type="button" data-menu-route="library"><span aria-hidden="true">♡</span><small>Library</small></button>
+</nav>
 
 <div id="modalRoot"></div>
 <div id="streamsRoot"></div>
@@ -6892,7 +6955,13 @@ function wireAddonPanel(){
 }
 
 /* ---------------- router, menu drawer and TV navigation ---------------- */
-function setNav(name){ $$(".nav button,.menu-link[data-menu-route]").forEach(b=>b.classList.toggle("active",(b.dataset.nav||b.dataset.menuRoute)===name)); }
+function setNav(name){
+  $$(".nav button,.menu-link[data-menu-route],.zp-rail-link[data-menu-route],.mobile-bottom-nav [data-menu-route]").forEach(b=>{
+    const active=(b.dataset.nav||b.dataset.menuRoute)===name;
+    b.classList.toggle("active",active);
+    if(active) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current");
+  });
+}
 let menuReturnFocus=null;
 function renderMenuQuickSwitches(){
   const box=document.getElementById("menuQuickSwitches");
@@ -6963,6 +7032,7 @@ function render(){
 }
 $$(".nav button").forEach(b=>b.onclick=()=>goRoute(b.dataset.nav));
 $("#btnMenu").onclick=openMenuDrawer;
+$("#zpSidebarMore").onclick=openMenuDrawer;
 
 $("#btnCloseMenu").onclick=closeMenuDrawer;
 $("#menuScrim").onclick=closeMenuDrawer;
