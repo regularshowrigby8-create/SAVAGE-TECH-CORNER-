@@ -52,8 +52,8 @@ vm.runInContext(script.slice(start, end), ctx, { filename: 'collect-all-streams.
   assert.notStrictEqual(completed[0], 'provider-0', 'fast providers are not held behind a slow provider');
   assert.strictEqual(result.identityVerified, addons.length, 'aggregates verified stream counts');
 
-  const allEighty = Array.from({ length: 80 }, (_, i) => ({ id: `vod-${i}`, name: `VOD ${i}` }));
-  ctx.settings.addons = allEighty;
+  const allProviders = Array.from({ length: 120 }, (_, i) => ({ id: `vod-${i}`, name: `VOD ${i}` }));
+  ctx.settings.addons = allProviders;
   let started = 0;
   ctx.queryAddonStreams = async addon => {
     started++;
@@ -61,11 +61,11 @@ vm.runInContext(script.slice(start, end), ctx, { filename: 'collect-all-streams.
     return { direct: [{ url: `https://cdn.test/${addon.id}.mp4`, addonName: addon.name, addonBase: `https://${addon.id}.test` }] };
   };
   const fullScan = await ctx.collectAllStreams({ title: 'Series', type: 'tv' }, {});
-  assert.strictEqual(fullScan.concurrency, 32, 'uses the optimized default worker count across a large VOD provider list');
-  assert.strictEqual(started, 80, 'does not stop provider scheduling after finding matching servers');
-  assert.strictEqual(fullScan.queried, 80, 'scans the complete enabled VOD provider list');
-  assert.strictEqual(fullScan.totalAddons, 80, 'reports the full provider inventory');
-  assert.strictEqual(fullScan.direct.length, 80, 'does not cap verified direct results');
+  assert.strictEqual(fullScan.concurrency, 100, 'uses the requested 100-worker default for a large VOD provider list');
+  assert.strictEqual(started, 120, 'does not stop provider scheduling after finding matching servers');
+  assert.strictEqual(fullScan.queried, 120, 'scans the complete enabled VOD provider list');
+  assert.strictEqual(fullScan.totalAddons, 120, 'reports the full provider inventory');
+  assert.strictEqual(fullScan.direct.length, 120, 'does not cap verified direct results');
   console.log('PASS bounded concurrent workers and immediate per-provider progress');
   console.log('PASS uncapped VOD provider scan returns all matching servers');
 })().catch(error => { console.error(error); process.exit(1); });

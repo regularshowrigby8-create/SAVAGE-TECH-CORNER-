@@ -6275,8 +6275,8 @@ async function collectAllStreams(ctx,opts){
   const addons=enabledAddons().slice().sort((a,b)=>healthScore(b.id)-healthScore(a.id)||((b.stars||0)-(a.stars||0)));
   const agg={direct:[],torrents:0,oversize:0,external:0,identityRejected:0,identityVerified:0,catalogMatches:0,queried:0,totalAddons:addons.length,concurrency:0};
   const seen=new Set();
-  const requestedWorkers=Number(opts.concurrency)||(opts.quick?16:32);
-  const concurrency=Math.max(1,Math.min(32,addons.length||1,Math.floor(requestedWorkers)||1));
+  const requestedWorkers=Number(opts.concurrency)||100;
+  const concurrency=Math.max(1,Math.min(100,addons.length||1,Math.floor(requestedWorkers)||1));
   agg.concurrency=concurrency;
   const qualityPenalty=v=>{
     const pref=normalizeQualityLabel(settings.stream.quality||"auto");
@@ -6404,13 +6404,14 @@ async function findTitleServers(ctx,opts){
   ctx=Object.assign({},ctx||{});
   const identity=(ctx.identity&&ctx.identity.version)?ctx.identity:buildTitleIdentity(ctx);
   const richCtx=Object.assign({},ctx,{identity,imdb:identity.imdbId||ctx.imdb||"",altTitles:identity.titles,year:identity.year,season:identity.season,episode:identity.episode});
-  const cacheKey=identity.fingerprint+":"+identity.type+":"+identity.season+":"+identity.episode+":"+(settings.stream.quality||"auto");
+  const providerInventory=enabledAddons().map(a=>String(a.id||"")+"@"+String(a.base||"")).sort().join("|");
+  const cacheKey=identity.fingerprint+":"+identity.type+":"+identity.season+":"+identity.episode+":"+(settings.stream.quality||"auto")+":"+providerInventory;
   if(!opts.bypassCache){
     const cached=titleServerCache.get(cacheKey);
     if(cached&&Date.now()-cached.t<180000){ if(opts.onUpdate) opts.onUpdate(Object.assign({},cached.data,{complete:true,cached:true})); return cached.data; }
   }
   const byId=new Map();
-  const stats={checkedRoutes:0,checkedWebsites:0,matchedWebsites:0,queriedProviders:0,totalProviders:enabledAddons().length,concurrency:Math.max(1,Math.min(32,Math.floor(Number(opts.concurrency)||(opts.quick?16:32))||1,enabledAddons().length||1)),identityVerified:0,identityRejected:0,torrents:0,oversize:0,external:0,catalogMatches:0,complete:false};
+  const stats={checkedRoutes:0,checkedWebsites:0,matchedWebsites:0,queriedProviders:0,totalProviders:enabledAddons().length,concurrency:Math.max(1,Math.min(100,Math.floor(Number(opts.concurrency)||100)||1,enabledAddons().length||1)),identityVerified:0,identityRejected:0,torrents:0,oversize:0,external:0,catalogMatches:0,complete:false};
   let embedwaveOption=null;
   const snapshot=complete=>({options:sortTitleServerOptions([...byId.values()].concat(complete&&embedwaveOption?[embedwaveOption]:[])),stats:Object.assign({},stats,{complete:!!complete}),identity});
   const emit=()=>{ if(opts.onUpdate){ try{ opts.onUpdate(snapshot(false)); }catch{} } };
@@ -6469,7 +6470,7 @@ async function findTitleServers(ctx,opts){
         server with their real quality variants. */
   let addonSearchActive=true, quickSearchDetached=false;
   const runAddons=collectAllStreams(richCtx,{
-    concurrency:opts.concurrency||(opts.quick?16:32),
+    concurrency:opts.concurrency||100,
     signal:opts.signal,
     shouldContinue:()=>addonSearchActive&&(quickSearchDetached||!opts.shouldContinue||opts.shouldContinue()),
     onProgress:agg=>{
@@ -6697,8 +6698,8 @@ function renderTitleServerOptions(){
   if(status){
     const stats=c._stats||{};
     status.innerHTML=searching
-      ? '<span class="spinner"></span> Searching only for <strong>'+esc(c.title||"this title")+'</strong>'+(stats.queriedProviders?(' · checked '+stats.queriedProviders+'/'+(stats.totalProviders|| enabledAddons().length)+' direct providers'):"")+(stats.concurrency?' · '+stats.concurrency+' active workers, scanning every enabled provider':' · scanning every enabled provider')+' · matches appear as they arrive'
-      : '<strong>'+(direct.length+sites.length)+'</strong> verified server option'+((direct.length+sites.length)===1?"":"s")+' · <strong>'+routes.length+'</strong> exact-ID player route'+(routes.length===1?"":"s")+' · unrelated servers hidden';
+      ? '<span class="spinner"></span> Searching only for <strong>'+esc(c.title||"this title")+'</strong>'+(stats.queriedProviders?(' · checked '+stats.queriedProviders+'/'+(stats.totalProviders|| enabledAddons().length)+' direct providers'):"")+(stats.concurrency?' · '+stats.concurrency+' active workers, scanning every enabled provider (100-worker max)':' · scanning every enabled provider (100-worker max)')+' · matches appear as they arrive'
+      : '<strong>'+(direct.length+sites.length)+'</strong> verified server option'+((direct.length+sites.length)===1?"":"s")+' · <strong>'+routes.length+'</strong> exact-ID player route'+(routes.length===1?"":"s")+' · scanned all '+(stats.queriedProviders||stats.totalProviders||0)+' enabled direct providers · unrelated servers hidden';
   }
   const cnt=document.getElementById("streamCounts");
   if(cnt&&c._stats){
