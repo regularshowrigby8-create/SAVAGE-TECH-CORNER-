@@ -4,7 +4,7 @@ const path = require('path');
 const vm = require('vm');
 const axios = require('axios');
 const api = require('../api/global-search.js');
-const { ENGINE_IDS, runEngine, normRows, externalUrl } = api._test;
+const { ENGINE_IDS, WEB_CRAWLERS, runEngine, normRows, externalUrl, crawlerResultRows } = api._test;
 const enginesDir = path.join(__dirname, '..', 'lib/vendor/cdrake-se/Engines');
 assert(!fs.existsSync(path.join(__dirname, '..', 'api/vendor')), 'vendored adapter modules stay outside Vercel function discovery to respect Hobby function limits');
 
@@ -18,7 +18,8 @@ function responseStub() {
 }
 
 (async () => {
-  assert.strictEqual(ENGINE_IDS.length, 11, 'ten global search engines plus one niche-title pass are registered');
+  assert.strictEqual(ENGINE_IDS.length, 21, 'twenty global web-search workers plus one niche-title pass are registered');
+  assert.deepStrictEqual(Object.keys(WEB_CRAWLERS), ['ecosia', 'startpage', 'brave', 'metacrawler', 'webcrawler', 'gibiru', 'info', 'etools', 'qwantweb', 'bingnews'], 'ten additional regular web crawlers are registered separately from provider discovery');
   assert(ENGINE_IDS.includes('duckduckgo') && !ENGINE_IDS.includes('suggest'), 'the pool includes a full-text DuckDuckGo worker instead of autocomplete-only suggestions');
   for (const engine of ['Aol', 'Ask', 'Bing', 'Google', 'Qwant', 'Suggest', 'Wikipedia', 'Yahoo', 'Yep', 'Youtube']) {
     assert(fs.existsSync(path.join(enginesDir, engine + '.js')), engine + ' adapter is vendored from the inspected GitHub source');
@@ -33,6 +34,11 @@ function responseStub() {
   const normalized = normRows('google', { Results: [{ Title: 'Exact title', Link: 'https://example.com/title', Description: '2011 series' }] });
   assert.strictEqual(normalized.length, 1, 'search results normalize from upstream schema');
   assert.strictEqual(normalized[0].href, 'https://example.com/title', 'normalized result keeps its safe URL');
+  const htmlSearchResult = '<div class="result"><a class="result-title" href="https://example.com/lola">Mi corazón insiste en Lola Volcán · 2011</a><p>Exact title reference: My Heart Beats for Lola Volcán.</p></div>';
+  const htmlRows = crawlerResultRows('ecosia', htmlSearchResult, ['ecosia.org']);
+  assert.strictEqual(htmlRows.length, 1, 'generic crawler parser extracts an external result');
+  assert.strictEqual(htmlRows[0].Link, 'https://example.com/lola', 'crawler parser returns the public result URL');
+  assert.strictEqual(crawlerResultRows('ecosia', '<a href="https://ecosia.org/search?q=x">Search</a>', ['ecosia.org']).length, 0, 'crawler parser discards internal search/navigation links');
   const originalAxiosGet = axios.get;
   axios.get = async (url, options) => {
     assert.strictEqual(url, 'https://html.duckduckgo.com/html/', 'DuckDuckGo uses its keyless HTML search endpoint');
@@ -42,6 +48,26 @@ function responseStub() {
   try {
     const duck = await runEngine('duckduckgo', 'niche title 2011', 'en-US');
     assert(duck.ok && duck.results[0].href === 'https://example.com/show' && duck.results[0].engine === 'duckduckgo', 'DuckDuckGo redirect links normalize to the original HTTPS page');
+  } finally { axios.get = originalAxiosGet; }
+
+  const crawlerCalls = [];
+  axios.get = async (url, options) => {
+    crawlerCalls.push({ url, options });
+    return { data: htmlSearchResult };
+  };
+  try {
+    for (const engine of Object.keys(WEB_CRAWLERS)) {
+      const found = await runEngine(engine, 'Mi corazón insiste en Lola Volcán 2011', 'es-ES');
+      assert(found.ok && found.results.some(row => row.href === 'https://example.com/lola'), engine + ' normalizes live HTML result markup');
+      assert(found.results.every(row => row.engine === engine), engine + ' retains independent source attribution');
+    }
+    assert.strictEqual(crawlerCalls.length, 10, 'all ten additional crawler sources are queried independently');
+    for (let i = 0; i < crawlerCalls.length; i++) {
+      const engine = Object.keys(WEB_CRAWLERS)[i], source = WEB_CRAWLERS[engine], call = crawlerCalls[i];
+      assert.strictEqual(call.url, source.url, engine + ' calls its own web search endpoint');
+      assert.strictEqual(call.options.params[source.param], 'Mi corazón insiste en Lola Volcán 2011', engine + ' receives the tested original-title query');
+      if (source.extra) for (const [key, value] of Object.entries(source.extra)) assert.strictEqual(call.options.params[key], value, engine + ' receives its configured search vertical');
+    }
   } finally { axios.get = originalAxiosGet; }
 
   const Aol = require('../lib/vendor/cdrake-se/Engines/Aol');
@@ -96,11 +122,14 @@ function responseStub() {
     type: 'tv', year: '2011', season: 1, episode: 1, imdbId: 'tt1929755', tmdbId: 35281,
   }, true);
   assert(nicheQuery.includes('Mi corazón insiste en Lola Volcán') && nicheQuery.includes('tt1929755') && nicheQuery.includes('TMDB 35281'), 'niche worker searches original title plus exact IMDb/TMDB identifiers');
+  const regularQuery = nicheContext.buildGlobalQuery({ title: 'My Heart Beats for Lola Volcán', titles: ['My Heart Beats for Lola Volcán', 'Mi corazón insiste en Lola Volcán'], type: 'tv', year: '2011', season: 1, episode: 1 }, false);
+  assert(regularQuery.includes('My Heart Beats for Lola Volcán') && regularQuery.includes('Mi corazón insiste en Lola Volcán') && regularQuery.includes('2011'), 'every regular web crawler receives both canonical and original title variants');
   const searchStart = inlineScript.indexOf('async function findTitleServers(ctx,opts)');
   const searchEnd = inlineScript.indexOf('\nasync function playTitleServerOption', searchStart);
   assert(searchStart >= 0 && searchEnd > searchStart, 'title search function exists');
   const titleSearch = inlineScript.slice(searchStart, searchEnd);
   assert(titleSearch.includes('GLOBAL_SEARCH_ENGINE_POOL.map(async engine=>'), 'browser launches one JavaScript worker per global engine');
+  assert(ENGINE_IDS.filter(id => id !== 'niche').length === 20, 'all twenty web crawlers share the existing title-scoped global search worker pool');
   assert(titleSearch.includes('Promise.allSettled(tasks)'), 'all global engine workers settle independently');
   assert(titleSearch.includes('Promise.race([runTitleCandidates,'), 'quick playback failover is not delayed by global web engines');
   assert(titleSearch.includes('collectAllStreams(richCtx'), '100-worker provider search remains in its own path');
@@ -116,5 +145,5 @@ function responseStub() {
   const progressMarkup = progressContext.renderGlobalProgress({ globalEnginesTotal: 2, globalEnginesComplete: 1, globalEnginesFailed: 1, globalEngineStatus: [{ id: 'a', name: 'Alpha', status: 'running' }, { id: 'b', name: 'Beta', status: 'failed' }] }, true);
   assert(progressMarkup.includes('1/2 engines complete') && progressMarkup.includes('Alpha · searching') && progressMarkup.includes('Beta · unavailable') && progressMarkup.includes('value="1"'), 'progress panel communicates completed count and per-engine running/failure states');
 
-  console.log('PASS 10 keyless global search engines plus niche-title pass, zero-key relay, and separate browser worker pools');
+  console.log('PASS 20 keyless global web-search sources plus niche-title pass, zero-key relay, and separate browser worker pools');
 })().catch(error => { console.error(error); process.exit(1); });

@@ -22,7 +22,19 @@ const cheerio = require('cheerio');
 const REQUEST_TIMEOUT_MS = 4500;
 kAxiosOptions.timeout = REQUEST_TIMEOUT_MS;
 axios.defaults.timeout = REQUEST_TIMEOUT_MS;
-const ENGINE_IDS = Object.freeze(['aol', 'ask', 'bing', 'google', 'qwant', 'duckduckgo', 'wikipedia', 'yahoo', 'yep', 'youtube', 'niche']);
+const WEB_CRAWLERS = Object.freeze({
+  ecosia: { url: 'https://www.ecosia.org/search', param: 'q', hosts: ['ecosia.org'] },
+  startpage: { url: 'https://www.startpage.com/sp/search', param: 'query', hosts: ['startpage.com'] },
+  brave: { url: 'https://search.brave.com/search', param: 'q', hosts: ['search.brave.com', 'brave.com'] },
+  metacrawler: { url: 'https://www.metacrawler.com/serp', param: 'q', hosts: ['metacrawler.com'] },
+  webcrawler: { url: 'https://www.webcrawler.com/serp', param: 'q', hosts: ['webcrawler.com'] },
+  gibiru: { url: 'https://gibiru.com/results.html', param: 'q', hosts: ['gibiru.com'] },
+  info: { url: 'https://www.info.com/search', param: 'q', hosts: ['info.com'] },
+  etools: { url: 'https://www.etools.ch/searchSubmit.do', param: 'query', hosts: ['etools.ch'] },
+  qwantweb: { url: 'https://www.qwant.com/', param: 'q', extra: { t: 'web' }, hosts: ['qwant.com'] },
+  bingnews: { url: 'https://www.bing.com/news/search', param: 'q', hosts: ['bing.com'] },
+});
+const ENGINE_IDS = Object.freeze(['aol', 'ask', 'bing', 'google', 'qwant', 'duckduckgo', 'wikipedia', 'yahoo', 'yep', 'youtube', ...Object.keys(WEB_CRAWLERS), 'niche']);
 const cleanText = (value, max = 500) => String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 
 function externalUrl(raw) {
@@ -55,6 +67,48 @@ function normRows(engine, payload) {
     rows.push({ title, href: finalHref, body, image, engine });
   }
   return rows;
+}
+function crawlerResultRows(engine, html, internalHosts) {
+  const $ = cheerio.load(String(html || ''));
+  const rows = [];
+  const seen = new Set();
+  const ignoredText = /^(all|images|videos|news|maps|shopping|settings|privacy|terms|more|next|previous|about|sign in|menu|show menu|search)$/i;
+  $('a[href]').each((_, element) => {
+    const anchor = $(element);
+    const title = cleanText(anchor.attr('title') || anchor.text(), 220);
+    if (title.length < 4 || ignoredText.test(title)) return;
+    let href = String(anchor.attr('href') || '').trim();
+    try {
+      const parsed = new URL(href, 'https://search.invalid');
+      const redirect = ['url', 'u', 'uddg', 'target', 'redirect', 'ru', 'r'].map(key => parsed.searchParams.get(key)).find(value => value && /^https?:\/\//i.test(value));
+      if (redirect) href = redirect;
+      else if (parsed.hostname === 'search.invalid') return;
+    } catch { return; }
+    const safeHref = externalUrl(href);
+    if (!safeHref) return;
+    let parsedHref;
+    try { parsedHref = new URL(safeHref); } catch { return; }
+    const host = parsedHref.hostname.toLowerCase();
+    if (internalHosts.some(domain => host === domain || host.endsWith('.' + domain))) return;
+    if (seen.has(safeHref)) return;
+    const block = anchor.closest('.result, .web-result, .search-result, .result-item, .serp__result, article, li, tr');
+    const parentText = cleanText(block.length ? block.text() : anchor.parent().parent().text(), 700);
+    const body = parentText && parentText !== title ? cleanText(parentText.replace(title, ''), 500) : '';
+    rows.push({ Title: title, Link: safeHref, Description: body });
+    seen.add(safeHref);
+    if (rows.length >= 12) return false;
+  });
+  return rows;
+}
+async function searchWebCrawler(engine, query) {
+  const source = WEB_CRAWLERS[engine];
+  if (!source) throw new Error('Unsupported web crawler');
+  const params = { [source.param]: query, ...(source.extra || {}) };
+  const response = await axios.get(source.url, {
+    params, timeout: REQUEST_TIMEOUT_MS,
+    headers: { ...kAxiosOptions.headers, Accept: 'text/html,application/xhtml+xml' },
+  });
+  return { Results: crawlerResultRows(engine, response.data, source.hosts) };
 }
 async function searchDuckDuckGo(query) {
   const response = await axios.get('https://html.duckduckgo.com/html/', {
@@ -93,7 +147,9 @@ function queryForEngine(engine, query, language) {
     case 'yahoo': return new Yahoo({ Query: encoded, Page: 1, Language: language }).Search();
     case 'yep': return new Yep({ Query: encoded, Page: 1, Language: language }).Search();
     case 'youtube': return new Youtube({ Query: query, Limit: 8, AllowPlaylist: false }).Search();
-    default: throw new Error('Unsupported search engine');
+    default:
+      if (WEB_CRAWLERS[engine]) return searchWebCrawler(engine, query);
+      throw new Error('Unsupported search engine');
   }
 }
 async function runEngine(engine, query, language) {
@@ -130,4 +186,4 @@ module.exports = async function handler(req, res) {
   return res.status(200).json({ ok: true, ...result });
 };
 
-module.exports._test = { ENGINE_IDS, runEngine, normRows, externalUrl, queryForEngine };
+module.exports._test = { ENGINE_IDS, WEB_CRAWLERS, runEngine, normRows, externalUrl, queryForEngine, crawlerResultRows };

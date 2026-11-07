@@ -6527,11 +6527,12 @@ const GLOBAL_SEARCH_ENGINE_POOL=[
 ];
 function globalSearchQuery(identity,niche){
   const quote=value=>'"'+String(value||"").replace(/"/g," ").replace(/\s+/g," ").trim().slice(0,120)+'"';
+  const titles=identityUnique(identity.titles||[identity.title]).filter(Boolean).slice(0,niche?3:2).map(quote);
   if(niche){
-    const titles=identityUnique(identity.titles||[identity.title]).filter(Boolean).slice(0,3).map(quote);
     return titles.join(" OR ")+" "+[identity.year,identity.imdbId,identity.tmdbId?("TMDB "+identity.tmdbId):""].filter(Boolean).join(" ");
   }
-  return quote(identity.title)+" "+[identity.year,identity.type==="tv"?("season "+(identity.season||1)+" episode "+(identity.episode||1)):""].filter(Boolean).join(" ");
+  const titleQuery=titles.length>1?"("+titles.join(" OR ")+")":titles[0]||quote(identity.title);
+  return titleQuery+" "+[identity.year,identity.type==="tv"?("season "+(identity.season||1)+" episode "+(identity.episode||1)):""].filter(Boolean).join(" ");
 }
 async function requestGlobalSearchEngine(engine,query,language,signal){
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),7200);
@@ -6945,7 +6946,7 @@ function renderTitleServerOptions(){
   const cnt=document.getElementById("streamCounts");
   if(cnt&&c._stats){
     const s=c._stats;
-    cnt.textContent="Checked "+s.checkedRoutes+" exact-ID routes · "+s.checkedWebsites+" website lookup servers ("+s.matchedWebsites+" matched) · "+(s.queriedProviders||0)+"/"+(s.totalProviders||0)+" enabled direct providers · "+(s.titleCandidatesQueried||0)+" checked this pass from "+(s.titleCandidatesAvailable||0)+" title candidates ("+(s.titleCandidatesMatched||0)+" matched and saved) · "+(s.globalEnginesComplete||0)+"/"+(s.globalEnginesTotal||11)+" global search engines · "+(s.globalSearchLeads||0)+" title-matched web leads (not playable/installed) · "+(s.identityVerified||0)+" verified streams · "+(s.identityRejected||0)+" rejected as wrong title/episode · "+(s.torrents||0)+" torrents hidden · "+(s.oversize||0)+" over the "+capGb()+" GB cap hidden.";
+    cnt.textContent="Checked "+s.checkedRoutes+" exact-ID routes · "+s.checkedWebsites+" website lookup servers ("+s.matchedWebsites+" matched) · "+(s.queriedProviders||0)+"/"+(s.totalProviders||0)+" enabled direct providers · "+(s.titleCandidatesQueried||0)+" checked this pass from "+(s.titleCandidatesAvailable||0)+" title candidates ("+(s.titleCandidatesMatched||0)+" matched and saved) · "+(s.globalEnginesComplete||0)+"/"+(s.globalEnginesTotal||21)+" global search engines · "+(s.globalSearchLeads||0)+" title-matched web leads (not playable/installed) · "+(s.identityVerified||0)+" verified streams · "+(s.identityRejected||0)+" rejected as wrong title/episode · "+(s.torrents||0)+" torrents hidden · "+(s.oversize||0)+" over the "+capGb()+" GB cap hidden.";
   }
   if(playerState&&c.fromPlayer){ playerState.availableServers=options; playerState.availabilityChecked=!!c._searchDone; updatePlayerMeta(); }
 }
@@ -6967,12 +6968,12 @@ async function showStreamsModal(ctx){
   $("#streamsRoot").innerHTML='<div class="overlay" id="streamsOverlay"><div class="modal"><button class="icon-btn modal-close" id="btnCloseStreams" aria-label="Close">×</button>'
     +'<div style="padding:1.6rem 1.8rem 1.8rem"><div class="streams-hero"><img src="'+esc(posterURL(ctx.item,"w185"))+'" alt="" data-seed="'+esc(ctx.id||"")+'"><div><span class="logo-badge" style="margin-bottom:.6rem">Servers with this title</span>'
     +'<h2 style="color:var(--text-heading)">'+esc(ctx.title||"Stream")+(ctx.type==='tv'?' <span class="chip violet">S'+(ctx.season||1)+' · E'+(ctx.episode||1)+'</span>':'')+(ctx.year?' <span class="chip">'+esc(ctx.year)+'</span>':'')+'</h2>'
-    +'<p class="section-desc" style="margin-bottom:0">ZeroPlay checks the canonical TMDB/IMDb identity, year, title variants and episode. The 100-worker provider scan, 11 global web-search workers, and continuous provider crawler are separate.</p></div></div>'
+    +'<p class="section-desc" style="margin-bottom:0">ZeroPlay checks the canonical TMDB/IMDb identity, year, title variants and episode. The 100-worker provider scan, 21 global web-search workers, and continuous provider crawler are separate.</p></div></div>'
     +'<div class="status-box info" id="serverSearchStatus"><span class="spinner"></span> Searching for this exact title…</div>'
     +'<div class="streams-toolbar"><div class="form-group"><label for="streamQuality">Preferred quality</label><select id="streamQuality">'+[["auto","Auto — best stable"],["2160p","4K 2160p"],["1080p","1080p"],["720p","720p"],["480p","480p"]].map(([v,t])=>'<option value="'+v+'"'+(settings.stream.quality===v?' selected':'')+'>'+t+'</option>').join("")+'</select></div><button class="btn btn-primary" id="btnRace" disabled>Race verified streams</button><button class="btn btn-secondary" id="btnRefreshServers">Search again</button><span id="raceStatus" class="help-text" style="display:inline"></span></div>'
     +'<h3 class="category-heading">Verified direct servers</h3><div id="serverDirect"></div>'
     +'<h3 class="category-heading">Verified website servers</h3><p class="help-text">Optional: this section checks only website sources you add. It is separate from direct provider and exact-ID server searches.</p><div id="serverWebsites"></div>'
-    +'<h3 class="category-heading">Global web search leads</h3><p class="help-text">Ten keyless global search engines plus a niche-title pass run concurrently. Per-engine progress and failures are shown below. These are title-matched web pages, not verified streams; they are never auto-installed.</p><div id="serverGlobal"></div>'
+    +'<h3 class="category-heading">Global web search leads</h3><p class="help-text">Twenty keyless global web-search sources plus a niche-title pass run concurrently. Per-engine progress and failures are shown below. These are title-matched web pages, not verified streams; they are never auto-installed.</p><div id="serverGlobal"></div>'
     +'<h3 class="category-heading">Exact-ID players</h3><p class="help-text">These players can address this exact catalogue ID. Cross-origin players cannot prove their library before loading, so ZeroPlay does not falsely label them “verified”. Embedwave remains last.</p><div id="serverRoutes"></div>'
     +'<div id="streamCounts" class="help-text"></div></div></div></div>';
   renderTitleServerOptions();
