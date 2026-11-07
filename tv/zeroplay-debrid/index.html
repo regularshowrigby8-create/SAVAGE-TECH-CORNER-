@@ -620,6 +620,27 @@ body.theme-warm{--bg:#171411;--surface:#211b16;--surface2:#2b231d;--surface-bord
 body.theme-warm .topbar{background:linear-gradient(180deg,rgba(24,20,16,.97),rgba(24,20,16,.88))}
 body.theme-warm .topbar.is-scrolled{background:rgba(24,20,16,.97)}
 body.theme-warm .menu-drawer{background:#211b16}
+body.theme-light{--bg:#f2f4f7;--surface:#fff;--surface2:#e9edf2;--surface-border:#d1d8e0;--primary:#6d28d9;--primary-hover:#5b21b6;--primary-soft:rgba(109,40,217,.1);--text:#34404c;--text-heading:#151b22;--text-muted:#596674;--text-dim:#758291;--gold:#8a6200;--focus:#6d28d9;background:radial-gradient(900px 420px at 18% -8%,rgba(124,58,237,.08),transparent 58%),#f2f4f7}
+body.theme-light .topbar{background:rgba(246,247,249,.96);border-bottom-color:#d8dde3}
+body.theme-light .topbar.is-scrolled{background:rgba(246,247,249,.98)}
+body.theme-light .topbar .nav button{color:#43505e}
+body.theme-light .topbar .nav button.active{color:#231b35;background:rgba(109,40,217,.09)}
+body.theme-light .menu-button{color:#292433;background:#fff;border-color:#d5dbe3}
+body.theme-light .category-strip button{color:#43505e;background:rgba(255,255,255,.8);border-color:#d4dbe3}
+body.theme-light .zp-sidebar-label{color:#737f8c}
+body.theme-light .topbar-search input,body.theme-light input[type="text"],body.theme-light input[type="password"],body.theme-light input[type="number"],body.theme-light input[type="search"],body.theme-light select,body.theme-light textarea{background:#fff;color:#1b2430;border-color:#cfd6df}
+body.theme-light .zp-sidebar{background:linear-gradient(180deg,#fff,#f5f6f8);border-right-color:#d6dce3}
+body.theme-light .zp-sidebar .zp-rail-link{color:#596674}
+body.theme-light .zp-sidebar .zp-rail-link:hover{color:#171b22;background:rgba(109,40,217,.06)}
+body.theme-light .zp-sidebar .zp-rail-link.active{color:#2b174d;background:rgba(109,40,217,.1);border-color:rgba(109,40,217,.14)}
+body.theme-light .zp-sidebar-footcard{border-color:#dce1e7;background:linear-gradient(135deg,rgba(109,40,217,.07),rgba(255,255,255,.8))}
+body.theme-light .panel{background:linear-gradient(145deg,#fff,#f7f8fa);border-color:#dce1e7;box-shadow:0 12px 30px rgba(29,41,57,.08)}
+body.theme-light .menu-drawer{background:#fff;color:#202732;border-color:#d8dde3}
+body.theme-light .menu-drawer h2,body.theme-light .menu-link{color:#202732}
+body.theme-light .menu-link:hover{background:#f0edf7}
+body.theme-light .menu-section{border-color:#e1e5ea}
+body.theme-light .mobile-bottom-nav{background:rgba(250,250,252,.96);border-color:#d8dde3}
+body.theme-light .mobile-bottom-nav button.active{color:#5b21b6;background:rgba(109,40,217,.08)}
 body.high-contrast{--text:#fff;--text-heading:#fff;--text-muted:#e1e1e1;--text-dim:#c8c8c8;--surface-border:#737b84;--gold:#ffe17a;--focus:#ffe17a}
 body.high-contrast .panel,body.high-contrast .modal,body.high-contrast .menu-drawer{border:1px solid var(--surface-border)}
 body.high-contrast button:focus-visible,body.high-contrast a:focus-visible,body.high-contrast input:focus-visible,body.high-contrast select:focus-visible,body.high-contrast textarea:focus-visible{outline-width:3px;outline-offset:3px}
@@ -627,9 +648,99 @@ html.font-large{font-size:17px}
 html.font-xl{font-size:19px}
 @media(max-width:620px){.ui-preferences{grid-template-columns:1fr}}
 
+/* New ZeroPlay shell: persistent desktop rail, touch-first mobile dock,
+   and larger, calmer surfaces. All existing routes and handlers stay intact. */
+.zp-sidebar{display:none}
+.zp-sidebar-brand{display:flex;align-items:center;gap:.78rem;padding:.8rem .7rem 1.75rem;color:var(--text-heading);font-size:1.16rem;font-weight:800;letter-spacing:-.035em}
+.zp-sidebar-brand:hover{text-decoration:none}
+.zp-brand-mark{width:42px;height:42px;border-radius:14px;background:linear-gradient(145deg,#8b5cf6,#6d28d9);display:flex;align-items:center;justify-content:center;color:#fff;font-size:.95rem;box-shadow:0 10px 26px rgba(124,58,237,.35)}
+.zp-sidebar-brand small{display:block;margin-top:.2rem;color:var(--text-dim);font-size:.57rem;font-weight:750;letter-spacing:.14em}
+.zp-sidebar-label{padding:.35rem .8rem .55rem;color:var(--text-dim);font-size:.65rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase}
+.zp-sidebar-label-spaced{margin-top:1.45rem}
+.zp-sidebar .zp-rail-nav{display:grid;gap:.25rem}
+.zp-sidebar .zp-rail-link{width:100%;min-height:46px;display:flex;align-items:center;gap:.9rem;text-align:left;border:1px solid transparent;border-radius:12px;padding:.65rem .8rem;color:var(--text-muted);background:transparent;font-size:.91rem;font-weight:650;cursor:pointer;transition:background .18s ease,color .18s ease,border-color .18s ease,transform .18s ease}
+.zp-sidebar .zp-rail-link:hover{background:rgba(255,255,255,.055);color:var(--text-heading);transform:translateX(2px)}
+.zp-sidebar .zp-rail-link.active{color:var(--text-heading);background:linear-gradient(90deg,rgba(124,58,237,.22),rgba(124,58,237,.075));border-color:rgba(167,139,250,.13);box-shadow:inset 3px 0 #8b5cf6}
+.zp-rail-icon{width:22px;display:inline-flex;align-items:center;justify-content:center;color:#a78bfa;font-size:1.12rem;font-weight:700}
+.zp-sidebar-genres{display:flex;flex-wrap:wrap;gap:.45rem;padding:0 .65rem}
+.zp-sidebar-genres button{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035);border-radius:999px;padding:.38rem .65rem;color:var(--text-muted);font-size:.71rem;font-weight:650;cursor:pointer}
+.zp-sidebar-genres button:hover{color:#fff;border-color:rgba(167,139,250,.5);background:rgba(124,58,237,.13)}
+.zp-sidebar-spacer{flex:1;min-height:1.5rem}
+.zp-sidebar-footcard{display:flex;align-items:center;gap:.7rem;padding:.85rem .75rem;margin:.7rem .05rem 1rem;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(255,255,255,.025))}
+.zp-footcard-orb{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:rgba(124,58,237,.22);color:#c4b5fd}
+.zp-sidebar-footcard strong,.zp-sidebar-footcard small{display:block}
+.zp-sidebar-footcard strong{font-size:.73rem;color:var(--text-heading)}
+.zp-sidebar-footcard small{font-size:.62rem;color:var(--text-dim);margin-top:.15rem}
+.zp-settings-link{margin-top:.25rem}
+.mobile-bottom-nav{display:none}
+/* Refined reading surfaces and clear focus affordances. */
+.panel{border:1px solid rgba(255,255,255,.065);border-radius:18px;background:linear-gradient(145deg,rgba(29,33,37,.96),rgba(20,23,26,.98));box-shadow:0 12px 34px rgba(0,0,0,.16)}
+.hero{border-radius:24px;box-shadow:0 24px 60px rgba(0,0,0,.32)}
+.hero-body h1{max-width:15ch;text-wrap:balance}
+.hero-actions .btn-primary{background:linear-gradient(135deg,#8b5cf6,#6d28d9);box-shadow:0 9px 24px rgba(109,40,217,.24)}
+.poster-wrap{border-radius:14px;box-shadow:0 8px 26px rgba(0,0,0,.18),inset 0 0 0 1px rgba(255,255,255,.06)}
+.poster-card:focus-visible .poster-wrap{box-shadow:0 0 0 3px rgba(167,139,250,.88),0 18px 42px rgba(0,0,0,.5)}
+.rail-head h2{font-size:1.28rem;letter-spacing:-.025em}
+.mobile-bottom-nav button:focus-visible,.zp-sidebar button:focus-visible{outline:3px solid #b794f6;outline-offset:2px}
+@media(min-width:980px){
+  body:not(.android-tv) .zp-sidebar{position:fixed;inset:0 auto 0 0;z-index:70;width:250px;display:flex;flex-direction:column;padding:1.15rem .9rem 1rem;background:linear-gradient(180deg,#15171b 0%,#111316 65%,#101214 100%);border-right:1px solid rgba(255,255,255,.07);box-shadow:12px 0 40px rgba(0,0,0,.14);overflow-y:auto}
+  body:not(.android-tv) .topbar{width:calc(100% - 250px);margin-left:250px}
+  body:not(.android-tv) #view,body:not(.android-tv) .footer{margin-left:250px}
+  body:not(.android-tv) .topbar .nav{display:none}
+  body:not(.android-tv) .topbar .logo-badge{display:none}
+  body:not(.android-tv) .topbar-inner{max-width:none;padding:.72rem clamp(1rem,2.4vw,2rem)}
+  body:not(.android-tv) .topbar-search{max-width:760px}
+  body:not(.android-tv) .category-strip{max-width:none;padding-left:clamp(1rem,2.4vw,2rem)}
+  body:not(.android-tv) #view>.page{max-width:none;padding:1.6rem clamp(1.4rem,3.2vw,3rem) 2.5rem}
+  body:not(.android-tv) .footer{text-align:left;padding-left:clamp(1.4rem,3.2vw,3rem)}
+  body.theme-oled .zp-sidebar{background:#050505;border-right-color:#1b1b1b}
+  body.theme-warm .zp-sidebar{background:linear-gradient(180deg,#211b16,#171411);border-right-color:#4a3c30}
+}
+@media(max-width:979px){.zp-sidebar{display:none!important}}
+@media(max-width:620px){
+  body:not(.android-tv) .topbar .nav{display:none}
+  body:not(.android-tv) .topbar .category-strip{display:none}
+  body:not(.android-tv) .topbar-inner{padding:.62rem .78rem;gap:.6rem}
+  body:not(.android-tv) .topbar-search{order:3;flex-basis:100%;min-width:0}
+  body:not(.android-tv) .topbar-search input{min-height:44px}
+  body:not(.android-tv) #view{padding-bottom:5.8rem}
+  body:not(.android-tv) .mobile-bottom-nav{position:fixed;inset:auto 0 0;z-index:72;display:flex;justify-content:space-around;gap:.2rem;padding:.45rem .35rem calc(.45rem + env(safe-area-inset-bottom));border-top:1px solid rgba(255,255,255,.08);background:rgba(15,17,20,.94);backdrop-filter:blur(16px);box-shadow:0 -8px 28px rgba(0,0,0,.24)}
+  body:not(.android-tv) .mobile-bottom-nav button{flex:1;min-width:0;min-height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.12rem;border:0;border-radius:11px;background:transparent;color:var(--text-dim);font-size:1.15rem;cursor:pointer}
+  body:not(.android-tv) .mobile-bottom-nav button.active{color:#c4b5fd;background:rgba(124,58,237,.12)}
+  body:not(.android-tv) .mobile-bottom-nav small{font-size:.62rem;font-weight:700;letter-spacing:.015em}
+  body.theme-oled .mobile-bottom-nav{background:rgba(0,0,0,.96)}
+  body.theme-warm .mobile-bottom-nav{background:rgba(30,24,19,.96)}
+}
+
 </style>
 </head>
 <body>
+
+<aside class="zp-sidebar" id="desktopRail" aria-label="ZeroPlay navigation">
+  <a class="zp-sidebar-brand" href="#/home" aria-label="ZeroPlay home"><span class="zp-brand-mark" aria-hidden="true">▶</span><span>ZeroPlay<small>DISCOVER · WATCH · REPEAT</small></span></a>
+  <div class="zp-sidebar-label">Browse</div>
+  <nav class="nav zp-rail-nav" aria-label="Main navigation">
+    <button class="zp-rail-link" type="button" data-nav="home"><span class="zp-rail-icon">⌂</span><span>Home</span></button>
+    <button class="zp-rail-link" type="button" data-nav="movies"><span class="zp-rail-icon">▣</span><span>Movies</span></button>
+    <button class="zp-rail-link" type="button" data-nav="series"><span class="zp-rail-icon">▤</span><span>Series</span></button>
+    <button class="zp-rail-link" type="button" data-nav="categories"><span class="zp-rail-icon">◈</span><span>Categories</span></button>
+  </nav>
+  <div class="zp-sidebar-label zp-sidebar-label-spaced">Your space</div>
+  <nav class="nav zp-rail-nav" aria-label="Your library and tools">
+    <button class="zp-rail-link" type="button" data-nav="library"><span class="zp-rail-icon">♡</span><span>My Library</span></button>
+    <button class="zp-rail-link" type="button" data-menu-route="downloads"><span class="zp-rail-icon">⇩</span><span>Downloads</span></button>
+    <button class="zp-rail-link" type="button" data-nav="sources"><span class="zp-rail-icon">⌕</span><span>Sources</span></button>
+  </nav>
+  <div class="zp-sidebar-label zp-sidebar-label-spaced">Quick genres</div>
+  <div class="zp-sidebar-genres">
+    <button type="button" data-category-type="movie" data-category-id="28">Action</button>
+    <button type="button" data-category-type="movie" data-category-id="35">Comedy</button>
+    <button type="button" data-category-type="movie" data-category-id="878">Sci-fi</button>
+  </div>
+  <div class="zp-sidebar-spacer"></div>
+  <div class="zp-sidebar-footcard"><span class="zp-footcard-orb">✦</span><div><strong>Made for your screen</strong><small>Remote-friendly. No account needed.</small></div></div>
+  <button class="zp-rail-link zp-settings-link" type="button" data-menu-route="settings"><span class="zp-rail-icon">⚙</span><span>Settings</span></button>
+</aside>
 
 <header class="topbar" id="topbar">
   <div class="topbar-inner">
@@ -718,6 +829,14 @@ html.font-xl{font-size:19px}
 </div>
 
 <main id="view"></main>
+
+<nav class="nav mobile-bottom-nav" aria-label="Mobile navigation">
+  <button type="button" data-nav="home"><span>⌂</span><small>Home</small></button>
+  <button type="button" data-nav="movies"><span>▣</span><small>Movies</small></button>
+  <button type="button" data-nav="series"><span>▤</span><small>Series</small></button>
+  <button type="button" data-nav="library"><span>♡</span><small>Library</small></button>
+  <button type="button" id="btnMobileMore" aria-label="Open menu"><span>☰</span><small>More</small></button>
+</nav>
 
 <footer class="footer">ZeroPlay · Movies and series, ready to watch. ZeroPlay does not host media files.</footer>
 
@@ -839,7 +958,7 @@ function applyInterfaceSettings(){
   const ui=settings.ui||{};
   const isAndroidTv=typeof ANDROID_TV_APP!=="undefined"&&ANDROID_TV_APP;
   const isLowRamTv=typeof ANDROID_TV_LOW_RAM!=="undefined"&&ANDROID_TV_LOW_RAM;
-  const theme=["dark","oled","warm"].includes(ui.theme)?ui.theme:"dark";
+  const theme=["dark","oled","warm","light"].includes(ui.theme)?ui.theme:"dark";
   const textScale=["normal","large","xl"].includes(ui.textScale)?ui.textScale:"normal";
   ui.theme=theme; ui.textScale=textScale; ui.highContrast=!!ui.highContrast;
   document.body.classList.toggle("theme-oled",theme==="oled");
@@ -949,7 +1068,7 @@ document.addEventListener("change",e=>{
   if(!control) return;
   const ui=settings.ui||(settings.ui={});
   const key=control.dataset.uiPreference;
-  if(key==="theme") ui.theme=["dark","oled","warm"].includes(control.value)?control.value:"dark";
+  if(key==="theme") ui.theme=["dark","oled","warm","light"].includes(control.value)?control.value:"dark";
   else if(key==="textScale") ui.textScale=["normal","large","xl"].includes(control.value)?control.value:"normal";
   else if(key==="highContrast") ui.highContrast=!!control.checked;
   saveSettings(); applyInterfaceSettings();
@@ -4749,7 +4868,7 @@ function settingsHubHTML(){
     +featureSwitchHTML("keepCompletedDownloads","Keep finished files","Keep downloads available to play or save again.","hub")
     +'<div class="settings-actions"><button class="btn btn-primary btn-sm" type="button" data-menu-route="downloads">Open downloads</button></div></div>'
     +'<div><h3>Appearance & data</h3>'
-    +'<div class="ui-preferences"><div class="form-group"><label for="uiThemeSelect">Colour theme</label><select id="uiThemeSelect" data-ui-preference="theme"><option value="dark"'+(settings.ui.theme==="dark"?" selected":"")+'>Dark</option><option value="oled"'+(settings.ui.theme==="oled"?" selected":"")+'>OLED black</option><option value="warm"'+(settings.ui.theme==="warm"?" selected":"")+'>Warm violet</option></select></div><div class="form-group"><label for="uiTextScale">Text size</label><select id="uiTextScale" data-ui-preference="textScale"><option value="normal"'+(settings.ui.textScale==="normal"?" selected":"")+'>Standard</option><option value="large"'+(settings.ui.textScale==="large"?" selected":"")+'>Large</option><option value="xl"'+(settings.ui.textScale==="xl"?" selected":"")+'>Extra large</option></select></div></div>'
+    +'<div class="ui-preferences"><div class="form-group"><label for="uiThemeSelect">Colour theme</label><select id="uiThemeSelect" data-ui-preference="theme"><option value="dark"'+(settings.ui.theme==="dark"?" selected":"")+'>Dark</option><option value="oled"'+(settings.ui.theme==="oled"?" selected":"")+'>OLED black</option><option value="warm"'+(settings.ui.theme==="warm"?" selected":"")+'>Warm violet</option><option value="light"'+(settings.ui.theme==="light"?" selected":"")+'>Light</option></select></div><div class="form-group"><label for="uiTextScale">Text size</label><select id="uiTextScale" data-ui-preference="textScale"><option value="normal"'+(settings.ui.textScale==="normal"?" selected":"")+'>Standard</option><option value="large"'+(settings.ui.textScale==="large"?" selected":"")+'>Large</option><option value="xl"'+(settings.ui.textScale==="xl"?" selected":"")+'>Extra large</option></select></div></div>'
     +'<div class="setting-switch"><div class="setting-copy"><label for="uiHighContrast">High contrast</label><small>Strengthen text and focus outlines for easier reading and remote navigation.</small></div><label tabindex="0" class="switch-label setting-control" for="uiHighContrast"><input type="checkbox" id="uiHighContrast" data-ui-preference="highContrast"'+(settings.ui.highContrast?" checked":"")+'><span class="slider"></span></label></div>'
     +featureSwitchHTML("autoplayNext","Autoplay next episode","Move to the next episode after the current one ends.","hub")
     +featureSwitchHTML("reduceMotion","Reduce motion","Disable decorative movement; useful on TV boxes.","hub")
@@ -6728,6 +6847,7 @@ function render(){
 }
 $$(".nav button").forEach(b=>b.onclick=()=>goRoute(b.dataset.nav));
 $("#btnMenu").onclick=openMenuDrawer;
+const mobileMoreButton=$("#btnMobileMore"); if(mobileMoreButton) mobileMoreButton.onclick=openMenuDrawer;
 $("#btnCloseMenu").onclick=closeMenuDrawer;
 $("#menuScrim").onclick=closeMenuDrawer;
 document.addEventListener("click",e=>{

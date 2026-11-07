@@ -142,7 +142,8 @@ contains the same shared settings plus:
   DNS warm-up, health sorting, downloads, multithreading, M3U extraction,
   download auto-resume/auto-save/link-refresh/retention, autoplay-next,
   reduced motion, compact cards and the category strip; display preferences
-  also include OLED-black/warm-violet themes, larger text and high contrast;
+  also include dark, OLED-black, warm-violet and light themes, larger text
+  and high contrast;
 - FastStream configuration for the direct-stream engine, preload mode,
   preferred quality, default source, buffer target, embed-load and
   confirmed-stall timing, safe range-priming workers/chunks/budget, the file
