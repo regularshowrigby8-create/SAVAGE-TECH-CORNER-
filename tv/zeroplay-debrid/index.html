@@ -1788,8 +1788,9 @@ async function faststreamPreload(ctx, sourceId){
   const t0=performance.now();
   const ping=await warmHost(sourceOrigin(source)); if(ping) recordHealth(source.id,ping.ok,ping.ms);
   let url=""; try{ url=await resolveSourceURL(source,ctx); }catch{ return; }
+  if(settings.stream.preload==="off"||effectiveSaver()) return;
   const direct=!!(source.direct||isDirectMedia(url));
-  if(direct){ const w=await warmDirectMedia(url); preloadCache={key:preloadKey(ctx,source.id),url,mode:"direct file warmed ("+fmtBytes(w.got)+")",ms:Math.round(performance.now()-t0)}; }
+  if(direct){ const w=await warmDirectMedia(url); if(settings.stream.preload==="off"||effectiveSaver()) return; preloadCache={key:preloadKey(ctx,source.id),url,mode:"direct file warmed ("+fmtBytes(w.got)+")",ms:Math.round(performance.now()-t0)}; }
   else if(mode==="aggressive"){
     const slot=preloadSlotEl(); slot.innerHTML="";
     const f=document.createElement("iframe"); f.referrerPolicy=embedReferrerPolicyForUrl(url); f.src=url; f.setAttribute("allow","encrypted-media"); f.setAttribute("loading","eager"); f.title="FastStream preload";
@@ -2977,7 +2978,7 @@ async function tryNextDirectVariant(reason){
 }
 const FASTSTREAM_ORIGIN="https://faststream.online";
 let fastStreamApiStatus=(()=>{ try{ return JSON.parse(sessionStorage.getItem("zp_faststream_api_v1")||"null")||{state:"unknown",checkedAt:0}; }catch{ return {state:"unknown",checkedAt:0}; } })();
-let fastStreamProbeStarted=false;
+let fastStreamProbeStarted=false,fastStreamProbeCleanup=null;
 function effectiveFastStreamApiStatus(){ return Date.now()-Number(fastStreamApiStatus.checkedAt||0)<6*60*60*1000?String(fastStreamApiStatus.state||"unknown"):"unknown"; }
 function setFastStreamApiStatus(state){ fastStreamApiStatus={state,checkedAt:Date.now()}; try{ sessionStorage.setItem("zp_faststream_api_v1",JSON.stringify(fastStreamApiStatus)); }catch{} }
 function probeFastStreamApiInBackground(){
@@ -2985,8 +2986,10 @@ function probeFastStreamApiInBackground(){
   fastStreamProbeStarted=true;
   const frame=document.createElement("iframe");
   frame.hidden=true; frame.setAttribute("aria-hidden","true"); frame.title="FastStream API capability check";
-  const cleanup=()=>{ window.removeEventListener("message",onMessage); frame.remove(); };
+  const cleanup=()=>{ window.removeEventListener("message",onMessage); frame.remove(); if(fastStreamProbeCleanup===cancelProbe) fastStreamProbeCleanup=null; };
   const timer=setTimeout(()=>{ setFastStreamApiStatus("unavailable"); cleanup(); },6500);
+  const cancelProbe=()=>{ clearTimeout(timer); cleanup(); fastStreamProbeStarted=false; };
+  fastStreamProbeCleanup=cancelProbe;
   function onMessage(e){
     if(e.origin!==FASTSTREAM_ORIGIN||e.source!==frame.contentWindow) return;
     if(e.data&&e.data.type==="faststream:event"&&e.data.event==="ready"){ clearTimeout(timer); setFastStreamApiStatus("available"); cleanup(); }
@@ -3402,7 +3405,9 @@ async function mountDirectVideo(stage,url,source,loadT0,resume){
   const mode=String(settings.stream.player||"faststream-only");
   if(mode==="builtin"){
     if(nativeCanPlayDirect(url)) return mountNativeVideo(stage,url,source,loadT0,resumeAt);
-    return mountFastStreamPlayer(stage,url,source,loadT0,resumeAt,{allowApi:false});
+    stage.innerHTML=playerErrorHTML("FastStream is disabled","This stream format is not supported by the ZeroPlay player. Enable FastStream or choose a compatible direct stream.");
+    bindPlayerErrorActions(); setPlayerControlMode("native");
+    return;
   }
   if(mode==="faststream-only") return mountFastStreamPlayer(stage,url,source,loadT0,resumeAt,{allowApi:true,legacyOnly:true});
   /* FastStream is the default direct-stream transport. It first attempts the
@@ -3539,7 +3544,7 @@ function mountNativeVideo(stage,url,source,loadT0,resumeAt,opts){
     if(playerState!==st) return;
     recordHealth(source.id,false);
     if(await tryNextDirectVariant("This stream format failed")) return;
-    if(st._nativeRetriedWithFastStream!==url){ st._nativeRetriedWithFastStream=url; toast("The browser could not play this file directly — retrying inside FastStream"); mountFastStreamPlayer(stage,url,source,performance.now(),currentPlaybackTime(),{allowApi:false}); return; }
+    if(settings.stream.player!=="builtin"&&st._nativeRetriedWithFastStream!==url){ st._nativeRetriedWithFastStream=url; toast("The browser could not play this file directly — retrying inside FastStream"); mountFastStreamPlayer(stage,url,source,performance.now(),currentPlaybackTime(),{allowApi:false}); return; }
     stage.innerHTML=playerErrorHTML("This stream could not be played","The browser reported a media/codec error. Try another quality or server with this exact title."); bindPlayerErrorActions(); setPlayerControlMode("native");
   },true);
   try{v.load();}catch{}
@@ -5130,6 +5135,7 @@ function renderSources(soft,opts){
   +'<section class="panel" id="settingsPlaybackSources"><h2>Watch from</h2><p class="section-desc">Choose the places ZeroPlay can use. More are found automatically in the background.</p><div id="srcList">'+(rows||'<div class="empty"><h3>No sources</h3><p>Add a website above.</p></div>')+"</div></section>"
 
   +'<section class="panel" id="settingsFastStream"><h2>Advanced playback</h2><p class="section-desc">Fine-tune how playback starts and switches. Most people can leave this on Auto.</p>'
+  +'<div class="settings-actions"><button class="btn '+(st.player==="builtin"?"btn-primary":"btn-outline")+'" id="btnFastStreamToggle" type="button">'+(st.player==="builtin"?"Enable FastStream":"Disable FastStream")+'</button><span class="meta-inline" id="fastStreamToggleStatus">FastStream is '+(st.player==="builtin"?"disabled":"enabled")+' for direct streams.</span></div>'
   +'<div class="stat-grid"><div class="stat"><div class="k">Connection</div><div class="v">'+esc(ci.type)+'</div></div><div class="stat"><div class="k">Est. downlink</div><div class="v">'+(ci.downlink?ci.downlink+" Mbps":"unknown")+'</div></div><div class="stat"><div class="k">Round-trip</div><div class="v">'+(ci.rtt?ci.rtt+" ms":"unknown")+'</div></div><div class="stat"><div class="k">Data saver (effective)</div><div class="v">'+(effectiveSaver()?"ON":"OFF")+'</div></div><div class="stat"><div class="k">Enabled sources</div><div class="v">'+allSources().length+'</div></div><div class="stat"><div class="k">File-size cap</div><div class="v">'+capGb()+' GB max</div></div></div>'
   +'<div class="form-row"><div class="form-group"><label for="optPlayer">Direct-stream player</label><select id="optPlayer"><option value="faststream-only"'+(st.player==="faststream-only"?" selected":"")+'>FastStream — default for every direct server</option><option value="auto"'+(st.player==="auto"?" selected":"")+'>Automatic fallback — FastStream first</option><option value="builtin"'+(st.player==="builtin"?" selected":"")+'>ZeroPlay responsive player</option></select><small class="help-text">Verified streams from selected and discovered servers enter FastStream first. ZeroPlay remains available as an explicit fallback.</small></div>'+'<div class="form-row"><div class="form-group"><label for="optPreload">FastStream preload</label><select id="optPreload"><option value="off"'+(st.preload==="off"?" selected":"")+'>Off</option><option value="smart"'+(st.preload==="smart"?" selected":"")+'>Smart — recommended</option><option value="aggressive"'+(st.preload==="aggressive"?" selected":"")+'>Aggressive — also pre-loads the embed player in the background</option></select><small class="help-text">Aggressive may start a provider player early in a hidden frame; if you ever hear background audio, switch back to Smart.</small></div>'
   +'<div class="form-group"><label for="optQuality">Preferred quality (stability first)</label><select id="optQuality">'+[["auto","Auto — best available"],["2160p","4K UHD 2160p"],["1080p","Full HD 1080p"],["720p","HD 720p — most stable on slow links"],["480p","SD 480p — minimum buffering"]].map(([v,t])=>'<option value="'+v+'"'+(st.quality===v?" selected":"")+">"+t+"</option>").join("")+"</select><small class='help-text'>Used for direct-stream ranking and warm-up size. Embed players choose their own internal quality.</small></div></div>"
@@ -5215,6 +5221,31 @@ function renderSources(soft,opts){
     if(del){ const did=del.dataset.srcDelete; if(getProvider(did)) removeProviderById(did); settings.customSources=settings.customSources.filter(x=>x.id!==did); settings.sites=(settings.sites||[]).filter(x=>x.id!==did); saveSettings(); toast("Source removed"); renderSources(true); }
   });
   $("#optCap").addEventListener("input",e=>{ $("#optCapVal").textContent=Number(e.target.value).toFixed(1).replace(/\.0$/,"")+" GB"; });
+  const fastStreamToggle=$("#btnFastStreamToggle");
+  if(fastStreamToggle) fastStreamToggle.onclick=()=>{
+    const stNow=streamCfg(), disabling=stNow.player!=="builtin";
+    if(disabling){
+      stNow.fastStreamPreviousPlayer=stNow.player||"faststream-only";
+      stNow.player="builtin"; stNow.fastStreamApiProbe=false;
+      if(typeof fastStreamProbeCleanup==="function") fastStreamProbeCleanup();
+      if(stNow.preload!=="off"){ stNow.preloadLastMode=stNow.preload; stNow.preload="off"; }
+      clearPreload();
+    }else{
+      stNow.player=stNow.fastStreamPreviousPlayer&&stNow.fastStreamPreviousPlayer!=="builtin"?stNow.fastStreamPreviousPlayer:"faststream-only";
+      if(stNow.player==="auto"||stNow.player==="faststream") stNow.player="faststream-only";
+      stNow.fastStreamApiProbe=true;
+      stNow.preload=stNow.preloadLastMode==="aggressive"?"aggressive":"smart";
+    }
+    saveSettings();
+    if(playerState&&playerState.direct&&((disabling&&/^faststream/.test(playerState.engine||""))||(!disabling&&playerState.engine==="native"))){
+      const active=playerState, stage=$("#playerStage"), source=getSource(active.source)||active.tempSource||{id:active.source||"",name:"Direct stream"};
+      const resumeAt=currentPlaybackTime();
+      clearPlayerTimers();
+      if(stage) void mountDirectVideo(stage,active.url,source,performance.now(),resumeAt);
+    }
+    toast(disabling?"FastStream disabled — direct streams will use the ZeroPlay player":"FastStream enabled for direct streams","success");
+    renderSources(true);
+  };
   $("#btnOptSave").onclick=()=>{
     const stNow=streamCfg(), dlNow=downloadCfg();
     stNow.player=$("#optPlayer").value; stNow.preload=$("#optPreload").value; if(stNow.preload!=="off") stNow.preloadLastMode=stNow.preload;
