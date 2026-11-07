@@ -69,6 +69,18 @@ function eq(a, b, label) { assert.deepStrictEqual(a, b, label + `: ${JSON.string
   eq(identity.tmdbId, 1399, 'identity keeps TMDB id');
   ok(identity.titles.includes('Juego de tronos'), 'identity keeps alternative titles');
 
+  const lolaIdentity = context.buildTitleIdentity({
+    type: 'tv', id: 35281, title: 'My Heart Beats for Lola Volcán',
+    original_name: 'Mi corazón insiste en Lola Volcán',
+    external_ids: { imdb_id: 'tt1929755' }, year: '2011', season: 1, episode: 1,
+  });
+  eq(lolaIdentity.tmdbId, 35281, 'reference series keeps its TMDB ID');
+  eq(lolaIdentity.imdbId, 'tt1929755', 'reference series keeps its IMDb ID');
+  ok(lolaIdentity.titles.includes('Mi corazón insiste en Lola Volcán'), 'reference series searches its original Spanish title');
+  ok(Array.from(context.streamIdsForAddon({ idPrefixes: ['tt'] }, lolaIdentity, lolaIdentity.imdbId)).join(',') === 'tt1929755:1:1', 'reference series builds exact IMDb episode ID');
+  const lolaVerdict = context.identifyTitleCandidate({ title: 'Mi corazón insiste en Lola Volcán S01E01', type: 'series', year: '2011' }, lolaIdentity);
+  ok(lolaVerdict.accepted, 'reference series verifies the Spanish title and requested episode');
+
   let verdict = context.identifyTitleCandidate({ title: 'Game of Thrones 2011 S01E02', type: 'series' }, identity);
   ok(verdict.accepted && verdict.score >= 95, 'exact series episode accepted');
   verdict = context.identifyTitleCandidate({ title: 'Game of Thrones S01E03' }, identity);
@@ -139,6 +151,25 @@ function eq(a, b, label) { assert.deepStrictEqual(a, b, label + `: ${JSON.string
   eq(streams.direct[0].url, 'https://cdn.example/got.mp4', 'verified stream is the requested episode');
   ok(streams.identityRejected >= 1, 'wrong stream counted as identity rejection');
   eq(streams.torrents, 1, 'torrent remains hidden/counted');
+
+  const lolaCatalogUrls = [];
+  context.fetchJsonLoose = async (url) => {
+    lolaCatalogUrls.push(url);
+    if (url.includes('search=Mi%20coraz%C3%B3n%20insiste%20en%20Lola%20Volc%C3%A1n')) {
+      return { metas: [{
+        id: 'lola-volcan', name: 'Mi corazón insiste en Lola Volcán', type: 'series', releaseInfo: '2011',
+        imdb_id: 'tt1929755', moviedb_id: 35281,
+        videos: [{ id: 'lola-volcan:1:1', season: 1, episode: 1 }],
+      }] };
+    }
+    return { metas: [] };
+  };
+  const lolaFound = await context.searchAddonCatalog({
+    base: 'https://lola-addon.example', supportsMeta: false,
+    searchCatalogs: [{ type: 'series', id: 'searchable' }],
+  }, lolaIdentity);
+  ok(lolaFound && lolaFound.streamId === 'lola-volcan:1:1', 'server catalogue fallback finds Lola Volcán by its original title and episode');
+  ok(lolaCatalogUrls.some(url => url.includes('search=My%20Heart%20Beats%20for%20Lola%20Volc%C3%A1n')) && lolaCatalogUrls.some(url => url.includes('search=Mi%20coraz%C3%B3n%20insiste%20en%20Lola%20Volc%C3%A1n')), 'server searches both English and Spanish exact-title variants');
 
   const server = require(path.join(root, 'api/extract.js'));
   const p = server._parse;

@@ -54,10 +54,13 @@ identified candidates for the requested movie/episode per search, rotates the
 batch across larger candidate registries, and keeps no more than 12 candidate
 checks in flight at once. A candidate is promoted into the installed
 provider list only when it returns a direct stream that passes the app's
-existing title/episode identity checks. Unmatched candidates are not imported
-into playback sources. Manual seeds and configured feeds keep their existing
-behavior. GitHub projects without a hosted declarative endpoint/manifest remain
-candidates; arbitrary repository code is never executed. Any provider can be
+existing title/episode identity checks. This bounded candidate scan runs in
+parallel with the installed-provider search, so newly discovered servers do
+not wait for the full installed-provider queue to finish. Unmatched candidates
+are not imported into playback sources. Manual seeds and configured feeds keep
+their existing behavior. GitHub projects without a hosted declarative
+endpoint/manifest remain candidates; arbitrary repository code is never
+executed. Any provider can be
 enabled, disabled or removed while the searcher runs. Removed providers are
 tombstoned so the crawler does not immediately resurrect them.
 
@@ -73,11 +76,15 @@ the **title**. A catalogue item becomes a canonical identity containing:
 - season and episode.
 
 All enabled players, website servers and identified stream providers are
-searchable from **Servers with this title**. Providers may be queried by exact
-IMDb/TMDB ID or through an identified searchable catalogue. Returned website
-pages, catalogue metas and direct streams are scored against the canonical
-identity. Different catalogue IDs or explicit wrong season/episode markers are
-hard rejections.
+searchable from **Servers with this title**. Providers are queried by exact
+IMDb/TMDB ID and can fall back to searchable catalogues using the canonical and
+original title variants. Series streams are addressed at the requested season
+and episode. Returned website pages, catalogue metas and direct streams are
+scored against the canonical identity. Different catalogue IDs or explicit
+wrong season/episode markers are hard rejections. The reference regression
+fixture “My Heart Beats for Lola Volcán” verifies TMDB `35281`, IMDb
+`tt1929755`, the original title “Mi corazón insiste en Lola Volcán”, and its
+season/episode-specific catalogue search.
 
 The server drawer does not dump the whole registry into the player. Direct
 providers appear only after they return identity-verified streams for the

@@ -6609,13 +6609,13 @@ async function findTitleServers(ctx,opts){
       emit();
     }
   });
-  const runTitleCandidates=runAddons.then(async providerAgg=>{
+  const runCandidates=(async()=>{
     if(addonSearchActive&&(quickSearchDetached||!opts.shouldContinue||opts.shouldContinue())&&!(opts.signal&&opts.signal.aborted)){
       await refreshTitleScopedCandidates();
       stats.titleCandidatesTotal=titleSearchCandidates(100).length; stats.titleCandidatesAvailable=titleCandidatePool().length;
       emit();
     }
-    const candidateAgg=await collectTitleCandidateStreams(richCtx,{
+    return collectTitleCandidateStreams(richCtx,{
       limit:100,concurrency:12,signal:opts.signal,
       shouldContinue:()=>addonSearchActive&&(quickSearchDetached||!opts.shouldContinue||opts.shouldContinue()),
       onProgress:found=>{
@@ -6624,6 +6624,8 @@ async function findTitleServers(ctx,opts){
         emit();
       }
     });
+  })();
+  const runTitleCandidates=Promise.all([runAddons,runCandidates]).then(([providerAgg,candidateAgg])=>{
     providerAgg.titleCandidateAgg=candidateAgg;
     for(const stream of candidateAgg.direct||[]) if(stream&&stream.url&&!providerAgg.direct.some(existing=>existing.url===stream.url)) providerAgg.direct.push(stream);
     return providerAgg;
@@ -6845,13 +6847,15 @@ function renderTitleServerOptions(){
   c._options=options;
   const direct=options.filter(o=>o.kind==="direct");
   const sites=options.filter(o=>o.kind==="site");
+  const configuredSites=allSources(true).filter(source=>source.kind==="site");
+  const enabledSiteCount=allSources().filter(source=>source.kind==="site").length;
   const routes=options.filter(o=>o.kind==="route");
   const searching=!c._searchDone;
   const empty=(title,body)=>searching?'<div class="server-skeleton"><span class="spinner"></span> Checking servers for this exact title…</div>':'<div class="empty"><h3>'+esc(title)+'</h3><p>'+esc(body)+'</p></div>';
   const directBox=document.getElementById("serverDirect");
   if(directBox) directBox.innerHTML=direct.length?direct.map(serverOptionHTML).join(""):empty("No direct file yet","ZeroPlay is still looking for this exact title.");
   const siteBox=document.getElementById("serverWebsites");
-  if(siteBox) siteBox.innerHTML=sites.length?sites.map(serverOptionHTML).join(""):empty("No website match yet","Added websites are listed only when they return and identity-verify this exact title.");
+  if(siteBox) siteBox.innerHTML=sites.length?sites.map(serverOptionHTML).join(""):enabledSiteCount?empty("No website match yet","None of your enabled website lookups returned an identity-verified match for this title. Direct provider and exact-ID server searches run separately."):empty(configuredSites.length?"Website lookup is disabled":"No website lookup sources added",configuredSites.length?"Enable a website lookup source in More to check it. Direct provider and exact-ID server searches are separate.":"This optional section checks websites you add. Direct provider and exact-ID server searches are separate and continue independently.");
   const routeBox=document.getElementById("serverRoutes");
   if(routeBox) routeBox.innerHTML=routes.length?routes.map(serverOptionHTML).join(""):empty("No exact-ID player route","No enabled player template can address this title ID.");
   const race=document.getElementById("btnRace"); if(race) race.disabled=!direct.length;
@@ -6891,7 +6895,7 @@ async function showStreamsModal(ctx){
     +'<div class="status-box info" id="serverSearchStatus"><span class="spinner"></span> Searching for this exact title…</div>'
     +'<div class="streams-toolbar"><div class="form-group"><label for="streamQuality">Preferred quality</label><select id="streamQuality">'+[["auto","Auto — best stable"],["2160p","4K 2160p"],["1080p","1080p"],["720p","720p"],["480p","480p"]].map(([v,t])=>'<option value="'+v+'"'+(settings.stream.quality===v?' selected':'')+'>'+t+'</option>').join("")+'</select></div><button class="btn btn-primary" id="btnRace" disabled>Race verified streams</button><button class="btn btn-secondary" id="btnRefreshServers">Search again</button><span id="raceStatus" class="help-text" style="display:inline"></span></div>'
     +'<h3 class="category-heading">Verified direct servers</h3><div id="serverDirect"></div>'
-    +'<h3 class="category-heading">Verified website servers</h3><div id="serverWebsites"></div>'
+    +'<h3 class="category-heading">Verified website servers</h3><p class="help-text">Optional: this section checks only website sources you add. It is separate from direct provider and exact-ID server searches.</p><div id="serverWebsites"></div>'
     +'<h3 class="category-heading">Exact-ID players</h3><p class="help-text">These players can address this exact catalogue ID. Cross-origin players cannot prove their library before loading, so ZeroPlay does not falsely label them “verified”. Embedwave remains last.</p><div id="serverRoutes"></div>'
     +'<div id="streamCounts" class="help-text"></div></div></div></div>';
   renderTitleServerOptions();
