@@ -25,6 +25,7 @@ crawlers:
 - Provider/source JSON feeds and user-added discovery seeds.
 - Website-server profile refresh.
 - A server-identification queue for candidates found by the other crawlers.
+- Title-scoped checks of identified stream candidates from public addon catalogs.
 - Rotating health-check batches.
 
 ZeroPlay does not impose a provider-registry cap. The provider list is merely
@@ -46,11 +47,18 @@ records:
 - episode capability;
 - identification confidence and the checks that passed.
 
-Providers are auto-installed by capability into Streams, Catalogues,
-Metadata, Subtitles, Discovery, Websites, Projects and Feeds. GitHub projects
-remain candidates until a hosted declarative endpoint/manifest is identified;
-arbitrary repository code is never executed. Any provider can be enabled,
-disabled or removed while the searcher runs. Removed providers are
+Non-stream capabilities and providers explicitly added by the user keep the
+existing install behavior. Stream providers discovered through public addon
+catalogues are held as title-scoped candidates: ZeroPlay checks at most 100
+identified candidates for the requested movie/episode per search, rotates the
+batch across larger candidate registries, and keeps no more than 12 candidate
+checks in flight at once. A candidate is promoted into the installed
+provider list only when it returns a direct stream that passes the app's
+existing title/episode identity checks. Unmatched candidates are not imported
+into playback sources. Manual seeds and configured feeds keep their existing
+behavior. GitHub projects without a hosted declarative endpoint/manifest remain
+candidates; arbitrary repository code is never executed. Any provider can be
+enabled, disabled or removed while the searcher runs. Removed providers are
 tombstoned so the crawler does not immediately resurrect them.
 
 ## Built-in title identifier

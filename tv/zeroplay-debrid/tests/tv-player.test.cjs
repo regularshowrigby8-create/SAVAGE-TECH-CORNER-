@@ -105,6 +105,13 @@ eq(sorted.map(x => x.id), ['direct:a', 'route:vidstuck', 'route:embedwave'], 've
     [html.includes('id="playerQuality"') && html.includes('setVideoLevel'), 'unified player exposes real FastStream quality selection'],
     [html.includes('frame.src="https://faststream.online/player/"') && html.includes('waitForFastStreamReady(4500)'), 'FastStream API handshake precedes fallback'],
     [html.includes('player:"faststream-only"') && html.includes('const mode=String(settings.stream.player||"faststream-only")') && html.includes('settings.stream.player==="auto"||settings.stream.player==="faststream"'), 'FastStream is the default for selected and discovered direct servers'],
+    [html.includes('deferInstall:true') && html.includes('titleScopedDiscovery') && html.includes('limit:100,concurrency:12'), 'public-catalogue streaming candidates are title-scanned in a bounded, rate-moderated batch'],
+    [html.includes('result.direct.length&&result.identityVerified>0') && html.includes('titleScopedDiscovery:false') && html.includes('matched a title-scoped playback search'), 'only identity-verified direct title matches are promoted into installed providers'],
+    [html.includes('titleCandidatesQueried') && html.includes('only exact-title stream matches are saved'), 'title-specific candidate progress is shown separately from installed-provider scan progress'],
+    [html.includes('function titleCandidateInventoryFingerprint()') && html.includes('candidateInventory:candidates.map') && html.includes('titleCandidateCursor'), 'candidate inventory is cache-aware and rotates past the first 100 candidates'],
+    [html.includes('titleScopedDiscovery&&!installed') && html.includes('!installed&&!p.titleScopedDiscovery'), 'title-scoped candidates cannot be manually installed from the candidate list without a title match'],
+
+
     [html.includes('id="btnFastStreamToggle"') && html.includes('Disable FastStream') && html.includes('stNow.player="builtin"') && html.includes('stNow.fastStreamApiProbe=false'), 'settings include an immediate FastStream disable toggle'],
     [html.includes('This stream format is not supported by the ZeroPlay player. Enable FastStream') && html.includes('settings.stream.player!=="builtin"&&st._nativeRetriedWithFastStream!==url'), 'FastStream-disabled mode never silently launches the hosted fallback'],
     [html.includes('https://faststream.online/player/#'), 'legacy FastStream HLS/DASH fallback retained'],

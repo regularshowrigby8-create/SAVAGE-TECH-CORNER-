@@ -5448,10 +5448,12 @@ function providerFromManifest(manifestUrl, manifest, meta){
   const repoOnly=!!meta.repoOnly;
   const categories=uniqueStringList((repoOnly?["projects"]:[ ]).concat(info.categories));
   const identification=Object.assign({},info.identification,repoOnly?{kind:"github-project-manifest",confidence:78,installable:false,checks:(info.identification.checks||[]).concat(["manifest found in repository; hosted endpoint not yet identified"])}:{});
+  const titleScopedDiscovery=!!(meta.deferInstall&&info.playableStream&&!repoOnly);
   return {
     id:meta.id||("addon:"+base), name:String(manifest.name||manifest.id||meta.name||"Identified addon").slice(0,80),
     kind:repoOnly?"github-project":"stremio-addon", categories,
-    status:meta.status||((!repoOnly&&identification.installable)?"installed":"candidate"),
+    status:meta.status||((!repoOnly&&identification.installable&&!titleScopedDiscovery)?"installed":"candidate"),
+    titleScopedDiscovery,
     enabled:meta.enabled!==false,
     endpoint:repoOnly?"":base, base:repoOnly?"":base, manifestUrl:cleanManifest,
     manifestId:String(manifest.id||""), version:String(manifest.version||""),
@@ -5714,10 +5716,11 @@ async function probeGitHubProvider(provider){
   }
   const hosted=candidateUrls.filter(x=>x.hosted);
   for(const c of hosted){
-    const rec=await probeManifestUrl(c.url,{id:provider.id,from:"GitHub identification",repoUrl:provider.repoUrl,stars:provider.stars||0,tags:provider.tags||[],description:provider.description||""});
-    if(rec&&rec.status==="installed"){
+    const crawlerSeed=/^GitHub crawler/i.test(String(provider.source||provider.from||""));
+    const rec=await probeManifestUrl(c.url,{id:provider.id,deferInstall:crawlerSeed,from:"GitHub identification",repoUrl:provider.repoUrl,stars:provider.stars||0,tags:provider.tags||[],description:provider.description||""});
+    if(rec&&(rec.status==="installed"||rec.titleScopedDiscovery)){
       Object.assign(provider,rec,{id:provider.id,kind:"stremio-addon",repoUrl:provider.repoUrl,fullName:provider.fullName,categories:uniqueStringList([].concat(rec.categories||[],["projects"])),lastCheckedAt:Date.now(),lastError:""});
-      return true;
+      return provider.status==="installed";
     }
   }
   if(gr){
@@ -5891,10 +5894,10 @@ async function crawlStremioAddonsNet(){
     const manifestUrl=cleanHttpUrl(entry.manifestUrl||"");
     const tags=(entry.categories||[]).map(c=>typeof c==="string"?c:(c.slug||c.name)).filter(Boolean);
     if(manifestUrl&&entry.manifest){
-      const rec=providerFromManifest(manifestUrl,entry.manifest,{stars:entry.stars||0,from:"stremio-addons.net",tags});
+      const rec=providerFromManifest(manifestUrl,entry.manifest,{stars:entry.stars||0,from:"stremio-addons.net",tags,deferInstall:true});
       if(rec) absorbProvider(result,rec);
     }else if(manifestUrl){
-      absorbProvider(result,{name:(entry.manifest&&entry.manifest.name)||entry.slug||"Addon candidate",kind:"stremio-addon",categories:[],status:"candidate",manifestUrl,endpoint:manifestBaseFromUrl(manifestUrl),base:manifestBaseFromUrl(manifestUrl),stars:entry.stars||0,source:"stremio-addons.net",tags,identification:{version:1,kind:"unknown",confidence:20,identifiedAt:0,searchable:false,supports:{movie:false,series:false,streams:false,catalog:false,meta:false,subtitles:false,addonCatalog:false,search:false,episodeLookup:false},identifierModes:[],idPrefixes:[],checks:["manifest URL discovered; identification queued"],installable:false,playableStream:false}});
+      absorbProvider(result,{name:(entry.manifest&&entry.manifest.name)||entry.slug||"Addon candidate",kind:"stremio-addon",categories:[],status:"candidate",titleScopedDiscovery:true,manifestUrl,endpoint:manifestBaseFromUrl(manifestUrl),base:manifestBaseFromUrl(manifestUrl),stars:entry.stars||0,source:"stremio-addons.net",tags,identification:{version:1,kind:"unknown",confidence:20,identifiedAt:0,searchable:false,supports:{movie:false,series:false,streams:false,catalog:false,meta:false,subtitles:false,addonCatalog:false,search:false,episodeLookup:false},identifierModes:[],idPrefixes:[],checks:["manifest URL discovered; title-scoped stream match required before install"],installable:false,playableStream:false}});
     }
   };
   for(const addon of data.addons){ ingest(addon); for(const inst of (addon.instances||[])) ingest(inst); }
@@ -5939,10 +5942,10 @@ async function crawlCatalogGraph(){
       const manifestUrl=cleanHttpUrl(entry.transportUrl||entry.manifestUrl||(entry.transport&&entry.transport.url)||"");
       if(!manifestUrl) continue;
       if(entry.manifest){
-        const rec=providerFromManifest(manifestUrl,entry.manifest,{from:ep.label});
+        const rec=providerFromManifest(manifestUrl,entry.manifest,{from:ep.label,deferInstall:true});
         if(rec) absorbProvider(result,rec);
       }else{
-        absorbProvider(result,{name:"Addon candidate · "+(()=>{try{return new URL(manifestUrl).hostname;}catch{return "endpoint";}})(),kind:"stremio-addon",categories:[],status:"candidate",manifestUrl,endpoint:manifestBaseFromUrl(manifestUrl),base:manifestBaseFromUrl(manifestUrl),source:ep.label,identification:{version:1,kind:"unknown",confidence:20,identifiedAt:0,searchable:false,supports:{movie:false,series:false,streams:false,catalog:false,meta:false,subtitles:false,addonCatalog:false,search:false,episodeLookup:false},identifierModes:[],idPrefixes:[],checks:["manifest URL found in addon catalogue; identification queued"],installable:false,playableStream:false}});
+          absorbProvider(result,{name:"Addon candidate · "+(()=>{try{return new URL(manifestUrl).hostname;}catch{return "endpoint";}})(),kind:"stremio-addon",categories:[],status:"candidate",titleScopedDiscovery:true,manifestUrl,endpoint:manifestBaseFromUrl(manifestUrl),base:manifestBaseFromUrl(manifestUrl),source:ep.label,identification:{version:1,kind:"unknown",confidence:20,identifiedAt:0,searchable:false,supports:{movie:false,series:false,streams:false,catalog:false,meta:false,subtitles:false,addonCatalog:false,search:false,episodeLookup:false},identifierModes:[],idPrefixes:[],checks:["manifest URL found in addon catalogue; title-scoped stream match required before install"],installable:false,playableStream:false}});
       }
     }
     await discoveryDelay(120);
@@ -5980,7 +5983,7 @@ async function identifyProviderCandidate(provider, result){
       return ok;
     }
     if(provider.manifestUrl){
-      const rec=await probeManifestUrl(provider.manifestUrl,{id:provider.id,from:provider.source||"candidate identification",repoUrl:provider.repoUrl||"",stars:provider.stars||0,tags:provider.tags||[]});
+      const rec=await probeManifestUrl(provider.manifestUrl,{id:provider.id,deferInstall:!!provider.titleScopedDiscovery,from:provider.source||"candidate identification",repoUrl:provider.repoUrl||"",stars:provider.stars||0,tags:provider.tags||[]});
       if(rec){
         const before=provider.status;
         Object.assign(provider,rec,{id:provider.id,categories:uniqueStringList([].concat(provider.categories||[],rec.categories||[])),lastCheckedAt:Date.now(),lastError:""});
@@ -6002,6 +6005,7 @@ async function crawlCandidateIdentification(){
   const result=emptyCrawlResult("server identification");
   const candidates=(settings.providers||[])
     .filter(p=>p.status!=="installed"&&(p.manifestUrl||p.repoUrl||p.endpoint||p.base||p.home))
+    .filter(p=>!(p.titleScopedDiscovery&&p.identification&&p.identification.supports&&p.identification.supports.streams))
     .sort((a,b)=>((a.lastCheckedAt||0)-(b.lastCheckedAt||0))||((b.stars||0)-(a.stars||0)))
     .slice(0,5);
   for(const p of candidates){ result.seen++; await identifyProviderCandidate(p,result); await discoveryDelay(100); }
@@ -6344,6 +6348,100 @@ async function collectAllStreams(ctx,opts){
   sortDirect();
   return agg;
 }
+function isPublicHttpsProviderBase(raw){
+  try{
+    const u=new URL(raw),host=u.hostname.toLowerCase();
+    const octets=host.split(".").map(Number),ipv4=octets.length===4&&octets.every(n=>Number.isInteger(n)&&n>=0&&n<=255);
+    return u.protocol==="https:"&&!!host&&!ipv4&&!host.startsWith("[")&&host!=="localhost"&&!host.endsWith(".local")&&!host.endsWith(".localhost");
+  }catch{ return false; }
+}
+function titleCandidatePool(){
+  const installedBases=new Set((settings.addons||[]).map(a=>String(a.base||"").replace(/\/$/,"").toLowerCase()));
+  const tombstones=settings.providerTombstones||{};
+  return (settings.providers||[])
+    .filter(p=>p&&p.status==="candidate"&&p.enabled!==false&&p.base&&p.manifestUrl)
+    .filter(p=>!tombstones[p.id]&&!installedBases.has(String(p.base).replace(/\/$/,"").toLowerCase()))
+    .filter(p=>{
+      const supports=p.identification&&p.identification.supports||{};
+      const resources=Array.isArray(p.resources)?p.resources:[],categories=Array.isArray(p.categories)?p.categories:[];
+      if(!supports.streams&&!resources.includes("stream")&&!categories.includes("streams")) return false;
+      return isPublicHttpsProviderBase(p.base);
+    })
+    .sort((a,b)=>(Number(b.stars)||0)-(Number(a.stars)||0)||(Number(b.identification&&b.identification.confidence)||0)-(Number(a.identification&&a.identification.confidence)||0));
+}
+function titleSearchCandidates(limit,offset){
+  const pool=titleCandidatePool(),cap=Math.max(0,Math.min(100,Number(limit)||100));
+  if(pool.length<=cap) return pool;
+  const stored=settings.discovery&&settings.discovery.cursors&&settings.discovery.cursors.titleCandidateCursor;
+  const start=((Math.floor(Number(offset===undefined?stored:offset)||0)%pool.length)+pool.length)%pool.length;
+  return Array.from({length:cap},(_,i)=>pool[(start+i)%pool.length]);
+}
+function titleCandidateInventoryFingerprint(){ return titleSearchCandidates(100).map(p=>String(p.id||"")+"@"+String(p.base||"")).join("|"); }
+function titleCandidateAddon(provider){
+  if(!provider) return null;
+  const idn=provider.identification||{}, supports=idn.supports||{};
+  return {
+    id:"title-candidate:"+provider.id,providerId:provider.id,name:provider.name||"Candidate server",base:provider.base,
+    manifestUrl:provider.manifestUrl,types:provider.types||["movie","series"],idPrefixes:provider.idPrefixes||idn.idPrefixes||[],
+    resources:provider.resources||["stream"],supportsMeta:!!supports.meta,catalogDefs:provider.catalogDefs||[],
+    addonCatalogs:provider.addonCatalogs||[],searchCatalogs:provider.searchCatalogs||[],identification:idn,
+    stars:provider.stars||0,from:provider.source||provider.from||"provider registry",enabled:true,kind:"addon"
+  };
+}
+async function refreshTitleScopedCandidates(){
+  const cfg=discoveryCfg(),cursors=cfg.cursors||(cfg.cursors={}),now=Date.now();
+  if(discoveryRuntime.cycleRunning||titleSearchCandidates(100).length>=100||now-Number(cursors.titleScopedRefreshAt||0)<10*60*1000) return 0;
+  cursors.titleScopedRefreshAt=now; saveSettings();
+  try{ await crawlStremioAddonsNet(); }catch{}
+  const pending=(settings.providers||[]).filter(p=>p&&p.status==="candidate"&&p.titleScopedDiscovery&&p.manifestUrl&&!(p.identification&&p.identification.supports&&p.identification.supports.streams)).slice(0,8);
+  let identified=0;
+  for(const provider of pending){
+    try{
+      const rec=await probeManifestUrl(provider.manifestUrl,{id:provider.id,status:"candidate",deferInstall:true,from:provider.source||"title-scoped candidate refresh",stars:provider.stars||0,tags:provider.tags||[]});
+      if(rec){ absorbProvider({seen:0,added:0,installed:0,identified:0,candidates:0},Object.assign({},rec,{id:provider.id,titleScopedDiscovery:!!rec.identification&&!!rec.identification.supports&&!!rec.identification.supports.streams&&!!rec.identification.playableStream})); identified++; }
+    }catch{}
+    await discoveryDelay(100);
+  }
+  syncInstalledAddonsFromProviders(); saveSettings();
+  return identified;
+}
+async function collectTitleCandidateStreams(ctx,opts){
+  opts=opts||{};
+  const pool=titleCandidatePool(),cfg=discoveryCfg(),cursors=cfg.cursors||(cfg.cursors={});
+  const start=Math.max(0,Number(cursors.titleCandidateCursor)||0),candidates=titleSearchCandidates(opts.limit||100,start);
+  const agg={direct:[],queried:0,totalCandidates:candidates.length,availableCandidates:pool.length,matchedProviders:0,identityVerified:0,concurrency:Math.min(12,candidates.length||0),candidateInventory:candidates.map(p=>String(p.id||"")+"@"+String(p.base||"")).join("|")};
+  const matches=new Map(),seen=new Set();
+  let cursor=0;
+  const mayContinue=()=>(!opts.shouldContinue||opts.shouldContinue())&&!(opts.signal&&opts.signal.aborted);
+  const emit=()=>{ if(opts.onProgress){ try{ opts.onProgress(agg); }catch{} } };
+  const worker=async()=>{
+    while(mayContinue()){
+      const provider=candidates[cursor++]; if(!provider) return;
+      const addon=titleCandidateAddon(provider); let result=null;
+      try{ result=addon?await queryAddonStreams(addon,ctx):null; }catch{}
+      agg.queried++;
+      if(result&&result.direct&&result.direct.length&&result.identityVerified>0){
+        matches.set(provider.id,provider); agg.matchedProviders=matches.size; agg.identityVerified+=result.identityVerified;
+        for(const stream of result.direct){ if(stream&&stream.url&&!seen.has(stream.url)){ seen.add(stream.url); agg.direct.push(stream); } }
+      }
+      emit();
+    }
+  };
+  await Promise.all(Array.from({length:agg.concurrency},()=>worker()));
+  if(matches.size){
+    for(const provider of matches.values()){
+      if(provider.enabled===false) continue;
+      const identification=Object.assign({},provider.identification||{});
+      identification.checks=uniqueStringList((identification.checks||[]).concat(["matched a title-scoped playback search"]));
+      const installed=Object.assign({},provider,{status:"installed",enabled:true,titleScopedDiscovery:false,identification,lastCheckedAt:Date.now(),lastError:""});
+      upsertProvider(installed);
+    }
+    syncInstalledAddonsFromProviders();
+  }
+  if(candidates.length&&agg.queried===candidates.length) cursors.titleCandidateCursor=pool.length>candidates.length?(start+candidates.length)%pool.length:0;
+  if(matches.size||(candidates.length&&agg.queried===candidates.length)) saveSettings();
+  return agg;
+}
 async function measureSpeed(url, bytes, timeoutMs){
   bytes = bytes||384*1024; timeoutMs = timeoutMs||2600;
   const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(), timeoutMs); const t0=performance.now();
@@ -6436,13 +6534,14 @@ async function findTitleServers(ctx,opts){
   const identity=(ctx.identity&&ctx.identity.version)?ctx.identity:buildTitleIdentity(ctx);
   const richCtx=Object.assign({},ctx,{identity,imdb:identity.imdbId||ctx.imdb||"",altTitles:identity.titles,year:identity.year,season:identity.season,episode:identity.episode});
   const providerInventory=enabledAddons().map(a=>String(a.id||"")+"@"+String(a.base||"")).sort().join("|");
-  const cacheKey=identity.fingerprint+":"+identity.type+":"+identity.season+":"+identity.episode+":"+(settings.stream.quality||"auto")+":"+providerInventory;
+  const candidateInventory=titleCandidateInventoryFingerprint();
+  const cacheKey=identity.fingerprint+":"+identity.type+":"+identity.season+":"+identity.episode+":"+(settings.stream.quality||"auto")+":"+providerInventory+":"+candidateInventory;
   if(!opts.bypassCache){
     const cached=titleServerCache.get(cacheKey);
     if(cached&&Date.now()-cached.t<180000){ if(opts.onUpdate) opts.onUpdate(Object.assign({},cached.data,{complete:true,cached:true})); return cached.data; }
   }
   const byId=new Map();
-  const stats={checkedRoutes:0,checkedWebsites:0,matchedWebsites:0,queriedProviders:0,totalProviders:enabledAddons().length,concurrency:Math.max(1,Math.min(100,Math.floor(Number(opts.concurrency)||100)||1,enabledAddons().length||1)),identityVerified:0,identityRejected:0,torrents:0,oversize:0,external:0,catalogMatches:0,complete:false};
+  const stats={checkedRoutes:0,checkedWebsites:0,matchedWebsites:0,queriedProviders:0,totalProviders:enabledAddons().length,concurrency:Math.max(1,Math.min(100,Math.floor(Number(opts.concurrency)||100)||1,enabledAddons().length||1)),titleCandidatesQueried:0,titleCandidatesTotal:titleSearchCandidates(100).length,titleCandidatesAvailable:titleCandidatePool().length,titleCandidatesMatched:0,titleCandidateConcurrency:0,identityVerified:0,identityRejected:0,torrents:0,oversize:0,external:0,catalogMatches:0,complete:false};
   let embedwaveOption=null;
   const snapshot=complete=>({options:sortTitleServerOptions([...byId.values()].concat(complete&&embedwaveOption?[embedwaveOption]:[])),stats:Object.assign({},stats,{complete:!!complete}),identity});
   const emit=()=>{ if(opts.onUpdate){ try{ opts.onUpdate(snapshot(false)); }catch{} } };
@@ -6510,19 +6609,40 @@ async function findTitleServers(ctx,opts){
       emit();
     }
   });
+  const runTitleCandidates=runAddons.then(async providerAgg=>{
+    if(addonSearchActive&&(quickSearchDetached||!opts.shouldContinue||opts.shouldContinue())&&!(opts.signal&&opts.signal.aborted)){
+      await refreshTitleScopedCandidates();
+      stats.titleCandidatesTotal=titleSearchCandidates(100).length; stats.titleCandidatesAvailable=titleCandidatePool().length;
+      emit();
+    }
+    const candidateAgg=await collectTitleCandidateStreams(richCtx,{
+      limit:100,concurrency:12,signal:opts.signal,
+      shouldContinue:()=>addonSearchActive&&(quickSearchDetached||!opts.shouldContinue||opts.shouldContinue()),
+      onProgress:found=>{
+        stats.titleCandidatesQueried=found.queried; stats.titleCandidatesTotal=found.totalCandidates; stats.titleCandidatesAvailable=found.availableCandidates; stats.titleCandidatesMatched=found.matchedProviders; stats.titleCandidateConcurrency=found.concurrency;
+        for(const group of groupStreamsByServer(found.direct)) byId.set(group.id,group);
+        emit();
+      }
+    });
+    providerAgg.titleCandidateAgg=candidateAgg;
+    for(const stream of candidateAgg.direct||[]) if(stream&&stream.url&&!providerAgg.direct.some(existing=>existing.url===stream.url)) providerAgg.direct.push(stream);
+    return providerAgg;
+  });
   let agg=null;
   if(opts.quick){
-    agg=await Promise.race([runAddons,new Promise(resolve=>setTimeout(()=>resolve(null),Math.max(5000,Number(opts.quickTimeoutMs)||10000)))]);
+    agg=await Promise.race([runTitleCandidates,new Promise(resolve=>setTimeout(()=>resolve(null),Math.max(5000,Number(opts.quickTimeoutMs)||10000)))]);
     if(!agg){
       /* A quick caller may consume the partial list, but the provider scan is
          never cancelled at the deadline. Keep filling its live results until
          every enabled provider settles (or the caller explicitly cancels). */
       quickSearchDetached=true;
-      runAddons.then(async fullAgg=>{
+      runTitleCandidates.then(async fullAgg=>{
         addonSearchActive=false;
         await Promise.allSettled([routeTask,websiteTask]);
         stats.queriedProviders=fullAgg.queried; stats.totalProviders=fullAgg.totalAddons; stats.concurrency=fullAgg.concurrency;
         stats.identityVerified=fullAgg.identityVerified; stats.identityRejected=fullAgg.identityRejected; stats.torrents=fullAgg.torrents; stats.oversize=fullAgg.oversize; stats.external=fullAgg.external; stats.catalogMatches=fullAgg.catalogMatches;
+        const candidateStats=fullAgg.titleCandidateAgg||{};
+        stats.titleCandidatesQueried=candidateStats.queried||0; stats.titleCandidatesTotal=candidateStats.totalCandidates||0; stats.titleCandidatesAvailable=candidateStats.availableCandidates||0; stats.titleCandidatesMatched=candidateStats.matchedProviders||0; stats.titleCandidateConcurrency=candidateStats.concurrency||0;
         for(const group of groupStreamsByServer(fullAgg.direct)) byId.set(group.id,group);
         const completed=snapshot(true); completed.agg=fullAgg;
         if(opts.onUpdate){ try{ opts.onUpdate(completed); }catch{} }
@@ -6530,13 +6650,23 @@ async function findTitleServers(ctx,opts){
       const partial=snapshot(false); partial.agg=null;
       return partial;
     }
-  }else agg=await runAddons;
+  }else agg=await runTitleCandidates;
   addonSearchActive=false;
   await Promise.allSettled([routeTask,websiteTask]);
-  if(agg){ stats.queriedProviders=agg.queried; stats.concurrency=agg.concurrency; stats.identityVerified=agg.identityVerified; stats.identityRejected=agg.identityRejected; stats.torrents=agg.torrents; stats.oversize=agg.oversize; stats.external=agg.external; stats.catalogMatches=agg.catalogMatches; for(const group of groupStreamsByServer(agg.direct)) byId.set(group.id,group); }
+  if(agg){
+    stats.queriedProviders=agg.queried; stats.concurrency=agg.concurrency; stats.identityVerified=agg.identityVerified; stats.identityRejected=agg.identityRejected; stats.torrents=agg.torrents; stats.oversize=agg.oversize; stats.external=agg.external; stats.catalogMatches=agg.catalogMatches;
+    const candidateStats=agg.titleCandidateAgg||{};
+    stats.titleCandidatesQueried=candidateStats.queried||0; stats.titleCandidatesTotal=candidateStats.totalCandidates||0; stats.titleCandidatesAvailable=candidateStats.availableCandidates||0; stats.titleCandidatesMatched=candidateStats.matchedProviders||0; stats.titleCandidateConcurrency=candidateStats.concurrency||0;
+    for(const group of groupStreamsByServer(agg.direct)) byId.set(group.id,group);
+  }
   const result=snapshot(true);
   result.agg=agg;
-  if(!opts.quick&&!(agg&&agg.aborted)) titleServerCache.set(cacheKey,{t:Date.now(),data:result});
+  if(!opts.quick&&!(agg&&agg.aborted)){
+    const latestInventory=enabledAddons().map(a=>String(a.id||"")+"@"+String(a.base||"")).sort().join("|");
+    const checkedCandidateInventory=agg&&agg.titleCandidateAgg?agg.titleCandidateAgg.candidateInventory:titleCandidateInventoryFingerprint();
+    const latestCacheKey=identity.fingerprint+":"+identity.type+":"+identity.season+":"+identity.episode+":"+(settings.stream.quality||"auto")+":"+latestInventory+":"+checkedCandidateInventory;
+    titleServerCache.set(latestCacheKey,{t:Date.now(),data:result});
+  }
   if(opts.onUpdate){ try{ opts.onUpdate(result); }catch{} }
   return result;
 }
@@ -6729,13 +6859,13 @@ function renderTitleServerOptions(){
   if(status){
     const stats=c._stats||{};
     status.innerHTML=searching
-      ? '<span class="spinner"></span> Searching only for <strong>'+esc(c.title||"this title")+'</strong>'+(stats.queriedProviders?(' · checked '+stats.queriedProviders+'/'+(stats.totalProviders|| enabledAddons().length)+' direct providers'):"")+(stats.concurrency?' · '+stats.concurrency+' active workers, scanning every enabled provider (100-worker max)':' · scanning every enabled provider (100-worker max)')+' · matches appear as they arrive'
-      : '<strong>'+(direct.length+sites.length)+'</strong> verified server option'+((direct.length+sites.length)===1?"":"s")+' · <strong>'+routes.length+'</strong> exact-ID player route'+(routes.length===1?"":"s")+' · scanned all '+(stats.queriedProviders||stats.totalProviders||0)+' enabled direct providers · unrelated servers hidden';
+      ? '<span class="spinner"></span> Searching only for <strong>'+esc(c.title||"this title")+'</strong>'+(stats.queriedProviders?(' · checked '+stats.queriedProviders+'/'+(stats.totalProviders|| enabledAddons().length)+' direct providers'):"")+(stats.concurrency?' · '+stats.concurrency+' active workers, scanning every enabled provider (100-worker max)':' · scanning every enabled provider (100-worker max)')+(stats.titleCandidatesTotal?' · checking up to '+stats.titleCandidatesTotal+' of '+stats.titleCandidatesAvailable+' title-scoped candidates; only exact-title stream matches are saved':"")+' · matches appear as they arrive'
+      : '<strong>'+(direct.length+sites.length)+'</strong> verified server option'+((direct.length+sites.length)===1?"":"s")+' · <strong>'+routes.length+'</strong> exact-ID player route'+(routes.length===1?"":"s")+' · scanned all '+(stats.queriedProviders||stats.totalProviders||0)+' enabled direct providers'+(stats.titleCandidatesQueried?' · checked '+stats.titleCandidatesQueried+' title candidates and saved '+stats.titleCandidatesMatched+' title-matched provider'+(stats.titleCandidatesMatched===1?"":"s"):"")+' · unrelated servers hidden';
   }
   const cnt=document.getElementById("streamCounts");
   if(cnt&&c._stats){
     const s=c._stats;
-    cnt.textContent="Checked "+s.checkedRoutes+" exact-ID routes · "+s.checkedWebsites+" website lookup servers ("+s.matchedWebsites+" matched) · "+(s.queriedProviders||0)+"/"+(s.totalProviders||0)+" identified direct providers · "+(s.identityVerified||0)+" verified streams · "+(s.identityRejected||0)+" rejected as wrong title/episode · "+(s.torrents||0)+" torrents hidden · "+(s.oversize||0)+" over the "+capGb()+" GB cap hidden.";
+    cnt.textContent="Checked "+s.checkedRoutes+" exact-ID routes · "+s.checkedWebsites+" website lookup servers ("+s.matchedWebsites+" matched) · "+(s.queriedProviders||0)+"/"+(s.totalProviders||0)+" enabled direct providers · "+(s.titleCandidatesQueried||0)+" checked this pass from "+(s.titleCandidatesAvailable||0)+" title candidates ("+(s.titleCandidatesMatched||0)+" matched and saved) · "+(s.identityVerified||0)+" verified streams · "+(s.identityRejected||0)+" rejected as wrong title/episode · "+(s.torrents||0)+" torrents hidden · "+(s.oversize||0)+" over the "+capGb()+" GB cap hidden.";
   }
   if(playerState&&c.fromPlayer){ playerState.availableServers=options; playerState.availabilityChecked=!!c._searchDone; updatePlayerMeta(); }
 }
@@ -6880,11 +7010,12 @@ function providerRowsHTML(){
       +'<div class="provider-meta">'+esc(categoryText)+' · '+esc(providerSupportText(p))+'</div>'
       +'<div class="provider-meta">Server type: '+esc(idn.kind||p.kind||"unknown")+esc(confidence)+' · Title identification: '+esc(modes)+'</div>'
       +(p.description?'<div class="provider-desc">'+esc(p.description)+'</div>':"")
+      +(p.titleScopedDiscovery&&!installed?'<div class="provider-checks">Only added to playback after returning a verified stream for the exact title you search.</div>':"")
       +(checks?'<div class="provider-checks">'+esc(checks)+'</div>':"")
       +(p.lastError?'<div class="provider-error">'+esc(p.lastError)+'</div>':"")
       +'<code>'+esc(endpoint)+(p.source?(" · via "+p.source):"")+'</code></div>'
       +'<div class="src-actions">'
-      +(!installed?'<button class="btn btn-primary btn-xs" type="button" data-provider-install="'+esc(p.id)+'">Identify &amp; add</button>':"")
+      +(!installed&&!p.titleScopedDiscovery?'<button class="btn btn-primary btn-xs" type="button" data-provider-install="'+esc(p.id)+'">Identify &amp; add</button>':"")
       +'<button class="btn btn-outline btn-xs" type="button" data-provider-toggle="'+esc(p.id)+'">'+(p.enabled!==false?"Disable":"Enable")+'</button>'
       +(endpoint?'<a class="btn btn-outline btn-xs" href="'+esc(endpoint)+'" target="_blank" rel="noopener">Open</a>':"")
       +'<button class="btn btn-danger btn-xs" type="button" data-provider-remove="'+esc(p.id)+'">Remove</button>'
