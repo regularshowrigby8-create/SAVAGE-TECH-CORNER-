@@ -13,7 +13,6 @@ const RATE_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT = 8;
 const requestBuckets = new Map();
 const API_HANDLERS = {
-  '/api/global-search': require('./api/global-search'),
   '/api/extract': require('./api/extract'),
   '/api/tmdb': require('./api/tmdb'),
 };

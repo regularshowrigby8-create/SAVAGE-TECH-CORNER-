@@ -126,22 +126,10 @@ The server drawer does not dump the whole registry into the player. Direct
 providers appear only after they return identity-verified streams for the
 selected movie/episode, grouped by server with their actual returned quality
 variants. Added websites appear only after an identity-verified lookup match.
-The drawer also runs twenty keyless global web-search sources plus a
-niche/alternate-title pass in parallel: nine MIT-licensed GitHub-imported
-CDrake-SE adapters (AOL, Ask, Bing, Google, Qwant Images, Wikipedia, Yahoo,
-Yep, and YouTube), a DuckDuckGo HTML adapter, and ten additional public web
-crawlers (Ecosia, Startpage, Brave Search, MetaCrawler, WebCrawler, Gibiru,
-Info.com, eTools.ch, Qwant Web, and Bing News). The drawer shows live
-per-engine status, completion, and failures. Those browser workers run in parallel with the
-100-worker provider scan. In a live exact-title probe on 2026-11-07, Ecosia,
-Startpage, Brave Search, MetaCrawler, WebCrawler, Gibiru, Info.com, and eTools.ch
-surfaced pages referencing “Mi corazón insiste en Lola Volcán” / “My Heart Beats
-for Lola Volcán”. Qwant Web returned its search shell without extractable
-results, and Bing News reported no matches. These are web-page leads, not proof
-of a stream or availability. Global results are displayed only
-when title identity verifies them and remain web leads—not installed or
-playable servers. The continuously adding provider crawler runs on its own
-timer; title lookup never starts it.
+The bounded GitHub server finder searches for hosted stream-provider projects
+and treats discoveries as candidates, not playable servers. A provider is
+promoted only after title-scoped stream verification. The continuously adding
+provider crawler runs on its own timer; title lookup never starts it.
 Built-in/custom embed templates that can address the exact catalogue ID are
 shown in a separate **Exact-ID players** section: a hosting page cannot prove
 a cross-origin player's internal library before that player loads, so ZeroPlay
