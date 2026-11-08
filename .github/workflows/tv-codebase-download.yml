@@ -1,0 +1,32 @@
+name: Publish direct TV codebase Markdown download
+
+on:
+  push:
+    branches:
+      - arena/acbde91b-savage-tech-corner
+    paths:
+      - .github/workflows/tv-codebase-download.yml
+
+permissions:
+  contents: write
+
+jobs:
+  publish-download:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Attach the repository Markdown file to a GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          tag="tv-codebase-md-${GITHUB_SHA::7}"
+          gh release create "$tag" SAVAGE-TECH-CORNER-codebase.md \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "ZeroPlay TV codebase Markdown download" \
+            --notes "Direct-download attachment of the TV-only Markdown codebase snapshot in this commit." \
+            --prerelease
