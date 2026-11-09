@@ -468,6 +468,95 @@ async function main() {
       }
       await context.close();
     }
+    /* ---- the defects reported from the sofa, measured in a real browser ---- */
+    {
+      const { context, page, errors } = await open({ progress: true });
+
+      /* D1: a focused card must not wear a white ring. The accent is #e6b355
+         (230,179,85); anything near-white here is the old bug. */
+      await page.locator("#view .poster-card").first().focus();
+      const ring = await page.evaluate(() => {
+        const card = document.querySelector("#view .poster-card");
+        const wrap = card.querySelector(".poster-wrap") || card;
+        const cs = getComputedStyle(card);
+        const ws = getComputedStyle(wrap);
+        return {
+          outlineColor: cs.outlineColor,
+          outlineWidth: parseFloat(cs.outlineWidth) || 0,
+          shadow: ws.boxShadow,
+        };
+      });
+      const parsed = (ring.outlineColor.match(/[\d.]+/g) || []).map(Number);
+      const isWhite = parsed.length >= 3 && parsed[0] > 245 && parsed[1] > 245 && parsed[2] > 245;
+      check(!isWhite, `focused card ring is not white (${ring.outlineColor})`);
+      check(
+        !/rgba?\(255,\s*255,\s*255,\s*0?\.[5-9]/.test(ring.shadow),
+        "focused card elevation has no white halo",
+      );
+
+      /* D2/D3: the D-pad moves through shelves and never lands in the sidebar. */
+      await page.locator("#view .poster-card").first().focus();
+      const trail = [];
+      for (const key of ["ArrowRight", "ArrowRight", "ArrowDown", "ArrowDown", "ArrowUp"]) {
+        await page.keyboard.press(key);
+        trail.push(
+          await page.evaluate(() => {
+            const el = document.activeElement;
+            const rail = el && el.closest && el.closest(".rail-track");
+            return {
+              inSidebar: !!(el && el.closest && el.closest(".zp-sidebar")),
+              tag: el ? el.tagName : "",
+              id: el ? el.id : "",
+              rail: rail ? [...document.querySelectorAll(".rail-track")].indexOf(rail) : -1,
+              card: !!(el && el.classList && el.classList.contains("poster-card")),
+            };
+          }),
+        );
+      }
+      check(
+        trail.every((stop) => !stop.inSidebar),
+        "no arrow key lands focus in the sidebar: " + JSON.stringify(trail),
+      );
+      check(
+        trail.slice(0, 3).every((stop) => stop.card || stop.id),
+        "arrow keys keep a real control focused on every press",
+      );
+      check(
+        trail[0].rail === trail[1].rail && trail[0].rail >= 0,
+        "left/right stays inside the shelf it started on",
+      );
+      check(trail[2].rail !== trail[0].rail, "down moves to a different shelf");
+      check(errors.length === 0, "no console errors while driving the D-pad");
+
+      /* D5: the player's bars must leave the screen while a film plays. */
+      await page.evaluate(() => {
+        openPlayer({ id: 101, type: "movie", title: "Test Film 101" });
+        playerState = playerState || {};
+        if (playerState) {
+          playerState.trailer = false;
+          playerState.playback = Object.assign({}, playerState.playback, {
+            paused: false,
+            buffering: false,
+            currentTime: 30,
+            duration: 7200,
+          });
+        }
+        showPlayerChrome(false);
+      });
+      await page.locator("#playerOverlay").waitFor({ state: "visible" });
+      const hid = await page
+        .waitForFunction(
+          () => document.getElementById("playerOverlay").classList.contains("chrome-hidden"),
+          null,
+          { timeout: 8000 },
+        )
+        .then(() => true)
+        .catch(() => false);
+      check(hid, "player bars hide on their own while playback continues");
+      await page.evaluate(() => closePlayer && closePlayer());
+      await context.close();
+    }
+
     const { context, page, errors } = await open({ logo: true });
     check(
       (await page.locator("#heroLogo").isVisible()) &&
