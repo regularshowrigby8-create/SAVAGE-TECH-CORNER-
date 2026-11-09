@@ -8136,19 +8136,6 @@ function settingsHubHTML(){
     +featureSwitchHTML("dnsWarm","Connect faster","Prepare source connections in advance.","hub")
     +featureSwitchHTML("sortByHealth","Use reliable sources first","Prefer sources that worked well recently.","hub")
     +'<div class="settings-actions"><button class="btn btn-primary btn-sm" type="button" data-settings-section="faststream">Advanced playback</button></div></div>'
-    +'<div><h3>Sources</h3>'
-    +featureSwitchHTML("discovery","Find sources automatically","Look for more places to watch while ZeroPlay is open.","hub")
-    +'<p>Added websites are only checked when you press Watch. Their titles and covers are not imported.</p>'
-    +'<div class="settings-actions"><button class="btn btn-primary btn-sm" type="button" data-settings-section="add-website">Add website</button><button class="btn btn-secondary btn-sm" type="button" data-settings-section="continuous">Advanced sources</button><button class="btn btn-outline btn-sm" id="btnSettingsRunDiscovery" type="button">Search now</button></div></div>'
-    +'<div><h3>Downloads</h3>'
-    +featureSwitchHTML("downloads","Downloads","Download episodes and movies when a direct file is available.","hub")
-    +featureSwitchHTML("multithreadedDownloads","Faster downloads","Use parallel parts when a server supports them.","hub")
-    +featureSwitchHTML("m3uExtraction","Playlist tools","Find and inspect M3U/M3U8 links.","hub")
-    +featureSwitchHTML("downloadAutoSave","Save finished downloads","Save a file as soon as its download completes.","hub")
-    +featureSwitchHTML("downloadAutoResume","Resume downloads","Continue interrupted downloads when ZeroPlay opens.","hub")
-    +featureSwitchHTML("refreshExpiredDownloads","Repair expired links","Find the same title again if a download link expires.","hub")
-    +featureSwitchHTML("keepCompletedDownloads","Keep finished files","Keep downloads available to play or save again.","hub")
-    +'<div class="settings-actions"><button class="btn btn-primary btn-sm" type="button" data-menu-route="downloads">Open downloads</button></div></div>'
     +'<div><h3>Appearance & data</h3>'
     +featureSwitchHTML("autoplayNext","Autoplay next episode","Move to the next episode after the current one ends.","hub")
     +featureSwitchHTML("reduceMotion","Reduce motion","Disable decorative movement; useful on TV boxes.","hub")
@@ -8156,6 +8143,32 @@ function settingsHubHTML(){
     +featureSwitchHTML("categoryStrip","Category shortcuts","Show the visual Browse by Category row on Home.","hub")
     +'<div class="settings-actions"><button class="btn btn-secondary btn-sm" id="btnExportSettings" type="button">Export settings</button><label class="btn btn-outline btn-sm" for="importSettingsFile">Import settings</label><input class="sr-only" id="importSettingsFile" type="file" accept="application/json,.json"><button class="btn btn-outline btn-sm" id="btnClearPlaybackCaches" type="button">Clear temporary data</button></div>'
     +'<p>Export includes providers, websites, templates and feature settings. Watch history stays in Library and can be cleared there.</p></div>'
+    +'</div></section>';
+}
+function settingsSourcesSectionHTML(){
+  return '<section class="panel" id="settingsSourcesHub" data-panel-group="sources"><h2>Sources</h2>'
+    +'<p class="section-desc">Where ZeroPlay looks for a title. Websites and providers found below are only checked when you press Watch.</p>'
+    +'<div class="settings-hub-grid"><div><h3>Sources</h3>'
+    +featureSwitchHTML("discovery","Find sources automatically","Look for more places to watch while ZeroPlay is open.","hub")
+    +'<p>Added websites are only checked when you press Watch. Their titles and covers are not imported.</p>'
+    +'<div class="settings-actions"><button class="btn btn-primary btn-sm" type="button" data-settings-section="add-website">Add website</button><button class="btn btn-secondary btn-sm" type="button" data-settings-section="continuous">Advanced sources</button><button class="btn btn-outline btn-sm" id="btnSettingsRunDiscovery" type="button">Search now</button></div></div></div></section>';
+}
+function settingsDownloadsSectionHTML(){
+  return '<section class="panel" id="settingsDownloadsHub" data-panel-group="downloads"><h2>Downloads</h2>'
+    +'<p class="section-desc">Download episodes and movies when a direct file is available.</p>'
+    +'<div class="settings-hub-grid"><div><h3>Downloads</h3>'
+    +featureSwitchHTML("downloads","Downloads","Download episodes and movies when a direct file is available.","hub")
+    +featureSwitchHTML("multithreadedDownloads","Faster downloads","Use parallel parts when a server supports them.","hub")
+    +featureSwitchHTML("m3uExtraction","Playlist tools","Find and inspect M3U/M3U8 links.","hub")
+    +featureSwitchHTML("downloadAutoSave","Save finished downloads","Save a file as soon as its download completes.","hub")
+    +featureSwitchHTML("downloadAutoResume","Resume downloads","Continue interrupted downloads when ZeroPlay opens.","hub")
+    +featureSwitchHTML("refreshExpiredDownloads","Repair expired links","Find the same title again if a download link expires.","hub")
+    +featureSwitchHTML("keepCompletedDownloads","Keep finished files","Keep downloads available to play or save again.","hub")
+    +'</div></div>'
+    +'<div class="settings-actions"><button class="btn btn-primary btn-sm" type="button" data-menu-route="downloads">Open downloads</button><button class="btn btn-secondary btn-sm" type="button" data-settings-section="faststream">Speed defaults</button></div></section>';
+}
+function settingsDeviceHTML(){
+  return '<section class="panel" id="settingsDevice" data-panel-group="data"><h2>This TV</h2><p class="section-desc">How ZeroPlay behaves on this device and where its posters come from.</p>'
     +'<div id="settingsAndroidTv"><h3>This TV</h3><p>'+esc(deviceText)+' D-pad OK opens titles, Play/Pause starts playback, Back closes one layer at a time, and the remote Menu button opens the drawer.</p>'
     +featureSwitchHTML("tvPerformance","Make this TV run lighter","Recommended for Xiaomi and other 2 GB TV boxes.","hub")
     +featureSwitchHTML("tvLaunchFocus","Start on the first title","Put remote focus ready to resume or browse when Home opens.","hub")
@@ -8167,7 +8180,7 @@ function settingsHubHTML(){
     +featureSwitchHTML("artworkAnilist","AniList","Keyless anime covers and banners matched by title/year.","hub")
     +featureSwitchHTML("artworkItunes","Apple iTunes","Keyless movie and TV-season poster fallback matched by title/year.","hub")
     +'<div class="settings-actions"><button class="btn btn-outline btn-sm" id="btnClearArtworkCache" type="button">Clear artwork cache</button></div><p>Good matches are remembered on this TV.</p></div>'
-    +'</div></section>';
+  +'</section>';
 }
 function exportZeroPlaySettings(){
   const blob=new Blob([JSON.stringify({app:"ZeroPlay",version:1,exportedAt:new Date().toISOString(),settings},null,2)],{type:"application/json"});
@@ -8209,7 +8222,7 @@ function clearPlaybackCaches(){
    section and collapses the rest, so nothing is unreachable with a remote.
    State lives in sourcesRenderMode so a re-render keeps the viewer's place. */
 const SETTINGS_PANEL_GROUPS=["everyday","playback","sources","addons","downloads","data"];
-const SETTINGS_SECTION_TARGETS={"add-website":"sources",continuous:"sources",faststream:"playback",sources:"sources",switches:"everyday",androidtv:"everyday",artwork:"everyday",addons:"addons",downloads:"downloads"};
+const SETTINGS_SECTION_TARGETS={"add-website":"sources",continuous:"addons",faststream:"playback",sources:"sources",switches:"everyday",androidtv:"data",artwork:"data",addons:"addons",downloads:"downloads"};
 function settingsGroupOf(sectionTarget){
   return SETTINGS_SECTION_TARGETS[String(sectionTarget||"")]||"everyday";
 }
@@ -8218,7 +8231,7 @@ function applySettingsSections(settingsPage,sectionTarget){
   const page=view.querySelector(".page"); if(!page) return;
   const panels=Array.prototype.slice.call(page.querySelectorAll(":scope > .panel[data-panel-group]"));
   if(!settingsPage){ panels.forEach(panel=>{ panel.hidden=false; panel.classList.remove("is-collapsed"); }); return; }
-  const active=sourcesRenderMode.group||settingsGroupOf(sectionTarget);
+  const active=sourcesRenderMode.group||settingsGroupOf(sectionTarget)||"everyday";
   sourcesRenderMode.group=active;
   panels.forEach(panel=>{
     const group=panel.getAttribute("data-panel-group");
@@ -8268,7 +8281,7 @@ function renderSources(soft,opts){
   +sourceStatusPanelHTML()
   +(settingsPage?settingsHubHTML():"")
 
-  +addonPanelHTML()+'<section class="panel" id="settingsAddWebsite" data-panel-group="sources"><h2>Add a website</h2><p class="section-desc">Paste a website. When you press Watch, ZeroPlay checks whether that exact movie or episode is there. It does not copy titles or posters from the site.</p>'
+  +(settingsPage?settingsSourcesSectionHTML()+settingsDownloadsSectionHTML()+settingsDeviceHTML():"")+addonPanelHTML()+'<section class="panel" id="settingsAddWebsite" data-panel-group="sources"><h2>Add a website</h2><p class="section-desc">Paste a website. When you press Watch, ZeroPlay checks whether that exact movie or episode is there. It does not copy titles or posters from the site.</p>'
   +'<div class="form-group"><label for="pasteLink">Paste website link</label><div class="input-with-action"><input type="text" id="pasteLink" placeholder="https://example.com or https://example.com/watch/tt1375666/1/2"><button class="btn btn-secondary" id="btnDetect" type="button">Detect</button></div><div id="detectNote" class="status-box hidden"></div></div>'
   +'<div class="form-row"><div class="form-group"><label for="srcName">Source name</label><input type="text" id="srcName" placeholder="My Site"></div>'
   +'<div class="form-group"><label for="srcKind">Source type</label><select id="srcKind"><option value="embed">Website embed (iframe)</option><option value="direct">Direct media files (.mp4/.m3u8…)</option></select></div></div>'
@@ -10026,7 +10039,7 @@ function addonPanelHTML(){
   const logs=(settings.dlog||[]).slice(0,30).map(e=>'<li><span>'+new Date(e.t).toLocaleTimeString()+"</span>"+esc(e.msg)+"</li>").join("");
   const categoryButtons=[["all","All"]].concat(PROVIDER_CATEGORIES).map(([id,label])=>'<button class="chip-btn'+(providerUi.category===id?" active":"")+'" type="button" data-provider-category="'+id+'">'+esc(label)+(id==="all"?"":" · "+(counts[id]||0))+"</button>").join("");
   const seeds=(cfg.seeds||[]).map((s,i)=>'<div class="src-row seed-row"><div class="grow"><span class="nm">'+esc(s.name||s.kind||"Seed")+'</span><code>'+esc(s.url)+(s.lastError?(" · "+s.lastError):"")+'</code></div><div class="src-actions"><button class="btn btn-danger btn-xs" type="button" data-seed-remove="'+i+'">Remove seed</button></div></div>').join("");
-  return '<section class="panel" id="discoveryPanel" data-panel-group="sources">'
+  return '<section class="panel" id="discoveryPanel" data-panel-group="addons">'
     +'<div class="panel-head"><div><h2>Advanced sources</h2><p class="section-desc">ZeroPlay looks for more places to watch in the background. You do not need to manage this to start watching.</p></div>'
     +'<button class="btn '+(discoveryRuntime.running?"btn-secondary":"btn-primary")+'" id="btnDiscoveryToggle" type="button">'+(discoveryRuntime.running?"Automatic search: On":"Automatic search: Off")+'</button></div>'
     +'<div class="discovery-status" id="discoveryStatus" aria-live="polite">'+esc(discoveryStatusText())+'</div>'
