@@ -63,6 +63,17 @@ jobs:
           TV_SCREENSHOT_DIR: artifacts/screenshots
         run: npm run test:browser
 
+      # Three repeats in one job so an intermittent failure is visible as a
+      # flake instead of being written off as "the runner was slow".
+      - name: Repeat the browser suite to expose flakes
+        env:
+          TV_SCREENSHOT_DIR: artifacts/screenshots-repeat
+        run: |
+          for i in 1 2 3; do
+            echo "::notice title=Browser repeat $i::starting run $i of 3"
+            npm run test:browser
+          done
+
       # Screenshots are the point of a browser shell: a person can look at the
       # actual TV frame instead of trusting a pass/fail line.
       - name: Upload TV screenshots
