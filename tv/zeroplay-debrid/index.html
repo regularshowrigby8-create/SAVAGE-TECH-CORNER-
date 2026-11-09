@@ -8148,7 +8148,7 @@ function settingsHubHTML(){
 function settingsSourcesSectionHTML(){
   return '<section class="panel" id="settingsSourcesHub" data-panel-group="sources"><h2>Sources</h2>'
     +'<p class="section-desc">Where ZeroPlay looks for a title. Websites and providers found below are only checked when you press Watch.</p>'
-    +'<div class="settings-hub-grid"><div><h3>Sources</h3>'
+    +'<div class="settings-hub-grid"><div>'
     +featureSwitchHTML("discovery","Find sources automatically","Look for more places to watch while ZeroPlay is open.","hub")
     +'<p>Added websites are only checked when you press Watch. Their titles and covers are not imported.</p>'
     +'<div class="settings-actions"><button class="btn btn-primary btn-sm" type="button" data-settings-section="add-website">Add website</button><button class="btn btn-secondary btn-sm" type="button" data-settings-section="continuous">Advanced sources</button><button class="btn btn-outline btn-sm" id="btnSettingsRunDiscovery" type="button">Search now</button></div></div></div></section>';
@@ -8156,7 +8156,7 @@ function settingsSourcesSectionHTML(){
 function settingsDownloadsSectionHTML(){
   return '<section class="panel" id="settingsDownloadsHub" data-panel-group="downloads"><h2>Downloads</h2>'
     +'<p class="section-desc">Download episodes and movies when a direct file is available.</p>'
-    +'<div class="settings-hub-grid"><div><h3>Downloads</h3>'
+    +'<div class="settings-hub-grid"><div>'
     +featureSwitchHTML("downloads","Downloads","Download episodes and movies when a direct file is available.","hub")
     +featureSwitchHTML("multithreadedDownloads","Faster downloads","Use parallel parts when a server supports them.","hub")
     +featureSwitchHTML("m3uExtraction","Playlist tools","Find and inspect M3U/M3U8 links.","hub")
@@ -8177,7 +8177,7 @@ function settingsDeviceHTML(){
   const deviceText=ANDROID_TV_APP?"This TV is ready for remote control.":"Open ZeroPlay in the Android TV app for remote-first browsing.";
   const deviceDetails=ANDROID_TV_APP?([profile.manufacturer,profile.model||profile.device].filter(Boolean).join(" ")+" · Android "+(profile.androidRelease||"TV")+" · "+abiText+ramText):"";
   return '<section class="panel" id="settingsDevice" data-panel-group="data"><h2>This TV</h2><p class="section-desc">How ZeroPlay behaves on this device and where its posters come from.</p>'
-    +'<div id="settingsAndroidTv"><h3>This TV</h3><p>'+esc(deviceText)+' D-pad OK opens titles, Play/Pause starts playback, Back closes one layer at a time, and the remote Menu button opens the drawer.</p>'
+    +'<div id="settingsAndroidTv"><p>'+esc(deviceText)+' D-pad OK opens titles, Play/Pause starts playback, Back closes one layer at a time, and the remote Menu button opens the drawer.</p>'
     +featureSwitchHTML("tvPerformance","Make this TV run lighter","Recommended for Xiaomi and other 2 GB TV boxes.","hub")
     +featureSwitchHTML("tvLaunchFocus","Start on the first title","Put remote focus ready to resume or browse when Home opens.","hub")
     +'<p>Light mode also pauses decorative previews so browsing stays responsive.</p>'+(deviceDetails?'<details class="advanced"><summary tabindex="0">Device details</summary><div class="advanced-body"><p>'+esc(deviceDetails)+'</p></div></details>':"")+'</div>'
