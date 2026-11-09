@@ -25,6 +25,10 @@ else
   fail browser_env "TV browser test environment is not reachable"
 fi
 
+echo "[GATE 2c] Anti-hallucination and anti-padding audits..."
+python3 tools/anti_hallucination.py || fail hallucination "Anti-hallucination audit failed"
+python3 tools/anti_padding.py || fail padding "Anti-padding audit failed"
+
 echo "[GATE 3] Anti-Stub & Placeholder Invariant Check..."
 if ! python3 - <<'PY'
 import os

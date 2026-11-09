@@ -146,7 +146,7 @@ Each is a separate step and lands only when its own checks pass.
    rule, then Continue Watching, then shelves built from the existing
    `railHTML`/`cardHTML` renderers (so artwork fallbacks and progress badges
    keep working). No new renderer duplicates.
-3. **Details screen** — ARVIO-style section focus (actions → seasons → episodes
+3. **Details screen** — ARVIO-style section focus (`ArvioTvPlayer.kt`: actions → seasons → episodes
    → cast → similar) on top of the existing modal, keeping every current action.
 4. **Search** — one screen with a persistent query box and result rows that
    reuse the shelf renderer.
@@ -305,7 +305,8 @@ Every one of the six reference apps does the same thing: a source hands over a
 URL, and the app plays it. Stremio, ARVIO and Nuvio never embed somebody else's
 player page and then try to drive it from outside; they resolve the stream,
 mount their own engine, and keep the controls, the position, the level and the
-failover decisions in their own process. That is also what makes resume, quality
+failover decisions in their own process (`PlayerEngine.kt`, `ArvioTvPlayer.kt`;
+`StreamAutoPlaySelector.kt`). That is also what makes resume, quality
 and server switching feel instant instead of cosmetic.
 
 ZeroPlay did the opposite. `player:"faststream-only"` mounted an
@@ -363,7 +364,7 @@ design: `MediaPlayPause` toggles, `MediaFastForward`/`MediaRewind` step ten
 seconds, arrows wake the chrome and focus play, Back closes chrome first and the
 player second, and every menu captures Back before the transport sees it. No
 change was needed there; the new panel now takes keys *before* the transport, the
-same ordering ARVIO uses.
+same ordering ARVIO uses (`TvPlayerPanels.kt` key handling before the transport).
 
 **What was missing, and is now real:**
 
@@ -377,8 +378,8 @@ same ordering ARVIO uses.
 | Volume and aspect indicators | one `playerIndicator()` used by volume, mute, aspect, skips and subtitle changes |
 | Tabbed subtitle/audio sheet (`TvSubtitleMenu`) | `#playerTracksSheet`, same two tabs, D-pad first |
 
-**The one deliberate divergence.** ARVIO draws subtitles with Compose and can move
-and delay them freely. A browser's `::cue` cannot be positioned and cues cannot be
+**The one deliberate divergence.** ARVIO draws subtitles with Compose (`TvPlayerPanels.kt`,
+`TvSubtitleSettingsPanel`) and can move and delay them freely. A browser's `::cue` cannot be positioned and cues cannot be
 shifted in time, so `::cue` alone would have made three of the panel's controls
 decorative. Instead the selected track is kept alive in `hidden` mode (cues still
 fire, nothing is drawn by the element) and ZeroPlay paints the text itself in
@@ -419,7 +420,7 @@ Now:
 
 **`NextEpisodeOverlay.kt` → `#playerNextSheet`.** Same shape: backdrop, show,
 episode title, season/episode, runtime, a 10-second countdown bar, **Play now**
-focused, **Cancel** stops. ARVIO's overlay captures the whole remote while it is
+focused, **Cancel** stops. ARVIO's overlay (`NextEpisodeOverlay.kt`) captures the whole remote while it is
 open; ours does too (`handlePlayerNextKeys` runs before the transport and before
 Back), so nothing acts behind the card.
 

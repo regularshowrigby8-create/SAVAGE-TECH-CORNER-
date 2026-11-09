@@ -2145,7 +2145,7 @@ body.android-tv .poster-card:focus-visible .poster-wrap {
 }
 
 /* A focused card shows where OK will take you, then OK opens Details, which
-   owns Play, Episodes and Servers (NuvioTV/Arvio keep the shelf card free of
+   owns Play, Episodes and Servers (NuvioTV/Arvio keep the shelf card free of (`ArvioTvPlayer.kt`)
    stacked buttons and put the actions on the detail page). */
 body.android-tv .poster-card .hover-actions,
 body.tv-mode .poster-card .hover-actions {
@@ -3500,7 +3500,7 @@ body.android-tv.reduce-motion *::after {
      NuvioTV      UI icon scale ............ 14-36dp
      Arvio        sidebar ................. 56dp icon rail
      Streamflix   focus spring scale ......... 1.08
-     Stremio      focus scale ................ 0.95 -> 1 (artwork only shifts)
+     Stremio      focus scale ................ 0.95 -> 1 (artwork only shifts; see docs/REFERENCE-SOURCES.md)
 
    A poster is already ~8.5x the size of a sidebar icon; making it bigger to
    signal TV-ness is what pushed everything off-budget. So: artwork steps
@@ -3905,7 +3905,7 @@ video.zp-subs::cue { color: transparent; background: transparent; text-shadow: n
 
 
 
-/* Paused card — ARVIO's pause metadata, so a paused TV shows what is playing */
+/* Paused card — pause metadata shaped like ARVIO's (`TvPlayerOverlays.kt`), so a paused TV shows what is playing */
 .player-paused-card {
   position: absolute; left: 4vw; bottom: 30%; z-index: 14;
   display: flex; flex-direction: column; gap: 0.4rem;
@@ -4622,7 +4622,7 @@ let catalogMode="tmdb";
 function setCatalogMode(m){ catalogMode=m; const c=$("#catalogModeChip"); if(c) c.textContent = m==="cinemeta" ? "Cinemeta" : m==="demo" ? "Offline demo" : "TMDB"; }
 function setDemo(on){ demoMode=on; $("#demoBanner").classList.toggle("hidden",!on); }
 /* ---------------- Cinemeta keyless catalogue ----------------
-   Stremio's official catalogue addon (no API key, CORS-open). Used whenever
+   Stremio's official catalogue addon (no API key, CORS-open; `https://v3-cinemeta.strem.io`). Used whenever
    no TMDB key/proxy is available, so the app always has a LIVE catalogue
    with real poster/backdrop artwork (Metahub). Metas include moviedb_id,
    so titles keep working with the TMDB-id playback sources. */
@@ -6178,7 +6178,7 @@ function finishPlaybackAndLeave(reason){
   if(reason) playerIndicator(reason,2400);
   playerTimers.push(setTimeout(()=>{ if(playerState===st) closePlayer(); },2200));
 }
-/* ARVIO's Up Next card: 10 seconds, play focused, Enter continues immediately,
+/* Up Next card shaped like ARVIO's (`TvPlayerOverlays.kt`): 10 seconds, play focused, Enter continues immediately,
    Back stops. The countdown only auto-advances while the prompt is on screen. */
 function openNextEpisodePrompt(){
   const st=playerState; if(!st) return;
@@ -6206,7 +6206,7 @@ function openNextEpisodePrompt(){
       +'<div class="next-copy">'
         +'<span class="next-show">'+esc(titleOf(st.item))+'</span>'
         +'<span class="next-ep" id="playerNextLabel">'+(meta&&meta.name?esc(meta.name):"Episode "+(st.episode+1))+'</span>'
-        +'<span class="next-sub">Season '+esc(String(st.season))+' · Episode '+esc(String(st.episode+1))+(meta&&meta.runtime?" · "+Number(meta.runtime)+" min":"")+'</span>'
+        +'<span class="next-sub" id="playerNextSub">Season '+esc(String(st.season))+' · Episode '+esc(String(st.episode+1))+(meta&&meta.runtime?" · "+Number(meta.runtime)+" min":"")+'</span>'
       +'</div>'
     +'</div>'
     +'<div class="next-actions">'
@@ -6371,8 +6371,8 @@ async function tryNextDirectVariant(reason){
    Nothing is imported from a provider. Every control reads and writes the
    element or the engine instance we created, so the transport row, the
    More sheet, seek, quality, speed, volume, PiP, failover and progress all
-   act on our own playback state. That is the same shape Nuvio (ExoPlayer
-   with its own MediaSession) and ARVIO (its own player screen) use: the
+   act on our own playback state. That is the same shape Nuvio (`StreamScreenViewModel.kt`, its Android engine
+   with its own MediaSession) and ARVIO (`ArvioTvPlayer.kt`, its own player screen) use: the
    server supplies a URL, the app supplies the player.
    ===================================================================== */
 const ZP_ENGINE_SCRIPTS=[
@@ -6992,7 +6992,7 @@ function playerShell(msg){
     +'</div>'
     +'<div class="player-indicator" id="playerIndicator" hidden aria-live="polite"></div></div>';
 }
-/* ARVIO puts subtitles and audio behind one tabbed panel, and gives subtitle
+/* ARVIO puts subtitles and audio behind one tabbed panel (`TvPlayerPanels.kt`), and gives subtitle
    timing, size and position their own three-row panel. Same structure here,
    driven by the real tracks our engine reports. */
 function playerTracksModalHTML(st){
@@ -7559,7 +7559,7 @@ async function failover(reason,opts){
     return true;
   }finally{ if(playerState===st) st.switching=false; }
 }
-/* ARVIO's exit transition: pause first, fade the overlay, and only then tear the
+/* ARVIO's exit transition (`TvPlayerControls.kt`, fadeOut ~200ms): pause first, fade the overlay, and only then tear the
    surface down. Leaving on a live video frame is what makes an exit feel like a
    crash on a TV; reduced-motion viewers skip the fade and leave at once. */
 function playerExitAnimated(){
@@ -8587,7 +8587,7 @@ function drawDetail(){
   faststreamPreload({type,id:d.id,title:titleOf(d),year:yearOf(d),season:isTV?(prev.season||detailState.season||1):1,episode:isTV?(prev.episode||1):1,identity:identityFromDetail(d,type,isTV?(prev.season||detailState.season||1):1,isTV?(prev.episode||1):1)}, defaultSourceId());
 }
 
-/* The player needs to know what it is playing. ARVIO keeps the full episode
+/* The player needs to know what it is playing. ARVIO keeps the full episode (`TvPlayerOverlays.kt`)
    record next to playback so the pause card and the end-of-episode prompt can
    name it; ZeroPlay had only a season and an episode number. */
 const episodeMetaCache=new Map();
@@ -11523,7 +11523,7 @@ function restoreTvFocus(){
   },40);
   return true;
 }
-/* The Up Next card owns the remote while it is open, exactly as ARVIO's overlay
+/* The Up Next card owns the remote while it is open, exactly as ARVIO's overlay (`TvPlayerOverlays.kt`)
    does: arrows move between its two buttons, Enter activates, Back stops. */
 function handlePlayerNextKeys(e){
   const st=playerState;
