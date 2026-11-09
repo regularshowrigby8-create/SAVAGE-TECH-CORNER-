@@ -154,3 +154,122 @@ Each is a separate step and lands only when its own checks pass.
    wired actions only.
 6. **Settings / Sources** — dashboard density is correct here; align it to the
    same tokens and remove the remaining duplicate CSS layers.
+
+---
+
+## Server aggregation → one player (read from source, 2026-11-09)
+
+Read from real checkouts, not reviews: NuvioTV (`StreamAutoPlaySelector.kt`,
+`StreamAutoPlayPolicy.kt`, `StreamProviderGrouping.kt`, `Stream.kt`,
+`StreamScreen.kt`, `StreamScreenViewModel.kt`) and ARVIO (`StreamRepository.kt`,
+`PlayerSourceDiscovery.kt`, `SourceFailoverPolicy.kt`, `PlayerViewModel.kt`).
+
+Five mechanisms do the work. None of them is a "source dropdown".
+
+### 1. One normalised stream record for every server
+
+Every backend — Stremio addon, plugin, scraper, debrid, direct file, external
+player, IPTV — is flattened into the **same** record before the UI sees it.
+Nuvio's `Stream` carries `url | infoHash/fileIdx | externalUrl | ytId`,
+`behaviorHints.proxyHeaders`, `addonName`, `pluginSourceName`, `quality`,
+`qualityValue`, `debridCacheStatus`, `badges`, `subtitles`, `serverTarget`.
+ARVIO's `StreamSource` is the same shape.
+
+**Consequence for ZeroPlay:** the UI never renders a provider. It renders a
+stream that happens to remember where it came from. That is exactly why these
+apps have no "select your source" step anywhere in the player.
+
+### 2. Progressive merge, never a blocking spinner
+
+ARVIO `mergePlayerSourceDiscovery` combines two flows — addon batches and plugin
+batches — and emits a `ProgressiveStreamResult(streams, completedAddons,
+totalAddons, isFinal, notices)`. Each side starts with an empty emit so neither
+waits for the other; `channelFlow` + `withTimeoutOrNull(30s)` bounds the slow
+side. Dedupe is by `providerScopedStreamIdentity` = `addonId|url|source`.
+`notices` carries addon *error messages* so a failed server is reported instead
+of vanishing.
+
+Nuvio does the same per addon: `StreamScreenViewModel` fills results as they
+arrive, and autoplay may fire **before** the list is final.
+
+**Consequence:** the picker is a live list that grows, with an honest
+`3 of 7 servers answered` counter — not `Loading…` then a finished list.
+
+### 3. Ordering is policy, not insertion order
+
+Nuvio `orderAddonStreams(streams, installedOrder, preferredNames)`:
+1. preferred providers first,
+2. then entries containing a **direct debrid** stream,
+3. then installed addons in user order,
+4. then plugins.
+
+`isPlayable()` filters non-playable records (external links, un-cached torrents
+still `CHECKING`) *before* selection. `selectAutoPlayStream` scopes by source
+(ALL_SOURCES / INSTALLED_ADDONS_ONLY / ENABLED_PLUGINS_ONLY), applies
+`StreamAutoPlayMode` (MANUAL / FIRST_STREAM / REGEX_MATCH), and
+`StreamAutoPlayPolicy.isEffectivelyEnabled` is true if autoplay is on **or**
+"reuse last link" is on.
+
+### 4. Failover is in the player, not in the picker
+
+ARVIO `canTryFailoverSource(candidate, playing, playingUrl, placeholders)`
+compares `PlaybackRequestIdentity(url, headers)` so the same request is never
+retried, and previously failed placeholders are skipped.
+`playingRequestIndex` locates the current stream inside the list for "next
+source" navigation. `safePlaybackHeaders()` sanitises proxy headers before use.
+
+**Consequence:** a failing stream silently advances to the next candidate and
+the player shows `Source 2 of 5` instead of an error box.
+
+### 5. Grouping is a display concern only
+
+Nuvio `groupStreamsByProvider` groups by `addonName`, then by
+`pluginSourceName`, alphabetically, and renders a **header only when the
+provider actually changes** (`streamProviderHeader` compares with `previous`).
+So a unified list still reads as "these came from Torrentio" without becoming a
+folder tree.
+
+### What ZeroPlay already has, and what it lacks
+
+Already present and worth keeping: canonical identity verification
+(`buildTitleIdentity`, `identityScore`, `identityVerified/Rejected`), variant
+normalisation (`sortVariantsForQuality`, `chooseVariantForQuality`), progressive
+search (`findTitleServers({onUpdate})`), racing (`measureSpeed`), failover
+(`directQueue`, `tried`), and honest "unrelated servers hidden" reporting.
+
+Missing, and what this rebuild adds:
+- a **single unified list** — today servers are split into three headings
+  (`Verified direct` / `Verified website` / `Exact-ID players`), which is a
+  provider taxonomy, the thing these apps deliberately avoid;
+- **progressive counts** in the picker header (`n of m answered`);
+- **autoplay** as policy (`settings.stream.autoplay`) rather than a button the
+  viewer must press every episode;
+- **failover surfacing** in the player (`Source 2 of 5`) while a queue drains;
+- **provider chips** as a filter, not as sections.
+
+---
+
+## Phase 2 — what changed (2026-11-09)
+
+| Directive | Status | Where |
+|---|---|---|
+| D-pad on every part of the app | done | geometry engine (`tvRowKey`/`tvRowBand`/`tvSameRow`/`tvNearestAbove`/`tvNearestBelow`), header re-entry from the first content row, `tvIsFocusable` now walks ancestors so faded chrome is never an arrow target |
+| D-pad in Settings | done | sticky section strip (`data-panel-tab`), `activateSettingsGroup()`, collapsible `data-panel-group` sections, `:focus-within` switch rows, `tvActivateTarget()` for Enter/Space on selects and sliders, selects release the D-pad at the edge of their range |
+| Remove the giant border over cards | done | five stacked halos deleted; one `--zp-focus-ring` (2px) plus depth. Desktop focus is a hairline inset |
+| Refine, don't add | done | no new files; every change lands in `index.html` and its existing suites |
+| Servers unified into one player | done | single `#serverList` with `data-stream-filter` chips and provider chips; three provider-taxonomy sections removed |
+| Player UI scrapped and rebuilt | done | `playerShell()` rewritten: top bar (identity + exits), transport row (play, ∓10, seek, servers, more), paused shelf for the real jobs, one More sheet for quality/speed/volume/PiP/fullscreen/download/details; `[data-tv-row]` on each row; `directQueueStatus()` reports "Source 2 of 5" |
+
+**Preserved on purpose:** every element id the playback engine binds
+(`playerStage`, `playerFrame`, `seekRange`, `volumeRange`, `playerQuality`,
+`playerRate`, `btnPlayPause`, `btnBack10`, `btnForward10`, `btnMute`, `btnPiP`,
+`btnFullscreen`, `btnFocusEmbed`, `btnPlayerServers`, `btnPrevEp`, `btnNextEp`,
+`btnPlayerDownload`, `btnPlayerDetails`, `btnClosePlayer`, `playerMeta`,
+`playerEngine`, `fastBadge`).
+
+**Removed:** the Android TV rule that set `display:none!important` on player
+tools (`#btnPiP`, `#playerRate`, `.volume-wrap`, `#btnPlayerDownload`,
+`#btnPlayerDetails`, `#btnFocusEmbed`) — those controls now live inside the More
+sheet, which is better than deleting them from the TV build.
+
+**Tests:** 327 checks green (`npm test`), 57 of them the TV navigation contract.

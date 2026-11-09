@@ -347,7 +347,7 @@ body.route-enter .page{animation:zpFade .32s ease both}
 .category-tile{position:relative;min-height:132px;border:0;border-radius:16px;overflow:hidden;cursor:pointer;text-align:left;color:#fff;background:#171a1d;padding:0;transition:transform .22s var(--ease-out),box-shadow .22s ease}
 .category-tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.56;transition:transform .35s var(--ease-out),opacity .25s ease}
 .category-tile::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.82),rgba(0,0,0,.18)),linear-gradient(0deg,rgba(0,0,0,.72),transparent 62%)}
-.category-tile:hover,.category-tile:focus-visible{transform:translateY(-3px) scale(1.012);box-shadow:0 0 0 2px var(--focus),0 22px 44px rgba(0,0,0,.38)}
+.category-tile:hover,.category-tile:focus-visible{transform:scale(1.02);box-shadow:0 14px 30px rgba(0,0,0,.34)}
 .category-tile:hover img{transform:scale(1.05);opacity:.68}
 .category-tile b,.category-tile span{position:relative;z-index:2;display:block;margin-left:1rem}
 .category-tile b{margin-top:4.4rem;font-size:1.14rem;letter-spacing:-.02em}
@@ -412,7 +412,6 @@ input[type="range"]{border-radius:999px}
 .variant-chips span{border:1px solid rgba(255,255,255,.11);border-radius:999px;padding:.14rem .48rem;font-size:.72rem;color:#e8ebee;background:rgba(255,255,255,.035)}
 .streams-toolbar{display:flex;gap:.6rem;align-items:end;flex-wrap:wrap;margin:1rem 0}
 .streams-toolbar .form-group{margin:0;min-width:180px}
-body.tv-mode .poster-card:focus-visible,body.tv-mode button:focus-visible{box-shadow:0 0 0 2px rgba(240,198,107,.45)}
 @media(min-width:1200px){.rail-track .poster-card{flex-basis:176px}.grid{grid-template-columns:repeat(auto-fill,minmax(176px,1fr))}.hero-body{padding:2.6rem}.hero-body h1{font-size:3rem}}
 @media(max-width:760px){.category-strip{display:none}.player-bar .pt{max-width:42vw}.player-bar .logo-badge>span:last-child{display:none}.player-status{display:none}.volume-wrap input{display:none}.control-select{min-width:104px}.hero{min-height:430px}.hero-trailer iframe{transform:scale(1.55)}}
 .setting-switch{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.62rem 0;border-bottom:1px solid rgba(255,255,255,.055)}
@@ -480,7 +479,7 @@ body.hide-category-strip .home-category-rail{display:none!important}
 .ep-thumb{position:relative;flex:0 0 118px;width:118px;aspect-ratio:16/9;border-radius:9px;overflow:hidden;background:#050607;box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
 .ep-thumb>img{display:block;width:100%;height:100%;object-fit:cover}
 .ep-num-badge{position:absolute;left:.35rem;bottom:.35rem;min-width:1.55rem;height:1.55rem;padding:0 .32rem;border-radius:999px;background:rgba(0,0,0,.72);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:.76rem;font-weight:800}
-.ep-main:focus-visible .ep-thumb{box-shadow:0 0 0 2px var(--focus)}
+.ep-main:focus-visible .ep-thumb{outline:var(--zp-focus-ring) solid var(--zp-focus);outline-offset:2px}
 @media(max-width:620px){.continue-track .continue-card{flex-basis:min(300px,82vw)}.ep-thumb{flex-basis:92px;width:92px}}
 
 /* Android TV / Xiaomi TV Box profile: fewer layers, no expensive blur, and focus that reads at 10 feet. */
@@ -533,7 +532,6 @@ body.android-tv .modal{width:min(980px,94vw);max-height:92vh;overflow-y:auto}
 body.android-tv .settings-hub-grid{grid-template-columns:1fr}
 body.android-tv .panel,body.android-tv .form-group,body.android-tv .setting-switch,body.android-tv .form-row>*{min-width:0}
 body.android-tv .player-bar,body.android-tv .player-controls{padding-left:3vw;padding-right:3vw}
-body.android-tv .player-controls #btnPiP,body.android-tv .player-controls #playerRate,body.android-tv .player-controls .volume-wrap,body.android-tv .player-bar #btnPlayerDownload,body.android-tv .player-bar #btnPlayerDetails,body.android-tv #btnFocusEmbed{display:none}
 body.android-tv .player-action-shelf{bottom:clamp(6.4rem,13vh,10rem);max-width:94vw;padding:.7rem .8rem;border-radius:28px}
 body.android-tv .player-action-shelf .control-btn{min-width:160px;height:56px;font-size:1rem;border-radius:999px}
 body.android-tv .player-action-shelf .action-kicker{font-size:.78rem}
@@ -547,7 +545,7 @@ body.android-tv .trailer-ctl{display:none!important}
 body.android-tv .rail-arrows,body.android-tv .rail-progress{display:none!important}
 body.android-tv .preview-badge,body.android-tv .card-overview{display:none!important}
 body.android-tv .continue-actions{display:none}
-body.android-tv .filters,body.android-tv .menu-category-list,body.android-tv .menu-quick-note,body.android-tv #menuQuickSettings .settings-actions{display:none!important}
+body.android-tv .menu-category-list,body.android-tv .menu-quick-note,body.android-tv #menuQuickSettings .settings-actions{display:none!important}
 body.android-tv .category-quick{gap:.65rem;margin-bottom:1.6rem}
 body.android-tv .menu-drawer{width:min(440px,36vw);padding:1.4rem}
 body.android-tv .menu-link{min-height:54px;font-size:1.08rem;padding:.8rem .75rem}
@@ -1766,9 +1764,8 @@ body.reduce-motion .zp-home-featured .hero:focus-within .hero-bg {
 
 .poster-card:focus-visible .poster-wrap {
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
-    0 0 0 3px rgba(255, 255, 255, 0.88),
-    0 24px 60px rgba(0, 0, 0, 0.48);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+    0 10px 24px rgba(0, 0, 0, 0.34);
 }
 
 .poster-wrap img {
@@ -2075,26 +2072,12 @@ body.tv-mode .rail-track {
   padding-bottom: 1.15rem;
 }
 
-body.tv-mode .rail-track .poster-card {
-  flex-basis: clamp(220px, 16vw, 290px);
-}
-
 body.tv-mode .poster-wrap {
   border-radius: var(--zp-radius-lg);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
-    0 18px 46px rgba(0, 0, 0, 0.34);
-}
-
-body.tv-mode .poster-card:focus-visible .poster-wrap {
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
-    0 0 0 3px rgba(255, 255, 255, 0.92),
-    0 30px 72px rgba(0, 0, 0, 0.52);
 }
 
 body.tv-mode .poster-meta {
-  padding: 0.85rem 0.2rem 0;
+  padding: 0.6rem 0.2rem 0;
 }
 
 body.tv-mode .poster-meta .t {
@@ -2142,8 +2125,7 @@ body.android-tv .poster-card:focus-visible {
 body.android-tv .poster-card:focus-visible .poster-wrap {
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.18),
-    0 0 0 4px rgba(255, 255, 255, 0.9),
-    0 30px 72px rgba(0, 0, 0, 0.52);
+    0 0 0 2px var(--zp-focus);
 }
 
 /* A focused card shows where OK will take you, then OK opens Details, which
@@ -2184,9 +2166,7 @@ body.android-tv-low-ram .poster-wrap {
 }
 
 body.android-tv-low-ram .poster-card:focus-visible .poster-wrap {
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
-    0 0 0 3px rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 2px var(--zp-focus);
 }
 
 /* -------------------------------------------------------------
@@ -3677,6 +3657,224 @@ body.tv-mode .chip-btn { font-size: 0.8rem; padding: 0.32rem 0.7rem; }
 body.android-tv-low-ram .poster-card:focus-visible,
 body.android-tv-low-ram .continue-card:focus-visible,
 body.android-tv-low-ram .category-tile:focus-visible { transform: none; }
+
+/* =====================================================================
+   PHASE 2 — SETTINGS ON A D-PAD
+
+   Before: the Android TV profile *deleted* settings blocks
+   (`body.android-tv .filters{display:none!important}`), so most controls
+   could not be reached with a remote at all, switch rows were not focus
+   targets in any consistent order, and a settings page was one long
+   vertical scroll with no way to jump between sections.
+
+   Now: a sticky section strip (itself a focus row), collapsible sections
+   instead of hidden ones, and every switch row is a focus target whose
+   whole row reacts, which is how NuvioTV and ARVIO present TV settings.
+   ===================================================================== */
+.panel-tab-bar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  margin: 0 0 1.1rem;
+  padding: 0.5rem 0;
+  background: linear-gradient(var(--zp-canvas, #0b0d0f) 72%, rgba(11, 13, 15, 0));
+}
+.panel-tabs {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+}
+.panel-tabs::-webkit-scrollbar { display: none; }
+.panel-tab {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  min-height: 38px;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--zp-line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--zp-text-secondary);
+  font-size: 0.84rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.panel-tab:hover { background: rgba(255, 255, 255, 0.06); color: var(--zp-text-primary); }
+.panel-tab.is-active {
+  background: var(--zp-accent-soft);
+  border-color: var(--zp-accent-line);
+  color: var(--zp-text-primary);
+}
+
+/* Collapsible sections: no content is ever removed from the app. */
+.panel[data-panel-group] > h2 { position: relative; }
+.panel.is-collapsed > :not(h2) { display: none; }
+.panel.is-collapsed > h2::after { content: " · collapsed"; color: var(--zp-text-tertiary); font-weight: 500; }
+.panel-tab.is-hidden-target { display: none !important; }
+
+/* Switch rows are one focus stop each; the whole row shows focus. */
+.setting-switch {
+  border-radius: 10px;
+  transition: background 120ms ease;
+}
+.setting-switch:focus-within {
+  background: rgba(255, 255, 255, 0.05);
+  outline: var(--zp-focus-ring) solid var(--zp-focus);
+  outline-offset: 2px;
+}
+body.tv-mode .setting-switch,
+body.android-tv .setting-switch { padding: 0.55rem 0.6rem; }
+body.tv-mode .setting-copy label,
+body.android-tv .setting-copy label { font-size: 0.92rem; }
+body.tv-mode .setting-copy small,
+body.android-tv .setting-copy small { font-size: 0.76rem; }
+
+/* Settings controls sit on the same focus contract as the shelves. */
+body.tv-mode .panel-tab,
+body.android-tv .panel-tab { min-height: 42px; font-size: 0.86rem; }
+body.tv-mode .settings-actions,
+body.android-tv .settings-actions { gap: 0.45rem; }
+body.tv-mode .settings-actions .btn,
+body.android-tv .settings-actions .btn { min-height: 40px; padding: 0.45rem 0.95rem; font-size: 0.84rem; }
+body.tv-mode .src-actions,
+body.android-tv .src-actions { flex-wrap: wrap; gap: 0.35rem; }
+body.tv-mode .src-row,
+body.android-tv .src-row { border-radius: 10px; padding: 0.65rem 0.7rem; }
+body.tv-mode .src-row:focus-within,
+body.android-tv .src-row:focus-within { background: rgba(255, 255, 255, 0.05); }
+
+/* Long settings pages need a visible scrollbar edge on a TV. */
+body.tv-mode .page,
+body.android-tv .page { scroll-margin-top: 4rem; }
+
+/* =====================================================================
+   PHASE 2 — PLAYER SHELL LAYOUT (replaces the old bar+wall-of-controls)
+
+   The old rules laid seek, volume, quality, speed, PiP and fullscreen end to
+   end in one wrapping row. Those rules are dead now; this block defines the
+   transport row, the More sheet, and the TV sizing for both.
+   ===================================================================== */
+.player-spacer { flex: 1 1 auto; }
+.player-bar .pt { display: flex; flex-direction: column; line-height: 1.15; }
+.player-bar .pt .pn { font-weight: 750; }
+.player-bar .pn { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40vw; }
+.zp-loading-sub { color: #cbd2d8; font-size: 0.88rem; }
+
+/* transport row: hairline glass, sits above the shelf, never wraps out of view */
+.player-controls {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(1.1rem, 3.2vh, 2.2rem);
+  transform: translateX(-50%);
+  width: min(94vw, 1120px);
+  z-index: 22;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 18px;
+  background: rgba(9, 11, 14, 0.82);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+}
+.player-controls .seek-row { display: flex; align-items: center; gap: 0.6rem; }
+.player-controls .seek-row input[type="range"] { flex: 1 1 auto; }
+.player-controls .control-row { display: flex; align-items: center; gap: 0.45rem; flex-wrap: nowrap; }
+.player-controls .control-row .player-status {
+  font-size: 0.78rem;
+  color: var(--zp-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 26vw;
+}
+.player-controls .control-btn { min-height: 40px; padding: 0 0.85rem; font-size: 0.84rem; }
+.player-controls .control-btn.primary { min-width: 74px; }
+.player-overlay.chrome-hidden .player-controls { transform: translate(-50%, 118%); opacity: 0; pointer-events: none; }
+.player-overlay.chrome-hidden .player-bar { transform: translateY(-108%); opacity: 0; pointer-events: none; }
+
+/* More sheet */
+.player-sheet {
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: 30;
+  display: flex;
+  justify-content: center;
+  padding: 0 4vw 4.2rem;
+}
+.player-sheet[hidden] { display: none; }
+.player-sheet-inner {
+  width: min(96vw, 880px);
+  padding: 1rem 1.15rem 1.1rem;
+  border-radius: 20px;
+  background: rgba(10, 12, 15, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+.player-sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+.player-sheet-head strong { font-size: 0.95rem; letter-spacing: 0.01em; }
+.player-sheet-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.7rem 1.1rem; }
+.sheet-field { display: flex; flex-direction: column; gap: 0.35rem; }
+.sheet-field > span { font-size: 0.72rem; font-weight: 750; letter-spacing: 0.09em; text-transform: uppercase; color: var(--zp-text-tertiary); }
+.sheet-field .control-select { width: 100%; }
+.sheet-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.player-sheet-note { margin: 0.75rem 0 0; font-size: 0.78rem; color: var(--zp-text-secondary); }
+.player-overlay.player-more-open .player-controls,
+.player-overlay.player-more-open .player-action-shelf { opacity: 0; pointer-events: none; }
+/* Parked chrome is invisible; it must also be unfocusable, or arrows land on
+   controls nobody can see. */
+.player-overlay.chrome-hidden .player-controls,
+.player-overlay.chrome-hidden .player-bar,
+.player-overlay.chrome-hidden .player-action-shelf,
+.player-overlay:not(.player-more-open) .player-sheet { visibility: hidden; }
+
+/* Unified server list + chips */
+.stream-filters { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0.9rem 0 0.7rem; }
+.stream-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 34px;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--zp-line);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--zp-text-secondary);
+  font-size: 0.78rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+.stream-chip:hover:not(:disabled) { background: rgba(255, 255, 255, 0.07); color: var(--zp-text-primary); }
+.stream-chip.is-active { background: var(--zp-accent-soft); border-color: var(--zp-accent-line); color: var(--zp-text-primary); }
+.stream-chip:disabled { opacity: 0.4; cursor: default; }
+.server-list { display: flex; flex-direction: column; gap: 0.45rem; }
+.server-option { display: flex; align-items: flex-start; gap: 0.7rem; }
+.server-rank { flex: 0 0 26px; padding-top: 0.15rem; text-align: right; font-variant-numeric: tabular-nums; font-size: 0.78rem; font-weight: 750; color: var(--zp-text-tertiary); }
+.server-option.is-autoplay { border-color: var(--zp-accent-line); }
+.server-option .src-actions { align-items: center; }
+
+/* TV sizing: bigger targets, fewer of them per row */
+body.tv-mode .player-controls,
+body.android-tv .player-controls { width: min(96vw, 1240px); padding: 0.7rem 0.9rem; border-radius: 22px; }
+body.tv-mode .player-controls .control-btn,
+body.android-tv .player-controls .control-btn { min-height: 44px; font-size: 0.88rem; }
+body.tv-mode .player-bar,
+body.android-tv .player-bar { gap: 0.55rem; }
+body.tv-mode .player-bar .pn,
+body.android-tv .player-bar .pn { max-width: 34vw; }
+body.tv-mode .player-sheet-inner,
+body.android-tv .player-sheet-inner { width: min(94vw, 1000px); }
+body.tv-mode .sheet-field .control-select,
+body.android-tv .sheet-field .control-select,
+body.tv-mode .player-sheet-grid .control-btn,
+body.android-tv .player-sheet-grid .control-btn { min-height: 44px; font-size: 0.9rem; }
+body.tv-mode .stream-chip,
+body.android-tv .stream-chip { min-height: 40px; font-size: 0.84rem; }
+body.tv-mode .server-option .src-actions .btn,
+body.android-tv .server-option .src-actions .btn { min-height: 42px; padding: 0 1rem; font-size: 0.88rem; }
 </style>
 </head>
 <body>
@@ -5844,6 +6042,21 @@ async function switchDirectVariant(variant,opts){
   await mountDirectVideo(stage,next.url,source,performance.now(),at);
   updatePlayerMeta(source);
 }
+/* Failover position — the ARVIO `playingRequestIndex` idea, reduced to what
+   ZeroPlay's queue can answer: where is the stream we are playing, and how many
+   remain? Shown in the player so a silent switch is never a mystery. */
+function directQueueStatus(st){
+  st=st||playerState; if(!st) return null;
+  const tried=st.triedUrls||new Set();
+  const queue=(st.variants||[]).concat(st.directQueue||[]).map(v=>normalizeVariant(v)).filter(Boolean);
+  if(!queue.length) return null;
+  const seen=new Set(); const unique=[];
+  for(const v of queue){ if(!seen.has(v.url)){ seen.add(v.url); unique.push(v); } }
+  const playingUrl=st.url||st.directUrl||"";
+  const index=unique.findIndex(v=>v.url===playingUrl);
+  const remaining=unique.filter(v=>!tried.has(v.url)&&v.url!==playingUrl).length;
+  return {index:index<0?0:index+1,total:unique.length,remaining};
+}
 async function tryNextDirectVariant(reason){
   const st=playerState; if(!st) return false;
   if(streamCfg().autoFailover===false) return false;
@@ -6013,29 +6226,100 @@ function openM3uExtractorForContext(ctx,url){
     toast(target?"M3U extractor ready for the current player stream":"M3U extractor ready — paste a playlist or watch-page URL");
   },120);
 }
+/* =====================================================================
+   PHASE 2 — PLAYER SHELL, REBUILT FROM SCRATCH
+
+   The old shell was a top bar (logo, title, five buttons) plus a bottom
+   row that put seek, volume, quality, speed, PiP and fullscreen on one
+   line: 13 focus stops in an unpredictable order, and on a TV it grew so
+   wide that D-pad movement between stops was unreliable.
+
+   This shell keeps the *engine contract* untouched — the same element ids
+   the playback code binds to — and reorganises the presentation into what
+   NuvioTV and ARVIO actually use:
+
+     • a transport row that is short and ordered: resume/play, −10, +10,
+       seek, then two explicit doors (Servers, More)
+     • a paused action shelf holding the real jobs (resume, servers,
+       download, M3U, FastStream) as large targets
+     • everything secondary inside one "More" sheet, so the face of the
+       player is never a wall of controls
+     • explicit [data-tv-row] values on both rows, so the D-pad engine
+       never has to guess which controls belong together
+     • a source line that reports failover position ("Source 2 of 5")
+
+   Nothing is dropped: every element id below is still bound by
+   bindPlayerChrome(), and every control still calls playerCommand().
+   ===================================================================== */
 function playerShell(msg){
   const st=withPlayerRuntime(playerState); playerState=st;
   const it=st.item, isTV=it.type==="tv";
   const rate=Number(st.playback&&st.playback.rate||1);
+  const queue=directQueueStatus(st);
+  const src=(st.tempSource||getSource(st.source));
+  const engineLabel=st.engine==="faststream-api"?"FastStream":st.engine==="faststream-legacy"?"FastStream legacy":st.engine==="embed"?"Player page":st.direct?"Direct file":"Connecting";
   return '<div class="player-overlay" id="playerOverlay">'
-    +'<div class="player-stage" id="playerStage"><div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>'+esc(msg||"Connecting…")+'</strong><span style="color:#cbd2d8;font-size:.88rem">ZeroPlay is preparing this exact title.</span></div></div>'
-    +'<div class="player-action-shelf" id="playerActionShelf" aria-label="Paused player tools"><span class="action-kicker">Paused</span><button class="control-btn primary" id="btnPlayerResume" type="button">▶ Resume</button><button class="control-btn" id="btnPlayerFastStream" type="button">FastStream controls</button><button class="control-btn" id="btnPlayerM3u" type="button">M3U tools</button><button class="control-btn" id="btnPlayerDownloadStage" type="button">⬇ Download</button><button class="control-btn" id="btnPlayerServersStage" type="button">Servers</button></div>'
-    +'<div class="player-bar"><button class="icon-btn" id="btnBackPlayer" type="button" aria-label="Back">‹</button><span class="logo-badge"><span class="logo-mark">▶</span><span>ZeroPlay</span></span>'
-    +'<span class="pt">'+esc(titleOf(it))+'<span class="player-title-sub" id="playerSourceLine">'+(isTV?"Season "+st.season+" · Episode "+st.episode:"Movie")+'</span></span><span id="fastBadge" class="chip violet"></span><span style="flex:1"></span>'
-    +(isTV?'<button class="control-btn" id="btnPrevEp" type="button">‹ Ep</button><button class="control-btn" id="btnNextEp" type="button">Ep ›</button>':"")
-    +'<button class="control-btn" id="btnPlayerServers" type="button">Servers</button>'+(downloadsEnabled()?'<button class="control-btn" id="btnPlayerDownload" type="button" aria-label="Download this title or episode">⬇</button>':"")+'<button class="control-btn" id="btnPlayerDetails" type="button">Details</button><button class="control-btn" id="btnClosePlayer" type="button" aria-label="Close player">×</button></div>'
+    +'<div class="player-stage" id="playerStage"><div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>'+esc(msg||"Connecting…")+'</strong><span class="zp-loading-sub">ZeroPlay is preparing this exact title.</span></div></div>'
+
+    /* paused shelf — the jobs a viewer actually pauses for */
+    +'<div class="player-action-shelf" id="playerActionShelf" aria-label="Paused player tools" data-tv-row="player-shelf">'
+      +'<button class="control-btn primary" id="btnPlayerResume" type="button">▶ Resume</button>'
+      +'<button class="control-btn" id="btnPlayerServersStage" type="button">Servers</button>'
+      +'<button class="control-btn" id="btnPlayerDownloadStage" type="button">⬇ Download</button>'
+      +'<button class="control-btn" id="btnPlayerM3u" type="button">M3U tools</button>'
+      +'<button class="control-btn" id="btnPlayerFastStream" type="button">FastStream controls</button>'
+    +'</div>'
+
+    /* top bar — identity and the two ways out, nothing else */
+    +'<div class="player-bar" id="playerTopBar" data-tv-row="player-top">'
+      +'<button class="icon-btn" id="btnBackPlayer" type="button" aria-label="Back">‹</button>'
+      +'<span class="pt"><span class="pn" id="playerTitle">'+esc(titleOf(it))+'</span><span class="player-title-sub" id="playerSourceLine">'+(isTV?"Season "+st.season+" · Episode "+st.episode:"Movie")+'</span></span>'
+      +'<span id="fastBadge" class="chip violet"></span>'
+      +'<span class="player-spacer"></span>'
+      +(isTV?'<button class="control-btn" id="btnPrevEp" type="button" aria-label="Previous episode">‹ Ep</button><button class="control-btn" id="btnNextEp" type="button" aria-label="Next episode">Ep ›</button>':"")
+      +'<button class="control-btn" id="btnPlayerServers" type="button">Servers</button>'
+      +'<button class="control-btn" id="btnPlayerMore" type="button" aria-expanded="false">More ⋯</button>'
+      +'<button class="control-btn" id="btnClosePlayer" type="button" aria-label="Close player">×</button>'
+    +'</div>'
+
     +'<button class="center-play" id="btnCenterPlay" type="button" aria-label="Play" hidden>▶</button>'
-    +'<div class="player-controls" id="playerControls" data-mode="loading">'
-    +'<div class="seek-row"><span id="currentTime">0:00</span><input id="seekRange" type="range" min="0" max="100" value="0" step="1" aria-label="Seek"><span id="durationTime">0:00</span></div>'
-    +'<div class="control-row"><button class="control-btn primary" id="btnPlayPause" type="button" aria-label="Play or pause">▶</button>'
-    +'<button class="control-btn" id="btnBack10" type="button" aria-label="Back 10 seconds">−10</button><button class="control-btn" id="btnForward10" type="button" aria-label="Forward 10 seconds">+10</button>'
-    +'<span class="volume-wrap"><button class="control-btn" id="btnMute" type="button" aria-label="Mute or unmute">🔊</button><input id="volumeRange" type="range" min="0" max="100" value="'+Math.round((st.playback.volume==null?.9:st.playback.volume)*100)+'" aria-label="Volume"></span>'
-    +'<span class="player-status" id="playerMeta">Connecting…</span><span style="flex:1"></span><span class="chip" id="playerEngine">Connecting</span>'
-    +'<select class="control-select" id="playerQuality" aria-label="Playback quality">'+qualityOptionsHTML(st)+'</select>'
-    +'<select class="control-select" id="playerRate" aria-label="Playback speed">'+[.5,.75,1,1.25,1.5,2].map(r=>'<option value="'+r+'"'+(rate===r?" selected":"")+">"+r+'×</option>').join("")+'</select>'
-    +'<button class="control-btn" id="btnFocusEmbed" type="button" style="display:none">Video controls</button>'
-    +'<button class="control-btn" id="btnPiP" type="button" aria-label="Picture in picture">PiP</button><button class="control-btn" id="btnFullscreen" type="button" aria-label="Fullscreen">⛶</button>'
-    +'</div></div></div>';
+
+    /* transport — short, ordered, one row */
+    +'<div class="player-controls" id="playerControls" data-mode="loading" data-tv-row="player-transport">'
+      +'<div class="seek-row"><span id="currentTime">0:00</span><input id="seekRange" type="range" min="0" max="100" value="0" step="1" aria-label="Seek"><span id="durationTime">0:00</span></div>'
+      +'<div class="control-row" data-tv-row="player-transport-buttons">'
+        +'<button class="control-btn primary" id="btnPlayPause" type="button" aria-label="Play or pause">▶</button>'
+        +'<button class="control-btn" id="btnBack10" type="button" aria-label="Back 10 seconds">−10</button>'
+        +'<button class="control-btn" id="btnForward10" type="button" aria-label="Forward 10 seconds">+10</button>'
+        +'<span class="player-status" id="playerMeta">Connecting…</span>'
+        +'<span class="player-spacer"></span>'
+        +'<span class="chip" id="playerEngine">'+esc(engineLabel)+'</span>'
+        +'<button class="control-btn" id="btnPlayerServersAlt" type="button">Servers</button>'
+        +'<button class="control-btn" id="btnPlayerMoreAlt" type="button" aria-expanded="false">More ⋯</button>'
+      +'</div>'
+    +'</div>'
+
+    /* More sheet — every secondary control, reachable, never hidden away */
+    +'<div class="player-sheet" id="playerMoreSheet" hidden data-tv-row="player-sheet-more" aria-label="More player tools">'
+      +'<div class="player-sheet-inner">'
+        +'<div class="player-sheet-head"><strong>Playback tools</strong><button class="icon-btn" id="btnClosePlayerMore" type="button" aria-label="Close tools">×</button></div>'
+        +'<div class="player-sheet-grid">'
+          +'<label class="sheet-field"><span>Quality</span><select class="control-select" id="playerQuality" aria-label="Playback quality">'+qualityOptionsHTML(st)+'</select></label>'
+          +'<label class="sheet-field"><span>Speed</span><select class="control-select" id="playerRate" aria-label="Playback speed">'+[.5,.75,1,1.25,1.5,2].map(r=>'<option value="'+r+'"'+(rate===r?" selected":"")+">"+r+'×</option>').join("")+'</select></label>'
+          +'<div class="sheet-field"><span>Volume</span><div class="volume-wrap"><button class="control-btn" id="btnMute" type="button" aria-label="Mute or unmute">🔊</button><input id="volumeRange" type="range" min="0" max="100" value="'+Math.round((st.playback.volume==null?.9:st.playback.volume)*100)+'" aria-label="Volume"></div></div>'
+          +'<div class="sheet-field"><span>Screen</span><div class="sheet-actions">'
+            +'<button class="control-btn" id="btnPiP" type="button" aria-label="Picture in picture">PiP</button>'
+            +'<button class="control-btn" id="btnFullscreen" type="button" aria-label="Fullscreen">⛶ Fullscreen</button>'
+            +'<button class="control-btn" id="btnFocusEmbed" type="button" style="display:none">Video controls</button>'
+          +'</div></div>'
+          +'<div class="sheet-field"><span>This title</span><div class="sheet-actions">'
+            +(downloadsEnabled()?'<button class="control-btn" id="btnPlayerDownload" type="button" aria-label="Download this title or episode">⬇ Download</button>':"")
+            +'<button class="control-btn" id="btnPlayerDetails" type="button">Details</button>'
+          +'</div></div>'
+        +'</div>'
+        +(queue?'<p class="player-sheet-note" id="playerQueueLine">Source '+queue.index+' of '+queue.total+(queue.remaining?' · '+queue.remaining+' more queued':'')+'</p>':"")
+      +'</div>'
+    +'</div></div>';
 }
 function bindPlayerChrome(){
   const st=playerState; if(!st||st.trailer) return;
@@ -6076,6 +6360,13 @@ function bindPlayerChrome(){
   on("volumeRange","input",e=>{ settings.stream.volume=Number(e.target.value)/100; saveSettings(); playerCommand("volume",settings.stream.volume); });
   on("playerRate","change",e=>{ settings.stream.rate=Number(e.target.value)||1; saveSettings(); playerCommand("rate",settings.stream.rate); });
   on("playerQuality","change",e=>setPlayerQuality(e.target.value));
+  /* The two "Servers" and two "More" doors exist because the same job has to be
+     reachable from whichever row the viewer is on. Both call the same handler. */
+  const openServers=()=>{ const b=document.getElementById("btnPlayerServers"); if(b) b.click(); };
+  on("btnPlayerServersAlt","click",openServers);
+  on("btnPlayerMore","click",()=>togglePlayerMore());
+  on("btnPlayerMoreAlt","click",()=>togglePlayerMore());
+  on("btnClosePlayerMore","click",()=>togglePlayerMore(false));
   const overlay=document.getElementById("playerOverlay");
   if(overlay){
     overlay.addEventListener("mousemove",()=>showPlayerChrome(false));
@@ -6085,6 +6376,36 @@ function bindPlayerChrome(){
   }
   setPlayerControlMode(st.engine||"loading");
   if(ANDROID_TV_APP||document.body.classList.contains("tv-mode")){ const first=document.getElementById("btnPlayerServers")||document.getElementById("btnClosePlayer"); if(first) setTimeout(()=>first.focus({preventScroll:true}),40); }
+}
+/* The More sheet is a real focus scope: opening it moves the D-pad into it and
+   closing it returns focus to the control that opened it. */
+function togglePlayerMore(force){
+  const sheet=document.getElementById("playerMoreSheet"); if(!sheet) return false;
+  const open=force==null?sheet.hidden:!!force;
+  sheet.hidden=!open;
+  const opener=open?document.activeElement:null;
+  ["btnPlayerMore","btnPlayerMoreAlt"].forEach(id=>{
+    const b=document.getElementById(id); if(b) b.setAttribute("aria-expanded",open?"true":"false");
+  });
+  const overlay=document.getElementById("playerOverlay");
+  if(overlay){
+    overlay.classList.toggle("player-tools-awake",open);
+    overlay.classList.toggle("player-more-open",open);
+    if(open) overlay.setAttribute("data-tv-scope","player-more"); else overlay.removeAttribute("data-tv-scope");
+  }
+  if(open){
+    showPlayerChrome(false);
+    const first=sheet.querySelector("select,button:not([hidden]),input[type='range']");
+    if(first) setTimeout(()=>tvFocusAndReveal(first),30);
+  }else if(opener&&opener.isConnected){ opener.focus({preventScroll:true}); }
+  return open;
+}
+/* Called whenever the playing stream changes so "Source 2 of 5" stays truthful. */
+function updatePlayerQueueLine(){
+  const line=document.getElementById("playerQueueLine"); if(!line||!playerState) return;
+  const queue=directQueueStatus(playerState);
+  if(!queue){ line.textContent=""; return; }
+  line.textContent="Source "+queue.index+" of "+queue.total+(queue.remaining?" · "+queue.remaining+" more queued":" · last source");
 }
 function playerContext(st){
   st=st||playerState;
@@ -6103,7 +6424,11 @@ function updatePlayerMeta(source){
   if(st.playback&&st.playback.buffered) parts.push("Buffer "+Math.round(st.playback.buffered)+"s");
   m.innerHTML=parts.join(" · ");
   const line=document.getElementById("playerSourceLine");
-  if(line) line.textContent=(st.item&&st.item.type==="tv"?"Season "+st.season+" · Episode "+st.episode+" · ":"")+(src?src.name:"ZeroPlay player");
+  if(line){
+    const queue=directQueueStatus(st);
+    line.textContent=(st.item&&st.item.type==="tv"?"Season "+st.season+" · Episode "+st.episode+" · ":"")+(src?src.name:"ZeroPlay player")+(queue&&queue.total>1?" · source "+queue.index+" of "+queue.total:"");
+  }
+  updatePlayerQueueLine();
   const servers=document.getElementById("btnPlayerServers");
   if(servers) servers.textContent=st.availableServers&&st.availableServers.length?("Servers · "+st.availableServers.length):"Servers";
   updateFastBadge();
@@ -7798,7 +8123,7 @@ function settingsHubHTML(){
   const ramText=ANDROID_TV_TOTAL_RAM_MB?(" · "+(ANDROID_TV_TOTAL_RAM_MB>=1024?(ANDROID_TV_TOTAL_RAM_MB/1024).toFixed(1).replace(/\.0$/,"")+" GB":ANDROID_TV_TOTAL_RAM_MB+" MB")+" RAM"):"";
   const deviceText=ANDROID_TV_APP?"This TV is ready for remote control.":"Open ZeroPlay in the Android TV app for remote-first browsing.";
   const deviceDetails=ANDROID_TV_APP?([profile.manufacturer,profile.model||profile.device].filter(Boolean).join(" ")+" · Android "+(profile.androidRelease||"TV")+" · "+abiText+ramText):"";
-  return '<section class="panel" id="settingsHub"><div class="panel-head"><div><h2>Everyday settings</h2><p class="section-desc">The few choices most people use. Changes save immediately.</p></div><button class="btn btn-secondary" type="button" data-settings-section="add-website">Add a website</button></div>'
+  return '<section class="panel" id="settingsHub" data-panel-group="everyday"><div class="panel-head"><div><h2>Everyday settings</h2><p class="section-desc">The few choices most people use. Changes save immediately.</p></div><button class="btn btn-secondary" type="button" data-settings-section="add-website">Add a website</button></div>'
     +'<div class="settings-hub-grid">'
     +'<div><h3>Watching</h3>'
     +featureSwitchHTML("trailers","Trailer previews","Play a short preview when a title is focused.","hub")
@@ -7880,12 +8205,37 @@ function clearPlaybackCaches(){
   try{ clearPreload(); }catch{}
   toast("Playback health and server caches cleared","success"); renderSources(true);
 }
-function applyTvSourcesLayout(settingsPage,sectionTarget){
-  if(!ANDROID_TV_APP||!view) return;
+/* Settings sections are never removed from the page: the strip activates one
+   section and collapses the rest, so nothing is unreachable with a remote.
+   State lives in sourcesRenderMode so a re-render keeps the viewer's place. */
+const SETTINGS_PANEL_GROUPS=["everyday","playback","sources","addons","downloads","data"];
+const SETTINGS_SECTION_TARGETS={"add-website":"sources",continuous:"sources",faststream:"playback",sources:"sources",switches:"everyday",androidtv:"everyday",artwork:"everyday",addons:"addons",downloads:"downloads"};
+function settingsGroupOf(sectionTarget){
+  return SETTINGS_SECTION_TARGETS[String(sectionTarget||"")]||"everyday";
+}
+function applySettingsSections(settingsPage,sectionTarget){
+  if(!view) return;
   const page=view.querySelector(".page"); if(!page) return;
-  const targetBySection={"add-website":"settingsAddWebsite",continuous:"discoveryPanel",faststream:"settingsFastStream",sources:"settingsPlaybackSources",switches:"settingsHub",androidtv:"settingsHub",artwork:"settingsHub"};
-  const wanted=settingsPage?["sourceStatePanel",targetBySection[sectionTarget]||"settingsHub"]:["sourceStatePanel","settingsAddWebsite","settingsPlaybackSources"];
-  page.querySelectorAll(":scope > .panel").forEach(panel=>{ panel.hidden=!wanted.includes(panel.id); });
+  const panels=Array.prototype.slice.call(page.querySelectorAll(":scope > .panel[data-panel-group]"));
+  if(!settingsPage){ panels.forEach(panel=>{ panel.hidden=false; panel.classList.remove("is-collapsed"); }); return; }
+  const active=sourcesRenderMode.group||settingsGroupOf(sectionTarget);
+  sourcesRenderMode.group=active;
+  panels.forEach(panel=>{
+    const group=panel.getAttribute("data-panel-group");
+    panel.hidden=false;
+    panel.classList.toggle("is-collapsed",group!==active);
+  });
+  /* Keep the strip in step with the active section and hide tabs whose
+     section is not present in this build. */
+  const present=new Set(panels.map(panel=>panel.getAttribute("data-panel-group")));
+  page.querySelectorAll("[data-panel-tab]").forEach(tab=>{
+    const group=tab.getAttribute("data-panel-tab");
+    tab.classList.toggle("is-active",group===active);
+    tab.setAttribute("aria-current",group===active?"true":"false");
+    tab.classList.toggle("is-hidden-target",!present.has(group));
+  });
+  const activePanel=panels.find(panel=>panel.getAttribute("data-panel-group")===active);
+  if(activePanel) activePanel.classList.remove("is-collapsed");
 }
 function renderSources(soft,opts){
   if(opts&&typeof opts==="object") sourcesRenderMode={settingsPage:!!opts.settingsPage,section:String(opts.section||"")};
@@ -7910,11 +8260,12 @@ function renderSources(soft,opts){
       +"</div></div>";
   }).join("");
   const logs=(settings.dlog||[]).map(e=>'<li><span>'+new Date(e.t).toLocaleTimeString()+"</span>"+esc(e.msg)+"</li>").join("");
-  view.innerHTML='<div class="page"><h1>'+(settingsPage?"Settings":"Sources")+'</h1><p class="lede">'+(settingsPage?"Choose how ZeroPlay looks, plays and downloads. Most people never need Advanced.":"Sources are ready automatically. Add a website only if you want ZeroPlay to check it too.")+'</p>'
+  view.innerHTML='<div class="page'+(settingsPage?" has-panel-tabs":"")+'"><h1>'+(settingsPage?"Settings":"Sources")+'</h1><p class="lede">'+(settingsPage?"Choose how ZeroPlay looks, plays and downloads. Most people never need Advanced.":"Sources are ready automatically. Add a website only if you want ZeroPlay to check it too.")+'</p>'
+  +(settingsPage?'<div class="panel-tab-bar"><nav class="panel-tabs" aria-label="Settings sections" data-tv-row="settings-tabs"><button class="panel-tab" type="button" data-panel-tab="everyday">Everyday</button><button class="panel-tab" type="button" data-panel-tab="playback">Playback</button><button class="panel-tab" type="button" data-panel-tab="sources">Sources</button><button class="panel-tab" type="button" data-panel-tab="addons">Add-ons</button><button class="panel-tab" type="button" data-panel-tab="downloads">Downloads</button><button class="panel-tab" type="button" data-panel-tab="data">Data & about</button></nav></div>':"")
   +sourceStatusPanelHTML()
   +(settingsPage?settingsHubHTML():"")
 
-  +addonPanelHTML()+'<section class="panel" id="settingsAddWebsite"><h2>Add a website</h2><p class="section-desc">Paste a website. When you press Watch, ZeroPlay checks whether that exact movie or episode is there. It does not copy titles or posters from the site.</p>'
+  +addonPanelHTML()+'<section class="panel" id="settingsAddWebsite" data-panel-group="sources"><h2>Add a website</h2><p class="section-desc">Paste a website. When you press Watch, ZeroPlay checks whether that exact movie or episode is there. It does not copy titles or posters from the site.</p>'
   +'<div class="form-group"><label for="pasteLink">Paste website link</label><div class="input-with-action"><input type="text" id="pasteLink" placeholder="https://example.com or https://example.com/watch/tt1375666/1/2"><button class="btn btn-secondary" id="btnDetect" type="button">Detect</button></div><div id="detectNote" class="status-box hidden"></div></div>'
   +'<div class="form-row"><div class="form-group"><label for="srcName">Source name</label><input type="text" id="srcName" placeholder="My Site"></div>'
   +'<div class="form-group"><label for="srcKind">Source type</label><select id="srcKind"><option value="embed">Website embed (iframe)</option><option value="direct">Direct media files (.mp4/.m3u8…)</option></select></div></div>'
@@ -7922,12 +8273,12 @@ function renderSources(soft,opts){
   +'<div class="form-group"><label for="srcTv">TV episode URL template (advanced, optional)</label><input type="text" id="srcTv" placeholder="https://example.com/embed/tv/{tmdb}/{season}/{episode}"></div>'
   +'<div style="display:flex;gap:.6rem;flex-wrap:wrap"><button class="btn btn-primary" id="btnAddWebsite" type="button">Add website lookup</button><button class="btn btn-secondary" id="btnAddSource" type="button">Add template source</button><button class="btn btn-outline" id="btnTestNew" type="button">▶ Test template with Inception</button></div></section>'
 
-  +'<section class="panel" id="settingsPlayLink"><h2>Play a link now</h2><p class="section-desc">One-off playback: a direct .mp4/.m3u8 link opens in the built-in player (size-checked against the '+capGb()+' GB cap); any other link opens as a website embed. Some sites block embedding; ZeroPlay distinguishes a loaded page from confirmed playback and will explain if no progress arrives.</p>'
+  +'<section class="panel" id="settingsPlayLink" data-panel-group="sources"><h2>Play a link now</h2><p class="section-desc">One-off playback: a direct .mp4/.m3u8 link opens in the built-in player (size-checked against the '+capGb()+' GB cap); any other link opens as a website embed. Some sites block embedding; ZeroPlay distinguishes a loaded page from confirmed playback and will explain if no progress arrives.</p>'
   +'<div class="input-with-action"><input type="text" id="playLink" placeholder="Paste any video or website URL…"><button class="btn btn-primary" id="btnPlayLink" type="button">▶ Play link</button></div></section>'
 
-  +'<section class="panel" id="settingsPlaybackSources"><h2>Watch from</h2><p class="section-desc">Choose the places ZeroPlay can use. More are found automatically in the background.</p><div id="srcList">'+(rows||'<div class="empty"><h3>No sources</h3><p>Add a website above.</p></div>')+"</div></section>"
+  +'<section class="panel" id="settingsPlaybackSources" data-panel-group="sources"><h2>Watch from</h2><p class="section-desc">Choose the places ZeroPlay can use. More are found automatically in the background.</p><div id="srcList">'+(rows||'<div class="empty"><h3>No sources</h3><p>Add a website above.</p></div>')+"</div></section>"
 
-  +'<section class="panel" id="settingsFastStream"><h2>Advanced playback</h2><p class="section-desc">Fine-tune how playback starts and switches. Most people can leave this on Auto.</p>'
+  +'<section class="panel" id="settingsFastStream" data-panel-group="playback"><h2>Advanced playback</h2><p class="section-desc">Fine-tune how playback starts and switches. Most people can leave this on Auto.</p>'
   +'<div class="stat-grid"><div class="stat"><div class="k">Connection</div><div class="v">'+esc(ci.type)+'</div></div><div class="stat"><div class="k">Est. downlink</div><div class="v">'+(ci.downlink?ci.downlink+" Mbps":"unknown")+'</div></div><div class="stat"><div class="k">Round-trip</div><div class="v">'+(ci.rtt?ci.rtt+" ms":"unknown")+'</div></div><div class="stat"><div class="k">Data saver (effective)</div><div class="v">'+(effectiveSaver()?"ON":"OFF")+'</div></div><div class="stat"><div class="k">Enabled sources</div><div class="v">'+allSources().length+'</div></div><div class="stat"><div class="k">File-size cap</div><div class="v">'+capGb()+' GB max</div></div></div>'
   +'<div class="form-row"><div class="form-group"><label for="optPlayer">Direct-stream player</label><select id="optPlayer"><option value="faststream-only"'+(st.player==="faststream-only"?" selected":"")+'>FastStream — default for every direct server</option><option value="auto"'+(st.player==="auto"?" selected":"")+'>Automatic fallback — FastStream first</option><option value="builtin"'+(st.player==="builtin"?" selected":"")+'>ZeroPlay responsive player</option></select><small class="help-text">Verified streams from selected and discovered servers enter FastStream first. ZeroPlay remains available as an explicit fallback.</small></div>'+'<div class="form-row"><div class="form-group"><label for="optPreload">FastStream preload</label><select id="optPreload"><option value="off"'+(st.preload==="off"?" selected":"")+'>Off</option><option value="smart"'+(st.preload==="smart"?" selected":"")+'>Smart — recommended</option><option value="aggressive"'+(st.preload==="aggressive"?" selected":"")+'>Aggressive — also pre-loads the embed player in the background</option></select><small class="help-text">Aggressive may start a provider player early in a hidden frame; if you ever hear background audio, switch back to Smart.</small></div>'
   +'<div class="form-group"><label for="optQuality">Preferred quality (stability first)</label><select id="optQuality">'+[["auto","Auto — best available"],["2160p","4K UHD 2160p"],["1080p","Full HD 1080p"],["720p","HD 720p — most stable on slow links"],["480p","SD 480p — minimum buffering"]].map(([v,t])=>'<option value="'+v+'"'+(st.quality===v?" selected":"")+">"+t+"</option>").join("")+"</select><small class='help-text'>Used for direct-stream ranking and warm-up size. Embed players choose their own internal quality.</small></div></div>"
@@ -8044,7 +8395,7 @@ function renderSources(soft,opts){
   wireAddonPanel();
   syncFeatureToggles(view);
   refreshSourceStatePanel();
-  applyTvSourcesLayout(settingsPage,sectionTarget);
+  applySettingsSections(settingsPage,sectionTarget);
   if(!soft){
     const targets={"add-website":"settingsAddWebsite",continuous:"discoveryPanel",faststream:"settingsFastStream",sources:"settingsPlaybackSources",switches:"settingsHub",androidtv:"settingsAndroidTv",artwork:"settingsArtwork"};
     const target=targets[sectionTarget]&&document.getElementById(targets[sectionTarget]);
@@ -9432,7 +9783,8 @@ function closeStreams(){
   if(!playerState&&!detailState) document.body.classList.remove("locked");
   if(document.body.classList.contains("tv-mode")) setTimeout(()=>{ const target=document.getElementById("btnPlayerServers")||document.getElementById("btnStreams"); if(target) target.focus({preventScroll:true}); },30);
 }
-function serverOptionHTML(option){
+function serverOptionHTML(option,opts){
+  opts=opts||{};
   const variants=sortVariantsForQuality(option.variants||[],settings.stream.quality);
   const qualityChoices=variantQualityOptions(variants);
   const best=variants[0]||option.activeVariant||null;
@@ -9440,10 +9792,17 @@ function serverOptionHTML(option){
   const badge=verified?'<span class="chip rd">Has this title'+(option.identityScore?(" · "+Math.round(option.identityScore)+"%"):"")+'</span> ':(option.kind==="route"?'<span class="chip violet">Exact ID route</span> ':'<span class="chip">Direct route</span> ');
   const qualitySelect=variants.length?'<select class="server-quality-select" data-server-quality="'+esc(option.id)+'" aria-label="Quality for '+esc(option.name)+'"><option value="auto">Auto quality</option>'+qualityChoices.map(q=>'<option value="'+esc(q.value)+'"'+(settings.stream.quality===q.value?" selected":"")+">"+esc(q.label)+"</option>").join("")+"</select>":"";
   const variantMeta=variants.length?'<div class="variant-chips">'+qualityChoices.slice(0,5).map(q=>'<span>'+esc(q.label)+'</span>').join("")+(best&&best.bytes?'<span>'+fmtBytes(best.bytes)+'</span>':"")+(best&&best.seeders!=null?'<span>👤 '+best.seeders+'</span>':"")+(best&&best.notWebReady?'<span>may not play in browser</span>':"")+"</div>":"";
-  return '<div class="src-row server-option"><div class="grow"><span class="nm">'+esc(option.name)+'</span> '+badge+(option.sourceId==="embedwave"?'<span class="chip">LAST RESORT</span> ':"")+(option.sourceId?healthBadge(option.sourceId):"")
+  return '<div class="src-row server-option'+(opts.autoplay?' is-autoplay':'')+'" data-kind="'+esc(option.kind||"direct")+'">'
+    +'<div class="server-rank">'+(opts.rank||"")+'</div><div class="grow"><span class="nm">'+esc(option.name)+'</span> '+streamProviderChip(option)+' '+badge+(option.sourceId==="embedwave"?'<span class="chip">LAST RESORT</span> ':"")+(option.sourceId?healthBadge(option.sourceId):"")
     +'<code>'+esc(best?(best.label+(best.sub?(" — "+best.sub):"")):(option.evidence||""))+'</code>'+variantMeta
     +(option.evidence&&best?'<div class="help-text">'+esc(option.evidence)+'</div>':"")
     +'</div><div class="src-actions">'+qualitySelect+'<button class="btn btn-primary btn-xs" data-server-option="'+esc(option.id)+'">▶ Play</button>'+(downloadsEnabled()&&option.kind==="direct"&&variants.some(v=>directMediaKind(v.url)!=="dash")?'<button class="btn btn-secondary btn-xs" type="button" data-server-download="'+esc(option.id)+'">⬇ Download</button>':"")+'</div></div>';
+}
+function streamFilterLabel(kind){
+  return kind==="all"?"All servers":kind==="direct"?"Direct":kind==="site"?"Websites":kind==="route"?"Exact-ID players":"Servers";
+}
+function streamProviderChip(option){
+  return '<span class="stream-chip kind-'+esc(option.kind||"direct")+'">'+esc(streamFilterLabel(option.kind))+'</span>';
 }
 function renderTitleServerOptions(){
   const c=streamsCtx; if(!c) return;
@@ -9454,19 +9813,35 @@ function renderTitleServerOptions(){
   const routes=options.filter(o=>o.kind==="route");
   const searching=!c._searchDone;
   const empty=(title,body)=>searching?'<div class="server-skeleton"><span class="spinner"></span> Checking servers for this exact title…</div>':'<div class="empty"><h3>'+esc(title)+'</h3><p>'+esc(body)+'</p></div>';
-  const directBox=document.getElementById("serverDirect");
-  if(directBox) directBox.innerHTML=direct.length?direct.map(serverOptionHTML).join(""):empty("No direct file yet","ZeroPlay is still looking for this exact title.");
-  const siteBox=document.getElementById("serverWebsites");
-  if(siteBox) siteBox.innerHTML=sites.length?sites.map(serverOptionHTML).join(""):empty("No website match yet","Added websites are listed only when they return and identity-verify this exact title.");
-  const routeBox=document.getElementById("serverRoutes");
-  if(routeBox) routeBox.innerHTML=routes.length?routes.map(serverOptionHTML).join(""):empty("No exact-ID player route","No enabled player template can address this title ID.");
+  /* One unified list. Provider kind becomes a chip + a filter, never a section:
+     a viewer choosing something to watch should not have to learn our taxonomy,
+     which is the arrangement Nuvio and ARVIO converge on. */
+  const filter=streamsCtx.filter||"all";
+  const visible=filter==="all"?options:options.filter(o=>o.kind===filter);
+  const listBox=document.getElementById("serverList");
+  if(listBox){
+    listBox.innerHTML=visible.length
+      ? visible.map((o,i)=>serverOptionHTML(o,{rank:i+1,autoplay:!!(streamsCtx.autoplayId&&streamsCtx.autoplayId===o.id)})).join("")
+      : empty(filter==="all"?"No server has this title yet":"No "+streamFilterLabel(filter)+" results","ZeroPlay is still looking for this exact title. Add a source in Settings → Sources to widen the search.");
+  }
+  document.querySelectorAll("[data-stream-filter]").forEach(chip=>{
+    chip.classList.toggle("is-active",chip.getAttribute("data-stream-filter")===filter);
+    const kind=chip.getAttribute("data-stream-filter");
+    const n=kind==="all"?options.length:options.filter(o=>o.kind===kind).length;
+    chip.textContent=streamFilterLabel(kind)+(n?" · "+n:"");
+    chip.disabled=!n&&kind!=="all";
+  });
   const race=document.getElementById("btnRace"); if(race) race.disabled=!direct.length;
   const status=document.getElementById("serverSearchStatus");
   if(status){
     const stats=c._stats||{};
+    /* Progressive, honest reporting: ARVIO ships completedAddons/totalAddons for
+       exactly this, so the viewer sees the list growing instead of a dead spinner. */
+    const answered=stats.queriedProviders||0;
+    const total=stats.totalProviders||enabledAddons().length;
     status.innerHTML=searching
-      ? '<span class="spinner"></span> Searching only for <strong>'+esc(c.title||"this title")+'</strong>'+(stats.queriedProviders?(' · checked '+stats.queriedProviders+'/'+(stats.totalProviders|| enabledAddons().length)+' direct providers'):"")+' · servers appear only after a match'
-      : '<strong>'+(direct.length+sites.length)+'</strong> verified server option'+((direct.length+sites.length)===1?"":"s")+' · <strong>'+routes.length+'</strong> exact-ID player route'+(routes.length===1?"":"s")+' · unrelated servers hidden';
+      ? '<span class="spinner"></span> Searching only for <strong>'+esc(c.title||"this title")+'</strong> · <strong>'+options.length+'</strong> server'+(options.length===1?"":"s")+' answered'+(total?(' · '+answered+' of '+total+' checked'):"")
+      : '<strong>'+(direct.length+sites.length)+'</strong> verified of <strong>'+options.length+'</strong> server'+(options.length===1?"":"s")+' · <strong>'+routes.length+'</strong> exact-ID route'+(routes.length===1?"":"s")+' · unrelated servers hidden';
   }
   const cnt=document.getElementById("streamCounts");
   if(cnt&&c._stats){
@@ -9496,14 +9871,16 @@ async function showStreamsModal(ctx){
     +'<p class="section-desc" style="margin-bottom:0">ZeroPlay checks the canonical TMDB/IMDb identity, year, title variants and episode. Direct and website servers appear only when they return this exact work.</p></div></div>'
     +'<div class="status-box info" id="serverSearchStatus"><span class="spinner"></span> Searching for this exact title…</div>'
     +'<div class="streams-toolbar"><div class="form-group"><label for="streamQuality">Preferred quality</label><select id="streamQuality">'+[["auto","Auto — best stable"],["2160p","4K 2160p"],["1080p","1080p"],["720p","720p"],["480p","480p"]].map(([v,t])=>'<option value="'+v+'"'+(settings.stream.quality===v?' selected':'')+'>'+t+'</option>').join("")+'</select></div><button class="btn btn-primary" id="btnRace" disabled>Race verified streams</button><button class="btn btn-secondary" id="btnRefreshServers">Search again</button><span id="raceStatus" class="help-text" style="display:inline"></span></div>'
-    +'<h3 class="category-heading">Verified direct servers</h3><div id="serverDirect"></div>'
-    +'<h3 class="category-heading">Verified website servers</h3><div id="serverWebsites"></div>'
-    +'<h3 class="category-heading">Exact-ID players</h3><p class="help-text">These players can address this exact catalogue ID. Cross-origin players cannot prove their library before loading, so ZeroPlay does not falsely label them “verified”. Embedwave remains last.</p><div id="serverRoutes"></div>'
+    +'<div class="stream-filters" role="tablist" aria-label="Filter servers">'+["all","direct","site","route"].map(k=>'<button class="stream-chip kind-'+k+'" type="button" role="tab" data-stream-filter="'+k+'">'+streamFilterLabel(k)+'</button>').join("")+'</div>'
+    +'<div id="serverList" class="server-list" role="list"></div>'
+    +'<p class="help-text">Exact-ID players can address this catalogue ID but cannot prove their library before loading, so ZeroPlay does not label them verified. Embedwave always ranks last.</p>'
     +'<div id="streamCounts" class="help-text"></div></div></div></div>';
   renderTitleServerOptions();
   $("#btnCloseStreams").onclick=closeStreams;
   $("#streamsOverlay").addEventListener("click",async e=>{
     if(e.target.id==="streamsOverlay"){ closeStreams(); return; }
+    const filterChip=e.target.closest&&e.target.closest("[data-stream-filter]");
+    if(filterChip){ if(!streamsCtx||streamsCtx._token!==token) return; streamsCtx.filter=filterChip.dataset.streamFilter||"all"; renderTitleServerOptions(); return; }
     const downloadBtn=e.target.closest&&e.target.closest("[data-server-download]");
     if(downloadBtn&&streamsCtx&&streamsCtx._token===token){
       const option=(streamsCtx._options||[]).find(o=>o.id===downloadBtn.dataset.serverDownload); if(!option) return;
@@ -9646,7 +10023,7 @@ function addonPanelHTML(){
   const logs=(settings.dlog||[]).slice(0,30).map(e=>'<li><span>'+new Date(e.t).toLocaleTimeString()+"</span>"+esc(e.msg)+"</li>").join("");
   const categoryButtons=[["all","All"]].concat(PROVIDER_CATEGORIES).map(([id,label])=>'<button class="chip-btn'+(providerUi.category===id?" active":"")+'" type="button" data-provider-category="'+id+'">'+esc(label)+(id==="all"?"":" · "+(counts[id]||0))+"</button>").join("");
   const seeds=(cfg.seeds||[]).map((s,i)=>'<div class="src-row seed-row"><div class="grow"><span class="nm">'+esc(s.name||s.kind||"Seed")+'</span><code>'+esc(s.url)+(s.lastError?(" · "+s.lastError):"")+'</code></div><div class="src-actions"><button class="btn btn-danger btn-xs" type="button" data-seed-remove="'+i+'">Remove seed</button></div></div>').join("");
-  return '<section class="panel" id="discoveryPanel">'
+  return '<section class="panel" id="discoveryPanel" data-panel-group="sources">'
     +'<div class="panel-head"><div><h2>Advanced sources</h2><p class="section-desc">ZeroPlay looks for more places to watch in the background. You do not need to manage this to start watching.</p></div>'
     +'<button class="btn '+(discoveryRuntime.running?"btn-secondary":"btn-primary")+'" id="btnDiscoveryToggle" type="button">'+(discoveryRuntime.running?"Automatic search: On":"Automatic search: Off")+'</button></div>'
     +'<div class="discovery-status" id="discoveryStatus" aria-live="polite">'+esc(discoveryStatusText())+'</div>'
@@ -9826,9 +10203,25 @@ document.addEventListener("click",e=>{
   if(cat){ e.preventDefault(); navigateCategory(cat.dataset.categoryType,cat.dataset.categoryId); return; }
   const settingsBtn=e.target.closest&&e.target.closest("[data-settings-section]");
   if(settingsBtn){ e.preventDefault(); closeMenuDrawer(); const target="#/settings?section="+encodeURIComponent(settingsBtn.dataset.settingsSection||""); if(location.hash===target) render(); else location.hash=target; return; }
+  const panelTab=e.target.closest&&e.target.closest("[data-panel-tab]");
+  if(panelTab){ e.preventDefault(); activateSettingsGroup(panelTab.dataset.panelTab); return; }
   const routeBtn=e.target.closest&&e.target.closest("[data-menu-route]");
   if(routeBtn){ e.preventDefault(); goRoute(routeBtn.dataset.menuRoute); }
 });
+/* Activating a settings section keeps the current page, collapses the other
+   sections and lands the viewer on the first control of the chosen one. */
+function activateSettingsGroup(group){
+  if(!group) return false;
+  sourcesRenderMode.group=group;
+  applySettingsSections(true,"");
+  const active=view.querySelector('.page > .panel[data-panel-group="'+group+'"]');
+  if(!active) return false;
+  active.classList.remove("is-collapsed");
+  const first=active.querySelector("[data-switch-label],button:not([disabled]),input:not([type='hidden']),select,textarea");
+  if(first) tvFocusAndReveal(first);
+  else active.scrollIntoView({block:"start",behavior:tvPerformanceEnabled()?"auto":"smooth"});
+  return true;
+}
 $("#topSearch").addEventListener("submit",e=>{ e.preventDefault(); const q=$("#topQuery").value.trim(); const target="#/search?q="+encodeURIComponent(q); if(location.hash===target) render(); else location.hash=target; });
 $("#demoBannerBtn").onclick=()=>{ location.hash="#/sources"; };
 /* =====================================================================
@@ -9887,13 +10280,7 @@ function tvFocusSelectorFor(target){
   return "";
 }
 
-/* ---- 2 & 3. Row membership and reachable controls ------------------- */
-/* A "row" is any horizontal group: a poster rail, the category rail, the
-   top-bar nav, the sidebar, a row of hero buttons or filter chips. */
-function tvRowOf(node){
-  if(!node||!node.closest) return node&&node.parentElement?node.parentElement:null;
-  return node.closest(".rail-track,.category-strip,.hero-actions,.zp-rail-nav,.topbar-inner .nav,.chip-row,.episode-row")||node.parentElement;
-}
+/* ---- 3. Reachable controls ------------------------------------------ */
 function tvScopeRoot(){
   for(const scope of TV_FOCUS_SCOPES){ const root=scope(); if(root) return root; }
   return document;
@@ -9910,6 +10297,14 @@ function tvIsFocusable(node){
      D-pad presses. Hidden means opacity 0 or a 0-width ancestor. */
   if(style&&Number(style.opacity)===0) return false;
   if(node.closest&&node.closest("[hidden],[aria-hidden='true']")) return false;
+  /* An ancestor faded to zero (the parked player chrome, the collapsed More
+     sheet) must not stay in the arrow path: otherwise a press lands on an
+     invisible control and the viewer sees the D-pad do nothing. */
+  for(let up=node.parentElement;up&&up!==document.body;up=up.parentElement){
+    const upStyle=window.getComputedStyle?getComputedStyle(up):null;
+    if(upStyle&&(upStyle.visibility==="hidden"||upStyle.display==="none"||Number(upStyle.opacity)===0)) return false;
+    if(up.hasAttribute&&(up.hasAttribute("hidden")||up.getAttribute("aria-hidden")==="true")) return false;
+  }
   const rect=node.getBoundingClientRect();
   if(!(rect.width>2&&rect.height>2)) return false;
   if(rect.bottom<=0||rect.right<=0) return false;
@@ -9974,22 +10369,38 @@ function tvRestoreReturnFocus(){
 }
 
 /* ---- 1 & 2. Spatial movement --------------------------------------- */
-/* Direction scoring follows Stremio's `useContentGamepadNavigation`:
-   distance = primary + secondary * 3, so a control in the same row always
-   beats a diagonal neighbour. Unlike Stremio we keep Left/Right inside the
-   row, because a poster rail is a shelf, and wrap Down to the nearest item
-   below instead of falling into whatever is leftmost. */
+/* Rows are detected from geometry, not from DOM parents: settings columns,
+   form rows, chip strips and episode lists are all horizontal groups that
+   live in different containers. Two controls share a row when their vertical
+   centres are within half a card of each other, which is how a couch viewer
+   reads the screen. An explicit `data-tv-row` still wins when a renderer
+   knows better (see tvRowKey). */
+function tvRowKey(node){
+  if(!node) return "";
+  const explicit=node.closest&&node.closest("[data-tv-row]");
+  if(explicit) return explicit.getAttribute("data-tv-row")||"row";
+  return "";
+}
+function tvRowBand(rect){
+  return {centre:rect.top+rect.height/2,height:rect.height};
+}
+function tvSameRow(a,b){
+  const ra=a.getBoundingClientRect(), rb=b.getBoundingClientRect();
+  const bandA=tvRowBand(ra), bandB=tvRowBand(rb);
+  const tolerance=Math.max(18,Math.min(bandA.height,bandB.height)*0.55);
+  return Math.abs(bandA.centre-bandB.centre)<=tolerance;
+}
 function tvEdgeTolerance(){
   try{ return Math.max(8,Math.round(window.innerHeight*0.022)); }catch{ return 16; }
 }
 function tvNearestBelow(current,list){
   const cr=current.getBoundingClientRect(), cx=cr.left+cr.width/2;
-  const currentRow=tvRowOf(current);
+  const key=tvRowKey(current);
   let best=null,bestScore=Infinity;
   for(const node of list){
     if(node===current||(current.contains&&current.contains(node))) continue;
-    const row=tvRowOf(node);
-    if(row===currentRow) continue;
+    if(tvSameRow(current,node)) continue;
+    if(key&&tvRowKey(node)===key) continue;
     const r=node.getBoundingClientRect();
     if(r.top<cr.bottom-4) continue;
     const dx=Math.abs(r.left+r.width/2-cx);
@@ -9999,10 +10410,54 @@ function tvNearestBelow(current,list){
   }
   return best;
 }
+function tvNearestAbove(current,list){
+  const cr=current.getBoundingClientRect(), cx=cr.left+cr.width/2;
+  const key=tvRowKey(current);
+  let best=null,bestScore=Infinity;
+  for(const node of list){
+    if(node===current||(current.contains&&current.contains(node))) continue;
+    if(tvSameRow(current,node)) continue;
+    if(key&&tvRowKey(node)===key) continue;
+    const r=node.getBoundingClientRect();
+    if(r.bottom>cr.top+4) continue;
+    const dx=Math.abs(r.left+r.width/2-cx);
+    const dy=cr.top-r.bottom;
+    const score=dy+dx*2.4;
+    if(score<bestScore){ bestScore=score; best=node; }
+  }
+  return best;
+}
 function tvHeaderTargets(list){
   return list.filter(function(node){
     return node.closest&&(node.closest(".topbar")||node.closest(".zp-sidebar"));
   });
+}
+/* On a TV, Enter/Space on a <select> or range input did nothing because the
+   browser's native popup never opens without a mouse. This is the single most
+   common "dead button" on a remote: gate it and send the key where it belongs. */
+function tvActivateTarget(target){
+  if(!target||!target.tagName) return false;
+  const tag=target.tagName;
+  if(tag==="SELECT"){
+    const options=Array.prototype.slice.call(target.options||[]);
+    if(options.length<2) return false;
+    const current=target.selectedIndex<0?0:target.selectedIndex;
+    const next=(current+(target.dataset.tvDir==="-1"?-1:1)+options.length)%options.length;
+    target.selectedIndex=next;
+    target.dispatchEvent(new Event("change",{bubbles:true}));
+    return true;
+  }
+  if(tag==="INPUT"&&(target.type==="range")){
+    const step=Number(target.step)||1;
+    const dir=Number(target.dataset.tvDir)||1;
+    const max=Number(target.max), min=Number(target.min)||0;
+    const value=Math.min(max,Math.max(min,Number(target.value)+step*dir*5));
+    target.value=value;
+    target.dispatchEvent(new Event("input",{bubbles:true}));
+    target.dispatchEvent(new Event("change",{bubbles:true}));
+    return true;
+  }
+  return false;
 }
 function moveTvFocus(direction){
   const scopeRoot=tvScopeRoot();
@@ -10024,19 +10479,12 @@ function moveTvFocus(direction){
     return true;
   }
   const cr=current.getBoundingClientRect(), cx=cr.left+cr.width/2, cy=cr.top+cr.height/2;
-  const currentRow=tvRowOf(current);
   const inHeader=!!(current.closest&&(current.closest(".topbar")||current.closest(".zp-sidebar")));
-  /* 2. Up from the first content row hands the D-pad back to the header. */
-  if(direction==="up"&&!inHeader&&!document.activeElement.closest(".hero-actions")){
+  /* Up from the first content block hands the D-pad back to the header. */
+  if(direction==="up"&&!inHeader){
     const header=tvHeaderTargets(list);
     if(header.length){
-      let above=null,aboveScore=Infinity;
-      for(const node of header){
-        const r=node.getBoundingClientRect();
-        if(r.bottom>cr.top+4) continue;
-        const score=(cr.top-r.bottom)+Math.abs(r.left+r.width/2-cx)*2.4;
-        if(score<aboveScore){ aboveScore=score; above=node; }
-      }
+      const above=tvNearestAbove(current,header);
       if(above){ tvFocusAndReveal(above); return true; }
     }
   }
@@ -10045,9 +10493,11 @@ function moveTvFocus(direction){
   for(const node of list){
     if(node===current) continue;
     if(current.classList&&(current.classList.contains("poster-card")||current.classList.contains("continue-card"))&&current.contains(node)) continue;
-    const nodeRow=tvRowOf(node);
+    const sameRow=tvSameRow(current,node);
     /* 1. Left/Right is owned by the row the viewer started in. */
-    if((direction==="left"||direction==="right")&&currentRow&&nodeRow!==currentRow) continue;
+    if((direction==="left"||direction==="right")&&!sameRow) continue;
+    /* Vertical movement must change row (so Up/Down never drift sideways). */
+    if((direction==="up"||direction==="down")&&sameRow) continue;
     const r=node.getBoundingClientRect(), x=r.left+r.width/2, y=r.top+r.height/2;
     const dx=x-cx, dy=y-cy, adx=Math.abs(dx), ady=Math.abs(dy);
     let primary=0, secondary=0;
@@ -10056,25 +10506,15 @@ function moveTvFocus(direction){
     else if(direction==="down"){ if(dy<=4) continue; primary=dy; secondary=adx; }
     else if(direction==="up"){ if(dy>=-4) continue; primary=-dy; secondary=adx; }
     else continue;
-    /* Ignore a control in the same row that is only diagonally adjacent:
-       vertical movement must change section, never drift along a shelf. */
-    if((direction==="up"||direction==="down")&&nodeRow===currentRow) continue;
     const score=primary+secondary*3;
     if(score<bestScore){ bestScore=score; best=node; }
   }
-  if(!best&&direction==="down"&&currentRow){
-    /* 2. Rail edge reached: step down to the closest item of the next row. */
+  if(!best&&direction==="down"){
+    /* Rail/column edge reached: step to the nearest control of the next row. */
     best=tvNearestBelow(current,list);
   }
-  if(!best&&direction==="up"&&inHeader){
-    return false;
-  }
   if(!best&&direction==="up"){
-    const header=tvHeaderTargets(list);
-    const above=header.filter(node=>node.getBoundingClientRect().bottom<=cr.top+4).sort(function(a,b){
-      return (a.getBoundingClientRect().bottom-b.getBoundingClientRect().bottom);
-    }).pop();
-    if(above){ tvFocusAndReveal(above); return true; }
+    best=tvNearestAbove(current,list);
   }
   if(!best) return false;
   tvFocusAndReveal(best);
@@ -10158,6 +10598,8 @@ function handleZeroPlayTvBack(){
   if(drawer&&drawer.classList.contains("open")){ closeMenuDrawer(); return true; }
   if(typeof downloadModalState!=="undefined"&&downloadModalState){ closeDownloadModal(); return true; }
   if(streamsCtx){ closeStreams(); return true; }
+  const moreSheet=document.getElementById("playerMoreSheet");
+  if(moreSheet&&!moreSheet.hidden){ togglePlayerMore(false); return true; }
   if(playerState){
     if(playerState.embedFocused){ playerState.embedFocused=false; showPlayerChrome(false); const backBtn=document.getElementById("btnFocusEmbed"); if(backBtn) backBtn.focus({preventScroll:true}); return true; }
     if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); return true; }
@@ -10231,9 +10673,37 @@ document.addEventListener("keydown",e=>{
   if(handlePlayerKeyboard(e)) return;
   if(/^(INPUT|TEXTAREA|SELECT)$/.test(activeTag)){
     const active=document.activeElement;
-    if(ANDROID_TV_APP&&(e.key==="ArrowUp"||e.key==="ArrowDown")&&activeTag!=="SELECT"){
-      const tvDir=e.key.replace("Arrow","").toLowerCase();
-      if(moveTvFocus(tvDir)){ e.preventDefault(); return; }
+    const isText=/^(INPUT|TEXTAREA)$/.test(activeTag)&&active&&/^(text|search|url|email|password|number|tel)$/.test(active.type||"text");
+    if(isText){
+      /* A text field owns Left/Right for the caret; only Up/Down leave it. */
+      if(e.key==="ArrowUp"||e.key==="ArrowDown"){
+        if(moveTvFocus(e.key==="ArrowUp"?"up":"down")){ e.preventDefault(); }
+      }
+      return;
+    }
+    /* A <select> or a slider used to swallow the entire D-pad: no arrow could
+       ever leave it, so Settings was a trap. Arrows change the value; Up/Down
+       at the edge of the range (or with any other key) leaves the control. */
+    if(e.key==="Enter"||e.key===" "){
+      active.dataset.tvDir="1";
+      if(tvActivateTarget(active)){ e.preventDefault(); return; }
+    }
+    if(e.key==="ArrowLeft"||e.key==="ArrowRight"){
+      active.dataset.tvDir=e.key==="ArrowLeft"?"-1":"1";
+      tvActivateTarget(active);
+      e.preventDefault();
+      return;
+    }
+    if(e.key==="ArrowUp"||e.key==="ArrowDown"){
+      const dir=e.key==="ArrowUp"?"up":"down";
+      active.dataset.tvDir=e.key==="ArrowUp"?"-1":"1";
+      const atEdge=e.key==="ArrowUp"
+        ? (active.tagName==="SELECT" ? active.selectedIndex<=0 : Number(active.value)<=Number(active.min||0))
+        : (active.tagName==="SELECT" ? active.selectedIndex>=(active.options||[]).length-1 : Number(active.value)>=Number(active.max||100));
+      if(atEdge&&moveTvFocus(dir)){ e.preventDefault(); return; }
+      tvActivateTarget(active);
+      e.preventDefault();
+      return;
     }
     return;
   }

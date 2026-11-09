@@ -406,4 +406,24 @@ ok(/--zp-icon-lg:\s*24px/.test(css) && /--zp-icon-md:\s*20px/.test(css), "TV ico
 ok(/body\.android-tv \.zp-rail-icon,[\s\S]{0,120}?font-size:\s*var\(--zp-icon-md\)/.test(css), "sidebar icons use the icon token instead of inheriting text size");
 ok(/--zp-focus-ring:\s*2px/.test(css) && /outline:\s*var\(--zp-focus-ring\) solid var\(--zp-focus\)/.test(css), "one shared focus ring is used across cards, buttons and inputs");
 
+/* 9. Phase 2 — settings and player are D-pad complete. */
+ok(html.includes("function activateSettingsGroup("), "settings sections are reachable through one activation path");
+ok(html.includes('data-panel-tab="everyday"'), "the settings strip renders real section buttons");
+ok(html.includes("is-collapsed"), "settings sections collapse instead of being removed from the page");
+ok(!html.includes("panel.hidden=!wanted.includes"), "the old code that hid whole settings blocks on TV is gone");
+ok(html.includes(".setting-switch:focus-within"), "a switch row shows focus across the whole row");
+ok(html.includes("function tvActivateTarget("), "Enter/Space on a select or slider is handled, not swallowed");
+ok(html.includes("if(isText){") && html.includes("const atEdge="), "text fields keep the caret while selects release the D-pad at the edge");
+
+/* Player shell: engine ids preserved, new structure real. */
+ok(html.includes('id="playerMoreSheet"'), "the player has one More sheet instead of a wall of controls");
+ok(html.includes('data-tv-row="player-transport"') && html.includes('data-tv-row="player-top"'), "player rows carry explicit D-pad row keys");
+for (const id of ["playerQuality", "playerRate", "volumeRange", "btnMute", "btnPiP", "btnFullscreen", "btnPlayerDownload", "btnPlayerDetails", "btnFocusEmbed", "seekRange", "btnPlayPause"]) {
+  ok(html.includes('id="' + id + '"'), "player control " + id + " survives the rebuild");
+}
+ok(html.includes("togglePlayerMore") && html.includes('on("btnPlayerMoreAlt","click"'), "both More doors are wired to the same sheet");
+ok(html.includes("directQueueStatus"), "the player reports failover position instead of a silent switch");
+ok(html.includes('id="serverList"') && html.includes("data-stream-filter"), "servers are one unified, filterable list");
+ok(html.includes("streamProviderChip") && !html.includes('id="serverDirect"'), "provider taxonomy headings no longer split the server list");
+
 console.log(`\n${passed} TV navigation contract checks passed`);
