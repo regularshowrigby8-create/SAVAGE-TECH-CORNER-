@@ -10990,6 +10990,7 @@ function openMenuDrawer(){
   const drawer=document.getElementById("menuDrawer"), scrim=document.getElementById("menuScrim"), btn=document.getElementById("btnMenu");
   if(!drawer||!scrim) return;
   renderMenuQuickSwitches();
+  cancelTvInitialFocus();
   menuReturnFocus=document.activeElement;
   tvRememberReturnFocus();
   scrim.hidden=false; drawer.classList.add("open"); drawer.setAttribute("aria-hidden","false");
@@ -11479,8 +11480,30 @@ function focusInitialTvTarget(){
 }
 function scheduleTvInitialFocus(){
   if(!ANDROID_TV_APP) return;
-  if(tvInitialFocusTimer) clearTimeout(tvInitialFocusTimer);
-  tvInitialFocusTimer=setTimeout(function(){ if(!focusInitialTvTarget()) setTimeout(focusInitialTvTarget,1400); },650);
+  cancelTvInitialFocus();
+  tvInitialFocusTimer=setTimeout(function(){
+    tvInitialFocusTimer=null;
+    if(focusInitialTvTarget()) return;
+    /* focusInitialTvTarget() refuses while a drawer or player owns the remote,
+       and that is correct — but the retry must not outlive the surface that
+       blocked it, or it steals focus back from the menu the viewer just
+       opened. Only retry while the page is still the thing being looked at. */
+    if(tvOverlayOwnsFocus()||!tvInitialFocusStillWanted()) return;
+    tvInitialFocusTimer=setTimeout(function(){ tvInitialFocusTimer=null; focusInitialTvTarget(); },1400);
+  },650);
+}
+function cancelTvInitialFocus(){
+  if(tvInitialFocusTimer){ clearTimeout(tvInitialFocusTimer); tvInitialFocusTimer=null; }
+}
+/* A drawer, the player, a detail modal or a streams sheet owns the remote. */
+function tvOverlayOwnsFocus(){
+  const drawer=tvEl("menuDrawer");
+  return !!((drawer&&drawer.classList.contains("open"))||playerState||detailState||streamsCtx||(typeof downloadModalState!=="undefined"&&downloadModalState));
+}
+/* The viewer has not already moved focus somewhere deliberate. */
+function tvInitialFocusStillWanted(){
+  const active=document.activeElement;
+  return !active||active===document.body||active.id==="btnMenu"||!tvIsFocusable(active);
 }
 function restoreTvFocus(){
   if(!ANDROID_TV_APP) return false;

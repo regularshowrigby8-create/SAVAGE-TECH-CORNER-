@@ -504,4 +504,17 @@ ok(html.includes("streamProviderChip") && !html.includes('id="serverDirect"'), "
   ok(timer.includes("paused") && timer.includes("buffering"), "a paused or buffering film still hides the bar once it is idle");
 }
 
+/* R6. A pending page-focus timer must never steal focus from an open menu.
+   The browser run reproduced this at 1920x1080: open the drawer just after a
+   route change and the page took the D-pad back behind it. */
+{
+  ok(html.includes("function cancelTvInitialFocus") && html.includes("function tvOverlayOwnsFocus"), "a pending initial-focus timer can be cancelled");
+  ok(html.includes("function tvInitialFocusStillWanted"), "the initial-focus retry only runs while the viewer has not moved focus");
+  const opener = script.slice(script.indexOf("function openMenuDrawer()"), script.indexOf("function closeMenuDrawer()"));
+  ok(opener.includes("cancelTvInitialFocus()"), "opening the menu cancels any pending page focus grab");
+  const scheduler = script.slice(script.indexOf("function scheduleTvInitialFocus()"), script.indexOf("function restoreTvFocus()"));
+  ok(!/setTimeout\(focusInitialTvTarget,1400\)/.test(scheduler), "the retry is no longer an unconditional timer that outlives a modal");
+  ok(scheduler.includes("tvOverlayOwnsFocus()"), "the retry stands down while a drawer, player or modal owns the remote");
+}
+
 console.log(`\n${passed} TV navigation contract checks passed`);
