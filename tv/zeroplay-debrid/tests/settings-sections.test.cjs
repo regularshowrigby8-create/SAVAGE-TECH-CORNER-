@@ -57,4 +57,25 @@ ok(html.includes('id="settingsDownloadsHub"'), "downloads has its own section");
 ok(html.includes('id="settingsDevice"'), "This TV and artwork have their own section");
 ok(html.includes('id="settingsSourcesHub"'), "sources switches have their own section");
 
+/* 6. A panel extracted out of settingsHubHTML() must carry its own locals.
+ *    This is the bug that shipped once: the This TV panel used deviceText, which
+ *    only existed inside settingsHubHTML(), so render threw and the settings
+ *    route silently fell back to Sources. */
+const hubStart = html.indexOf("function settingsHubHTML(){");
+const hubBody = html.slice(hubStart, html.indexOf("function settingsSourcesSectionHTML(", hubStart));
+const hubLocals = [...hubBody.matchAll(/^  const ([A-Za-z_$][\w$]*)[= ]/gm)].map((m) => m[1]);
+ok(hubLocals.length > 0, "the everyday hub declares the locals the extracted panels used to share");
+for (const fn of ["settingsSourcesSectionHTML", "settingsDownloadsSectionHTML", "settingsDeviceHTML"]) {
+  const start = html.indexOf("function " + fn + "(){");
+  const body = html.slice(start, html.indexOf("\nfunction ", start + 10));
+  const declaredHere = [...body.matchAll(/^  const ([A-Za-z_$][\w$]*)[= ]/gm)].map((m) => m[1]);
+  const leaked = hubLocals.filter((name) => declaredHere.indexOf(name) === -1 && new RegExp("\\b" + name + "\\b").test(body));
+  ok(leaked.length === 0, fn + " declares everything it uses (leaked: " + (leaked.join(", ") || "none") + ")");
+}
+
+/* 7. Settings render must not be able to fall back to the Sources page. */
+ok(/\+sourceStatusPanelHTML\(\)/.test(html), "the settings page still renders its status panel");
+ok(html.includes("settingsPage?settingsSourcesSectionHTML()+settingsDownloadsSectionHTML()+settingsDeviceHTML()"),
+   "all extracted panels are mounted on the settings page");
+
 console.log(`\n${passed} settings section checks passed\n`);

@@ -8168,6 +8168,14 @@ function settingsDownloadsSectionHTML(){
     +'<div class="settings-actions"><button class="btn btn-primary btn-sm" type="button" data-menu-route="downloads">Open downloads</button><button class="btn btn-secondary btn-sm" type="button" data-settings-section="faststream">Speed defaults</button></div></section>';
 }
 function settingsDeviceHTML(){
+  /* These four values used to be locals of settingsHubHTML(); the markup moved
+     into its own panel, so the values move with it. A ReferenceError here threw
+     during render and the whole settings page silently fell back to Sources. */
+  const profile=ANDROID_TV_PROFILE||{};
+  const abiText=Array.isArray(profile.supportedAbis)&&profile.supportedAbis.length?profile.supportedAbis.join(", "):(profile.primaryAbi||"armeabi-v7a target");
+  const ramText=ANDROID_TV_TOTAL_RAM_MB?(" · "+(ANDROID_TV_TOTAL_RAM_MB>=1024?(ANDROID_TV_TOTAL_RAM_MB/1024).toFixed(1).replace(/\.0$/,"")+" GB":ANDROID_TV_TOTAL_RAM_MB+" MB")+" RAM"):"";
+  const deviceText=ANDROID_TV_APP?"This TV is ready for remote control.":"Open ZeroPlay in the Android TV app for remote-first browsing.";
+  const deviceDetails=ANDROID_TV_APP?([profile.manufacturer,profile.model||profile.device].filter(Boolean).join(" ")+" · Android "+(profile.androidRelease||"TV")+" · "+abiText+ramText):"";
   return '<section class="panel" id="settingsDevice" data-panel-group="data"><h2>This TV</h2><p class="section-desc">How ZeroPlay behaves on this device and where its posters come from.</p>'
     +'<div id="settingsAndroidTv"><h3>This TV</h3><p>'+esc(deviceText)+' D-pad OK opens titles, Play/Pause starts playback, Back closes one layer at a time, and the remote Menu button opens the drawer.</p>'
     +featureSwitchHTML("tvPerformance","Make this TV run lighter","Recommended for Xiaomi and other 2 GB TV boxes.","hub")
