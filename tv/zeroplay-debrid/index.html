@@ -3891,6 +3891,53 @@ body.android-tv .page { scroll-margin-top: 4rem; }
 /* The element's own cue rendering stays out of the way; we paint the text. */
 video.zp-subs::cue { color: transparent; background: transparent; text-shadow: none; }
 
+
+
+/* Paused card — ARVIO's pause metadata, so a paused TV shows what is playing */
+.player-paused-card {
+  position: absolute; left: 4vw; bottom: 30%; z-index: 14;
+  display: flex; flex-direction: column; gap: 0.4rem;
+  max-width: min(46vw, 620px); padding: 0.9rem 1.1rem;
+  border-radius: 14px; background: rgba(8, 10, 13, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.player-paused-card[hidden] { display: none; }
+.ppc-ep { font-size: 1.05rem; font-weight: 800; color: var(--zp-text-primary); }
+.ppc-overview {
+  margin: 0; font-size: 0.86rem; line-height: 1.45; color: var(--zp-text-secondary);
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+}
+.ppc-where { font-size: 0.78rem; font-weight: 700; color: var(--accent, #65e6cc); }
+.player-overlay.chrome-hidden .player-paused-card { display: none; }
+@media (max-width: 900px) { .player-paused-card { display: none; } }
+
+
+/* Exit: fade and hold the scrim for a frame, so the video is never the last
+   thing the compositor draws */
+.player-overlay.player-exiting { opacity: 0; transition: opacity 180ms cubic-bezier(.4, 0, .2, 1); }
+.player-overlay.player-exiting::after {
+  content: ""; position: absolute; inset: 0; z-index: 60;
+  background: #000; pointer-events: none;
+}
+
+/* Up next — ARVIO's end-of-episode card, sized for a 10-foot screen */
+.player-overlay.player-next-open .player-controls,
+.player-overlay.player-next-open .player-bar,
+.player-overlay.player-next-open .player-action-shelf { opacity: 0.15; pointer-events: none; }
+.next-card { padding: 1.1rem 1.2rem 1rem; }
+.next-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.7rem; }
+.next-head strong { font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--zp-text-tertiary); }
+.next-body { display: flex; gap: 1rem; align-items: center; }
+.next-art { width: 232px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 12px; background: rgba(255,255,255,.06); }
+.next-copy { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+.next-show { font-size: 0.82rem; color: var(--zp-text-secondary); }
+.next-ep { font-size: 1.05rem; font-weight: 800; color: var(--zp-text-primary); }
+.next-sub { font-size: 0.85rem; color: var(--zp-text-secondary); }
+.next-actions { display: flex; gap: 0.5rem; margin-top: 0.9rem; }
+.next-actions .control-btn { min-width: 132px; min-height: 48px; }
+.next-progress { margin-top: 0.7rem; height: 4px; border-radius: 4px; background: rgba(255,255,255,.12); overflow: hidden; }
+.next-progress span { display: block; height: 100%; width: 100%; background: var(--accent, #65e6cc); transition: width 1s linear; }
+
 /* Unified server list + chips */
 .stream-filters { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0.9rem 0 0.7rem; }
 .stream-chip {
@@ -6045,19 +6092,130 @@ function updatePlaybackUI(state,eventName){
   const overlay=document.getElementById("playerOverlay");
   if(overlay){ overlay.classList.toggle("player-paused",!!st.playback.paused); if(st.playback.paused) overlay.classList.add("player-tools-awake"); else if(eventName==="playing") overlay.classList.remove("player-tools-awake"); }
   if(st.playback.paused) showPlayerChrome(true); else if(eventName==="playing") showPlayerChrome(false);
+  if(eventName==="pause"||eventName==="playing"||eventName==="loadedmetadata") renderPausedCard();
 }
 function currentPlaybackTime(){
   const st=playerState; if(!st) return 0;
   const v=document.getElementById("pv"); if(v&&Number.isFinite(v.currentTime)) return v.currentTime;
   return Number((st.playback||{}).currentTime)||0;
 }
+/* ---- end of playback, ported from ARVIO's PlayerCompletionEffect ----
+   ZeroPlay's old handler did nothing at all for a movie, and with autoplay off
+   nothing at all for an episode either: the viewer was left on the last frame
+   with no way forward except Back. ARVIO's rule is that every finished video
+   either offers its next episode or leaves the player, and that an end-of-
+   episode prompt is claimed once per episode so it cannot reopen. */
+function playbackEpisodeKey(){
+  const st=playerState; if(!st) return "";
+  return (st.item&&st.item.id)+":"+(st.season||0)+":"+(st.episode||0);
+}
+function nextEpisodeAvailable(){
+  const st=playerState;
+  if(!st||!st.item||st.item.type!=="tv") return false;
+  if(st.noProgress||st.tempSource) return false;
+  if(settings.ui&&settings.ui.autoplayNext===false) return false;
+  if(st.totalEpisodes&&Number(st.episode)>=Number(st.totalEpisodes)&&Number(st.season)>=Number(st.totalSeasons||st.season)) return false;
+  return true;
+}
 function handlePlaybackEnded(){
   const st=playerState; if(!st||st.trailer) return;
   savePlaybackProgress(true); showPlayerChrome(true);
-  if(st.item&&st.item.type==="tv"&&!st.noProgress&&!st.tempSource&&(!settings.ui||settings.ui.autoplayNext!==false)){
-    toast("Episode finished — starting the next episode");
-    playerTimers.push(setTimeout(()=>{ if(playerState!==st) return; st.episode++; st.directUrl=""; st.variants=[]; st.activeVariant=null; st.tried=new Set(); st.triedUrls=new Set(); registerProgress(st.item,st.season,st.episode); drawPlayer({}); },1200));
-  }
+  if(st.endedHandledFor===playbackEpisodeKey()) return;
+  st.endedHandledFor=playbackEpisodeKey();
+  if(nextEpisodeAvailable()) openNextEpisodePrompt();
+  else finishPlaybackAndLeave("This title has finished");
+}
+function finishPlaybackAndLeave(reason){
+  const st=playerState;
+  if(!st||st.completionLeaving) return;
+  st.completionLeaving=true;
+  if(reason) playerIndicator(reason,2400);
+  playerTimers.push(setTimeout(()=>{ if(playerState===st) closePlayer(); },2200));
+}
+/* ARVIO's Up Next card: 10 seconds, play focused, Enter continues immediately,
+   Back stops. The countdown only auto-advances while the prompt is on screen. */
+function openNextEpisodePrompt(){
+  const st=playerState; if(!st) return;
+  closeNextEpisodePrompt(false);
+  st.nextPromptOpen=true;
+  /* The claimed episode is state, not markup: set it before touching the DOM so
+     the prompt can never half-open. */
+  st.nextPromptKey=episodeMetaKey(st.season,st.episode+1);
+  const overlay=document.getElementById("playerOverlay");
+  if(overlay) overlay.classList.add("player-next-open");
+  const host=document.getElementById("playerRoot");
+  const meta=rememberEpisodeMeta(st.season,st.episode+1);
+  const key=st.nextPromptKey;
+  if(!host) return;
+  const box=document.createElement("div");
+  box.className="player-sheet player-next";
+  box.id="playerNextSheet";
+  box.setAttribute("data-tv-row","player-next");
+  box.setAttribute("role","dialog");
+  box.setAttribute("aria-label","Up next");
+  box.innerHTML='<div class="player-sheet-inner next-card">'
+    +'<div class="next-head"><strong>Up next</strong><span class="chip" id="playerNextCount">10</span></div>'
+    +'<div class="next-body">'
+      +'<img class="next-art" id="playerNextArt" alt="" src="'+esc(backdropURL(st.item,"w500"))+'">'
+      +'<div class="next-copy">'
+        +'<span class="next-show">'+esc(titleOf(st.item))+'</span>'
+        +'<span class="next-ep" id="playerNextLabel">'+(meta&&meta.name?esc(meta.name):"Episode "+(st.episode+1))+'</span>'
+        +'<span class="next-sub">Season '+esc(String(st.season))+' · Episode '+esc(String(st.episode+1))+(meta&&meta.runtime?" · "+Number(meta.runtime)+" min":"")+'</span>'
+      +'</div>'
+    +'</div>'
+    +'<div class="next-actions">'
+      +'<button class="control-btn primary" id="btnPlayerNextNow" type="button">Play now</button>'
+      +'<button class="control-btn" id="btnPlayerNextCancel" type="button">Cancel</button>'
+    +'</div>'
+    +'<div class="next-progress"><span id="playerNextBar"></span></div>'
+  +'</div>';
+  host.appendChild(box);
+  let left=10;
+  const countRule=document.getElementById("playerNextCount");
+  const bar=document.getElementById("playerNextBar");
+  const step=()=>{
+    if(playerState!==st||!st.nextPromptOpen) return;
+    left-=1;
+    if(countRule) countRule.textContent=String(Math.max(0,left));
+    if(bar) bar.style.width=(Math.max(0,left)/10*100).toFixed(0)+"%";
+    if(left<=0){ playNextEpisodeNow(); }
+  };
+  st.nextCountdownTimer=setInterval(step,1000);
+  playerTimers.push(st.nextCountdownTimer);
+  const playBtn=document.getElementById("btnPlayerNextNow");
+  const cancelBtn=document.getElementById("btnPlayerNextCancel");
+  if(playBtn) playBtn.onclick=()=>playNextEpisodeNow();
+  if(cancelBtn) cancelBtn.onclick=()=>{ closeNextEpisodePrompt(false); finishPlaybackAndLeave("Stopped after this episode"); };
+  if(playBtn) setTimeout(()=>{ if(playerState===st&&st.nextPromptOpen) playBtn.focus({preventScroll:true}); },60);
+  if(!meta) ensureEpisodeMeta(st.season,st.episode+1).then(record=>{
+    if(!record||playerState!==st||!st.nextPromptOpen) return;
+    const label=document.getElementById("playerNextLabel");
+    if(label&&record.name) label.textContent=record.name;
+    const sub=document.getElementById("playerNextSub");
+    if(sub&&record.runtime) sub.textContent=sub.textContent+" · "+Number(record.runtime)+" min";
+  });
+}
+function closeNextEpisodePrompt(keepPlayer){
+  const st=playerState;
+  if(st&&st.nextCountdownTimer){ clearInterval(st.nextCountdownTimer); st.nextCountdownTimer=null; }
+  if(st) st.nextPromptOpen=false;
+  const box=document.getElementById("playerNextSheet"); if(box) box.remove();
+  const overlay=document.getElementById("playerOverlay");
+  if(overlay) overlay.classList.remove("player-next-open");
+  return !keepPlayer;
+}
+function playNextEpisodeNow(){
+  const st=playerState; if(!st) return;
+  closeNextEpisodePrompt(true);
+  st.episode+=1;
+  /* Everything that belonged to the previous episode goes, including the URL it
+     was playing: carrying it forward would resume the wrong file. */
+  st.url=""; st.direct=false; st.kind="";
+  st.directUrl=""; st.variants=[]; st.activeVariant=null; st.levels=[]; st.autoLevelQueue=null;
+  st.tried=new Set(); st.triedUrls=new Set(); st.endedHandledFor="";
+  st.subtitleTracks=[]; st.subtitleSelection="off";
+  registerProgress(st.item,st.season,st.episode);
+  void drawPlayer({});
 }
 async function playerCommand(action,value){
   const st=playerState; if(!st||st.trailer) return;
@@ -6784,6 +6942,11 @@ function playerShell(msg){
       +'</div>'
     +'</div>'
     +playerTracksModalHTML(st)
+    +'<div class="player-paused-card" id="playerPausedCard" hidden data-tv-row="player-paused">'
+      +'<span class="ppc-ep" id="playerPausedTitle"></span>'
+      +'<p class="ppc-overview" id="playerPausedOverview"></p>'
+      +'<span class="ppc-where" id="playerPausedWhere"></span>'
+    +'</div>'
     +'<div class="player-indicator" id="playerIndicator" hidden aria-live="polite"></div></div>';
 }
 /* ARVIO puts subtitles and audio behind one tabbed panel, and gives subtitle
@@ -7398,7 +7561,28 @@ async function failover(reason,opts){
     return true;
   }finally{ if(playerState===st) st.switching=false; }
 }
+/* ARVIO's exit transition: pause first, fade the overlay, and only then tear the
+   surface down. Leaving on a live video frame is what makes an exit feel like a
+   crash on a TV; reduced-motion viewers skip the fade and leave at once. */
+function playerExitAnimated(){
+  if(!settings.ui||settings.ui.reduceMotion!==true) return true;
+  return false;
+}
 function closePlayer(){
+  const st=playerState;
+  const overlay=document.getElementById("playerOverlay");
+  if(st&&overlay&&!st.exiting&&playerExitAnimated()){
+    st.exiting=true;
+    try{ const v=st.zpEngine&&st.zpEngine.video; if(v) v.pause(); }catch{}
+    overlay.classList.add("player-exiting");
+    /* Only finish the exit for the player that started it: opening another
+       title inside the 190ms fade must not be torn down by the old one. */
+    playerTimers.push(setTimeout(()=>{ if(playerState!==st) return; st.exiting=false; closePlayerNow(); },190));
+    return;
+  }
+  closePlayerNow();
+}
+function closePlayerNow(){
   const st=playerState;
   if(st){
     savePlaybackProgress(true);
@@ -8398,6 +8582,69 @@ function drawDetail(){
   faststreamPreload({type,id:d.id,title:titleOf(d),year:yearOf(d),season:isTV?(prev.season||detailState.season||1):1,episode:isTV?(prev.episode||1):1,identity:identityFromDetail(d,type,isTV?(prev.season||detailState.season||1):1,isTV?(prev.episode||1):1)}, defaultSourceId());
 }
 
+/* The player needs to know what it is playing. ARVIO keeps the full episode
+   record next to playback so the pause card and the end-of-episode prompt can
+   name it; ZeroPlay had only a season and an episode number. */
+const episodeMetaCache=new Map();
+/* ARVIO's playerPauseOverview: while paused, describe the episode that is
+   actually playing and fall back to the show's own summary. */
+function playerPauseOverview(){
+  const st=playerState; if(!st) return "";
+  const item=st.item||{};
+  if(item.type==="tv"){
+    const ep=rememberEpisodeMeta(st.season,st.episode);
+    const overview=ep&&String(ep.overview||"").trim();
+    if(overview) return overview;
+  }
+  return String(item.overview||"").trim();
+}
+function playerPlayingLabel(){
+  const st=playerState; if(!st) return "";
+  const item=st.item||{};
+  if(item.type!=="tv") return titleOf(item);
+  const ep=rememberEpisodeMeta(st.season,st.episode);
+  const name=ep&&String(ep.name||"").trim();
+  return (name?name+" · ":"")+"S"+st.season+"E"+st.episode;
+}
+/* The paused card: what is playing, what it is about, and where the viewer is. */
+function renderPausedCard(){
+  const box=document.getElementById("playerPausedCard");
+  if(!box) return;
+  const st=playerState;
+  const paused=!!(st&&st.playback&&st.playback.paused&&st.playback.hasStarted);
+  box.hidden=!paused;
+  if(!paused) return;
+  const title=document.getElementById("playerPausedTitle");
+  const overview=document.getElementById("playerPausedOverview");
+  const where=document.getElementById("playerPausedWhere");
+  if(title) title.textContent=playerPlayingLabel();
+  if(overview) overview.textContent=playerPauseOverview();
+  if(where){
+    const v=st.zpEngine&&st.zpEngine.video;
+    const at=Number(v&&v.currentTime)||Number(st.playback.currentTime)||0;
+    const dur=Number(v&&v.duration)||Number(st.playback.duration)||0;
+    where.textContent=formatTime(at)+(dur?" / "+formatTime(dur):"");
+  }
+}
+function episodeMetaKey(season,episode){ return "ep:"+Number(season||0)+":"+Number(episode||0); }
+function rememberEpisodeMeta(season,episode,record){
+  const key=episodeMetaKey(season,episode);
+  if(record){ episodeMetaCache.set(key,record); return record; }
+  if(episodeMetaCache.has(key)) return episodeMetaCache.get(key);
+  /* No record was remembered (deep link, resume): ask the season endpoint. */
+  return null;
+}
+async function ensureEpisodeMeta(season,episode){
+  const cached=rememberEpisodeMeta(season,episode);
+  if(cached) return cached;
+  const st=playerState||detailState; if(!st) return null;
+  try{
+    const data=await tmdb("/tv/"+st.item.id+"/season/"+season);
+    const found=(data.episodes||[]).find(e=>Number(e.episode_number)===Number(episode));
+    if(!found) return null;
+    return rememberEpisodeMeta(season,episode,found);
+  }catch{ return null; }
+}
 const tvmazeEpisodeArtworkCache=new Map();
 function episodeStillInfo(ep,item){
   let raw=ep&&(ep.still_url||ep.thumbnail_url||ep.thumbnail)||"";
@@ -8447,12 +8694,13 @@ async function loadEpisodes(){
     if(!detailState||detailState!==stateToken) return;
     box.innerHTML=eps.length?'<div class="ep-list">'+eps.map(ep=>{
       const still=episodeStillInfo(ep,detailState.data);
+      rememberEpisodeMeta(season,ep.episode_number,ep);
       return '<div class="ep" data-ep="'+ep.episode_number+'"><button class="ep-main" type="button" data-ep-play="'+ep.episode_number+'" aria-label="Play episode '+ep.episode_number+'"><span class="ep-thumb"><img class="episode-thumb-img" loading="lazy" src="'+esc(still.url)+'" alt="" data-episode-thumb="'+ep.episode_number+'"'+(still.missing?' data-episode-thumb-missing="1"':"")+'><span class="ep-num-badge">'+ep.episode_number+'</span></span><span class="ep-copy"><span class="et">'+esc(ep.name||("Episode "+ep.episode_number))+'</span><br><span class="es">'+esc(ep.air_date||"")+(ep.runtime?" · "+ep.runtime+" min":"")+'</span></span></button>'+(downloadsEnabled()?'<button class="ep-download" type="button" data-ep-download="'+ep.episode_number+'" aria-label="Download episode '+ep.episode_number+'" title="Download this episode">⬇<small>Download</small></button>':"")+"</div>";
     }).join("")+"</div>"
       :'<p style="color:var(--text-muted)">No episode data for this season.</p>';
     $$(".ep",box).forEach(row=>{
       const episodeNumber=Number(row.dataset.ep)||1;
-      const mark=()=>{ detailState.episode=episodeNumber; };
+      const mark=()=>{ detailState.episode=episodeNumber; rememberEpisodeMeta(detailState.season,episodeNumber); };
       row.addEventListener("mouseenter",mark);
       const play=row.querySelector("[data-ep-play]");
       if(play){ play.addEventListener("focus",mark); play.onclick=()=>openPlayer(snap(detailState.data,"tv"),{season:detailState.season,episode:episodeNumber,source:defaultSourceId()}); }
@@ -11152,7 +11400,28 @@ function restoreTvFocus(){
   },40);
   return true;
 }
+/* The Up Next card owns the remote while it is open, exactly as ARVIO's overlay
+   does: arrows move between its two buttons, Enter activates, Back stops. */
+function handlePlayerNextKeys(e){
+  const st=playerState;
+  const box=document.getElementById("playerNextSheet");
+  if(!st||!st.nextPromptOpen||!box) return false;
+  const buttons=[document.getElementById("btnPlayerNextNow"),document.getElementById("btnPlayerNextCancel")].filter(Boolean);
+  if(!buttons.length) return false;
+  if(e.key==="Escape"){ e.preventDefault(); closeNextEpisodePrompt(false); finishPlaybackAndLeave("Stopped after this episode"); return true; }
+  if(e.key==="ArrowLeft"||e.key==="ArrowRight"){
+    e.preventDefault();
+    const i=Math.max(0,buttons.indexOf(document.activeElement));
+    const next=buttons[(i+(e.key==="ArrowRight"?1:buttons.length-1))%buttons.length];
+    next.focus({preventScroll:true});
+    return true;
+  }
+  if(e.key==="ArrowUp"||e.key==="ArrowDown"){ e.preventDefault(); return true; }
+  if(e.key==="Enter"||e.key===" "){ e.preventDefault(); const a=document.activeElement; (buttons.includes(a)?a:buttons[0]).click(); return true; }
+  return true; /* swallow everything else rather than acting behind the card */
+}
 function handlePlayerKeyboard(e){
+  if(typeof handlePlayerNextKeys==="function"&&handlePlayerNextKeys(e)) return true;
   if(typeof handlePlayerTracksKeys==="function"&&handlePlayerTracksKeys(e)) return true;
   const st=playerState; if(!st||st.trailer||streamsCtx||(typeof downloadModalState!=="undefined"&&downloadModalState)) return false;
   const tag=(document.activeElement&&document.activeElement.tagName)||"";
@@ -11207,6 +11476,7 @@ function handleZeroPlayTvBack(){
   if(streamsCtx){ closeStreams(); return true; }
   const moreSheet=document.getElementById("playerMoreSheet");
   if(moreSheet&&!moreSheet.hidden){ togglePlayerMore(false); return true; }
+  if(playerState&&playerState.nextPromptOpen){ closeNextEpisodePrompt(false); finishPlaybackAndLeave("Stopped after this episode"); return true; }
   const tracksSheet=document.getElementById("playerTracksSheet");
   if(tracksSheet&&!tracksSheet.hidden){
     tracksSheet.hidden=true; if(playerState) playerState.tracksOpen=false;

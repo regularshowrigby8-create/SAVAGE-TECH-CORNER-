@@ -23,11 +23,23 @@ const ctx = {
   healthScore() { return 50; },
   refreshPlayerQualityOptions() {},
   toast() {},
+  tvFocusAndReveal() {},
   saveSettings() { ctx.settingsSaved = true; },
+  closePlayer() { ctx.closed = true; },
+  registerProgress() {},
+  savePlaybackProgress() {},
+  showPlayerChrome() {},
+  drawPlayer() {},
+  backdropURL() { return 'https://art.test/backdrop.jpg'; },
+  episodeMetaCache: new Map(),
+  episodeMetaKey(season, episode) { return 'ep:' + Number(season||0) + ':' + Number(episode||0); },
+  rememberEpisodeMeta(season, episode, record) { return record || ctx.episodeMetaCache.get(ctx.episodeMetaKey(season, episode)) || null; },
+  playerIndicator() {},
+  playerTimers: [],
   document: {
     head: { appendChild() {} },
     getElementById() { return null; },
-    createElement() { return { classList: { add() {} }, style: {}, setAttribute() {}, appendChild() {} }; },
+    createElement() { return { classList: { add() {} }, style: {}, setAttribute() {}, appendChild() {}, remove() {} }; },
   },
   tvFocusAndReveal() {},
 };
@@ -38,6 +50,7 @@ vm.runInContext([
   between('function formatTime(sec)', 'function playerLoading'),
   between('const ZP_ENGINE_SCRIPTS', 'function registerProgress'),
   between('function directMediaKind', 'function startOwnEngine'),
+  between('function playbackEpisodeKey', 'async function playerCommand'),
   between('function groupStreamsByServer', 'const titleServerCache'),
 ].join('\n'), ctx);
 
@@ -212,10 +225,67 @@ eq(sorted.map(x => x.id), ['direct:a', 'route:vidstuck', 'route:embedwave'], 've
   ok(/function handlePlayerTracksKeys\(e\)/.test(html) && html.includes('handlePlayerTracksKeys(e)) return true'), 'the panel takes D-pad keys before the transport does');
   ok(/const tracksSheet=document\.getElementById\("playerTracksSheet"\)/.test(html), 'Back closes the panel before it closes the player');
   ok(html.includes('subtitles:subtitlesFromStream(stream)'), 'provider subtitle lists travel with the stream');
+  ok(/function playerExitAnimated\(\)/.test(html) && /player-overlay\.player-exiting/.test(html), 'leaving the player fades first instead of cutting on a live frame');
+  ok(html.includes('if(playerState!==st) return; st.exiting=false; closePlayerNow();'), 'a deferred exit cannot tear down a player opened during the fade');
+  ok(/function playerPauseOverview\(\)/.test(html) && html.includes('id="playerPausedCard"'), 'a paused player names what is playing and what it is about');
+  ok(/function handlePlayerNextKeys\(e\)/.test(html) && html.includes('handlePlayerNextKeys(e)) return true'), 'the Up Next card owns the remote while it is open');
+  ok(/function nextEpisodeAvailable\(\)/.test(html) && /function finishPlaybackAndLeave\(reason\)/.test(html), 'a finished video either offers the next episode or leaves the player');
   ok(/function startOwnEngine\(stage,url,source,loadT0,resumeAt,opts\)/.test(html), 'one mount path owns the player');
   ok(html.includes('zpEngineDestroy()'), 'leaving the player tears the engine down');
   ok(/st\.triedUrls=st\.triedUrls\|\|new Set\(\)/.test(html), 'a failed stream is remembered so failover cannot loop');
   ok(!/mountEmbedPlayer[\s\S]{0,400}postMessage/.test(html), 'the framed fallback is never remote-controlled');
+
+  /* ---- end of playback, the rules ARVIO enforces ---- */
+  const tvItem = { id: 1399, type: 'tv', title: 'A Show' };
+  ctx.settings.ui = { autoplayNext: true };
+  ctx.playerState = { item: tvItem, season: 2, episode: 3, noProgress: false, tempSource: null };
+  eq(ctx.playbackEpisodeKey(), '1399:2:3', 'an episode is identified by show, season and episode');
+  ok(ctx.nextEpisodeAvailable() === true, 'a mid-season episode offers what comes next');
+
+  ctx.settings.ui.autoplayNext = false;
+  ok(ctx.nextEpisodeAvailable() === false, 'with autoplay off no next episode is offered');
+  ctx.settings.ui.autoplayNext = true;
+
+  ctx.playerState.noProgress = true;
+  ok(ctx.nextEpisodeAvailable() === false, 'a source test never advances the episode count');
+  ctx.playerState.noProgress = false;
+
+  ctx.playerState.item = { id: 27205, type: 'movie', title: 'A Film' };
+  ok(ctx.nextEpisodeAvailable() === false, 'a finished movie has no next episode to offer');
+
+  /* A finished video must always go somewhere: the old handler left the last
+     frame on screen with no way forward for a movie or for autoplay-off. */
+  ctx.playerState = { item: { id: 27205, type: 'movie', title: 'A Film' }, season: 1, episode: 1, playback: {} };
+  ctx.closed = false;
+  ctx.handlePlaybackEnded();
+  ok(ctx.playerState.completionLeaving === true, 'a finished movie starts leaving the player instead of freezing on the last frame');
+  ok(ctx.playerState.endedHandledFor === '27205:1:1', 'completion is claimed once, so a second ended event cannot re-run it');
+
+  ctx.playerState = { item: tvItem, season: 2, episode: 3, noProgress: false, tempSource: null, playback: {} };
+  ctx.handlePlaybackEnded();
+  ok(ctx.playerState.nextPromptOpen === true, 'a finished episode opens the Up Next card');
+  ok(ctx.playerState.nextPromptKey === 'ep:2:4', 'the card points at the next episode, not the one just watched');
+  ctx.closeNextEpisodePrompt(true);
+
+  /* Claim-once: STATE_ENDED stays true after the card is dismissed, so a second
+     ended event for the same episode must not reopen it. */
+  ctx.playerState.nextPromptOpen = false;
+  ctx.handlePlaybackEnded();
+  ok(ctx.playerState.nextPromptOpen === false, 'the same episode cannot open a second Up Next card');
+  ctx.playerState.episode = 4;
+  ctx.handlePlaybackEnded();
+  ok(ctx.playerState.nextPromptOpen === true, 'a genuinely new episode opens its own card');
+  ctx.closeNextEpisodePrompt(true);
+
+  /* Playing now advances exactly one episode and clears the old stream. */
+  ctx.playerState = { item: tvItem, season: 2, episode: 3, url: 'https://old.test/a.m3u8', subtitleTracks: [{ url: 'x.vtt' }], variant: 1, variants: [1], levels: [1], tried: new Set(['a']), triedUrls: new Set(['b']), nextPromptOpen: true, playback: {} };
+  ctx.playNextEpisodeNow();
+  eq(ctx.playerState.episode, 4, 'the next episode is exactly one further');
+  eq(ctx.playerState.season, 2, 'the season is untouched');
+  eq(ctx.playerState.url, '', 'the previous stream URL is not carried into the next episode');
+  eq(ctx.playerState.subtitleTracks.length, 0, 'subtitles from the previous episode do not leak forward');
+  eq([...ctx.playerState.triedUrls], [], 'failover history resets for the new episode');
+  ctx.playerState = null;
 
   const statics = [
     [html.includes('id="menuDrawer"') && html.includes('data-nav="categories"'), 'TV menu drawer and Categories navigation present'],

@@ -393,3 +393,53 @@ config-blob paths, which `api/extract.js` now returns from `parseWatch` and from
 and converted SRT → WebVTT in the browser, so a provider behind CORS still works.
 
 **Test total: 416 checks.**
+
+---
+
+## Porting the logic, not the surface
+
+Importing ARVIO's player was never possible and wrapping it was refused: their
+player is Kotlin + media3 on a native surface, their repo contains no web player
+at all (`netlify-arvio-tv-site` is marketing pages), and a WebView bridge is the
+pattern this rebuild deleted. So the *logic* was copied into HTML, file by file.
+
+**`PlayerCompletionEffect.kt` → `handlePlaybackEnded()`, and it fixed a real bug.**
+ZeroPlay's old handler was two lines of condition and then nothing: a movie that
+ended left the viewer on its final frame with no way forward except Back, and an
+episode ended with autoplay off did exactly the same. ARVIO's rule is that every
+finished on-demand video either offers its next episode or leaves the player.
+Now:
+
+- a finished movie (or autoplay-off episode edge case) pauses, says so, and
+  closes the player instead of freezing;
+- a finished episode opens the **Up Next** card;
+- completion is claimed once per episode (`endedHandledFor`), because `ended`
+  stays true after dismissal and visibility alone can't guard a reopen;
+- source tests never advance the episode count.
+
+**`NextEpisodeOverlay.kt` → `#playerNextSheet`.** Same shape: backdrop, show,
+episode title, season/episode, runtime, a 10-second countdown bar, **Play now**
+focused, **Cancel** stops. ARVIO's overlay captures the whole remote while it is
+open; ours does too (`handlePlayerNextKeys` runs before the transport and before
+Back), so nothing acts behind the card.
+
+**`NextEpisodePromptGate.kt` → the claim-once rule.** One `endedHandledFor` per
+episode key, exactly the gate their comment describes.
+
+**`PlayerPauseMetadata.kt` → `playerPauseOverview()` / `playerPlayingLabel()`.**
+A paused TV now shows the episode title and its synopsis (falling back to the
+show), plus position — previously the player only ever knew "Season 2 · Episode 4".
+This needed the episode record to survive leaving the detail screen, so
+`episodeMetaCache` remembers it and fetches the season endpoint if a deep link
+skipped it.
+
+**`PlayerExitTransition.kt` → `closePlayer()`.** Pause, fade 180ms, then tear
+down — with a guard so an exit started for one player cannot destroy a player
+opened during the fade, and `reduceMotion` leaving immediately.
+
+**Not ported, deliberately:** skiploop/recap intervals. ARVIO gets them from a
+skip-intro repository that queries a provider; ZeroPlay has no such source wired,
+and shipping the button without the data would be exactly the dead control this
+project bans. Left for when a skip-intro provider is actually added.
+
+**Test total: 438 checks.**
