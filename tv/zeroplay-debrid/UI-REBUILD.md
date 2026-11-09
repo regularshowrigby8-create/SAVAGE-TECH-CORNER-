@@ -273,3 +273,26 @@ tools (`#btnPiP`, `#playerRate`, `.volume-wrap`, `#btnPlayerDownload`,
 sheet, which is better than deleting them from the TV build.
 
 **Tests:** 327 checks green (`npm test`), 57 of them the TV navigation contract.
+
+### Settings, honestly (the bug worth remembering)
+
+Splitting the everyday hub into six real sections moved the *This TV* markup into
+its own function, but `deviceText`, `deviceProfile`, `abiText` and `ramText`
+stayed behind as locals of `settingsHubHTML()`. Rendering the settings route then
+threw a `ReferenceError`, the render pipeline caught it, and the app silently
+presented the **Sources** page instead. Production looked "wrong" while every
+test passed, because no test read the page after render.
+
+Two fixes, both permanent:
+
+1. the values now live in the panel that uses them;
+2. `tests/settings-sections.test.cjs` compares every extracted panel against the
+   locals of the hub it came from and fails on any name it does not declare.
+
+Live verification after the fix shows the six-section settings page with no
+duplicated headings and no missing panel.
+
+**Test total: 358 checks.** Sections shipped: navigation + scale (Phase 1),
+D-pad everywhere + settings sections + unified server list + rebuilt player
+shell (Phase 2). Still queued: the Home structure pass itself (Section 2), which
+is now cheap because the navigation engine underneath it is finally reliable.
