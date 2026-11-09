@@ -62,7 +62,7 @@ ok(watch.embed.includes('player.test') && watch.direct.includes('https://cdn.tes
 const statics = [
   [html.includes('"/api/extract?mode=json&url="+encodeURIComponent(url)'), 'Cinemeta/deployment JSON relay path retained'],
   [html.includes('const LAST_RESORT=new Set(["embedwave"])'), 'Embedwave last-resort registry retained'],
-  [html.includes('https://faststream.online/player/#'), 'embedded FastStream direct player retained'],
+  [html.includes('function zpEngineMount(') && html.includes('vendor/hls.min.js'), 'ZeroPlay owns playback through its own HLS/DASH engine'],
   [html.includes('settings.source==="embedwave") settings.source="vidstuck"'), 'Embedwave cannot remain saved default'],
   [html.includes('delete settings.siteCatalogues'), 'legacy imported website catalogues still purged'],
   [html.includes('no titles or covers imported'), 'lookup-only website rule visible'],
@@ -71,3 +71,24 @@ const statics = [
 ];
 for (const [cond,label] of statics) ok(cond,label);
 console.log(`\n${n} regression checks passed`);
+
+/* ---- resolve mode: a provider page becomes a stream, not an iframe ---- */
+const extract = require(path.join(root, 'api', 'extract.js'));
+(async () => {
+  /* The resolver must find a direct file behind a page and, when the page only
+     exposes a player frame, follow that one hop instead of returning the page. */
+  const watch = extract._parse.parseWatch(
+    '<html><body><iframe src="https://player.host/embed/77"></iframe>' +
+    '<video><source src="https://cdn.host/movie/master.m3u8"></video></body></html>',
+    'https://site.host/watch/1');
+  ok(watch.direct.includes('https://cdn.host/movie/master.m3u8'), 'a page that exposes a direct stream is extracted as a stream');
+  ok(watch.embeds.includes('https://player.host/embed/77'), 'a player frame is recognised as an embed, not as playback');
+  const onlyFrame = extract._parse.parseWatch(
+    '<html><body><iframe src="https://player.host/embed/88"></iframe></body></html>',
+    'https://site.host/watch/2');
+  eq(onlyFrame.direct.length, 0, 'a page with no direct file yields no stream to play');
+  ok(onlyFrame.embeds.length > 0, 'so the caller can still follow one hop to the player frame');
+  ok(extract._parse.parseWatch('<html><iframe src="https://www.facebook.com/plugins/like.php"></iframe></html>', 'https://s.h/1').embeds.length === 0,
+    'social and tracker frames are never treated as a player');
+  console.log('\nresolve-mode checks passed');
+})().catch(e => { console.error(e); process.exit(1); });

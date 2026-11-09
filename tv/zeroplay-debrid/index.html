@@ -3949,7 +3949,7 @@ body.android-tv .server-option .src-actions .btn { min-height: 42px; padding: 0 
     <div id="menuQuickSwitches"></div>
     <div class="settings-actions">
       <button class="btn btn-primary btn-sm" type="button" data-settings-section="add-website">Add website</button>
-      <button class="btn btn-secondary btn-sm" type="button" data-settings-section="faststream">Advanced playback</button>
+      <button class="btn btn-secondary btn-sm" type="button" data-settings-section="playback">Advanced playback</button>
       <button class="btn btn-secondary btn-sm" type="button" data-settings-section="continuous">Advanced sources</button>
     </div>
   </div>
@@ -4024,10 +4024,12 @@ let settings = Object.assign({
 const LEGACY_SETTING_KEYS=["tmdbKey","rdToken","rdUser","addonBase","debrid","debridManifestUrl","siteCatalogues"];
 const hadLegacySettings=LEGACY_SETTING_KEYS.some(k=>Object.prototype.hasOwnProperty.call(settings,k));
 for(const k of LEGACY_SETTING_KEYS) delete settings[k]; /* no user API keys and no Real-Debrid configuration */
-settings.stream=Object.assign({preload:"smart",player:"faststream-only",raceTimeoutSec:20,stallSwitch:true,stallTimeoutSec:45,quality:"auto",resolutions:["2160p","1080p","720p","480p"],maxFileSizeGb:5,dataSaver:"auto",dnsWarm:true,sortByHealth:true,trailerPreviews:!ANDROID_TV_APP,volume:.9,muted:false,rate:1,autoFailover:true,embedwaveFailover:false,fastStreamApiProbe:true,nextEpisodeWarm:true,primeThreads:ANDROID_TV_APP?1:2,primeChunkKb:ANDROID_TV_APP?128:256,primeBudgetMb:ANDROID_TV_APP?1:2,bufferTargetSec:ANDROID_TV_APP?12:16},settings.stream||{});
+settings.stream=Object.assign({preload:"smart",player:"native",raceTimeoutSec:20,stallSwitch:true,stallTimeoutSec:45,quality:"auto",resolutions:["2160p","1080p","720p","480p"],maxFileSizeGb:5,dataSaver:"auto",dnsWarm:true,sortByHealth:true,trailerPreviews:!ANDROID_TV_APP,volume:.9,muted:false,rate:1,autoFailover:true,embedwaveFailover:false,fastStreamApiProbe:true,nextEpisodeWarm:true,primeThreads:ANDROID_TV_APP?1:2,primeChunkKb:ANDROID_TV_APP?128:256,primeBudgetMb:ANDROID_TV_APP?1:2,bufferTargetSec:ANDROID_TV_APP?12:16},settings.stream||{});
 settings.ui=Object.assign({autoplayNext:true,reduceMotion:ANDROID_TV_APP,compactCards:false,showCategoryStrip:true,tvPerformanceMode:ANDROID_TV_APP,androidTvLaunchFocus:true},settings.ui||{});
 settings.downloads=Object.assign({enabled:true,multithreaded:true,threads:ANDROID_TV_APP?2:4,chunkMb:ANDROID_TV_APP?1:2,concurrent:1,m3uExtraction:true,autoSave:true,autoResume:false,refreshExpired:true,keepCompleted:true},settings.downloads||{});
-if(settings.stream.player==="auto"||settings.stream.player==="faststream") settings.stream.player="faststream-only"; /* FastStream is the default for every verified direct stream; native playback remains an explicit fallback. */
+/* ZeroPlay plays every stream itself. Older saved settings that pointed at
+   the hosted player are migrated, so nobody keeps the bridged path by accident. */
+if(settings.stream.player!=="embed-page") settings.stream.player="native";
 if(!(Number(settings.stream.maxFileSizeGb)>0)||Number(settings.stream.maxFileSizeGb)>5) settings.stream.maxFileSizeGb=5;
 if(settings.source==="embedwave") settings.source="vidstuck"; /* Embedwave is last-resort only — never the saved default */
 if(!Array.isArray(settings.customSources)) settings.customSources=[];
@@ -4878,17 +4880,19 @@ async function faststreamPreload(ctx, sourceId){
   const ping=await warmHost(sourceOrigin(source)); if(ping) recordHealth(source.id,ping.ok,ping.ms);
   let url=""; try{ url=await resolveSourceURL(source,ctx); }catch{ return; }
   const direct=!!(source.direct||isDirectMedia(url));
-  if(direct){ const w=await warmDirectMedia(url); preloadCache={key:preloadKey(ctx,source.id),url,mode:"direct file warmed ("+fmtBytes(w.got)+")",ms:Math.round(performance.now()-t0)}; }
-  else if(mode==="aggressive"){
-    const slot=preloadSlotEl(); slot.innerHTML="";
-    const f=document.createElement("iframe"); f.referrerPolicy=embedReferrerPolicyForUrl(url); f.src=url; f.setAttribute("allow","encrypted-media"); f.setAttribute("loading","eager"); f.title="FastStream preload";
-    slot.appendChild(f); preloadCache={key:preloadKey(ctx,source.id),url,mode:"player preloaded",frame:f,ms:Math.round(performance.now()-t0)};
-  } else preloadCache={key:preloadKey(ctx,source.id),url,mode:"DNS + connection warmed",ms:Math.round(performance.now()-t0)};
+  if(direct){
+    const w=await warmDirectMedia(url);
+    preloadCache={key:preloadKey(ctx,source.id),url,mode:"stream warmed ("+fmtBytes(w.got)+")",ms:Math.round(performance.now()-t0)};
+  }else{
+    /* A page we would have to frame is not worth preloading into a hidden
+       iframe: it would start somebody else's player behind the app. Warm the
+       connection to the host instead and leave playback to our own engine. */
+    preloadCache={key:preloadKey(ctx,source.id),url,mode:"connection warmed",ms:Math.round(performance.now()-t0)};
+  }
   updateFastBadge();
 }
-function takePreloadedFrame(key,url){ if(preloadCache&&preloadCache.frame&&preloadCache.key===key&&preloadCache.url===url){ const f=preloadCache.frame; preloadCache=null; return f; } return null; }
 function clearPreload(){ const el=document.getElementById("preloadSlot"); if(el) el.innerHTML=""; preloadCache=null; }
-function updateFastBadge(){ const b=document.getElementById("fastBadge"); if(b) b.textContent=preloadCache?("FastStream: "+preloadCache.mode+" · "+preloadCache.ms+" ms"):""; }
+function updateFastBadge(){ const b=document.getElementById("fastBadge"); if(b) b.textContent=preloadCache?("Ready: "+preloadCache.mode+" · "+preloadCache.ms+" ms"):""; }
 
 /* ---- source discovery: feed auto-add + continuous health (browsers cannot crawl the web;
         discovery = your feed URL checked on an interval + built-in/custom health tracking) ---- */
@@ -5836,9 +5840,9 @@ function variantQualityOptions(variants){
 function qualityOptionsHTML(st){
   st=st||playerState||{};
   const selected=String(st.qualitySelection||settings.stream.quality||"auto");
-  if(st.engine==="faststream-api"&&Array.isArray(st.levels)&&st.levels.length){
+  if(st.engine==="native"&&Array.isArray(st.levels)&&st.levels.length){
     const levels=st.levels.slice().sort((a,b)=>(Number(b.height)||0)-(Number(a.height)||0)||(Number(b.bitrate)||0)-(Number(a.bitrate)||0));
-    return '<option value="auto"'+(selected==="auto"?" selected":"")+'>Auto · FastStream</option>'+levels.map(l=>{
+    return '<option value="auto"'+(selected==="auto"?" selected":"")+'>Auto</option>'+levels.map(l=>{
       const label=(l.height?l.height+"p":(l.label||"Level"))+(l.bitrate?" · "+Math.max(.1,Number(l.bitrate)/1000000).toFixed(1)+" Mb/s":"");
       const value="level:"+String(l.id);
       return '<option value="'+esc(value)+'"'+(selected===value?" selected":"")+">"+esc(label)+"</option>";
@@ -5848,8 +5852,8 @@ function qualityOptionsHTML(st){
   if(variants.length){
     return '<option value="auto"'+(selected==="auto"?" selected":"")+'>Auto · best server stream</option>'+variants.map(v=>'<option value="'+esc(v.value)+'"'+(selected===v.value?" selected":"")+">"+esc(v.label)+"</option>").join("");
   }
-  if(st.engine==="embed"||st.engine==="faststream-legacy"){
-    return [["auto","Quality · player decides"],["2160p","Prefer 4K"],["1080p","Prefer 1080p"],["720p","Prefer 720p"],["480p","Prefer 480p"]].map(([v,t])=>'<option value="'+v+'"'+(selected===v?" selected":"")+">"+t+"</option>").join("");
+  if(st.engine==="embed"){
+    return [["auto","Quality · provider decides"],["2160p","Prefer 4K"],["1080p","Prefer 1080p"],["720p","Prefer 720p"],["480p","Prefer 480p"]].map(([v,t])=>'<option value="'+v+'"'+(selected===v?" selected":"")+">"+t+"</option>").join("");
   }
   return '<option value="auto" selected>Auto quality</option>';
 }
@@ -5888,14 +5892,17 @@ function showPlayerChrome(sticky){
 function setPlayerControlMode(mode){
   const st=playerState; if(st) st.engine=mode||st.engine;
   const controls=document.getElementById("playerControls"); if(controls) controls.dataset.mode=mode||"";
-  const full=mode==="native"||mode==="faststream-api";
-  const limited=mode==="embed"||mode==="faststream-legacy";
+  /* Two states only: "native" is our player and every control is live;
+     "embed" is a provider page we could not resolve into a stream, and the
+     app says so instead of pretending to control it. */
+  const full=mode==="native";
+  const limited=mode==="embed";
   ["btnPlayPause","btnBack10","btnForward10","btnMute","btnPiP"].forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=!full; });
   ["seekRange","volumeRange","playerRate"].forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=!full; });
   const seek=document.querySelector(".seek-row"); if(seek) seek.style.display=limited?"none":"flex";
   const focusBtn=document.getElementById("btnFocusEmbed"); if(focusBtn) focusBtn.style.display=limited?"inline-flex":"none";
   const engine=document.getElementById("playerEngine");
-  if(engine) engine.textContent=mode==="faststream-api"?"FastStream integrated":mode==="faststream-legacy"?"FastStream player":mode==="native"?"ZeroPlay player":mode==="embed"?"Embedded player":"Connecting";
+  if(engine) engine.textContent=mode==="native"?"ZeroPlay player":mode==="embed"?"Provider page":"Connecting";
   refreshPlayerQualityOptions();
   showPlayerChrome(true);
   if(full&&ANDROID_TV_APP){ const active=document.activeElement; if(!active||!active.closest||!active.closest("#playerRoot")){ const play=document.getElementById("btnPlayPause"); if(play) setTimeout(()=>play.focus({preventScroll:true}),30); } }
@@ -5906,8 +5913,9 @@ function refreshPlayerQualityOptions(){
   const was=document.activeElement===sel;
   sel.innerHTML=qualityOptionsHTML(playerState);
   const mode=playerState.engine;
-  sel.disabled=(mode==="loading"||mode==="faststream-connecting"||!(mode==="faststream-api"||mode==="embed"||mode==="faststream-legacy"||(playerState.variants||[]).length>1));
-  sel.title=mode==="faststream-api"?"FastStream quality level":(playerState.variants||[]).length?"Choose a real returned stream quality":"Quality preference. This player chooses the actual in-player quality.";
+  const hasLevels=mode==="native"&&(playerState.levels||[]).length>1;
+  sel.disabled=(mode==="loading")||!(hasLevels||(playerState.variants||[]).length>1||mode==="embed");
+  sel.title=hasLevels?"Choose a quality from this stream's own levels":(playerState.variants||[]).length?"Choose a real returned stream quality":"Quality preference for the provider page.";
   if(was) sel.focus({preventScroll:true});
 }
 function savePlaybackProgress(force){
@@ -5969,17 +5977,6 @@ async function playerCommand(action,value){
       else if(action==="pip") { if(document.pictureInPictureElement) await document.exitPictureInPicture(); else await v.requestPictureInPicture(); }
       return;
     }
-    if(st.engine==="faststream-api"){
-      if(action==="toggle") await fsCommand("togglePlay");
-      else if(action==="seek") await fsCommand("seek",{time:Number(value)||0});
-      else if(action==="seekDelta") await fsCommand("seek",{delta:Number(value)||0});
-      else if(action==="volume") await fsCommand("setVolume",{volume:Math.max(0,Math.min(1,Number(value)))});
-      else if(action==="mute") await fsCommand("setMuted",{muted:!(st.playback&&st.playback.muted)});
-      else if(action==="rate") await fsCommand("setPlaybackRate",{rate:Number(value)||1});
-      else if(action==="pip") await fsCommand("setPictureInPicture",{pictureInPicture:!(st.fsState&&st.fsState.pictureInPicture)});
-      const fresh=await fsCommand("getState",{},5000).catch(()=>null); if(fresh) updatePlaybackUI(normalizeFastStreamState(fresh));
-      return;
-    }
     if(action==="focusEmbed"){ const f=document.getElementById("playerFrame")||document.getElementById("fsFrame"); if(f){ playerState.embedFocused=true; const ov=document.getElementById("playerOverlay"); if(ov) ov.classList.add("chrome-hidden"); f.focus(); toast("Video controls focused. Press Back once to return to the ZeroPlay bar."); } }
   }catch(err){ toast("Player control failed: "+(err&&err.message||err),"error"); }
 }
@@ -5992,23 +5989,22 @@ async function setPlayerQuality(value){
   const st=playerState; if(!st||st.trailer) return;
   st.qualitySelection=String(value||"auto");
   if(!String(value).startsWith("level:")){ settings.stream.quality=normalizeQualityLabel(value)==="source"?"auto":normalizeQualityLabel(value); applyQualityPreset(settings.stream.quality); saveSettings(); }
-  if(st.engine==="faststream-api"){
+  if(st.engine==="native"&&st.direct){
     try{
-      playerLoading(true,"Switching FastStream quality…");
-      if(String(value).startsWith("level:")) await fsCommand("setVideoLevel",{id:String(value).slice(6)});
-      else if(value==="auto"){
-        const state=await fsCommand("getState",{},5000).catch(()=>st.fsState||{});
-        await fsCommand("load",{url:st.url,autoPlay:true,time:Number(state.currentTime)||currentPlaybackTime()});
-      }else await applyPreferredFastStreamLevel(value,true);
-      playerLoading(false); toast("Quality set to "+(value==="auto"?"Auto":value.replace("level:","")),"success");
-    }catch(e){ playerLoading(false); toast("FastStream could not switch quality: "+(e.message||e),"error"); }
+      playerLoading(true,"Switching quality…");
+      if(String(value).startsWith("level:")||value==="auto"){
+        if(!zpEngineSetLevel(value)){ playerLoading(false); toast("This stream does not expose selectable levels","error"); return; }
+      }else zpEngineApplyPreferredLevel(value);
+      playerLoading(false);
+      toast("Quality set to "+(value==="auto"?"Auto":value.replace("level:","")),"success");
+    }catch(e){ playerLoading(false); toast("Could not switch quality: "+(e.message||e),"error"); }
     return;
   }
   if((st.variants||[]).length){
     const next=chooseVariantForQuality(st.variants,value,st.url);
     if(next&&next.url!==st.url){ await switchDirectVariant(next,{reason:"quality"}); return; }
   }
-  if(st.engine==="embed"||st.engine==="faststream-legacy") toast("Saved as your quality preference. This embedded player controls its actual playback quality internally.");
+  if(st.engine==="embed") toast("This is a provider page, not ZeroPlay playback. Its own player decides quality.");
   updatePlayerMeta();
 }
 async function switchDirectVariant(variant,opts){
@@ -6021,25 +6017,14 @@ async function switchDirectVariant(variant,opts){
   const stage=document.getElementById("playerStage");
   const source=st.tempSource||getSource(st.source)||{id:"direct",name:next.addonName||"Direct server"};
   playerLoading(true,opts.reason==="quality"?"Switching quality…":"Trying another stream…");
-  if(st.engine==="faststream-api"&&fsBridge.ready&&stage){
-    try{
-      await fsCommand("load",{url:next.url,autoPlay:true,time:at>5?at:0},12000);
-      setTimeout(()=>refreshFastStreamLevels(true),300);
-      updatePlayerMeta(source);
-      return;
-    }catch{}
-  }
-  if(st.engine==="native"&&stage&&nativeCanPlayDirect(next.url)){
-    mountNativeVideo(stage,next.url,source,performance.now(),at);
+  /* Every direct variant, whatever its container, is remounted in the one
+     engine this app owns — no branch hands the URL to somebody else. */
+  if(stage){
+    await startOwnEngine(stage,next.url,source,performance.now(),at,{reason:opts.reason});
     updatePlayerMeta(source);
     return;
   }
-  if(st.engine==="faststream-legacy"&&stage){
-    await mountFastStreamPlayer(stage,next.url,source,performance.now(),at,{allowApi:false});
-    updatePlayerMeta(source);
-    return;
-  }
-  await mountDirectVideo(stage,next.url,source,performance.now(),at);
+  await startOwnEngine(stage,next.url,source,performance.now(),at,{reason:opts.reason});
   updatePlayerMeta(source);
 }
 /* Failover position — the ARVIO `playingRequestIndex` idea, reduced to what
@@ -6067,120 +6052,262 @@ async function tryNextDirectVariant(reason){
   await switchDirectVariant(next,{reason:"fallback"});
   return true;
 }
-const FASTSTREAM_ORIGIN="https://faststream.online";
-let fastStreamApiStatus=(()=>{ try{ return JSON.parse(sessionStorage.getItem("zp_faststream_api_v1")||"null")||{state:"unknown",checkedAt:0}; }catch{ return {state:"unknown",checkedAt:0}; } })();
-let fastStreamProbeStarted=false;
-function effectiveFastStreamApiStatus(){ return Date.now()-Number(fastStreamApiStatus.checkedAt||0)<6*60*60*1000?String(fastStreamApiStatus.state||"unknown"):"unknown"; }
-function setFastStreamApiStatus(state){ fastStreamApiStatus={state,checkedAt:Date.now()}; try{ sessionStorage.setItem("zp_faststream_api_v1",JSON.stringify(fastStreamApiStatus)); }catch{} }
-function probeFastStreamApiInBackground(){
-  if(streamCfg().fastStreamApiProbe===false||fastStreamProbeStarted||effectiveFastStreamApiStatus()!=="unknown"||effectiveSaver()||document.hidden) return;
-  fastStreamProbeStarted=true;
-  const frame=document.createElement("iframe");
-  frame.hidden=true; frame.setAttribute("aria-hidden","true"); frame.title="FastStream API capability check";
-  const cleanup=()=>{ window.removeEventListener("message",onMessage); frame.remove(); };
-  const timer=setTimeout(()=>{ setFastStreamApiStatus("unavailable"); cleanup(); },6500);
-  function onMessage(e){
-    if(e.origin!==FASTSTREAM_ORIGIN||e.source!==frame.contentWindow) return;
-    if(e.data&&e.data.type==="faststream:event"&&e.data.event==="ready"){ clearTimeout(timer); setFastStreamApiStatus("available"); cleanup(); }
-  }
-  window.addEventListener("message",onMessage);
-  frame.src="https://faststream.online/player/";
-  document.body.appendChild(frame);
-}
-let fsBridge={frame:null,ready:false,pending:new Map(),seq:0,waiters:[],lastState:null};
-function resetFastStreamBridge(frame){
-  for(const p of fsBridge.pending.values()){ clearTimeout(p.timer); p.reject(new Error("FastStream player changed")); }
-  fsBridge={frame:frame||null,ready:false,pending:new Map(),seq:0,waiters:[],lastState:null};
-}
-function normalizeFastStreamState(state){
-  state=state||{};
-  let buffered=0;
-  if(Array.isArray(state.buffered)){ for(const r of state.buffered){ if(r&&Number(r.start)<=Number(state.currentTime||0)&&Number(r.end)>=Number(state.currentTime||0)) buffered=Math.max(buffered,Number(r.end)-Number(state.currentTime||0)); } }
-  return {paused:state.paused!==false,buffering:!!state.buffering,currentTime:Number(state.currentTime)||0,duration:Number(state.duration)||0,buffered,volume:Number(state.volume==null?1:state.volume),muted:!!state.muted,rate:Number(state.playbackRate||state.rate||1),videoWidth:Number(state.videoWidth)||0,videoHeight:Number(state.videoHeight)||0,currentVideoLevelID:state.videoLevel||state.currentVideoLevelID||null,currentAudioLevelID:state.audioLevel||state.currentAudioLevelID||null,fullscreen:!!state.fullscreen,pictureInPicture:!!state.pictureInPicture};
-}
-function fsCommand(command,args,timeoutMs){
-  const frame=fsBridge.frame;
-  if(!frame||!frame.contentWindow) return Promise.reject(new Error("FastStream is not loaded"));
-  const id="zp-"+(++fsBridge.seq)+"-"+Date.now().toString(36);
-  return new Promise((resolve,reject)=>{
-    const timer=setTimeout(()=>{ fsBridge.pending.delete(id); reject(new Error("FastStream "+command+" timed out")); },timeoutMs||9000);
-    fsBridge.pending.set(id,{resolve,reject,timer});
-    frame.contentWindow.postMessage({type:"faststream:command",id,command,args:args||{}},FASTSTREAM_ORIGIN);
-  });
-}
-function waitForFastStreamReady(timeoutMs){
-  if(fsBridge.ready) return Promise.resolve(true);
+/* =====================================================================
+   ZEROPLAY ENGINE — the app's own player
+
+   Before this, a direct stream was handed to somebody else's player in an
+   iframe (faststream.online/player/#url) and every control was a
+   postMessage into that page. That is not a player, it is a remote
+   control for one: quality, seek, buffering and failure were theirs to
+   decide, our bar only asked.
+
+   This engine takes the stream URL and plays it itself:
+
+     HLS  → hls.js (vendor/hls.min.js), native HLS where the platform
+            supports it (Android TV / Safari), with our own level list
+     DASH → dash.js (vendor/dash.min.js), our own bitrate list
+     MP4  → the <video> element directly
+
+   Nothing is imported from a provider. Every control reads and writes the
+   element or the engine instance we created, so the transport row, the
+   More sheet, seek, quality, speed, volume, PiP, failover and progress all
+   act on our own playback state. That is the same shape Nuvio (ExoPlayer
+   with its own MediaSession) and ARVIO (its own player screen) use: the
+   server supplies a URL, the app supplies the player.
+   ===================================================================== */
+const ZP_ENGINE_SCRIPTS=[
+  {src:"vendor/hls.min.js",global:"Hls"},
+  {src:"vendor/dash.min.js",global:"dashjs"}
+];
+let zpEngineScriptsPromise=null;
+function loadScriptOnce(src,global){
   return new Promise(resolve=>{
-    const waiter={resolve}; fsBridge.waiters.push(waiter);
-    setTimeout(()=>{ const i=fsBridge.waiters.indexOf(waiter); if(i>=0) fsBridge.waiters.splice(i,1); resolve(false); },timeoutMs||4500);
+    if(global&&window[global]) return resolve(true);
+    const existing=document.querySelector('script[data-zp-engine="'+src+'"]');
+    if(existing){ existing.addEventListener("load",()=>resolve(!!(global&&window[global])),{once:true}); existing.addEventListener("error",()=>resolve(false),{once:true}); return; }
+    const s=document.createElement("script");
+    s.src=src; s.async=true; s.setAttribute("data-zp-engine",src);
+    s.onload=()=>resolve(!!(global&&window[global]));
+    s.onerror=()=>resolve(false);
+    document.head.appendChild(s);
   });
 }
-let fsLevelsTimer=null;
-async function refreshFastStreamLevels(applyPref){
-  const st=playerState; if(!st||st.engine!=="faststream-api") return;
-  try{
-    const levels=await fsCommand("getLevels",{},7000);
-    const raw=levels&&(levels.video||levels.videoLevels||levels.levels)||[];
-    st.levels=(Array.isArray(raw)?raw:[]).map(l=>({id:String(l.id||l.levelId||""),label:String(l.label||""),width:Number(l.width)||0,height:Number(l.height)||0,bitrate:Number(l.bitrate||l.bandwidth)||0})).filter(l=>l.id);
-    st.currentLevelId=(levels&&(levels.currentVideo||levels.currentVideoLevelID))||st.currentLevelId||null;
-    refreshPlayerQualityOptions();
-    if(applyPref) await applyPreferredFastStreamLevel(settings.stream.quality,false);
-  }catch{}
+function ensureEngineScripts(){
+  if(!zpEngineScriptsPromise) zpEngineScriptsPromise=Promise.all(ZP_ENGINE_SCRIPTS.map(x=>loadScriptOnce(x.src,x.global)));
+  return zpEngineScriptsPromise;
 }
-async function applyPreferredFastStreamLevel(quality,announce){
-  const st=playerState; if(!st||!st.levels||!st.levels.length) return;
-  const pref=normalizeQualityLabel(quality||"auto");
-  const sorted=st.levels.slice().sort((a,b)=>(Number(a.height)||0)-(Number(b.height)||0)||(Number(a.bitrate)||0)-(Number(b.bitrate)||0));
-  if(pref==="auto"){
-    // Start high, then step down only if buffering proves the connection
-    // cannot sustain it (handled in the faststream event listener).
-    // FastStream's own auto starts low and can sit there indefinitely.
-    const top=sorted[sorted.length-1]; if(!top) return;
-    if(st.autoHighLevelId!==top.id){ await fsCommand("setVideoLevel",{id:top.id}); st.autoHighLevelId=top.id; st.autoHighBufferingSince=0; }
-    return;
-  }
-  const prefH=qualityHeight(pref);
-  const level=sorted.filter(l=>(Number(l.height)||0)<=prefH).pop()||sorted[0];
-  if(level){ st.autoHighLevelId=""; await fsCommand("setVideoLevel",{id:level.id}); st.qualitySelection="level:"+level.id; refreshPlayerQualityOptions(); if(announce) toast("Quality set to "+(level.height?level.height+"p":pref)); }
+function streamKindOf(url,declared){
+  const kind=directMediaKind(url);
+  if(kind!=="unknown") return kind;
+  const d=String(declared||"").toLowerCase();
+  if(/hls|m3u8|mpegts/.test(d)) return "hls";
+  if(/dash|mpd/.test(d)) return "dash";
+  return /\.(mp4|webm|mov|m4v|mkv)([?#]|$)/i.test(String(url||""))?"file":"unknown";
 }
-window.addEventListener("message",e=>{
-  if(e.origin!==FASTSTREAM_ORIGIN||!fsBridge.frame||e.source!==fsBridge.frame.contentWindow) return;
-  const data=e.data||{};
-  if(data.type==="faststream:response"&&data.id){
-    const p=fsBridge.pending.get(data.id); if(!p) return;
-    fsBridge.pending.delete(data.id); clearTimeout(p.timer);
-    if(data.ok) p.resolve(data.result); else p.reject(new Error(data.error||"FastStream command failed"));
-    return;
+
+/* One object owns the live playback: the element, the engine instance, the
+   level list and the teardown. Everything else in the player talks to it. */
+function zpEngine(){
+  const st=playerState;
+  if(!st) return null;
+  if(!st.zpEngine){
+    st.zpEngine={video:null,instance:null,kind:"",url:"",levels:[],activeLevel:"auto",destroyed:false};
   }
-  if(data.type!=="faststream:event") return;
-  const state=normalizeFastStreamState(data.state||{});
-  fsBridge.lastState=state;
-  if(playerState) playerState.fsState=state;
-  if(data.event==="ready"){
-    fsBridge.ready=true;
-    const waiters=fsBridge.waiters.splice(0); waiters.forEach(w=>w.resolve(true));
+  return st.zpEngine;
+}
+function zpEngineDestroy(){
+  const st=playerState; const e=st&&st.zpEngine; if(!e) return;
+  e.destroyed=true;
+  try{ if(e.instance&&e.instance.destroy) e.instance.destroy(); }catch{}
+  try{ if(e.instance&&e.instance.reset) e.instance.reset(); }catch{}
+  const v=e.video;
+  if(v){
+    try{ v.pause(); }catch{}
+    try{ v.removeAttribute("src"); v.load(); }catch{}
   }
-  if(!playerState||playerState.trailer) return;
-  if(playerState.engine==="faststream-api"||playerState.engine==="faststream-connecting"){
-    updatePlaybackUI(state,data.event);
-    if(playerState.autoHighLevelId&&(!playerState.qualitySelection||playerState.qualitySelection==="auto")){
-      if(playerState.playback&&playerState.playback.buffering&&!playerState.playback.paused){ playerState.autoHighBufferingSince=playerState.autoHighBufferingSince||Date.now(); }
-      else playerState.autoHighBufferingSince=0;
-      if(playerState.autoHighBufferingSince&&Date.now()-playerState.autoHighBufferingSince>7000){
-        playerState.autoHighBufferingSince=0;
-        const sortedLevels=(playerState.levels||[]).slice().sort((a,b)=>(Number(a.height)||0)-(Number(b.height)||0)||(Number(a.bitrate)||0)-(Number(b.bitrate)||0));
-        const lvlIdx=sortedLevels.findIndex(l=>String(l.id)===String(playerState.autoHighLevelId));
-        if(lvlIdx>0){ const lower=sortedLevels[lvlIdx-1]; playerState.autoHighLevelId=lower.id; fsCommand("setVideoLevel",{id:lower.id}).catch(()=>{}); }
+  if(st){ st.zpEngine=null; st.levels=[]; st.currentLevelId=null; }
+}
+function zpEngineLevels(){
+  const e=zpEngine(); return (e&&e.levels)||[];
+}
+function zpEngineSetLevel(value){
+  const e=zpEngine(); const st=playerState;
+  if(!e||!e.instance) return false;
+  const wanted=String(value||"auto");
+  if(e.kind==="hls"&&e.instance&&Array.isArray(e.instance.levels)){
+    const levels=e.instance.levels||[];
+    if(wanted==="auto"){ e.instance.currentLevel=-1; }
+    else{
+      /* hls.js addresses levels by array index; its level objects carry no id,
+         so the index is the only correct key. */
+      const idx=levels.findIndex((l,i)=>Number(l.id!=null?l.id:i)===Number(wanted.replace("level:","")));
+      if(idx<0) return false;
+      e.instance.currentLevel=idx;
+    }
+    e.activeLevel=wanted;
+    if(st){ st.currentLevelId=wanted==="auto"?null:wanted.replace("level:",""); st.qualitySelection=wanted; }
+    return true;
+  }
+  if(e.kind==="dash"&&e.instance){
+    if(wanted==="auto"){ e.instance.updateSettings({streaming:{abr:{autoSwitchBitrate:{video:true}}}}); }
+    else{
+      const id=Number(wanted.replace("level:",""));
+      const reps=(e.instance.getBitrateInfoListFor&&e.instance.getBitrateInfoListFor("video"))||[];
+      const rep=reps.find(r=>Number(r.qualityIndex)===id||Number(r.bitrate)===id);
+      if(!rep) return false;
+      e.instance.updateSettings({streaming:{abr:{autoSwitchBitrate:{video:false}}}});
+      e.instance.setQualityFor("video",Number(rep.qualityIndex));
+    }
+    e.activeLevel=wanted;
+    if(st){ st.qualitySelection=wanted; }
+    return true;
+  }
+  return false;
+}
+function zpEngineApplyRate(rate){ const e=zpEngine(); if(e&&e.video){ try{ e.video.playbackRate=Number(rate)||1; }catch{} } }
+function zpEngineSetVolume(v,muted){ const e=zpEngine(); if(e&&e.video){ try{ e.video.volume=Math.max(0,Math.min(1,Number(v))); e.video.muted=!!muted; }catch{} } }
+
+/* Mount the stream in our own player. Returns the <video> that is now playing,
+   so callers bind their health/stall/failover listeners to a real element. */
+async function zpEngineMount(stage,url,source,opts){
+  const st=playerState; opts=opts||{};
+  if(!stage||!st) return null;
+  const resumeAt=Number(opts.resumeAt)||0;
+  const kind=streamKindOf(url,opts.kind);
+  zpEngineDestroy();
+  stage.innerHTML='<div class="media-shell"><video class="player-frame" id="pv" playsinline preload="metadata"></video><button class="media-click" id="mediaClick" type="button" aria-label="Play or pause"></button></div>'
+    +'<div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>Connecting to the stream…</strong><span class="zp-loading-sub">ZeroPlay is reading this stream directly.</span></div>';
+  const shell=stage.querySelector(".media-shell");
+  const v=document.getElementById("pv");
+  const e=zpEngine();
+  e.video=v; e.kind=kind; e.url=url;
+  const click=document.getElementById("mediaClick");
+  if(click){ click.onclick=()=>playerCommand("toggle"); click.ondblclick=()=>playerCommand("fullscreen"); }
+
+  /* A Streams/Addon result can hand us required headers; HLS/XHR based
+     engines need them explicitly, so they are passed to the loader only. */
+  const headers=(source&&source.headers&&typeof source.headers==="object")?source.headers:null;
+
+  if(kind==="hls"&&!v.canPlayType("application/vnd.apple.mpegurl")){
+    const loaded=await ensureEngineScripts();
+    if(playerState!==st) return null;
+    if(loaded&&window.Hls&&window.Hls.isSupported()){
+      const hls=new window.Hls({
+        enableWorker:true,
+        lowLatencyMode:false,
+        backBufferLength:90,
+        maxBufferLength:60,
+        capLevelToPlayerSize:false,
+        startLevel:-1
+      });
+      e.instance=hls;
+      const syncLevels=()=>{
+        e.levels=(hls.levels||[]).map((l,i)=>({
+          id:String(i),
+          height:Number(l.height)||0,
+          width:Number(l.width)||0,
+          bitrate:Number(l.bitrate)||0,
+          label:l.name||""
+        })).filter(l=>l.id!=="");
+        if(st){ st.levels=e.levels; }
+        refreshPlayerQualityOptions();
+        if(Number(st.quality)&&false){} /* preference applied below */
+      };
+      hls.on(window.Hls.Events.MANIFEST_PARSED,()=>{
+        syncLevels();
+        /* Auto means "start high and only come down when the box cannot keep
+           up", not "start at 360p and hope". The step-down is driven by real
+           buffering on our own element, so it survives any source switch. */
+        if(String(settings.stream.quality||"auto")==="auto"&&(hls.levels||[]).length){
+          const order=(hls.levels||[]).map((l,i)=>({i,height:Number(l.height)||0})).sort((a,b)=>b.height-a.height);
+          st.autoLevelQueue=order.map(x=>x.i);
+          st.autoHighLevelId=String(order[0].i);
+          st.autoHighBufferingSince=0;
+          try{ hls.currentLevel=order[0].i; }catch{}
+        }else{
+          st.autoLevelQueue=null;
+          zpEngineApplyPreferredLevel(settings.stream.quality);
+        }
+        playerLoading(false);
+        const p=v.play(); if(p&&p.catch) p.catch(()=>{ playerLoading(false); updatePlaybackUI({paused:true,buffering:false,currentTime:v.currentTime||0,duration:v.duration||0},"pause"); toast("Press Play to start"); });
+      });
+      hls.on(window.Hls.Events.LEVEL_SWITCHED,(_,d)=>{
+        const lvl=(hls.levels||[])[d.level];
+        if(st){ st.currentLevelId=String(d.level); }
+        markPlayingQuality(lvl);
+      });
+      if(headers){
+        hls.config.xhrSetup=function(xhr,requestUrl){
+          try{ Object.keys(headers).forEach(k=>{ if(/^(authorization|referer|cookie|user-agent)$/i.test(k)) xhr.setRequestHeader(k,headers[k]); }); }catch{}
+        };
       }
+      hls.on(window.Hls.Events.ERROR,(_,data)=>{
+        if(!data||!data.fatal) return;
+        if(data.type===window.Hls.ErrorTypes.MEDIA_ERROR){ try{ hls.recoverMediaError(); return; }catch{} }
+        if(playerState===st) v.dispatchEvent(new Event("zp-engine-error"));
+      });
+      hls.loadSource(url);
+      hls.attachMedia(v);
+    }else{
+      /* No MSE and no native HLS: the browser genuinely cannot play this. */
+      playerLoading(false);
+      stage.innerHTML=playerErrorHTML("This stream cannot be played here","ZeroPlay needs MediaSource or native HLS support for this link. Try another quality or server with this exact title.");
+      bindPlayerErrorActions();
+      return null;
     }
-    if(data.event==="manifestparsed"||data.event==="sourcechange"||data.event==="loadedmetadata"){
-      clearTimeout(fsLevelsTimer); fsLevelsTimer=setTimeout(()=>refreshFastStreamLevels(true),180);
+  }else if(kind==="dash"){
+    const loaded=await ensureEngineScripts();
+    if(playerState!==st) return null;
+    if(loaded&&window.dashjs&&window.dashjs.MediaPlayer){
+      const player=window.dashjs.MediaPlayer().create();
+      e.instance=player;
+      try{ player.initialize(v,url,true); }catch{ player.initialize(v,null,true); player.attachSource(url); }
+      player.on("streamInitialized",()=>{
+        const reps=(player.getBitrateInfoListFor&&player.getBitrateInfoListFor("video"))||[];
+        e.levels=reps.map(r=>({id:String(r.qualityIndex),height:Number(r.height)||0,width:Number(r.width)||0,bitrate:Number(r.bitrate)||0,label:""})).filter(l=>l.id!=="");
+        if(st) st.levels=e.levels;
+        refreshPlayerQualityOptions();
+        playerLoading(false);
+      });
+      player.on("playbackError",()=>{ if(playerState===st) v.dispatchEvent(new Event("zp-engine-error")); });
+    }else{
+      playerLoading(false);
+      stage.innerHTML=playerErrorHTML("This stream cannot be played here","DASH needs the bundled dash.js engine. Try another quality or server with this exact title.");
+      bindPlayerErrorActions();
+      return null;
     }
-    if(data.event==="playing"&&!playerState.healthRecorded){ playerState.healthRecorded=true; const src=playerState.tempSource||getSource(playerState.source); if(src) recordHealth(src.id,true); updatePlayerMeta(); }
-    if(data.event==="ended") handlePlaybackEnded();
-    if(data.event==="error"){ playerLoading(true,"FastStream reported an error…"); tryNextDirectVariant("FastStream stream error").then(ok=>{ if(!ok) toast("FastStream could not play this stream","error"); }); }
+  }else{
+    v.preload=(settings.stream.preload==="off"||effectiveSaver())?"metadata":"auto";
+    v.src=url;
   }
-});
+  if(resumeAt>20) v.addEventListener("loadedmetadata",()=>{ if(v.duration&&resumeAt<v.duration-15){ try{ v.currentTime=resumeAt; }catch{} } },{ once:true });
+  if(kind==="file"||kind==="unknown"){
+    const p0=()=>{ const p=v.play(); if(p&&p.catch) p.catch(()=>{}); };
+    v.addEventListener("loadedmetadata",p0,{ once:true });
+  }
+  return v;
+}
+function markPlayingQuality(level){
+  const st=playerState; if(!st||!level) return;
+  const label=level.height?level.height+"p":(level.bitrate?(Math.max(.1,level.bitrate/1000000)).toFixed(1)+" Mb/s":"");
+  if(label){ st.playingQualityLabel=label; const chip=document.getElementById("playerEngine"); if(chip&&st.engine==="native") chip.textContent="ZeroPlay · "+label; }
+}
+/* Preference is a hint, never a lock: pick the closest declared level once,
+   then leave the engine alone if the viewer later chooses Auto. */
+function zpEngineApplyPreferredLevel(pref){
+  const e=zpEngine(); const list=e&&e.levels||[];
+  if(!list.length) return;
+  const want=String(pref||"auto").toLowerCase();
+  if(want==="auto"||!want) return;
+  const target=Number(want.replace("p",""));
+  if(!target) return;
+  const sorted=list.slice().sort((a,b)=>(Number(b.height)||0)-(Number(a.height)||0));
+  const exact=sorted.find(l=>Number(l.height)===target)||sorted.find(l=>Math.abs((Number(l.height)||0)-target)<=120);
+  if(exact) zpEngineSetLevel("level:"+exact.id);
+}
+/* =====================================================================
+   End of ZeroPlay engine
+   ===================================================================== */
 function registerProgress(item,season,episode){
   const k=keyOf(item.type,item.id), prev=progress[k]||{};
   progress[k]=Object.assign({},prev,snap(item,item.type),{season:season==null?prev.season:season,episode:episode==null?prev.episode:episode,updatedAt:Date.now()});
@@ -6205,7 +6332,7 @@ function openSourceTest(tempSource,type){
   drawPlayer({});
 }
 function openTrailer(title,youtubeKey){
-  stopCardPreview(); resetFastStreamBridge(null);
+  stopCardPreview(); 
   clearPlayerTimers();
   playerState={trailer:youtubeKey,item:{title:title+" — Trailer",type:"movie",id:0}};
   $("#playerRoot").innerHTML='<div class="player-overlay" id="playerOverlay"><div class="player-bar"><span class="logo-badge"><span class="logo-mark">▶</span><span>ZeroPlay</span></span><span class="pt">'+esc(title)+' — Trailer</span><span style="flex:1"></span><button class="btn btn-secondary" id="btnClosePlayer">× Close</button></div>'
@@ -6257,7 +6384,7 @@ function playerShell(msg){
   const rate=Number(st.playback&&st.playback.rate||1);
   const queue=directQueueStatus(st);
   const src=(st.tempSource||getSource(st.source));
-  const engineLabel=st.engine==="faststream-api"?"FastStream":st.engine==="faststream-legacy"?"FastStream legacy":st.engine==="embed"?"Player page":st.direct?"Direct file":"Connecting";
+  const engineLabel=st.engine==="native"?(st.playingQualityLabel||"ZeroPlay player"):st.engine==="embed"?"Provider page":st.direct?"ZeroPlay player":"Connecting";
   return '<div class="player-overlay" id="playerOverlay">'
     +'<div class="player-stage" id="playerStage"><div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>'+esc(msg||"Connecting…")+'</strong><span class="zp-loading-sub">ZeroPlay is preparing this exact title.</span></div></div>'
 
@@ -6267,7 +6394,7 @@ function playerShell(msg){
       +'<button class="control-btn" id="btnPlayerServersStage" type="button">Servers</button>'
       +'<button class="control-btn" id="btnPlayerDownloadStage" type="button">⬇ Download</button>'
       +'<button class="control-btn" id="btnPlayerM3u" type="button">M3U tools</button>'
-      +'<button class="control-btn" id="btnPlayerFastStream" type="button">FastStream controls</button>'
+      +'<button class="control-btn" id="btnPlayerFastStream" type="button">Quality</button>'
     +'</div>'
 
     /* top bar — identity and the two ways out, nothing else */
@@ -6337,7 +6464,9 @@ function bindPlayerChrome(){
   on("btnPlayerDownloadStage","click",openDownload);
   on("btnPlayerServersStage","click",()=>document.getElementById("btnPlayerServers")?.click());
   on("btnPlayerResume","click",()=>playerCommand("toggle"));
-  on("btnPlayerFastStream","click",()=>{ showPlayerChrome(true); if(st.engine==="faststream-api"||st.engine==="faststream-legacy"){ playerCommand("focusEmbed"); } else toast("ZeroPlay controls are active for this stream"); });
+  /* This door used to hand focus to another app's player. Now it opens the
+     quality list of the stream we are actually playing. */
+  on("btnPlayerFastStream","click",()=>{ togglePlayerMore(true); const q=document.getElementById("playerQuality"); if(q) setTimeout(()=>tvFocusAndReveal(q),60); });
   on("btnPlayerM3u","click",()=>openM3uExtractorForContext(playerContext(st),st.directUrl||(st.direct?st.url:"")));
   const changeEpisode=delta=>{
     if(delta<0&&st.episode<=1) return;
@@ -6442,6 +6571,15 @@ function bindPlayerErrorActions(){
   const retry=document.getElementById("btnPlayerRetry"); if(retry) retry.onclick=()=>drawPlayer(progress[keyOf(st.item.type,st.item.id)]||{});
   const disc=document.getElementById("btnPlayerDiscover"); if(disc) disc.onclick=()=>{ closePlayer(); location.hash="#/sources"; };
 }
+/* Ask the resolver for direct media behind a provider page. The app's player
+   plays what comes back; a page is never framed as a player. */
+async function resolvePageToStreams(pageUrl,label){
+  try{
+    const data=await resolverCall({mode:"resolve",url:pageUrl});
+    const list=Array.isArray(data&&data.direct)?data.direct:[];
+    return list.filter(u=>isDirectMedia(u)).map(u=>normalizeVariant({url:u,addonName:label||"Website",label:label||"Stream"},label||"Website"));
+  }catch{ return []; }
+}
 async function resolveSourcePlayback(source,ctx){
   ctx=ctx||{};
   const identity=(ctx.identity&&ctx.identity.version)?ctx.identity:buildTitleIdentity(ctx);
@@ -6458,15 +6596,24 @@ async function resolveSourcePlayback(source,ctx){
     const direct=sortVariantsForQuality((found.direct||[]).map(url=>({url,addonName:source.name,label:found.pageTitle||source.name})),settings.stream.quality);
     if(found.playUrl&&isDirectMedia(found.playUrl)&&!direct.some(v=>v.url===found.playUrl)) direct.unshift(normalizeVariant({url:found.playUrl,addonName:source.name,label:found.pageTitle||source.name},source.name));
     if(direct.length&&isDirectMedia(found.playUrl||direct[0].url)) return {url:found.playUrl&&isDirectMedia(found.playUrl)?found.playUrl:direct[0].url,kind:"direct",direct:true,variants:direct,activeVariant:direct.find(v=>v.url===found.playUrl)||direct[0],found,identityScore:found.identityScore,identityVerdict:found.identityVerdict};
+    /* No direct file on the page itself: look one hop deeper (the page's own
+       player frame) for a real stream before falling back to framing it. */
+    const deep=await resolvePageToStreams(found.playUrl||found.watchUrl||source.base,source.name);
+    if(deep.length) return {url:deep[0].url,kind:"direct",direct:true,variants:sortVariantsForQuality(deep,settings.stream.quality),activeVariant:deep[0],found,identityScore:found.identityScore,identityVerdict:found.identityVerdict};
     return {url:found.playUrl||found.embed||found.watchUrl,kind:"embed",direct:false,variants:[],activeVariant:null,found,identityScore:found.identityScore,identityVerdict:found.identityVerdict};
   }
   const url=await resolveSourceURL(source,richCtx);
   const direct=!!(source&&source.direct)||isDirectMedia(url);
-  const variant=direct?normalizeVariant({url,addonName:source?source.name:"Direct server",label:source?source.name:"Direct stream"},source?source.name:"Direct server"):null;
-  return {url,kind:direct?"direct":"embed",direct,variants:variant?[variant]:[],activeVariant:variant};
+  if(direct){
+    const v=normalizeVariant({url,addonName:source?source.name:"Direct server",label:source?source.name:"Direct stream"},source?source.name:"Direct server");
+    return {url,kind:"direct",direct:true,variants:[v],activeVariant:v};
+  }
+  const owned=await resolvePageToStreams(url,source?source.name:"Direct server");
+  if(owned.length) return {url:owned[0].url,kind:"direct",direct:true,variants:sortVariantsForQuality(owned,settings.stream.quality),activeVariant:owned[0]};
+  return {url,kind:"embed",direct:false,variants:[],activeVariant:null};
 }
 async function drawPlayer(prevProgress){
-  clearPlayerTimers(); resetFastStreamBridge(null);
+  clearPlayerTimers(); 
   const st=withPlayerRuntime(playerState); playerState=st;
   const it=st.item, isTV=it.type==="tv";
   stopCardPreview();
@@ -6517,7 +6664,7 @@ async function drawPlayer(prevProgress){
   bindPlayerChrome();
   const stage=$("#playerStage");
   const loadT0=performance.now();
-  if(st.direct) await mountDirectVideo(stage,st.url,source,loadT0,resumeSeconds);
+  if(st.direct) await startOwnEngine(stage,st.url,source,loadT0,resumeSeconds,{kind:st.kind});
   else mountEmbedPlayer(stage,st.url,source,loadT0,ctx);
   updatePlayerMeta(source);
   if(isTV&&settings.stream.preload!=="off"&&streamCfg().nextEpisodeWarm!==false&&!st.noProgress) playerTimers.push(setTimeout(()=>{ if(playerState===st&&!document.hidden) faststreamPreload({type:it.type,id:it.id,title:titleOf(it),season:st.season,episode:st.episode+1},source.id); },9000));
@@ -6528,28 +6675,24 @@ function embedReferrerPolicyForUrl(url){
 function mountEmbedPlayer(stage,url,source,loadT0,ctx){
   const st=playerState;
   if(!stage||!st) return;
-  resetFastStreamBridge(null);
+  
   st.mountedAt=Date.now(); st.frameLoadedAt=0; st.playbackSignalAt=0; st.playbackConfirmed=false; st.embedNoticeShown=false; st.lastTs=0; st.lastAdvanceAt=0;
   stage.innerHTML='<div class="media-shell"></div><div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>Loading '+esc(source.name)+'…</strong><span style="color:#cbd2d8;font-size:.88rem">The player page is loading. ZeroPlay will not call this successful until playback actually progresses.</span></div>';
   const shell=stage.querySelector(".media-shell");
-  const key=preloadKey({type:st.item.type,id:st.item.id,season:st.season,episode:st.episode},source.id);
-  const pre=takePreloadedFrame(key,url);
-  const markFrameLoaded=(preloaded)=>{
+  const markFrameLoaded=()=>{
     if(playerState!==st||st.frameLoadedAt) return;
     st.frameLoadedAt=Date.now();
     playerLoading(false);
     showPlayerChrome(false);
     updatePlayerMeta(source);
-    if(preloaded) toast("Preloaded "+source.name+" page attached — waiting for playback");
   };
   const armFrame=f=>{
     if(!f) return;
     f.id="playerFrame"; f.className="player-frame"; f.setAttribute("tabindex","-1"); f.setAttribute("title",source.name+" video player");
     try{ f.referrerPolicy=embedReferrerPolicyForUrl(url); }catch{}
-    f.addEventListener("load",()=>markFrameLoaded(false),{once:true});
+    f.addEventListener("load",()=>markFrameLoaded(),{once:true});
   };
-  if(pre){ armFrame(pre); shell.appendChild(pre); markFrameLoaded(true); }
-  else{
+  {
     const f=document.createElement("iframe");
     f.allow="autoplay; fullscreen; encrypted-media; picture-in-picture"; f.allowFullscreen=true; f.referrerPolicy=embedReferrerPolicyForUrl(url);
     armFrame(f); shell.appendChild(f); f.src=url;
@@ -6585,112 +6728,56 @@ function directMediaKind(url){
   if(/\.(mp4|webm|mov|m4v)$/.test(path)) return "file";
   return "unknown";
 }
-function nativeCanPlayDirect(url){
-  const kind=directMediaKind(url);
-  if(kind==="dash") return false;
-  if(kind==="hls"){
-    const probe=document.createElement("video");
-    return !!(probe.canPlayType&&probe.canPlayType("application/vnd.apple.mpegurl"));
-  }
-  return kind==="file"||kind==="unknown";
+/* =====================================================================
+   One path from a URL to a picture.
+
+   startOwnEngine() is the only mounting entry point left. It picks the
+   container, hands it to the ZeroPlay engine, then binds the transport,
+   health, stall and failover listeners to the element that is actually
+   playing. There is no fallback to a hosted player, because there is
+   nothing to fall back to: if this app cannot decode the stream, it says
+   so honestly instead of showing someone else's page.
+   ===================================================================== */
+function startOwnEngine(stage,url,source,loadT0,resumeAt,opts){
+  return zpEngineMount(stage,url,source,opts||{}).then(video=>{
+    if(!video||playerState!==(opts&&opts.forState||playerState)) return video;
+    setPlayerControlMode("native");
+    bindNativeTransport(video,source,loadT0||performance.now());
+    startAutoQualityGuard(video);
+    updatePlayerMeta(source);
+    return video;
+  });
 }
-async function mountDirectVideo(stage,url,source,loadT0,resume){
+/* Transport, health, stall and failover listeners for the element the
+   ZeroPlay engine created. This is the whole reason the app can own playback:
+   every one of these reads the same <video> our controls write to. */
+/* Auto quality guard: keeps the highest level until buffering persists, then
+   drops exactly one step and re-arms. A viewer who picked a level is never
+   overridden — qualitySelection leaves "auto" and this stops. */
+function startAutoQualityGuard(v){
+  const st=playerState; if(!v||!st) return;
+  const timer=setInterval(()=>{
+    if(playerState!==st||!v.isConnected||!st.zpEngine){ clearInterval(timer); return; }
+    const manual=st.qualitySelection&&st.qualitySelection!=="auto";
+    if(manual||!st.autoLevelQueue||!st.autoLevelQueue.length){ st.autoHighBufferingSince=0; return; }
+    const buffering=!v.paused&&v.readyState<3;
+    if(buffering){ st.autoHighBufferingSince=st.autoHighBufferingSince||Date.now(); }
+    else{ st.autoHighBufferingSince=0; return; }
+    if(Date.now()-st.autoHighBufferingSince<7000) return;
+    st.autoHighBufferingSince=0;
+    const idx=st.autoLevelQueue.indexOf(Number(String(st.autoHighLevelId)));
+    const next=st.autoLevelQueue[idx+1];
+    if(next==null) return;
+    st.autoHighLevelId=String(next);
+    const e=zpEngine();
+    if(e&&e.instance&&e.kind==="hls"){ try{ e.instance.currentLevel=next; }catch{} }
+    toast("Lowering quality — this device cannot hold the higher level");
+  },1000);
+  playerTimers.push(timer);
+}
+function bindNativeTransport(v,source,loadT0){
   const st=playerState;
-  if(!stage||!st) return;
-  if(st.primeCtl) try{st.primeCtl.abort();}catch{}
-  st.url=url; st.direct=true; st.triedUrls=st.triedUrls||new Set(); st.triedUrls.add(url);
-  if(!st.activeVariant||st.activeVariant.url!==url) st.activeVariant=(st.variants||[]).find(v=>v.url===url)||normalizeVariant({url,addonName:source.name},source.name);
-  const resumeAt=typeof resume==="number"?resume:Number(resume&&(resume.timestamp||resume.position))||0;
-  const mode=String(settings.stream.player||"faststream-only");
-  if(mode==="builtin"){
-    if(nativeCanPlayDirect(url)) return mountNativeVideo(stage,url,source,loadT0,resumeAt);
-    return mountFastStreamPlayer(stage,url,source,loadT0,resumeAt,{allowApi:false});
-  }
-  if(mode==="faststream-only") return mountFastStreamPlayer(stage,url,source,loadT0,resumeAt,{allowApi:true,legacyOnly:true});
-  /* FastStream is the default direct-stream transport. It first attempts the
-     EmbedAPI and then uses the hosted FastStream player; native playback is
-     only selected when the user explicitly chooses ZeroPlay or as a guarded
-     compatibility fallback after FastStream cannot load the stream. */
-  return mountFastStreamPlayer(stage,url,source,loadT0,resumeAt,{allowApi:true});
-}
-async function mountFastStreamPlayer(stage,url,source,loadT0,resumeAt,opts){
-  const st=playerState; opts=opts||{};
-  if(!stage||!st) return;
-  const beginLegacy=()=>{
-    if(playerState!==st) return;
-    resetFastStreamBridge(null);
-    stage.innerHTML='<div class="media-shell"><iframe class="player-frame" id="fsFrame" tabindex="-1" src="https://faststream.online/player/#'+encodeURI(url)+'" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen title="FastStream player"></iframe></div><div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>Loading FastStream…</strong><span style="color:#cbd2d8;font-size:.88rem">FastStream is running inside ZeroPlay. Servers and quality remain in the ZeroPlay bar.</span></div>';
-    const f=document.getElementById("fsFrame");
-    if(f) f.addEventListener("load",()=>{ st.frameLoadedAt=Date.now(); playerLoading(false); showPlayerChrome(false); updatePlayerMeta(source); },{once:true});
-    setPlayerControlMode("faststream-legacy");
-    updatePlayerMeta(source);
-  };
-  if(opts.allowApi===false){ beginLegacy(); return; }
-  if(streamCfg().fastStreamApiProbe===false){
-    if(!opts.legacyOnly&&nativeCanPlayDirect(url)) return mountNativeVideo(stage,url,source,loadT0,resumeAt,{fastStreamApiPending:true});
-    beginLegacy(); return;
-  }
-  const apiStatus=effectiveFastStreamApiStatus();
-  if(!opts.legacyOnly&&apiStatus==="unavailable"){
-    if(nativeCanPlayDirect(url)) return mountNativeVideo(stage,url,source,loadT0,resumeAt,{fastStreamApiPending:true});
-    beginLegacy(); return;
-  }
-  if(!opts.legacyOnly&&apiStatus!=="available"&&nativeCanPlayDirect(url)){
-    /* Do not make a playable file wait on a capability handshake. Start in
-       the responsive ZeroPlay engine now and probe FastStream in the
-       background; once the API is known available, later direct streams
-       use it automatically. */
-    probeFastStreamApiInBackground();
-    return mountNativeVideo(stage,url,source,loadT0,resumeAt,{fastStreamApiPending:true});
-  }
-  stage.innerHTML='<div class="media-shell"></div><div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>Connecting FastStream inside ZeroPlay…</strong><span style="color:#cbd2d8;font-size:.88rem">Checking for the FastStream control API.</span></div>';
-  const shell=stage.querySelector(".media-shell");
-  const frame=document.createElement("iframe");
-  frame.id="fsFrame"; frame.className="player-frame"; frame.title="FastStream player inside ZeroPlay";
-  frame.allow="autoplay; fullscreen; encrypted-media; picture-in-picture"; frame.allowFullscreen=true; frame.setAttribute("tabindex","-1");
-  resetFastStreamBridge(frame);
-  shell.appendChild(frame);
-  st.engine="faststream-connecting";
-  setPlayerControlMode("faststream-connecting");
-  frame.src="https://faststream.online/player/";
-  const ready=await waitForFastStreamReady(4500);
-  if(playerState!==st) return;
-  if(!ready){
-    setFastStreamApiStatus("unavailable");
-    if(opts.legacyOnly||!nativeCanPlayDirect(url)){ beginLegacy(); return; }
-    /* Hosted FastStream currently lags the EmbedAPI release. A native file
-       gets full ZeroPlay controls now, and automatically upgrades to the
-       API engine as soon as faststream.online publishes it. */
-    return mountNativeVideo(stage,url,source,loadT0,resumeAt,{fastStreamApiPending:true});
-  }
-  try{
-    await fsCommand("subscribe",{events:["canplay","durationchange","ended","error","loadedmetadata","manifestparsed","pause","play","playing","ratechange","seeked","seeking","timeupdate","waiting","sourcechange","volumechange"]},6000);
-    setFastStreamApiStatus("available");
-    st.engine="faststream-api";
-    setPlayerControlMode("faststream-api");
-    const click=document.createElement("button"); click.className="media-click"; click.type="button"; click.setAttribute("aria-label","Play or pause"); click.onclick=()=>playerCommand("toggle"); click.ondblclick=()=>playerCommand("fullscreen"); shell.appendChild(click);
-    playerLoading(true,"FastStream connected — loading stream…");
-    await fsCommand("load",{url,autoPlay:true,time:resumeAt>20?resumeAt:0},12000);
-    await fsCommand("setVolume",{volume:Number(settings.stream.volume==null?.9:settings.stream.volume)},5000).catch(()=>{});
-    await fsCommand("setPlaybackRate",{rate:Number(settings.stream.rate||1)},5000).catch(()=>{});
-    const state=await fsCommand("getState",{},5000).catch(()=>null);
-    if(state) updatePlaybackUI(normalizeFastStreamState(state),"playing");
-    setTimeout(()=>refreshFastStreamLevels(true),350);
-    updatePlayerMeta(source);
-  }catch(e){
-    if(playerState!==st) return;
-    if(opts.legacyOnly||!nativeCanPlayDirect(url)) beginLegacy();
-    else return mountNativeVideo(stage,url,source,loadT0,resumeAt,{fastStreamApiPending:true});
-  }
-}
-function mountNativeVideo(stage,url,source,loadT0,resumeAt,opts){
-  const st=playerState; opts=opts||{};
-  if(!stage||!st) return;
-  resetFastStreamBridge(null);
-  stage.innerHTML='<div class="media-shell"><video class="player-frame" id="pv" playsinline preload="metadata"></video><button class="media-click" id="mediaClick" type="button" aria-label="Play or pause"></button></div><div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>Connecting to the stream…</strong><span style="color:#cbd2d8;font-size:.88rem">'+(opts.fastStreamApiPending?"ZeroPlay controls are active while FastStream API support rolls out.":"ZeroPlay player")+'</span></div>';
-  const v=document.getElementById("pv");
-  const click=document.getElementById("mediaClick");
-  if(click){ click.onclick=()=>playerCommand("toggle"); click.ondblclick=()=>playerCommand("fullscreen"); }
+  if(!v||!st) return;
   const bufferedAhead=()=>{ try{ for(let i=0;i<v.buffered.length;i++){ if(v.buffered.start(i)<=v.currentTime&&v.currentTime<=v.buffered.end(i)) return Math.max(0,v.buffered.end(i)-v.currentTime); } }catch{} return 0; };
   let raf=0,lastUi=0;
   const sync=(eventName,force)=>{
@@ -6700,19 +6787,18 @@ function mountNativeVideo(stage,url,source,loadT0,resumeAt,opts){
     if(raf) cancelAnimationFrame(raf);
     raf=requestAnimationFrame(()=>updatePlaybackUI({paused:v.paused,buffering:v.readyState<3&&!v.paused,currentTime:v.currentTime||0,duration:Number.isFinite(v.duration)?v.duration:0,buffered:bufferedAhead(),volume:v.volume,muted:v.muted,rate:v.playbackRate},eventName));
   };
-  v.volume=Math.max(0,Math.min(1,Number(settings.stream.volume==null?.9:settings.stream.volume)));
-  v.muted=!!settings.stream.muted; v.playbackRate=Number(settings.stream.rate||1);
-  v.preload=(settings.stream.preload==="off"||effectiveSaver())?"metadata":"auto";
-  v.src=url;
-  setPlayerControlMode("native");
-  updatePlayerMeta(source);
-  v.addEventListener("loadedmetadata",()=>{
-    if(resumeAt>20&&v.duration&&resumeAt<v.duration-15){ try{v.currentTime=resumeAt;}catch{} }
-    sync("loadedmetadata",true);
-    const p=v.play(); if(p&&p.catch) p.catch(()=>{ playerLoading(false); updatePlaybackUI({paused:true,buffering:false,currentTime:v.currentTime,duration:v.duration||0},"pause"); toast("Press Play to start"); });
+  try{
+    v.volume=Math.max(0,Math.min(1,Number(settings.stream.volume==null?.9:settings.stream.volume)));
+    v.muted=!!settings.stream.muted;
+    v.playbackRate=Number(settings.stream.rate||1);
+  }catch{}
+  v.addEventListener("loadedmetadata",()=>sync("loadedmetadata",true));
+  v.addEventListener("canplay",()=>{ playerLoading(false); sync("canplay",true); primeDirectSafely(st.url||v.currentSrc,v,bufferedAhead); });
+  v.addEventListener("playing",()=>{
+    playerLoading(false);
+    if(!st.healthRecorded){ st.healthRecorded=true; recordHealth(source&&source.id,true,performance.now()-(loadT0||performance.now())); }
+    sync("playing",true); updatePlayerMeta(source);
   });
-  v.addEventListener("canplay",()=>{ playerLoading(false); sync("canplay",true); primeDirectSafely(url,v,bufferedAhead); });
-  v.addEventListener("playing",()=>{ playerLoading(false); if(!st.healthRecorded){ st.healthRecorded=true; recordHealth(source.id,true,performance.now()-loadT0); } sync("playing",true); updatePlayerMeta(source); });
   v.addEventListener("pause",()=>{ sync("pause",true); savePlaybackProgress(true); });
   v.addEventListener("waiting",()=>{ st.stalls++; playerLoading(true,"Buffering…"); sync("waiting",true); });
   v.addEventListener("progress",()=>sync("progress"));
@@ -6732,19 +6818,22 @@ function mountNativeVideo(stage,url,source,loadT0,resumeAt,opts){
     if(t<lastObservedTime-.5){ noteObservedTime(); return; }
     if(hasAdvanced&&lastObservedAdvanceAt&&Date.now()-lastObservedAdvanceAt>embedStallTimeoutMs()){
       lastObservedAdvanceAt=Date.now(); st.stalls++;
-      if(streamCfg().stallSwitch) void failover("Confirmed direct playback stalled on "+source.name,{confirmedStall:true});
-      else toast("Direct playback has stalled on "+source.name+" — open Servers to switch","error");
+      if(streamCfg().stallSwitch) void failover("Confirmed playback stalled on "+source.name,{confirmedStall:true});
+      else toast("Playback has stalled on "+source.name+" — open Servers to switch","error");
     }
   },5000);
   playerTimers.push(stallTimer);
-  v.addEventListener("error",async()=>{
+  /* A fatal engine error and a dead <video> are the same event to the viewer:
+     move to the next verified stream, or say plainly that this one is gone. */
+  const onFailure=async reason=>{
     if(playerState!==st) return;
-    recordHealth(source.id,false);
-    if(await tryNextDirectVariant("This stream format failed")) return;
-    if(st._nativeRetriedWithFastStream!==url){ st._nativeRetriedWithFastStream=url; toast("The browser could not play this file directly — retrying inside FastStream"); mountFastStreamPlayer(stage,url,source,performance.now(),currentPlaybackTime(),{allowApi:false}); return; }
-    stage.innerHTML=playerErrorHTML("This stream could not be played","The browser reported a media/codec error. Try another quality or server with this exact title."); bindPlayerErrorActions(); setPlayerControlMode("native");
-  },true);
-  try{v.load();}catch{}
+    recordHealth(source&&source.id,false);
+    if(await tryNextDirectVariant(reason)) return;
+    const stage=document.getElementById("playerStage");
+    if(stage){ stage.innerHTML=playerErrorHTML("This stream could not be played","ZeroPlay tried every verified stream for this exact title. Try another server."); bindPlayerErrorActions(); }
+  };
+  v.addEventListener("error",()=>onFailure("This stream format failed"),true);
+  v.addEventListener("zp-engine-error",()=>onFailure("The stream engine reported an error"));
 }
 function primeDirectSafely(url,video,bufferedAhead){
   const st=playerState;
@@ -6828,11 +6917,12 @@ function closePlayer(){
     savePlaybackProgress(true);
     if(st.primeCtl) try{st.primeCtl.abort();}catch{}
     if(st.chromeTimer) clearTimeout(st.chromeTimer);
-    if(st.engine==="faststream-api") fsCommand("unsubscribe",{},1500).catch(()=>{});
+    if(st.zpEngine) zpEngineDestroy();
   }
   if(document.pictureInPictureElement) document.exitPictureInPicture().catch(()=>{});
   if(document.fullscreenElement&&document.fullscreenElement.id==="playerOverlay") document.exitFullscreen().catch(()=>{});
-  clearPlayerTimers(); resetFastStreamBridge(null); clearPreload();
+  if(st&&st.zpEngine) zpEngineDestroy();
+  clearPlayerTimers();  clearPreload();
   if(typeof activeDownloadObjectUrl!=="undefined"&&activeDownloadObjectUrl&&st&&(st.url===activeDownloadObjectUrl||st.directUrl===activeDownloadObjectUrl)){ URL.revokeObjectURL(activeDownloadObjectUrl); activeDownloadObjectUrl=""; }
   $("#playerRoot").innerHTML=""; playerState=null;
   if(typeof discoveryRuntime!=="undefined"&&discoveryRuntime.running&&discoveryRuntime.deferredForPlayback){ discoveryRuntime.deferredForPlayback=false; setTimeout(()=>runDiscoveryCycle("after playback"),3000); }
@@ -7724,8 +7814,8 @@ async function updateDownloadStorageMeter(){
 function renderDownloadsPage(){
   const dl=downloadCfg();
   view.innerHTML='<div class="page"><p class="eyebrow">Offline & extraction</p><h1>Downloads</h1><p class="lede">Pause and resume verified direct downloads from stored chunks or HLS segments. Multithreading is enabled only where the remote server actually supports byte ranges or independent segments.</p>'
-    +'<section class="panel"><div class="panel-head"><div><h2>Download manager</h2><p class="section-desc" id="downloadSummary">Loading downloads…</p><div id="downloadStorageText" class="help-text">Checking browser storage…</div><div class="storage-meter"><i id="downloadStorageBar"></i></div></div><div class="settings-actions"><button class="btn btn-secondary" id="btnClearCompletedDownloads" type="button">Clear completed</button><button class="btn btn-primary" type="button" data-settings-section="faststream">Download & FastStream settings</button></div></div>'
-    +'<div class="settings-hub-grid"><div>'+featureSwitchHTML("downloads","Downloads enabled","Turning this off pauses active jobs but keeps stored chunks.","downloads")+featureSwitchHTML("multithreadedDownloads","Multithreaded downloads","Parallel ranges/segments where supported.","downloads")+'</div><div>'+featureSwitchHTML("downloadAutoResume","Resume on app start","Continue paused/interrupted jobs automatically.","downloads")+featureSwitchHTML("downloadAutoSave","Auto-save completed files","Save after final assembly finishes.","downloads")+'</div><div><h3>Current speed defaults</h3><p>'+esc(dl.threads)+' threads per job · '+esc(dl.chunkMb)+' MB parts · '+esc(dl.concurrent)+' download(s) at once. Change these in Settings → FastStream configuration and playback.</p><div class="settings-actions"><button class="btn btn-outline btn-sm" type="button" data-settings-section="faststream">Change speed defaults</button></div></div></div>'
+    +'<section class="panel"><div class="panel-head"><div><h2>Download manager</h2><p class="section-desc" id="downloadSummary">Loading downloads…</p><div id="downloadStorageText" class="help-text">Checking browser storage…</div><div class="storage-meter"><i id="downloadStorageBar"></i></div></div><div class="settings-actions"><button class="btn btn-secondary" id="btnClearCompletedDownloads" type="button">Clear completed</button><button class="btn btn-primary" type="button" data-settings-section="playback">Download & FastStream settings</button></div></div>'
+    +'<div class="settings-hub-grid"><div>'+featureSwitchHTML("downloads","Downloads enabled","Turning this off pauses active jobs but keeps stored chunks.","downloads")+featureSwitchHTML("multithreadedDownloads","Multithreaded downloads","Parallel ranges/segments where supported.","downloads")+'</div><div>'+featureSwitchHTML("downloadAutoResume","Resume on app start","Continue paused/interrupted jobs automatically.","downloads")+featureSwitchHTML("downloadAutoSave","Auto-save completed files","Save after final assembly finishes.","downloads")+'</div><div><h3>Current speed defaults</h3><p>'+esc(dl.threads)+' threads per job · '+esc(dl.chunkMb)+' MB parts · '+esc(dl.concurrent)+' download(s) at once. Change these in Settings → FastStream configuration and playback.</p><div class="settings-actions"><button class="btn btn-outline btn-sm" type="button" data-settings-section="playback">Change speed defaults</button></div></div></div>'
     +'<div id="downloadJobsList" style="margin-top:1rem"><span class="spinner"></span> Loading stored downloads…</div></section>'
     +'<section class="panel" id="m3uExtractor"><div class="panel-head"><div><h2>M3U extraction</h2><p class="section-desc">Paste a website/watch page or an M3U/M3U8 URL. ZeroPlay extracts playlist links, can inspect quality variants and segment counts, and can download the assembled HLS file. A cross-origin embed alone cannot be converted into an M3U.</p></div>'+featureSwitchHTML("m3uExtraction","M3U extraction enabled","","downloads")+'</div>'
     +'<div class="form-row"><div class="form-group grow"><label for="m3uUrl">Website, watch-page or M3U/M3U8 URL</label><input type="text" id="m3uUrl" placeholder="https://example.com/watch/... or https://cdn.example/stream.m3u8"></div><div class="form-group"><label for="m3uTitle">Download title (optional)</label><input type="text" id="m3uTitle" placeholder="My extracted stream"></div></div>'
@@ -8135,7 +8225,7 @@ function settingsHubHTML(){
     +featureSwitchHTML("embedwaveFailover","Use Embedwave automatically","Keep off unless you want it as a final fallback.","hub")
     +featureSwitchHTML("dnsWarm","Connect faster","Prepare source connections in advance.","hub")
     +featureSwitchHTML("sortByHealth","Use reliable sources first","Prefer sources that worked well recently.","hub")
-    +'<div class="settings-actions"><button class="btn btn-primary btn-sm" type="button" data-settings-section="faststream">Advanced playback</button></div></div>'
+    +'<div class="settings-actions"><button class="btn btn-primary btn-sm" type="button" data-settings-section="playback">Advanced playback</button></div></div>'
     +'<div><h3>Appearance & data</h3>'
     +featureSwitchHTML("autoplayNext","Autoplay next episode","Move to the next episode after the current one ends.","hub")
     +featureSwitchHTML("reduceMotion","Reduce motion","Disable decorative movement; useful on TV boxes.","hub")
@@ -8165,7 +8255,7 @@ function settingsDownloadsSectionHTML(){
     +featureSwitchHTML("refreshExpiredDownloads","Repair expired links","Find the same title again if a download link expires.","hub")
     +featureSwitchHTML("keepCompletedDownloads","Keep finished files","Keep downloads available to play or save again.","hub")
     +'</div></div>'
-    +'<div class="settings-actions"><button class="btn btn-primary btn-sm" type="button" data-menu-route="downloads">Open downloads</button><button class="btn btn-secondary btn-sm" type="button" data-settings-section="faststream">Speed defaults</button></div></section>';
+    +'<div class="settings-actions"><button class="btn btn-primary btn-sm" type="button" data-menu-route="downloads">Open downloads</button><button class="btn btn-secondary btn-sm" type="button" data-settings-section="playback">Speed defaults</button></div></section>';
 }
 function settingsDeviceHTML(){
   /* These four values used to be locals of settingsHubHTML(); the markup moved
@@ -8230,7 +8320,7 @@ function clearPlaybackCaches(){
    section and collapses the rest, so nothing is unreachable with a remote.
    State lives in sourcesRenderMode so a re-render keeps the viewer's place. */
 const SETTINGS_PANEL_GROUPS=["everyday","playback","sources","addons","downloads","data"];
-const SETTINGS_SECTION_TARGETS={"add-website":"sources",continuous:"addons",faststream:"playback",sources:"sources",switches:"everyday",androidtv:"data",artwork:"data",addons:"addons",downloads:"downloads"};
+const SETTINGS_SECTION_TARGETS={"add-website":"sources",continuous:"addons",playback:"playback",sources:"sources",switches:"everyday",androidtv:"data",artwork:"data",addons:"addons",downloads:"downloads"};
 function settingsGroupOf(sectionTarget){
   return SETTINGS_SECTION_TARGETS[String(sectionTarget||"")]||"everyday";
 }
@@ -8302,9 +8392,9 @@ function renderSources(soft,opts){
 
   +'<section class="panel" id="settingsPlaybackSources" data-panel-group="sources"><h2>Watch from</h2><p class="section-desc">Choose the places ZeroPlay can use. More are found automatically in the background.</p><div id="srcList">'+(rows||'<div class="empty"><h3>No sources</h3><p>Add a website above.</p></div>')+"</div></section>"
 
-  +'<section class="panel" id="settingsFastStream" data-panel-group="playback"><h2>Advanced playback</h2><p class="section-desc">Fine-tune how playback starts and switches. Most people can leave this on Auto.</p>'
+  +'<section class="panel" id="settingsPlayback" data-panel-group="playback"><h2>Advanced playback</h2><p class="section-desc">Fine-tune how playback starts and switches. Most people can leave this on Auto.</p>'
   +'<div class="stat-grid"><div class="stat"><div class="k">Connection</div><div class="v">'+esc(ci.type)+'</div></div><div class="stat"><div class="k">Est. downlink</div><div class="v">'+(ci.downlink?ci.downlink+" Mbps":"unknown")+'</div></div><div class="stat"><div class="k">Round-trip</div><div class="v">'+(ci.rtt?ci.rtt+" ms":"unknown")+'</div></div><div class="stat"><div class="k">Data saver (effective)</div><div class="v">'+(effectiveSaver()?"ON":"OFF")+'</div></div><div class="stat"><div class="k">Enabled sources</div><div class="v">'+allSources().length+'</div></div><div class="stat"><div class="k">File-size cap</div><div class="v">'+capGb()+' GB max</div></div></div>'
-  +'<div class="form-row"><div class="form-group"><label for="optPlayer">Direct-stream player</label><select id="optPlayer"><option value="faststream-only"'+(st.player==="faststream-only"?" selected":"")+'>FastStream — default for every direct server</option><option value="auto"'+(st.player==="auto"?" selected":"")+'>Automatic fallback — FastStream first</option><option value="builtin"'+(st.player==="builtin"?" selected":"")+'>ZeroPlay responsive player</option></select><small class="help-text">Verified streams from selected and discovered servers enter FastStream first. ZeroPlay remains available as an explicit fallback.</small></div>'+'<div class="form-row"><div class="form-group"><label for="optPreload">FastStream preload</label><select id="optPreload"><option value="off"'+(st.preload==="off"?" selected":"")+'>Off</option><option value="smart"'+(st.preload==="smart"?" selected":"")+'>Smart — recommended</option><option value="aggressive"'+(st.preload==="aggressive"?" selected":"")+'>Aggressive — also pre-loads the embed player in the background</option></select><small class="help-text">Aggressive may start a provider player early in a hidden frame; if you ever hear background audio, switch back to Smart.</small></div>'
+  +'<div class="form-row"><div class="form-group"><label for="optPlayer">Playback engine</label><select id="optPlayer"><option value="native"'+(st.player!=="embed-page"?" selected":"")+'>ZeroPlay player — HLS, DASH and MP4 in one player</option><option value="embed-page"'+(st.player==="embed-page"?" selected":"")+'>Provider page — only when a stream cannot be extracted</option></select><small class="help-text">ZeroPlay extracts the stream and plays it in its own player, so seek, quality, speed and failover are its own. A provider page is a last resort: its player cannot be controlled from here.</small></div>'+'<div class="form-row"><div class="form-group"><label for="optPreload">Stream preload</label><select id="optPreload"><option value="off"'+(st.preload==="off"?" selected":"")+'>Off</option><option value="smart"'+(st.preload==="smart"?" selected":"")+'>Smart — recommended</option><option value="aggressive"'+(st.preload==="aggressive"?" selected":"")+'>Aggressive — also warms the next episode stream</option></select><small class="help-text">Preloading a verified stream lets the player start sooner. It never starts a provider page in a hidden frame.</small></div>'
   +'<div class="form-group"><label for="optQuality">Preferred quality (stability first)</label><select id="optQuality">'+[["auto","Auto — best available"],["2160p","4K UHD 2160p"],["1080p","Full HD 1080p"],["720p","HD 720p — most stable on slow links"],["480p","SD 480p — minimum buffering"]].map(([v,t])=>'<option value="'+v+'"'+(st.quality===v?" selected":"")+">"+t+"</option>").join("")+"</select><small class='help-text'>Used for direct-stream ranking and warm-up size. Embed players choose their own internal quality.</small></div></div>"
   +'<div class="form-row"><div class="form-group"><label for="optDefaultSource">Default first player/source</label><select id="optDefaultSource">'+sourceOptionsHTML(defaultSourceId(),true)+'</select><small class="help-text">Embedwave cannot be the saved default. Title-specific verified direct servers can still be chosen first at play time.</small></div>'
   +'<div class="form-group"><label for="optBufferTarget">Buffer target before easing warm-up (seconds)</label><input type="number" id="optBufferTarget" min="6" max="60" step="1" value="'+esc(st.bufferTargetSec)+'"><small class="help-text">Safe range priming stops once native direct playback is buffered beyond this target.</small></div></div>'
@@ -8319,7 +8409,7 @@ function renderSources(soft,opts){
   +featureSwitchHTML("autoFailover","Automatic server switching","Master switch for all automatic source changes.","playback")
   +featureSwitchHTML("stallSwitch","Switch after confirmed stalls","Requires real playback progress before the stall clock can run.","playback")
   +featureSwitchHTML("embedwaveFailover","Automatic Embedwave last resort","Off keeps Embedwave manual-only during failover.","playback")
-  +featureSwitchHTML("fastStreamProbe","Responsive FastStream controls","Use ZeroPlay controls whenever FastStream supports them.","playback")
+  +featureSwitchHTML("fastStreamProbe","Prepare the player engine early","Load the HLS/DASH engine while the first stream is being resolved.","playback")
   +featureSwitchHTML("nextEpisodeWarm","Warm next episode","Prepare the following episode while watching.","playback")
   +'</div><div><h3>Speed & interface</h3>'
   +featureSwitchHTML("dnsWarm","Connect faster","Prepare source connections in advance.","playback")
@@ -8421,7 +8511,7 @@ function renderSources(soft,opts){
   refreshSourceStatePanel();
   applySettingsSections(settingsPage,sectionTarget);
   if(!soft){
-    const targets={"add-website":"settingsAddWebsite",continuous:"discoveryPanel",faststream:"settingsFastStream",sources:"settingsPlaybackSources",switches:"settingsHub",androidtv:"settingsAndroidTv",artwork:"settingsArtwork"};
+    const targets={"add-website":"settingsAddWebsite",continuous:"discoveryPanel",playback:"settingsPlayback",sources:"settingsPlaybackSources",switches:"settingsHub",androidtv:"settingsAndroidTv",artwork:"settingsArtwork"};
     const target=targets[sectionTarget]&&document.getElementById(targets[sectionTarget]);
     if(target) setTimeout(()=>target.scrollIntoView({block:"start",behavior:document.body.classList.contains("reduce-motion")?"auto":"smooth"}),40);
     else window.scrollTo({top:0});

@@ -8,6 +8,8 @@
  * mode=json    : fetch a JSON URL server-side (CORS fallback for addons).
  * mode=text    : return a validated M3U/M3U8 playlist without truncation.
  * mode=m3u     : extract M3U/M3U8 links/variants from a page or playlist.
+ * mode=resolve : follow a provider page (and one player frame) and return only
+ *                direct media URLs, so ZeroPlay's own player can play them.
  *
  * Safety: http(s) only, private/loopback hosts blocked, 1.5 MB response cap,
  * bounded search requests and timeouts. This parses public pages only; it
@@ -770,6 +772,27 @@ async function handle(mode, rawUrl, query) {
       if (doc.truncated) return { status: 413, body: { ok: false, error: 'Remote playlist is larger than the resolver safety limit' } };
       return { status: 200, body: { ok: true, mode: 'text', url: doc.finalUrl, text: doc.text } };
     }
+    if (mode === 'resolve') {
+      /* ZeroPlay's own player needs a stream, not a page. Follow a provider
+         page (and, one hop further, its player/embed frame) and return only
+         direct media URLs. If there is nothing playable we say so, and the
+         caller never frames the page. */
+      const chain = [];
+      let direct = [];
+      let pageUrl = u.href;
+      for (let depth = 0; depth < 2; depth++) {
+        const doc = await fetchDocument(pageUrl, false, 12000);
+        const parsed = parseWatch(doc.text, doc.finalUrl);
+        chain.push({ url: doc.finalUrl, direct: parsed.direct.length, embeds: parsed.embeds.length });
+        direct = direct.concat(parsed.direct);
+        if (direct.length) break;
+        const nextFrame = (parsed.embeds || []).find(src => guardUrl(src));
+        if (!nextFrame) break;
+        pageUrl = nextFrame;
+      }
+      direct = [...new Set(direct)].slice(0, 8);
+      return { status: 200, body: { ok: true, mode: 'resolve', url: u.href, direct, chain } };
+    }
     if (mode === 'm3u') {
       return { status: 200, body: { ok: true, mode: 'm3u', url: doc.finalUrl, truncated: !!doc.truncated, ...extractM3u(doc.text, doc.finalUrl) } };
     }
@@ -786,7 +809,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ ok: false, error: 'Method not allowed' });
   const query = req.query || {};
   const mode = String(query.mode || 'profile');
-  if (!['profile', 'find', 'watch', 'json', 'text', 'm3u'].includes(mode)) return res.status(400).json({ ok: false, error: 'Unknown mode' });
+  if (!['profile', 'find', 'watch', 'resolve', 'json', 'text', 'm3u'].includes(mode)) return res.status(400).json({ ok: false, error: 'Unknown mode' });
   const out = await handle(mode, String(query.url || ''), query);
   return res.status(out.status).json(out.body);
 };

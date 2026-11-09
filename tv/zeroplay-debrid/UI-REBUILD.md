@@ -296,3 +296,55 @@ duplicated headings and no missing panel.
 D-pad everywhere + settings sections + unified server list + rebuilt player
 shell (Phase 2). Still queued: the Home structure pass itself (Section 2), which
 is now cheap because the navigation engine underneath it is finally reliable.
+
+---
+
+## The player is ours now
+
+Every one of the six reference apps does the same thing: a source hands over a
+URL, and the app plays it. Stremio, ARVIO and Nuvio never embed somebody else's
+player page and then try to drive it from outside; they resolve the stream,
+mount their own engine, and keep the controls, the position, the level and the
+failover decisions in their own process. That is also what makes resume, quality
+and server switching feel instant instead of cosmetic.
+
+ZeroPlay did the opposite. `player:"faststream-only"` mounted an
+`https://faststream.online/player/#<url>` iframe and then posted messages into it
+to ask for play, pause, seek and quality. Everything a viewer could see was ours
+and everything a viewer could *do* belonged to another site. When that site
+changed, or the iframe refused an origin, the buttons were decoration.
+
+The bridge is gone — `fsCommand`, `fsBridge`, `resetFastStreamBridge`,
+`mountFastStreamPlayer`, `mountDirectVideo`, `nativeCanPlayDirect` and the hidden
+preload iframe no longer exist anywhere in the file. In their place:
+
+- `vendor/hls.min.js` and `vendor/dash.min.js`, same-origin copies, loaded on
+  demand through `loadScriptOnce`;
+- `streamKindOf(url, declared)` decides `hls` / `dash` / `file` / `unknown`
+  from the URL, the declared container, or the provider's own `type`;
+- `zpEngineMount` builds the `<video>` in our stage and hands the URL to the
+  right library; `zpEngineSetLevel`, `zpEngineApplyRate` and `zpEngineSetVolume`
+  act on the library's real instance;
+- `bindNativeTransport` feeds our own UI, health scores and failover from the
+  element's own events, plus a stall timer that does not trust the site;
+- `zpEngineDestroy` tears everything down on close, so the next stream starts
+  clean.
+
+The framed fallback survives only for pages that genuinely never expose a file.
+To keep it rare, `api/extract.js` grew `mode=resolve`: it follows a provider page,
+and one hop further into that page's player frame, and returns direct media URLs
+only. `resolvePageToStreams()` asks for that before ZeroPlay ever frames a page.
+
+Two things came back with the engine that the bridge used to fake. Auto quality
+now starts at the highest level and steps down exactly one rung after seven
+seconds of real buffering on our own element — and never overrides a level the
+viewer picked. And levels are addressed by array index, because hls.js level
+objects carry no id; the old bridge code was matching a field that does not
+exist, which would have made the quality menu silently do nothing.
+
+Build and policy had to follow: `npm run build` now copies `vendor/` into `dist/`
+(the engines would have 404'd under `script-src 'self'`), and the CSP gained
+`worker-src 'self' blob:` for the transmuxing worker.
+
+**Test total: 378 checks**, including resolve-mode parsing and real level-setting
+against a fake engine instance.
