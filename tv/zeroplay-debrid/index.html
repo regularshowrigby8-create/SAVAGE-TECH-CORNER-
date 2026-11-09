@@ -8238,7 +8238,10 @@ function applySettingsSections(settingsPage,sectionTarget){
   if(activePanel) activePanel.classList.remove("is-collapsed");
 }
 function renderSources(soft,opts){
-  if(opts&&typeof opts==="object") sourcesRenderMode={settingsPage:!!opts.settingsPage,section:String(opts.section||"")};
+  /* A soft re-render (a toggle flipping, a search landing) must not reset which
+     settings section the viewer is standing in, or the page jumps under them. */
+  if(opts&&typeof opts==="object") sourcesRenderMode=Object.assign({},sourcesRenderMode,{settingsPage:!!opts.settingsPage,section:String(opts.section||"")});
+  else if(soft&&sourcesRenderMode.settingsPage) sourcesRenderMode=Object.assign({},sourcesRenderMode);
   const settingsPage=!!sourcesRenderMode.settingsPage, sectionTarget=String(sourcesRenderMode.section||"");
   const st=streamCfg(), fd=settings.feed, ci=connInfo(), dl=downloadCfg();
   const rows=allSources(true).filter(s=>s.kind!=="addon").map(s=>{
