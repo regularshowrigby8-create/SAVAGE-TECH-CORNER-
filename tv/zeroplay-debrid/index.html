@@ -3828,8 +3828,68 @@ body.android-tv .page { scroll-margin-top: 4rem; }
    controls nobody can see. */
 .player-overlay.chrome-hidden .player-controls,
 .player-overlay.chrome-hidden .player-bar,
-.player-overlay.chrome-hidden .player-action-shelf,
-.player-overlay:not(.player-more-open) .player-sheet { visibility: hidden; }
+.player-overlay.chrome-hidden .player-action-shelf { visibility: hidden; }
+.player-overlay:not(.player-more-open) #playerMoreSheet { visibility: hidden; }
+.player-overlay:not(.player-tracks-open) #playerTracksSheet { visibility: hidden; }
+
+
+/* Subtitles & audio panel — ARVIO's tabbed sheet, sized for a 10-foot screen */
+.player-tracks .player-sheet-inner { width: min(96vw, 720px); max-height: 72vh; overflow-y: auto; }
+.track-tabs { display: flex; gap: 0.4rem; margin-bottom: 0.7rem; }
+.track-tab {
+  min-height: 42px; padding: 0 1.1rem; border-radius: 14px; cursor: pointer;
+  background: rgba(255, 255, 255, 0.07); color: var(--zp-text-secondary);
+  border: 1px solid transparent; font-size: 0.86rem; font-weight: 700;
+}
+.track-tab.is-on { background: rgba(255, 255, 255, 0.14); color: #fff; border-color: var(--accent, #65e6cc); }
+.track-tab.tv-focused { outline: none; box-shadow: 0 0 0 var(--zp-focus-ring, 2px) var(--accent, #65e6cc); }
+.track-group-title {
+  margin: 0.5rem 0 0.3rem; font-size: 0.7rem; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--zp-text-tertiary);
+}
+.track-row {
+  display: flex; align-items: center; width: 100%; min-height: 46px;
+  padding: 0 0.9rem; margin-bottom: 0.3rem; border-radius: 12px; cursor: pointer;
+  background: rgba(255, 255, 255, 0.04); color: var(--zp-text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.08); font-size: 0.9rem; text-align: left;
+}
+.track-row.is-on { background: rgba(101, 230, 204, 0.16); border-color: var(--accent, #65e6cc); color: #fff; }
+.track-row.is-on::after { content: "✓"; margin-left: auto; color: var(--accent, #65e6cc); font-weight: 800; }
+.track-row.tv-focused { outline: none; box-shadow: 0 0 0 var(--zp-focus-ring, 2px) var(--accent, #65e6cc); }
+.track-empty { margin: 0.35rem 0 0.6rem; font-size: 0.84rem; color: var(--zp-text-secondary); }
+.track-setting {
+  display: grid; grid-template-columns: 1fr auto auto auto; align-items: center;
+  gap: 0.5rem; min-height: 46px; padding: 0 0.9rem; margin-bottom: 0.3rem;
+  border-radius: 12px; background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08); font-size: 0.88rem;
+}
+.track-setting .track-value { min-width: 62px; text-align: right; font-weight: 800; color: var(--accent, #65e6cc); }
+.track-setting .control-btn { min-width: 52px; min-height: 38px; }
+/* Transient remote feedback */
+.player-indicator {
+  position: absolute; z-index: 40; left: 50%; bottom: 15%;
+  transform: translateX(-50%);
+  padding: 0.6rem 1.2rem; border-radius: 999px;
+  background: rgba(0, 0, 0, 0.86); border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff; font-size: 0.95rem; font-weight: 700; letter-spacing: 0.01em;
+  pointer-events: none;
+}
+.player-indicator[hidden] { display: none; }
+/* Cue defaults; the runtime style element overrides size and position */
+/* Painted captions: ::cue cannot be positioned or delayed, so ZeroPlay draws
+   its own text with the viewer's size and height. */
+.player-subtitles {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  bottom: 30%; max-width: 86%; z-index: 12;
+  padding: 0.18em 0.5em; border-radius: 6px;
+  background: rgba(0, 0, 0, 0.72); color: #fff;
+  font-size: var(--zp-cue-size, 1.55rem); font-weight: 600; line-height: 1.32;
+  text-align: center; white-space: pre-line; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+}
+.player-subtitles[hidden] { display: none; }
+/* The element's own cue rendering stays out of the way; we paint the text. */
+video.zp-subs::cue { color: transparent; background: transparent; text-shadow: none; }
 
 /* Unified server list + chips */
 .stream-filters { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0.9rem 0 0.7rem; }
@@ -4025,6 +4085,13 @@ const LEGACY_SETTING_KEYS=["tmdbKey","rdToken","rdUser","addonBase","debrid","de
 const hadLegacySettings=LEGACY_SETTING_KEYS.some(k=>Object.prototype.hasOwnProperty.call(settings,k));
 for(const k of LEGACY_SETTING_KEYS) delete settings[k]; /* no user API keys and no Real-Debrid configuration */
 settings.stream=Object.assign({preload:"smart",player:"native",raceTimeoutSec:20,stallSwitch:true,stallTimeoutSec:45,quality:"auto",resolutions:["2160p","1080p","720p","480p"],maxFileSizeGb:5,dataSaver:"auto",dnsWarm:true,sortByHealth:true,trailerPreviews:!ANDROID_TV_APP,volume:.9,muted:false,rate:1,autoFailover:true,embedwaveFailover:false,fastStreamApiProbe:true,nextEpisodeWarm:true,primeThreads:ANDROID_TV_APP?1:2,primeChunkKb:ANDROID_TV_APP?128:256,primeBudgetMb:ANDROID_TV_APP?1:2,bufferTargetSec:ANDROID_TV_APP?12:16},settings.stream||{});
+/* Screen size and subtitle appearance persist with the rest of the player
+   settings, so a viewer sets them once. */
+settings.stream.resizeMode=["fit","zoom","stretch"].includes(settings.stream.resizeMode)?settings.stream.resizeMode:"fit";
+settings.stream.subtitleStyle=Object.assign({syncMs:0,size:100,vertical:100},settings.stream.subtitleStyle||{});
+settings.stream.subtitleStyle.syncMs=Math.max(-10000,Math.min(10000,Number(settings.stream.subtitleStyle.syncMs)||0));
+settings.stream.subtitleStyle.size=Math.max(60,Math.min(220,Number(settings.stream.subtitleStyle.size)||100));
+settings.stream.subtitleStyle.vertical=Math.max(4,Math.min(250,Number(settings.stream.subtitleStyle.vertical)||100));
 settings.ui=Object.assign({autoplayNext:true,reduceMotion:ANDROID_TV_APP,compactCards:false,showCategoryStrip:true,tvPerformanceMode:ANDROID_TV_APP,androidTvLaunchFocus:true},settings.ui||{});
 settings.downloads=Object.assign({enabled:true,multithreaded:true,threads:ANDROID_TV_APP?2:4,chunkMb:ANDROID_TV_APP?1:2,concurrent:1,m3uExtraction:true,autoSave:true,autoResume:false,refreshExpired:true,keepCompleted:true},settings.downloads||{});
 /* ZeroPlay plays every stream itself. Older saved settings that pointed at
@@ -5771,6 +5838,7 @@ function withPlayerRuntime(st){
   const defaults={
     engine:"", variants:[], activeVariant:null, directQueue:[], levels:[], currentLevelId:null,
     qualitySelection:(settings.stream&&settings.stream.quality)||"auto", availableServers:[], availabilityPromise:null,
+    subtitleTracks:[], subtitleSelection:"off", tracksOpen:false,
     availabilityChecked:false, currentServerOptionId:"", triedUrls:new Set(), fsState:null,
     playback:{paused:true,buffering:true,currentTime:0,duration:0,buffered:0,volume:Number(settings.stream&&settings.stream.volume!=null?settings.stream.volume:.9),muted:!!(settings.stream&&settings.stream.muted),rate:Number(settings.stream&&settings.stream.rate||1)},
     lastProgressSave:0, chromeTimer:null, switching:false, healthRecorded:false, mountedAt:0, frameLoadedAt:0, playbackSignalAt:0, playbackConfirmed:false, embedNoticeShown:false, prime:null,
@@ -5809,6 +5877,36 @@ function normalizeVariant(v,fallback){
   base.label=base.label||base.name||fallback||"Direct stream";
   base.addonName=base.addonName||base.serverName||fallback||"Direct server";
   return base;
+}
+/* A Stremio stream may carry `subtitles:[{url,lang,name}]`. Those are real
+   files we can render, so they travel with the variant and land in the menu. */
+function subtitlesFromStream(stream){
+  const raw=(stream&&Array.isArray(stream.subtitles))?stream.subtitles:[];
+  const out=[];
+  for(const s of raw){
+    const url=typeof s==="string"?s:(s&&(s.url||s.src));
+    if(!url||!/^https?:\/\//i.test(url)) continue;
+    if(!/\.(?:vtt|srt|ass|ssa)(?:\?|#|$)/i.test(url)) continue;
+    if(out.some(t=>t.url===url)) continue;
+    out.push({
+      id:"ext:"+out.length,
+      url,
+      label:(s&&(s.name||s.label))||s.lang||"Subtitle",
+      lang:String((s&&s.lang)||"").toLowerCase(),
+      format:(url.match(/\.(vtt|srt|ass|ssa)/i)||[])[1].toLowerCase(),
+    });
+  }
+  return out.slice(0,12);
+}
+function mergeSubtitleTracks(){
+  const seen=new Set(); const out=[];
+  for(const list of arguments){
+    for(const t of (Array.isArray(list)?list:[])){
+      if(!t||!t.url||seen.has(t.url)) continue;
+      seen.add(t.url); out.push(Object.assign({id:"sub:"+out.length},t));
+    }
+  }
+  return out.slice(0,16);
 }
 function sortVariantsForQuality(variants,quality){
   const pref=normalizeQualityLabel(quality||settings.stream.quality||"auto");
@@ -5971,8 +6069,8 @@ async function playerCommand(action,value){
       if(action==="toggle") { if(v.paused) await v.play(); else v.pause(); }
       else if(action==="seek") v.currentTime=Math.max(0,Math.min(v.duration||Infinity,Number(value)||0));
       else if(action==="seekDelta") v.currentTime=Math.max(0,Math.min(v.duration||Infinity,v.currentTime+(Number(value)||0)));
-      else if(action==="volume"){ v.volume=Math.max(0,Math.min(1,Number(value))); v.muted=v.volume===0; }
-      else if(action==="mute") v.muted=!v.muted;
+      else if(action==="volume"){ v.volume=Math.max(0,Math.min(1,Number(value))); v.muted=v.volume===0; playerIndicator(v.muted?"Muted":Math.round(v.volume*100)+"%",1400); }
+      else if(action==="mute"){ v.muted=!v.muted; playerIndicator(v.muted?"Muted":Math.round(v.volume*100)+"%",1400); }
       else if(action==="rate") v.playbackRate=Number(value)||1;
       else if(action==="pip") { if(document.pictureInPictureElement) await document.exitPictureInPicture(); else await v.requestPictureInPicture(); }
       return;
@@ -6116,6 +6214,7 @@ function zpEngine(){
   return st.zpEngine;
 }
 function zpEngineDestroy(){
+  try{ stopSubtitleRenderer(); }catch{}
   const st=playerState; const e=st&&st.zpEngine; if(!e) return;
   e.destroyed=true;
   try{ if(e.instance&&e.instance.destroy) e.instance.destroy(); }catch{}
@@ -6129,6 +6228,237 @@ function zpEngineDestroy(){
 }
 function zpEngineLevels(){
   const e=zpEngine(); return (e&&e.levels)||[];
+}
+/* ---- track contract ------------------------------------------------------
+   ARVIO's PlayerEngine exposes audioTracks / subtitleTracks / resizeMode and a
+   buffered position to one UI layer. These four functions are that contract
+   for our engine, so the menus never care which library is underneath. */
+const ZP_RESIZE_MODES=["fit","zoom","stretch"];
+const ZP_RESIZE_LABELS={fit:"Fit to screen",zoom:"Zoom (fill)",stretch:"Stretch"};
+function zpEngineBufferedSec(){
+  const v=playerState&&playerState.zpEngine&&playerState.zpEngine.video;
+  try{
+    if(!v||!v.buffered||!v.buffered.length) return 0;
+    return Number(v.buffered.end(v.buffered.length-1))||0;
+  }catch{ return 0; }
+}
+function zpEngineResizeMode(){
+  return (settings.stream&&settings.stream.resizeMode)||"fit";
+}
+function zpEngineApplyResize(mode){
+  const v=playerState&&playerState.zpEngine&&playerState.zpEngine.video;
+  const next=ZP_RESIZE_MODES.includes(mode)?mode:"fit";
+  settings.stream.resizeMode=next; saveSettings();
+  if(v) v.style.objectFit=next==="stretch"?"fill":next==="zoom"?"cover":"contain";
+  const label=document.getElementById("btnPlayerAspect");
+  if(label) label.textContent=ZP_RESIZE_LABELS[next];
+  const st=playerState&&playerState.ui; if(st) st.resizeMode=next;
+  return next;
+}
+function zpEngineAudioTracks(){
+  const v=playerState&&playerState.zpEngine&&playerState.zpEngine.video;
+  const list=[];
+  try{
+    const tracks=v&&v.audioTracks;
+    if(tracks&&tracks.length){
+      for(let i=0;i<tracks.length;i++){
+        const t=tracks[i];
+        list.push({id:"audio:"+i,index:i,label:t.label||t.language||"Audio "+(i+1),lang:String(t.language||"").toLowerCase(),enabled:!!t.enabled});
+      }
+    }
+  }catch{}
+  /* hls.js exposes the muxed audio renditions; index maps to audioTrack */
+  const e=zpEngine();
+  if(!list.length&&e&&e.kind==="hls"&&e.instance&&Array.isArray(e.instance.audioTracks)&&e.instance.audioTracks.length>1){
+    e.instance.audioTracks.forEach((t,i)=>list.push({id:"audio:"+i,index:i,label:t.name||t.lang||"Audio "+(i+1),lang:String(t.lang||"").toLowerCase(),enabled:Number(e.instance.audioTrack)===i}));
+  }
+  return list;
+}
+function zpEngineSelectAudio(id){
+  const e=zpEngine(); const v=e&&e.video;
+  const idx=Number(String(id||"").replace("audio:",""));
+  if(!Number.isFinite(idx)||idx<0) return false;
+  try{
+    if(v&&v.audioTracks&&v.audioTracks.length){
+      for(let i=0;i<v.audioTracks.length;i++) v.audioTracks[i].enabled=(i===idx);
+      return true;
+    }
+  }catch{}
+  if(e&&e.kind==="hls"&&e.instance&&Array.isArray(e.instance.audioTracks)&&e.instance.audioTracks.length>idx){
+    e.instance.audioTrack=idx;
+    return true;
+  }
+  return false;
+}
+function zpEngineSubtitleTracks(){
+  const st=playerState;
+  const v=st&&st.zpEngine&&st.zpEngine.video;
+  const out=[];
+  try{
+    const tracks=v&&v.textTracks;
+    if(tracks){
+      for(let i=0;i<tracks.length;i++){
+        const t=tracks[i];
+        if(t.kind!=="subtitles"&&t.kind!=="captions") continue;
+        out.push({id:"text:"+i,index:i,label:t.label||t.language||"Track "+(i+1),lang:String(t.language||"").toLowerCase(),active:t.mode==="showing",builtIn:true});
+      }
+    }
+  }catch{}
+  /* Provider-supplied sidecar files come from the stream itself */
+  for(const t of (st&&st.subtitleTracks)||[]){
+    if(out.some(x=>x.id===t.id)) continue;
+    out.push({id:t.id,url:t.url,label:t.label||t.lang||"External subtitle",lang:String(t.lang||"").toLowerCase(),active:!!t.active,builtIn:false,format:t.format||""});
+  }
+  return out;
+}
+function zpEngineSelectSubtitle(id){
+  const st=playerState; if(!st) return false;
+  const v=st.zpEngine&&st.zpEngine.video;
+  const want=String(id||"off");
+  /* A cue source only needs to be live, not visible: mode "hidden" still fires
+     cues, and ZeroPlay paints the text so delay, size and position all work. */
+  try{
+    const tracks=v&&v.textTracks;
+    if(tracks){
+      for(let i=0;i<tracks.length;i++){
+        const t=tracks[i];
+        if(t.kind!=="subtitles"&&t.kind!=="captions") continue;
+        t.mode=(want==="text:"+i)?"hidden":"disabled";
+      }
+    }
+  }catch{}
+  const external=(st.subtitleTracks||[]).find(t=>t.id===want);
+  if(external){
+    attachExternalSubtitle(external).then(()=>{
+      const v2=st&&st.zpEngine&&st.zpEngine.video;
+      const el=v2&&v2.querySelector('track[data-zp-src="'+String(external.id).replace(/"/g,"")+'"]');
+      if(el&&el.track) el.track.mode="hidden";
+      if(!el) toast("This subtitle file could not be loaded");
+      paintSubtitles();
+    });
+    external.attached=true;
+  }
+  st.subtitleSelection=want;
+  (st.subtitleTracks||[]).forEach(t=>{ t.active=(t.id===want); });
+  applySubtitleStyle();
+  if(want==="off") stopSubtitleRenderer();
+  paintSubtitles();
+  return true;
+}
+/* Subtitle delay, size and position cannot be done with ::cue (it cannot be
+   positioned, and cues cannot be shifted in time), so the tracks are kept as
+   cue sources only and ZeroPlay paints the text itself. That is what makes the
+   three controls real instead of decorative. */
+function subtitleStyleCfg(){
+  const s=(settings.stream&&settings.stream.subtitleStyle)||{};
+  return {syncMs:Number(s.syncMs)||0,size:Number(s.size)||100,vertical:Number(s.vertical)||100};
+}
+function applySubtitleStyle(){
+  const cfg=subtitleStyleCfg();
+  const box=document.getElementById("playerSubtitles");
+  if(box){
+    box.style.setProperty("--zp-cue-size",(Math.max(60,Math.min(220,cfg.size))/100*1.55).toFixed(2)+"rem");
+    box.style.bottom=(Math.max(2,Math.min(60,cfg.vertical*0.32))).toFixed(1)+"%";
+  }
+}
+function subtitleCueSources(){
+  const st=playerState;
+  const v=st&&st.zpEngine&&st.zpEngine.video;
+  const out=[];
+  try{
+    const tracks=v&&v.textTracks;
+    if(!tracks) return out;
+    for(let i=0;i<tracks.length;i++){
+      const t=tracks[i];
+      if(t.kind!=="subtitles"&&t.kind!=="captions") continue;
+      if(t.mode==="disabled") continue;
+      out.push(t);
+    }
+  }catch{}
+  return out;
+}
+/* Text currently due, honouring the delay setting. */
+function activeSubtitleText(timeMs){
+  const cfg=subtitleStyleCfg();
+  const at=Number(timeMs)-cfg.syncMs;
+  const lines=[];
+  for(const track of subtitleCueSources()){
+    let cues=null;
+    try{ cues=track.cues; }catch{ cues=null; }
+    if(!cues) continue;
+    for(let i=0;i<cues.length;i++){
+      const c=cues[i];
+      if(at>=Number(c.startTime)*1000&&at<=Number(c.endTime)*1000){
+        const text=String(c.text||"").trim();
+        if(text) lines.push(text);
+      }
+    }
+  }
+  return lines.join("\n");
+}
+function paintSubtitles(){
+  const box=document.getElementById("playerSubtitles");
+  const st=playerState;
+  if(!box) return false;
+  const v=st&&st.zpEngine&&st.zpEngine.video;
+  const selected=st&&st.subtitleSelection&&st.subtitleSelection!=="off";
+  if(!v||!selected){ box.hidden=true; box.textContent=""; return false; }
+  const text=activeSubtitleText((Number(v.currentTime)||0)*1000);
+  if(!text){ box.hidden=true; box.textContent=""; return false; }
+  box.textContent=text; box.hidden=false;
+  return true;
+}
+function startSubtitleRenderer(){
+  stopSubtitleRenderer();
+  const tick=()=>{ paintSubtitles(); };
+  playerTimers.push(setInterval(tick,200));
+  applySubtitleStyle();
+  tick();
+}
+function stopSubtitleRenderer(){
+  const box=document.getElementById("playerSubtitles");
+  if(box){ box.hidden=true; box.textContent=""; }
+}
+/* External subtitle files are fetched through our own relay, which also turns
+   SRT/ASS into WebVTT and gives the element a same-origin source, so a provider
+   behind CORS still supplies subtitles. */
+async function attachExternalSubtitle(track){
+  const st=playerState; const v=st&&st.zpEngine&&st.zpEngine.video;
+  if(!v||!track||!track.url) return false;
+  const already=v.querySelector('track[data-zp-src="'+String(track.id).replace(/"/g,"")+'"]');
+  if(already) return true;
+  let src=track.url;
+  try{
+    const text=await resolverCall({mode:"text",url:track.url});
+    if(text&&typeof text==="string"&&text.length>8&&/-->/.test(text)){
+      const vtt=/\.vtt(\?|#|$)/i.test(track.url)?text:srtToVtt(text);
+      src=URL.createObjectURL(new Blob([vtt],{type:"text/vtt"}));
+    }
+  }catch{ /* keep the direct URL; the element will fetch it itself */ }
+  const el=document.createElement("track");
+  el.kind="subtitles";
+  el.label=track.label||"Subtitle";
+  el.srclang=track.lang||"en";
+  el.src=src;
+  el.setAttribute("data-zp-src",track.id);
+  v.appendChild(el);
+  return true;
+}
+function srtToVtt(text){
+  const body=String(text||"").replace(/\r+/g,"").replace(/^\uFEFF/,"")
+    .replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g,"$1.$2");
+  return "WEBVTT\n\n"+body.replace(/^\s*\d+\s*$/gm,"").replace(/\n{3,}/g,"\n\n");
+}
+function setSubtitleStyle(key,delta){
+  const cfg=subtitleStyleCfg();
+  const next={syncMs:cfg.syncMs,size:cfg.size,vertical:cfg.vertical};
+  if(key==="sync") next.syncMs=Math.max(-10000,Math.min(10000,cfg.syncMs+(delta||0)));
+  if(key==="size") next.size=Math.max(60,Math.min(220,cfg.size+(delta||0)));
+  if(key==="vertical") next.vertical=Math.max(4,Math.min(250,cfg.vertical+(delta||0)));
+  settings.stream.subtitleStyle=next; saveSettings();
+  applySubtitleStyle();
+  paintSubtitles();
+  return next;
 }
 function zpEngineSetLevel(value){
   const e=zpEngine(); const st=playerState;
@@ -6176,11 +6506,14 @@ async function zpEngineMount(stage,url,source,opts){
   const kind=streamKindOf(url,opts.kind);
   zpEngineDestroy();
   stage.innerHTML='<div class="media-shell"><video class="player-frame" id="pv" playsinline preload="metadata"></video><button class="media-click" id="mediaClick" type="button" aria-label="Play or pause"></button></div>'
+    +'<div class="player-subtitles" id="playerSubtitles" hidden aria-live="off"></div>'
     +'<div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>Connecting to the stream…</strong><span class="zp-loading-sub">ZeroPlay is reading this stream directly.</span></div>';
   const shell=stage.querySelector(".media-shell");
   const v=document.getElementById("pv");
   const e=zpEngine();
   e.video=v; e.kind=kind; e.url=url;
+  v.classList.add("zp-subs");
+  try{ v.style.objectFit=zpEngineResizeMode()==="stretch"?"fill":zpEngineResizeMode()==="zoom"?"cover":"contain"; }catch{}
   const click=document.getElementById("mediaClick");
   if(click){ click.onclick=()=>playerCommand("toggle"); click.ondblclick=()=>playerCommand("fullscreen"); }
 
@@ -6418,6 +6751,8 @@ function playerShell(msg){
         +'<button class="control-btn primary" id="btnPlayPause" type="button" aria-label="Play or pause">▶</button>'
         +'<button class="control-btn" id="btnBack10" type="button" aria-label="Back 10 seconds">−10</button>'
         +'<button class="control-btn" id="btnForward10" type="button" aria-label="Forward 10 seconds">+10</button>'
+        +'<button class="control-btn" id="btnPlayerTracks" type="button" aria-label="Subtitles and audio">CC / Audio</button>'
+        +'<button class="control-btn" id="btnPlayerAspect" type="button" aria-label="Screen size">'+esc(ZP_RESIZE_LABELS[zpEngineResizeMode()]||"Fit to screen")+'</button>'
         +'<span class="player-status" id="playerMeta">Connecting…</span>'
         +'<span class="player-spacer"></span>'
         +'<span class="chip" id="playerEngine">'+esc(engineLabel)+'</span>'
@@ -6446,7 +6781,132 @@ function playerShell(msg){
         +'</div>'
         +(queue?'<p class="player-sheet-note" id="playerQueueLine">Source '+queue.index+' of '+queue.total+(queue.remaining?' · '+queue.remaining+' more queued':'')+'</p>':"")
       +'</div>'
-    +'</div></div>';
+      +'</div>'
+    +'</div>'
+    +playerTracksModalHTML(st)
+    +'<div class="player-indicator" id="playerIndicator" hidden aria-live="polite"></div></div>';
+}
+/* ARVIO puts subtitles and audio behind one tabbed panel, and gives subtitle
+   timing, size and position their own three-row panel. Same structure here,
+   driven by the real tracks our engine reports. */
+function playerTracksModalHTML(st){
+  const subs=typeof zpEngineSubtitleTracks==="function"?zpEngineSubtitleTracks():[];
+  const audio=typeof zpEngineAudioTracks==="function"?zpEngineAudioTracks():[];
+  const cfg=subtitleStyleCfg();
+  const offset=(()=>{const ms=cfg.syncMs,a=Math.abs(ms);return (ms>0?"+":ms<0?"-":"")+(a/1000).toFixed(1)+"s";})();
+  const subRows=[{id:"off",label:"Off"}].concat(subs.map(t=>({id:t.id,label:t.label||t.lang||t.id})))
+    .map(r=>'<button class="track-row'+(((st.subtitleSelection||"off")===r.id)?" is-on":"")+'" data-sub="'+esc(r.id)+'" type="button" role="menuitemradio" aria-checked="'+(((st.subtitleSelection||"off")===r.id)?"true":"false")+'">'+esc(r.label)+'</button>').join("");
+  const audioRows=audio.length
+    ? audio.map(t=>'<button class="track-row'+(t.enabled?" is-on":"")+'" data-audio="'+esc(t.id)+'" type="button" role="menuitemradio" aria-checked="'+(t.enabled?"true":"false")+'">'+esc(t.label)+'</button>').join("")
+    : '<p class="track-empty">This stream has a single audio track.</p>';
+  return '<div class="player-sheet player-tracks" id="playerTracksSheet" hidden data-tv-row="player-tracks" aria-label="Subtitles and audio">'
+    +'<div class="player-sheet-inner">'
+      +'<div class="player-sheet-head"><strong>Subtitles &amp; audio</strong><button class="icon-btn" id="btnClosePlayerTracks" type="button" aria-label="Close subtitles and audio">×</button></div>'
+      +'<div class="track-tabs" role="tablist">'
+        +'<button class="track-tab is-on" id="tabSubtitleTracks" data-track-tab="subtitles" type="button" role="tab" aria-selected="true">Subtitles</button>'
+        +'<button class="track-tab" id="tabAudioTracks" data-track-tab="audio" type="button" role="tab" aria-selected="false">Audio</button>'
+      +'</div>'
+      +'<div class="track-pane" data-track-pane="subtitles" role="menu">'
+        +'<p class="track-group-title">Track</p>'+subRows
+        +'<p class="track-group-title">Appearance</p>'
+        +'<div class="track-setting"><span>Delay</span><span class="track-value" data-value="sync">'+offset+'</span><button class="control-btn" data-sub-style="sync" data-delta="-100" type="button" aria-label="Subtitle delay earlier">−</button><button class="control-btn" data-sub-style="sync" data-delta="100" type="button" aria-label="Subtitle delay later">+</button></div>'
+        +'<div class="track-setting"><span>Size</span><span class="track-value" data-value="size">'+cfg.size+'%</span><button class="control-btn" data-sub-style="size" data-delta="-10" type="button" aria-label="Smaller subtitles">−</button><button class="control-btn" data-sub-style="size" data-delta="10" type="button" aria-label="Larger subtitles">+</button></div>'
+        +'<div class="track-setting"><span>Position</span><span class="track-value" data-value="vertical">'+cfg.vertical+'%</span><button class="control-btn" data-sub-style="vertical" data-delta="-10" type="button" aria-label="Subtitles lower">−</button><button class="control-btn" data-sub-style="vertical" data-delta="10" type="button" aria-label="Subtitles higher">+</button></div>'
+      +'</div>'
+      +'<div class="track-pane" data-track-pane="audio" role="menu" hidden>'+audioRows+'</div>'
+    +'</div>'
+  +'</div>';
+}
+/* One transient indicator for the things a remote changes with the chrome
+   closed: volume, screen size, a skip. */
+function playerIndicator(text,ms){
+  const el=document.getElementById("playerIndicator");
+  if(!el||!text) return;
+  el.textContent=text; el.hidden=false;
+  clearTimeout(el._t);
+  el._t=setTimeout(()=>{ el.hidden=true; },ms||1600);
+}
+function refreshPlayerTracksSheet(){
+  const sheet=document.getElementById("playerTracksSheet");
+  if(!sheet||!playerState) return;
+  const wasOpen=!sheet.hidden;
+  const holder=document.createElement("div");
+  holder.innerHTML=playerTracksModalHTML(playerState);
+  sheet.replaceWith(holder.firstElementChild);
+  const fresh=document.getElementById("playerTracksSheet");
+  if(fresh) fresh.hidden=!wasOpen;
+  bindPlayerTracksSheet();
+}
+function setTrackTab(tab){
+  document.querySelectorAll("[data-track-tab]").forEach(b=>{
+    const on=b.getAttribute("data-track-tab")===tab;
+    b.classList.toggle("is-on",on); b.setAttribute("aria-selected",on?"true":"false");
+  });
+  document.querySelectorAll("[data-track-pane]").forEach(p=>{ p.hidden=p.getAttribute("data-track-pane")!==tab; });
+}
+function bindPlayerTracksSheet(){
+  const sheet=document.getElementById("playerTracksSheet"); if(!sheet) return;
+  const btn=document.getElementById("btnPlayerTracks");
+  const setOpen=open=>{
+    sheet.hidden=!open;
+    if(playerState) playerState.tracksOpen=open;
+    if(btn) btn.setAttribute("aria-expanded",open?"true":"false");
+    const overlay=document.getElementById("playerOverlay");
+    if(overlay) overlay.classList.toggle("player-tracks-open",open);
+    if(open){ setTrackTab("subtitles"); const first=sheet.querySelector(".track-row, .control-btn"); if(first) setTimeout(()=>tvFocusAndReveal(first),40); }
+  };
+  const close=()=>{ setOpen(false); if(btn) btn.focus({preventScroll:true}); };
+  const closeBtn=document.getElementById("btnClosePlayerTracks");
+  if(closeBtn) closeBtn.addEventListener("click",close);
+  if(btn) btn.onclick=()=>{ refreshPlayerTracksSheet(); const again=document.getElementById("playerTracksSheet"); const host=document.getElementById("btnPlayerTracks"); if(host) host.setAttribute("aria-expanded","true"); if(again) again.hidden=false; if(playerState) playerState.tracksOpen=true; setTrackTab("subtitles"); const first=document.querySelector("#playerTracksSheet .track-row"); if(first) setTimeout(()=>tvFocusAndReveal(first),40); };
+  sheet.querySelectorAll("[data-track-tab]").forEach(t=>t.addEventListener("click",()=>setTrackTab(t.getAttribute("data-track-tab"))));
+  sheet.querySelectorAll("[data-sub]").forEach(row=>row.addEventListener("click",()=>{
+    const id=row.getAttribute("data-sub");
+    zpEngineSelectSubtitle(id);
+    toast(id==="off"?"Subtitles off":"Subtitles: "+(row.textContent||"").trim());
+    refreshPlayerTracksSheet();
+    const again=document.querySelector('[data-sub="'+id.replace(/"/g,"")+'"]'); if(again) tvFocusAndReveal(again);
+  }));
+  sheet.querySelectorAll("[data-audio]").forEach(row=>row.addEventListener("click",()=>{
+    const id=row.getAttribute("data-audio");
+    if(zpEngineSelectAudio(id)) toast("Audio: "+(row.textContent||"").trim());
+    else toast("This stream exposes one audio track");
+    refreshPlayerTracksSheet();
+    const again=document.querySelector('[data-audio="'+id.replace(/"/g,"")+'"]'); if(again) tvFocusAndReveal(again);
+  }));
+  sheet.querySelectorAll("[data-sub-style]").forEach(b=>b.addEventListener("click",()=>{
+    const key=b.getAttribute("data-sub-style"), delta=Number(b.getAttribute("data-delta"))||0;
+    const cfg=setSubtitleStyle(key,delta);
+    const out=sheet.querySelector('[data-value="'+key+'"]');
+    if(out) out.textContent=key==="sync"?((cfg.syncMs>0?"+":cfg.syncMs<0?"-":"")+(Math.abs(cfg.syncMs)/1000).toFixed(1)+"s"):cfg[key]+"%";
+    if(key==="sync") playerIndicator(cfg.syncMs===0?"Subtitles in sync":"Subtitles "+((cfg.syncMs>0?"+":"")+(cfg.syncMs/1000).toFixed(1)+"s"));
+    if(key==="size") playerIndicator("Subtitle size "+cfg.size+"%");
+    if(key==="vertical") playerIndicator("Subtitle height "+cfg.vertical+"%");
+    tvFocusAndReveal(b);
+  }));
+}
+/* Left/right inside the panel walks the tabs before it leaves the panel. */
+function handlePlayerTracksKeys(e){
+  const sheet=document.getElementById("playerTracksSheet");
+  if(!sheet||sheet.hidden) return false;
+  if(e.key==="Escape"){
+    e.preventDefault(); sheet.hidden=true;
+    if(playerState) playerState.tracksOpen=false;
+    const b=document.getElementById("btnPlayerTracks"); if(b) b.focus({preventScroll:true});
+    return true;
+  }
+  if(e.key==="ArrowLeft"||e.key==="ArrowRight"){
+    const tabs=[...sheet.querySelectorAll("[data-track-tab]")];
+    const active=document.activeElement;
+    if(active&&tabs.includes(active)){
+      e.preventDefault();
+      const i=Math.max(0,tabs.indexOf(active)+(e.key==="ArrowRight"?1:-1));
+      setTrackTab(tabs[i].getAttribute("data-track-tab"));
+      tabs[i].focus({preventScroll:true});
+      return true;
+    }
+  }
+  return false;
 }
 function bindPlayerChrome(){
   const st=playerState; if(!st||st.trailer) return;
@@ -6478,6 +6938,17 @@ function bindPlayerChrome(){
   on("btnNextEp","click",()=>changeEpisode(1));
   on("btnPlayPause","click",()=>playerCommand("toggle"));
   on("btnCenterPlay","click",()=>playerCommand("toggle"));
+  on("btnPlayerAspect","click",()=>{
+    /* ARVIO cycles its screen modes from one button; same idea here, with the
+       three fits a browser video element actually honours. */
+    const modes=["fit","zoom","stretch"];
+    const next=modes[(modes.indexOf(zpEngineResizeMode())+1)%modes.length];
+    const applied=zpEngineApplyResize(next);
+    const b=document.getElementById("btnPlayerAspect");
+    if(b){ b.textContent=ZP_RESIZE_LABELS[applied]; tvFocusAndReveal(b); }
+    playerIndicator(ZP_RESIZE_LABELS[applied],1400);
+  });
+  bindPlayerTracksSheet();
   on("btnBack10","click",()=>playerCommand("seekDelta",-10));
   on("btnForward10","click",()=>playerCommand("seekDelta",10));
   on("btnMute","click",()=>playerCommand("mute"));
@@ -6550,6 +7021,10 @@ function updatePlayerMeta(source){
   if(st.direct&&st.fileBytes) parts.push(fmtBytes(st.fileBytes));
   parts.push("Cap "+capGb()+" GB");
   if(st.engine==="embed") parts.push(st.playbackConfirmed?"Playback confirmed":st.frameLoadedAt?"Player page loaded":"Connecting");
+  if(parts.length>0&&st.subtitleSelection&&st.subtitleSelection!=="off"){
+    const on=(st.subtitleTracks||[]).find(t=>t.id===st.subtitleSelection);
+    parts.push("CC"+(on?" "+esc(on.label||on.lang||""):""));
+  }
   if(st.playback&&st.playback.buffered) parts.push("Buffer "+Math.round(st.playback.buffered)+"s");
   m.innerHTML=parts.join(" · ");
   const line=document.getElementById("playerSourceLine");
@@ -6573,10 +7048,12 @@ function bindPlayerErrorActions(){
 }
 /* Ask the resolver for direct media behind a provider page. The app's player
    plays what comes back; a page is never framed as a player. */
+let lastResolvedSubtitles=[];
 async function resolvePageToStreams(pageUrl,label){
   try{
     const data=await resolverCall({mode:"resolve",url:pageUrl});
     const list=Array.isArray(data&&data.direct)?data.direct:[];
+    if(Array.isArray(data&&data.subtitles)&&data.subtitles.length) lastResolvedSubtitles=data.subtitles;
     return list.filter(u=>isDirectMedia(u)).map(u=>normalizeVariant({url:u,addonName:label||"Website",label:label||"Stream"},label||"Website"));
   }catch{ return []; }
 }
@@ -6588,18 +7065,18 @@ async function resolveSourcePlayback(source,ctx){
     const res=await queryAddonStreams(source,richCtx);
     const variants=sortVariantsForQuality(res.direct||[],settings.stream.quality);
     if(!variants.length) throw new Error(source.name+" did not return this exact title");
-    return {url:variants[0].url,kind:"direct",direct:true,variants,activeVariant:variants[0],identityScore:variants[0].identityScore,identityVerdict:variants[0].identityVerdict};
+    return {url:variants[0].url,kind:"direct",direct:true,variants,activeVariant:variants[0],subtitles:mergeSubtitleTracks(...variants.map(v=>v.subtitles)),identityScore:variants[0].identityScore,identityVerdict:variants[0].identityVerdict};
   }
   if(source&&source.kind==="site"){
     const found=await findOnWebsite(source,richCtx);
     if(!found) throw new Error(source.name+" did not return this exact title");
     const direct=sortVariantsForQuality((found.direct||[]).map(url=>({url,addonName:source.name,label:found.pageTitle||source.name})),settings.stream.quality);
     if(found.playUrl&&isDirectMedia(found.playUrl)&&!direct.some(v=>v.url===found.playUrl)) direct.unshift(normalizeVariant({url:found.playUrl,addonName:source.name,label:found.pageTitle||source.name},source.name));
-    if(direct.length&&isDirectMedia(found.playUrl||direct[0].url)) return {url:found.playUrl&&isDirectMedia(found.playUrl)?found.playUrl:direct[0].url,kind:"direct",direct:true,variants:direct,activeVariant:direct.find(v=>v.url===found.playUrl)||direct[0],found,identityScore:found.identityScore,identityVerdict:found.identityVerdict};
+    if(direct.length&&isDirectMedia(found.playUrl||direct[0].url)) return {url:found.playUrl&&isDirectMedia(found.playUrl)?found.playUrl:direct[0].url,kind:"direct",direct:true,variants:direct,activeVariant:direct.find(v=>v.url===found.playUrl)||direct[0],subtitles:mergeSubtitleTracks(...direct.map(v=>v.subtitles),found.subtitles),found,identityScore:found.identityScore,identityVerdict:found.identityVerdict};
     /* No direct file on the page itself: look one hop deeper (the page's own
        player frame) for a real stream before falling back to framing it. */
     const deep=await resolvePageToStreams(found.playUrl||found.watchUrl||source.base,source.name);
-    if(deep.length) return {url:deep[0].url,kind:"direct",direct:true,variants:sortVariantsForQuality(deep,settings.stream.quality),activeVariant:deep[0],found,identityScore:found.identityScore,identityVerdict:found.identityVerdict};
+    if(deep.length) return {url:deep[0].url,kind:"direct",direct:true,variants:sortVariantsForQuality(deep,settings.stream.quality),activeVariant:deep[0],subtitles:mergeSubtitleTracks(...deep.map(v=>v.subtitles),found.subtitles),found,identityScore:found.identityScore,identityVerdict:found.identityVerdict};
     return {url:found.playUrl||found.embed||found.watchUrl,kind:"embed",direct:false,variants:[],activeVariant:null,found,identityScore:found.identityScore,identityVerdict:found.identityVerdict};
   }
   const url=await resolveSourceURL(source,richCtx);
@@ -6653,6 +7130,14 @@ async function drawPlayer(prevProgress){
   st.variants=sortVariantsForQuality(playback.variants||[],settings.stream.quality);
   st.activeVariant=playback.activeVariant||st.variants.find(v=>v.url===st.url)||null;
   st.directQueue=st.variants.filter(v=>v.url!==st.url);
+  /* Subtitles the provider declared, plus any the page handed the resolver. */
+  const carried=mergeSubtitleTracks(
+    (st.activeVariant&&st.activeVariant.subtitles)||[],
+    playback.subtitles||[],
+    lastResolvedSubtitles||[]);
+  lastResolvedSubtitles=[];
+  st.subtitleTracks=carried;
+  if(!carried.some(t=>t.id===st.subtitleSelection)) st.subtitleSelection="off";
   if(st.activeVariant&&st.activeVariant.bytes) st.fileBytes=st.activeVariant.bytes;
   if(st.direct){
     if(!st.fileBytes&&!/^blob:/i.test(st.url)&&!/\.(m3u8|mpd)(\?|#|$)/i.test(st.url)) st.fileBytes=await probeFileSize(st.url);
@@ -6744,6 +7229,8 @@ function startOwnEngine(stage,url,source,loadT0,resumeAt,opts){
     setPlayerControlMode("native");
     bindNativeTransport(video,source,loadT0||performance.now());
     startAutoQualityGuard(video);
+    startSubtitleRenderer();
+    if(playerState.subtitleSelection&&playerState.subtitleSelection!=="off") zpEngineSelectSubtitle(playerState.subtitleSelection);
     updatePlayerMeta(source);
     return video;
   });
@@ -9501,7 +9988,7 @@ async function queryAddonStreams(addon, ctx){
         const verdict=identifyTitleCandidate({title:meta.label,name:stream.name||"",description:meta.sub+" "+(stream.description||""),url:stream.url},identity,{idVerified:!!idVerified,idEvidence:evidence||"provider queried by exact catalogue id",threshold:85});
         if(!verdict.accepted){ out.identityRejected++; continue; }
         out.identityVerified++;
-        out.direct.push({url:stream.url,addonName:fullAddon.name,addonBase:fullAddon.base,bytes:meta.bytes,quality:meta.quality,seeders:meta.seeders,label:meta.label,sub:meta.sub,notWebReady:!!(stream.behaviorHints&&stream.behaviorHints.notWebReady),needsHeaders:!!(stream.behaviorHints&&stream.behaviorHints.proxyHeaders),identityScore:verdict.score,identityVerdict:verdict.verdict,identityReasons:verdict.reasons,matchedTitle:verdict.matchedTitle,streamIdUsed:streamId});
+        out.direct.push({url:stream.url,addonName:fullAddon.name,addonBase:fullAddon.base,bytes:meta.bytes,quality:meta.quality,seeders:meta.seeders,label:meta.label,sub:meta.sub,notWebReady:!!(stream.behaviorHints&&stream.behaviorHints.notWebReady),needsHeaders:!!(stream.behaviorHints&&stream.behaviorHints.proxyHeaders),subtitles:subtitlesFromStream(stream),identityScore:verdict.score,identityVerdict:verdict.verdict,identityReasons:verdict.reasons,matchedTitle:verdict.matchedTitle,streamIdUsed:streamId});
       }else if(stream.infoHash) out.torrents++;
       else if(stream.externalUrl||stream.ytId) out.external++;
     }
@@ -10666,6 +11153,7 @@ function restoreTvFocus(){
   return true;
 }
 function handlePlayerKeyboard(e){
+  if(typeof handlePlayerTracksKeys==="function"&&handlePlayerTracksKeys(e)) return true;
   const st=playerState; if(!st||st.trailer||streamsCtx||(typeof downloadModalState!=="undefined"&&downloadModalState)) return false;
   const tag=(document.activeElement&&document.activeElement.tagName)||"";
   if(/^(INPUT|TEXTAREA|SELECT)$/.test(tag)&&document.activeElement.id!=="seekRange"&&document.activeElement.id!=="volumeRange") return false;
@@ -10702,6 +11190,11 @@ function handlePlayerKeyboard(e){
   if(key.toLowerCase()==="m"&&full){ e.preventDefault(); playerCommand("mute"); return true; }
   if(key.toLowerCase()==="s"){ e.preventDefault(); const b=document.getElementById("btnPlayerServers"); if(b) b.click(); return true; }
   if(key.toLowerCase()==="q"){ e.preventDefault(); const q=document.getElementById("playerQuality"); if(q) q.focus(); return true; }
+  if(key.toLowerCase()==="c"&&full){ e.preventDefault(); const cc=document.getElementById("btnPlayerTracks"); if(cc) cc.click(); return true; }
+  if(key.toLowerCase()==="a"&&full){ e.preventDefault(); const asp=document.getElementById("btnPlayerAspect"); if(asp) asp.click(); return true; }
+  /* Subtitle sizing straight from the remote, like ARVIO's menu shortcuts. */
+  if(e.shiftKey&&(key==="<"||key===",")&&full){ e.preventDefault(); setSubtitleStyle("size",-10); playerIndicator("Subtitle size "+subtitleStyleCfg().size+"%"); return true; }
+  if(e.shiftKey&&(key===">"||key===".")&&full){ e.preventDefault(); setSubtitleStyle("size",10); playerIndicator("Subtitle size "+subtitleStyleCfg().size+"%"); return true; }
   if(key==="Backspace"){ e.preventDefault(); closePlayer(); return true; }
   return false;
 }
@@ -10714,6 +11207,12 @@ function handleZeroPlayTvBack(){
   if(streamsCtx){ closeStreams(); return true; }
   const moreSheet=document.getElementById("playerMoreSheet");
   if(moreSheet&&!moreSheet.hidden){ togglePlayerMore(false); return true; }
+  const tracksSheet=document.getElementById("playerTracksSheet");
+  if(tracksSheet&&!tracksSheet.hidden){
+    tracksSheet.hidden=true; if(playerState) playerState.tracksOpen=false;
+    const cc=document.getElementById("btnPlayerTracks"); if(cc) cc.focus({preventScroll:true});
+    return true;
+  }
   if(playerState){
     if(playerState.embedFocused){ playerState.embedFocused=false; showPlayerChrome(false); const backBtn=document.getElementById("btnFocusEmbed"); if(backBtn) backBtn.focus({preventScroll:true}); return true; }
     if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); return true; }

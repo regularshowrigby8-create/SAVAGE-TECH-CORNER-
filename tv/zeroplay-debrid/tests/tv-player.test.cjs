@@ -23,6 +23,13 @@ const ctx = {
   healthScore() { return 50; },
   refreshPlayerQualityOptions() {},
   toast() {},
+  saveSettings() { ctx.settingsSaved = true; },
+  document: {
+    head: { appendChild() {} },
+    getElementById() { return null; },
+    createElement() { return { classList: { add() {} }, style: {}, setAttribute() {}, appendChild() {} }; },
+  },
+  tvFocusAndReveal() {},
 };
 ctx.globalThis = ctx;
 vm.createContext(ctx);
@@ -37,6 +44,66 @@ vm.runInContext([
 let n = 0;
 const ok = (c, label) => { assert(c, label); n++; console.log('PASS', label); };
 const eq = (a, b, label) => { assert.deepStrictEqual(JSON.parse(JSON.stringify(a)), b, label); n++; console.log('PASS', label); };
+
+  /* ---- tracks: the menus must be driven by real engine state ---- */
+  ok(typeof ctx.subtitlesFromStream === 'function', 'provider subtitle lists are normalised by the app');
+  eq(ctx.subtitlesFromStream({ subtitles: [
+    { url: 'https://cdn.test/en.vtt', lang: 'en', name: 'English' },
+    { url: 'https://cdn.test/es.srt', lang: 'es' },
+    { url: 'https://cdn.test/notes.txt', lang: 'en' },
+  ] }).map(t => t.lang), ['en', 'es'], 'only timed-text files become tracks, with their language kept');
+  const merged = ctx.mergeSubtitleTracks(
+    [{ url: 'https://cdn.test/en.vtt', label: 'English' }, { url: 'https://cdn.test/en.vtt', label: 'dup' }],
+    [{ url: 'https://cdn.test/fr.vtt', label: 'French' }]);
+  eq(merged.length, 2, 'the same subtitle file arriving from two providers is listed once');
+  eq(merged[1].label, 'French', 'merged tracks keep their provider labels');
+
+  /* Resize is a real element property, not a label. */
+  const fakeVideo = { style: {}, textTracks: [], audioTracks: [] };
+  ctx.settings.stream.resizeMode = 'fit';
+  ctx.playerState = { zpEngine: { kind: 'hls', instance: null, video: fakeVideo }, subtitleTracks: [], ui: {} };
+  eq(ctx.zpEngineResizeMode(), 'fit', 'screen size starts at fit');
+  eq(ctx.zpEngineApplyResize('zoom'), 'zoom', 'zooming the picture is accepted');
+  eq(fakeVideo.style.objectFit, 'cover', 'zoom actually fills the frame');
+  eq(ctx.zpEngineApplyResize('stretch'), 'stretch', 'stretching is accepted');
+  eq(fakeVideo.style.objectFit, 'fill', 'stretch actually distorts to fill');
+  eq(ctx.zpEngineApplyResize('nonsense'), 'fit', 'an unknown screen size falls back to fit instead of breaking');
+
+  /* Subtitle tracks: built-in cues and provider files share one list, and
+     selecting one turns the others off. */
+  const cueA = { kind: 'subtitles', label: 'English', language: 'en', mode: 'disabled' };
+  const cueB = { kind: 'subtitles', label: 'French', language: 'fr', mode: 'showing' };
+  fakeVideo.textTracks = [cueA, cueB];
+  ctx.playerState.subtitleTracks = [{ id: 'sub:0', url: 'https://cdn.test/de.vtt', label: 'German', lang: 'de', active: false }];
+  const list = ctx.zpEngineSubtitleTracks();
+  eq(list.map(t => t.label), ['English', 'French', 'German'], 'built-in and provider subtitles appear in one list');
+  ok(ctx.zpEngineSelectSubtitle('text:0') === true, 'a built-in track can be selected');
+  eq([cueA.mode, cueB.mode], ['hidden', 'disabled'], 'selecting a track enables one cue source; ZeroPlay paints the text');
+  eq(ctx.playerState.subtitleSelection, 'text:0', 'the selected track is remembered');
+  ctx.zpEngineSelectSubtitle('off');
+  eq([cueA.mode, cueB.mode], ['disabled', 'disabled'], 'Off really turns every subtitle off');
+
+  /* Audio: a stream with several tracks can be switched; a single-track
+     stream reports that honestly instead of showing a dead menu. */
+  const a0 = { label: 'English', language: 'en', enabled: true };
+  const a1 = { label: 'Spanish', language: 'es', enabled: false };
+  fakeVideo.audioTracks = [a0, a1];
+  eq(ctx.zpEngineAudioTracks().map(t => t.label), ['English', 'Spanish'], 'every audio track a stream carries is listed');
+  ok(ctx.zpEngineSelectAudio('audio:1') === true, 'a second audio track can be selected');
+  eq([a0.enabled, a1.enabled], [false, true], 'selecting an audio track enables exactly one');
+  fakeVideo.audioTracks = [];
+  eq(ctx.zpEngineAudioTracks().length, 0, 'a single-track stream exposes no fake choices');
+  ok(ctx.zpEngineSelectAudio('audio:5') === false, 'an audio track that does not exist is refused');
+
+  /* Subtitle appearance is stored, clamped and applied. */
+  ctx.settings.stream.subtitleStyle = { syncMs: 0, size: 100, vertical: 100 };
+  eq(ctx.setSubtitleStyle('sync', 100).syncMs, 100, 'subtitle delay moves forward');
+  eq(ctx.setSubtitleStyle('sync', -300).syncMs, -200, 'subtitle delay moves back');
+  eq(ctx.setSubtitleStyle('size', -100).size, 60, 'subtitle size is clamped at the small end');
+  eq(ctx.setSubtitleStyle('size', 900).size, 220, 'subtitle size is clamped at the large end');
+  eq(ctx.setSubtitleStyle('vertical', -900).vertical, 4, 'subtitle height is clamped so cues cannot vanish');
+  ctx.playerState = null;
+
 
 eq(ctx.cmGenreIds('movie', ['Action', 'Science Fiction']), [28, 878], 'Cinemeta movie genres map to category IDs');
 eq(ctx.cmGenreIds('tv', ['Sci-Fi', 'Drama']), [10765, 18], 'Cinemeta series genres map to category IDs');
@@ -112,10 +179,39 @@ eq(sorted.map(x => x.id), ['direct:a', 'route:vidstuck', 'route:embedwave'], 've
   ok(ctx.zpEngineSetLevel('auto') === true, 'Auto is accepted by the engine');
   eq(fakeHls.currentLevel, -1, 'Auto returns level control to the engine');
   ok(ctx.zpEngineSetLevel('level:9') === false, 'a level that is not in the stream is refused instead of silently ignored');
+  /* The painter: what a viewer reads on screen, including the delay setting. */
+  cueA.mode = 'hidden';
+  cueA.cues = [
+    { startTime: 9, endTime: 11, text: 'first line' },
+    { startTime: 9, endTime: 11, text: 'second line' },
+    { startTime: 30, endTime: 32, text: 'much later' },
+  ];
+  fakeVideo.currentTime = 10;
+  ctx.playerState = { zpEngine: { video: fakeVideo }, subtitleSelection: 'text:0', subtitleTracks: [] };
+  ctx.settings.stream.subtitleStyle = { syncMs: 0, size: 100, vertical: 100 };
+  eq(ctx.activeSubtitleText(10000), 'first line\nsecond line', 'the cue due right now is what gets painted');
+  ctx.settings.stream.subtitleStyle.syncMs = -2000; /* this viewer wants cues two seconds early */
+  eq(ctx.activeSubtitleText(10000), '', 'a delay really moves the cue instead of pretending to');
+  eq(ctx.activeSubtitleText(8000), 'first line\nsecond line', 'with the delay applied, the cue shows two seconds earlier');
+  ctx.settings.stream.subtitleStyle.syncMs = 2000; /* and now two seconds later */
+  eq(ctx.activeSubtitleText(8000), '', 'a positive delay keeps the cue off screen at that moment');
+  eq(ctx.activeSubtitleText(12000), 'first line\nsecond line', 'a positive delay shows it two seconds later');
+  ctx.settings.stream.subtitleStyle.syncMs = 0;
+  eq(ctx.activeSubtitleText(40000), '', 'nothing is painted between cues');
+  cueA.mode = 'disabled';
+  ctx.playerState.subtitleSelection = 'off';
+  eq(ctx.activeSubtitleText(10000), '', 'no selection means no captions, even if a track is loaded');
   ctx.playerState = null;
 
   /* The resumed position and the source we mounted must reach the engine, and a
      teardown must leave nothing behind for the next stream to trip over. */
+  ok(html.includes('id="btnPlayerTracks"') && html.includes('id="btnPlayerAspect"'), 'subtitles, audio and screen size live on the transport row');
+  ok(html.includes('id="playerTracksSheet"') && html.includes('data-track-tab'), 'subtitles and audio share one tabbed panel');
+  ok(['MediaPlayPause','MediaFastForward','MediaRewind','MediaStop'].every(k => html.includes('"'+k+'"')), 'the remote media keys are handled, as in the reference player');
+  ok(html.includes('data-sub-style="sync"') && html.includes('data-sub-style="size"') && html.includes('data-sub-style="vertical"'), 'subtitle delay, size and position are adjustable');
+  ok(/function handlePlayerTracksKeys\(e\)/.test(html) && html.includes('handlePlayerTracksKeys(e)) return true'), 'the panel takes D-pad keys before the transport does');
+  ok(/const tracksSheet=document\.getElementById\("playerTracksSheet"\)/.test(html), 'Back closes the panel before it closes the player');
+  ok(html.includes('subtitles:subtitlesFromStream(stream)'), 'provider subtitle lists travel with the stream');
   ok(/function startOwnEngine\(stage,url,source,loadT0,resumeAt,opts\)/.test(html), 'one mount path owns the player');
   ok(html.includes('zpEngineDestroy()'), 'leaving the player tears the engine down');
   ok(/st\.triedUrls=st\.triedUrls\|\|new Set\(\)/.test(html), 'a failed stream is remembered so failover cannot loop');

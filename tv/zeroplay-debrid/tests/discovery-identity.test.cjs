@@ -53,6 +53,7 @@ const code = [
   between('function getProvider(id)', 'function providerCounts'),
   between('function streamIdsForAddon(addon, identity, imdb)', 'function enabledAddons'),
   between('function parseStreamMeta(s)', 'async function collectAllStreams'),
+  between('function subtitlesFromStream(stream)', 'function mergeSubtitleTracks('),
 ].join('\n');
 vm.runInContext(code, context, { filename: 'extracted-client.js' });
 

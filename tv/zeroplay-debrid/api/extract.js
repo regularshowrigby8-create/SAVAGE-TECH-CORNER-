@@ -136,6 +136,36 @@ function serverNames(html) {
   return [...names];
 }
 
+/* Subtitles a page ships alongside its video. OpenSubtitles-style keys are
+   useless to <track>, so only real timed-text files are accepted. */
+function subtitleTracks(html, base) {
+  const out = [];
+  const push = (src, label, lang, isDefault) => {
+    const url = abs(decodeEntities(String(src || '')).replace(/\\\//g, '/'), base);
+    if (!url || !/\.(?:vtt|srt|ass|ssa)(?:\?|#|$)/i.test(url)) return;
+    if (out.some(t => t.url === url)) return;
+    const guess = (url.match(/\.([a-z]{2,3})(?:[-_][A-Z]{2})?\.(?:vtt|srt|ass|ssa)(?:\?|#|$)/i) || [])[1] || '';
+    out.push({
+      url,
+      label: String(label || '').trim() || guess.toUpperCase() || 'Subtitle',
+      lang: String(lang || guess || '').trim().toLowerCase(),
+      default: !!isDefault,
+      format: (url.match(/\.(vtt|srt|ass|ssa)(?:\?|#|$)/i) || [])[1].toLowerCase(),
+    });
+  };
+  for (const m of html.matchAll(/<track\b[^>]*>/gi)) {
+    const tag = m[0];
+    push(attr(tag, 'src'), attr(tag, 'label') || attr(tag, 'title'), attr(tag, 'srclang'), /\bdefault\b/i.test(tag));
+  }
+  /* Players that build their own UI keep the files in a config blob. */
+  for (const m of html.matchAll(/["']([^"']+?\.(?:vtt|srt|ass|ssa)(?:\?[^"']*)?)["']/gi)) {
+    const tag = m[0];
+    push(m[1], /(?:label|lang)["']?\s*[:=]\s*["']([^"']{2,40})["']/i.test(tag) ? tag.match(/(?:label|lang)["']?\s*[:=]\s*["']([^"']{2,40})["']/i)[1] : '', '');
+    if (out.length >= 12) break;
+  }
+  return out.slice(0, 12);
+}
+
 function embedScore(url) {
   let score = 0;
   if (/embed|player|stream|video|play|watch/i.test(url)) score += 30;
@@ -190,6 +220,7 @@ function parseWatch(html, base) {
     embed: embeds[0] || '',
     embeds: embeds.slice(0, 4),
     direct,
+    subtitles: subtitleTracks(html, base),
     servers: serverNames(html),
     embedHosts: iframeHosts(html),
   };
@@ -779,19 +810,23 @@ async function handle(mode, rawUrl, query) {
          caller never frames the page. */
       const chain = [];
       let direct = [];
+      let subtitles = [];
       let pageUrl = u.href;
       for (let depth = 0; depth < 2; depth++) {
         const doc = await fetchDocument(pageUrl, false, 12000);
         const parsed = parseWatch(doc.text, doc.finalUrl);
         chain.push({ url: doc.finalUrl, direct: parsed.direct.length, embeds: parsed.embeds.length });
         direct = direct.concat(parsed.direct);
+        for (const track of parsed.subtitles || []) {
+          if (!subtitles.some(t => t.url === track.url)) subtitles.push(track);
+        }
         if (direct.length) break;
         const nextFrame = (parsed.embeds || []).find(src => guardUrl(src));
         if (!nextFrame) break;
         pageUrl = nextFrame;
       }
       direct = [...new Set(direct)].slice(0, 8);
-      return { status: 200, body: { ok: true, mode: 'resolve', url: u.href, direct, chain } };
+      return { status: 200, body: { ok: true, mode: 'resolve', url: u.href, direct, subtitles, chain } };
     }
     if (mode === 'm3u') {
       return { status: 200, body: { ok: true, mode: 'm3u', url: doc.finalUrl, truncated: !!doc.truncated, ...extractM3u(doc.text, doc.finalUrl) } };

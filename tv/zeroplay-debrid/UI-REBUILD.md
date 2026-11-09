@@ -348,3 +348,48 @@ Build and policy had to follow: `npm run build` now copies `vendor/` into `dist/
 
 **Test total: 378 checks**, including resolve-mode parsing and real level-setting
 against a fake engine instance.
+
+---
+
+## Translating ARVIO's player into HTML
+
+ARVIO's player is 3,900 lines of Kotlin + `androidx.media3` (ExoPlayer 1.9) drawing
+into a native Android surface through Compose `AndroidView`. It cannot be imported
+into a WebView — so it was translated, function by function, onto the engine
+ZeroPlay already mounts.
+
+**What already matched.** Their remote contract and ours turned out to be the same
+design: `MediaPlayPause` toggles, `MediaFastForward`/`MediaRewind` step ten
+seconds, arrows wake the chrome and focus play, Back closes chrome first and the
+player second, and every menu captures Back before the transport sees it. No
+change was needed there; the new panel now takes keys *before* the transport, the
+same ordering ARVIO uses.
+
+**What was missing, and is now real:**
+
+| ARVIO | ZeroPlay now |
+| --- | --- |
+| `PlayerEngine.state` with buffered position | `zpEngineBufferedSec()` over the element's own `buffered` ranges |
+| `AudioTrackItem` list + `selectAudioTrack` | `zpEngineAudioTracks()` / `zpEngineSelectAudio()` over `audioTracks`, or the HLS renditions when the element exposes none |
+| `SubtitleTrackItem` list, external + embedded | `zpEngineSubtitleTracks()` merges element cues with provider-declared sidecar files |
+| Subtitle delay / size / vertical position | `setSubtitleStyle()` on real settings, applied by our own cue painter |
+| `ResizeMode` AUTO/FIT/STRETCH/CROP | `zpEngineApplyResize()` cycling fit / zoom / stretch on `object-fit` |
+| Volume and aspect indicators | one `playerIndicator()` used by volume, mute, aspect, skips and subtitle changes |
+| Tabbed subtitle/audio sheet (`TvSubtitleMenu`) | `#playerTracksSheet`, same two tabs, D-pad first |
+
+**The one deliberate divergence.** ARVIO draws subtitles with Compose and can move
+and delay them freely. A browser's `::cue` cannot be positioned and cues cannot be
+shifted in time, so `::cue` alone would have made three of the panel's controls
+decorative. Instead the selected track is kept alive in `hidden` mode (cues still
+fire, nothing is drawn by the element) and ZeroPlay paints the text itself in
+`#playerSubtitles`. That is what makes delay, size and position honest, and the
+tests assert the painted text at fixed timestamps — including that a −2s delay
+shows a cue two seconds earlier and nothing at the original moment.
+
+Subtitles arrive from two real places: a Stremio addon's `subtitles[]` (filtered to
+timed-text files, carried on the variant), and a provider page's own `<track>` or
+config-blob paths, which `api/extract.js` now returns from `parseWatch` and from
+`mode=resolve`. Sidecar files are fetched through the existing `mode=text` relay
+and converted SRT → WebVTT in the browser, so a provider behind CORS still works.
+
+**Test total: 416 checks.**
