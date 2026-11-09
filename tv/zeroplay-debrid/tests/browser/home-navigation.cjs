@@ -298,6 +298,39 @@ async function main() {
           return original(route);
         };
       });
+      /* PROBE: what does the drawer look like right before the looping test? */
+      console.log(
+        "PROBE-START",
+        JSON.stringify(
+          await page.evaluate(() => ({
+            sidebarDisplay: getComputedStyle(document.querySelector(".zp-sidebar")).display,
+            btnMenuVisible: !!document.getElementById("btnMenu").offsetParent,
+            btnMenuRect: document.getElementById("btnMenu").getBoundingClientRect().toJSON(),
+            drawerOpen: document.getElementById("menuDrawer").className,
+            active: document.activeElement && (document.activeElement.id || document.activeElement.className),
+            route: location.hash,
+          })),
+        ),
+      );
+      await page.locator("#btnMenu").click();
+      await page.waitForTimeout(300);
+      console.log(
+        "PROBE-AFTER-CLICK",
+        JSON.stringify(
+          await page.evaluate(() => {
+            const d = document.getElementById("menuDrawer");
+            return {
+              drawerClass: d.className,
+              ariaHidden: d.getAttribute("aria-hidden"),
+              display: getComputedStyle(d).display,
+              visibility: getComputedStyle(d).visibility,
+              active: document.activeElement && (document.activeElement.id || document.activeElement.className || document.activeElement.tagName),
+              closeBtnExists: !!document.getElementById("btnCloseMenu"),
+              closeBtnRect: document.getElementById("btnCloseMenu") && document.getElementById("btnCloseMenu").getBoundingClientRect().toJSON(),
+            };
+          }),
+        ),
+      );
       for (const container of [".zp-sidebar", "#menuDrawer"]) {
         for (const route of [
           "movies",
