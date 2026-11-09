@@ -491,3 +491,44 @@ matching, and the fake DOM could not model a scrolled shelf at all. Both are
 fixed — shelf membership is checked through `classList`, and fake cards inside a
 `.rail-track` offset by the track's `scrollLeft`, so scrolling is observable.
 That is why these checks reproduce the sofa instead of agreeing with the code.
+
+## The browser shell (GitHub Actions)
+
+`tests/browser/home-navigation.cjs` existed but was a dead tool: `playwright`
+was never a dependency, no workflow ran it, and `npm run test:browser` could
+only fail with `MODULE_NOT_FOUND`. It is now a real environment.
+
+`.github/workflows/zeroplay-tv-browser.yml` runs three jobs:
+
+1. **Node suites** — the nine contract suites (462 checks).
+2. **Chromium** — `npx playwright install --with-deps chromium`, then the
+   acceptance suite, repeated three times in one job so an intermittent
+   failure shows up as a flake instead of being dismissed. Screenshots of the
+   1920×1080 frame are uploaded as `zeroplay-tv-screenshots`.
+3. **guard-the-guard** — checks out `82d0440` (before these fixes), drops its
+   `index.html` in, and runs the same suite. It *must* fail; if it ever passes,
+   the suite has stopped measuring the defect and the job fails loudly.
+
+It is a separate workflow on purpose: Factory 2's debug workflow is
+contractually a single job. `GATE 2b` in `.claude/scripts/gates.sh` fails if
+the workflow, the npm scripts, the Playwright dependency or the suite ever
+disappear again (the repo's NO_PADDING rule).
+
+Failures publish themselves as run annotations (`::error` / `::notice`),
+because the run log endpoint is not always reachable, and the check count is
+published too — a suite that silently skipped everything would otherwise look
+identical to a passing one.
+
+### What the real browser found that the fake DOM could not
+
+- **The white border was four layers, not a token.** Beyond `--zp-focus`,
+  nine more focus rules painted white: a 4px `rgba(255,255,255,.92)` ring plus
+  a white inset frame on cards and category tiles, 3px white outlines on
+  buttons, sidebar links, menu links and textareas, and their low-ram twins.
+  A stylesheet-wide scan now fails if any focus rule paints white again.
+- **The D-pad could be taken back behind the menu.** `scheduleTvInitialFocus`
+  armed an unconditional 1400ms retry that outlived the modal which had
+  blocked it, and `closePlayerNow`/`restoreTvFocus` returned focus to the page
+  after 30–40ms without checking for an open drawer. On a television that is
+  the remote pointing at the page behind the menu. Both now go through
+  `tvOverlayOwnsFocus()`.
