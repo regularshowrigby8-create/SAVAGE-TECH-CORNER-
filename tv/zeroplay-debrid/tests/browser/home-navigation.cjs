@@ -481,6 +481,9 @@ async function main() {
     check(errors.length === 0, "logo path has no console errors");
     await context.close();
     console.log(`\n${passed} browser acceptance checks passed`);
+    /* The count is published as an annotation so a run can be audited without
+       downloading logs: zero checks would otherwise look like success. */
+    console.log(`::notice title=Browser acceptance::${passed} real-browser checks passed`);
   } finally {
     if (browser) await browser.close();
     await new Promise((resolve) => server.close(resolve));
