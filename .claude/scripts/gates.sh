@@ -15,6 +15,16 @@ if [ -f .github/workflows/factory-2-debug.yml ]; then
   echo "PASS: workflow is single-job compliant"
 fi
 
+echo "[GATE 2b] TV browser test environment is wired..."
+if [ -f .github/workflows/zeroplay-tv-browser.yml ] \
+  && grep -q '"test:all"' tv/zeroplay-debrid/package.json \
+  && grep -q '"playwright"' tv/zeroplay-debrid/package.json \
+  && [ -f tv/zeroplay-debrid/tests/browser/home-navigation.cjs ]; then
+  echo "PASS: real-browser suite is reachable (workflow + npm scripts + Playwright dependency)"
+else
+  fail browser_env "TV browser test environment is not reachable"
+fi
+
 echo "[GATE 3] Anti-Stub & Placeholder Invariant Check..."
 if ! python3 - <<'PY'
 import os

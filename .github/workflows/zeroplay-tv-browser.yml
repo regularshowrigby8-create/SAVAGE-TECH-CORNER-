@@ -1,0 +1,84 @@
+name: ZeroPlay TV — browser acceptance
+
+# A real Chromium drives the actual index.html, so D-pad geometry, focus rings
+# and player chrome are judged by the browser's own layout engine instead of a
+# hand-written fake DOM. This is a separate workflow on purpose: Factory 2's
+# debug workflow is contractually a single job and must stay that way.
+
+on:
+  push:
+    branches: [main, production, arena/**]
+    paths:
+      - 'tv/zeroplay-debrid/**'
+      - '.github/workflows/zeroplay-tv-browser.yml'
+  pull_request:
+    branches: [main, production]
+    paths:
+      - 'tv/zeroplay-debrid/**'
+  workflow_dispatch:
+
+concurrency:
+  group: zeroplay-tv-browser-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: tv/zeroplay-debrid
+
+jobs:
+  node-suites:
+    name: Node suites (logic, contracts)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run every Node suite
+        run: npm test
+      - name: Build the deployed bundle
+        run: npm run build
+
+  browser:
+    name: Chromium — D-pad, focus, layout
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: tv/zeroplay-debrid/package-lock.json
+
+      # Playwright's own install pulls the Chromium build and every shared
+      # library it needs (libnspr4, libnss3, libgbm…) — the reason this job
+      # lives on a runner instead of inside a stripped sandbox.
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install Chromium with system libraries
+        run: npx playwright install --with-deps chromium
+
+      - name: Real-browser acceptance suite
+        env:
+          TV_SCREENSHOT_DIR: artifacts/screenshots
+        run: npm run test:browser
+
+      # Screenshots are the point of a browser shell: a person can look at the
+      # actual TV frame instead of trusting a pass/fail line.
+      - name: Upload TV screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zeroplay-tv-screenshots
+          path: tv/zeroplay-debrid/artifacts/screenshots
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload failure trace
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zeroplay-tv-browser-logs
+          path: tv/zeroplay-debrid/artifacts
+          if-no-files-found: ignore
+          retention-days: 7

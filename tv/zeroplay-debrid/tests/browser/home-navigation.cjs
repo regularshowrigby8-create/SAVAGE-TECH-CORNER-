@@ -7,7 +7,18 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const http = require("node:http");
-const { chromium } = require("playwright");
+let chromium;
+try {
+  ({ chromium } = require("playwright"));
+} catch (error) {
+  console.error(
+    "This suite needs a real browser. Install it first:\n" +
+      "  npm install\n" +
+      "  npx playwright install --with-deps chromium\n" +
+      "On CI this runs in .github/workflows/zeroplay-tv-browser.yml.",
+  );
+  process.exit(1);
+}
 const html = fs.readFileSync(path.join(__dirname, "../../index.html"), "utf8");
 const art =
   '<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900"><defs><linearGradient id="g"><stop stop-color="#132b3f"/><stop offset="1" stop-color="#8b6944"/></linearGradient></defs><path fill="url(#g)" d="M0 0h1600v900H0z"/><circle cx="1100" cy="340" r="210" fill="#c6a66b" opacity=".3"/></svg>';
