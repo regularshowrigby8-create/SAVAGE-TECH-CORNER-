@@ -292,15 +292,19 @@ eq(sorted.map(x => x.id), ['direct:a', 'route:vidstuck', 'route:embedwave'], 've
     [html.includes('function renderCategories()') && html.includes('route==="categories"'), 'Categories route is wired'],
     [html.includes('class="trailer-layer"') && html.includes('function startCardPreview'), 'trailer preview lives inside poster title blocks'],
     [html.includes('id="playerQuality"') && html.includes('function zpEngineSetLevel('), 'the quality select drives our own engine levels'],
-    [html.includes('player:"native"') && html.includes('settings.stream.player!=="embed-page"'), 'the ZeroPlay engine is the default and saved hosted-player settings migrate'],
-    [html.includes('if(st.direct) await startOwnEngine('), 'every direct stream is mounted through the one owned engine'],
+    [html.includes('player:"native"') && html.includes('settings.stream.player="native";'), 'the ZeroPlay engine is the only engine and saved hosted-player settings are dropped'],
+    [html.includes('await startOwnEngine(stage,st.url,source,loadT0,resumeSeconds'), 'every direct stream is mounted through the one owned engine'],
+    [!html.includes('mountEmbedPlayer'), 'the third-party player mount is gone entirely'],
+    [!html.includes('playerFrame') && !html.includes('createElement("iframe")'), 'no iframe is ever created as a player'],
+    [!html.includes('Provider page') && !html.includes('btnFocusEmbed'), 'no control offers or focuses another app\'s player'],
     [html.includes('resolvePageToStreams') && html.includes('mode:"resolve"'), 'provider pages are resolved into streams before playback'],
     [html.includes('r.status!==206') && html.includes('Math.min(4,Number(cfg.primeThreads)||2)') && html.includes('primeBudgetMb'), 'direct priming capped to genuine range responses and configured worker/budget limits'],
     [/async function tryNextDirectVariant\(reason\)\{\s*const st=playerState; if\(!st\) return false;\s*if\(streamCfg\(\)\.autoFailover===false\) return false;/.test(html) && html.includes('Confirmed playback stalled on ') && html.includes('hasAdvanced&&lastObservedAdvanceAt'), 'automatic switching master switch and confirmed native stall detection are wired'],
     [html.includes('groupStreamsByServer') && html.includes('id="serverList"') && html.includes('unrelated servers hidden') && html.includes('data-stream-filter'), 'server list is title-specific, unified into one list, and filterable by provider kind'],
     [!/id=\\"playerSource\\"(?!Line)/.test(html) && !html.includes('id="detailSource"'), 'all-server player/detail dropdowns removed'],
     [html.includes('function moveTvFocus') && html.includes('handlePlayerKeyboard'), 'TV spatial and player keyboard navigation present'],
-    [html.includes('f.setAttribute("tabindex","-1")'), 'cross-origin frames do not steal initial TV focus'],
+    [html.includes('function hidePlayerChrome') && html.includes('playerIdleAccumulate'), 'player chrome hides on an idle timer that survives a stall'],
+    [!html.includes('--zp-focus: #ffffff'), 'the focus ring is never pure white'],
   ];
   for (const [cond, label] of statics) ok(cond, label);
   console.log(`\n${n} TV/player checks passed`);

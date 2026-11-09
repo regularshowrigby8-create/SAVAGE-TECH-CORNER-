@@ -67,17 +67,26 @@ class FakeNode {
     this.isConnected = true;
     this.scrollTop = 0;
     this.scrollLeft = 0;
+    this.scrollWidth = options.scrollWidth || 0;
     this.style = options.style || {};
     this.selectorIndex = null; // filled in by the document
   }
   getBoundingClientRect() {
     const r = this.rect;
+    /* a card inside a scrolled shelf sits further left than its layout x */
+    let offset = 0;
+    let parent = this.parentElement;
+    while (parent) {
+      if (parent.classList.contains("rail-track") || parent.classList.contains("category-strip")) offset += parent.scrollLeft || 0;
+      parent = parent.parentElement;
+    }
+    r.left -= 0; /* keep the declaration order obvious */
     return {
-      left: r.left,
+      left: r.left - offset,
       top: r.top,
       width: r.width,
       height: r.height,
-      right: r.left + r.width,
+      right: r.left - offset + r.width,
       bottom: r.top + r.height,
       x: r.left,
       y: r.top,
@@ -418,12 +427,81 @@ ok(html.includes("if(isText){") && html.includes("const atEdge="), "text fields 
 /* Player shell: engine ids preserved, new structure real. */
 ok(html.includes('id="playerMoreSheet"'), "the player has one More sheet instead of a wall of controls");
 ok(html.includes('data-tv-row="player-transport"') && html.includes('data-tv-row="player-top"'), "player rows carry explicit D-pad row keys");
-for (const id of ["playerQuality", "playerRate", "volumeRange", "btnMute", "btnPiP", "btnFullscreen", "btnPlayerDownload", "btnPlayerDetails", "btnFocusEmbed", "seekRange", "btnPlayPause"]) {
+for (const id of ["playerQuality", "playerRate", "volumeRange", "btnMute", "btnPiP", "btnFullscreen", "btnPlayerDownload", "btnPlayerDetails", "seekRange", "btnPlayPause"]) {
   ok(html.includes('id="' + id + '"'), "player control " + id + " survives the rebuild");
 }
 ok(html.includes("togglePlayerMore") && html.includes('on("btnPlayerMoreAlt","click"'), "both More doors are wired to the same sheet");
 ok(html.includes("directQueueStatus"), "the player reports failover position instead of a silent switch");
+ok(!html.includes("btnFocusEmbed") && !html.includes("mountEmbedPlayer"), "no control exists for a player ZeroPlay does not own");
 ok(html.includes('id="serverList"') && html.includes("data-stream-filter"), "servers are one unified, filterable list");
 ok(html.includes("streamProviderChip") && !html.includes('id="serverDirect"'), "provider taxonomy headings no longer split the server list");
+
+/* ---------------------------------------------------------- regressions ---
+   The five defects a viewer reported from the sofa. Each check fails on the
+   old code and passes only when the behaviour is right. */
+
+/* R1. A shelf mixing tall posters with a short continue-card is ONE shelf, so
+   Left/Right keeps travelling instead of dead-ending at the height change. */
+{
+  const p = buildPage();
+  const mixed = p.doc.create({
+    tag: "article",
+    className: "continue-card",
+    parent: p.doc.create({ className: "rail-track", parent: p.view, rect: { left: 288, top: 800, width: 1632, height: 168 }, scrollWidth: 2400 }),
+    rect: { left: 700, top: 806, width: 168, height: 156 },
+    attrs: { tabindex: "0" },
+  });
+  const c = loadContract(p.doc);
+  c.document.activeElement = mixed;
+  const shelf = mixed.parentElement;
+  const after = p.doc.create({ tag: "article", className: "poster-card", parent: shelf, rect: { left: 900, top: 800, width: 132, height: 198 }, attrs: { tabindex: "0" } });
+  ok(c.moveTvFocus("right") === true && p.doc.activeElement === after, "a shelf of mixed card heights still moves with right");
+}
+
+/* R2. Reaching the visible edge of a shelf scrolls it instead of doing nothing. */
+{
+  const p = buildPage();
+  const track = p.doc.create({ className: "rail-track", parent: p.view, rect: { left: 288, top: 900, width: 1600, height: 198 }, scrollWidth: 2400 });
+  const cards = [];
+  for (let i = 0; i < 12; i += 1) {
+    cards.push(p.doc.create({ tag: "article", className: "poster-card", parent: track, rect: { left: 300 + i * 134, top: 900, width: 132, height: 198 }, attrs: { tabindex: "0" } }));
+  }
+  const c = loadContract(p.doc);
+  p.doc.activeElement = cards[11];
+  const before = track.scrollLeft;
+  ok(c.moveTvFocus("right") === true && track.scrollLeft > before, "the last card on a shelf scrolls the shelf, it does not swallow the press");
+}
+
+/* R3. Down never lands on the sidebar — the chrome is not a neighbour of a shelf. */
+{
+  const p = buildPage();
+  const sidebar = p.doc.create({ id: "zpSidebar", className: "zp-sidebar", parent: p.doc.body, rect: { left: 0, top: 96, width: 288, height: 900 } });
+  const links = [];
+  for (let i = 0; i < 8; i += 1) links.push(p.doc.create({ tag: "a", className: "zp-rail-link", parent: sidebar, rect: { left: 16, top: 120 + i * 70, width: 256, height: 56 } }));
+  const c = loadContract(p.doc);
+  p.doc.activeElement = p.rowOne[3];
+  for (let i = 0; i < 6; i += 1) {
+    c.moveTvFocus("down");
+    ok(!links.includes(p.doc.activeElement), "down from a shelf never crosses into the sidebar (press " + (i + 1) + ")");
+  }
+}
+
+/* R4. No pure-white focus ring anywhere: the ring is the brand accent. */
+{
+  const style = html.slice(html.indexOf("<style>") + 7, html.indexOf("</style>"));
+  ok(!/--zp-focus:\s*#fff/i.test(style) && !/--zp-focus:\s*white/i.test(style), "the focus token is not white");
+  ok(!/0 0 0 2px rgba\(255,\s*255,\s*255,0?\.9/.test(style), "the focus elevation ring is not a white halo");
+  ok(/--zp-focus:\s*var\(--zp-accent\)/.test(style), "the focus ring uses the accent colour");
+}
+
+/* R5. The player chrome timer reschedules itself instead of bailing out, so a
+   stall or a paused film cannot leave the bars on screen for the session. */
+{
+  ok(html.includes("function playerIdleStart") && html.includes("function playerIdleAccumulate"), "player idle time is accounted explicitly");
+  const timer = script.slice(script.indexOf("function showPlayerChrome(sticky)"), script.indexOf("function setPlayerControlMode(mode)"));
+  ok(!/if\(!\(st\.playback&&!st\.playback\.paused&&!st\.playback\.buffering\)\) return;/.test(timer), "the hide timer no longer returns without rescheduling");
+  ok(/const tick=\(\)=>\{/.test(timer) && /chromeTimer=setTimeout\(tick/.test(timer), "the hide timer re-arms itself until it can hide the bar");
+  ok(timer.includes("paused") && timer.includes("buffering"), "a paused or buffering film still hides the bar once it is idle");
+}
 
 console.log(`\n${passed} TV navigation contract checks passed`);

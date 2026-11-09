@@ -443,3 +443,51 @@ and shipping the button without the data would be exactly the dead control this
 project bans. Left for when a skip-intro provider is actually added.
 
 **Test total: 438 checks.**
+
+## Defect pass: what the sofa reported, and what changed
+
+Five defects were confirmed by reading the code, then fixed. Each one has a
+check in `tests/tv-navigation-contract.test.cjs` ("regressions" block) that was
+run against the previous build to prove it fails there and passes now.
+
+**D1 — giant white borders.** `--zp-focus` was `#ffffff` and
+`--zp-elevation-focus` was a `rgba(255,255,255,.92)` ring, so every focused card
+wore a 2px pure-white frame at 1080p. Both now use the brand accent
+(`--zp-focus: var(--zp-accent)`), and cards take an accent ring plus a lift
+instead of a white halo.
+
+**D2 — D-pad only worked on Home.** Rows were inferred by comparing two cards'
+centre lines with a tolerance. A shelf that mixes a 168px continue-card with
+198px posters therefore looked like two rows, and Left/Right refused to move
+between them. Rows are now the scroll containers themselves (`tvRowOf` /
+`tvRows`), which is what a viewer perceives as a shelf. `tvIsChrome` marks the
+topbar and sidebar as chrome: never a Left/Right or Down neighbour, only
+reachable with Up off the top shelf, and the first press on an unfocused page
+lands on content.
+
+**D3 — Up/Down could not scroll a rail.** The old code skipped any vertical
+press inside the same row. `moveTvFocus` now moves between shelves while keeping
+the horizontal position, and at a shelf edge with cards still off screen it
+scrolls the shelf (`scrollWidth`/`scrollLeft`, class-checked through
+`TV_X_SCROLL_CLASSES`) instead of swallowing the press.
+
+**D4 — third-party players were still embedded.** `mountEmbedPlayer`,
+`embedReferrerPolicyForUrl`, the whole `engine==="embed"` mode, the "Provider
+page" engine option, the "Video controls" focus bridge and the framed-player
+Back branch are deleted. A resolver that can only find a page now throws a
+truthful error, the stage shows "No direct stream from <server>" with real
+actions, and auto-failover moves on. The only iframes left in the file are
+YouTube **trailers** — a preview surface, not playback.
+
+**D5 — the player bar never disappeared.** The hide timer's callback returned
+without rescheduling whenever the film was paused or buffering, so a stall left
+the bars up for the session. Idle time is now counted in watched milliseconds
+(`playerIdleStart` / `playerIdleAccumulate`), and the timer's `tick()` always
+ends by hiding the bar or re-arming itself; it stands down while a repair sheet
+(`playerSheetVisible`) or the Up Next card is open.
+
+A note on the harness: an earlier regex over `className` silently stopped
+matching, and the fake DOM could not model a scrolled shelf at all. Both are
+fixed — shelf membership is checked through `classList`, and fake cards inside a
+`.rail-track` offset by the track's `scrollLeft`, so scrolling is observable.
+That is why these checks reproduce the sofa instead of agreeing with the code.

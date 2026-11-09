@@ -611,7 +611,9 @@ body.android-tv .ep .es{font-size:.84rem}
   --zp-accent-line: rgba(230, 179, 85, 0.34);
 
   --zp-selection: #ffffff;
-  --zp-focus: #ffffff;
+  /* The focus ring is the brand accent, never white. A pure-white 2px ring at
+     1080p reads as a giant white border wrapped around every card. */
+  --zp-focus: var(--zp-accent);
 
   /* Semantic system */
 
@@ -688,8 +690,8 @@ body.android-tv .ep .es{font-size:.84rem}
     0 18px 48px rgba(0, 0, 0, 0.34);
 
   --zp-elevation-focus:
-    0 0 0 2px rgba(255, 255, 255, 0.92),
-    0 22px 60px rgba(0, 0, 0, 0.46);
+    0 0 0 2px rgba(230, 179, 85, 0.85),
+    0 18px 44px rgba(0, 0, 0, 0.5);
 }
 
 /* -------------------------------------------------------------
@@ -1127,6 +1129,18 @@ textarea:focus-visible {
 .continue-card:focus-visible .continue-media,
 .category-tile:focus-visible {
   box-shadow: var(--zp-elevation-focus);
+  border-color: var(--zp-accent);
+}
+
+/* Focus is a 2px accent ring and a lift — not a white frame. */
+.poster-card:focus-visible,
+.continue-card:focus-visible,
+.category-tile:focus-visible,
+.chip:focus-visible,
+.season-chip:focus-visible,
+.ep-card:focus-visible {
+  outline: 2px solid var(--zp-accent);
+  outline-offset: 2px;
 }
 
 /* -------------------------------------------------------------
@@ -4141,9 +4155,9 @@ settings.stream.subtitleStyle.size=Math.max(60,Math.min(220,Number(settings.stre
 settings.stream.subtitleStyle.vertical=Math.max(4,Math.min(250,Number(settings.stream.subtitleStyle.vertical)||100));
 settings.ui=Object.assign({autoplayNext:true,reduceMotion:ANDROID_TV_APP,compactCards:false,showCategoryStrip:true,tvPerformanceMode:ANDROID_TV_APP,androidTvLaunchFocus:true},settings.ui||{});
 settings.downloads=Object.assign({enabled:true,multithreaded:true,threads:ANDROID_TV_APP?2:4,chunkMb:ANDROID_TV_APP?1:2,concurrent:1,m3uExtraction:true,autoSave:true,autoResume:false,refreshExpired:true,keepCompleted:true},settings.downloads||{});
-/* ZeroPlay plays every stream itself. Older saved settings that pointed at
-   the hosted player are migrated, so nobody keeps the bridged path by accident. */
-if(settings.stream.player!=="embed-page") settings.stream.player="native";
+/* ZeroPlay plays every stream itself, and that is the only engine there is.
+   Older saved settings that pointed at a hosted player are dropped. */
+settings.stream.player="native";
 if(!(Number(settings.stream.maxFileSizeGb)>0)||Number(settings.stream.maxFileSizeGb)>5) settings.stream.maxFileSizeGb=5;
 if(settings.source==="embedwave") settings.source="vidstuck"; /* Embedwave is last-resort only — never the saved default */
 if(!Array.isArray(settings.customSources)) settings.customSources=[];
@@ -4216,8 +4230,7 @@ function clampSettingNumber(value,min,max,fallback){ const n=Number(value); retu
 function tvPerformanceEnabled(){ return !!(typeof ANDROID_TV_APP!=="undefined"&&ANDROID_TV_APP&&settings.ui&&settings.ui.tvPerformanceMode!==false); }
 function streamCfg(){ const st=settings.stream||(settings.stream={}); st.raceTimeoutSec=clampSettingNumber(st.raceTimeoutSec,15,60,20); st.stallTimeoutSec=clampSettingNumber(st.stallTimeoutSec,30,120,45); st.primeThreads=Math.round(clampSettingNumber(st.primeThreads,1,4,2)); st.primeChunkKb=Math.round(clampSettingNumber(st.primeChunkKb,64,1024,256)); st.primeBudgetMb=clampSettingNumber(st.primeBudgetMb,.25,8,2); st.bufferTargetSec=clampSettingNumber(st.bufferTargetSec,6,60,16); if(tvPerformanceEnabled()){ st.primeThreads=Math.min(st.primeThreads,1); st.primeChunkKb=Math.min(st.primeChunkKb,128); st.primeBudgetMb=Math.min(st.primeBudgetMb,1); st.bufferTargetSec=Math.min(st.bufferTargetSec,12); } return st; }
 function downloadCfg(){ const d=settings.downloads||(settings.downloads={}); d.threads=Math.round(clampSettingNumber(d.threads,1,8,4)); d.chunkMb=clampSettingNumber(d.chunkMb,.25,8,2); d.concurrent=Math.round(clampSettingNumber(d.concurrent,1,3,1)); if(tvPerformanceEnabled()){ d.threads=Math.min(d.threads,2); d.chunkMb=Math.min(d.chunkMb,1); d.concurrent=1; } return d; }
-function embedLoadTimeoutMs(){ return streamCfg().raceTimeoutSec*1000; }
-function embedStallTimeoutMs(){ return streamCfg().stallTimeoutSec*1000; }
+function playbackStallTimeoutMs(){ return streamCfg().stallTimeoutSec*1000; }
 function downloadsEnabled(){ return downloadCfg().enabled!==false; }
 function applyInterfaceSettings(){
   const ui=settings.ui||{};
@@ -5997,15 +6010,46 @@ function qualityOptionsHTML(st){
   if(variants.length){
     return '<option value="auto"'+(selected==="auto"?" selected":"")+'>Auto · best server stream</option>'+variants.map(v=>'<option value="'+esc(v.value)+'"'+(selected===v.value?" selected":"")+">"+esc(v.label)+"</option>").join("");
   }
-  if(st.engine==="embed"){
-    return [["auto","Quality · provider decides"],["2160p","Prefer 4K"],["1080p","Prefer 1080p"],["720p","Prefer 720p"],["480p","Prefer 480p"]].map(([v,t])=>'<option value="'+v+'"'+(selected===v?" selected":"")+">"+t+"</option>").join("");
-  }
   return '<option value="auto" selected>Auto quality</option>';
 }
 function playerLoading(on,text){
   const el=document.getElementById("playerLoading"); if(!el) return;
   if(text){ const t=el.querySelector("[data-loading-text]"); if(t) t.textContent=text; }
   el.classList.toggle("hide",!on);
+}
+/* Idle is counted in watched milliseconds, not wall-clock time, so pausing the
+   film does not eat the countdown. */
+function playerIdleStart(st){
+  if(!st) return;
+  st.idleMs=0;
+  st.idleSince=(st.playback&&st.playback.paused)?Date.now():0;
+}
+function playerIdleAccumulate(st){
+  if(!st||!st.idleSince) return;
+  st.idleMs=(st.idleMs||0)+(Date.now()-st.idleSince);
+  st.idleSince=0;
+}
+/* A repair/tracks sheet on screen is a menu: the bar stays while it is open. */
+function playerSheetVisible(){
+  const ids=["playerTracksSheet","playerMoreSheet","playerNextSheet"];
+  for(const id of ids){
+    const el=document.getElementById(id);
+    if(el&&el.hidden!==true&&!el.hasAttribute("hidden")) return true;
+  }
+  return false;
+}
+function hidePlayerChrome(){
+  const st=playerState, overlay=document.getElementById("playerOverlay");
+  if(!st||!overlay) return;
+  const active=document.activeElement;
+  if(active&&active.tagName==="SELECT"&&!active.disabled) return;
+  if(active&&active.closest&&active.closest("[data-player-sheet]")) return;
+  if(active&&active.closest&&active.closest(".player-bar,.player-controls")&&true){
+    const stage=document.getElementById("playerStage");
+    if(stage){ stage.setAttribute("tabindex","-1"); stage.focus({preventScroll:true}); }
+  }
+  overlay.classList.add("chrome-hidden");
+  overlay.classList.remove("player-tools-awake");
 }
 function showPlayerChrome(sticky){
   const st=playerState, overlay=document.getElementById("playerOverlay"); if(!st||!overlay) return;
@@ -6015,43 +6059,47 @@ function showPlayerChrome(sticky){
   overlay.classList.add("player-tools-awake");
   if(st.chromeTimer) clearTimeout(st.chromeTimer);
   const playingNow=!!(st.playback&&!st.playback.paused&&!st.playback.buffering);
+  const menuOpen=!!(st.tracksOpen||st.nextPromptOpen||playerSheetVisible());
   // On TV the remote focus always sits on a chrome control, so a sticky
   // bar would cover the movie forever. While playing, always schedule
   // the hide; any key press wakes the bar again.
   if(sticky&&!(ANDROID_TV_APP&&playingNow)) return;
-  st.chromeTimer=setTimeout(()=>{
-    if(playerState!==st) return;
-    if(!(st.playback&&!st.playback.paused&&!st.playback.buffering)) return;
-    const active=document.activeElement;
-    if(active&&active.tagName==="SELECT"){ showPlayerChrome(true); return; }
-    if(active&&active.closest&&active.closest(".player-bar,.player-controls")&&!st.embedFocused){
-      // Park focus on the stage so focusin does not instantly re-show
-      // the bar and the next key lands on the wake-up handler.
-      const stage=document.getElementById("playerStage");
-      if(stage){ stage.setAttribute("tabindex","-1"); stage.focus({preventScroll:true}); }
-    }
-    overlay.classList.add("chrome-hidden");
-    overlay.classList.remove("player-tools-awake");
-  },3000);
+  if(paused||!playingNow||menuOpen){ playerIdleStart(st); return; }
+  if(!st.idleSince) st.idleSince=Date.now();
+  const budget=Math.max(0,3000-(st.idleMs||0));
+  /* The old timer bailed out of its own callback without rescheduling, so a
+     stall, an autoplay block or a paused film left the bars on screen for the
+     whole session. The timer now always ends by either hiding the chrome or
+     scheduling the next check. */
+  const tick=()=>{
+    if(playerState!==st){ return; }
+    if(!overlay.isConnected&&document.body&&!document.body.contains(overlay)){ return; }
+    const menuNow=!!(st.tracksOpen||st.nextPromptOpen||playerSheetVisible());
+    if(menuNow||(st.playback&&st.playback.paused)){ playerIdleStart(st); st.chromeTimer=setTimeout(tick,700); return; }
+    if(!st.playback||st.playback.buffering){ st.chromeTimer=setTimeout(tick,700); return; }
+    if(!st.idleSince) st.idleSince=Date.now();
+    const left=Math.max(0,3000-((st.idleMs||0)+(Date.now()-st.idleSince)));
+    if(left>0){ st.chromeTimer=setTimeout(tick,left); return; }
+    st.chromeTimer=null;
+    hidePlayerChrome();
+  };
+  st.chromeTimer=setTimeout(tick,budget);
 }
 function setPlayerControlMode(mode){
   const st=playerState; if(st) st.engine=mode||st.engine;
   const controls=document.getElementById("playerControls"); if(controls) controls.dataset.mode=mode||"";
-  /* Two states only: "native" is our player and every control is live;
-     "embed" is a provider page we could not resolve into a stream, and the
-     app says so instead of pretending to control it. */
+  /* There is one player, and while it is up every control is live. The old
+     "embed" state existed only for a framed provider page, which no longer
+     exists. */
   const full=mode==="native";
-  const limited=mode==="embed";
   ["btnPlayPause","btnBack10","btnForward10","btnMute","btnPiP"].forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=!full; });
   ["seekRange","volumeRange","playerRate"].forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=!full; });
-  const seek=document.querySelector(".seek-row"); if(seek) seek.style.display=limited?"none":"flex";
-  const focusBtn=document.getElementById("btnFocusEmbed"); if(focusBtn) focusBtn.style.display=limited?"inline-flex":"none";
+  const seek=document.querySelector(".seek-row"); if(seek) seek.style.display="flex";
   const engine=document.getElementById("playerEngine");
-  if(engine) engine.textContent=mode==="native"?"ZeroPlay player":mode==="embed"?"Provider page":"Connecting";
+  if(engine) engine.textContent=mode==="native"?"ZeroPlay player":"Connecting";
   refreshPlayerQualityOptions();
   showPlayerChrome(true);
   if(full&&ANDROID_TV_APP){ const active=document.activeElement; if(!active||!active.closest||!active.closest("#playerRoot")){ const play=document.getElementById("btnPlayPause"); if(play) setTimeout(()=>play.focus({preventScroll:true}),30); } }
-  else if(limited&&ANDROID_TV_APP){ const embedBtn=document.getElementById("btnFocusEmbed"); if(embedBtn) setTimeout(()=>embedBtn.focus({preventScroll:true}),30); showPlayerChrome(false); }
 }
 function refreshPlayerQualityOptions(){
   const sel=document.getElementById("playerQuality"); if(!sel||!playerState) return;
@@ -6059,8 +6107,8 @@ function refreshPlayerQualityOptions(){
   sel.innerHTML=qualityOptionsHTML(playerState);
   const mode=playerState.engine;
   const hasLevels=mode==="native"&&(playerState.levels||[]).length>1;
-  sel.disabled=(mode==="loading")||!(hasLevels||(playerState.variants||[]).length>1||mode==="embed");
-  sel.title=hasLevels?"Choose a quality from this stream's own levels":(playerState.variants||[]).length?"Choose a real returned stream quality":"Quality preference for the provider page.";
+  sel.disabled=(mode==="loading")||!(hasLevels||(playerState.variants||[]).length>1);
+  sel.title=hasLevels?"Choose a quality from this stream's own levels":"Choose a real returned stream quality.";
   if(was) sel.focus({preventScroll:true});
 }
 function savePlaybackProgress(force){
@@ -6233,7 +6281,6 @@ async function playerCommand(action,value){
       else if(action==="pip") { if(document.pictureInPictureElement) await document.exitPictureInPicture(); else await v.requestPictureInPicture(); }
       return;
     }
-    if(action==="focusEmbed"){ const f=document.getElementById("playerFrame")||document.getElementById("fsFrame"); if(f){ playerState.embedFocused=true; const ov=document.getElementById("playerOverlay"); if(ov) ov.classList.add("chrome-hidden"); f.focus(); toast("Video controls focused. Press Back once to return to the ZeroPlay bar."); } }
   }catch(err){ toast("Player control failed: "+(err&&err.message||err),"error"); }
 }
 async function togglePlayerFullscreen(){
@@ -6260,7 +6307,6 @@ async function setPlayerQuality(value){
     const next=chooseVariantForQuality(st.variants,value,st.url);
     if(next&&next.url!==st.url){ await switchDirectVariant(next,{reason:"quality"}); return; }
   }
-  if(st.engine==="embed") toast("This is a provider page, not ZeroPlay playback. Its own player decides quality.");
   updatePlayerMeta();
 }
 async function switchDirectVariant(variant,opts){
@@ -6875,7 +6921,7 @@ function playerShell(msg){
   const rate=Number(st.playback&&st.playback.rate||1);
   const queue=directQueueStatus(st);
   const src=(st.tempSource||getSource(st.source));
-  const engineLabel=st.engine==="native"?(st.playingQualityLabel||"ZeroPlay player"):st.engine==="embed"?"Provider page":st.direct?"ZeroPlay player":"Connecting";
+  const engineLabel=st.engine==="native"?(st.playingQualityLabel||"ZeroPlay player"):st.direct?"ZeroPlay player":"Connecting";
   return '<div class="player-overlay" id="playerOverlay">'
     +'<div class="player-stage" id="playerStage"><div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>'+esc(msg||"Connecting…")+'</strong><span class="zp-loading-sub">ZeroPlay is preparing this exact title.</span></div></div>'
 
@@ -6930,7 +6976,6 @@ function playerShell(msg){
           +'<div class="sheet-field"><span>Screen</span><div class="sheet-actions">'
             +'<button class="control-btn" id="btnPiP" type="button" aria-label="Picture in picture">PiP</button>'
             +'<button class="control-btn" id="btnFullscreen" type="button" aria-label="Fullscreen">⛶ Fullscreen</button>'
-            +'<button class="control-btn" id="btnFocusEmbed" type="button" style="display:none">Video controls</button>'
           +'</div></div>'
           +'<div class="sheet-field"><span>This title</span><div class="sheet-actions">'
             +(downloadsEnabled()?'<button class="control-btn" id="btnPlayerDownload" type="button" aria-label="Download this title or episode">⬇ Download</button>':"")
@@ -7117,7 +7162,6 @@ function bindPlayerChrome(){
   on("btnMute","click",()=>playerCommand("mute"));
   on("btnPiP","click",()=>playerCommand("pip"));
   on("btnFullscreen","click",()=>playerCommand("fullscreen"));
-  on("btnFocusEmbed","click",()=>playerCommand("focusEmbed"));
   on("seekRange","input",e=>{ const cur=document.getElementById("currentTime"); if(cur) cur.textContent=formatTime(Number(e.target.value)); showPlayerChrome(true); });
   on("seekRange","change",e=>playerCommand("seek",Number(e.target.value)));
   on("volumeRange","input",e=>{ settings.stream.volume=Number(e.target.value)/100; saveSettings(); playerCommand("volume",settings.stream.volume); });
@@ -7183,7 +7227,6 @@ function updatePlayerMeta(source){
   if(st.activeVariant&&st.activeVariant.quality) parts.push(esc(String(st.activeVariant.quality).replace("2160p","4K")));
   if(st.direct&&st.fileBytes) parts.push(fmtBytes(st.fileBytes));
   parts.push("Cap "+capGb()+" GB");
-  if(st.engine==="embed") parts.push(st.playbackConfirmed?"Playback confirmed":st.frameLoadedAt?"Player page loaded":"Connecting");
   if(parts.length>0&&st.subtitleSelection&&st.subtitleSelection!=="off"){
     const on=(st.subtitleTracks||[]).find(t=>t.id===st.subtitleSelection);
     parts.push("CC"+(on?" "+esc(on.label||on.lang||""):""));
@@ -7240,7 +7283,7 @@ async function resolveSourcePlayback(source,ctx){
        player frame) for a real stream before falling back to framing it. */
     const deep=await resolvePageToStreams(found.playUrl||found.watchUrl||source.base,source.name);
     if(deep.length) return {url:deep[0].url,kind:"direct",direct:true,variants:sortVariantsForQuality(deep,settings.stream.quality),activeVariant:deep[0],subtitles:mergeSubtitleTracks(...deep.map(v=>v.subtitles),found.subtitles),found,identityScore:found.identityScore,identityVerdict:found.identityVerdict};
-    return {url:found.playUrl||found.embed||found.watchUrl,kind:"embed",direct:false,variants:[],activeVariant:null,found,identityScore:found.identityScore,identityVerdict:found.identityVerdict};
+    throw new Error("This page has no direct video stream ZeroPlay can extract. ZeroPlay plays its own streams only, so it will not frame "+source.name+"'s player.");
   }
   const url=await resolveSourceURL(source,richCtx);
   const direct=!!(source&&source.direct)||isDirectMedia(url);
@@ -7250,7 +7293,7 @@ async function resolveSourcePlayback(source,ctx){
   }
   const owned=await resolvePageToStreams(url,source?source.name:"Direct server");
   if(owned.length) return {url:owned[0].url,kind:"direct",direct:true,variants:sortVariantsForQuality(owned,settings.stream.quality),activeVariant:owned[0]};
-  return {url,kind:"embed",direct:false,variants:[],activeVariant:null};
+  throw new Error("This URL is a page, not a video file, and no direct stream was found behind it. ZeroPlay does not frame other players.");
 }
 async function drawPlayer(prevProgress){
   clearPlayerTimers(); 
@@ -7312,62 +7355,19 @@ async function drawPlayer(prevProgress){
   bindPlayerChrome();
   const stage=$("#playerStage");
   const loadT0=performance.now();
-  if(st.direct) await startOwnEngine(stage,st.url,source,loadT0,resumeSeconds,{kind:st.kind});
-  else mountEmbedPlayer(stage,st.url,source,loadT0,ctx);
+  if(!st.direct){
+    /* Playback is only ever ZeroPlay's own engine. A source that hands back a
+       page instead of a stream has not provided playback. */
+    if(stage) stage.innerHTML=playerErrorHTML("No direct stream from "+source.name,"This server returned a page instead of a video file. ZeroPlay does not frame another app's player — try another server for the same title.");
+    bindPlayerErrorActions(); playerLoading(false); updatePlayerMeta(source);
+    recordHealth(source.id,false,2000);
+    const stNoDirect=playerState;
+    if(stNoDirect&&streamCfg().autoFailover&&!st.tempSource) playerTimers.push(setTimeout(()=>{ if(playerState===stNoDirect) void failover(source.name+" had no direct stream"); },1200));
+    return;
+  }
+  await startOwnEngine(stage,st.url,source,loadT0,resumeSeconds,{kind:st.kind});
   updatePlayerMeta(source);
   if(isTV&&settings.stream.preload!=="off"&&streamCfg().nextEpisodeWarm!==false&&!st.noProgress) playerTimers.push(setTimeout(()=>{ if(playerState===st&&!document.hidden) faststreamPreload({type:it.type,id:it.id,title:titleOf(it),season:st.season,episode:st.episode+1},source.id); },9000));
-}
-function embedReferrerPolicyForUrl(url){
-  try{ return new URL(String(url||"")).hostname.toLowerCase().endsWith("embedwave.cc")?"no-referrer":"strict-origin-when-cross-origin"; }catch{ return "strict-origin-when-cross-origin"; }
-}
-function mountEmbedPlayer(stage,url,source,loadT0,ctx){
-  const st=playerState;
-  if(!stage||!st) return;
-  
-  st.mountedAt=Date.now(); st.frameLoadedAt=0; st.playbackSignalAt=0; st.playbackConfirmed=false; st.embedNoticeShown=false; st.lastTs=0; st.lastAdvanceAt=0;
-  stage.innerHTML='<div class="media-shell"></div><div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>Loading '+esc(source.name)+'…</strong><span style="color:#cbd2d8;font-size:.88rem">The player page is loading. ZeroPlay will not call this successful until playback actually progresses.</span></div>';
-  const shell=stage.querySelector(".media-shell");
-  const markFrameLoaded=()=>{
-    if(playerState!==st||st.frameLoadedAt) return;
-    st.frameLoadedAt=Date.now();
-    playerLoading(false);
-    showPlayerChrome(false);
-    updatePlayerMeta(source);
-  };
-  const armFrame=f=>{
-    if(!f) return;
-    f.id="playerFrame"; f.className="player-frame"; f.setAttribute("tabindex","-1"); f.setAttribute("title",source.name+" video player");
-    try{ f.referrerPolicy=embedReferrerPolicyForUrl(url); }catch{}
-    f.addEventListener("load",()=>markFrameLoaded(),{once:true});
-  };
-  {
-    const f=document.createElement("iframe");
-    f.allow="autoplay; fullscreen; encrypted-media; picture-in-picture"; f.allowFullscreen=true; f.referrerPolicy=embedReferrerPolicyForUrl(url);
-    armFrame(f); shell.appendChild(f); f.src=url;
-  }
-  setPlayerControlMode("embed");
-  updatePlayerMeta(source);
-  const raceMs=embedLoadTimeoutMs();
-  playerTimers.push(setTimeout(()=>{
-    if(playerState!==st||st.engine!=="embed"||st.frameLoadedAt) return;
-    recordHealth(source.id,false,raceMs);
-    void failover(source.name+" player page did not load within "+Math.round(raceMs/1000)+"s",{frameNeverLoaded:true});
-  },raceMs));
-  playerTimers.push(setTimeout(()=>{
-    if(playerState!==st||st.engine!=="embed"||!st.frameLoadedAt||st.playbackConfirmed||st.embedNoticeShown) return;
-    st.embedNoticeShown=true;
-    updatePlayerMeta(source);
-    toast(source.name+" loaded, but ZeroPlay has not received playback progress yet. Its own server list or Play button may still be working; ZeroPlay will stay here instead of jumping away.","error");
-  },embedStallTimeoutMs()));
-  playerTimers.push(setInterval(()=>{
-    if(playerState!==st||st.engine!=="embed"||!st.playbackConfirmed||!(Number(st.lastTs)>0)||!st.lastAdvanceAt) return;
-    if(document.activeElement&&document.activeElement.id==="playerFrame") return;
-    if(Date.now()-st.lastAdvanceAt>embedStallTimeoutMs()){
-      st.stalls++; st.lastAdvanceAt=Date.now();
-      if(streamCfg().stallSwitch) void failover("Confirmed playback stalled on "+source.name,{confirmedStall:true});
-      else toast("Playback progress has stalled on "+source.name+" — open Servers to switch","error");
-    }
-  },5000));
 }
 function directMediaKind(url){
   const path=String(url||"").split(/[?#]/)[0].toLowerCase();
@@ -7466,7 +7466,7 @@ function bindNativeTransport(v,source,loadT0){
     const t=Number(v.currentTime)||0;
     if(t>lastObservedTime+.2){ lastObservedTime=t; lastObservedAdvanceAt=Date.now(); if(t>.5) hasAdvanced=true; return; }
     if(t<lastObservedTime-.5){ noteObservedTime(); return; }
-    if(hasAdvanced&&lastObservedAdvanceAt&&Date.now()-lastObservedAdvanceAt>embedStallTimeoutMs()){
+    if(hasAdvanced&&lastObservedAdvanceAt&&Date.now()-lastObservedAdvanceAt>playbackStallTimeoutMs()){
       lastObservedAdvanceAt=Date.now(); st.stalls++;
       if(streamCfg().stallSwitch) void failover("Confirmed playback stalled on "+source.name,{confirmedStall:true});
       else toast("Playback has stalled on "+source.name+" — open Servers to switch","error");
@@ -9117,7 +9117,7 @@ function renderSources(soft,opts){
   +(settingsPage?settingsSourcesSectionHTML()+settingsDownloadsSectionHTML()+settingsDeviceHTML():"")+addonPanelHTML()+'<section class="panel" id="settingsAddWebsite" data-panel-group="sources"><h2>Add a website</h2><p class="section-desc">Paste a website. When you press Watch, ZeroPlay checks whether that exact movie or episode is there. It does not copy titles or posters from the site.</p>'
   +'<div class="form-group"><label for="pasteLink">Paste website link</label><div class="input-with-action"><input type="text" id="pasteLink" placeholder="https://example.com or https://example.com/watch/tt1375666/1/2"><button class="btn btn-secondary" id="btnDetect" type="button">Detect</button></div><div id="detectNote" class="status-box hidden"></div></div>'
   +'<div class="form-row"><div class="form-group"><label for="srcName">Source name</label><input type="text" id="srcName" placeholder="My Site"></div>'
-  +'<div class="form-group"><label for="srcKind">Source type</label><select id="srcKind"><option value="embed">Website embed (iframe)</option><option value="direct">Direct media files (.mp4/.m3u8…)</option></select></div></div>'
+  +'<div class="form-group"><label for="srcKind">Source type</label><select id="srcKind"><option value="embed">Website page — ZeroPlay extracts the video file</option><option value="direct">Direct media file (.mp4/.m3u8/.mpd)</option></select><small class="help-text">A website page is opened only to find its video file. ZeroPlay plays that file itself; it never frames the site\'s own player.</small></div></div>'
   +'<div class="form-group"><label for="srcMovie">Movie URL template (advanced, optional)</label><input type="text" id="srcMovie" placeholder="https://example.com/embed/movie/{tmdb}"></div>'
   +'<div class="form-group"><label for="srcTv">TV episode URL template (advanced, optional)</label><input type="text" id="srcTv" placeholder="https://example.com/embed/tv/{tmdb}/{season}/{episode}"></div>'
   +'<div style="display:flex;gap:.6rem;flex-wrap:wrap"><button class="btn btn-primary" id="btnAddWebsite" type="button">Add website lookup</button><button class="btn btn-secondary" id="btnAddSource" type="button">Add template source</button><button class="btn btn-outline" id="btnTestNew" type="button">▶ Test template with Inception</button></div></section>'
@@ -9129,7 +9129,8 @@ function renderSources(soft,opts){
 
   +'<section class="panel" id="settingsPlayback" data-panel-group="playback"><h2>Advanced playback</h2><p class="section-desc">Fine-tune how playback starts and switches. Most people can leave this on Auto.</p>'
   +'<div class="stat-grid"><div class="stat"><div class="k">Connection</div><div class="v">'+esc(ci.type)+'</div></div><div class="stat"><div class="k">Est. downlink</div><div class="v">'+(ci.downlink?ci.downlink+" Mbps":"unknown")+'</div></div><div class="stat"><div class="k">Round-trip</div><div class="v">'+(ci.rtt?ci.rtt+" ms":"unknown")+'</div></div><div class="stat"><div class="k">Data saver (effective)</div><div class="v">'+(effectiveSaver()?"ON":"OFF")+'</div></div><div class="stat"><div class="k">Enabled sources</div><div class="v">'+allSources().length+'</div></div><div class="stat"><div class="k">File-size cap</div><div class="v">'+capGb()+' GB max</div></div></div>'
-  +'<div class="form-row"><div class="form-group"><label for="optPlayer">Playback engine</label><select id="optPlayer"><option value="native"'+(st.player!=="embed-page"?" selected":"")+'>ZeroPlay player — HLS, DASH and MP4 in one player</option><option value="embed-page"'+(st.player==="embed-page"?" selected":"")+'>Provider page — only when a stream cannot be extracted</option></select><small class="help-text">ZeroPlay extracts the stream and plays it in its own player, so seek, quality, speed and failover are its own. A provider page is a last resort: its player cannot be controlled from here.</small></div>'+'<div class="form-row"><div class="form-group"><label for="optPreload">Stream preload</label><select id="optPreload"><option value="off"'+(st.preload==="off"?" selected":"")+'>Off</option><option value="smart"'+(st.preload==="smart"?" selected":"")+'>Smart — recommended</option><option value="aggressive"'+(st.preload==="aggressive"?" selected":"")+'>Aggressive — also warms the next episode stream</option></select><small class="help-text">Preloading a verified stream lets the player start sooner. It never starts a provider page in a hidden frame.</small></div>'
+  +'<div class="form-row"><div class="form-group"><span class="field-label">Playback engine</span><div class="status-box" id="optPlayerNote"><strong>ZeroPlay player</strong> — HLS, DASH and MP4 in one player. Every source is resolved to a video file and played here, so seek, quality, speed and failover belong to ZeroPlay. There is no other engine.</div></div>'
+  +'<div class="form-row"><div class="form-group"><label for="optPreload">Stream preload</label><select id="optPreload"><option value="off"'+(st.preload==="off"?" selected":"")+'>Off</option><option value="smart"'+(st.preload==="smart"?" selected":"")+'>Smart — recommended</option><option value="aggressive"'+(st.preload==="aggressive"?" selected":"")+'>Aggressive — also warms the next episode stream</option></select><small class="help-text">Preloading a verified stream lets the player start sooner.</small></div>'
   +'<div class="form-group"><label for="optQuality">Preferred quality (stability first)</label><select id="optQuality">'+[["auto","Auto — best available"],["2160p","4K UHD 2160p"],["1080p","Full HD 1080p"],["720p","HD 720p — most stable on slow links"],["480p","SD 480p — minimum buffering"]].map(([v,t])=>'<option value="'+v+'"'+(st.quality===v?" selected":"")+">"+t+"</option>").join("")+"</select><small class='help-text'>Used for direct-stream ranking and warm-up size. Embed players choose their own internal quality.</small></div></div>"
   +'<div class="form-row"><div class="form-group"><label for="optDefaultSource">Default first player/source</label><select id="optDefaultSource">'+sourceOptionsHTML(defaultSourceId(),true)+'</select><small class="help-text">Embedwave cannot be the saved default. Title-specific verified direct servers can still be chosen first at play time.</small></div>'
   +'<div class="form-group"><label for="optBufferTarget">Buffer target before easing warm-up (seconds)</label><input type="number" id="optBufferTarget" min="6" max="60" step="1" value="'+esc(st.bufferTargetSec)+'"><small class="help-text">Safe range priming stops once native direct playback is buffered beyond this target.</small></div></div>'
@@ -9215,7 +9216,7 @@ function renderSources(soft,opts){
   $("#optCap").addEventListener("input",e=>{ $("#optCapVal").textContent=Number(e.target.value).toFixed(1).replace(/\.0$/,"")+" GB"; });
   $("#btnOptSave").onclick=()=>{
     const stNow=streamCfg(), dlNow=downloadCfg();
-    stNow.player=$("#optPlayer").value; stNow.preload=$("#optPreload").value; if(stNow.preload!=="off") stNow.preloadLastMode=stNow.preload;
+    stNow.player="native"; stNow.preload=$("#optPreload").value; if(stNow.preload!=="off") stNow.preloadLastMode=stNow.preload;
     const requestedDefault=$("#optDefaultSource")?.value||"";
     if(requestedDefault&&getSource(requestedDefault)&&!LAST_RESORT.has(requestedDefault)) settings.source=requestedDefault;
     stNow.raceTimeoutSec=clampSettingNumber($("#optRace").value,15,60,20);
@@ -11183,6 +11184,7 @@ function tvFocusAndReveal(node){
   node.focus({preventScroll:true});
   const behavior=tvPerformanceEnabled()?"auto":"smooth";
   try{ node.scrollIntoView({block:"nearest",inline:"nearest",behavior}); }catch{}
+  tvRevealInRow(node);
   let parent=node.parentElement;
   while(parent&&parent!==document.body){
     const style=window.getComputedStyle?getComputedStyle(parent):null;
@@ -11230,26 +11232,63 @@ function tvRowKey(node){
   if(explicit) return explicit.getAttribute("data-tv-row")||"row";
   return "";
 }
+/* ---- rows are containers, not coincidences of pixels ---------------------
+   The old row test compared two cards' centre lines with a tolerance. A shelf
+   that mixes a 168px continue-card with 198px posters therefore split into two
+   "rows", and Left/Right refused to move between them — the D-pad appeared to
+   ignore the remote. Rows are now the scroll containers themselves, which is
+   what a viewer actually perceives as a shelf. */
+const TV_ROW_SELECTOR="[data-tv-row], .rail-track, .grid, .cast-track, .category-strip, .ep-list, .stream-list, .player-sheet-grid, .track-pane";
+function tvRowOf(node){
+  if(!node) return null;
+  const explicit=node.closest&&node.closest("[data-tv-row]");
+  if(explicit) return explicit;
+  const container=node.closest&&node.closest(TV_ROW_SELECTOR);
+  if(container) return container;
+  /* A bare control with no shelf around it is its own row. */
+  return node.parentElement||node;
+}
 function tvRowBand(rect){
-  return {centre:rect.top+rect.height/2,height:rect.height};
+  return {centre:rect.top+rect.height/2,height:rect.height,top:rect.top,bottom:rect.bottom};
 }
 function tvSameRow(a,b){
-  const ra=a.getBoundingClientRect(), rb=b.getBoundingClientRect();
-  const bandA=tvRowBand(ra), bandB=tvRowBand(rb);
-  const tolerance=Math.max(18,Math.min(bandA.height,bandB.height)*0.55);
-  return Math.abs(bandA.centre-bandB.centre)<=tolerance;
+  if(!a||!b) return false;
+  if(a===b) return true;
+  return tvRowOf(a)===tvRowOf(b);
 }
 function tvEdgeTolerance(){
   try{ return Math.max(8,Math.round(window.innerHeight*0.022)); }catch{ return 16; }
 }
+/* Focusable controls grouped by the shelf they sit on, in visual order. */
+function tvRows(list,current){
+  const map=new Map();
+  for(const node of list){
+    const row=tvRowOf(node);
+    if(!row) continue;
+    if(!map.has(row)) map.set(row,[]);
+    map.get(row).push(node);
+  }
+  const rows=[...map.entries()].map(([row,items])=>{
+    const rect=row.getBoundingClientRect?row.getBoundingClientRect():{top:0,height:0,bottom:0,left:0,width:0};
+    const band=tvRowBand(rect);
+    items.sort((a,b)=>a.getBoundingClientRect().left-b.getBoundingClientRect().left);
+    return {row,items,centre:band.centre,top:band.top,bottom:band.bottom};
+  });
+  rows.sort((a,b)=>(a.centre-b.centre)||(a.top-b.top));
+  return rows;
+}
+/* The chrome (rail, search, menu) is not a content shelf. It is only reachable
+   by pressing Up off the topmost shelf, and never by Left/Right or Down. */
+function tvIsChrome(node){
+  return !!(node&&node.closest&&(node.closest(".topbar")||node.closest(".zp-sidebar")||node.closest("#menuDrawer")));
+}
 function tvNearestBelow(current,list){
   const cr=current.getBoundingClientRect(), cx=cr.left+cr.width/2;
-  const key=tvRowKey(current);
   let best=null,bestScore=Infinity;
   for(const node of list){
     if(node===current||(current.contains&&current.contains(node))) continue;
-    if(tvSameRow(current,node)) continue;
-    if(key&&tvRowKey(node)===key) continue;
+    if(tvIsChrome(node)) continue;
+    if(tvRowOf(node)===tvRowOf(current)) continue;
     const r=node.getBoundingClientRect();
     if(r.top<cr.bottom-4) continue;
     const dx=Math.abs(r.left+r.width/2-cx);
@@ -11261,12 +11300,10 @@ function tvNearestBelow(current,list){
 }
 function tvNearestAbove(current,list){
   const cr=current.getBoundingClientRect(), cx=cr.left+cr.width/2;
-  const key=tvRowKey(current);
   let best=null,bestScore=Infinity;
   for(const node of list){
     if(node===current||(current.contains&&current.contains(node))) continue;
-    if(tvSameRow(current,node)) continue;
-    if(key&&tvRowKey(node)===key) continue;
+    if(tvRowOf(node)===tvRowOf(current)) continue;
     const r=node.getBoundingClientRect();
     if(r.bottom>cr.top+4) continue;
     const dx=Math.abs(r.left+r.width/2-cx);
@@ -11275,6 +11312,26 @@ function tvNearestAbove(current,list){
     if(score<bestScore){ bestScore=score; best=node; }
   }
   return best;
+}
+/* Scroll the shelf itself so the focused card is fully on screen. Vertical
+   presses must move the page, horizontal presses must move the rail — that is
+   what "scrolling the cards" means to a viewer. */
+/* Which shelves the D-pad scrolls horizontally. Checked through classList, not
+   a regex over className: a regex here once silently stopped matching and took
+   the whole remote with it. */
+const TV_X_SCROLL_CLASSES=["rail-track","category-strip","cast-track","ep-list","stream-list","chip-row"];
+function tvRowScrollsX(node){
+  if(!node||!node.classList) return false;
+  for(const name of TV_X_SCROLL_CLASSES){ if(node.classList.contains(name)) return true; }
+  return false;
+}
+function tvRevealInRow(node){
+  const row=tvRowOf(node);
+  if(!row||!row.classList) return;
+  if(!row.getBoundingClientRect||!tvRowScrollsX(row)) return;
+  const outer=row.getBoundingClientRect(), inner=node.getBoundingClientRect(), pad=24;
+  if(inner.right>outer.right-pad) row.scrollLeft+=(inner.right-outer.right)+pad;
+  else if(inner.left<outer.left+pad) row.scrollLeft-=(outer.left-inner.left)+pad;
 }
 function tvHeaderTargets(list){
   return list.filter(function(node){
@@ -11308,6 +11365,9 @@ function tvActivateTarget(target){
   }
   return false;
 }
+/* One D-pad press. Rows move first (Left/Right inside a shelf), then shelves
+   (Up/Down between them); a shelf that has more cards than fit scrolls before
+   focus is given up, and the chrome is never a neighbour. */
 function moveTvFocus(direction){
   const scopeRoot=tvScopeRoot();
   const list=tvFocusables(scopeRoot);
@@ -11323,51 +11383,84 @@ function moveTvFocus(direction){
       for(const node of list){ const r=node.getBoundingClientRect(); const d=Math.hypot(r.left+r.width/2+window.scrollX-lastTvFocusPoint.x,r.top+r.height/2+window.scrollY-lastTvFocusPoint.y); if(d<nearestDist){ nearestDist=d; nearest=node; } }
       if(nearest&&nearestDist<900) target=nearest;
     }
-    target=target||list.find(node=>node.classList&&node.classList.contains("continue-card"))||list.find(node=>node.classList&&node.classList.contains("poster-card"))||list.find(node=>node.id==="heroPlay")||list[0];
+    const firstContentRow=tvRows(list).find(r=>!tvIsChrome(r.items[0]));
+    target=target
+      ||(firstContentRow&&firstContentRow.items[0])
+      ||list.find(node=>node.classList&&node.classList.contains("continue-card"))
+      ||list.find(node=>node.classList&&node.classList.contains("poster-card"))
+      ||list.find(node=>node.id==="heroPlay")
+      ||list[0];
     tvFocusAndReveal(target);
     return true;
   }
-  const cr=current.getBoundingClientRect(), cx=cr.left+cr.width/2, cy=cr.top+cr.height/2;
-  const inHeader=!!(current.closest&&(current.closest(".topbar")||current.closest(".zp-sidebar")));
-  /* Up from the first content block hands the D-pad back to the header. */
-  if(direction==="up"&&!inHeader){
+  const chrome=tvIsChrome(current);
+  const rows=tvRows(list);
+  const myRow=tvRowOf(current);
+  const myIndex=rows.findIndex(r=>r.row===myRow);
+
+  if(direction==="left"||direction==="right"){
+    /* 1. Inside the shelf the viewer is already on. */
+    const row=rows[myIndex];
+    if(row){
+      const i=row.items.indexOf(current);
+      if(i>=0){
+        const next=row.items[i+(direction==="right"?1:-1)];
+        if(next&&next!==current){ tvFocusAndReveal(next); return true; }
+      }
+    }
+    /* 2. At the shelf edge. If the shelf still has cards off screen, bring them
+          in; otherwise absorb the press rather than wandering into the chrome. */
+    const rowRect=myRow&&myRow.getBoundingClientRect?myRow.getBoundingClientRect():null;
+    if(rowRect&&tvRowScrollsX(myRow)){
+      const hidden=direction==="right"
+        ?(myRow.scrollWidth||0)-(myRow.scrollLeft||0)-(rowRect.width||0)>4
+        :(myRow.scrollLeft||0)>4;
+      if(hidden){
+        myRow.scrollLeft+=(direction==="right"?1:-1)*Math.max(160,Math.round((rowRect.width||600)*0.6));
+        return true;
+      }
+    }
+    return true;
+  }
+
+  /* Up/Down: move between shelves. Chrome counts as one shelf at the very top. */
+  const cr=current.getBoundingClientRect(), cx=cr.left+cr.width/2;
+  if(direction==="up"&&chrome){
+    return false; /* the top of the page: the drawer/menu key handles it */
+  }
+  if(direction==="down"&&chrome){
+    const target=tvFirstContentBelow(cr,cx,list);
+    if(target){ tvFocusAndReveal(target); return true; }
+    return false;
+  }
+  /* From content: Up off the first shelf returns to the chrome. */
+  if(direction==="up"){
+    const above=tvNearestAbove(current,list);
+    if(above){ tvFocusAndReveal(above); return true; }
     const header=tvHeaderTargets(list);
     if(header.length){
-      const above=tvNearestAbove(current,header);
-      if(above){ tvFocusAndReveal(above); return true; }
+      const h=tvNearestAbove(current,header);
+      if(h){ tvFocusAndReveal(h); return true; }
     }
+    return false;
   }
+  /* Down to the next shelf, keeping the horizontal position. */
+  const below=tvNearestBelow(current,list);
+  if(below){ tvFocusAndReveal(below); return true; }
+  /* Nothing below on this axis: the page itself scrolls. Let the browser do it
+     (the keyup is not swallowed) so the last shelf is still reachable. */
+  return false;
+}
+function tvFirstContentBelow(cr,cx,list){
   let best=null,bestScore=Infinity;
-  const tolerance=tvEdgeTolerance();
   for(const node of list){
-    if(node===current) continue;
-    if(current.classList&&(current.classList.contains("poster-card")||current.classList.contains("continue-card"))&&current.contains(node)) continue;
-    const sameRow=tvSameRow(current,node);
-    /* 1. Left/Right is owned by the row the viewer started in. */
-    if((direction==="left"||direction==="right")&&!sameRow) continue;
-    /* Vertical movement must change row (so Up/Down never drift sideways). */
-    if((direction==="up"||direction==="down")&&sameRow) continue;
-    const r=node.getBoundingClientRect(), x=r.left+r.width/2, y=r.top+r.height/2;
-    const dx=x-cx, dy=y-cy, adx=Math.abs(dx), ady=Math.abs(dy);
-    let primary=0, secondary=0;
-    if(direction==="right"){ if(dx<=tolerance*0.5) continue; primary=dx; secondary=ady; }
-    else if(direction==="left"){ if(dx>=-tolerance*0.5) continue; primary=-dx; secondary=ady; }
-    else if(direction==="down"){ if(dy<=4) continue; primary=dy; secondary=adx; }
-    else if(direction==="up"){ if(dy>=-4) continue; primary=-dy; secondary=adx; }
-    else continue;
-    const score=primary+secondary*3;
+    if(tvIsChrome(node)) continue;
+    const r=node.getBoundingClientRect();
+    if(r.top<cr.bottom-8) continue;
+    const score=(r.top-cr.bottom)+Math.abs(r.left+r.width/2-cx)*2.4;
     if(score<bestScore){ bestScore=score; best=node; }
   }
-  if(!best&&direction==="down"){
-    /* Rail/column edge reached: step to the nearest control of the next row. */
-    best=tvNearestBelow(current,list);
-  }
-  if(!best&&direction==="up"){
-    best=tvNearestAbove(current,list);
-  }
-  if(!best) return false;
-  tvFocusAndReveal(best);
-  return true;
+  return best;
 }
 
 /* ---- 2. Where focus lands when a screen opens ----------------------- */
@@ -11429,9 +11522,9 @@ function handlePlayerKeyboard(e){
   const full=st.engine==="native"||st.engine==="faststream-api";
   const key=e.key;
   const overlayEl=document.getElementById("playerOverlay");
-  if(overlayEl&&overlayEl.classList.contains("chrome-hidden")&&!st.embedFocused&&/^(Arrow|Enter|Channel)/.test(key)){
+  if(overlayEl&&overlayEl.classList.contains("chrome-hidden")&&/^(Arrow|Enter|Channel)/.test(key)){
     e.preventDefault(); showPlayerChrome(false);
-    const wake=document.getElementById(full?"btnPlayPause":"btnFocusEmbed")||document.getElementById("btnPlayerServers");
+    const wake=document.getElementById("btnPlayPause")||document.getElementById("btnPlayerServers");
     if(wake&&wake.style.display!=="none"&&!wake.disabled) wake.focus({preventScroll:true});
     return true;
   }
@@ -11444,7 +11537,6 @@ function handlePlayerKeyboard(e){
   if((key==="MediaFastForward"||key==="MediaRewind")&&full){ e.preventDefault(); playerCommand("seekDelta",key==="MediaFastForward"?30:-30); return true; }
   if(key==="MediaPlay"&&full){ e.preventDefault(); if(st.playback&&st.playback.paused) playerCommand("toggle"); return true; }
   if(key==="MediaPause"&&full){ e.preventDefault(); if(st.playback&&!st.playback.paused) playerCommand("toggle"); return true; }
-  if(/^Media/.test(key)&&!full){ e.preventDefault(); showPlayerChrome(true); const focusBtn=document.getElementById("btnFocusEmbed"); if(focusBtn&&focusBtn.style.display!=="none") focusBtn.focus({preventScroll:true}); return true; }
   if(key===" "||key.toLowerCase()==="k"||key==="MediaPlayPause"){
     if(!full) return false;
     e.preventDefault(); playerCommand("toggle"); return true;
@@ -11484,7 +11576,6 @@ function handleZeroPlayTvBack(){
     return true;
   }
   if(playerState){
-    if(playerState.embedFocused){ playerState.embedFocused=false; showPlayerChrome(false); const backBtn=document.getElementById("btnFocusEmbed"); if(backBtn) backBtn.focus({preventScroll:true}); return true; }
     if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); return true; }
     closePlayer(); return true;
   }
