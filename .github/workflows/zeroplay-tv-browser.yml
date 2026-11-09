@@ -93,3 +93,41 @@ jobs:
           path: tv/zeroplay-debrid/artifacts
           if-no-files-found: ignore
           retention-days: 7
+
+  # Proof the checks have teeth: run the same suite against the build before the
+  # focus fixes. It must FAIL. A green suite that also passes on broken code is
+  # worse than no suite, and this job makes that impossible to claim again.
+  guard-the-guard:
+    name: The browser checks must fail on the old build
+    runs-on: ubuntu-latest
+    needs: browser
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          path: current
+      - uses: actions/checkout@v4
+        with:
+          ref: 82d04403828fb17a5ecd27261242283e8ff2b25f
+          fetch-depth: 1
+          path: old
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install and prepare Chromium once
+        working-directory: current/tv/zeroplay-debrid
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Run the current suite against the old index.html
+        working-directory: current/tv/zeroplay-debrid
+        run: |
+          cp ../../../old/tv/zeroplay-debrid/index.html index.html
+          set +e
+          node tests/browser/home-navigation.cjs
+          status=$?
+          if [ "$status" -eq 0 ]; then
+            echo "::error title=Guard the guard::the browser suite passes against the old build, so it proves nothing about the fix"
+            exit 1
+          fi
+          echo "::notice title=Guard the guard::the suite fails on the old build, as it must"
