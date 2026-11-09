@@ -492,6 +492,22 @@ ok(html.includes("streamProviderChip") && !html.includes('id="serverDirect"'), "
   ok(!/--zp-focus:\s*#fff/i.test(style) && !/--zp-focus:\s*white/i.test(style), "the focus token is not white");
   ok(!/0 0 0 2px rgba\(255,\s*255,\s*255,0?\.9/.test(style), "the focus elevation ring is not a white halo");
   ok(/--zp-focus:\s*var\(--zp-accent\)/.test(style), "the focus ring uses the accent colour");
+  /* Every rule that mentions focus, scanned for a white ring or halo. Four
+     separate layers painted one (4px ring, 3px outlines, inset frames); the
+     token alone could never fix that. */
+  const whiteFocusRules = [];
+  const ruleRe = /([^{}]+)\{([^{}]*)\}/g;
+  let match;
+  while ((match = ruleRe.exec(style))) {
+    const selector = match[1];
+    const body = match[2];
+    if (!/focus/.test(selector)) continue;
+    const paint = body.match(/(?:box-shadow|outline)[^;]*;/g) || [];
+    for (const decl of paint) {
+      if (/(?:255,\s*255,\s*255|#fff\b|#ffffff|\bwhite\b)/.test(decl)) whiteFocusRules.push(selector.trim());
+    }
+  }
+  ok(whiteFocusRules.length === 0, "no focus rule paints a white ring or halo: " + whiteFocusRules.slice(0, 4).join(" | "));
 }
 
 /* R5. The player chrome timer reschedules itself instead of bailing out, so a
