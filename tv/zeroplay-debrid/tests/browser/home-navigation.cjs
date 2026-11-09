@@ -509,6 +509,8 @@ async function main() {
               id: el ? el.id : "",
               rail: rail ? [...document.querySelectorAll(".rail-track")].indexOf(rail) : -1,
               card: !!(el && el.classList && el.classList.contains("poster-card")),
+              interactive: !!(el && el.matches && el.matches('button,a[href],input,select,textarea,[tabindex]:not([tabindex="-1"])')),
+              isBody: el === document.body,
             };
           }),
         );
@@ -518,8 +520,8 @@ async function main() {
         "no arrow key lands focus in the sidebar: " + JSON.stringify(trail),
       );
       check(
-        trail.slice(0, 3).every((stop) => stop.card || stop.id),
-        "arrow keys keep a real control focused on every press",
+        trail.every((stop) => stop.interactive && !stop.isBody),
+        "every arrow press leaves focus on a real control: " + JSON.stringify(trail),
       );
       check(
         trail[0].rail === trail[1].rail && trail[0].rail >= 0,
