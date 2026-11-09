@@ -487,6 +487,12 @@ async function main() {
   }
 }
 main().catch((error) => {
+  const message = String((error && error.message) || error);
   console.error(error);
+  /* A failing acceptance check must be readable from the run itself — the
+     GitHub log download needs network the reviewer may not have, but
+     annotations are available through the API. */
+  const annotation = message.replace(/[\r\n]+/g, " ").slice(0, 900);
+  console.log(`::error title=Browser acceptance failed::${annotation}`);
   process.exit(1);
 });
