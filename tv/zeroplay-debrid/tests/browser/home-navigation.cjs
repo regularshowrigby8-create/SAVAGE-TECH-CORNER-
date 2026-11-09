@@ -317,6 +317,20 @@ async function main() {
               })
               .catch(async (error) => {
                 console.log(
+                  "::error title=Menu focus debug::" +
+                    JSON.stringify(await page.evaluate(() => ({
+                      active: document.activeElement && (document.activeElement.id || document.activeElement.className || document.activeElement.tagName),
+                      drawerClass: document.querySelector("#menuDrawer").className,
+                      ariaHidden: document.querySelector("#menuDrawer").getAttribute("aria-hidden"),
+                      events: focusEvents.slice(-10).map((e) => e.id || e.cls),
+                      route: location.hash,
+                      timersPending: !!tvInitialFocusTimer,
+                      overlayOwns: typeof tvOverlayOwnsFocus === "function" ? tvOverlayOwnsFocus() : "n/a",
+                      player: !!playerState,
+                      detail: !!detailState,
+                      streams: !!streamsCtx,
+                    }))).replace(/[\r\n]+/g, " ").slice(0, 900)),
+                console.log(
                   "MENU DEBUG",
                   await page.evaluate(() => ({
                     active: document.activeElement.outerHTML.slice(0, 160),
