@@ -533,4 +533,15 @@ ok(html.includes("streamProviderChip") && !html.includes('id="serverDirect"'), "
   ok(scheduler.includes("tvOverlayOwnsFocus()"), "the retry stands down while a drawer, player or modal owns the remote");
 }
 
+/* R7. Nothing may hand focus back to the page while a menu, sheet or player
+   owns the remote. The browser run caught two timing-dependent paths. */
+{
+  const closer = script.slice(script.indexOf("function closePlayerNow()"), script.indexOf("const DOWNLOAD_DB_NAME"));
+  ok(closer.includes("if(tvOverlayOwnsFocus()) return;"), "closing the player does not grab focus into an open menu");
+  ok(closer.includes("tvFocusAndReveal(target)"), "closing the player returns focus through the reveal helper, not a bare focus()");
+  const restore = script.slice(script.indexOf("function restoreTvFocus()"), script.indexOf("function handlePlayerNextKeys(e)"));
+  ok(restore.includes("if(tvOverlayOwnsFocus()) return;"), "restoring page focus stands down while an overlay owns the remote");
+  ok(restore.includes("cancelTvInitialFocus()"), "restoring page focus cancels a pending launch-focus timer first");
+}
+
 console.log(`\n${passed} TV navigation contract checks passed`);

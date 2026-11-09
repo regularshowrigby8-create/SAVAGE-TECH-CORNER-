@@ -7597,7 +7597,14 @@ function closePlayerNow(){
   if(typeof discoveryRuntime!=="undefined"&&discoveryRuntime.running&&discoveryRuntime.deferredForPlayback){ discoveryRuntime.deferredForPlayback=false; setTimeout(()=>runDiscoveryCycle("after playback"),3000); }
   if(!detailState) document.body.classList.remove("locked");
   if(st&&st.item&&st.item.id&&(ANDROID_TV_APP||document.body.classList.contains("tv-mode"))){
-    setTimeout(()=>{ const target=document.getElementById("btnPlay")||document.querySelector('.continue-card[data-type="'+st.item.type+'"][data-id="'+st.item.id+'"]')||document.querySelector('.poster-card[data-type="'+st.item.type+'"][data-id="'+st.item.id+'"]'); if(target) target.focus({preventScroll:true}); else if(typeof restoreTvFocus==="function") restoreTvFocus(); },30);
+    /* This hands the remote back to the page after a film ends. It must never
+       do that into a menu, a sheet or another player the viewer has opened in
+       the meantime — the exit takes ~190ms and a person can be quicker. */
+    setTimeout(()=>{
+      if(tvOverlayOwnsFocus()) return;
+      const target=document.getElementById("btnPlay")||document.querySelector('.continue-card[data-type="'+st.item.type+'"][data-id="'+st.item.id+'"]')||document.querySelector('.poster-card[data-type="'+st.item.type+'"][data-id="'+st.item.id+'"]');
+      if(target&&tvIsFocusable(target)) tvFocusAndReveal(target); else if(typeof restoreTvFocus==="function") restoreTvFocus();
+    },30);
   }
 }
 
@@ -11505,9 +11512,11 @@ function tvInitialFocusStillWanted(){
 }
 function restoreTvFocus(){
   if(!ANDROID_TV_APP) return false;
+  /* Coming back to the page cancels a pending launch-focus grab, so two
+     timers cannot fight over the remote. */
+  cancelTvInitialFocus();
   setTimeout(function(){
-    const drawer=tvEl("menuDrawer");
-    if(drawer&&drawer.classList.contains("open")||playerState||detailState||streamsCtx||(typeof downloadModalState!=="undefined"&&downloadModalState)) return;
+    if(tvOverlayOwnsFocus()) return;
     let target=lastTvFocusElement&&lastTvFocusElement.isConnected?lastTvFocusElement:null;
     if((!target||!tvIsFocusable(target))&&lastTvFocusSelector){ try{ target=document.querySelector(lastTvFocusSelector); }catch{ target=null; } }
     if(target&&tvIsFocusable(target)) tvFocusAndReveal(target);
