@@ -4229,151 +4229,6 @@ body.android-tv .server-option .src-actions .btn { min-height: 42px; padding: 0 
 <div id="playerRoot"></div>
 <div id="toasts" aria-live="polite"></div>
 
-<script data-zp-crash>
-/* =====================================================================
-   Crash surface — installed BEFORE the app script, deliberately.
-
-   Note the `data-zp-crash` attribute. Several test suites locate the app's
-   script by searching for an attribute-free script open tag, taking the first
-   match. This
-   tag carries an attribute so it never matches that search, and the app script
-   stays the first bare tag in the document.
-
-   The app is one inline script block. If anything in it throws at the top level,
-   the browser stops executing that script and the user gets a pure white page
-   with no message and no way to report it. A white page tells us nothing.
-
-   Two dependency-free safety nets:
-     1. Global error / unhandledrejection handlers that paint a readable card.
-     2. A boot watchdog: if #view is still empty a few seconds after load, paint
-        the same card instead of leaving the page blank.
-
-   This block must never throw. Everything is wrapped.
-   ===================================================================== */
-(function () {
-  "use strict";
-  var shown = false;
-  var WATCHDOG_MS = 8000;
-
-  function esc(text) {
-    return String(text == null ? "" : text)
-      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-      .slice(0, 700);
-  }
-
-  function paint(reason, detail) {
-    if (shown) return;
-    shown = true;
-    try {
-      var host = document.getElementById("zpCrash");
-      if (!host) {
-        host = document.createElement("div");
-        host.id = "zpCrash";
-        host.setAttribute("role", "alert");
-        host.style.cssText = [
-          "position:fixed", "inset:0", "z-index:2147483647",
-          "display:flex", "align-items:center", "justify-content:center",
-          "padding:24px", "background:#0b0b12", "color:#e8e8f0",
-          "font:14px/1.55 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif",
-          "overflow:auto"
-        ].join(";");
-        document.body.appendChild(host);
-      }
-      host.innerHTML =
-        '<div style="max-width:620px;width:100%;background:#15151f;border:1px solid #2c2c3f;' +
-        'border-radius:14px;padding:26px">' +
-        '<div style="font-weight:700;font-size:17px;margin-bottom:6px">ZeroPlay could not start</div>' +
-        '<div style="color:#a9a9bd;margin-bottom:16px">The page loaded but the app did not finish ' +
-        'booting. The details below are what the browser reported, which is what makes it fixable.</div>' +
-        '<div style="font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:#0d0d16;' +
-        'border:1px solid #2c2c3f;border-radius:9px;padding:12px;white-space:pre-wrap;' +
-        'word-break:break-word;color:#ffb4b4;max-height:230px;overflow:auto">' +
-        esc(reason) + (detail ? "\n\n" + esc(detail) : "") + "</div>" +
-        '<div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">' +
-        '<button id="zpCrashReload" style="cursor:pointer;border:0;border-radius:9px;padding:10px 18px;' +
-        'font:inherit;font-weight:600;background:#7c3aed;color:#fff">Reload</button>' +
-        '<button id="zpCrashCopy" style="cursor:pointer;border:1px solid #2c2c3f;border-radius:9px;' +
-        'padding:10px 18px;font:inherit;background:transparent;color:#e8e8f0">Copy details</button>' +
-        '<button id="zpCrashReset" style="cursor:pointer;border:1px solid #2c2c3f;border-radius:9px;' +
-        'padding:10px 18px;font:inherit;background:transparent;color:#e8e8f0">Reset local data</button>' +
-        '</div></div>';
-
-      var reload = host.querySelector("#zpCrashReload");
-      if (reload) reload.onclick = function () { location.reload(); };
-
-      var copy = host.querySelector("#zpCrashCopy");
-      if (copy) copy.onclick = function () {
-        try {
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(reason + (detail ? "\n\n" + detail : ""));
-            copy.textContent = "Copied";
-          }
-        } catch (error) { /* best effort */ }
-      };
-
-      /* The escape hatch for "it worked yesterday": drop the caches that can
-         serve a stale bundle and the saved state from an older version, then
-         reload exactly once. */
-      var reset = host.querySelector("#zpCrashReset");
-      if (reset) reset.onclick = function () {
-        reset.textContent = "Resetting\u2026";
-        var done = function () {
-          try { localStorage.clear(); } catch (error) {}
-          try { sessionStorage.clear(); } catch (error) {}
-          location.reload();
-        };
-        try {
-          var jobs = [];
-          if (window.caches && caches.keys) {
-            jobs.push(caches.keys().then(function (keys) {
-              return Promise.all(keys.map(function (key) { return caches.delete(key); }));
-            }));
-          }
-          if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
-            jobs.push(navigator.serviceWorker.getRegistrations().then(function (list) {
-              return Promise.all(list.map(function (item) { return item.unregister(); }));
-            }));
-          }
-          if (!jobs.length) { done(); return; }
-          Promise.all(jobs).then(done, done);
-        } catch (error) { done(); }
-      };
-    } catch (error) { /* painting must never itself crash the page */ }
-  }
-
-  window.addEventListener("error", function (event) {
-    var target = event && event.target;
-    /* Resource failures carry no error object and are not fatal boot errors. */
-    if (target && target !== window && target.tagName) return;
-    var message = (event && event.message) || "Unknown error";
-    var where = event && event.filename
-      ? " at " + event.filename + ":" + event.lineno + ":" + event.colno : "";
-    paint(message + where, event && event.error && event.error.stack);
-  }, true);
-
-  window.addEventListener("unhandledrejection", function (event) {
-    var reason = event && event.reason;
-    paint("Unhandled promise rejection: " + ((reason && reason.message) || reason || "unknown"),
-      reason && reason.stack);
-  });
-
-  function watch() {
-    try {
-      var view = document.getElementById("view");
-      if (view && view.children.length) return;
-      if (document.getElementById("zpCrash")) return;
-      paint("The app shell never rendered (#view is empty).",
-        "Usually this means the bundle or a source request failed, or saved settings " +
-        "from a previous version are incompatible.");
-    } catch (error) { /* never throw from the watchdog */ }
-  }
-
-  try {
-    if (document.readyState === "complete") setTimeout(watch, WATCHDOG_MS);
-    else window.addEventListener("load", function () { setTimeout(watch, WATCHDOG_MS); });
-  } catch (error) {}
-})();
-</script>
 <script>
 "use strict";
 /* =====================================================================
@@ -6355,10 +6210,9 @@ function playerChromeState(st){
   };
 }
 
-/* A tracks/servers/next sheet on screen counts as an open menu: the chrome
-   stays while it is up. This was dropped when the idle logic was replaced, which
-   left two call sites calling a function that no longer existed — a ReferenceError
-   on the first mousemove over the player. */
+/* Restored: the player-core replacement deleted this while two call sites
+   survived, so a player sheet that was open no longer suppressed the chrome-hide
+   rule. Body is unchanged from before the rewrite. */
 function playerSheetVisible(){
   const ids=["playerTracksSheet","playerMoreSheet","playerNextSheet"];
   for(const id of ids){
