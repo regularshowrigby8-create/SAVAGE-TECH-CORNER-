@@ -115,7 +115,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(124,58,237,.35);o
 .page{max-width:1400px;margin:0 auto;padding:1.25rem 1rem 2rem}
 .page h1{color:var(--text-heading);font-size:1.6rem;margin-bottom:.25rem}
 .page .lede{color:var(--text-muted);font-size:.92rem;margin-bottom:1.25rem}
-.demo-banner{max-width:1400px;margin:1rem auto 0;padding:0 1rem}
+.demo-banner{max-width:1400px;margin:1rem auto 0;padding:0 1rem;position:relative;z-index:59}
 .demo-banner .status-box{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;justify-content:space-between}
 .hero{position:relative;border:0;border-radius:var(--radius);overflow:hidden;background:var(--surface);min-height:360px;display:flex;align-items:flex-end;box-shadow:none;margin-bottom:2rem}
 .hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55}
@@ -206,7 +206,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(124,58,237,.35);o
 .player-hint{background:#0d1117;color:var(--text-muted);font-size:.76rem;padding:.4rem .9rem;border-top:1px solid var(--surface-border)}
 
 /* ---------- Toasts ---------- */
-#toasts{position:fixed;right:1rem;bottom:1rem;z-index:120;display:flex;flex-direction:column;gap:.5rem;max-width:min(360px,90vw)}
+#toasts{position:fixed;right:1rem;bottom:1rem;z-index:200;display:flex;flex-direction:column;gap:.5rem;max-width:min(360px,90vw)}
 .toast{background:#22262b;border:1px solid #343a40;border-radius:6px;color:var(--text-heading);padding:.7rem .9rem;font-size:.87rem;box-shadow:0 12px 30px rgba(0,0,0,.35)}
 .toast.success{color:#dff5e8}
 .toast.error{color:#ffe1de}
@@ -5911,6 +5911,28 @@ function withPlayerRuntime(st){
 }
 /* A bounded insert: a TV session can touch hundreds of titles, and a Map that
    only ever grows is a slow leak on a device with no page reloads. */
+/* =====================================================================
+   Scroll lock: one authority, not a copy of the rule in every opener.
+
+   Every overlay used to add "locked" when it painted and re-derive on close
+   whether anything else still needed it. That rule was written out five times
+   and twice not at all (openDetail, drawPlayer, openTrailer, openMenuDrawer),
+   so it drifted: a detail sheet opened from inside the player painted its own
+   lock, and closing the player then unlocked the page underneath a still-open
+   sheet. Ask the DOM what is open instead of trusting a flag.
+   ===================================================================== */
+function bodyScrollIsLocked(){
+  if(document.querySelector("#playerRoot .player-overlay")) return true;
+  if(document.querySelector("#modalRoot .overlay")) return true;
+  if(document.querySelector("#streamsRoot .overlay")) return true;
+  if(document.querySelector("#downloadsRoot .overlay")) return true;
+  const drawer=document.getElementById("menuDrawer");
+  if(drawer&&drawer.classList.contains("open")) return true;
+  return false;
+}
+function syncBodyScrollLock(){ document.body.classList.toggle("locked",bodyScrollIsLocked()); }
+/* Call after an overlay root is filled or emptied. */
+function refreshScrollLock(){ setTimeout(syncBodyScrollLock,0); }
 function rememberBounded(map,key,value,limit){
   if(!(map instanceof Map)) return value;
   if(map.has(key)) map.delete(key);
@@ -6886,7 +6908,7 @@ function openTrailer(title,youtubeKey){
   playerState={trailer:youtubeKey,item:{title:title+" — Trailer",type:"movie",id:0}};
   $("#playerRoot").innerHTML='<div class="player-overlay" id="playerOverlay"><div class="player-bar"><span class="logo-badge"><span class="logo-mark">▶</span><span>ZeroPlay</span></span><span class="pt">'+esc(title)+' — Trailer</span><span style="flex:1"></span><button class="btn btn-secondary" id="btnClosePlayer">× Close</button></div>'
     +'<iframe class="player-frame" src="https://www.youtube-nocookie.com/embed/'+esc(youtubeKey)+'?autoplay=1&rel=0" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen title="Trailer"></iframe></div>';
-  document.body.classList.add("locked");
+  syncBodyScrollLock();
   $("#btnClosePlayer").onclick=closePlayer;
 }
 function openM3uExtractorForContext(ctx,url){
@@ -7135,6 +7157,13 @@ function bindPlayerChrome(){
   on("btnBackPlayer","click",closePlayer);
   on("btnPlayerDetails","click",()=>{ const it2=st.item; closePlayer(); if(it2&&it2.id) openDetail(it2.type,it2.id); });
   on("btnPlayerServers","click",()=>{
+    /* The sheet is z-index 130 and the player 100, so the film keeps playing
+       behind an opaque panel: the viewer hears it, cannot see it, and cannot
+       reach the controls. Pause first and resume only if we paused. */
+    try{
+      const v=st.zpEngine&&st.zpEngine.video;
+      if(v&&!v.paused){ st.sheetPaused=true; v.pause(); }
+    }catch{}
     const identity=st.identity||buildTitleIdentity({item:st.item,type:st.item.type,id:st.item.id,title:titleOf(st.item),season:st.season,episode:st.episode});
     showStreamsModal({type:st.item.type,id:st.item.id,title:identity.title,altTitles:identity.titles,year:identity.year,season:st.season,episode:st.episode,imdb:identity.imdbId,identity,item:snap(st.item,st.item.type),fromPlayer:true});
   });
@@ -7353,7 +7382,7 @@ async function drawPlayer(prevProgress){
   document.querySelectorAll(".hero-trailer.on").forEach(stopBackdropPreview);
   st.engine="loading"; st.healthRecorded=false; st.levels=[]; st.frameLoadedAt=0; st.playbackSignalAt=0; st.playbackConfirmed=false; st.embedNoticeShown=false; st.prime=null; st.playback=Object.assign({},st.playback,{paused:true,buffering:true,currentTime:0,duration:0,buffered:0});
   $("#playerRoot").innerHTML=playerShell(hasInstalledFeeds()?"Asking your feeds for this title…":"No feed is installed yet…");
-  document.body.classList.add("locked");
+  syncBodyScrollLock();
   bindPlayerChrome();
   const source=st.tempSource||getSource(st.source)||allSources()[0];
   if(!source){
@@ -7644,8 +7673,9 @@ function closePlayerNow(){
   clearPlayerTimers();  clearPreload();
   if(typeof activeDownloadObjectUrl!=="undefined"&&activeDownloadObjectUrl&&st&&(st.url===activeDownloadObjectUrl||st.directUrl===activeDownloadObjectUrl)){ URL.revokeObjectURL(activeDownloadObjectUrl); activeDownloadObjectUrl=""; }
   $("#playerRoot").innerHTML=""; playerState=null;
+  refreshScrollLock();
   if(typeof discoveryRuntime!=="undefined"&&discoveryRuntime.running&&discoveryRuntime.deferredForPlayback){ discoveryRuntime.deferredForPlayback=false; setTimeout(()=>runDiscoveryCycle("after playback"),3000); }
-  if(!detailState) document.body.classList.remove("locked");
+  syncBodyScrollLock();
   if(st&&st.item&&st.item.id&&(ANDROID_TV_APP||document.body.classList.contains("tv-mode"))){
     /* This hands the remote back to the page after a film ends. It must never
        do that into a menu, a sheet or another player the viewer has opened in
@@ -8029,7 +8059,7 @@ function resumeDownload(jobOrId){
 async function deleteDownload(jobOrId,opts){
   opts=opts||{};
   const job=typeof jobOrId==="string"?downloadJobs.get(jobOrId):jobOrId; if(!job) return;
-  deletedDownloadIds.add(job.id);
+  rememberDeletedDownloadId(job.id);
   pauseDownload(job,true);
   for(let i=0;i<100&&downloadControllers.has(job.id);i++) await new Promise(resolve=>setTimeout(resolve,50));
   await dlDeleteJobChunks(job.id).catch(()=>{}); await dlDelete("files",job.id).catch(()=>{}); await dlDelete("jobs",job.id).catch(()=>{});
@@ -8453,7 +8483,7 @@ async function openDownloadForContext(ctx,opts){
     +'<h3 style="color:#fff;margin:1.2rem 0 .6rem">Your downloads</h3><div id="downloadModalJobs"></div>'
     +'<div class="settings-actions"><button class="btn btn-secondary" id="btnOpenDownloadsPage" type="button">Open download manager & M3U extractor</button><button class="btn btn-outline" type="button" data-settings-section="add-website">Add another website</button></div>'
     +'</div></div>';
-  document.body.classList.add("locked");
+  syncBodyScrollLock();
   document.getElementById("btnCloseDownloads").onclick=closeDownloadModal;
   document.getElementById("downloadOverlay").addEventListener("click",e=>{ if(e.target.id==="downloadOverlay") closeDownloadModal(); });
   document.getElementById("btnOpenDownloadsPage").onclick=()=>{ closeDownloadModal(); location.hash="#/downloads"; };
@@ -8478,7 +8508,10 @@ async function openDownloadForContext(ctx,opts){
 function closeDownloadModal(){
   const root=document.getElementById("downloadsRoot"); if(root) root.innerHTML="";
   downloadModalState=null;
-  if(!playerState&&!detailState&&!streamsCtx) document.body.classList.remove("locked");
+  /* This sheet can sit on top of live playback; closing it must hand focus to
+     the player underneath, not to nothing. */
+  syncBodyScrollLock();
+  if(playerState) setTimeout(()=>{ const btn=document.getElementById("btnPlayerDownload"); if(btn&&btn.isConnected) btn.focus({preventScroll:true}); },20);
 }
 function m3uResultHTML(item,index){
   const actions=item.localOnly?"":'<div class="settings-actions"><button class="btn btn-secondary btn-sm" type="button" data-m3u-action="inspect" data-m3u-index="'+index+'">Inspect</button><button class="btn btn-primary btn-sm" type="button" data-m3u-action="download" data-m3u-index="'+index+'">⬇ Download</button><button class="btn btn-outline btn-sm" type="button" data-m3u-action="play" data-m3u-index="'+index+'">▶ Play</button><button class="btn btn-outline btn-sm" type="button" data-m3u-action="copy" data-m3u-index="'+index+'">Copy M3U link</button></div>';
@@ -8575,12 +8608,17 @@ document.addEventListener("click",e=>{
 /* ---------------- detail modal ---------------- */
 let detailState=null;
 async function openDetail(type,id){
+  /* The detail sheet is z-index 80 and the player is 100, so opening a title
+     from inside playback painted a sheet the viewer could not see or close —
+     and it then trapped Back, because Back closes detail before the player.
+     Close the player first; the title stays one tap away. */
+  if(playerState) closePlayer();
   if(typeof rememberTvFocus==="function") rememberTvFocus(document.activeElement);
   stopCardPreview();
   document.querySelectorAll(".hero-trailer.on").forEach(stopBackdropPreview);
   detailState={type,id,season:null,episode:1,data:null};
   $("#modalRoot").innerHTML='<div class="overlay" id="detailOverlay"><div class="modal"><button class="icon-btn modal-close" id="btnCloseDetail" aria-label="Close">×</button><div style="padding:3rem;text-align:center;color:var(--text-muted)"><span class="spinner"></span> Loading…</div></div></div>';
-  document.body.classList.add("locked");
+  syncBodyScrollLock();
   $("#btnCloseDetail").onclick=closeDetail;
   $("#detailOverlay").addEventListener("click",e=>{ if(e.target.id==="detailOverlay") closeDetail(); });
   try{
@@ -8594,7 +8632,7 @@ async function openDetail(type,id){
     $("#btnCloseDetail").onclick=closeDetail;
   }
 }
-function closeDetail(){ const preview=document.getElementById("detailTrailer"); if(preview) stopBackdropPreview(preview); $("#modalRoot").innerHTML=""; detailState=null; if(!playerState) document.body.classList.remove("locked"); if(typeof restoreTvFocus==="function") restoreTvFocus(); }
+function closeDetail(){ const preview=document.getElementById("detailTrailer"); if(preview) stopBackdropPreview(preview); $("#modalRoot").innerHTML=""; detailState=null; syncBodyScrollLock(); if(typeof restoreTvFocus==="function") restoreTvFocus(); }
 function drawDetail(){
   const d=rememberCatalogItem(Object.assign({},detailState.data,{media_type:detailState.type})); detailState.data=d;
   const type=detailState.type, isTV=type==="tv";
@@ -11045,7 +11083,13 @@ async function addWebsiteSourceFlow(){
 let streamsCtx=null;
 function closeStreams(){
   $("#streamsRoot").innerHTML=""; streamsCtx=null;
-  if(!playerState&&!detailState) document.body.classList.remove("locked");
+  syncBodyScrollLock();
+  /* Only undo our own pause: the viewer may have paused before opening the
+     sheet, and a viewer who picked a new stream gets a fresh state object. */
+  if(playerState&&playerState.sheetPaused){
+    playerState.sheetPaused=false;
+    try{ const v=playerState.zpEngine&&playerState.zpEngine.video; if(v&&v.paused) v.play().catch(()=>{}); }catch{}
+  }
   if(document.body.classList.contains("tv-mode")) setTimeout(()=>{ const target=document.getElementById("btnPlayerServers")||document.getElementById("btnStreams"); if(target) target.focus({preventScroll:true}); },30);
 }
 function serverOptionHTML(option,opts){
@@ -11129,7 +11173,7 @@ async function showStreamsModal(ctx){
   const token=Date.now().toString(36)+Math.random().toString(36).slice(2);
   streamsCtx=Object.assign(ctx,{_token:token,_options:[],_direct:[],_searchDone:false,_stats:null});
   if(playerState&&ctx.fromPlayer&&Array.isArray(playerState.availableServers)&&playerState.availableServers.length) streamsCtx._options=playerState.availableServers.slice();
-  document.body.classList.add("locked");
+  syncBodyScrollLock();
   $("#streamsRoot").innerHTML='<div class="overlay" id="streamsOverlay"><div class="modal"><button class="icon-btn modal-close" id="btnCloseStreams" aria-label="Close">×</button>'
     +'<div style="padding:1.6rem 1.8rem 1.8rem"><div class="streams-hero"><img src="'+esc(posterURL(ctx.item,"w185"))+'" alt="" data-seed="'+esc(ctx.id||"")+'"><div><span class="logo-badge" style="margin-bottom:.6rem">Servers with this title</span>'
     +'<h2 style="color:var(--text-heading)">'+esc(ctx.title||"Stream")+(ctx.type==='tv'?' <span class="chip violet">S'+(ctx.season||1)+' · E'+(ctx.episode||1)+'</span>':'')+(ctx.year?' <span class="chip">'+esc(ctx.year)+'</span>':'')+'</h2>'
@@ -11501,7 +11545,7 @@ function openMenuDrawer(){
   scrim.hidden=false; drawer.classList.add("open"); drawer.setAttribute("aria-hidden","false");
   if(btn) btn.setAttribute("aria-expanded","true");
   $$("[data-open-menu]").forEach(b=>b.setAttribute("aria-expanded","true"));
-  document.body.classList.add("locked");
+  syncBodyScrollLock();
   setTimeout(()=>{ const first=document.getElementById("btnCloseMenu"); if(first&&drawer.classList.contains("open")) first.focus({preventScroll:true}); },30);
 }
 function closeMenuDrawer(){
@@ -11510,7 +11554,7 @@ function closeMenuDrawer(){
   drawer.classList.remove("open"); drawer.setAttribute("aria-hidden","true"); scrim.hidden=true;
   if(btn) btn.setAttribute("aria-expanded","false");
   $$("[data-open-menu]").forEach(b=>b.setAttribute("aria-expanded","false"));
-  if(!playerState&&!detailState&&!streamsCtx) document.body.classList.remove("locked");
+  syncBodyScrollLock();
   const back=menuReturnFocus&&menuReturnFocus.focus?menuReturnFocus:null;
   menuReturnFocus=null;
   if(back&&back.isConnected&&tvIsFocusable(back)) tvFocusAndReveal(back);
@@ -12117,6 +12161,14 @@ function handleZeroPlayTvBack(){
 }
 function handleZeroPlayTvMenu(){
   document.body.classList.add("tv-mode");
+  /* The drawer is z-index 90 and every modal root is above it, so opening it
+     while a sheet is up painted a menu the viewer could not see — and the next
+     Back closed the drawer instead of the sheet they were looking at. A sheet
+     owns Menu; the remote gets "nothing happened" instead of a hidden drawer. */
+  if(bodyScrollIsLocked()&&!document.getElementById("menuDrawer")?.classList.contains("open")){
+    const sheetOpen=document.querySelector("#modalRoot .overlay,#streamsRoot .overlay,#downloadsRoot .overlay");
+    if(sheetOpen) return true;
+  }
   if(playerState&&!streamsCtx){ showPlayerChrome(true); const servers=document.getElementById("btnPlayerServers"); if(servers) servers.focus({preventScroll:true}); return true; }
   const drawer=document.getElementById("menuDrawer");
   if(drawer&&drawer.classList.contains("open")) closeMenuDrawer(); else openMenuDrawer();

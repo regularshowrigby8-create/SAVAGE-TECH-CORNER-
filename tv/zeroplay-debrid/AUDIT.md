@@ -99,9 +99,72 @@ Severity: **S1** user-visible data loss or security, **S2** broken behaviour,
 
 ---
 
+<<<<<<< HEAD
 ## 3. Tests
 
 `npm test` — 480 checks across 11 files, all passing.
+=======
+## 2b. Overlay and layering sweep
+
+The user-facing question was: can two things be on screen at once, and can the
+viewer get stuck behind one. Everything below is a real path, not a theory —
+the stack is exercised in `tests/overlay-session.test.cjs`.
+
+### The stacking model, as it now stands
+
+| layer | z-index | what |
+| --- | --- | --- |
+| offline banner | 59 | under the sticky bar, cannot cover it |
+| top bar | 60 | |
+| detail / generic modal | 80 | |
+| menu scrim / drawer | 88 / 90 | |
+| player | 100 | |
+| server sheet | 130 | |
+| download sheet | 150 | |
+| toasts | 200 | above everything, by design |
+
+### Errors found and fixed
+
+| # | Sev | Finding | Fix |
+| --- | --- | --- | --- |
+| 10 | S1 | **Toasts were invisible over the two most-used sheets.** `#toasts` was `z-index:120`, under the server sheet (130) and the download sheet (150). Every error message raised from those sheets — "that server returned no variant", a failed download, a refused feed — was painted behind an opaque panel where nobody could read it. | `#toasts` → 200. It is the app's only feedback channel and now out-ranks every overlay. |
+| 11 | S1 | **A detail sheet opened from inside playback was unreachable.** Detail is 80, the player is 100. Opening a title from the player painted the sheet underneath it — invisible and unclickable — and it then *trapped Back*, because Back closes the player before detail, so the first Back looked like it did nothing while clearing hidden state. | `openDetail()` closes the player first. The title stays one tap away. |
+| 12 | S1 | **The scroll lock was written five ways and drifted.** Each opener added `body.locked` and each closer re-derived a slightly different guard; `openDetail`, `drawPlayer`, `openTrailer` and `openMenuDrawer` added it and two of them never released it. Closing a sheet in the wrong order left the page permanently unscrollable until reload — invisible on a TV, where there is no reload. | One authority: `bodyScrollIsLocked()` asks the DOM what is actually open, and `syncBodyScrollLock()` is the only writer. All 10 add/remove sites route through it. |
+| 13 | S2 | **The film kept playing behind an opaque sheet.** The server sheet is 130 and the player 100, so opening Servers left the audio running under a panel the viewer could neither see through nor reach. | The player pauses on open and resumes on close — and only if it was the one that paused. |
+| 14 | S2 | **The TV Menu key opened a drawer under a sheet.** Menu is 90, every modal root is above it. Pressing Menu with a sheet up created a hidden drawer, and the next Back closed that invisible drawer instead of the thing on screen — Back appeared to do nothing. | The handler refuses to open the drawer while another sheet owns the screen, and says so by returning "handled". |
+| 15 | S3 | **Closing the download sheet left focus nowhere.** It is the one overlay that can sit on live playback; closing it returned the viewer to a page with no focus ring. | Closing it hands focus back to the player's Download button when a player is underneath. |
+| 16 | S3 | The offline banner sat at `z-index:auto` in the same stacking context as the sticky bar, so on a short viewport it could ride over it. | Pinned at 59, one below the bar. |
+| 17 | S3 | `deleteDownload()` still wrote `deletedDownloadIds.add()` directly, bypassing the bounded helper added earlier — so the tombstone set I had "fixed" was still unbounded. | Routed through `rememberDeletedDownloadId()`. Caught by the new test, not by eye. |
+
+### Verified in a real DOM
+
+`tests/overlay-session.test.cjs` boots the app and walks a viewer's path:
+open a detail sheet → close it → open the player → open detail *from* the
+player → close → re-open the player → open Servers over it → close → close the
+player. It asserts, at every step, exactly how many overlays exist and whether
+the page is scroll-locked. 13 checks, 0 runtime errors.
+
+### Non-optimised parts left alone (with reasons)
+
+- **Detail sheet closes on backdrop click with no confirmation** while the
+  player gets an animated exit. Consistent enough; changing it is taste.
+- **`render()` closes four overlays on every route change**, including
+  re-renders that were not navigations. Correct but wasteful; the cost is a
+  full innerHTML wipe per route.
+- **No focus trap** in the detail or server sheets: Tab can walk out into the
+  page behind. The TV path is covered by `data-tv-scope` and an explicit focus
+  restore, so this only affects keyboard desktop users. Worth a real trap, but
+  it is a feature, not a bug fix.
+- **Dead code** (defined, never called): `directLinkFeed`, `feedIdForBase`,
+  `preloadSlotEl`, `playerIdleAccumulate`, `zpEngineLevels`,
+  `zpEngineBufferedSec`, `zpEngineApplyRate`, `zpEngineSetVolume`, `tvSameRow`,
+  `tvEdgeTolerance`, plus ~20 CSS classes with no markup. Flagged in the tests
+  so they cannot silently become live.
+
+## 3. Tests
+
+`npm test` — 520 checks across 13 files, all passing.
+>>>>>>> 68800d1 (fix(tv): stop overlays stacking on each other, and stop the viewer getting trapped behind one)
 
 Changed to match the new contract (they encoded the removed embed hosts):
 
