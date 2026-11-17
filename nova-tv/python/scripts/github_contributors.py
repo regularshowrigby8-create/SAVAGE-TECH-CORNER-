@@ -18,7 +18,7 @@ REGISTRY = Registry()
 def contributors(settings=None, repo="regularshowrigby8-create/SAVAGE-TECH-CORNER-"):
     from nova.github import GitHub
     settings = settings or load_settings()
-    gh = GitHub(settings.github_token, settings.user_agent, settings.timeout)
+    gh = GitHub(settings.github_token, settings.user_agent, settings.timeout, settings.github_ref)
     return gh.get(f"/repos/{repo}/contributors", {"per_page": 30})
 
 

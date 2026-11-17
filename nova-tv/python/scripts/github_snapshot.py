@@ -20,7 +20,7 @@ def snapshot(settings=None, repo="regularshowrigby8-create/SAVAGE-TECH-CORNER-")
     from nova.github import GitHub
     from nova.report import write_json
     settings = settings or load_settings()
-    snap = snapshot_repo(GitHub(settings.github_token, settings.user_agent, settings.timeout), repo)
+    snap = snapshot_repo(GitHub(settings.github_token, settings.user_agent, settings.timeout, settings.github_ref), repo)
     write_json("snapshot-" + repo.replace("/", "_") + ".json", snap)
     return {"repo": repo, "files": len(snap["files"])}
 

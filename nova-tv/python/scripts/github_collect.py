@@ -20,7 +20,7 @@ def collect(settings=None, budget=2):
     from nova.github import GitHub
     settings = settings or load_settings()
     kb = KnowledgeBase.load(settings.cache_dir.parent / "knowledge.json")
-    gh = GitHub(settings.github_token, settings.user_agent, settings.timeout)
+    gh = GitHub(settings.github_token, settings.user_agent, settings.timeout, settings.github_ref)
     report = run(gh, DEFAULT_QUERIES, kb, budget=budget)
     kb.save(settings.cache_dir.parent / "knowledge.json")
     return report

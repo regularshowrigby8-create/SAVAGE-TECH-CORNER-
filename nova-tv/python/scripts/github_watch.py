@@ -21,7 +21,7 @@ def watch(settings=None, interval=30):
     from nova.github import GitHub
     settings = settings or load_settings()
     path = settings.cache_dir.parent / "knowledge.json"
-    gh = GitHub(settings.github_token, settings.user_agent, settings.timeout)
+    gh = GitHub(settings.github_token, settings.user_agent, settings.timeout, settings.github_ref)
     passes, discovered = 0, 0
     while True:
         kb = KnowledgeBase.load(path)

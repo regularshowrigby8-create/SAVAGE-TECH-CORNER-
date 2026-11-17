@@ -18,7 +18,7 @@ REGISTRY = Registry()
 def tree(settings=None, repo="regularshowrigby8-create/SAVAGE-TECH-CORNER-"):
     from nova.github import GitHub, code_paths
     settings = settings or load_settings()
-    gh = GitHub(settings.github_token, settings.user_agent, settings.timeout)
+    gh = GitHub(settings.github_token, settings.user_agent, settings.timeout, settings.github_ref)
     return code_paths(gh.tree(repo), extensions=(".kt", ".py", ".kts"))
 
 

@@ -18,7 +18,7 @@ REGISTRY = Registry()
 def compare(settings=None, repo="regularshowrigby8-create/SAVAGE-TECH-CORNER-", base="HEAD~1", head="HEAD"):
     from nova.github import GitHub
     settings = settings or load_settings()
-    gh = GitHub(settings.github_token, settings.user_agent, settings.timeout)
+    gh = GitHub(settings.github_token, settings.user_agent, settings.timeout, settings.github_ref)
     return gh.get(f"/repos/{repo}/compare/{base}...{head}")
 
 

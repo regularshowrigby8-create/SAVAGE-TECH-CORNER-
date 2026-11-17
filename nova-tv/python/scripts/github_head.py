@@ -18,7 +18,7 @@ REGISTRY = Registry()
 def head(settings=None, repo="regularshowrigby8-create/SAVAGE-TECH-CORNER-", branch="main"):
     from nova.github import GitHub
     settings = settings or load_settings()
-    gh = GitHub(settings.github_token, settings.user_agent, settings.timeout)
+    gh = GitHub(settings.github_token, settings.user_agent, settings.timeout, settings.github_ref)
     payload = gh.get(f"/repos/{repo}/commits", {"sha": branch, "per_page": 1})
     return payload[0] if payload else {}
 

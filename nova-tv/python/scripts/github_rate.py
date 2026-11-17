@@ -18,7 +18,7 @@ REGISTRY = Registry()
 def rate(settings=None):
     from nova.github import GitHub
     settings = settings or load_settings()
-    payload = GitHub(settings.github_token, settings.user_agent, settings.timeout).rate_limit()
+    payload = GitHub(settings.github_token, settings.user_agent, settings.timeout, settings.github_ref).rate_limit()
     core = (payload.get("resources") or {}).get("core") or {}
     return {"remaining": core.get("remaining"), "limit": core.get("limit")}
 

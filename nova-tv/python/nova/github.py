@@ -62,10 +62,20 @@ def parse_repo(raw: Dict[str, Any]) -> Optional[Repo]:
 
 
 class GitHub:
-    def __init__(self, token: Optional[str] = None, user_agent: str = "NovaTV/1.0", timeout: float = 20.0):
+    def __init__(
+        self,
+        token: Optional[str] = None,
+        user_agent: str = "NovaTV/1.0",
+        timeout: float = 20.0,
+        ref: str = "HEAD",
+    ):
         self.token = token
         self.user_agent = user_agent
         self.timeout = timeout
+        # The ref every read uses unless a caller overrides it. Left as "HEAD"
+        # GitHub quietly serves the default branch, so callers that care about a
+        # non-default branch must set this.
+        self.ref = ref
         self.remaining: Optional[int] = None
         self._etags: Dict[str, tuple[str, Any]] = {}
 
@@ -128,15 +138,21 @@ class GitHub:
             raise GitHubError(f"unexpected repo payload for {full_name}")
         return parsed
 
-    def tree(self, full_name: str, ref: str = "HEAD", recursive: bool = True) -> List[Dict[str, Any]]:
-        payload = self.get(f"/repos/{full_name}/git/trees/{ref}", {"recursive": "1" if recursive else None})
+    def tree(self, full_name: str, ref: Optional[str] = None, recursive: bool = True) -> List[Dict[str, Any]]:
+        payload = self.get(
+            f"/repos/{full_name}/git/trees/{ref or self.ref}",
+            {"recursive": "1" if recursive else None},
+        )
         tree = payload.get("tree") if isinstance(payload, dict) else None
         if not isinstance(tree, list):
             raise GitHubError(f"no tree for {full_name}")
         return tree
 
-    def file_text(self, full_name: str, path: str, ref: str = "HEAD") -> str:
-        payload = self.get(f"/repos/{full_name}/contents/{urllib.parse.quote(path)}", {"ref": ref})
+    def file_text(self, full_name: str, path: str, ref: Optional[str] = None) -> str:
+        payload = self.get(
+            f"/repos/{full_name}/contents/{urllib.parse.quote(path)}",
+            {"ref": ref or self.ref},
+        )
         if isinstance(payload, dict) and payload.get("content"):
             import base64
             return base64.b64decode(payload["content"]).decode("utf-8", "replace")

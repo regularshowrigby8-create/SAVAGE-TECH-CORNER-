@@ -21,7 +21,7 @@ def prune(settings=None):
     settings = settings or load_settings()
     path = settings.cache_dir.parent / "knowledge.json"
     kb = KnowledgeBase.load(path)
-    gh = GitHub(settings.github_token, settings.user_agent, settings.timeout)
+    gh = GitHub(settings.github_token, settings.user_agent, settings.timeout, settings.github_ref)
     removed = []
     for name in list(kb.repos):
         try:

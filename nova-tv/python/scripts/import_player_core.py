@@ -22,7 +22,7 @@ def import_all(settings=None):
     from nova.github import GitHub
     from nova.importers import run_all
     settings = settings or load_settings()
-    gh = GitHub(settings.github_token, settings.user_agent, settings.timeout) if settings.has_github else None
+    gh = GitHub(settings.github_token, settings.user_agent, settings.timeout, settings.github_ref) if settings.has_github else None
     # ROOT is .../nova-tv: sources are read above it, output is written into it.
     results = run_all(gh, ROOT)
     return {

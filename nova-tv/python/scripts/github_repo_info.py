@@ -18,7 +18,7 @@ REGISTRY = Registry()
 def info(settings=None, repo="regularshowrigby8-create/SAVAGE-TECH-CORNER-"):
     from nova.github import GitHub
     settings = settings or load_settings()
-    return GitHub(settings.github_token, settings.user_agent, settings.timeout).repo(repo).as_dict()
+    return GitHub(settings.github_token, settings.user_agent, settings.timeout, settings.github_ref).repo(repo).as_dict()
 
 
 if __name__ == "__main__":

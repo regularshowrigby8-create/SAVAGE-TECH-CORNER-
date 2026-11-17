@@ -43,6 +43,10 @@ class Settings:
     github_token: Optional[str] = None
     github_owner: str = "regularshowrigby8-create"
     github_repo: str = "nova-tv"
+    # GitHub's contents API resolves "HEAD" to the repository's *default* branch,
+    # which is not the branch this work lives on. Naming the ref explicitly is
+    # what stops reads silently returning another branch's files.
+    github_ref: str = "HEAD"
     ai_base_url: str = "https://api.openai.com/v1"
     ai_model: str = "gpt-4o-mini"
     ai_api_key: Optional[str] = None
@@ -98,6 +102,7 @@ def _load_settings(config_path: Optional[Path]) -> Settings:
         github_token=_pick("GITHUB_TOKEN", github.get("token"), None),
         github_owner=_pick("NOVA_GITHUB_OWNER", github.get("owner"), "regularshowrigby8-create"),
         github_repo=_pick("NOVA_GITHUB_REPO", github.get("repo"), "nova-tv"),
+        github_ref=_pick("NOVA_GITHUB_REF", github.get("ref"), "HEAD"),
         ai_base_url=_pick("AI_BASE_URL", ai.get("base_url"), "https://api.openai.com/v1"),
         ai_model=_pick("AI_MODEL", ai.get("model"), "gpt-4o-mini"),
         ai_api_key=_pick("AI_API_KEY", ai.get("api_key"), None),
@@ -133,6 +138,7 @@ def redacted_view(settings: Settings) -> Dict[str, str]:
     view = {
         "github.owner": settings.github_owner,
         "github.repo": settings.github_repo,
+        "github.ref": settings.github_ref,
         "github.token": mask(settings.github_token),
         "ai.base_url": settings.ai_base_url,
         "ai.model": settings.ai_model,

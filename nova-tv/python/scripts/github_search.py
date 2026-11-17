@@ -18,7 +18,7 @@ REGISTRY = Registry()
 def search(settings=None, query="stremio addon", limit=10):
     from nova.github import GitHub
     settings = settings or load_settings()
-    gh = GitHub(settings.github_token, settings.user_agent, settings.timeout)
+    gh = GitHub(settings.github_token, settings.user_agent, settings.timeout, settings.github_ref)
     return [r.as_dict() for r in gh.search_repos(query, limit=limit)]
 
 
