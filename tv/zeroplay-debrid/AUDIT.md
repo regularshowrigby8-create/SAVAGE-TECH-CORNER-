@@ -361,3 +361,62 @@ github/npm/pypi), so verification is:
   key ids present, and `chrome-hidden` computes to `opacity: 0`,
   `pointer-events: none`, `translateY(118%)`;
 - `npm test`: 14 suites, all passing.
+
+---
+
+## 6. The player core, rebuilt from the reference players (2026-11-17)
+
+`lib/player-core.js` replaces the accumulate-then-poll chrome logic and adds the
+platform ladders the app was missing. `PLAYER-SOURCES.md` records the file and
+rule each piece came from; this is the summary.
+
+### What was wrong with the old chrome logic
+
+`showPlayerChrome` accumulated idle milliseconds and re-armed a **700 ms polling
+tick** whenever anything was busy. Consequences:
+
+- buffering, a stall, or an autoplay block kept the bars on screen for the whole
+  session — the tick rescheduled instead of hiding;
+- closing a menu did not grant a grace period, so the bar vanished mid-tap;
+- `focusout` was wired to "show the chrome", so it also *hid* it while tabbing
+  through the controls;
+- `translate(-50%,118%)` on a `left:0;right:0` element slid the deck half a
+  screen sideways and never off the bottom.
+
+### The replacement
+
+One deadline, one predicate, one place that writes the class.
+
+- `shouldShowChrome()` — video.js `computeVisible()`: visible when a lock is
+  held, the user is active, **or the film is paused** (that last clause is what
+  stops a viewer being stranded with no way to resume).
+- `createChromeLocks()` — refcounted, idempotent release, and releasing the last
+  hold starts a fresh idle window rather than hiding instantly.
+- `createIdleController()` — plyr's 2000 ms / 3000 ms windows, one re-armed
+  timer, plus video.js's touch-settle and capture-release guards.
+
+### Platform ladders added
+
+| Was | Now |
+|---|---|
+| `element.requestFullscreen` only — nothing on iOS | ordered ladder: standard → webkit → iOS `webkitSetPresentationMode` → media element |
+| PiP always reported as failure | distinguishes `needs-gesture` / `unsupported` / `rejected` |
+| blocked autoplay left a dead screen | unmuted → muted (and says so) → real centre-play button |
+| every `waiting` frame flashed the spinner | debounced; reports how long the stall really lasted |
+| bare `v.currentTime = n` | guarded seek: refuses before metadata, clamps short of the end |
+| no touch seeking | double-tap left/right ±10 s, single tap toggles chrome |
+
+### Tested
+
+`tests/player-core.test.cjs` — 65 checks with a fake clock, so the idle window,
+touch settle, double-tap deferral and buffering debounce are asserted against
+exact timings. The suite found four real bugs during development:
+
+1. `reset(true)` set `userActive` without arming a deadline, so the bar came up
+   on open and never hid.
+2. The touch-settle guard was checked *after* the `pointerType` test, so the
+   synthetic Android `mouseleave` still hid the chrome.
+3. `lastTouchAt > 0` and `if (!downAt)` used `0` as "no value". A clock reading
+   of zero is normal, and the first gesture of a session was misread as none.
+4. The buffering duration measured from when the spinner appeared, losing the
+   debounce window from the reported time.
