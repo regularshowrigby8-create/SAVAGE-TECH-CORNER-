@@ -420,3 +420,52 @@ exact timings. The suite found four real bugs during development:
    of zero is normal, and the first gesture of a session was misread as none.
 4. The buffering duration measured from when the spinner appeared, losing the
    debounce window from the reported time.
+
+---
+
+## 7. A deleted function, and why the tests could not see it
+
+Replacing the idle/chrome block deleted `playerSheetVisible()` by accident. Two
+call sites survived at `index.html:6200` and `index.html:6256`:
+
+```js
+const menuOpen = !!(s.tracksOpen || s.nextPromptOpen ||
+  (typeof playerSheetVisible === "function" && playerSheetVisible()));
+```
+
+Both are `typeof`-guarded, so this **does not throw** and, on its own, does not
+explain a blank page. It is still a defect — `menuOpen` silently became `false`,
+so a player track/more/next sheet that was open no longer suppressed the
+transient "hide the chrome" rule. The function is restored.
+
+### What is *not* established
+
+The blank page has not been reproduced. Everything checkable says production is
+serving a working app:
+
+- `fetch_page` on `zeroplay-rd.vercel.app` executes the JS and returns the full
+  rendered home screen (featured, rails, trending) — no auth wall, so the
+  project's `ssoProtection` is not blocking.
+- The deployed commit `e1f9222` renders all 11 routes in jsdom with no errors,
+  including with legacy `localStorage` from the previous version.
+- The deployed commit rebuilt from `git archive` builds clean.
+
+So the fault is client-side and I could not see it. Recording that honestly
+matters more than a tidy story.
+
+### The lesson that did hold
+
+Every existing suite passed while a function was missing, because nothing
+checked that the inline script's references resolve. `tests/inline-integrity.test.cjs`
+now fails the build if the script does not parse, declares a top-level name
+twice, or calls an app-style (camelCase) identifier that nothing declares. It was
+verified by re-planting the original deletion: the suite fails on the broken file
+and passes on the fixed one.
+
+### The structural fix
+
+A single uncaught error in that one inline `<script>` leaves a pure white page
+with no message — which is exactly the reported symptom, whatever its cause. So
+the app now installs a **crash screen** before the main script runs, and a boot
+watchdog that paints a visible failure card if the shell never renders. The next
+blank report will carry its own error text instead of a white rectangle.
