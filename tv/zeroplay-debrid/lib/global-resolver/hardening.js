@@ -165,9 +165,20 @@ function normalizeType(input) {
   if (value === "series" || value === "tv" || value === "show") return "series";
   return "";
 }
-function clampInteger(value, minimum, maximum) {
+/**
+ * clampInteger(value, minimum, maximum[, fallback])
+ *
+ * Every call site in this resolver passes a fourth "default" argument, but the
+ * function only ever declared three — so an omitted option returned `minimum`
+ * instead of the intended default. That is how a resolver asked for its default
+ * 40 results ran with maximumResults=1 and maximumCandidates=1: one result cap,
+ * one candidate, and a search that effectively could not find anything.
+ */
+function clampInteger(value, minimum, maximum, fallback) {
   const parsedValue = Number(value);
-  if (!Number.isFinite(parsedValue)) return minimum;
+  if (!Number.isFinite(parsedValue)) {
+    return fallback === undefined ? minimum : fallback;
+  }
   return Math.max(minimum, Math.min(maximum, Math.floor(parsedValue)));
 }
 function clampNumber(value, minimum, maximum) {

@@ -28,10 +28,29 @@ function createGlobalSourceRegistry(options) {
   const maximumFailuresBeforeCooldown = clampInteger(config.maximumFailuresBeforeCooldown, 1, 20, 4);
   const cooldownMs = clampInteger(config.cooldownMs, 1000, 3600000, 300000);
   return { addSource, getSource, getSources, updateHealth, isSourceAvailable, getStatistics, clear };
+  /**
+   * A stable, collision-resistant-enough id — without node:crypto.
+   *
+   * The old version did `require("node:crypto")` *inside* this function, so in
+   * the browser the first addSource() threw, the bootstrap swallowed it, and the
+   * resolver came up with zero sources. That is the whole reason the finder sat
+   * on "Searching…": there was nothing registered to search. Hashing is not
+   * needed here — the id only has to be deterministic and unique per source.
+   */
   function createSourceId(source) {
-    const crypto = require("node:crypto");
     const identity = [source.url, source.name, source.kind].filter(Boolean).join("|");
-    return crypto.createHash("sha256").update(identity).digest("hex").slice(0, 24);
+    let hash = 0x811c9dc5;
+    for (let index = 0; index < identity.length; index += 1) {
+      hash ^= identity.charCodeAt(index);
+      hash = Math.imul(hash, 0x01000193) >>> 0;
+    }
+    const suffix = hash.toString(16).padStart(8, "0");
+    let extra = 0;
+    for (let index = 0; index < identity.length; index += 1) {
+      extra = (Math.imul(extra, 31) + identity.charCodeAt(index)) >>> 0;
+    }
+    return "src-" + suffix + extra.toString(16).padStart(8, "0").slice(0, 6) + "-" +
+      identity.length.toString(16);
   }
   function addSource(input) {
     if (!input || !input.url) return null;
@@ -240,9 +259,20 @@ function adaptResponse(url, response, source, identity) {
   }
   return { sourceKind, candidates: scoredCandidates, links: adapted.links, metadata: adapted.metadata };
 }
-function clampInteger(value, minimum, maximum) {
+/**
+ * clampInteger(value, minimum, maximum[, fallback])
+ *
+ * Every call site in this resolver passes a fourth "default" argument, but the
+ * function only ever declared three — so an omitted option returned `minimum`
+ * instead of the intended default. That is how a resolver asked for its default
+ * 40 results ran with maximumResults=1 and maximumCandidates=1: one result cap,
+ * one candidate, and a search that effectively could not find anything.
+ */
+function clampInteger(value, minimum, maximum, fallback) {
   const parsedValue = Number(value);
-  if (!Number.isFinite(parsedValue)) return minimum;
+  if (!Number.isFinite(parsedValue)) {
+    return fallback === undefined ? minimum : fallback;
+  }
   return Math.max(minimum, Math.min(maximum, Math.floor(parsedValue)));
 }
 module.exports = {

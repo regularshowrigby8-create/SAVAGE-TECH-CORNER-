@@ -264,3 +264,100 @@ path.
   URLs require a Vercel login; only `zeroplay-rd.vercel.app` is public.
 - A feed install URL is a viewer-supplied host. The feed layer only reads
   `/manifest.json` and `/stream/…`; it never proxies or frames those hosts.
+
+---
+
+## 5. Why nothing appeared to change (2026-11-17)
+
+Three independent faults all pointed the same way: the app looked untouched and
+the finder spun forever. None of them were cosmetic.
+
+### 5a. The player and resolver code was never loaded by the browser
+
+`index.html` ships exactly **one** inline `<script>`; everything under `lib/**`
+is CommonJS. Nothing in the page ever referenced `lib/global-player.js`,
+`lib/global-player-bridge.js` or `lib/global-resolver/**`. The build step copied
+`index.html` and `vendor/` and nothing else, so `lib/` never reached Vercel
+either. Every earlier claim that the player redesign was "wired in" was false:
+only the inline changes were live.
+
+Fixed with `scripts/build.js`, a dependency-free CommonJS bundler. It walks the
+eight entry files, emits `dist/app.bundle.js`, and injects the script tag before
+the app script. `npm run build` now runs it. The old `cp` one-liner must not
+come back.
+
+### 5b. The resolver booted with zero sources
+
+`createGlobalResolver({})` reported `totalSources: 0`. With no sources
+`buildSeedUrls` returned `[]`, `resolveTitle` returned in 1 ms with no results
+and no reason, and the UI spun with literally nothing to search.
+
+Two causes:
+
+- **No defaults at all.** `lib/global-resolver/sources.js` now supplies public,
+  keyless addon endpoints and the resolver registers them at boot.
+- **`addSource` threw in every browser.** `adapters.js` called
+  `require("node:crypto")` *inside* `createSourceId`, so the first registration
+  threw, the bootstrap swallowed it, and the registry stayed empty. Replaced
+  with an inline FNV-style hash — no crypto dependency, same determinism.
+
+### 5c. Addon sources were never queried the way an addon works
+
+`buildSourceSeeds` pushed the manifest URL itself into the frontier for any
+`addon-manifest` source. That fetches `/manifest.json` and then tries to scrape
+video links out of JSON — empty every time. A Stremio addon is queried at
+`/stream/{type}/{id}.json` with a real catalogue id.
+
+`resolver.js` now runs `queryAddonSources()` before the frontier: probe the
+manifest once (cached), require a `stream` resource for the requested type,
+then call `/stream/...` with `tt`/`tmdb` ids (colons preserved — `%3A` 404s on
+real addons). Entries are converted by `streamEntryToResult`, which refuses
+torrents, magnets, usenet, YouTube ids, external pages and proxy-header streams.
+Results are merged ahead of the frontier's own.
+
+### 5d. `clampInteger` ignored its documented fourth argument
+
+Every call site passes `(value, minimum, maximum, fallback)`; the function
+declared three parameters, so an omitted option returned `minimum` instead of
+the default. A resolver asked for its normal results ran with
+`maximumResults: 1` and `maximumCandidates: 1`. Fixed in all four files that
+define it — defaults are now `24` / `48`.
+
+### 5e. "Searching…" could never finish
+
+`runDiscoveryCycle` runs seven crawlers in sequence with no per-job deadline,
+and the manual-search button disabled itself, swapped in a spinner, awaited the
+cycle and never restored the button — there was no `finally` and no timeout. A
+successful cycle left it spinning too. That is the literal report.
+
+- `withDeadline()` races each job against a deadline.
+- The cycle carries a whole-cycle budget (default 90 s).
+- The button always restores and always reports the outcome.
+
+### 5f. The player surface was never restructured
+
+`playerShell()` was byte-identical between `e6f734f` and `b86a75a`: not one
+line of player markup changed across the commit that claimed a redesign. It is
+now rebuilt as a stage plus three floating zones (identity strip, paused shelf,
+transport deck) with every one of the original 46 control ids preserved, so no
+handler binding moved. The `.zp-*` stylesheet accompanies it.
+
+A transform conflict was also making controls *fail to leave the screen*:
+`.player-controls` is `left:0;right:0`, but the hide rule used
+`translate(-50%,118%)`, sliding it half a viewport sideways while its 118 %
+slide never cleared the bottom. Now `translateY(118%)`, plus an `!important`
+opacity/pointer-events backstop for whichever rule wins.
+
+### What was verified, and how
+
+jsdom cannot download a browser here (outbound access is limited to
+github/npm/pypi), so verification is:
+
+- bundle loads in a browser-shaped global and exposes all 8 entry modules;
+- the shipped resolver, in that same browser mode, boots with 2 sources and
+  turns a mocked addon into 2 ranked, playable streams while refusing the
+  torrent and the external page;
+- the real `dist/index.html` renders `playerShell()` in jsdom: 29 controls, all
+  key ids present, and `chrome-hidden` computes to `opacity: 0`,
+  `pointer-events: none`, `translateY(118%)`;
+- `npm test`: 14 suites, all passing.

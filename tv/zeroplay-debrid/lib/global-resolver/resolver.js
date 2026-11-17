@@ -6,6 +6,9 @@ const {
 const { createGlobalFrontier } = require("./frontier");
 const { createIdentityContext, scoreCandidate } = require("./identity");
 const { createGlobalSourceRegistry, normalizeSourceCandidate } = require("./adapters");
+const {
+  manifestSupports, catalogueId, streamRequestType, streamEntryToResult, usableDefaults, streamSegment
+} = require("./sources");
 const DEFAULT_EXTRACTION_ENDPOINT = "/api/extract";
 const DEFAULT_MAXIMUM_RESULTS = 24;
 const DEFAULT_MAXIMUM_CANDIDATES = 48;
@@ -24,6 +27,24 @@ function createGlobalResolver(options) {
   const maximumCandidates = clampInteger(config.maximumCandidates, 1, 200, DEFAULT_MAXIMUM_CANDIDATES);
   const extractionTimeoutMs = clampInteger(config.extractionTimeoutMs, 2000, 30000, DEFAULT_EXTRACTION_TIMEOUT_MS);
   const searchPaths = Array.isArray(config.searchPaths) ? config.searchPaths : DEFAULT_SEARCH_PATHS;
+  const useDefaultSources = config.useDefaultSources !== false;
+  /* A resolver with no sources cannot resolve anything — it returned [] in 1ms
+     and the UI sat on "Searching…" forever. Seed the public keyless addons the
+     spec's "no user configuration" rule implies. */
+  if (useDefaultSources) {
+    for (const source of usableDefaults()) {
+      try {
+        sourceRegistry.addSource({
+          url: source.url,
+          name: source.name,
+          kind: "addon-manifest",
+          priority: source.priority
+        });
+      } catch (error) {
+        void error;
+      }
+    }
+  }
   return { resolveTitle, addSource, getSources, getStatistics, clear };
   function addSource(source) { return sourceRegistry.addSource(source); }
   function getSources(options) { return sourceRegistry.getSources(options); }
@@ -65,6 +86,10 @@ function createGlobalResolver(options) {
       policy, maximumResults: options.maximumResults || maximumResults, maximumCandidates: options.maximumCandidates || maximumCandidates,
       maximumDepth: options.maximumDepth, maximumLinksPerPage: options.maximumLinksPerPage
     });
+    /* Ask every registered addon properly first. This is the part that was
+       missing entirely: the frontier crawled the manifest itself and found
+       nothing, so the finder had no way to ever produce a result. */
+    const addonResults = await queryAddonSources(identityContext, options);
     const seeds = buildSeedUrls(identityContext, options);
     for (const seed of seeds) frontier.addSeed(seed);
     const frontierResult = await frontier.run({
@@ -74,13 +99,100 @@ function createGlobalResolver(options) {
     const directResults = frontierResult.results;
     const candidateResults = frontierResult.candidates;
     const extractionResults = await extractCandidates(candidateResults, identityContext, options);
-    const allResults = [...directResults, ...extractionResults];
+    const allResults = [...addonResults.results, ...directResults, ...extractionResults];
     const rankedResults = rankPlaybackResults(allResults, identityContext);
     return {
       success: rankedResults.length > 0, identity: identityContext.identity, results: rankedResults,
-      statistics: { ...frontierResult.statistics, directResults: directResults.length, candidateResults: candidateResults.length, extractionResults: extractionResults.length, finalResults: rankedResults.length, sources: sourceRegistry.getStatistics() }
+      statistics: { ...frontierResult.statistics, addonResults: addonResults.results.length, addonSources: addonResults.tried, directResults: directResults.length, candidateResults: candidateResults.length, extractionResults: extractionResults.length, finalResults: rankedResults.length, sources: sourceRegistry.getStatistics() }
     };
   }
+  /**
+   * Query each enabled addon source the way the protocol says: read the
+   * manifest once (cached), then GET /stream/{type}/{id}.json.
+   *
+   * A source that is not a stream addon is skipped rather than crawled — that
+   * is what produced empty results before. Every failure is counted, never
+   * thrown: one dead addon must not stop the others.
+   */
+  async function queryAddonSources(identityContext, options) {
+    const identity = identityContext.identity;
+    const type = streamRequestType(identity);
+    const id = catalogueId(identity);
+    const results = [];
+    const diagnostics = [];
+    if (!id) return { results, tried: 0, diagnostics };
+    const sources = sourceRegistry.getSources({ enabledOnly: true })
+      .filter((source) => source.kind === "addon-manifest");
+    if (!sources.length) return { results, tried: 0, diagnostics };
+
+    const timeoutMs = clampInteger(options.addonTimeoutMs || config.addonTimeoutMs, 1000, 30000, 8000);
+    const manifests = new Map();
+
+    const jobs = sources.map(async (source) => {
+      const base = normalizeAddonBase(source.url);
+      if (!base) return;
+      try {
+        let manifest = manifests.get(base);
+        if (manifest === undefined) {
+          manifest = await fetchJson(base + "/manifest.json", timeoutMs);
+          manifests.set(base, manifest);
+        }
+        if (!manifestSupports(manifest, type)) {
+          diagnostics.push({ source: source.name, skipped: "no-stream-resource" });
+          return;
+        }
+        const streamUrl = base + "/stream/" + type + "/" + streamSegment(id) + ".json";
+        const payload = await fetchJson(streamUrl, timeoutMs);
+        const entries = payload && Array.isArray(payload.streams) ? payload.streams : [];
+        let kept = 0;
+        for (const entry of entries) {
+          const converted = streamEntryToResult(entry, { id: source.id, name: source.name, verified: source.verified });
+          if (!converted.ok) {
+            diagnostics.push({ source: source.name, refused: converted.reason });
+            continue;
+          }
+          results.push({
+            ...converted.result,
+            identityScore: scoreCandidate(
+              { title: converted.result.title, url: converted.result.url },
+              identityContext
+            ).score || 0
+          });
+          kept += 1;
+        }
+        diagnostics.push({ source: source.name, entries: entries.length, kept });
+      } catch (error) {
+        diagnostics.push({ source: source.name, error: (error && error.message) || "failed" });
+      }
+    });
+
+    await Promise.allSettled(jobs);
+    return { results, tried: sources.length, diagnostics };
+  }
+
+  function normalizeAddonBase(url) {
+    const text = String(url || "").trim().replace(/\/+$/, "");
+    if (!text) return "";
+    return text.replace(/\/manifest\.json$/i, "");
+  }
+
+  async function fetchJson(url, timeoutMs) {
+    const guarded = guardUrl(url, { allowTorrents: false });
+    if (!guarded) throw new Error("blocked");
+    const controller = typeof AbortController === "function" ? new AbortController() : null;
+    const timer = setTimeout(() => { try { controller && controller.abort(); } catch (error) { void error; } }, timeoutMs);
+    try {
+      const response = await fetch(guarded.href, {
+        headers: { accept: "application/json" },
+        signal: controller ? controller.signal : undefined
+      });
+      if (!response || !response.ok) throw new Error("http-" + (response && response.status));
+      return await response.json();
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   function buildSeedUrls(identityContext, options) {
     const seeds = [];
     const identity = identityContext.identity;
@@ -105,7 +217,10 @@ function createGlobalResolver(options) {
     const parsedSourceUrl = normalizeUrl(source.url);
     if (!parsedSourceUrl) return seeds;
     if (source.kind === "addon-manifest") {
-      seeds.push({ url: parsedSourceUrl.href, depth: 0, priority: 90, reason: "addon-manifest", sourceName: source.name, identity });
+      /* Addons are queried through /stream/, not crawled. Pushing the manifest
+         URL into the frontier meant we fetched a JSON manifest and tried to
+         scrape video links out of it — always empty, and it made a real addon
+         look like a dead source. */
       return seeds;
     }
     const encodedQuery = encodeURIComponent(query);
@@ -241,9 +356,20 @@ function createStableId(input) {
   const crypto = require("node:crypto");
   return crypto.createHash("sha256").update(String(input)).digest("hex").slice(0, 32);
 }
-function clampInteger(value, minimum, maximum) {
+/**
+ * clampInteger(value, minimum, maximum[, fallback])
+ *
+ * Every call site in this resolver passes a fourth "default" argument, but the
+ * function only ever declared three — so an omitted option returned `minimum`
+ * instead of the intended default. That is how a resolver asked for its default
+ * 40 results ran with maximumResults=1 and maximumCandidates=1: one result cap,
+ * one candidate, and a search that effectively could not find anything.
+ */
+function clampInteger(value, minimum, maximum, fallback) {
   const parsedValue = Number(value);
-  if (!Number.isFinite(parsedValue)) return minimum;
+  if (!Number.isFinite(parsedValue)) {
+    return fallback === undefined ? minimum : fallback;
+  }
   return Math.max(minimum, Math.min(maximum, Math.floor(parsedValue)));
 }
 module.exports = {
