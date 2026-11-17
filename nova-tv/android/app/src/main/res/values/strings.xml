@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Nova TV</string>
+    <string name="home">Home</string>
+    <string name="movies">Movies</string>
+    <string name="series">Series</string>
+    <string name="settings">Settings</string>
+    <string name="search">Search</string>
+    <string name="addons">Addons</string>
+    <string name="play">Play</string>
+    <string name="resume">Resume</string>
+    <string name="loading">Loading</string>
+    <string name="empty">Nothing here yet</string>
+    <string name="error_generic">Something went wrong</string>
+    <string name="retry">Retry</string>
+    <string name="now_playing">Now playing</string>
+    <string name="back">Back</string>
+</resources>

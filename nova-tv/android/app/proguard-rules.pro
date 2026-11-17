@@ -1,0 +1,3 @@
+-keep class dev.nova.tv.data.model.** { *; }
+-keepattributes *Annotation*, InnerClasses
+-dontwarn org.jetbrains.annotations.**

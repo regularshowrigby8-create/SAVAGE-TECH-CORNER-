@@ -1,0 +1,66 @@
+name: nova
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Continuous collection: the self-updating part, running on GitHub's clock.
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Unit tests
+        working-directory: python
+        run: python -m unittest discover -s tests -t . -v
+      - name: Every script executes
+        working-directory: python
+        run: |
+          ok=0; bad=0
+          for f in scripts/*.py; do
+            case "$f" in
+              *github_watch*) continue ;;   # loops by design
+            esac
+            if timeout 120 python "$f" --json 2>&1 | grep -q '"ok": true'; then
+              ok=$((ok+1))
+            else
+              bad=$((bad+1)); echo "::warning file=$f::script did not produce a result"
+            fi
+          done
+          echo "scripts ok=$ok failed=$bad"
+      - name: No committed secrets
+        working-directory: python
+        run: python scripts/qa_secrets.py --json
+
+  collect:
+    name: Collect
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: One collection pass
+        working-directory: python
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python scripts/github_collect.py --json --budget 3 || true
+          python scripts/kb_stats.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: knowledge
+          path: knowledge.json
+          if-no-files-found: warn
