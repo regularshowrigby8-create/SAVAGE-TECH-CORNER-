@@ -206,6 +206,25 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(124,58,237,.35);o
 .player-hint{background:#0d1117;color:var(--text-muted);font-size:.76rem;padding:.4rem .9rem;border-top:1px solid var(--surface-border)}
 
 /* ---------- Toasts ---------- */
+/* ---------- Global finder result cards ----------
+   These are injected by lib/global-results-ui.js, which uses class names, not
+   ids. Without styles they render as unstyled text under the results grid. */
+.zp-global-result-card{background:var(--surface);border:1px solid var(--surface-border);border-radius:12px;padding:.9rem 1rem;display:flex;flex-direction:column;gap:.5rem;animation:zpRise .3s var(--ease-out) both}
+.zp-global-result-header{display:flex;align-items:center;gap:.55rem;min-width:0}
+.zp-global-result-title{font-weight:700;color:var(--text-heading);font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zp-global-badge,.zp-extended-badge{font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;padding:.18rem .45rem;border-radius:999px;border:1px solid rgba(255,255,255,.18);color:#cfe6ff;background:rgba(80,150,255,.14);white-space:nowrap}
+.zp-extended-badge{color:#ffe7b8;background:rgba(216,179,106,.16);border-color:rgba(216,179,106,.4)}
+.zp-global-meta{display:flex;flex-wrap:wrap;gap:.35rem}
+.zp-global-meta-chip{font-size:.68rem;padding:.16rem .45rem;border-radius:6px;background:rgba(255,255,255,.06);color:var(--text-muted);white-space:nowrap}
+.zp-global-status{font-size:.72rem;color:var(--text-muted)}
+.zp-global-result-actions{display:flex;gap:.5rem;margin-top:.15rem}
+.zp-global-action{min-height:38px;padding:.4rem .9rem;border-radius:8px;border:1px solid var(--surface-border);background:var(--bg-elev,#161b21);color:var(--text-heading);font:inherit;font-size:.85rem;cursor:pointer}
+.zp-global-action:hover:not(:disabled){border-color:rgba(216,179,106,.6)}
+.zp-global-action:disabled{opacity:.5;cursor:not-allowed}
+body.android-tv .zp-global-action{min-height:52px;font-size:1rem}
+body.android-tv .zp-global-result-card{padding:1.1rem 1.2rem}
+.zp-global-source-row{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;padding:.5rem 0;border-bottom:1px solid var(--surface-border)}
+.zp-global-source-row:last-child{border-bottom:0}
 #toasts{position:fixed;right:1rem;bottom:1rem;z-index:200;display:flex;flex-direction:column;gap:.5rem;max-width:min(360px,90vw)}
 .toast{background:#22262b;border:1px solid #343a40;border-radius:6px;color:var(--text-heading);padding:.7rem .9rem;font-size:.87rem;box-shadow:0 12px 30px rgba(0,0,0,.35)}
 .toast.success{color:#dff5e8}
@@ -6957,7 +6976,7 @@ function playerShell(msg){
   const src=(st.tempSource||getSource(st.source));
   const engineLabel=st.engine==="native"?(st.playingQualityLabel||"ZeroPlay player"):st.direct?"ZeroPlay player":"Connecting";
   return '<div class="player-overlay" id="playerOverlay">'
-    +'<div class="player-stage" id="playerStage"><div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>'+esc(msg||"Connecting…")+'</strong><span class="zp-loading-sub">ZeroPlay is preparing this exact title.</span></div></div>'
+    +'<div class="player-stage" id="playerStage" data-player><div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>'+esc(msg||"Connecting…")+'</strong><span class="zp-loading-sub">ZeroPlay is preparing this exact title.</span></div></div>'
 
     /* paused shelf — the jobs a viewer actually pauses for */
     +'<div class="player-action-shelf" id="playerActionShelf" aria-label="Paused player tools" data-tv-row="player-shelf">'
@@ -7326,6 +7345,156 @@ async function resolvePageToStreams(pageUrl,label){
     return list.filter(u=>isDirectMedia(u)).map(u=>normalizeVariant({url:u,addonName:label||"Website",label:label||"Stream"},label||"Website"));
   }catch{ return []; }
 }
+/* =====================================================================
+   Global source finder -> the ZeroPlay player
+
+   The global resolver (lib/global-resolver/*) is a Node module tree: it has no
+   DOM, and it returns *candidate stream URLs*, not something a <video> can use
+   directly. The local feed path returns the same shape, so both funnel through
+   here and the player never learns which finder produced a stream.
+
+   Two rules this enforces at the moment of playback, not just at discovery:
+     - nothing torrent-shaped or over the size cap ever reaches an element;
+     - exactly one stream is mounted at a time, because a stale mount is what
+       leaves a second <video> (and a second set of controls) alive underneath.
+   ===================================================================== */
+const GLOBAL_RESOLVE_ENDPOINT="/api/global-resolve";
+const GLOBAL_PLAY_MAX_BYTES=5*1000*1000*1000;
+const PLAYABLE_RESULT_KINDS=new Set(["direct-file","hls-playlist","dash-manifest","direct-media","playlist","manifest"]);
+
+function globalResultKind(url){
+  const path=String(url||"").split("?")[0].split("#")[0].toLowerCase();
+  if(/\.m3u8?$/.test(path)) return "hls-playlist";
+  if(/\.mpd$/.test(path)) return "dash-manifest";
+  if(/\.(mp4|m4v|mov|webm|mkv|avi|ts)$/.test(path)) return "direct-file";
+  return "";
+}
+
+/* One conversion, used by every caller. Returns null rather than a half-valid
+   object so a caller cannot accidentally mount something unplayable. */
+function globalResultToVariant(result){
+  if(!result) return null;
+  const url=String(result.url||result.href||result.link||"").trim();
+  if(!url) return null;
+  if(/^(magnet:|ed2k:|thunder:)/i.test(url)) return null;
+  if(/\.torrent(\?|$)/i.test(url)) return null;
+  if(result.notWebReady===true) return null;
+  if(result.behaviorHints&&result.behaviorHints.notWebReady===true) return null;
+  const headers=result.proxyHeaders||(result.behaviorHints&&result.behaviorHints.proxyHeaders);
+  if(headers&&typeof headers==="object"&&Object.keys(headers).length) return null;
+  const bytes=Number(result.bytes||result.sizeBytes||0)||0;
+  if(bytes>GLOBAL_PLAY_MAX_BYTES) return null;
+  const kind=PLAYABLE_RESULT_KINDS.has(String(result.resultKind||result.kind||"").toLowerCase())
+    ? String(result.resultKind||result.kind).toLowerCase()
+    : globalResultKind(url);
+  if(!kind) return null;
+  return {
+    url, quality:result.quality||(result.height?result.height+"p":""),
+    bytes, sourceId:result.sourceId||"global", sourceName:result.sourceName||"Global",
+    kind:kind==="hls-playlist"?"hls":kind==="dash-manifest"?"dash":"direct",
+    identityScore:Number(result.identityScore||result.relevanceScore||0)||0,
+    verified:result.verified===true, global:true, title:result.title||""
+  };
+}
+
+function rankGlobalVariants(variants){
+  const seen=new Set(), out=[];
+  for(const v of variants||[]){
+    if(!v||seen.has(v.url)) continue;
+    seen.add(v.url); out.push(v);
+  }
+  return out.sort((a,b)=>{
+    if(b.identityScore!==a.identityScore) return b.identityScore-a.identityScore;
+    const qh=v=>{const m=/(\d{3,4})p/i.exec(String(v.quality||""));return m?Number(m[1]):0;};
+    const d=qh(b)-qh(a); if(d) return d;
+    if(a.bytes&&b.bytes&&a.bytes!==b.bytes) return a.bytes-b.bytes;
+    return a.url<b.url?-1:1;
+  });
+}
+
+/* Ask the server-side finder for this title. Resolves to an array (possibly
+   empty). Never rejects: a dead endpoint must not break local playback. */
+async function findGlobalStreams(identity,opts){
+  opts=opts||{};
+  const params=new URLSearchParams();
+  if(identity.title) params.set("title",identity.title);
+  if(identity.year) params.set("year",String(identity.year));
+  if(identity.type) params.set("type",identity.type);
+  if(identity.imdbId) params.set("imdbId",identity.imdbId);
+  if(identity.tmdbId) params.set("tmdbId",String(identity.tmdbId));
+  if(identity.season) params.set("season",String(identity.season));
+  if(identity.episode) params.set("episode",String(identity.episode));
+  if(!params.toString()) return [];
+  const controller=typeof AbortController==="function"?new AbortController():null;
+  const timer=setTimeout(()=>{ try{controller&&controller.abort();}catch{} },Number(opts.timeoutMs)||15000);
+  try{
+    const res=await fetch(GLOBAL_RESOLVE_ENDPOINT+"?"+params.toString(),{
+      headers:{accept:"application/json"}, signal:controller?controller.signal:undefined
+    });
+    if(!res||!res.ok) return [];
+    const data=await res.json().catch(()=>null);
+    if(!data||!Array.isArray(data.results)) return [];
+    return data.results;
+  }catch{ return []; }
+  finally{ clearTimeout(timer); }
+}
+
+/* Replaces a stream list with anything better the global finder turned up, but
+   only when the local finder came back empty or thin. Local results are faster
+   and usually more exact; the global pass is the safety net, not the default. */
+async function topUpWithGlobal(st,n){
+  if(!st||st.globalTopUp) return;
+  st.globalTopUp=true;
+  try{
+    const identity=st.identity||buildTitleIdentity({item:st.item,type:st.item.type,id:st.item.id,title:titleOf(st.item),season:st.season,episode:st.episode});
+    const results=await findGlobalStreams(identity,{timeoutMs:Number(n)||15000});
+    if(!results.length||playerState!==st) return;
+    const variants=rankGlobalVariants(results.map(globalResultToVariant).filter(Boolean));
+    if(!variants.length) return;
+    const existing=new Set((st.variants||[]).map(v=>v&&v.url).filter(Boolean));
+    const fresh=variants.filter(v=>!existing.has(v.url));
+    if(!fresh.length) return;
+    st.variants=rankGlobalVariants([...(st.variants||[]),...fresh]);
+    st.directQueue=st.variants.slice();
+    if(st.engine==="loading"||!st.zpEngine){
+      void tryNextGlobalVariant(st,fresh[0]);
+    }else{
+      toast(fresh.length+" more stream"+(fresh.length===1?"":"s")+" found by the global finder","success");
+    }
+  }catch{}
+}
+
+/* Mount the first global variant that actually plays. Walks the list rather
+   than betting on one host. */
+function tryNextGlobalVariant(st,variant){
+  if(!st||!variant) return Promise.resolve(null);
+  const stage=$("#playerStage");
+  if(!stage) return Promise.resolve(null);
+  st.globalVariant=variant;
+  st.direct=true; st.embed=false; st.url=variant.url;
+  st.engine="";
+  st.tempSource=st.tempSource||{id:"global",name:"Global finder",kind:"direct"};
+  const source=st.tempSource;
+  /* startOwnEngine() is the app's only mount path and it takes
+     (stage, url, sourceValue, loadT0, resumeAt, opts) — the third argument is a
+     source id string, not the variant. Handing it a variant was the bug that
+     left the stage empty while the player believed it was loading. */
+  return startOwnEngine(stage,variant.url,source,performance.now(),0,{kind:variant.kind}).then(video=>{
+    updatePlayerMeta(source);
+    return video;
+  }).catch(err=>{
+    if(playerState!==st) return null;
+    st.globalFailed=(st.globalFailed||0)+1;
+    const queue=(st.variants||[]).filter(v=>v!==variant);
+    const nextVariant=queue[st.globalFailed];
+    if(nextVariant) return tryNextGlobalVariant(st,nextVariant);
+    const stageEl=$("#playerStage");
+    if(stageEl) stageEl.innerHTML=playerErrorHTML("No playable stream","The global finder returned streams but none could be opened here."+(err&&err.message?" ("+err.message+")":""));
+    bindPlayerErrorActions(); playerLoading(false);
+    return null;
+  });
+}
+
 async function resolveSourcePlayback(source,ctx,opts){
   ctx=ctx||{}; opts=opts||{};
   const identity=(ctx.identity&&ctx.identity.version)?ctx.identity:buildTitleIdentity(ctx);
@@ -7381,15 +7550,45 @@ async function drawPlayer(prevProgress){
   stopCardPreview();
   document.querySelectorAll(".hero-trailer.on").forEach(stopBackdropPreview);
   st.engine="loading"; st.healthRecorded=false; st.levels=[]; st.frameLoadedAt=0; st.playbackSignalAt=0; st.playbackConfirmed=false; st.embedNoticeShown=false; st.prime=null; st.playback=Object.assign({},st.playback,{paused:true,buffering:true,currentTime:0,duration:0,buffered:0});
+  /* A recovering player must not keep the previous pass's error card under a
+     live video. drawPlayer can re-enter (local finder first, global finder as
+     the fallback), and each pass repaints the same #playerStage. */
+  { const staleStage=document.getElementById("playerStage"); if(staleStage) staleStage.innerHTML=""; }
   $("#playerRoot").innerHTML=playerShell(hasInstalledFeeds()?"Asking your feeds for this title…":"No feed is installed yet…");
   syncBodyScrollLock();
   bindPlayerChrome();
-  const source=st.tempSource||getSource(st.source)||allSources()[0];
+  /* st.tempSource is a *source* object, and on the global path we install a
+     synthetic one. Without it the re-entry below looks like "no feed" again and
+     the player never mounts the stream it just found. */
+  let source=st.tempSource||getSource(st.source)||allSources()[0];
+  /* No feed is no longer the end of the road. The global finder is a server-side
+     source of last resort for exactly this case, so ask it before showing the
+     "install a feed" screen. Only if it also comes back empty does the viewer
+     see that screen. */
   if(!source){
-    const stage=$("#playerStage"); if(stage) stage.innerHTML=playerErrorHTML("No feed is installed","Playback comes from feeds you install."); bindPlayerErrorActions(); playerLoading(false);
-    /* A first run is not a failure: it is the one screen that explains what a
-       feed is and installs the first one without leaving the player. */
-    return;
+    /* No feed is not the end of the road: the server-side global finder is the
+       source of last resort for exactly this case. Ask it, and if it answers,
+       install a synthetic source and carry on in THIS pass. Recursing into
+       drawPlayer() was tried and is wrong: the re-entry resolves out of order,
+       paints the previous pass's error over the new one, and the mount never
+       happens. */
+    const probeIdentity=buildTitleIdentity({item:it,type:it.type,id:it.id,title:titleOf(it),year:it.year||yearOf(it),season:st.season,episode:st.episode});
+    const probeResults=await findGlobalStreams(probeIdentity,{timeoutMs:12000}).catch(()=>[]);
+    if(playerState!==st) return;
+    const probeVariants=rankGlobalVariants((probeResults||[]).map(globalResultToVariant).filter(Boolean));
+    if(!probeVariants.length){
+      const stage=$("#playerStage"); if(stage) stage.innerHTML=playerErrorHTML("No feed is installed","Playback comes from feeds you install, or from the global finder when it can find this title."); bindPlayerErrorActions(); playerLoading(false);
+      /* A first run is not a failure: it is the one screen that explains what a
+         feed is and installs the first one without leaving the player. */
+      return;
+    }
+    st.identity=probeIdentity;
+    st.tempSource={id:"global",name:"Global finder",kind:"direct"};
+    st.source="global"; st.globalVariant=probeVariants[0];
+    st.variants=probeVariants; st.activeVariant=probeVariants[0];
+    st.directQueue=probeVariants.slice(1);
+    st.url=probeVariants[0].url; st.direct=true;
+    source=st.tempSource;
   }
   st.source=source.id; st.tried.add(source.id);
   const prev=prevProgress||progress[keyOf(it.type,it.id)]||{};
@@ -7404,12 +7603,21 @@ async function drawPlayer(prevProgress){
   st.identity=identity;
   const ctx={type:it.type,id:it.id,title:identity.title,altTitles:identity.titles,year:identity.year,season:st.season,episode:st.episode,timestamp:resumeSeconds,percent:prev.percent,imdb:identity.imdbId||imdb,identity};
   let playback=null;
+  /* The global finder is the safety net behind the local one. If the feed
+     shelf comes back empty, ask it once before showing "no stream". This is the
+     join that was missing: the resolver existed but nothing called it from the
+     playback path, so a title with no feed hit a dead end. */
+  if(!playback&&st.globalVariant&&st.source==="global"){
+    const first=st.globalVariant;
+    playback={url:first.url,kind:first.kind==="hls"?"hls":first.kind==="dash"?"dash":"direct",direct:true,
+      variants:st.variants||[first],activeVariant:first,source:"global"};
+  }
   try{
-    if(st.directUrl){
+    if(!playback&&st.directUrl){
       const variants=sortVariantsForQuality([st.activeVariant||st.directUrl].concat(st.variants||[],st.directQueue||[]),settings.stream.quality);
       const active=variants.find(v=>v.url===st.directUrl)||variants[0];
       playback={url:st.directUrl,kind:"direct",direct:true,variants,activeVariant:active,source:"direct"};
-    }else playback=await resolveSourcePlayback(source,ctx,{identity,imdb:identity.imdbId||imdb,preferFeeds:!st.tempSource});
+    }else if(!playback) playback=await resolveSourcePlayback(source,ctx,{identity,imdb:identity.imdbId||imdb,preferFeeds:!st.tempSource});
   }catch(e){
     if(playerState!==st) return;
     if(!st.tempSource){ void failover(((source&&source.name)||"Source")+" did not provide this title"); return; }
@@ -7420,6 +7628,9 @@ async function drawPlayer(prevProgress){
   st.variants=sortVariantsForQuality(playback.variants||[],settings.stream.quality);
   st.activeVariant=playback.activeVariant||st.variants.find(v=>v.url===st.url)||null;
   st.directQueue=st.variants.filter(v=>v.url!==st.url);
+  /* One stream is not a choice. Ask the global finder in the background; it
+     only ever *adds* to the queue, so playback never waits for it. */
+  if((st.variants||[]).length<3) void topUpWithGlobal(st,15000);
   /* Subtitles the provider declared, plus any the page handed the resolver. */
   const carried=mergeSubtitleTracks(
     (st.activeVariant&&st.activeVariant.subtitles)||[],

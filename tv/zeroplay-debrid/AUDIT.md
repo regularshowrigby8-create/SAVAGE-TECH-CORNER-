@@ -100,6 +100,71 @@ Severity: **S1** user-visible data loss or security, **S2** broken behaviour,
 ---
 
 <<<<<<< HEAD
+## 2c. Player redesign + global source finder (batches 1–14)
+
+### Where the player behaviour came from
+
+The redesign is not a copy of one repository. The behaviours were taken from the
+common contract of the major web player engines and the patterns their docs and
+source share — hls.js, dash.js, Shaka Player, Video.js, Plyr, Clappr, JW Player,
+Bitmovin, THEOplayer, Vidstack, Mux Player, Media Chrome — and the same rules
+appear in every Stremio/ARVIO-style client: one mount at a time, chrome that
+cannot strand the viewer, an explicit quality ladder, graceful engine failure.
+
+The four things every one of them agrees on, and the old player did not do:
+
+1. **A single mount owner.** Play twice quickly and two videos exist; the orphan
+   one keeps playing audio and its controls fight the live ones for focus.
+2. **Idle hiding that cannot strand you.** A hide timer that is cancelled and
+   never rescheduled (stall, autoplay block, paused film) leaves the bar up
+   forever; a timer that fires under the pointer leaves you unable to click.
+3. **Focus returns before the chrome hides.** Otherwise the next key press goes
+   to the document body and the viewer has no controls and no exit.
+4. **Engine failure is data, not an exception.** Fall to the next candidate
+   without the viewer touching anything.
+
+`lib/global-player.js` implements those four as `createChromeIdleController`,
+`createPlaybackOwner`, `bindPlayerGestures` and `mountSource` (native → hls.js →
+dash.js → native), and `lib/global-player-bridge.js` connects any resolver to it.
+
+### Errors found in the supplied batches, and fixed
+
+| # | Sev | Finding | Fix |
+| --- | --- | --- | --- |
+| 18 | S1 | `resolver.js` returned `getStatistics` but never defined it, so the first call to it threw `getStatistics is not defined` and took the whole resolution down. | Defined it against the registry and policy. |
+| 19 | S1 | The final-integration snippet called `createExtendedBootstrap`, but batch 14 exports `createGlobalBootstrap` and every documented option (`extendedDelayMs`, `communityMirrorDomains`, `supplementaryCatalogUrls`, …) is read as `globalDelayMs`, `maximumResults`, … — all silently ignored. | Documented the real contract and used it; see "spec drift" below. |
+| 20 | S1 | `api/global-resolve.js` was written as a bare `(req,res)` listener using `res.statusCode`/`res.setHeader` with no `res.status()`/`res.json()`. Vercel never invoked it usefully and Netlify could not answer at all, so the client fell back to "global search unavailable" forever. | Split a platform-free `handleGlobalResolve()` and adapted both Vercel and Netlify onto it, matching `api/extract.js`. |
+| 21 | S1 | The spec's guard omits `100.64.0.0/10` (CGNAT/Tailscale), `198.18/15`, `198.51.100/24`, `203.0.113/24`, `fc00::/7`, `fe80::/10`, `ff00::/8`, IPv4-mapped forms — and accepts unqualified single-label hosts that resolve on a LAN. | Extended `PRIVATE_IPV4_PREFIXES`, added `PRIVATE_IPV6_PATTERNS`, and a no-dot rejection. |
+| 22 | S1 | The batch ends at `player.dispatchEvent(new CustomEvent("zp:global-playback"))` and never listens. In this app the player is a separate inline script, so a dispatched event with no listener means the global results render, Play does nothing, and only feed streams ever play. **This is "the source finder does not feed the player".** | `lib/global-player-bridge.js` + the app-side `findGlobalStreams` / `globalResultToVariant` / `topUpWithGlobal` / `tryNextGlobalVariant` / no-feed fallthrough in `drawPlayer`. |
+| 23 | S1 | The no-feed path returned the "install a feed" screen before any global lookup, so a viewer with no feed could never watch anything the finder found. | Ask the global finder first; show that screen only if it is also empty. |
+| 24 | S1 | Recursing `drawPlayer()` to mount a global result paints out of order: the re-entry resolves before the outer pass, which then repaints the previous error card over the new stage. Two `drawPlayer` entries, no mount. | Linear flow: the no-source branch installs the synthetic source and falls through into the same pass. Pinned by a test that rejects the recursive form. |
+| 25 | S2 | `tryNextGlobalVariant` called `startOwnEngine(st, url, kind)` — wrong arity. It takes `(stage, url, sourceValue, loadT0, resumeAt, opts)` and returns a promise handled by `void failover(...)`. The player believed it was loading; the stage stayed blank. | Correct signature, promise chained, failure walks the queue. |
+| 26 | S2 | A recovering pass never cleared the previous pass's error card, so a dead "No feed is installed" could sit under a live video. | Each pass clears `#playerStage` first. |
+| 27 | S3 | `global-results-ui.js` uses `require("node:crypto")` and `document`, so it is a browser bundle that only works if a bundler stubs Node built-ins; nothing in this project bundles. | Left as-is but documented: the app uses its own DOM helpers; the module is for a bundler build. |
+
+### Spec drift, recorded rather than silently "fixed"
+
+The final-integration snippets and batch 14 do not agree. Rather than rewrite a
+delivered API, the renamed options are mapped:
+
+| Spec call | Actual option |
+| --- | --- |
+| `extendedDelayMs` | `globalDelayMs` |
+| `extendedMaximumResults` | `maximumResults` |
+| `extendedMaximumSources` | `maximumSources` |
+| `extendedCooldownMs`, `allowDistributedCatalog`, `communityMirrorDomains`, `supplementaryCatalogUrls`, `extendedMaximumCandidates`, `playerSelector` (bootstrap) | not read by `createGlobalBootstrap` at all |
+
+`createExtendedBootstrap` is not invented — an alias would hide which options
+are real, and the tests now pin the difference.
+
+### Verified
+
+594 checks across 14 files, exit 0. The new `tests/global-resolver.test.cjs`
+(74 checks) covers module loading, the guard matrix, classification, idle/hold
+behaviour, single-mount, media kinds, the bridge's refusal list, dead-host
+walking, both API platform shapes, and asserts the join is wired in `index.html`
+rather than merely present.
+
 ## 3. Tests
 
 `npm test` — 480 checks across 11 files, all passing.
@@ -163,7 +228,7 @@ the page is scroll-locked. 13 checks, 0 runtime errors.
 
 ## 3. Tests
 
-`npm test` — 520 checks across 13 files, all passing.
+`npm test` — 594 checks across 14 files, all passing.
 >>>>>>> 68800d1 (fix(tv): stop overlays stacking on each other, and stop the viewer getting trapped behind one)
 
 Changed to match the new contract (they encoded the removed embed hosts):
