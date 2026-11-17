@@ -6168,72 +6168,132 @@ function playerLoading(on,text){
 }
 /* Idle is counted in watched milliseconds, not wall-clock time, so pausing the
    film does not eat the countdown. */
-function playerIdleStart(st){
-  if(!st) return;
-  st.idleMs=0;
-  st.idleSince=(st.playback&&st.playback.paused)?Date.now():0;
+/* ============================================================
+   Player chrome — idle controller
+   ------------------------------------------------------------
+   Replaces the old accumulate-then-poll logic (which added up idle time and
+   re-armed a 700 ms tick whenever anything was busy, so the bar could stay up
+   for an entire film while buffering, and closing a menu did not give the
+   viewer a grace period).
+
+   The model is taken from the players themselves:
+
+     video.js v10  core/src/dom/store/features/controls.ts
+       computeVisible() = lock held || userActive || paused || casting
+       requestControlsLock() = refcounted, idempotent release; releasing the
+       last lock calls setActive() so you get a full window afterwards.
+       Synthetic mouseleave after touchend, and Safari's capture-release
+       mouseleave, are both explicitly ignored.
+
+     plyr  src/js/listeners.js
+       2000 ms on pointer devices, 3000 ms on touch, one timer, cleared and
+       re-armed on every activity event.
+
+   lib/player-core.js holds the tested implementation; this is the DOM adapter.
+   ============================================================ */
+const zpCore=(window.ZeroPlayLib&&window.ZeroPlayLib["lib/player-core.js"])||null;
+
+/* The state the visibility predicate reads. One place, so every caller agrees. */
+function playerChromeState(st){
+  const s=st||playerState||{};
+  const overlay=document.getElementById("playerOverlay");
+  const menuOpen=!!(s.tracksOpen||s.nextPromptOpen||(typeof playerSheetVisible==="function"&&playerSheetVisible()));
+  return {
+    userActive:true,
+    paused:!!(s.playback&&s.playback.paused),
+    buffering:!!(s.playback&&s.playback.buffering),
+    ended:!!s.ended,
+    errored:!!(overlay&&overlay.querySelector(".player-error")),
+    menuOpen,
+    casting:!!(s.remotePlayback&&s.remotePlayback.connected),
+    holds:s.chromeHolds||new Set()
+  };
 }
-function playerIdleAccumulate(st){
-  if(!st||!st.idleSince) return;
-  st.idleMs=(st.idleMs||0)+(Date.now()-st.idleSince);
-  st.idleSince=0;
+
+/* Per-player hold registry. Refcounted; release is idempotent. */
+function playerChromeLocks(st){
+  if(!st) return null;
+  if(st.chromeLocks) return st.chromeLocks;
+  if(!zpCore||typeof zpCore.createChromeLocks!=="function") return null;
+  st.chromeLocks=zpCore.createChromeLocks({
+    onChange:()=>{ if(st.chromeLocks) st.chromeHolds=new Set(st.chromeLocks.count?["hold"]:[]); }
+  });
+  st.chromeHolds=st.chromeHolds||new Set();
+  return st.chromeLocks;
 }
-/* A repair/tracks sheet on screen is a menu: the bar stays while it is open. */
-function playerSheetVisible(){
-  const ids=["playerTracksSheet","playerMoreSheet","playerNextSheet"];
-  for(const id of ids){
-    const el=document.getElementById(id);
-    if(el&&el.hidden!==true&&!el.hasAttribute("hidden")) return true;
+
+function playerChromeController(st){
+  if(st&&st.chromeCtl) return st.chromeCtl;
+  if(!st) return null;
+  if(!zpCore||typeof zpCore.createIdleController!=="function"){
+    /* The bundle failed to load. Never leave the viewer without controls:
+       fall back to "always visible", which looks worse and never traps. */
+    st.chromeCtl={
+      activate(){}, deactivate(){}, reset(){}, rearm(){}, dispose(){},
+      setTouchMode(){}, noteTouch(){}, noteCaptureRelease(){},
+      onPointerMove(){}, onPointerLeave(){}, onKeyActivity(){}, onTap(){},
+      get userActive(){return true;}
+    };
+    return st.chromeCtl;
   }
-  return false;
+  /* A TV remote always leaves focus on a chrome control, so a bar that refuses
+     to hide would cover the film for the whole session. On TV the chrome hides
+     during playback and the next key press wakes it — which is what the idle
+     controller already does, provided it is never pinned. */
+  const touch=("ontouchstart" in window)||(navigator.maxTouchPoints||0)>0;
+  st.chromeCtl=zpCore.createIdleController({
+    touch,
+    getState:()=>playerChromeState(st),
+    onVisibilityChange:(visible,meta)=>applyPlayerChrome(st,visible,meta)
+  });
+  return st.chromeCtl;
 }
+
+/* The one place the overlay class is written. */
+function applyPlayerChrome(st,visible,meta){
+  const overlay=document.getElementById("playerOverlay");
+  if(!overlay) return;
+  const menuOpen=!!(st&&(st.tracksOpen||st.nextPromptOpen||(typeof playerSheetVisible==="function"&&playerSheetVisible())));
+  const show=visible===true||menuOpen;
+  overlay.classList.toggle("chrome-hidden",!show);
+  overlay.classList.toggle("player-tools-awake",show);
+  const paused=!!(st&&st.playback&&st.playback.paused);
+  overlay.classList.toggle("player-paused",paused);
+  if(!show){
+    /* Focus must leave the chrome before it goes, or a keyboard/remote user is
+       left typing into an invisible bar. */
+    const active=document.activeElement;
+    if(active&&active.closest&&active.closest(".player-bar,.player-controls,.player-action-shelf")){
+      const stage=document.getElementById("playerStage");
+      if(stage){ stage.setAttribute("tabindex","-1"); try{ stage.focus({preventScroll:true}); }catch(e){ void e; } }
+    }
+  }
+  if(st) st.chromeReasons=(meta&&meta.holds)||[];
+}
+
+/* Kept because many call sites use them; both now go through the controller
+   instead of owning timers of their own. */
+function playerIdleStart(st){ void st; }
+function playerIdleAccumulate(st){ void st; }
 function hidePlayerChrome(){
-  const st=playerState, overlay=document.getElementById("playerOverlay");
-  if(!st||!overlay) return;
-  const active=document.activeElement;
-  if(active&&active.tagName==="SELECT"&&!active.disabled) return;
-  if(active&&active.closest&&active.closest("[data-player-sheet]")) return;
-  if(active&&active.closest&&active.closest(".player-bar,.player-controls")&&true){
-    const stage=document.getElementById("playerStage");
-    if(stage){ stage.setAttribute("tabindex","-1"); stage.focus({preventScroll:true}); }
-  }
-  overlay.classList.add("chrome-hidden");
-  overlay.classList.remove("player-tools-awake");
+  const ctl=playerChromeController(playerState);
+  if(ctl) ctl.deactivate(); else applyPlayerChrome(playerState,false,{holds:[]});
 }
 function showPlayerChrome(sticky){
-  const st=playerState, overlay=document.getElementById("playerOverlay"); if(!st||!overlay) return;
-  overlay.classList.remove("chrome-hidden");
-  const paused=!!(st.playback&&st.playback.paused);
-  overlay.classList.toggle("player-paused",paused);
-  overlay.classList.add("player-tools-awake");
-  if(st.chromeTimer) clearTimeout(st.chromeTimer);
-  const playingNow=!!(st.playback&&!st.playback.paused&&!st.playback.buffering);
-  const menuOpen=!!(st.tracksOpen||st.nextPromptOpen||playerSheetVisible());
-  // On TV the remote focus always sits on a chrome control, so a sticky
-  // bar would cover the movie forever. While playing, always schedule
-  // the hide; any key press wakes the bar again.
-  if(sticky&&!(ANDROID_TV_APP&&playingNow)) return;
-  if(paused||!playingNow||menuOpen){ playerIdleStart(st); return; }
-  if(!st.idleSince) st.idleSince=Date.now();
-  const budget=Math.max(0,3000-(st.idleMs||0));
-  /* The old timer bailed out of its own callback without rescheduling, so a
-     stall, an autoplay block or a paused film left the bars on screen for the
-     whole session. The timer now always ends by either hiding the chrome or
-     scheduling the next check. */
-  const tick=()=>{
-    if(playerState!==st){ return; }
-    if(!overlay.isConnected&&document.body&&!document.body.contains(overlay)){ return; }
-    const menuNow=!!(st.tracksOpen||st.nextPromptOpen||playerSheetVisible());
-    if(menuNow||(st.playback&&st.playback.paused)){ playerIdleStart(st); st.chromeTimer=setTimeout(tick,700); return; }
-    if(!st.playback||st.playback.buffering){ st.chromeTimer=setTimeout(tick,700); return; }
-    if(!st.idleSince) st.idleSince=Date.now();
-    const left=Math.max(0,3000-((st.idleMs||0)+(Date.now()-st.idleSince)));
-    if(left>0){ st.chromeTimer=setTimeout(tick,left); return; }
-    st.chromeTimer=null;
-    hidePlayerChrome();
-  };
-  st.chromeTimer=setTimeout(tick,budget);
+  const st=playerState;
+  const ctl=playerChromeController(st);
+  if(!ctl) return;
+  const state=playerChromeState(st);
+  const playingNow=!!(st&&st.playback&&!st.playback.paused&&!st.playback.buffering);
+  /* On TV the remote focus always sits on a chrome control. A sticky request
+     while playing would therefore cover the movie forever, so it only wakes the
+     bar — the idle controller still hides it and the next key press brings it
+     back. Everywhere else sticky means "show and rearm". */
+  if(sticky===true&&!(ANDROID_TV_APP&&playingNow)){ ctl.activate(); return; }
+  if(state.paused||state.menuOpen||state.errored||state.ended){ ctl.activate(); return; }
+  ctl.activate();
 }
+
 function setPlayerControlMode(mode){
   const st=playerState; if(st) st.engine=mode||st.engine;
   const controls=document.getElementById("playerControls"); if(controls) controls.dataset.mode=mode||"";
@@ -6414,6 +6474,29 @@ function playNextEpisodeNow(){
   registerProgress(st.item,st.season,st.episode);
   void drawPlayer({});
 }
+/* One seek controller per mounted media, so the guards are shared by the scrub
+   bar, the double-tap zones and the keyboard. */
+function playerSeek(media){
+  const st=playerState;
+  if(st&&st.seekFx&&st.seekFx.media===media) return st.seekFx;
+  if(!(zpCore&&zpCore.createSeekController)){
+    const fallback={
+      media,
+      duration:()=>Number(media&&media.duration)||0,
+      currentTime:()=>Number(media&&media.currentTime)||0,
+      ready:()=>!!media&&Number(media.readyState)>=1,
+      seekTo:(t)=>{ try{ media.currentTime=t; return {ok:true,to:t}; }catch(e){ return {ok:false,reason:"threw",error:e}; } },
+      seekBy:(d)=>{ try{ media.currentTime=Math.max(0,(Number(media.currentTime)||0)+d); return {ok:true,from:0,to:media.currentTime}; }catch(e){ return {ok:false,reason:"threw",error:e}; } }
+    };
+    if(st) st.seekFx=fallback;
+    return fallback;
+  }
+  const ctl=zpCore.createSeekController({getMedia:()=>media});
+  const wrapped={media,duration:ctl.duration,currentTime:ctl.currentTime,ready:ctl.ready,clamp:ctl.clamp,seekTo:ctl.seekTo,seekBy:ctl.seekBy,seekFromTap:ctl.seekFromTap};
+  if(st) st.seekFx=wrapped;
+  return wrapped;
+}
+
 async function playerCommand(action,value){
   const st=playerState; if(!st||st.trailer) return;
   showPlayerChrome(true);
@@ -6421,21 +6504,53 @@ async function playerCommand(action,value){
   try{
     if(action==="fullscreen"){ await togglePlayerFullscreen(); return; }
     if(st.engine==="native"&&v){
+      /* Seeking goes through the guarded controller: a bare
+         `v.currentTime = n` on a stream with no duration silently lands at 0,
+         which looks exactly like a broken button. */
+      const seek=playerSeek(v);
       if(action==="toggle") { if(v.paused) await v.play(); else v.pause(); }
-      else if(action==="seek") v.currentTime=Math.max(0,Math.min(v.duration||Infinity,Number(value)||0));
-      else if(action==="seekDelta") v.currentTime=Math.max(0,Math.min(v.duration||Infinity,v.currentTime+(Number(value)||0)));
+      else if(action==="seek"){ const r=seek.seekTo(Number(value)||0); if(!r.ok&&r.reason==="not-ready") playerIndicator("Not ready yet",1200); }
+      else if(action==="seekDelta"){ const r=seek.seekBy(Number(value)||0); if(r.ok) playerIndicator((r.to>r.from?"+":"")+Math.round(r.to-r.from)+"s",900); else if(r.reason==="not-ready") playerIndicator("Not ready yet",1200); }
+      else if(action==="seekPercent"){ const d=seek.duration(); if(d>0) seek.seekTo(d*Math.max(0,Math.min(100,Number(value)||0))/100); }
       else if(action==="volume"){ v.volume=Math.max(0,Math.min(1,Number(value))); v.muted=v.volume===0; playerIndicator(v.muted?"Muted":Math.round(v.volume*100)+"%",1400); }
       else if(action==="mute"){ v.muted=!v.muted; playerIndicator(v.muted?"Muted":Math.round(v.volume*100)+"%",1400); }
-      else if(action==="rate") v.playbackRate=Number(value)||1;
-      else if(action==="pip") { if(document.pictureInPictureElement) await document.exitPictureInPicture(); else await v.requestPictureInPicture(); }
+      else if(action==="rate") v.playbackRate=(zpCore&&zpCore.clampRate)?zpCore.clampRate(Number(value)||1):(Number(value)||1);
+      else if(action==="pip"){
+        /* PiP has three outcomes and they are not the same thing: done, blocked
+           until a gesture, or not offered by this browser. Reporting them all as
+           "failed" is why the button looked broken. */
+        if(!(zpCore&&zpCore.createPipController)){ if(document.pictureInPictureElement) await document.exitPictureInPicture(); else await v.requestPictureInPicture(); return; }
+        const pip=zpCore.createPipController({getMedia:()=>v});
+        const res=pip.active()?await pip.exit():await pip.enter();
+        if(res&&res.ok===false){
+          if(res.reason==="needs-gesture") toast("Tap the PiP button once more to allow it","");
+          else if(res.reason==="unsupported") toast("This browser cannot float this stream","error");
+          else toast("Picture in picture was refused","error");
+        }
+      }
       return;
     }
   }catch(err){ toast("Player control failed: "+(err&&err.message||err),"error"); }
 }
+/* Fullscreen, with the ordered ladder the reference players use. The old
+   version only knew `element.requestFullscreen`, so on iOS — where element
+   fullscreen does not exist — the button did nothing and looked broken. */
 async function togglePlayerFullscreen(){
   const overlay=document.getElementById("playerOverlay");
-  if(document.fullscreenElement) await document.exitFullscreen();
-  else if(overlay&&overlay.requestFullscreen) await overlay.requestFullscreen();
+  const video=document.getElementById("pv");
+  if(!(zpCore&&zpCore.createFullscreenController)){
+    if(document.fullscreenElement) await document.exitFullscreen();
+    else if(overlay&&overlay.requestFullscreen) await overlay.requestFullscreen();
+    return;
+  }
+  const fs=zpCore.createFullscreenController({
+    getContainer:()=>overlay, getMedia:()=>video, getDocument:()=>document
+  });
+  const result=fs.isFullscreen()?await fs.exit():await fs.request();
+  if(result&&result.ok===false){
+    if(result.reason==="unsupported") toast("This browser has no fullscreen for this stream","error");
+    else toast("Fullscreen was refused","error");
+  }
 }
 async function setPlayerQuality(value){
   const st=playerState; if(!st||st.trailer) return;
@@ -6914,7 +7029,7 @@ async function zpEngineMount(stage,url,source,opts){
           zpEngineApplyPreferredLevel(settings.stream.quality);
         }
         playerLoading(false);
-        const p=v.play(); if(p&&p.catch) p.catch(()=>{ playerLoading(false); updatePlaybackUI({paused:true,buffering:false,currentTime:v.currentTime||0,duration:v.duration||0},"pause"); toast("Press Play to start"); });
+        startPlaybackWithRecovery(v,st);
       });
       hls.on(window.Hls.Events.LEVEL_SWITCHED,(_,d)=>{
         const lvl=(hls.levels||[])[d.level];
@@ -7347,11 +7462,60 @@ function bindPlayerChrome(){
   on("btnClosePlayerMore","click",()=>togglePlayerMore(false));
   const overlay=document.getElementById("playerOverlay");
   if(overlay){
-    overlay.addEventListener("mousemove",()=>showPlayerChrome(false));
-    overlay.addEventListener("touchstart",()=>showPlayerChrome(false),{passive:true});
-    overlay.addEventListener("focusin",()=>showPlayerChrome(false));
-    overlay.addEventListener("focusout",()=>showPlayerChrome(false));
+    /* The event wiring the reference players use, in their order.
+       - pointermove keeps the timer alive; on touch it does not flip state
+         mid-gesture (that is what made the bar jump under a finger).
+       - pointerleave hides, but not for the synthetic post-touch mouseleave
+         Android dispatches, nor Safari's capture-release mouseleave.
+       - keydown/keyup/focusin wake it.
+       - focusout must NOT hide it: that is the one that made the bar vanish
+         while tabbing through it. */
+    const ctl=playerChromeController(st);
+    overlay.addEventListener("pointermove",e=>{
+      if(!ctl) return;
+      if(e.pointerType==="touch") ctl.noteTouch();
+      ctl.onPointerMove(e.pointerType);
+    },{passive:true});
+    overlay.addEventListener("pointerdown",e=>{
+      if(ctl&&e.pointerType==="touch") ctl.noteTouch();
+    },{passive:true});
+    overlay.addEventListener("pointerleave",e=>{
+      if(!ctl) return;
+      const inside=!!(e.relatedTarget&&overlay.contains(e.relatedTarget));
+      ctl.onPointerLeave({pointerType:e.pointerType,insideOnCaptureRelease:inside});
+    });
+    overlay.addEventListener("lostpointercapture",()=>{ if(ctl) ctl.noteCaptureRelease(); },true);
+    overlay.addEventListener("keydown",()=>{ if(ctl) ctl.onKeyActivity(); });
+    overlay.addEventListener("keyup",()=>{ if(ctl) ctl.onKeyActivity(); });
+    overlay.addEventListener("focusin",()=>{ if(ctl) ctl.onKeyActivity(); });
   }
+
+  /* Double-tap to seek, tap to toggle chrome, through the recogniser so a quick
+     second tap never fires both. */
+  const stageEl=document.getElementById("playerStage");
+  if(stageEl&&zpCore&&zpCore.createGestureRecognizer){
+    const gestures=zpCore.createGestureRecognizer({
+      deferTap:false,
+      onTap:()=>{ const c=playerChromeController(st); if(c) c.onTap({onControl:false}); },
+      onDoubleTap:({x})=>{
+        const media=document.getElementById("pv");
+        if(!media||!zpCore.createSeekController) return;
+        const seek=playerSeek(media);
+        const width=stageEl.getBoundingClientRect().width||window.innerWidth;
+        const r=seek.seekFromTap(x,width);
+        if(r.ok){
+          playerIndicator((r.direction==="forward"?"+":"−")+r.seconds+"s",900);
+          const c=playerChromeController(st); if(c) c.activate();
+        }
+      }
+    });
+    stageEl.addEventListener("pointerdown",e=>gestures.pointerDown(e.clientX,e.clientY),{passive:true});
+    stageEl.addEventListener("pointermove",e=>gestures.pointerMove(e.clientX,e.clientY),{passive:true});
+    stageEl.addEventListener("pointerup",e=>gestures.pointerUp(e.clientX,e.clientY),{passive:true});
+    stageEl.addEventListener("pointercancel",()=>gestures.cancel(),{passive:true});
+    st.gestureFx=gestures;
+  }
+  playerChromeController(st).reset(true);
   setPlayerControlMode(st.engine||"loading");
   if(ANDROID_TV_APP||document.body.classList.contains("tv-mode")){ const first=document.getElementById("btnPlayerServers")||document.getElementById("btnClosePlayer"); if(first) setTimeout(()=>first.focus({preventScroll:true}),40); }
 }
@@ -7370,6 +7534,21 @@ function togglePlayerMore(force){
     overlay.classList.toggle("player-tools-awake",open);
     overlay.classList.toggle("player-more-open",open);
     if(open) overlay.setAttribute("data-tv-scope","player-more"); else overlay.removeAttribute("data-tv-scope");
+  }
+  /* A sheet is a HOLD on the chrome, not a one-off show: while it is open the
+     bar must not auto-hide, and the moment it closes the viewer gets a full idle
+     window instead of losing it mid-tap. Holds are refcounted and idempotent —
+     the video.js requestControlsLock contract. */
+  if(playerState){
+    const locks=playerChromeLocks(playerState);
+    if(locks){
+      if(open&&!playerState.chromeSheetRelease){
+        playerState.chromeSheetRelease=locks.acquire("menu");
+      }else if(!open&&playerState.chromeSheetRelease){
+        playerState.chromeSheetRelease();
+        playerState.chromeSheetRelease=null;
+      }
+    }
   }
   if(open){
     showPlayerChrome(false);
@@ -7792,6 +7971,38 @@ function directMediaKind(url){
    nothing to fall back to: if this app cannot decode the stream, it says
    so honestly instead of showing someone else's page.
    ===================================================================== */
+/* Autoplay recovery, in the order that works (indigo-player's canAutoplay gate,
+   with the muted retry every browser permits):
+     1. play() unmuted
+     2. if a gesture block, play() muted and say so
+     3. if even that is refused, a real play button — never a dead screen */
+function startPlaybackWithRecovery(video,st){
+  if(!video) return;
+  if(!(zpCore&&zpCore.createAutoplayRecovery)){
+    const p=video.play();
+    if(p&&p.catch) p.catch(()=>fallbackToPlayButton(video,st));
+    return;
+  }
+  const auto=zpCore.createAutoplayRecovery({
+    getMedia:()=>video,
+    onMuted:(muted)=>{
+      if(playerState!==st) return;
+      if(muted) toast("Playing muted — tap the speaker to unmute","");
+    },
+    onNeedsGesture:()=>fallbackToPlayButton(video,st)
+  });
+  st.autoplayFx=auto;
+  auto.attempt();
+}
+function fallbackToPlayButton(video,st){
+  playerLoading(false);
+  updatePlaybackUI({paused:true,buffering:false,currentTime:(video&&video.currentTime)||0,duration:(video&&video.duration)||0},"pause");
+  const center=document.getElementById("btnCenterPlay");
+  if(center){ center.hidden=false; if(center.focus) center.focus({preventScroll:true}); }
+  showPlayerChrome(true);
+  toast("Press Play to start");
+}
+
 function startOwnEngine(stage,url,source,loadT0,resumeAt,opts){
   return zpEngineMount(stage,url,source,opts||{}).then(video=>{
     if(!video||playerState!==(opts&&opts.forState||playerState)) return video;
@@ -7856,7 +8067,20 @@ function bindNativeTransport(v,source,loadT0){
     sync("playing",true); updatePlayerMeta(source);
   });
   v.addEventListener("pause",()=>{ sync("pause",true); savePlaybackProgress(true); });
-  v.addEventListener("waiting",()=>{ st.stalls++; playerLoading(true,"Buffering…"); sync("waiting",true); });
+  /* A single `waiting` frame is normal on a segment boundary — showing the
+     spinner for it is what makes a healthy stream look broken. The tracker
+     debounces on the way in and reports how long the stall really lasted. */
+  st.bufferFx=st.bufferFx||(zpCore&&zpCore.createBufferingTracker?zpCore.createBufferingTracker({
+    onChange:(visible,meta)=>{
+      if(playerState!==st) return;
+      if(visible){ playerLoading(true,"Buffering…"); sync("waiting",true); }
+      else{ playerLoading(false); if(meta&&meta.lasted>8000) dlog("Stalled "+Math.round(meta.lasted/1000)+"s"); }
+    }
+  }):null);
+  v.addEventListener("waiting",()=>{ st.stalls++; if(st.bufferFx) st.bufferFx.start(); else playerLoading(true,"Buffering…"); sync("waiting",true); });
+  v.addEventListener("playing",()=>{ if(st.bufferFx) st.bufferFx.stop(); });
+  v.addEventListener("canplay",()=>{ if(st.bufferFx) st.bufferFx.stop(); });
+  v.addEventListener("stalled",()=>{ if(st.bufferFx) st.bufferFx.start(); });
   v.addEventListener("progress",()=>sync("progress"));
   v.addEventListener("timeupdate",()=>sync("timeupdate"));
   v.addEventListener("volumechange",()=>{ settings.stream.volume=v.volume; settings.stream.muted=v.muted; saveSettings(); sync("volumechange",true); });

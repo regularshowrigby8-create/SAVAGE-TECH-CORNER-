@@ -21,6 +21,7 @@ const OUT_DIR = path.join(ROOT, "dist");
 /* Entry points, in the order the app may touch them. Each is resolved with the
    same rules as Node so `require("./policy")` from inside global-resolver/ works. */
 const ENTRY_FILES = [
+  "lib/player-core.js",
   "lib/global-player.js",
   "lib/global-player-bridge.js",
   "lib/global-resolver/policy.js",

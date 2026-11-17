@@ -510,16 +510,25 @@ ok(html.includes("streamProviderChip") && !html.includes('id="serverDirect"'), "
   ok(whiteFocusRules.length === 0, "no focus rule paints a white ring or halo: " + whiteFocusRules.slice(0, 4).join(" | "));
 }
 
-/* R5. The player chrome timer reschedules itself instead of bailing out, so a
-   stall or a paused film cannot leave the bars on screen for the session. */
+/* R5. The player chrome is owned by one idle controller with a single deadline,
+   and visibility is a predicate rather than a timer that bails out. This
+   replaced an accumulate-then-poll loop that re-armed a 700 ms tick and could
+   leave the bars on screen for a whole film while buffering. */
 {
-  ok(html.includes("function playerIdleStart") && html.includes("function playerIdleAccumulate"), "player idle time is accounted explicitly");
+  ok(html.includes("function playerIdleStart") && html.includes("function playerIdleAccumulate"),
+    "the legacy idle entry points still exist so old call sites keep working");
+  ok(/lib\/player-core\.js/.test(html) && html.includes("createIdleController"),
+    "the chrome is driven by the tested player-core idle controller");
+  ok(html.includes("function playerChromeState") && html.includes("function applyPlayerChrome"),
+    "visibility is computed from player state by one predicate and applied in one place");
+  ok(/paused:\!\!\(s\.playback&&s\.playback\.paused\)/.test(html),
+    "a paused film reports paused to the visibility predicate");
+  ok(!/chromeTimer=setTimeout\(tick/.test(html), "no polling tick remains in the chrome path");
   const timer = script.slice(script.indexOf("function showPlayerChrome(sticky)"), script.indexOf("function setPlayerControlMode(mode)"));
-  ok(!/if\(!\(st\.playback&&!st\.playback\.paused&&!st\.playback\.buffering\)\) return;/.test(timer), "the hide timer no longer returns without rescheduling");
-  ok(/const tick=\(\)=>\{/.test(timer) && /chromeTimer=setTimeout\(tick/.test(timer), "the hide timer re-arms itself until it can hide the bar");
-  ok(timer.includes("paused") && timer.includes("buffering"), "a paused or buffering film still hides the bar once it is idle");
+  ok(timer.includes("ANDROID_TV_APP&&playingNow"),
+    "TV playback still auto-hides the chrome so the remote never sits behind a bar");
+  ok(timer.includes("ctl.activate()"), "showing the chrome goes through the controller");
 }
-
 /* R6. A pending page-focus timer must never steal focus from an open menu.
    The browser run reproduced this at 1920x1080: open the drawer just after a
    route change and the page took the D-pad back behind it. */
