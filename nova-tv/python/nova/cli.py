@@ -28,9 +28,83 @@ def build_parser(title: str, description: str, registry: Optional[Registry] = No
         child = sub.add_parser(name, help=tool.summary)
         child.add_argument("--json", action="store_true", help="machine-readable output")
         child.add_argument("--verbose", "-v", action="store_true")
-        for flag in getattr(tool.func, "__nova_flags__", []):
+        for flag in _flags_for(tool.func):
             child.add_argument(*flag[0], **flag[1])
     return parser
+
+
+# Parameters every tool may receive from the framework, never from the user.
+_IMPLICIT = {"settings", "self", "cls"}
+
+
+def _flags_for(func) -> list[tuple[tuple, dict]]:
+    """CLI flags for a tool function.
+
+    Explicit `_flags(...)` declarations win. Without them, the flags are derived
+    from the signature, because the alternative is what was actually happening:
+    twenty tools accepted `query`, `repo`, `budget`, `claim` and so on, and none
+    of those values could be supplied from the command line. The parameters
+    existed, the flags did not, and the CLI silently ran with defaults.
+
+    A parameter with a default becomes `--flag` with that default; one without a
+    default becomes a required positional, so a missing argument is an argparse
+    error rather than a TypeError from inside the tool.
+    """
+    explicit = getattr(func, "__nova_flags__", None)
+    if explicit:
+        return list(explicit)
+
+    import inspect
+
+    try:
+        signature = inspect.signature(func)
+    except (TypeError, ValueError):
+        return []
+
+    derived: list[tuple[tuple, dict]] = []
+    for parameter in signature.parameters.values():
+        if parameter.name in _IMPLICIT:
+            continue
+        if parameter.kind in (parameter.VAR_POSITIONAL, parameter.VAR_KEYWORD):
+            continue
+        annotation = parameter.annotation
+        # Either an explicit `: bool` or a `= False` default makes this a switch.
+        # Checking only the annotation missed every unannotated bool parameter,
+        # so `--force` would have arrived as the string "False" -- truthy.
+        is_bool = annotation is bool or (
+            annotation is parameter.empty
+            and parameter.default is not parameter.empty
+            and isinstance(parameter.default, bool)
+        )
+        if is_bool:
+            info: dict = {"action": "store_true"}
+            if parameter.default is not parameter.empty:
+                info["default"] = bool(parameter.default)
+            else:
+                info["default"] = False
+        else:
+            info = {}
+            if parameter.default is not parameter.empty:
+                info["default"] = parameter.default
+            else:
+                info["required"] = True
+        # The scripts declare no annotations, so infer the type from the default.
+        # Without this, `--budget 1` arrives as the string "1" and the comparison
+        # inside the collector raises TypeError -- which is exactly what happened.
+        if annotation is int:
+            info["type"] = int
+        elif annotation is float:
+            info["type"] = float
+        elif annotation is parameter.empty and parameter.default is not parameter.empty:
+            if isinstance(parameter.default, bool):
+                pass  # handled above
+            elif isinstance(parameter.default, int):
+                info["type"] = int
+            elif isinstance(parameter.default, float):
+                info["type"] = float
+        info["help"] = f"{parameter.name} (default: {parameter.default!r})" if parameter.default is not parameter.empty else parameter.name
+        derived.append(((f"--{parameter.name.replace('_', '-')}",), info))
+    return derived
 
 
 def _flags(*spec):
@@ -54,7 +128,7 @@ def run(
     tool = registry.get(name)
     settings = settings or load_settings()
     kwargs: dict[str, Any] = {}
-    for spec in getattr(tool.func, "__nova_flags__", []):
+    for spec in _flags_for(tool.func):
         option = spec[0][0]
         dest = option.lstrip("-").replace("-", "_")
         if hasattr(args, dest):

@@ -36,21 +36,47 @@ def _load_toml(path: Path) -> Dict[str, Any]:
         return tomllib.load(handle)
 
 
+def _default_ref() -> str:
+    """The branch this checkout is on, so GitHub reads the code we are editing.
+
+    GitHub resolves `ref=HEAD` to the repository's *default* branch, which is
+    `main` here; the work lives on `arena/*`. Leaving the default as "HEAD"
+    meant every tree/file read silently returned main, where these files do not
+    exist -- a 404 on a file that is tracked, pushed and present.
+    """
+    import subprocess
+
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            cwd=Path(__file__).resolve().parent,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return "HEAD"
+    branch = result.stdout.strip()
+    if result.returncode != 0 or not branch or branch == "HEAD":
+        return "HEAD"
+    return branch
+
+
 @dataclass
 class Settings:
     """Resolved settings for one run."""
 
     github_token: Optional[str] = None
     github_owner: str = "regularshowrigby8-create"
-    github_repo: str = "nova-tv"
+    github_repo: str = "SAVAGE-TECH-CORNER-"
     # GitHub's contents API resolves "HEAD" to the repository's *default* branch,
     # which is not the branch this work lives on. Naming the ref explicitly is
     # what stops reads silently returning another branch's files.
-    github_ref: str = "HEAD"
+    github_ref: str = _default_ref()
     ai_base_url: str = "https://api.openai.com/v1"
     ai_model: str = "gpt-4o-mini"
     ai_api_key: Optional[str] = None
-    user_agent: str = "NovaTV/1.0 (+https://github.com/regularshowrigby8-create/nova-tv)"
+    user_agent: str = "NovaTV/1.0 (+https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-)"
     cache_dir: Path = field(default_factory=lambda: ROOT / ".nova-cache")
     timeout: float = 20.0
     max_retries: int = 3
@@ -101,8 +127,8 @@ def _load_settings(config_path: Optional[Path]) -> Settings:
     settings = Settings(
         github_token=_pick("GITHUB_TOKEN", github.get("token"), None),
         github_owner=_pick("NOVA_GITHUB_OWNER", github.get("owner"), "regularshowrigby8-create"),
-        github_repo=_pick("NOVA_GITHUB_REPO", github.get("repo"), "nova-tv"),
-        github_ref=_pick("NOVA_GITHUB_REF", github.get("ref"), "HEAD"),
+        github_repo=_pick("NOVA_GITHUB_REPO", github.get("repo"), "SAVAGE-TECH-CORNER-"),
+        github_ref=_pick("NOVA_GITHUB_REF", github.get("ref"), _default_ref()),
         ai_base_url=_pick("AI_BASE_URL", ai.get("base_url"), "https://api.openai.com/v1"),
         ai_model=_pick("AI_MODEL", ai.get("model"), "gpt-4o-mini"),
         ai_api_key=_pick("AI_API_KEY", ai.get("api_key"), None),
