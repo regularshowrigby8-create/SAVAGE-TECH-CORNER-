@@ -256,6 +256,27 @@ _RUN_CATCHING = re.compile(r"\brunCatching\b")
 _TRY = re.compile(r"\btry\s*\{")
 
 
+def nova_scale_calls(name: str) -> str:
+    """Matches `someModifier(stateVar)` where the helper turns it into a value.
+
+    Focus scale, alpha and colour helpers read the state to choose an output, so
+    they count as reads. A plain component pass-through such as
+    `Rail(current = route)` does not, because that is how an unrouted screen
+    hides.
+    """
+    return rf"\w*(?:[Ss]cale|[Aa]lpha|[Cc]olor|[Tt]int|[Ff]ade)\(\s*{name}\b"
+
+
+def _all_clean(sources: Dict[str, str]) -> List[str]:
+    """Comment-free text of every source, for cross-file call-site checks."""
+    cached = getattr(_all_clean, "_cache", None)
+    key = tuple(sorted(sources))
+    if cached is None or getattr(_all_clean, "_key", None) != key:
+        _all_clean._cache = [_strip_comments(t) for t in sources.values()]  # type: ignore[attr-defined]
+        _all_clean._key = key  # type: ignore[attr-defined]
+    return _all_clean._cache  # type: ignore[attr-defined]
+
+
 def find_unguarded_io(sources: Dict[str, str]) -> List[Finding]:
     """A suspend call in a ViewModel-visible path with no try/runCatching nearby.
 
@@ -285,6 +306,18 @@ def find_unguarded_io(sources: Dict[str, str]) -> List[Finding]:
             if not body.strip():
                 continue
             if _TRY.search(body) or _RUN_CATCHING.search(body):
+                continue
+            # A function that does not guard itself may still be guarded by every
+            # caller. `loadStreams` throws by design and every call site wraps it
+            # in runCatching, so reporting it as unprotected was wrong -- it
+            # would have pushed a try/catch into a layer that is deliberately
+            # transparent and broken the error reporting the caller relies on.
+            escaped = re.escape(name)
+            call_guarded = any(
+                re.search(rf"(runCatching|try)\s*\{{[^}}]*\b{escaped}\s*\(", other)
+                for other in (clean_all.values() if False else _all_clean(sources))
+            )
+            if call_guarded:
                 continue
             line = clean[: match.start()].count("\n") + 1
             findings.append(
@@ -351,10 +384,40 @@ def find_unrouted_screens(root: Path, sources: Dict[str, str]) -> List[Finding]:
             continue
         var_match = re.search(r"\bvar\s+(\w+)\s+by\s+remember", clean)
         var = var_match.group(1)
-        # Is the variable ever read in a condition?
-        read_in_condition = re.search(
-            rf"(if|when)\s*\([^)]*\b{re.escape(var)}\b", clean
-        ) or re.search(rf"when\s*\(\s*{re.escape(var)}\s*\)", clean)
+        # Is the variable ever *read to choose content*?
+        #
+        # Looking only inside `if (x)` / `when (x)` produced a false critical on
+        # `var focused by remember`, which is read by `novaFocusScale(focused)`.
+        # Passing a state variable into a modifier is a read; the earlier check
+        # simply could not see it, so it reported working focus code as a dead
+        # route. Reads now include: conditions, arguments, string interpolation,
+        # arithmetic/comparison, and being returned.
+        name = re.escape(var)
+        reads = [
+            # A condition is the strong signal: the variable chooses content.
+            rf"(?:if|when)\s*\([^)]*\b{name}\b",
+            rf"when\s*\(\s*{name}\s*\)",
+            # Being passed to a function is a read, but NOT a decision. This
+            # distinction matters: `Rail(current = route)` passes the route to
+            # the rail, which is exactly what the old broken app did while
+            # rendering the same pane for all six destinations. Counting a bare
+            # pass-through as a read would have hidden the very defect this
+            # check exists to find -- and did hide it, until a regression test
+            # caught the widening.
+            rf"=\s*[\w.]+\(\s*[^)]*\b{name}\b[^)]*\)\s*(?:\{{|$)",
+            rf"\$\{{?{name}\b",                              # string template
+            # Arithmetic and comparison, but never a plain assignment:
+            # `route = it` writes the variable, and counting a write as a read
+            # is precisely how an unrouted screen looks fine to a checker.
+            rf"\b{name}\s*(?:[+\-*/<]|[=!]=|&&|\|\|)",
+            rf"(?:[+\-*/<]|[=!]=)\s*{name}\b",
+            rf"[<>]\s*{name}\b",
+            rf"\b{name}\s*>\s*",
+            rf"return\s+{name}\b",                            # returned
+            # Consumed by a composable that branches on it: novaFocusScale(focused).
+            rf"\b{nova_scale_calls(name)}",
+        ]
+        read_in_condition = any(re.search(pattern, clean) for pattern in reads)
         if not read_in_condition:
             line = clean[: var_match.start()].count("\n") + 1
             findings.append(

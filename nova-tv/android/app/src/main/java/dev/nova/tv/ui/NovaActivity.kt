@@ -3,27 +3,22 @@ package dev.nova.tv.ui
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.ui.Modifier
-import dev.nova.tv.ui.theme.NovaTheme
 import dev.nova.tv.ui.screens.NovaApp
 
-/** The single activity. Compose owns everything above it. */
+/**
+ * The single activity. Compose owns everything above it.
+ *
+ * The theme is applied inside [NovaApp] rather than here, because the
+ * `reduceMotion` setting has to be read before the theme can honour it, and that
+ * value lives in the view model. Wrapping the app in a theme here meant the
+ * setting existed but could never reach the animations it controls -- one of the
+ * write-only properties the audit script reports.
+ */
 class NovaActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            NovaTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    NovaApp()
-                }
-            }
+            NovaApp()
         }
     }
 }

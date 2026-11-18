@@ -1,239 +1,217 @@
 package dev.nova.tv.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.tv.foundation.lazy.list.TvLazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.runtime.getValue // used by `by remember`
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue // used by `var x by remember`
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.tv.foundation.lazy.list.TvLazyColumn
-import androidx.tv.foundation.lazy.list.items
-import androidx.tv.material3.Card
 import androidx.tv.material3.ExperimentalTvMaterial3Api
-import dev.nova.tv.data.model.MetaPreview
+import androidx.tv.material3.Surface
+import androidx.tv.material3.Text
+import dev.nova.tv.ui.theme.NovaPalette
+import dev.nova.tv.ui.theme.NovaShape
+import dev.nova.tv.ui.theme.NovaSpace
+import dev.nova.tv.ui.theme.NovaTheme
+import dev.nova.tv.ui.theme.NovaType
+import dev.nova.tv.ui.theme.novaBackgroundBrush
 
 /**
  * The shell: a focusable side rail and a content area.
  *
- * Every interactive element is a real focus target, because on a TV D-pad a
- * control that cannot take focus does not exist.
+ * Layout notes that matter on a real television:
+ *
+ *  - The content is inset by a safe margin. Some panels still crop 5%, and a
+ *    heading that is half off-screen looks like a bug, not like a design choice.
+ *  - The rail is a fixed 96dp of icons. It expands on focus, which is where the
+ *    label appears; a permanently labelled rail costs 12% of a 1080p screen to
+ *    show six words.
+ *  - BACK is handled once, here. Every surface below closes exactly one level.
  */
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-fun NovaApp(viewModel: HomeViewModel = viewModel()) {
+fun NovaApp(viewModel: NovaViewModel = viewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    var route by remember { mutableStateOf(Route.HOME) }
 
-    Row(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        SideRail(current = route, onSelect = { route = it })
-        Box(Modifier.fillMaxSize().padding(horizontal = 32.dp, vertical = 24.dp)) {
-            when {
-                state.loading -> LoadingPane()
-                state.error != null && state.rows.isEmpty() -> ErrorPane(
-                    message = state.error ?: "",
-                    onRetry = viewModel::refresh
+    NovaTheme(reduceMotion = state.reduceMotion) {
+        // BACK closes one surface. Returning false lets the system exit, which is
+        // correct only when nothing is open.
+        BackHandler(enabled = true) { viewModel.back() }
+
+        // One root Box, so the shell and the player stack deterministically.
+        // Emitting them as bare siblings leaves their stacking to the caller,
+        // which is how a fullscreen player ends up drawn behind the rail.
+        Box(Modifier.fillMaxSize()) {
+            Row(
+                Modifier
+                    .fillMaxSize()
+                    .background(novaBackgroundBrush())
+            ) {
+                SideRail(current = state.route, onSelect = viewModel::navigate)
+
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(
+                            end = NovaSpace.safeHorizontal,
+                            top = NovaSpace.safeVertical,
+                            bottom = NovaSpace.safeVertical
+                        )
+                ) {
+                    // One branch per destination. Adding a Route without adding
+                    // a pane here fails to compile, so a rail entry can never be
+                    // dead -- which is exactly what `check_buttons.py` used to
+                    // report as `unrouted-entries`.
+                    when (state.route) {
+                        Route.HOME -> HomePane(state, viewModel)
+                        Route.MOVIES -> CatalogPane("Movies", state, viewModel)
+                        Route.SERIES -> CatalogPane("Series", state, viewModel)
+                        Route.SEARCH -> SearchPane(state, viewModel)
+                        Route.ADDONS -> AddonsPane(state, viewModel)
+                        Route.SETTINGS -> SettingsPane(state, viewModel)
+                    }
+
+                    if (state.opened != null && state.playing == null) {
+                        DetailOverlay(state, viewModel)
+                    }
+                }
+            }
+
+            // The player owns the whole window: video beside a 96dp rail is not
+            // fullscreen. Drawn last so it covers both the rail and the content.
+            state.playing?.let { stream ->
+                NovaPlayerHost(
+                    stream = stream,
+                    title = state.playingTitle.ifBlank { stream.name ?: "Playing" },
+                    onLeave = viewModel::stopPlayback
                 )
-                else -> HomePane(state = state, onTitleClick = viewModel::openTitle)
             }
         }
     }
 }
+
+// ---------------------------------------------------------------------------
+// Rail
+// ---------------------------------------------------------------------------
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 private fun SideRail(current: Route, onSelect: (Route) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+
     Column(
         Modifier
-            .width(200.dp)
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(vertical = 32.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .width(if (expanded) 208.dp else 96.dp)
+            .fillMaxHeight()
+            .background(NovaPalette.surface.copy(alpha = 0.6f))
+            .onFocusChanged { expanded = it.hasFocus }
+            .padding(vertical = NovaSpace.safeVertical, horizontal = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Text(
-            "NOVA",
-            color = MaterialTheme.colorScheme.primary,
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Black,
-            modifier = Modifier.padding(start = 24.dp, bottom = 24.dp)
+            text = if (expanded) "NOVA" else "N",
+            style = NovaType.sectionTitle.copy(
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 2.sp
+            ),
+            color = NovaPalette.accent,
+            modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 20.dp)
         )
+
         Route.entries.forEach { entry ->
-            RailButton(
-                label = entry.label,
+            RailItem(
+                route = entry,
                 selected = entry == current,
+                expanded = expanded,
                 onClick = { onSelect(entry) }
             )
+            // The divider sits above Settings, as in the shell diagram.
+            if (entry == Route.SEARCH) {
+                Spacer(Modifier.height(10.dp))
+                Box(
+                    Modifier
+                        .padding(start = 16.dp)
+                        .width(if (expanded) 160.dp else 32.dp)
+                        .height(1.dp)
+                        .background(NovaPalette.surfaceHigh)
+                )
+                Spacer(Modifier.height(10.dp))
+            }
         }
     }
 }
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-private fun RailButton(label: String, selected: Boolean, onClick: () -> Unit) {
-    androidx.tv.material3.Surface(
+private fun RailItem(
+    route: Route,
+    selected: Boolean,
+    expanded: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
-        shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(RoundedCornerShape(10.dp)),
+        modifier = Modifier.fillMaxSize().height(52.dp),
+        shape = RoundedCornerShape(percent = NovaShape.pillPercent),
         colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(
-            containerColor = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.22f) else Color.Transparent,
-            focusedContainerColor = MaterialTheme.colorScheme.primary
+            containerColor = if (selected) {
+                NovaPalette.accent.copy(alpha = 0.22f)
+            } else {
+                NovaPalette.surface.copy(alpha = 0f)
+            },
+            contentColor = if (selected) NovaPalette.accent else NovaPalette.textMuted,
+            focusedContainerColor = NovaPalette.surfaceHigh,
+            focusedContentColor = NovaPalette.textPrimary
         )
     ) {
-        Text(
-            label,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            color = MaterialTheme.colorScheme.onBackground,
-            fontSize = 18.sp
-        )
-    }
-}
-
-@OptIn(ExperimentalTvMaterial3Api::class)
-@Composable
-private fun HomePane(state: HomeState, onTitleClick: (MetaPreview) -> Unit) {
-    TvLazyColumn(verticalArrangement = Arrangement.spacedBy(28.dp)) {
-        item { Header(hero = state.rows.firstOrNull()?.items?.firstOrNull()) }
-        items(state.rows) { row ->
-            Column {
-                Text(
-                    row.title,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-                TvLazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                    items(row.items) { title ->
-                        PosterCard(title = title, onClick = { onTitleClick(title) })
-                    }
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalTvMaterial3Api::class)
-@Composable
-private fun PosterCard(title: MetaPreview, onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = Modifier.width(154.dp)) {
-        Column {
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(2f / 3f)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(
-                                MaterialTheme.colorScheme.surface,
-                                MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
-                            )
-                        )
-                    )
-            ) {
-                // Artwork loading is handled by Coil in a later pass; the card
-                // renders correctly with the placeholder alone.
-                Text(
-                    title.name.take(2).uppercase(),
-                    modifier = Modifier.align(Alignment.Center),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Spacer(Modifier.height(8.dp))
+        Row(
+            Modifier.padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text(
-                title.name,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontSize = 14.sp,
-                maxLines = 2
+                text = glyph(route),
+                style = NovaType.body.copy(fontWeight = FontWeight.Bold),
+                color = if (selected) NovaPalette.accent else NovaPalette.textMuted
             )
-            if (title.rating > 0) {
-                Text(
-                    "★ %.1f".format(title.rating),
-                    color = MaterialTheme.colorScheme.primary,
-                    fontSize = 12.sp
-                )
+            if (expanded) {
+                Spacer(Modifier.width(14.dp))
+                Text(route.label, style = NovaType.body, maxLines = 1)
             }
         }
     }
 }
 
-@Composable
-private fun Header(hero: MetaPreview?) {
-    AnimatedVisibility(visible = hero != null) {
-        Column(Modifier.padding(bottom = 8.dp)) {
-            Text(
-                hero?.name ?: "",
-                color = MaterialTheme.colorScheme.onBackground,
-                fontSize = 34.sp,
-                fontWeight = FontWeight.Bold
-            )
-            if (!hero?.description.isNullOrBlank()) {
-                Text(
-                    hero?.description ?: "",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 14.sp,
-                    maxLines = 3,
-                    modifier = Modifier.padding(top = 6.dp, end = 240.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun LoadingPane() {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-    }
-}
-
-@Composable
-private fun ErrorPane(message: String, onRetry: () -> Unit) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(message, color = MaterialTheme.colorScheme.onBackground, fontSize = 16.sp)
-            Spacer(Modifier.height(16.dp))
-            androidx.tv.material3.Surface(onClick = onRetry) {
-                Text("Retry", modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp))
-            }
-        }
-    }
-}
-
-enum class Route(val label: String) {
-    HOME("Home"),
-    MOVIES("Movies"),
-    SERIES("Series"),
-    SEARCH("Search"),
-    ADDONS("Addons"),
-    SETTINGS("Settings")
+/**
+ * Rail glyphs are single letters, not emoji.
+ *
+ * Emoji render differently on every panel, are sized inconsistently by the
+ * platform font, and are not focusable in a predictable box. A letter is the
+ * same width and weight everywhere.
+ */
+internal fun glyph(route: Route): String = when (route) {
+    Route.HOME -> "H"
+    Route.MOVIES -> "M"
+    Route.SERIES -> "S"
+    Route.SEARCH -> "Q"
+    Route.ADDONS -> "A"
+    Route.SETTINGS -> "G"
 }

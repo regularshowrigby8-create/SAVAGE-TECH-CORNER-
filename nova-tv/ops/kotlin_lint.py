@@ -171,13 +171,22 @@ def main() -> int:
             problems.append(f"class '{name}' declared {len(where)} times: {', '.join(where)}")
 
     # Unused imports: a cheap signal that a file was edited carelessly.
+    #
+    # Two symbols are exempt: `getValue` and `setValue` from
+    # androidx.compose.runtime are *operator* imports. A `by remember { ... }`
+    # delegate calls them implicitly, so neither name ever appears as a token in
+    # the source. Flagging them was a false positive that would have pushed
+    # anyone reading the report into deleting a required import and breaking the
+    # build -- the exact failure mode this lint exists to prevent.
+    IMPLICIT = {"getValue", "setValue"}
+
     for path in files:
         raw = path.read_text("utf-8")
         code = strip_comments_and_strings(raw)
         for full, alias in IMPORT_RE.findall(raw):
             symbol = alias or full.rsplit(".", 1)[-1]
             body = IMPORT_RE.sub("", code)
-            if symbol == "*":
+            if symbol == "*" or symbol in IMPLICIT:
                 continue
             if not re.search(rf"\b{re.escape(symbol)}\b", body):
                 problems.append(f"{path.name}: unused import {full}")

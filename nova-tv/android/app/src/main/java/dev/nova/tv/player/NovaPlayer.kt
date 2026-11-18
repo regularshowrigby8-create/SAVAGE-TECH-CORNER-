@@ -92,6 +92,18 @@ class NovaPlayer(
         prepared = true
     }
 
+    /**
+     * The engine, for the one thing Compose cannot do: attach a Surface.
+     *
+     * Exposed rather than wrapped because `PlayerView.setPlayer` needs the real
+     * ExoPlayer instance, and a forwarding wrapper would only add a layer that
+     * can drift from the implementation.
+     */
+    val player: ExoPlayer get() = exo
+
+    /** Current play state, for the on-screen chrome. */
+    fun isPlaying(): Boolean = exo.playWhenReady
+
     fun play() { exo.playWhenReady = true }
     fun pause() { exo.playWhenReady = false }
     fun togglePlay() { if (exo.playWhenReady) pause() else play() }

@@ -14,3 +14,4 @@ build/
 .env.*.local
 node_modules/
 dist/
+nova-tv/knowledge.json

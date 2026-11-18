@@ -44,6 +44,11 @@ class SettingsStore(private val prefs: SharedPreferences) {
         _settings.value = _settings.value.copy(autoplayNext = enabled)
     }
 
+    fun setReduceMotion(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_MOTION, enabled).apply()
+        _settings.value = _settings.value.copy(reduceMotion = enabled)
+    }
+
     fun setVolume(volume: Float) {
         val clamped = volume.coerceIn(0f, 1f)
         prefs.edit().putFloat(KEY_VOLUME, clamped).apply()
