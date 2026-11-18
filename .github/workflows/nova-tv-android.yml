@@ -70,40 +70,35 @@ jobs:
       - name: Assemble debug APK
         working-directory: nova-tv/android
         run: |
-          set -euo pipefail
-          chmod +x gradlew
           LOG="${{ runner.temp }}/nova-build.log"
-          set +e
-          # --continue so one broken file does not mask the rest.
-          ./gradlew :app:assembleDebug --stacktrace --no-daemon --console=plain 2>&1 | tee "$LOG"
-          STATUS=${PIPESTATUS[0]}
-          set -e
-          if [ "$STATUS" -ne 0 ]; then
-            # Artifact logs live in blob storage that is not always reachable, so
-            # the compiler's own errors are surfaced as check annotations, which
-            # the API can always read: one annotation per "e: file:line: msg".
-            COUNT=0
-            grep -E "^e: " "$LOG" | head -40 | while IFS= read -r line; do
-              echo "::error title=Kotlin compile::${line}"
-            done
-            COUNT=$(grep -cE "^e: " "$LOG" || true)
-            echo "::error title=Compile summary::${COUNT} kotlin error line(s)"
-            # Job summaries are readable through the API even when the log blob
-            # is not reachable, so the useful excerpt goes there too.
+          chmod +x gradlew || true
+          # Deliberately no `set -e`: if the build fails, capturing why is the
+          # whole point of this step, and an early exit skips the capture.
+          ./gradlew :app:assembleDebug --stacktrace --no-daemon --console=plain > "$LOG" 2>&1
+          STATUS=$?
+          echo "gradle exit status: $STATUS"
+          echo "----- head -----"
+          head -30 "$LOG" || true
+          echo "----- errors -----"
+          grep -E "^e: |error:|FAILURE:|What went wrong" "$LOG" | head -40 || echo "(no error lines matched)"
+          echo "----- tail -----"
+          tail -45 "$LOG" || true
+
+          if [ -f "$GITHUB_STEP_SUMMARY" ]; then
             {
-              echo "## nova-tv build failure"
-              echo
-              echo "\`\`\`"
-              grep -E "^e: |^w: .*error|FAILURE:|What went wrong|Caused by|> Task .*FAILED|error:" "$LOG" | head -60
-              echo "\`\`\`"
-              echo
-              echo "### last 40 lines"
-              echo "\`\`\`"
-              tail -40 "$LOG"
-              echo "\`\`\`"
-            } >> "$GITHUB_STEP_SUMMARY"
-            exit "$STATUS"
+              echo "## nova-tv build: exit $STATUS"
+              echo ""
+              echo '```'
+              grep -E "^e: |error:|FAILURE:|What went wrong|Caused by|> Task .*FAILED|^\* What went wrong" "$LOG" 2>/dev/null | head -50 || true
+              echo '```'
+              echo "### last 45 lines"
+              echo '```'
+              tail -45 "$LOG" 2>/dev/null || true
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY" || true
           fi
+
+          exit "$STATUS"
 
       - name: Run unit tests
         working-directory: nova-tv/android
