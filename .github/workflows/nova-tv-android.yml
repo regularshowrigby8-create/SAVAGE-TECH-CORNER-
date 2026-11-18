@@ -86,6 +86,109 @@ jobs:
           tail -45 build.log
           exit $STATUS
 
+      - name: Run unit tests
+        working-directory: nova-tv/android
+        run: ./gradlew :app:testDebugUnitTest --no-daemon --console=plain 2>&1 | tee "${{ runner.temp }}/nova-test.log"
+
+      # Lint is a gate, not a report. A UI with accessibility or API-level
+      # problems should fail the build rather than ship and be discovered by a
+      # viewer with a remote.
+      - name: Android lint
+        working-directory: nova-tv/android
+        run: |
+          set +e
+          ./gradlew :app:lintDebug --no-daemon --console=plain > lint.log 2>&1
+          STATUS=$?
+          echo "lint exit: $STATUS"
+          grep -nE "Error:|Warning:|errors?, [0-9]+ warnings?" lint.log | head -30
+          # Only errors block; warnings are recorded.
+          if grep -qE "^.*Error: " lint.log; then
+            echo "lint reported errors"
+            exit 1
+          fi
+          exit 0
+
+      # The release build is the one that has never existed. R8 shrinking is
+      # where a serialization-based app fails at runtime rather than at compile
+      # time, so building it in CI is the only cheap way to find out.
+      - name: Assemble release APK (R8)
+        working-directory: nova-tv/android
+        run: |
+          set +e
+          ./gradlew :app:assembleRelease --stacktrace --no-daemon --console=plain > release.log 2>&1
+          STATUS=$?
+          echo "release exit: $STATUS"
+          echo "----- errors -----"
+          grep -nE "^e: |error:|FAILURE:|What went wrong|R8|Missing class" release.log | head -40
+          echo "----- R8 missing classes -----"
+          grep -nE "Missing class|R8: " release.log | head -30
+          echo "----- tail -----"
+          tail -50 release.log
+          exit $STATUS
+
+      # An APK that exists is not an APK that installs. Verify the package, the
+      # signature, and the alignment rather than trusting the file name.
+      - name: Verify both APKs
+        if: always()
+        run: |
+          set -e
+          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          BT=$(ls -d "$SDK"/build-tools/* | sort -V | tail -1)
+          echo "build-tools: $BT"
+          FOUND=0
+          for apk in nova-tv/android/app/build/outputs/apk/debug/*.apk \
+                     nova-tv/android/app/build/outputs/apk/release/*.apk; do
+            [ -f "$apk" ] || continue
+            FOUND=$((FOUND+1))
+            echo "=== $apk"
+            ls -l "$apk"
+            "$BT/aapt2" dump badging "$apk" | head -5
+            "$BT/apksigner" verify --print-certs "$apk" | head -6
+            "$BT/zipalign" -c -v 4 "$apk" > /dev/null && echo "aligned: yes"
+          done
+          echo "verified $FOUND apk(s)"
+          [ "$FOUND" -gt 0 ] || { echo "no APKS were produced"; exit 1; }
+
+      - name: Summarise artefacts
+        run: |
+          {
+            echo "## nova-tv build"
+            echo
+            echo "| APK | bytes |"
+            echo "|---|---|"
+            for f in nova-tv/android/app/build/outputs/apk/*/*.apk; do
+              echo "| $(basename "$f") | $(stat -c%s "$f") |"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nova-build-log
+          path: |
+            ${{ runner.temp }}/nova-build.log
+            ${{ runner.temp }}/nova-test.log
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload release APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nova-tv-release-apk
+          path: nova-tv/android/app/build/outputs/apk/release/*.apk
+          retention-days: 30
+
+      - name: Upload debug APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nova-tv-debug-apk
+          path: nova-tv/android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
+          retention-days: 14
+
       # Runs after a failed build. Writes the excerpt into the repository itself,
       # because step summaries and log blobs have both proven unreachable through
       # the API from here, and a committed file always is.
@@ -136,101 +239,3 @@ jobs:
           git commit -m "ci(nova): record build diagnostics for run $GITHUB_RUN_ID"
           git push
           echo "push exit: $?"
-
-      - name: Run unit tests
-        working-directory: nova-tv/android
-        run: ./gradlew :app:testDebugUnitTest --no-daemon --console=plain 2>&1 | tee "${{ runner.temp }}/nova-test.log"
-
-      # Lint is a gate, not a report. A UI with accessibility or API-level
-      # problems should fail the build rather than ship and be discovered by a
-      # viewer with a remote.
-      - name: Android lint
-        working-directory: nova-tv/android
-        run: |
-          set +e
-          ./gradlew :app:lintDebug --no-daemon --console=plain > lint.log 2>&1
-          STATUS=$?
-          echo "lint exit: $STATUS"
-          grep -nE "Error:|Warning:|errors?, [0-9]+ warnings?" lint.log | head -30
-          # Only errors block; warnings are recorded.
-          if grep -qE "^.*Error: " lint.log; then
-            echo "lint reported errors"
-            exit 1
-          fi
-          exit 0
-
-      # The release build is the one that has never existed. R8 shrinking is
-      # where a serialization-based app fails at runtime rather than at compile
-      # time, so building it in CI is the only cheap way to find out.
-      - name: Assemble release APK (R8)
-        working-directory: nova-tv/android
-        run: |
-          set +e
-          ./gradlew :app:assembleRelease --stacktrace --no-daemon --console=plain > release.log 2>&1
-          STATUS=$?
-          echo "release exit: $STATUS"
-          echo "----- errors -----"
-          grep -nE "^e: |error:|FAILURE:|What went wrong|R8|Missing class" release.log | head -40
-          echo "----- R8 missing classes -----"
-          grep -nE "Missing class|R8: " release.log | head -30
-          echo "----- tail -----"
-          tail -50 release.log
-          exit $STATUS
-
-      # An APK that exists is not an APK that installs. Verify the package, the
-      # signature, and the alignment rather than trusting the file name.
-      - name: Verify both APKs
-        run: |
-          set -e
-          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
-          BT=$(ls -d "$SDK"/build-tools/* | sort -V | tail -1)
-          echo "build-tools: $BT"
-          for apk in nova-tv/android/app/build/outputs/apk/debug/*.apk \
-                     nova-tv/android/app/build/outputs/apk/release/*.apk; do
-            echo "=== $apk"
-            test -f "$apk" || { echo "MISSING: $apk"; exit 1; }
-            ls -l "$apk"
-            "$BT/aapt2" dump badging "$apk" | head -5
-            "$BT/apksigner" verify --print-certs "$apk" | head -6
-            "$BT/zipalign" -c -v 4 "$apk" > /dev/null && echo "aligned: yes"
-          done
-
-      - name: Summarise artefacts
-        run: |
-          {
-            echo "## nova-tv build"
-            echo
-            echo "| APK | bytes |"
-            echo "|---|---|"
-            for f in nova-tv/android/app/build/outputs/apk/*/*.apk; do
-              echo "| $(basename "$f") | $(stat -c%s "$f") |"
-            done
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload build log on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: nova-build-log
-          path: |
-            ${{ runner.temp }}/nova-build.log
-            ${{ runner.temp }}/nova-test.log
-          if-no-files-found: ignore
-          retention-days: 7
-
-      - name: Upload release APK
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: nova-tv-release-apk
-          path: nova-tv/android/app/build/outputs/apk/release/*.apk
-          retention-days: 30
-
-      - name: Upload debug APK
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: nova-tv-debug-apk
-          path: nova-tv/android/app/build/outputs/apk/debug/*.apk
-          if-no-files-found: warn
-          retention-days: 14
