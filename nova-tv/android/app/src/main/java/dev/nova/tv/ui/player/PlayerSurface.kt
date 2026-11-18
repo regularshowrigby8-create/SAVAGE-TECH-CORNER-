@@ -20,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.KeyEventType
@@ -30,6 +31,9 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.ui.PlayerView
 import androidx.tv.material3.Text
+import dev.nova.tv.player.NovaPlayer
+import dev.nova.tv.player.PlayerTimings
+import dev.nova.tv.player.SkipSeconds
 import dev.nova.tv.ui.components.PrimaryButton
 import dev.nova.tv.ui.theme.NovaPalette
 import dev.nova.tv.ui.theme.NovaType
