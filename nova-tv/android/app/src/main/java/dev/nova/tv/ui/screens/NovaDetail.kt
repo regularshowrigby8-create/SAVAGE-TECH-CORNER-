@@ -130,7 +130,7 @@ fun DetailOverlay(state: NovaState, viewModel: NovaViewModel) {
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                SecondaryButton("Close", viewModel::closeTitle)
+                SecondaryButton("Close", onClick = viewModel::closeTitle)
                 Text("BACK closes this panel", style = NovaType.meta)
             }
         }
@@ -164,7 +164,7 @@ private fun StreamRow(stream: Stream, onPlay: () -> Unit) {
                 }
             }
             Spacer(Modifier.weight(1f))
-            PrimaryButton("Play", onPlay)
+            PrimaryButton("Play", onClick = onPlay)
         }
     }
 }

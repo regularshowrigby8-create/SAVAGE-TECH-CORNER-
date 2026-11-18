@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -97,10 +99,14 @@ fun NovaApp(viewModel: NovaViewModel = viewModel()) {
 
             // The player owns the whole window: video beside a 96dp rail is not
             // fullscreen. Drawn last so it covers both the rail and the content.
-            state.playing?.let { stream ->
+            val playing = state.playing
+            if (playing != null) {
+                val label: String = state.playingTitle.ifBlank {
+                    playing.name ?: "Playing"
+                }
                 NovaPlayerHost(
-                    stream = stream,
-                    title = state.playingTitle.ifBlank { stream.name ?: "Playing" },
+                    stream = playing,
+                    title = label,
                     onLeave = viewModel::stopPlayback
                 )
             }

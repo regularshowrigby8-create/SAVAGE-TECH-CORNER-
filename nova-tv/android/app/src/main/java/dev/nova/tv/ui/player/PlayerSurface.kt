@@ -103,7 +103,7 @@ fun PlayerSurface(
                 if (problem.retryable) {
                     PrimaryButton("Try again") { player.play() }
                 }
-                PrimaryButton("Close player", onLeave)
+                PrimaryButton("Close player", onClick = onLeave)
             }
         }
     }

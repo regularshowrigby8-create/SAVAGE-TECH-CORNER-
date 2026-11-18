@@ -174,8 +174,8 @@ internal fun initials(name: String): String {
 @Composable
 fun PrimaryButton(
     label: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
 ) {
     Surface(
         onClick = onClick,
@@ -201,8 +201,8 @@ fun PrimaryButton(
 @Composable
 fun SecondaryButton(
     label: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
 ) {
     Surface(
         onClick = onClick,
@@ -229,8 +229,8 @@ fun SecondaryButton(
 fun FilterChip(
     label: String,
     selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
 ) {
     Surface(
         onClick = onClick,
@@ -325,7 +325,7 @@ fun EmptyState(
             )
             if (actionLabel != null && onAction != null) {
                 Spacer(Modifier.height(4.dp))
-                PrimaryButton(actionLabel, onAction)
+                PrimaryButton(actionLabel, onClick = onAction)
             }
         }
     }
@@ -357,7 +357,7 @@ fun ErrorState(
                 modifier = Modifier.width(560.dp)
             )
             Spacer(Modifier.height(4.dp))
-            PrimaryButton("Try again", onRetry)
+            PrimaryButton("Try again", onClick = onRetry)
         }
     }
 }

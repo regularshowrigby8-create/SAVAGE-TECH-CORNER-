@@ -447,7 +447,7 @@ private fun SettingRow(
             Text(detail, style = NovaType.meta)
         }
         Spacer(Modifier.weight(1f))
-        SecondaryButton(value, onToggle)
+        SecondaryButton(value, onClick = onToggle)
     }
 }
 
