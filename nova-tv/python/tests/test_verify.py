@@ -209,6 +209,42 @@ class FourModelTest(unittest.TestCase):
         self.assertEqual(status["models"], [])
 
 
+class ReviewUiTest(unittest.TestCase):
+    """The review must never invent four opinions."""
+
+    def test_unreachable_returns_no_reviews(self):
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "review_ui", __file__.replace("tests/test_verify.py", "scripts/review_ui.py")
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        out = module.review_ui(base_url="http://127.0.0.1:1/v1")
+        self.assertFalse(out["reachable"])
+        self.assertEqual(out["reviews"], {})
+        self.assertIn("not running", out["hint"])
+
+    def test_reachable_collects_all_four(self):
+        import importlib.util
+
+        _FakeZeroKey.verdicts.update({k: "supported" for k in _FakeZeroKey.verdicts})
+        server = HTTPServer(("127.0.0.1", 0), _FakeZeroKey)
+        port = server.server_address[1]
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        try:
+            spec = importlib.util.spec_from_file_location(
+                "review_ui2", __file__.replace("tests/test_verify.py", "scripts/review_ui.py")
+            )
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            out = module.review_ui(base_url=f"http://127.0.0.1:{port}/v1")
+            self.assertTrue(out["reachable"])
+            self.assertEqual(len(out["answered"]), 4)
+        finally:
+            server.shutdown()
+
+
 class ParseVerdictTest(unittest.TestCase):
     def test_reads_json_wrapped_in_prose(self):
         verdict, reason, _ = zerokey.parse_verdict(
