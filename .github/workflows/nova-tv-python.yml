@@ -1,4 +1,12 @@
-name: nova
+# Moved from nova-tv/.github/workflows/ci.yml, where it never ran.
+#
+# GitHub Actions only reads .github/workflows at the repository ROOT. A workflow
+# nested under a subproject is not registered at all -- this file was absent from
+# the repo's /actions/workflows list, so the unit tests, the 6-hourly collection
+# pass and the secrets scan it defines had never executed once.
+#
+# Only the working directories change on the way here: the Python project lives
+# at nova-tv/python, not at the root.
 
 on:
   push:
@@ -22,10 +30,10 @@ jobs:
         with:
           python-version: "3.12"
       - name: Unit tests
-        working-directory: python
+        working-directory: nova-tv/python
         run: python -m unittest discover -s tests -t . -v
       - name: Every script executes
-        working-directory: python
+        working-directory: nova-tv/python
         run: |
           ok=0; bad=0
           for f in scripts/*.py; do
@@ -40,7 +48,7 @@ jobs:
           done
           echo "scripts ok=$ok failed=$bad"
       - name: No committed secrets
-        working-directory: python
+        working-directory: nova-tv/python
         run: python scripts/qa_secrets.py --json
 
   collect:
@@ -53,7 +61,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: One collection pass
-        working-directory: python
+        working-directory: nova-tv/python
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -62,5 +70,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: knowledge
-          path: knowledge.json
+          path: nova-tv/knowledge.json
           if-no-files-found: warn

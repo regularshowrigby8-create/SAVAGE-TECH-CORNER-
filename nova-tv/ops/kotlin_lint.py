@@ -34,6 +34,105 @@ def strip_comments_and_strings(text: str) -> str:
     return text
 
 
+def check_build_files(root: Path) -> list[str]:
+    """Cross-check the Gradle build files against the sources they must build.
+
+    This is not a Gradle build -- it cannot resolve dependencies or type-check.
+    It catches the class of mistake that makes a build fail instantly and
+    unhelpfully: a namespace that does not match the source layout, a plugin
+    used by a module but never declared in the root file, a dependency
+    referenced in the catalog that is not defined, or a referenced file that
+    does not exist.
+    """
+    problems: list[str] = []
+    android = root / "android"
+    if not android.is_dir():
+        return problems
+
+    catalog = android / "gradle" / "libs.versions.toml"
+    if not catalog.is_file():
+        return [f"{catalog.relative_to(root)} is missing"]
+
+    try:
+        import tomllib
+    except ModuleNotFoundError:  # pragma: no cover - py<3.11
+        return problems
+    try:
+        data = tomllib.loads(catalog.read_text())
+    except Exception as error:
+        return [f"version catalog does not parse: {error}"]
+
+    defined = set(data.get("libraries", {}))
+    defined_plugins = set(data.get("plugins", {}))
+
+    app_build = android / "app" / "build.gradle.kts"
+    root_build = android / "build.gradle.kts"
+    if not app_build.is_file():
+        return problems + [f"{app_build.relative_to(root)} is missing"]
+
+    app_text = app_build.read_text()
+    root_text = root_build.read_text() if root_build.is_file() else ""
+
+    # 1. Every `libs.*` reference must exist in the catalog.
+    #
+    # Gradle's Kotlin DSL maps the whole dotted path to one hyphenated key:
+    #   libs.compose.ui.tooling.preview  ->  compose-ui-tooling-preview
+    #   libs.plugins.kotlin.android      ->  [plugins] kotlin-android
+    # Treating only the first and last segments as the key reports false
+    # positives for every multi-segment accessor, which is most of them.
+    for match in re.finditer(r"libs\.([a-z0-9]+(?:\.[a-z0-9]+)*)", app_text):
+        path_segments = match.group(1).split(".")
+        if path_segments[0] == "versions":
+            continue
+        if path_segments[0] == "plugins":
+            if len(path_segments) < 2:
+                continue
+            key = "-".join(path_segments[1:])
+            if key not in defined_plugins:
+                problems.append(f"app applies plugin '{key}' which the catalog does not define")
+            # and it must be declared, apply-false, at the root
+            dotted = ".".join(path_segments[1:])
+            if f"libs.plugins.{dotted}" not in root_text:
+                problems.append(f"plugin '{key}' is applied in app but not declared in the root build file")
+            continue
+        key = "-".join(path_segments)
+        if key not in defined:
+            problems.append(
+                f"app references libs.{'.'.join(path_segments)} (catalog key '{key}') which the catalog does not define"
+            )
+
+    # 2. Every library the catalog defines should be reachable; catch dead entries.
+    referenced = set()
+    for match in re.finditer(r"libs\.([a-z0-9]+(?:\.[a-z0-9]+)*)", app_text):
+        segs = match.group(1).split(".")
+        if segs[0] in ("versions", "plugins"):
+            continue
+        referenced.add("-".join(segs))
+    for key in sorted(defined - referenced):
+        problems.append(f"catalog defines '{key}' but no module uses it")
+
+    # 3. `namespace` must match where the sources actually live.
+    ns = re.search(r'namespace\s*=\s*"([^"]+)"', app_text)
+    if ns:
+        expected = android / "app" / "src" / "main" / "java" / Path(*ns.group(1).split("."))
+        if not expected.is_dir():
+            problems.append(f"namespace '{ns.group(1)}' has no source directory at app/src/main/java/{ns.group(1).replace('.', '/')}")
+
+    # 4. Files the build references must exist.
+    for relative in ("app/proguard-rules.pro", "gradle/wrapper/gradle-wrapper.jar",
+                     "gradle/wrapper/gradle-wrapper.properties", "gradlew",
+                     "app/src/main/AndroidManifest.xml"):
+        if not (android / relative).exists():
+            problems.append(f"build references {relative} but it does not exist")
+
+    # 5. Manifest must not declare a package; AGP 8 takes it from namespace.
+    manifest = android / "app" / "src" / "main" / "AndroidManifest.xml"
+    if manifest.is_file() and 'package="' in manifest.read_text():
+        problems.append("AndroidManifest.xml declares package=; with AGP 8 the namespace in build.gradle.kts governs")
+
+    return problems
+
+
 def main() -> int:
     files = sorted(SRC.rglob("*.kt"))
     problems: list[str] = []
@@ -90,6 +189,13 @@ def main() -> int:
         print(f"{len(problems)} problem(s):")
         for problem in problems:
             print("  - " + problem)
+    problems.extend(check_build_files(ROOT))
+
+    if not problems:
+        print("build files: no structural problems found")
+    else:
+        print(f"build files: {len([p for p in problems if 'build' in p or 'catalog' in p or 'plugin' in p or 'namespace' in p or 'gradle' in p or 'proguard' in p])} issue(s)")
+
     print("\nNote: this is a structural check, not a compile. Type errors, "
           "Compose API mismatches and missing Android resources can only be "
           "caught by a real Gradle build.")

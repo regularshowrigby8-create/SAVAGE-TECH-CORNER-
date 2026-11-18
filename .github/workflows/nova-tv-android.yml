@@ -1,0 +1,101 @@
+name: nova-tv Android
+
+# Why this file is at the repository root and not under nova-tv/.github:
+# GitHub Actions only reads .github/workflows at the repository root. The
+# workflow that previously sat at nova-tv/.github/workflows/ci.yml was therefore
+# never registered -- it is absent from /actions/workflows and has never run.
+# This one is where Actions actually looks.
+#
+# This workflow exists to answer one question: does nova-tv's Kotlin compile?
+# It has never been compiled anywhere, so nothing about it is known to be valid.
+# The first successful run is the milestone; signing and release come after.
+
+on:
+  push:
+    branches:
+      - main
+      - arena/*
+    paths:
+      - 'nova-tv/android/**'
+      - '.github/workflows/nova-tv-android.yml'
+  pull_request:
+    paths:
+      - 'nova-tv/android/**'
+      - '.github/workflows/nova-tv-android.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nova-tv-android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Compile nova-tv debug APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # The same Gradle/AGP pairing this repository already builds green in
+      # "ZeroPlay Android TV APK" (Gradle 8.7 + AGP 8.5.x), so a failure here is
+      # attributable to nova-tv's code rather than to an untried toolchain.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Validate version catalog
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import tomllib
+          from pathlib import Path
+          p = Path("nova-tv/android/gradle/libs.versions.toml")
+          data = tomllib.loads(p.read_text())
+          for section in ("versions", "libraries", "plugins"):
+              if not data.get(section):
+                  raise SystemExit(f"version catalog missing [{section}]")
+          print("catalog ok:", len(data["versions"]), "versions,", len(data["libraries"]), "libraries")
+          PY
+
+      - name: Assemble debug APK
+        working-directory: nova-tv/android
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          # --continue so one broken file does not mask the rest; the log is what
+          # tells us how far the compiler got.
+          ./gradlew :app:assembleDebug --stacktrace --no-daemon --console=plain 2>&1 | tee "${{ runner.temp }}/nova-build.log"
+
+      - name: Run unit tests
+        working-directory: nova-tv/android
+        run: ./gradlew :app:testDebugUnitTest --no-daemon --console=plain 2>&1 | tee "${{ runner.temp }}/nova-test.log"
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nova-build-log
+          path: |
+            ${{ runner.temp }}/nova-build.log
+            ${{ runner.temp }}/nova-test.log
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload debug APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nova-tv-debug-apk
+          path: nova-tv/android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
+          retention-days: 14
