@@ -95,20 +95,33 @@ jobs:
         run: |
           set +e
           OUT="$GITHUB_WORKSPACE/nova-tv/docs/build-diagnostics.md"
+          # Any of the three build steps can fail, and each writes its own log.
+          # The first version only read build.log, so a release-only failure
+          # published nothing and the committed file was stale.
+          LOG=""
+          for candidate in release.log lint.log build.log; do
+            if [ -s "$candidate" ] && grep -qE "FAILURE:|What went wrong|Error:" "$candidate"; then
+              LOG="$candidate"
+              break
+            fi
+          done
+          [ -z "$LOG" ] && LOG="build.log"
+          echo "diagnostics source: $LOG"
           {
             echo "# nova-tv build diagnostics"
             echo
             echo "Written automatically by the \"nova-tv Android\" workflow."
             echo "Run: $GITHUB_RUN_ID  Commit: $GITHUB_SHA"
+            echo "Log: $LOG"
             echo
-            echo "## compiler errors"
+            echo "## errors"
             echo '```'
-            grep -nE "^e: |error:|FAILURE:|What went wrong|Caused by" build.log 2>/dev/null | head -60
+            grep -nE "^e: |error:|Error:|FAILURE:|What went wrong|Caused by|Missing class|R8:" "$LOG" 2>/dev/null | head -60
             echo '```'
             echo
-            echo "## last 60 lines"
+            echo "## last 80 lines"
             echo '```'
-            tail -60 build.log 2>/dev/null
+            tail -80 "$LOG" 2>/dev/null
             echo '```'
           } > "$OUT"
           wc -l "$OUT"
@@ -158,8 +171,10 @@ jobs:
           echo "release exit: $STATUS"
           echo "----- errors -----"
           grep -nE "^e: |error:|FAILURE:|What went wrong|R8|Missing class" release.log | head -40
+          echo "----- R8 missing classes -----"
+          grep -nE "Missing class|R8: " release.log | head -30
           echo "----- tail -----"
-          tail -40 release.log
+          tail -50 release.log
           exit $STATUS
 
       # An APK that exists is not an APK that installs. Verify the package, the

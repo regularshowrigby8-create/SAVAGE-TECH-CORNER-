@@ -26,3 +26,19 @@
 # Keep line numbers so a shipped crash is still diagnosable.
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
+
+# Default values in @Serializable data classes generate a synthetic
+# `-serializer` constructor with a bitmask. R8 full mode strips synthetic
+# members it believes are unused, and the result is an InternalError at the
+# first decode rather than a build failure -- the worst kind, because it passes
+# every check here and fails on a viewer's device.
+-keepclassmembers class dev.nova.tv.data.model.** {
+    synthetic <init>(...);
+}
+-keepclassmembers,allowobfuscation class * implements kotlinx.serialization.KSerializer {
+    <init>(...);
+}
+
+# kotlinx.serialization reads these by name.
+-keepattributes RuntimeVisibleAnnotations,AnnotationDefault,Signature,Exceptions,InnerClasses
+-dontwarn kotlinx.serialization.**

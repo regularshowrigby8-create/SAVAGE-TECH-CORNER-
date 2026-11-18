@@ -68,29 +68,45 @@ android {
         }
     }
 
-    // Runs only when a release artefact is actually requested.
-    tasks.matching { it.name.startsWith("assembleRelease") || it.name.startsWith("bundleRelease") }
-        .configureEach {
-            doFirst {
-                if (!keystoreFile.exists()) {
-                    keystoreDir.mkdirs()
-                    val keytool = File(System.getProperty("java.home"), "bin/keytool")
-                    providers.exec {
-                        commandLine(
-                            keytool.absolutePath, "-genkeypair",
-                            "-keystore", keystoreFile.absolutePath,
-                            "-storepass", storePass,
-                            "-keypass", storePass,
-                            "-alias", keyAlias,
-                            "-keyalg", "RSA", "-keysize", "2048",
-                            "-validity", "10000",
-                            "-dname", "CN=Nova TV, OU=Development, O=nova-tv, C=ZA",
-                        )
-                    }.result.get()
-                    logger.lifecycle("nova: generated development keystore at $keystoreFile")
-                }
-            }
+    /**
+     * Generate the development key before the artefact that needs it.
+     *
+     * `doFirst` was the wrong hook: AGP validates and consumes the signing
+     * config during task execution setup, so a key created inside `doFirst` on
+     * `assembleRelease` can arrive after the packaging step has already decided
+     * the file is missing.
+     *
+     * This task is a hard dependency of packaging instead, and it is a no-op
+     * when the key already exists.
+     */
+    val ensureKeystore = tasks.register("ensureNovaKeystore") {
+        description = "Create the reproducible development release keystore if absent."
+        onlyIf { !keystoreFile.exists() }
+        doLast {
+            keystoreDir.mkdirs()
+            val keytool = File(System.getProperty("java.home"), "bin/keytool")
+            check(keytool.exists()) { "keytool not found at $keytool" }
+            providers.exec {
+                commandLine(
+                    keytool.absolutePath, "-genkeypair",
+                    "-keystore", keystoreFile.absolutePath,
+                    "-storepass", storePass,
+                    "-keypass", storePass,
+                    "-alias", keyAlias,
+                    "-keyalg", "RSA", "-keysize", "2048",
+                    "-validity", "10000",
+                    "-dname", "CN=Nova TV, OU=Development, O=nova-tv, C=ZA",
+                )
+            }.result.get()
+            logger.lifecycle("nova: generated development keystore at $keystoreFile")
         }
+    }
+
+    tasks.matching {
+        it.name.startsWith("packageRelease") || it.name.startsWith("validateSigningRelease")
+    }.configureEach {
+        dependsOn(ensureKeystore)
+    }
 
     buildTypes {
         debug {
