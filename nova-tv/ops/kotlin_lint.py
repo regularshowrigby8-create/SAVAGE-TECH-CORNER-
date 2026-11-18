@@ -49,6 +49,33 @@ def check_build_files(root: Path) -> list[str]:
     if not android.is_dir():
         return problems
 
+    # The module must still declare the things AGP reads before it builds
+    # anything. A refactor that accidentally swallows `compileSdk` or
+    # `defaultConfig` produces a build that fails on line 1 with an unhelpful
+    # message, which is exactly what happened: a splice from the signing block to
+    # `buildTypes` deleted both, and AGP reported only "compileSdkVersion is not
+    # specified". Structural lint cannot run Gradle, but it can insist these
+    # declarations exist.
+    module = android / "app" / "build.gradle.kts"
+    if module.is_file():
+        text = module.read_text()
+        for declaration in (
+            "namespace",
+            "compileSdk",
+            "defaultConfig",
+            "applicationId",
+            "minSdk",
+            "targetSdk",
+            "versionCode",
+            "versionName",
+            "buildTypes",
+        ):
+            if not re.search(rf"\b{declaration}\b", text):
+                problems.append(
+                    f"{module.name}: '{declaration}' is not declared -- AGP will "
+                    f"fail before compiling anything"
+                )
+
     catalog = android / "gradle" / "libs.versions.toml"
     if not catalog.is_file():
         return [f"{catalog.relative_to(root)} is missing"]
@@ -133,8 +160,10 @@ def check_build_files(root: Path) -> list[str]:
     return problems
 
 
-def main() -> int:
-    files = sorted(SRC.rglob("*.kt"))
+def main(argv: list[str] | None = None) -> int:
+    root = Path(argv[0]).resolve() if argv else ROOT
+    src = root / "android" / "app" / "src"
+    files = sorted(src.rglob("*.kt")) if src.is_dir() else []
     problems: list[str] = []
     declared: dict[str, list[str]] = {}
 
@@ -144,7 +173,7 @@ def main() -> int:
         # Sources live under main/ and test/; both must map package -> directory.
         relative = None
         for root_name in ("main", "test", "androidTest"):
-            candidate = SRC / root_name / "java"
+            candidate = src / root_name / "java"
             try:
                 relative = path.relative_to(candidate)
                 break
@@ -198,12 +227,13 @@ def main() -> int:
         print(f"{len(problems)} problem(s):")
         for problem in problems:
             print("  - " + problem)
-    problems.extend(check_build_files(ROOT))
+    build_problems = check_build_files(root)
+    problems.extend(build_problems)
 
     if not problems:
         print("build files: no structural problems found")
     else:
-        print(f"build files: {len([p for p in problems if 'build' in p or 'catalog' in p or 'plugin' in p or 'namespace' in p or 'gradle' in p or 'proguard' in p])} issue(s)")
+        print(f"build files: {len(build_problems)} issue(s)")
 
     print("\nNote: this is a structural check, not a compile. Type errors, "
           "Compose API mismatches and missing Android resources can only be "
@@ -212,4 +242,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    import sys as _sys
+    raise SystemExit(main(_sys.argv[1:]))
