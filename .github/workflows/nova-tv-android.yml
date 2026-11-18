@@ -203,7 +203,7 @@ jobs:
           # published nothing and the committed file was stale.
           LOG=""
           for candidate in release.log lint.log build.log; do
-            if [ -s "$candidate" ] && grep -qE "FAILURE:|What went wrong|Error:" "$candidate"; then
+            if [ -s "$candidate" ] && grep -qE "FAILURE:|What went wrong" "$candidate"; then
               LOG="$candidate"
               break
             fi
@@ -219,7 +219,7 @@ jobs:
             echo
             echo "## errors"
             echo '```'
-            grep -nE "^e: |error:|Error:|FAILURE:|What went wrong|Caused by|Missing class|R8:" "$LOG" 2>/dev/null | head -60
+            grep -nE "^e: |error:|FAILURE:|What went wrong|Caused by|Execution failed for task|Missing class|^> Task .* FAILED" "$LOG" 2>/dev/null | head -60
             echo '```'
             echo
             echo "## last 80 lines"

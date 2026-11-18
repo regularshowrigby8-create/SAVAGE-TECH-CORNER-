@@ -129,6 +129,20 @@ android {
         compose = true
     }
 
+    /**
+     * Point lint at app/lint.xml, which currently holds one entry: the crashing
+     * `NullSafeMutableLiveData` detector (a known AGP 8.7.x / lifecycle lint-jar
+     * mismatch). Without this file `assembleRelease` cannot complete, because
+     * `lintVitalRelease` runs as part of it and dies inside that detector.
+     */
+    lint {
+        lintConfig = file("lint.xml")
+        // Vital lint must still gate the release build; only the broken detector
+        // is exempted, and only in lint.xml where the reason is recorded.
+        checkReleaseBuilds = true
+        abortOnError = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
