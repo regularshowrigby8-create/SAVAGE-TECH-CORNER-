@@ -72,9 +72,29 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x gradlew
-          # --continue so one broken file does not mask the rest; the log is what
-          # tells us how far the compiler got.
-          ./gradlew :app:assembleDebug --stacktrace --no-daemon --console=plain 2>&1 | tee "${{ runner.temp }}/nova-build.log"
+          LOG="${{ runner.temp }}/nova-build.log"
+          set +e
+          # --continue so one broken file does not mask the rest.
+          ./gradlew :app:assembleDebug --stacktrace --no-daemon --console=plain 2>&1 | tee "$LOG"
+          STATUS=${PIPESTATUS[0]}
+          set -e
+          if [ "$STATUS" -ne 0 ]; then
+            # Artifact logs live in blob storage that is not always reachable, so
+            # the compiler's own errors are surfaced as check annotations, which
+            # the API can always read: one annotation per "e: file:line: msg".
+            COUNT=0
+            grep -E "^e: " "$LOG" | head -40 | while IFS= read -r line; do
+              echo "::error title=Kotlin compile::${line}"
+            done
+            COUNT=$(grep -cE "^e: " "$LOG" || true)
+            echo "::error title=Compile summary::${COUNT} kotlin error line(s)"
+            # Also print the first errors in the step log for quick scanning.
+            echo "----- first compiler errors -----"
+            grep -E "^e: " "$LOG" | head -15 || echo "(no 'e: ' lines found)"
+            echo "----- failure context -----"
+            grep -iE "what went wrong|execution failed|Caused by" -A4 "$LOG" | head -30 || true
+            exit "$STATUS"
+          fi
 
       - name: Run unit tests
         working-directory: nova-tv/android
