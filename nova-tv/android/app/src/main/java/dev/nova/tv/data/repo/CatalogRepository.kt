@@ -51,9 +51,12 @@ class CatalogRepository(private val client: AddonClient) {
         val results = enabled.map { addon ->
             async {
                 val catalog = addon.catalogDefs.firstOrNull { it.type == type } ?: return@async emptyList<MetaPreview>()
-                runCatching { client.fetchCatalog(addon, catalog) }
+                // The type argument is explicit because runCatching's own T is
+                // otherwise unconstrained, and getOrElse cannot settle on the
+                // element type of the surrounding map.
+                runCatching<List<MetaPreview>> { client.fetchCatalog(addon, catalog) }
                     .onFailure { errors += "${addon.name}: ${it.message}" }
-                    .getOrElse { it }
+                    .getOrElse { emptyList() }
             }
         }.map { it.await() }
         _lastErrors.value = errors
