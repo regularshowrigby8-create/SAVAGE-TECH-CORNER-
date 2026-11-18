@@ -70,10 +70,13 @@ jobs:
       - name: Assemble debug APK
         working-directory: nova-tv/android
         run: |
+          # GitHub's default shell is `bash -e`, so errexit is ON unless it is
+          # explicitly turned off. Turning it off here is the fix for three runs
+          # that produced no diagnostics at all: the failing gradlew call ended
+          # the step before any capture code could run.
+          set +e
           LOG="${{ runner.temp }}/nova-build.log"
-          chmod +x gradlew || true
-          # Deliberately no `set -e`: if the build fails, capturing why is the
-          # whole point of this step, and an early exit skips the capture.
+          chmod +x gradlew
           ./gradlew :app:assembleDebug --stacktrace --no-daemon --console=plain > "$LOG" 2>&1
           STATUS=$?
           echo "gradle exit status: $STATUS"
