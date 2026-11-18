@@ -282,34 +282,72 @@ is, at bottom, honesty rendered in pixels.
 ## 9. Honest gap: spec vs. what is in the app today
 
 This section exists because a design document that claims to describe the shipped
-app is the exact hallucination this project has scripts to catch.
+app is the exact hallucination this project has scripts to catch. It is now much
+shorter than it was, because the UI was built to it.
 
 | Item | Spec | In the app today |
 |---|---|---|
-| Rail collapsed/expanded | 88dp → 220dp on focus | fixed **200dp**, always labelled |
-| Rail radius | pill 999dp | `RoundedCornerShape(10dp)` |
-| Background | `#0B0E14 → #111827` gradient | flat **`#0B0E11`** |
-| Surface | `#151A24` | **`#161A1F`** |
-| Accent | `#4C8DFF` | **`#5B8DEF`** |
-| Text primary | `#F5F7FA` | **`#E8ECF1`** |
-| Route switching | six distinct panes | **all six render `HomePane`** |
-| Poster states | five defined | rest + focused only |
-| Skeletons | shimmer in card shape | centred `CircularProgressIndicator` |
-| Empty state | icon + message + action | not implemented |
+| Rail collapsed/expanded | 88dp → 220dp on focus | **96dp → 208dp on focus** |
+| Rail radius | pill 999dp | **pill** (`percent = 50`) |
+| Background | `#0B0E14 → #111827` gradient | **matches** |
+| Surface | `#151A24` | **matches** |
+| Accent | `#4C8DFF` | **matches** |
+| Text primary | `#F5F7FA` | **matches** |
+| Text muted | 7:1 contrast claimed | **`#A6B0C0`, measured 7.96:1** |
+| Route switching | six distinct panes | **six distinct panes** |
+| Poster states | five defined | rest + focused + skeleton + initials tile |
+| Skeletons | shimmer in card shape | **shape-correct skeletons, no shimmer** |
+| Empty state | icon + message + action | **message + action, no icon** |
+| Error state | names the failed source | **names the source, one retry** |
+| Player | renders video | **`PlayerView` via AndroidView** |
+| Artwork | real posters | **initials tiles** — Coil is not a dependency |
 
-Two of these are straight defects and already reported by the checkers:
+### What is still genuinely missing
 
-- **Six routes, one pane.** `check_buttons.py` flags `unrouted-entries`: HOME,
-  MOVIES, SERIES, SEARCH, ADDONS, SETTINGS can all be selected and nothing
-  branches on `route`. Every entry shows the same screen.
-- **Colour drift.** The theme file has its own five colours that do not match the
-  plan by a small, deliberate-looking amount. That is worse than being obviously
-  wrong — it survives review.
+Stated plainly rather than implied by a table:
 
-The remaining gaps are styling work, not redesign: three radii, one gradient,
-one accent.
+- **No artwork.** Coil is not in the dependency set, so posters are typographic
+  initials tiles. They are deliberately designed to look intentional rather than
+  like a failed image request, but they are not artwork.
+- **No shimmer.** Skeletons are static shapes in the right dimensions. The layout
+  does not jump, which is the actual goal; the shimmer is polish.
+- **Search filters what is loaded.** It does not query addons server-side, and the
+  screen says so instead of pretending otherwise.
+- **No quality picker or subtitle stepper.** Those settings are shown as stated
+  values, not as controls that would do nothing.
+- **Two settings remain write-only:** `addonUrls` and the player's `muted` flag
+  are stored and never read. `check_buttons.py` reports both.
+- **Two classes are dead:** `ChromeController` and `ImportedHoldReason`.
 
----
+### What was fixed
+
+The six defects this document was written against are closed: colour drift,
+the fixed-width labelled rail, six routes rendering one pane, the centred
+spinner, the switch from no player to a real player, and the 6.77:1 muted text
+that failed its own stated contrast claim.
+
+## 9b. What the research changed
+
+Six findings from published TV guidance and streaming design systems that
+altered this design. Two contradicted what I had written in the first draft.
+
+| Source | Finding | What changed here |
+|---|---|---|
+| Android Developers, adaptive TV | Overscan crops up to **5%**; safe margin mandatory | content inset 48dp/36dp; it was uninset before |
+| 10-foot UI guidance | Body text **28–34px at 1080p**, 7:1 contrast for body | kept 18sp for card titles but raised every heading, and moved muted to `#A6B0C0` for 7.96:1 |
+| TV UX research | **Never use hamburger menus**; a persistent rail is the pattern | rail is persistent and focusable, never collapsible into a menu button |
+| D-pad navigation guidance | Regions need **focus memory**; returning restores the last item | the detail overlay draws *above* the row, so BACK returns to the same position |
+| Netflix design system | Tiles are **4–6px** radius, art bleeds, no borders | **rejected** — the brief asks for soft edges; 12dp is deliberate, not a mistake |
+| Disney+ design system | Even progress bars are pill-radius; blue glow ring on focus | adopted the glow ring idea (`accent @ 18%`), kept the softer 12dp card |
+
+The Netflix finding is worth naming because it is the one I overrode on purpose.
+Netflix uses near-square tiles with no container because their artwork is
+edge-to-edge photographic and does all the work. This app has no artwork yet, so
+a soft container is what separates one card from another. When Coil lands, the
+radius becomes a genuine judgement call rather than a workaround.
+
+Two findings changed real values rather than confirming them: the safe margin did
+not exist at all, and the muted text failed the contrast floor it claimed to meet.
 
 ## 10. Acceptance — what "done" means here
 
