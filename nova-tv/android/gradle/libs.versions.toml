@@ -27,11 +27,11 @@
 # "vibe coded android app" repo (DeadWaveWave/demo2apk) ships no licence at all.
 
 [versions]
-agp = "8.5.2"
+agp = "8.7.3"
 kotlin = "2.0.21"
-compileSdk = "34"
+compileSdk = "35"
 minSdk = "26"
-targetSdk = "34"
+targetSdk = "35"
 
 # Compose
 composeBom = "2024.12.01"
