@@ -247,6 +247,29 @@ class ZeroKey:
         verdict, reason, quoted = parse_verdict(content)
         return Verdict(provider, model, verdict, reason, quoted)
 
+    def complete(self, model: str, prompt: str) -> str:
+        """One raw completion. Used for open-ended review, not verdicts.
+
+        `verify` runs a strict JSON verdict schema because a claim is a
+        supported/unsupported question. A design review has no such schema, so it
+        needs the model's actual prose, unparsed.
+        """
+        payload = _post(
+            f"{self.base_url}/chat/completions",
+            {
+                "model": model,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.2,
+                "stream": False,
+            },
+            self.api_key,
+            self.timeout,
+        )
+        try:
+            return payload["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, TypeError):
+            raise ValueError(f"{model}: no message in reply")
+
     def verify(self, claim: str, evidence: str) -> Consensus:
         """Ask every available provider the same question."""
         available = self.models()

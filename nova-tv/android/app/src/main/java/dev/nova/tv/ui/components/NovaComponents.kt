@@ -1,8 +1,7 @@
 package dev.nova.tv.ui.components
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -34,11 +33,10 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import dev.nova.tv.data.model.MetaPreview
+import dev.nova.tv.ui.theme.LocalReduceMotion
 import dev.nova.tv.ui.theme.NovaPalette
 import dev.nova.tv.ui.theme.NovaShape
 import dev.nova.tv.ui.theme.NovaType
-import dev.nova.tv.ui.theme.novaDuration
-import dev.nova.tv.ui.theme.novaFocusScale
 
 /**
  * Shared UI parts.
@@ -76,38 +74,28 @@ fun PosterCard(
     width: Int = 168
 ) {
     var focused by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(
-        targetValue = novaFocusScale(focused),
-        animationSpec = tween(durationMillis = novaDuration(120)),
-        label = "poster-scale"
-    )
+    val reduced = LocalReduceMotion.current
 
     Card(
         onClick = onClick,
         modifier = modifier
             .width(width.dp)
-            .scale(scale)
+            .graphicsLayer {
+                val target = if (focused && !reduced) 1.04f else 1f
+                scaleX = target
+                scaleY = target
+            }
             .onFocusChanged { focused = it.isFocused },
-        shape = CardShape,
-        colors = CardDefaults.colors(containerColor = Color.Transparent),
-        // The ring is drawn by Card itself so it is never clipped by the parent
-        // row, which is what happens when a glow is added via a border modifier.
-        border = CardDefaults.border(
-            focusedBorder = androidx.tv.material3.Border(
-                border = androidx.compose.foundation.BorderStroke(2.dp, NovaPalette.accent),
-                shape = CardShape
-            ),
-            selectedBorder = null
-        ),
-        glow = CardDefaults.glow(
-            focusedGlow = androidx.tv.material3.Glow(
-                elevationColor = NovaPalette.accent.copy(alpha = 0.18f),
-                elevation = 8.dp
-            ),
-            selectedGlow = null
-        )
+        shape = CardDefaults.shape(CardShape),
+        colors = CardDefaults.colors(containerColor = Color.Transparent)
     ) {
-        Column {
+        Column(
+            Modifier.border(
+                width = if (focused) 2.dp else 0.dp,
+                color = NovaPalette.accent,
+                shape = CardShape
+            )
+        ) {
             PosterArt(title = title, width = width)
             Spacer(Modifier.height(10.dp))
             Text(
@@ -190,7 +178,7 @@ fun PrimaryButton(
     Surface(
         onClick = onClick,
         modifier = modifier,
-        shape = PillShape,
+        shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(PillShape),
         colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(
             containerColor = NovaPalette.accent,
             contentColor = NovaPalette.background,
@@ -217,7 +205,7 @@ fun SecondaryButton(
     Surface(
         onClick = onClick,
         modifier = modifier,
-        shape = PillShape,
+        shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(PillShape),
         colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(
             containerColor = Color.Transparent,
             contentColor = NovaPalette.textPrimary,
@@ -245,7 +233,7 @@ fun FilterChip(
     Surface(
         onClick = onClick,
         modifier = modifier,
-        shape = PillShape,
+        shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(PillShape),
         colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(
             containerColor = if (selected) NovaPalette.accent.copy(alpha = 0.18f) else NovaPalette.surface,
             contentColor = if (selected) NovaPalette.accent else NovaPalette.textMuted,

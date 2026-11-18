@@ -171,7 +171,7 @@ private fun RailItem(
     Surface(
         onClick = onClick,
         modifier = Modifier.fillMaxSize().height(52.dp),
-        shape = RoundedCornerShape(percent = NovaShape.pillPercent),
+        shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(RoundedCornerShape(percent = NovaShape.pillPercent)),
         colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(
             containerColor = if (selected) {
                 NovaPalette.accent.copy(alpha = 0.22f)

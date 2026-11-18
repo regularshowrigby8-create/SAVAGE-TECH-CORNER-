@@ -23,7 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
@@ -103,7 +102,6 @@ fun PlayerSurface(
                 PrimaryButton("Close player", onLeave)
             }
         }
-        DisposableEffect(problem) { onDispose { } }
     }
 
     // Chrome hides itself after inactivity, so the picture is never dimmed by a
@@ -121,8 +119,13 @@ fun PlayerSurface(
             .background(NovaPalette.background)
             .onPreviewKeyEvent { event ->
                 if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
-                when (event.key) {
-                    AndroidKeyEvent.KEYCODE_DPAD_CENTER, AndroidKeyEvent.KEYCODE_ENTER,
+                // `event.key` is a compose `Key`, not an android keycode. The
+                // int constants from android.view.KeyEvent compare against
+                // `event.nativeKeyEvent.keyCode`; using them on `event.key`
+                // does not compile.
+                when (event.nativeKeyEvent.keyCode) {
+                    AndroidKeyEvent.KEYCODE_DPAD_CENTER,
+                    AndroidKeyEvent.KEYCODE_ENTER,
                     AndroidKeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
                         player.togglePlay()
                         wake()
@@ -211,7 +214,9 @@ fun PlayerSurface(
                     }
                     androidx.tv.material3.Surface(
                         onClick = { onLeave() },
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(percent = 50),
+                        shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(
+                            androidx.compose.foundation.shape.RoundedCornerShape(percent = 50)
+                        ),
                         colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(
                             containerColor = NovaPalette.surfaceHigh,
                             contentColor = NovaPalette.textPrimary

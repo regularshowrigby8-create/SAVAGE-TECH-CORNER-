@@ -279,7 +279,7 @@ private fun Key(label: String, width: Int = 56, onClick: () -> Unit) {
         modifier = Modifier
             .width(width.dp)
             .height(52.dp),
-        shape = RoundedCornerShape(NovaShape.card),
+        shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(RoundedCornerShape(NovaShape.card)),
         colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(
             containerColor = NovaPalette.surface,
             contentColor = NovaPalette.textPrimary,

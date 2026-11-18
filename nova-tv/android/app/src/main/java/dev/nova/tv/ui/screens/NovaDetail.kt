@@ -142,7 +142,7 @@ fun DetailOverlay(state: NovaState, viewModel: NovaViewModel) {
 private fun StreamRow(stream: Stream, onPlay: () -> Unit) {
     Card(
         onClick = onPlay,
-        shape = RoundedCornerShape(NovaShape.card),
+        shape = androidx.tv.material3.CardDefaults.shape(RoundedCornerShape(NovaShape.card)),
         colors = CardDefaults.colors(containerColor = NovaPalette.surface),
         modifier = Modifier.fillMaxWidth()
     ) {
