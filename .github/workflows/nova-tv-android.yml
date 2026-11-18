@@ -24,8 +24,10 @@ on:
       - '.github/workflows/nova-tv-android.yml'
   workflow_dispatch:
 
+# write is needed so the failure path can commit its diagnostics; the build
+# itself only reads.
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: nova-tv-android-${{ github.ref }}
@@ -70,38 +72,57 @@ jobs:
       - name: Assemble debug APK
         working-directory: nova-tv/android
         run: |
-          # GitHub's default shell is `bash -e`, so errexit is ON unless it is
-          # explicitly turned off. Turning it off here is the fix for three runs
-          # that produced no diagnostics at all: the failing gradlew call ended
-          # the step before any capture code could run.
+          # GitHub's default shell is `bash -e`, so errexit is ON unless turned
+          # off explicitly. It is off here so a failing build cannot skip the
+          # diagnostics below.
           set +e
-          LOG="${{ runner.temp }}/nova-build.log"
           chmod +x gradlew
-          ./gradlew :app:assembleDebug --stacktrace --no-daemon --console=plain > "$LOG" 2>&1
+          ./gradlew :app:assembleDebug --stacktrace --no-daemon --console=plain > build.log 2>&1
           STATUS=$?
           echo "gradle exit status: $STATUS"
-          echo "----- head -----"
-          head -30 "$LOG" || true
           echo "----- errors -----"
-          grep -E "^e: |error:|FAILURE:|What went wrong" "$LOG" | head -40 || echo "(no error lines matched)"
+          grep -nE "^e: |error:|FAILURE:|What went wrong" build.log | head -40
           echo "----- tail -----"
-          tail -45 "$LOG" || true
+          tail -45 build.log
+          exit $STATUS
 
-          if [ -f "$GITHUB_STEP_SUMMARY" ]; then
-            {
-              echo "## nova-tv build: exit $STATUS"
-              echo ""
-              echo '```'
-              grep -E "^e: |error:|FAILURE:|What went wrong|Caused by|> Task .*FAILED|^\* What went wrong" "$LOG" 2>/dev/null | head -50 || true
-              echo '```'
-              echo "### last 45 lines"
-              echo '```'
-              tail -45 "$LOG" 2>/dev/null || true
-              echo '```'
-            } >> "$GITHUB_STEP_SUMMARY" || true
-          fi
+      # Runs after a failed build. Writes the excerpt into the repository itself,
+      # because step summaries and log blobs have both proven unreachable through
+      # the API from here, and a committed file always is.
+      - name: Publish build diagnostics
+        if: failure() || cancelled()
+        working-directory: nova-tv/android
+        run: |
+          set +e
+          OUT="$GITHUB_WORKSPACE/nova-tv/docs/build-diagnostics.md"
+          {
+            echo "# nova-tv build diagnostics"
+            echo
+            echo "Written automatically by the \"nova-tv Android\" workflow."
+            echo "Run: $GITHUB_RUN_ID  Commit: $GITHUB_SHA"
+            echo
+            echo "## compiler errors"
+            echo '```'
+            grep -nE "^e: |error:|FAILURE:|What went wrong|Caused by" build.log 2>/dev/null | head -60
+            echo '```'
+            echo
+            echo "## last 60 lines"
+            echo '```'
+            tail -60 build.log 2>/dev/null
+            echo '```'
+          } > "$OUT"
+          wc -l "$OUT"
 
-          exit "$STATUS"
+      - name: Commit diagnostics
+        if: failure() || cancelled()
+        run: |
+          set +e
+          git config user.name "nova-ci"
+          git config user.email "nova-ci@users.noreply.github.com"
+          git add nova-tv/docs/build-diagnostics.md
+          git commit -m "ci(nova): record build diagnostics for run $GITHUB_RUN_ID"
+          git push
+          echo "push exit: $?"
 
       - name: Run unit tests
         working-directory: nova-tv/android
