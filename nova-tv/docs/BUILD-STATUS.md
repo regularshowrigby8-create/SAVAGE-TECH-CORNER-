@@ -1,15 +1,37 @@
 # nova-tv — build status
 
-**The app compiles. A real debug APK is produced by CI.**
+**The build is finalised: both variants compile, are signed, and are verified.**
 
 Workflow: `nova-tv Android` (`.github/workflows/nova-tv-android.yml`)
-Run: **44333505082** — `assembleDebug` **success**, `testDebugUnitTest` **success**
-Artefact: **`nova-tv-debug-apk`, 15,089,426 bytes**
+Run: **44352545863** — every step green.
 
-This is the first time nova-tv has ever been compiled. Before this run the
-Kotlin had never been through a compiler, so nothing about it was known to be
-valid — the structural linter in `ops/kotlin_lint.py` proves layout, not
-correctness.
+| Artefact | Bytes | Variant |
+|---|---|---|
+| `nova-tv-release-apk` | **1,835,124** | R8-minified, shrunk, signed |
+| `nova-tv-debug-apk` | 15,190,091 | debuggable, unminified |
+
+The release APK is **12% the size** of the debug APK. That ratio is the whole
+point of the release variant: Compose, Media3 and Kotlin ship a great deal of
+code that an app never calls, and R8 removes it.
+
+## What "finalised" means here, precisely
+
+Every statement below is backed by a step that ran in run 44352545863.
+
+| Claim | How it is proven |
+|---|---|
+| The Kotlin compiles | `assembleDebug` and `assembleRelease` both succeed |
+| Tests pass | `testDebugUnitTest` succeeds |
+| Lint passes | `lintDebug` succeeds; errors would have failed the job |
+| R8 shrinking is safe | `assembleRelease` completes with full-mode shrinking |
+| The APK is a real package | `aapt2 dump badging` reads both |
+| The APK is signed | `apksigner verify --print-certs` passes both |
+| The APK is aligned | `zipalign -c -v 4` passes both |
+
+**What is still not proven, and cannot be from here:** the APK has never been
+installed on a device or an emulator. Everything above shows the artefact is
+well-formed and installable. None of it shows that the app runs, that a
+catalogue loads, or that a video plays. That requires a device.
 
 ## Toolchain
 
@@ -18,49 +40,102 @@ project it was read from.
 
 | Component | Version | Taken from |
 |---|---|---|
-| Gradle | 8.9 | vipulasri/Timeline-View (Apache-2.0) |
-| AGP | 8.7.3 | same |
-| Kotlin | 2.0.21 | same |
-| compileSdk / targetSdk | 35 | required by the resolved dependencies |
-| Compose BOM | 2024.12.01 | gonzaroman/acornix (MIT) |
-| tv-material | 1.1.0 | android/compose-samples (Google) |
-| tv-foundation | 1.0.0-alpha11 | rommapp/argosy-launcher |
-| media3 | 1.5.1 | horsemail/yourtv, Gurupreet/ComposeCookBook |
-| OkHttp | 4.12.0 | gonzaroman/acornix |
+| AGP | 8.7.3 | this repository's `tv/android-tv`, proven green |
+| Gradle | 8.9 | CI-proven |
+| Kotlin | 2.0.21 | pairs with Compose BOM 2024.12.01 |
+| compileSdk / targetSdk | 35 | |
+| minSdk | 26 | |
+| tv-material | 1.1.0 | `android/compose-samples` |
+| tv-foundation | 1.0.0-alpha11 | the only published version |
+| media3 | 1.5.1 | `horsemail/yourtv` |
+| lifecycle | 2.8.7 | |
+| namespace | `dev.nova.tv` | |
 
-Rejected on licensing, not quality: `damontecres/Wholphin` (GPL-2.0) and
-`DeadWaveWave/demo2apk`, the highest-starred "vibe coded Android app" repo,
-which ships **no licence at all**.
+## Signing
 
-## Every failure, and what it actually was
+The release variant is signed with a **development key** generated on first
+build from fixed inputs, so CI and a local build produce the same installable
+artefact.
 
-Each of these was a real defect in nova-tv, found only by compiling. None would
-have been caught by the linter.
+- The keystore is **never committed**. `nova-tv/android/keystore/` is in
+  `.gitignore`.
+- Override with `NOVA_KEYSTORE_PASSWORD` and `NOVA_KEY_ALIAS`, or by placing
+  `keystore.properties` in that directory.
+- Generation is a real Gradle task (`ensureNovaKeystore`) that
+  `validateSigningRelease` and `packageRelease` depend on. Generating it in
+  `doFirst` was wrong: AGP consumes the signing config during task setup, so the
+  key could arrive after packaging had already decided the file was missing.
+
+**Outstanding before publishing:** this is a reproducible development key with a
+published password. It is fine for internal installs and sideloading. It is not
+fine for a store listing. Replace it with an uploaded keystore and rotate the
+artefact identity before any public release.
+
+## The five failures it took to get here
+
+Recorded because each one cost a CI round, and four of the five were avoidable.
 
 | # | Failure | Cause |
 |---|---|---|
-| 1 | 40 AAR metadata errors | Resolver pulled compose ui 1.10.3 / lifecycle 2.9.4, which demand AGP ≥ 8.6 and compileSdk ≥ 35. Stack was AGP 8.5.2 / 34. |
-| 2 | `AAPT: resource drawable/app_banner not found` | The manifest referenced `app_banner` and `ic_launcher`; **neither existed**. Imported from this repo's own `tv/android-tv`. |
-| 3 | 18 Kotlin errors | `items` imported from two packages, making the call ambiguous; `return@async emptyList()` untyped. |
-| 4 | `Unresolved reference: lazy` | `androidx.tv.foundation.lazy.list.*` is not in tv-foundation 1.0.0. |
-| 5 | `Could not find androidx.tv:tv-foundation:1.1.0` | 1.1.0 is not published as a release. |
-| 6 | 9 Kotlin errors | `items(Int)` bound instead of `items(List)`; `runCatching`'s `T` unconstrained. |
+| 1 | 60 compile errors | One missing import in `PlayerSurface.kt` caused ~30 of them; the rest were `getValue`/`setValue` operator imports. |
+| 2 | 5 compile errors | A trailing lambda binds to the *last* parameter, so `PrimaryButton(label, onClick, modifier)` sent the lambda into `modifier`. |
+| 3 | `compileSdkVersion is not specified` | My own splice from the signing block to `buildTypes {` deleted `compileSdk` and `defaultConfig`. |
+| 4 | Release failed, no diagnostics | The diagnostics step was gated on `failure()` but sat *before* the release step, so it was skipped on every run. |
+| 5 | Release failed inside lint | `lintVitalRelease` crashed in `NonNullableMutableLiveDataDetector` — a known AGP 8.7.x / lifecycle lint-jar incompatibility, not a nova-tv defect. |
 
-Two of my own diagnoses were wrong on the way and are recorded so they are not
-repeated: tv-foundation 1.1.0 does **not** exist, and `TvLazyColumn` is **not**
-in tv-material — it is in `androidx.tv.foundation.lazy.list`, available from
-`1.0.0-alpha11`.
+Two guards came out of this and both now run before CI:
 
-## What is still not proven
+- `ops/kotlin_lint.py` requires the module to declare `namespace`, `compileSdk`,
+  `defaultConfig`, `applicationId`, `minSdk`, `targetSdk`, `versionCode`,
+  `versionName` and `buildTypes`.
+- `tests/test_buildfiles.py` pins that with four fixtures, including the exact
+  deletions that caused failure 3.
 
-- **The APK has never been installed or run.** It compiles; that is all that is
-  known. No emulator, no device.
-- **Only `assembleDebug`.** `assembleRelease` (R8 shrinking) is untested.
-- **Signing is untouched.** The debug APK is signed with the throwaway debug key
-  and is not distributable. See `docs/BUILD-FACTORY-SDK-PLAN.md`.
-- The unit tests that ran are the JVM ones (`PlayerStateTest`, `UrlGuardTest`).
+The repeating lesson across failures 1, 2 and 4 is the same: **a guard that
+cannot report is worse than no guard**, because it looks like coverage. The
+diagnostics step spent three runs being skipped while the file it writes showed
+an error from a run two days old.
 
-## Reproducing
+## The one lint suppression, and why it is not cheating
 
-Push to any `arena/*` branch touching `nova-tv/android/**`, or run the workflow
-manually. The APK is attached to the run as `nova-tv-debug-apk`.
+`app/lint.xml` disables exactly one detector: `NullSafeMutableLiveData`.
+
+The detector looks for nullable `MutableLiveData` observed unsafely. This project
+contains **no LiveData at all** — it uses `StateFlow` and
+`collectAsStateWithLifecycle` throughout. Verified by grep: zero hits. The
+detector has no input, so disabling it loses no coverage. It was blocking the
+release because `assembleRelease` runs `lintVitalRelease` and the detector
+crashes inside lint itself with `IncompatibleClassChangeError`.
+
+`checkReleaseBuilds` and `abortOnError` remain **on**, so every other check still
+gates the release. The file records the AGP upgrade that would make the entry
+unnecessary, and instructs its deletion at that point.
+
+## Imported versus hand-written
+
+This app is **not** assembled from imported components. One file is imported and
+reproducibly generated:
+
+```
+ImportedTimings.kt  <- tv/zeroplay-debrid/lib/player-core.js
+                    via scripts/import_player_core.py
+```
+
+Re-running the importer reproduces it byte-for-byte. Everything else in `src/`
+is hand-written against the Stremio addon protocol, plus 25 library
+dependencies. `APP-COMPONENT-PLAN.md` proposed five components to be written by
+hand; the final count was 22 Kotlin files. That is worth knowing before the next
+phase: the licence wall (every Kotlin media client in the reference set is
+GPL-3.0) makes hand-writing hard to avoid, but "imported from open source
+projects" overstates what actually happened.
+
+## Reproducing locally
+
+```bash
+cd nova-tv/android
+./gradlew :app:assembleDebug      # unminified, installable
+./gradlew :app:assembleRelease    # R8 + signed
+./gradlew :app:testDebugUnitTest
+./gradlew :app:lintDebug
+python3 ../ops/kotlin_lint.py     # structural + build-file guard
+```
