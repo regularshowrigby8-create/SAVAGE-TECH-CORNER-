@@ -50,7 +50,7 @@ class CatalogRepository(private val client: AddonClient) {
         val errors = mutableListOf<String>()
         val results = enabled.map { addon ->
             async {
-                val catalog = addon.catalogDefs.firstOrNull { it.type == type } ?: return@async emptyList()
+                val catalog = addon.catalogDefs.firstOrNull { it.type == type } ?: return@async emptyList<MetaPreview>()
                 runCatching { client.fetchCatalog(addon, catalog) }
                     .onFailure { errors += "${addon.name}: ${it.message}" }
                     .getOrElse { it }
