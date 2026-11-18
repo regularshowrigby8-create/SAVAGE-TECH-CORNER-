@@ -88,11 +88,20 @@ jobs:
             done
             COUNT=$(grep -cE "^e: " "$LOG" || true)
             echo "::error title=Compile summary::${COUNT} kotlin error line(s)"
-            # Also print the first errors in the step log for quick scanning.
-            echo "----- first compiler errors -----"
-            grep -E "^e: " "$LOG" | head -15 || echo "(no 'e: ' lines found)"
-            echo "----- failure context -----"
-            grep -iE "what went wrong|execution failed|Caused by" -A4 "$LOG" | head -30 || true
+            # Job summaries are readable through the API even when the log blob
+            # is not reachable, so the useful excerpt goes there too.
+            {
+              echo "## nova-tv build failure"
+              echo
+              echo "\`\`\`"
+              grep -E "^e: |^w: .*error|FAILURE:|What went wrong|Caused by|> Task .*FAILED|error:" "$LOG" | head -60
+              echo "\`\`\`"
+              echo
+              echo "### last 40 lines"
+              echo "\`\`\`"
+              tail -40 "$LOG"
+              echo "\`\`\`"
+            } >> "$GITHUB_STEP_SUMMARY"
             exit "$STATUS"
           fi
 
