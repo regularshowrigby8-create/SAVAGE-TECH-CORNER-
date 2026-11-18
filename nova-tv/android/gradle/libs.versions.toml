@@ -40,7 +40,7 @@ lifecycle = "2.8.7"
 
 # AndroidX TV — nova-tv's target form factor
 tvMaterial = "1.1.0"
-tvFoundation = "1.1.0"
+tvFoundation = "1.0.0-alpha11"
 
 # Media3 / ExoPlayer
 media3 = "1.5.1"
