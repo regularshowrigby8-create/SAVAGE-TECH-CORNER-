@@ -112,6 +112,20 @@ guard_finish() {
       tail -n 150 "$LOG_DIR/$slug.log"
       echo '```'
     done
+    # A pass is a claim too: keep the end of each passing tool's output as
+    # evidence that it ran and what it saw.
+    for row in "${ROWS[@]}"; do
+      IFS="$SEP" read -r status label slug <<< "$row"
+      [[ "$status" == "PASS" ]] || continue
+      echo
+      echo "<details><summary>PASS: $label (last lines of output)</summary>"
+      echo
+      echo '```'
+      tail -n 30 "$LOG_DIR/$slug.log"
+      echo '```'
+      echo
+      echo "</details>"
+    done
   } > "$out"
   [[ -n "${GITHUB_STEP_SUMMARY:-}" ]] && cat "$out" >> "$GITHUB_STEP_SUMMARY"
   echo "== $GUARD_TITLE: $verdict  (report: ${out#"$REPO_ROOT/"})"

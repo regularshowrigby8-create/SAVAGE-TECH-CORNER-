@@ -2,7 +2,7 @@
 # Every link and relative file path a document cites must exist.
 
 # Anchors (`file.md#section`) are claims too.
-include_fragments = true
+include_fragments = "anchor-only"
 max_retries = 3
 retry_wait_time = 5
 timeout = 30
