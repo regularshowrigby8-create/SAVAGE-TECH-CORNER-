@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /** Persisted preferences. Addon URLs are user data, never hard-coded. */
-class SettingsStore(private val prefs: SharedPreferences) {
+class SettingsStore(private val prefs: SharedPreferences) : CatalogRepository.AddonUrlStore {
 
     data class Settings(
         val addonUrls: List<String> = emptyList(),
@@ -33,6 +33,10 @@ class SettingsStore(private val prefs: SharedPreferences) {
         volume = prefs.getFloat(KEY_VOLUME, 1f),
         playbackRate = prefs.getFloat(KEY_RATE, 1f)
     )
+
+    override fun savedAddonUrls(): List<String> = _settings.value.addonUrls
+
+    override fun saveAddonUrls(urls: List<String>) = saveAddons(urls)
 
     fun saveAddons(urls: List<String>) {
         prefs.edit().putString(KEY_ADDONS, urls.distinct().joinToString("\n")).apply()

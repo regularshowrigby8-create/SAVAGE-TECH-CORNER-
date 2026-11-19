@@ -40,15 +40,16 @@ project it was read from.
 
 | Component | Version | Taken from |
 |---|---|---|
-| AGP | 8.7.3 | this repository's `tv/android-tv`, proven green |
-| Gradle | 8.9 | CI-proven |
+| AGP | 8.13.0 | raised from 8.7.3 so Compose 1.10 / lifecycle lint jars run (see below) |
+| Gradle | 8.13 | required by AGP 8.13 |
 | Kotlin | 2.0.21 | pairs with Compose BOM 2024.12.01 |
 | compileSdk / targetSdk | 35 | |
 | minSdk | 26 | |
 | tv-material | 1.1.0 | `android/compose-samples` |
 | tv-foundation | 1.0.0-alpha11 | the only published version |
-| media3 | 1.5.1 | `horsemail/yourtv` |
+| media3 | 1.9.0 (+ Jellyfin FFmpeg 1.9.0+1) | ARVIO's player stack |
 | lifecycle | 2.8.7 | |
+| coil-compose | 2.7.0 | artwork, shares Nova's OkHttp client |
 | namespace | `dev.nova.tv` | |
 
 ## Signing
@@ -139,3 +140,14 @@ cd nova-tv/android
 ./gradlew :app:lintDebug
 python3 ../ops/kotlin_lint.py     # structural + build-file guard
 ```
+
+## Lint toolchain (2026-11-19)
+
+tv-material 1.1.0 resolves Compose to 1.10.x. Its lint jars (and lifecycle's)
+are built for a newer Kotlin Analysis API than AGP 8.7.3 bundles, so detectors
+such as `RememberInComposition`, `FrequentlyChangingValue` and
+`AutoboxingStateCreation` died with `IncompatibleClassChangeError` and aborted
+lint. Exempting them one at a time was whack-a-mole, so AGP moved to 8.13.0
+(Gradle 8.13). Every detector now runs and `app/lint.xml` has no exemptions.
+The newer lint found real issues, which were fixed: `windowLayoutInDisplayCutoutMode`
+moved to `values-v27`, and media3 `@UnstableApi` call sites are opted in.

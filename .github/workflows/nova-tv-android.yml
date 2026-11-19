@@ -47,13 +47,13 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      # The same Gradle/AGP pairing this repository already builds green in
-      # "ZeroPlay Android TV APK" (Gradle 8.7 + AGP 8.5.x), so a failure here is
-      # attributable to nova-tv's code rather than to an untried toolchain.
+      # Matches gradle/wrapper (Gradle 8.13 for AGP 8.13.0). AGP moved off 8.7.3
+      # because the lint jars in Compose 1.10 / lifecycle 2.8 need a newer Kotlin
+      # Analysis API than AGP 8.7's lint ships; on 8.7.3 those detectors crashed.
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.9'
+          gradle-version: '8.13'
 
       - name: Validate version catalog
         run: |

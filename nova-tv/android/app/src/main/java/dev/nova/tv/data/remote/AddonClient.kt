@@ -6,6 +6,7 @@ import dev.nova.tv.data.model.Manifest
 import dev.nova.tv.data.model.MetaPreview
 import dev.nova.tv.data.model.NovaAddon
 import dev.nova.tv.data.model.Stream
+import dev.nova.tv.finder.FinderRules
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -28,6 +29,7 @@ class AddonClient(private val http: HttpClient) {
     }
 
     suspend fun loadManifest(baseUrl: String): Manifest {
+        require(HttpClient.isAllowedUrl(normalise(baseUrl) + "/manifest.json")) { "That address is not allowed." }
         val raw = http.get(normalise(baseUrl) + "/manifest.json")
         val element = json.parseToJsonElement(raw)
         val obj = element.jsonObject
@@ -61,32 +63,54 @@ class AddonClient(private val http: HttpClient) {
     }
 
     suspend fun fetchStreams(addon: NovaAddon, type: String, id: String): List<Stream> {
-        val url = normalise(addon.baseUrl) + "/stream/$type/$id.json"
-        val raw = runCatching { http.get(url) }.getOrElse { return emptyList() }
+        // The id goes through streamSegment: `tt0903747:1:2` must keep its
+        // colons, but anything else odd in an id is still encoded.
+        val url = normalise(addon.baseUrl) + "/stream/$type/${FinderRules.streamSegment(id)}.json"
+        val raw = runCatching { http.get(url, attempts = 2) }.getOrElse { return emptyList() }
         return runCatching {
             val obj = json.parseToJsonElement(raw).jsonObject
             val array = obj["streams"] as? JsonArray ?: return emptyList()
             array.mapNotNull { entry ->
                 runCatching { json.decodeFromJsonElement(Stream.serializer(), entry.jsonObject) }.getOrNull()
+                    ?.copy(sourceName = addon.name, sourceBase = addon.baseUrl)
             }
         }.getOrElse { emptyList() }
     }
 
-    private fun normalise(base: String): String = base.trim().trimEnd('/')
+    suspend fun fetchSubtitles(addon: NovaAddon, type: String, id: String): List<dev.nova.tv.data.model.SubtitleRef> {
+        val url = normalise(addon.baseUrl) + "/subtitles/$type/${FinderRules.streamSegment(id)}.json"
+        val raw = http.get(url, attempts = 1)
+        return json.decodeFromString(dev.nova.tv.data.model.SubtitleResponse.serializer(), raw)
+            .subtitles.filter { HttpClient.isAllowedUrl(it.url) }
+            .take(40)
+    }
+
+    /**
+     * Server-side search, for addons whose catalogue declares a `search`
+     * extra. Before this, Search could only filter the first page of each
+     * catalogue already in memory.
+     */
+    suspend fun searchCatalog(addon: NovaAddon, catalog: CatalogDef, query: String): List<MetaPreview> {
+        val q = java.net.URLEncoder.encode(query.trim(), "UTF-8").replace("+", "%20")
+        return fetchCatalog(addon, catalog, mapOf("search" to q))
+    }
+
+    private fun normalise(base: String): String =
+        base.trim().trimEnd('/').replace(Regex("""/manifest\.json$""", RegexOption.IGNORE_CASE), "")
 
     companion object {
-        /** Rank streams so direct, playable files come first and dead entries last. */
+        /**
+         * Rank streams: playable only, best quality first, and one entry per
+         * request (same URL + headers) so two addons mirroring a file do not
+         * show the same link twice.
+         */
         fun rank(streams: List<Stream>): List<Stream> =
             streams.filter { it.isPlayable }
-                .sortedByDescending { stream ->
-                    val source = stream.title ?: stream.name ?: ""
-                    when {
-                        source.contains("1080", true) -> 4
-                        source.contains("720", true) -> 3
-                        source.contains("480", true) -> 2
-                        source.isNotBlank() -> 1
-                        else -> 0
-                    }
-                }
+                .distinctBy { it.url.orEmpty().trim() to it.requestHeaders }
+                .sortedWith(
+                    compareByDescending<Stream> { FinderRules.qualityRank(it.quality) }
+                        .thenByDescending { if (it.requestHeaders.isEmpty()) 1 else 0 }
+                        .thenByDescending { if ((it.title ?: it.name).isNullOrBlank()) 0 else 1 }
+                )
     }
 }

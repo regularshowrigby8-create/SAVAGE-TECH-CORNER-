@@ -191,17 +191,28 @@ dependencies {
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.lifecycle.viewmodel.compose)
 
-    // Media3 — PlayerState and NovaPlayer import common + exoplayer
+    // Media3 — NovaPlayer and the imported ARVIO engine (player/engine).
+    // HLS and DASH were missing entirely: every .m3u8 / .mpd stream the
+    // detail screen offered failed with "container unsupported".
     implementation(libs.media3.common)
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)
+    implementation(libs.media3.hls)
+    implementation(libs.media3.dash)
+    // OkHttp data source: the only way addon request headers reach the server.
+    implementation(libs.media3.okhttp)
+    // ARVIO's software fallback for audio codecs the TV cannot decode (DTS, TrueHD...).
+    implementation(libs.media3.ffmpeg)
+
+    // Poster and backdrop artwork.
+    implementation(libs.coil.compose)
 
     // Networking + JSON — HttpClient.kt uses OkHttp, Models.kt uses serialization
     implementation(libs.okhttp)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
 
-    // Unit tests — PlayerStateTest and UrlGuardTest run on the JVM
+    // Unit tests — finder rules, navigation, failover and URL guards on the JVM
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
 }

@@ -1,7 +1,7 @@
 package dev.nova.tv.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +15,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,18 +25,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.tv.material3.Border
 import androidx.tv.material3.Card
 import androidx.tv.material3.CardDefaults
 import androidx.tv.material3.ExperimentalTvMaterial3Api
+import androidx.tv.material3.Glow
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
+import coil.compose.AsyncImage
 import dev.nova.tv.data.model.MetaPreview
 import dev.nova.tv.ui.theme.LocalReduceMotion
 import dev.nova.tv.ui.theme.NovaPalette
@@ -56,16 +64,49 @@ private val SheetShape = RoundedCornerShape(NovaShape.sheet)
 private val PillShape = RoundedCornerShape(percent = NovaShape.pillPercent)
 
 // ---------------------------------------------------------------------------
+// Focus
+// ---------------------------------------------------------------------------
+
+/** The focus ring every focusable element uses: 3dp, high contrast, never colour alone. */
+val FocusRingWidth = 3.dp
+
+/**
+ * Which card should take focus back when an overlay closes.
+ *
+ * Without this, closing the detail overlay removed the focused node and left
+ * focus nowhere; the next D-pad press landed on whatever Compose found first,
+ * usually the rail, and the viewer lost their place in the row.
+ */
+data class FocusRestore(val id: String?, val consume: () -> Unit)
+
+val LocalFocusRestore = staticCompositionLocalOf { FocusRestore(null) {} }
+
+/** Request focus on [requester] when [id] is the one being restored. */
+@Composable
+fun RestoreFocusFor(id: String, requester: FocusRequester) {
+    val restore = LocalFocusRestore.current
+    LaunchedEffect(restore.id) {
+        if (restore.id != null && restore.id == id) {
+            // One frame so the node is attached after the overlay leaves.
+            withFrameNanos { }
+            if (runCatching { requester.requestFocus() }.isSuccess) restore.consume()
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Poster
 // ---------------------------------------------------------------------------
 
 /**
- * The most repeated element in the app, so its five states are defined once.
+ * The most repeated element in the app, so its states are defined once.
  *
- * Artwork is not loaded yet (Coil is not a dependency). Rather than show a grey
- * box that promises a picture and never delivers, the placeholder is a
- * deliberate typographic tile: initials over a surface gradient, which reads as
- * intentional at three metres and does not look like a failed request.
+ * TV changes: focus used to be a 2dp border on an inner Column plus a manual
+ * scale through onFocusChanged + graphicsLayer, which drew under the card's
+ * own focus treatment and was easy to miss at three metres. It is now the
+ * tv-material Card's own focused border (3dp accent), scale and glow, and the
+ * title brightens with it. Artwork now loads (Coil); the typographic tile
+ * stays underneath as the loading and failure state.
  */
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -73,51 +114,58 @@ fun PosterCard(
     title: MetaPreview,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    width: Int = 168
+    /** dp; 0 fills the parent (grid cells). 132dp fits six across a 960dp TV canvas. */
+    width: Int = 132
 ) {
     var focused by remember { mutableStateOf(false) }
     val reduced = LocalReduceMotion.current
+    val requester = remember { FocusRequester() }
+    RestoreFocusFor(title.id, requester)
 
-    Card(
-        onClick = onClick,
-        modifier = modifier
-            .width(width.dp)
-            .graphicsLayer {
-                val target = if (focused && !reduced) 1.04f else 1f
-                scaleX = target
-                scaleY = target
-            }
-            .onFocusChanged { focused = it.isFocused },
-        shape = CardDefaults.shape(CardShape),
-        colors = CardDefaults.colors(containerColor = Color.Transparent)
-    ) {
-        Column(
-            Modifier.border(
-                width = if (focused) 2.dp else 0.dp,
-                color = NovaPalette.accent,
-                shape = CardShape
+    Column(if (width > 0) modifier.width(width.dp) else modifier.fillMaxWidth()) {
+        Card(
+            onClick = onClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(2f / 3f)
+                .focusRequester(requester)
+                .onFocusChanged { focused = it.isFocused },
+            shape = CardDefaults.shape(CardShape),
+            colors = CardDefaults.colors(
+                containerColor = NovaPalette.surface,
+                focusedContainerColor = NovaPalette.surfaceHigh
+            ),
+            scale = CardDefaults.scale(focusedScale = if (reduced) 1f else 1.06f),
+            border = CardDefaults.border(
+                focusedBorder = Border(
+                    border = BorderStroke(FocusRingWidth, NovaPalette.accent),
+                    shape = CardShape
+                )
+            ),
+            glow = CardDefaults.glow(
+                focusedGlow = Glow(elevationColor = NovaPalette.accent.copy(alpha = 0.45f), elevation = 12.dp)
             )
         ) {
-            PosterArt(title = title, width = width)
-            Spacer(Modifier.height(10.dp))
-            Text(
-                text = title.name,
-                style = NovaType.cardTitle,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            SecondaryLine(title)
+            PosterArt(title = title)
         }
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = title.name,
+            style = NovaType.cardTitle,
+            color = if (focused) NovaPalette.textPrimary else NovaPalette.textMuted,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+        SecondaryLine(title)
     }
 }
 
-/** Initials tile used until real artwork loads. */
+/** Artwork over the initials tile; the tile shows while loading and on failure. */
 @Composable
-private fun PosterArt(title: MetaPreview, width: Int) {
+private fun PosterArt(title: MetaPreview) {
     Box(
         Modifier
-            .fillMaxWidth()
-            .aspectRatio(2f / 3f)
+            .fillMaxSize()
             .clip(CardShape)
             .background(
                 Brush.verticalGradient(
@@ -132,6 +180,15 @@ private fun PosterArt(title: MetaPreview, width: Int) {
             color = NovaPalette.accent.copy(alpha = 0.55f),
             textAlign = TextAlign.Center
         )
+        val poster = title.poster
+        if (!poster.isNullOrBlank()) {
+            AsyncImage(
+                model = poster,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
 }
 
@@ -186,7 +243,9 @@ fun PrimaryButton(
             contentColor = NovaPalette.background,
             focusedContainerColor = NovaPalette.textPrimary,
             focusedContentColor = NovaPalette.background
-        )
+        ),
+        scale = focusScale(),
+        border = focusBorder(PillShape)
     ) {
         Text(
             text = label,
@@ -213,6 +272,12 @@ fun SecondaryButton(
             contentColor = NovaPalette.textPrimary,
             focusedContainerColor = NovaPalette.surfaceHigh,
             focusedContentColor = NovaPalette.textPrimary
+        ),
+        scale = focusScale(),
+        // Outlined at rest so it reads as a button; the ring thickens on focus.
+        border = androidx.tv.material3.ClickableSurfaceDefaults.border(
+            border = Border(BorderStroke(1.dp, NovaPalette.textMuted.copy(alpha = 0.5f)), shape = PillShape),
+            focusedBorder = Border(BorderStroke(FocusRingWidth, NovaPalette.accent), shape = PillShape)
         )
     ) {
         Text(
@@ -241,13 +306,69 @@ fun FilterChip(
             contentColor = if (selected) NovaPalette.accent else NovaPalette.textMuted,
             focusedContainerColor = NovaPalette.surfaceHigh,
             focusedContentColor = NovaPalette.textPrimary
-        )
+        ),
+        scale = focusScale(),
+        border = focusBorder(PillShape)
     ) {
         Text(
-            text = label,
+            text = if (selected) "✓  $label" else label,
             style = NovaType.meta,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
         )
+    }
+}
+
+@OptIn(ExperimentalTvMaterial3Api::class)
+@Composable
+internal fun focusScale() = androidx.tv.material3.ClickableSurfaceDefaults.scale(
+    focusedScale = if (LocalReduceMotion.current) 1f else 1.05f
+)
+
+@OptIn(ExperimentalTvMaterial3Api::class)
+@Composable
+internal fun focusBorder(shape: androidx.compose.ui.graphics.Shape) = androidx.tv.material3.ClickableSurfaceDefaults.border(
+    focusedBorder = Border(BorderStroke(FocusRingWidth, NovaPalette.accent), shape = shape)
+)
+
+/**
+ * A whole row as one focus target.
+ *
+ * Settings and Addons rows used to be plain Rows with a small button at the
+ * far right, so focus jumped between tiny pills and the row itself never
+ * showed where the viewer was. The row is now the target, and [trailing]
+ * shows the value or action it triggers.
+ */
+@OptIn(ExperimentalTvMaterial3Api::class)
+@Composable
+fun FocusableRow(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    trailing: @Composable () -> Unit = {},
+    content: @Composable () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(CardShape),
+        colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(
+            containerColor = NovaPalette.surface,
+            contentColor = NovaPalette.textPrimary,
+            focusedContainerColor = NovaPalette.surfaceHigh,
+            focusedContentColor = NovaPalette.textPrimary
+        ),
+        scale = androidx.tv.material3.ClickableSurfaceDefaults.scale(
+            focusedScale = if (LocalReduceMotion.current) 1f else 1.02f
+        ),
+        border = focusBorder(CardShape)
+    ) {
+        Row(
+            Modifier.padding(horizontal = 24.dp, vertical = 18.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Box(Modifier.weight(1f)) { content() }
+            trailing()
+        }
     }
 }
 

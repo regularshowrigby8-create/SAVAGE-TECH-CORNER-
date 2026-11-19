@@ -42,3 +42,8 @@
 # kotlinx.serialization reads these by name.
 -keepattributes RuntimeVisibleAnnotations,AnnotationDefault,Signature,Exceptions,InnerClasses
 -dontwarn kotlinx.serialization.**
+
+# FFmpeg audio decoder (Jellyfin media3-ffmpeg-decoder): the native library
+# calls back into these classes by name over JNI, which R8 cannot see.
+-keep class androidx.media3.decoder.ffmpeg.** { *; }
+-dontwarn androidx.media3.decoder.ffmpeg.**

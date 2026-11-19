@@ -6,39 +6,40 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import dev.nova.tv.NovaApplication
-import dev.nova.tv.data.model.Stream
 import dev.nova.tv.player.NovaPlayer
 import dev.nova.tv.ui.player.PlayerSurface
 
 /**
- * Owns the player for the duration of one title.
+ * Owns the player for one playback request.
  *
- * The engine is created when playback starts and released when the surface
- * leaves composition, so a failed stream cannot leak a decoder -- on TV hardware
- * a leaked decoder is not a warning in a log, it is the next video failing to
- * start.
+ * Every source the detail screen found goes into one [NovaPlayer] as a ranked
+ * queue. Picking a different source, or the automatic failover after a dead
+ * one, happens inside that player, so there is exactly one decoder and one
+ * surface no matter how many addons answered.
+ *
+ * The engine is keyed on the request token, created when playback starts and
+ * released when the surface leaves composition: on TV hardware a leaked
+ * decoder is the next video failing to start.
  */
 @Composable
-fun NovaPlayerHost(
-    stream: Stream,
-    title: String,
-    startPositionMs: Long = 0L,
-    onLeave: () -> Unit
-) {
+fun NovaPlayerHost(request: PlaybackRequest, viewModel: NovaViewModel) {
     val context = LocalContext.current
     val app = context.applicationContext as NovaApplication
 
-    val player = remember(stream) { NovaPlayer(context, app.appScope) }
+    val player = remember(request.token) { NovaPlayer(context, app.http) }
 
-    LaunchedEffect(stream) {
-        val url = stream.url ?: return@LaunchedEffect
-        val headers = stream.behaviorHints?.proxyHeaders?.request ?: emptyMap()
-        player.prepare(url, startPositionMs, headers)
+    LaunchedEffect(request.token) {
+        player.load(request.streams, request.startIndex, 0L, request.subtitles)
     }
 
-    DisposableEffect(stream) {
+    // Subtitles arrive after playback starts (they are a separate addon call).
+    LaunchedEffect(request.token, request.subtitles) {
+        player.setSubtitles(request.subtitles)
+    }
+
+    DisposableEffect(request.token) {
         onDispose { player.release() }
     }
 
-    PlayerSurface(player = player, title = title, onLeave = onLeave)
+    PlayerSurface(player = player, title = request.title, viewModel = viewModel)
 }
