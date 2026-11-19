@@ -36,7 +36,8 @@ def four_models(claim: str = "The app compiles to a working debug APK.", evidenc
         "providers_found": status["providers_found"],
         "providers_missing": status["providers_missing"],
         "consensus": consensus.as_dict(),
-        "ok": True,
+        # Only a unanimous "supported" verifies the claim.
+        "ok": consensus.decision()[0] == "supported",
     }
 
 

@@ -14,11 +14,8 @@ class SettingsStore(private val prefs: SharedPreferences) : CatalogRepository.Ad
     data class Settings(
         val addonUrls: List<String> = emptyList(),
         val autoplayNext: Boolean = true,
-        val preferredQuality: String = "auto",
-        val subtitleSize: Int = 100,
         val reduceMotion: Boolean = false,
         val volume: Float = 1f,
-        val playbackRate: Float = 1f,
         val finders: Set<FinderKind> = FinderKind.entries.toSet(),
         /** FastStream-style pre-download; switched from the player. */
         val preload: PreloadMode = PreloadMode.OFF,
@@ -36,11 +33,8 @@ class SettingsStore(private val prefs: SharedPreferences) : CatalogRepository.Ad
             ?.filter { it.isNotBlank() }
             ?: emptyList(),
         autoplayNext = prefs.getBoolean(KEY_AUTOPLAY, true),
-        preferredQuality = prefs.getString(KEY_QUALITY, "auto") ?: "auto",
-        subtitleSize = prefs.getInt(KEY_SUBTITLE, 100),
         reduceMotion = prefs.getBoolean(KEY_MOTION, false),
         volume = prefs.getFloat(KEY_VOLUME, 1f),
-        playbackRate = prefs.getFloat(KEY_RATE, 1f),
         finders = FinderKind.entries.filter { prefs.getBoolean(KEY_FINDER + it.name, true) }.toSet(),
         preload = PreloadMode.entries.firstOrNull { it.name == prefs.getString(KEY_PRELOAD, null) } ?: PreloadMode.OFF,
         dns = DnsProvider.entries.firstOrNull { it.name == prefs.getString(KEY_DNS, null) } ?: DnsProvider.AUTO,
@@ -70,12 +64,6 @@ class SettingsStore(private val prefs: SharedPreferences) : CatalogRepository.Ad
         val clamped = volume.coerceIn(0f, 1f)
         prefs.edit().putFloat(KEY_VOLUME, clamped).apply()
         _settings.value = _settings.value.copy(volume = clamped)
-    }
-
-    fun setPlaybackRate(rate: Float) {
-        val clamped = rate.coerceIn(0.25f, 3f)
-        prefs.edit().putFloat(KEY_RATE, clamped).apply()
-        _settings.value = _settings.value.copy(playbackRate = clamped)
     }
 
     fun setFinders(kinds: Set<FinderKind>) {
@@ -108,11 +96,8 @@ class SettingsStore(private val prefs: SharedPreferences) : CatalogRepository.Ad
     companion object {
         private const val KEY_ADDONS = "addon_urls"
         private const val KEY_AUTOPLAY = "autoplay_next"
-        private const val KEY_QUALITY = "preferred_quality"
-        private const val KEY_SUBTITLE = "subtitle_size"
         private const val KEY_MOTION = "reduce_motion"
         private const val KEY_VOLUME = "volume"
-        private const val KEY_RATE = "playback_rate"
         private const val KEY_FINDER = "finder_"
         private const val KEY_PRELOAD = "preload_mode"
         private const val KEY_DNS = "dns_provider"

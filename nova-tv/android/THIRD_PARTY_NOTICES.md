@@ -35,6 +35,13 @@ Changes made for Nova (Apache 2.0 section 4(b)):
 - `ExoPlayerEngine`: publishes the selected audio / subtitle track and whether
   a subtitle track is external, so Nova's Audio and Subtitles panels can mark
   the current choice.
+- `PlayerEngine` / `ExoPlayerEngine` / `PlayerEngineState`: `setAudioDelayMs`,
+  `audioDelayMs` and `isMuted` are removed. ARVIO applies audio delay through
+  its AI subtitle renderers factory, which Nova does not ship, so in Nova the
+  call only stored a number. Resize mode is applied by Nova's PlayerView using
+  the mapping from ARVIO's `PlayerScreen.kt` (Auto/Fit letterbox, Stretch
+  fills, Crop zooms).
+- `PlayerEngineFactory`: the unused `context` parameter is removed.
 - `NovaExoPlayerFactory`: OkHttp data source sharing Nova's guarded client,
   with per-stream request headers from the addon (`proxyHeaders`).
 

@@ -27,7 +27,7 @@ def improve(settings=None):
         "summary": summary,
         "findings": [f.as_dict() for f in findings],
         "plan": appaudit.plan(findings),
-        "ok": True,
+        "ok": not findings,
     }
 
 

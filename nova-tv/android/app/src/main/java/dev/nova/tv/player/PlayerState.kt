@@ -21,8 +21,7 @@ data class PlayerUiState(
     val positionMs: Long = 0L,
     val durationMs: Long = 0L,
     val volume: Float = 1f,
-    val muted: Boolean = false,
-    val playbackRate: Float = 1f
+    val muted: Boolean = false
 ) {
     /** video.js: any hold, or paused, or ended, or errored, or menu open wins. */
     val chromeVisible: Boolean

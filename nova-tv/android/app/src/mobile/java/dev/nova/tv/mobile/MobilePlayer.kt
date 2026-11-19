@@ -75,7 +75,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.addPathNodes
-import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -94,12 +93,14 @@ import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
 import dev.nova.tv.player.NovaPlayer
 import dev.nova.tv.player.SkipSeconds
+import dev.nova.tv.player.engine.ResizeMode
 import dev.nova.tv.player.preload.PreloadMode
 import dev.nova.tv.ui.screens.NovaViewModel
 import dev.nova.tv.ui.screens.PlayerPanel
 import dev.nova.tv.ui.screens.UpNext
 import dev.nova.tv.ui.theme.LocalReduceMotion
 import dev.nova.tv.ui.theme.NovaPalette
+import dev.nova.tv.ui.player.playerViewMode
 import kotlinx.coroutines.delay
 
 private val Speeds = listOf(1f, 1.25f, 1.5f, 2f, 0.75f)
@@ -155,6 +156,7 @@ fun MobilePlayerSurface(player: NovaPlayer, title: String, viewModel: NovaViewMo
                     this.player = exo
                 }
             },
+            update = { view -> view.resizeMode = engine.resizeMode.playerViewMode() },
             modifier = Modifier.fillMaxSize()
         )
 
@@ -365,7 +367,6 @@ private fun Controls(player: NovaPlayer, title: String, viewModel: NovaViewModel
     val engine by player.engineState.collectAsStateWithLifecycle()
     val session by player.session.collectAsStateWithLifecycle()
     val preload by player.preloadStatus.collectAsStateWithLifecycle()
-    var speed by remember { mutableIntStateOf(0) }
     val upNext = remember(title) { viewModel.nextEpisode() }
 
     Box(Modifier.fillMaxSize()) {
@@ -445,9 +446,16 @@ private fun Controls(player: NovaPlayer, title: String, viewModel: NovaViewModel
                 if (session.sources.size > 1) TextButtonPill("Sources  ${session.sources.size}") { viewModel.openPlayerPanel(PlayerPanel.SOURCES) }
                 TextButtonPill("Audio") { viewModel.openPlayerPanel(PlayerPanel.AUDIO) }
                 TextButtonPill("Subtitles") { viewModel.openPlayerPanel(PlayerPanel.SUBTITLES) }
-                TextButtonPill(if (speed == 0) "Speed" else "${Speeds[speed]}x", active = speed != 0) {
-                    speed = (speed + 1) % Speeds.size
-                    player.setRate(Speeds[speed])
+                // The label is the player's real speed, so it stays right after
+                // the controls hide and come back.
+                val speed = engine.playbackSpeed
+                TextButtonPill(if (speed == 1f) "Speed" else "${speed}x", active = speed != 1f) {
+                    player.setRate(Speeds[(Speeds.indexOf(speed) + 1) % Speeds.size])
+                    viewModel.chrome.onUserActive()
+                }
+                // Picture size: Auto -> Fit -> Stretch -> Crop (ARVIO's cycle).
+                TextButtonPill("Picture: ${engine.resizeMode.label}", active = engine.resizeMode != ResizeMode.AUTO) {
+                    player.engine.cycleResizeMode()
                     viewModel.chrome.onUserActive()
                 }
                 if (upNext != null) TextButtonPill("Next episode", onClick = viewModel::playNext)
@@ -587,7 +595,7 @@ private fun Panel(panel: PlayerPanel, player: NovaPlayer, viewModel: NovaViewMod
                 viewModel.closePlayerPanel()
             }
         ) + engine.subtitleTracks.map { track ->
-            PanelOption(track.displayLabel(), null, track.id == engine.selectedSubtitleTrack?.id) {
+            PanelOption(track.displayLabel(), if (track.isExternal) "External" else null, track.id == engine.selectedSubtitleTrack?.id) {
                 player.engine.selectSubtitleTrack(track)
                 viewModel.closePlayerPanel()
             }

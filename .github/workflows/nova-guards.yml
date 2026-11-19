@@ -74,6 +74,18 @@ jobs:
           --config nova-tv/guards/detekt-dead-code.yml
           --report md:nova-tv/guards/reports/detekt.md
 
+      - uses: actions/setup-python@v7
+        if: ${{ !cancelled() }}
+        with:
+          python-version: '3.12'
+
+      # Nova's own audit (already in this repo): settings and player state the
+      # UI writes and nothing reads. Exits 2 when it finds any (nova/cli.py).
+      - name: Nova button audit - state the UI sets and nothing reads
+        if: ${{ !cancelled() }}
+        working-directory: nova-tv/python
+        run: python scripts/check_buttons.py | tee ../guards/reports/check_buttons.txt
+
       - name: Keep report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7

@@ -16,6 +16,9 @@ from typing import Any, Optional
 from .config import ROOT, Settings, load_settings, redacted_view
 from .registry import REGISTRY, Registry
 
+# Exit status of a tool that ran and reported a failing verdict.
+EXIT_CHECK_FAILED = 2
+
 
 def build_parser(title: str, description: str, registry: Optional[Registry] = None) -> argparse.ArgumentParser:
     registry = registry or REGISTRY
@@ -147,11 +150,15 @@ def run(
             payload["traceback"] = traceback.format_exc()
         print(json.dumps(payload, indent=2) if getattr(args, "json", False) else f"error: {error}")
         return 1
+    # A tool that reports its own verdict ("ok": False) ran but failed its
+    # check. Exit 2 says so, distinct from 1 (the tool itself raised); before,
+    # the CLI printed "ok": true and exited 0 whatever the tool found.
+    passed = not (isinstance(result, dict) and result.get("ok") is False)
     if getattr(args, "json", False):
-        print(json.dumps({"ok": True, "tool": name, "result": result}, indent=2, default=str))
+        print(json.dumps({"ok": passed, "tool": name, "result": result}, indent=2, default=str))
     else:
         _pretty(result)
-    return 0
+    return 0 if passed else EXIT_CHECK_FAILED
 
 
 def _pretty(result: Any) -> None:

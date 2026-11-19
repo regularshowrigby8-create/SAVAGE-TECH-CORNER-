@@ -19,10 +19,12 @@ def buttons(settings=None):
     from nova.config import ROOT
 
     findings = btns.audit(ROOT)
+    summary = btns.summarise(findings)
     return {
-        "summary": btns.summarise(findings),
+        "summary": summary,
         "findings": [f.as_dict() for f in findings],
-        "ok": True,
+        # A dead button found is a failed check, not a pass with notes.
+        "ok": summary["ok"],
     }
 
 

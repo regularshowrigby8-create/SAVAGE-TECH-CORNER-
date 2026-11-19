@@ -4,7 +4,6 @@
 // Changes for Nova are listed in nova-tv/android/THIRD_PARTY_NOTICES.md.
 package dev.nova.tv.player.engine
 
-import android.content.Context
 import androidx.media3.exoplayer.ExoPlayer
 import dev.nova.tv.player.engine.exoplayer.ExoPlayerEngine
 import kotlinx.coroutines.CoroutineScope
@@ -12,7 +11,6 @@ import kotlinx.coroutines.CoroutineScope
 object PlayerEngineFactory {
     fun createEngine(
         type: PlayerEngineType,
-        context: Context,
         exoPlayer: ExoPlayer,
         scope: CoroutineScope
     ): PlayerEngine {

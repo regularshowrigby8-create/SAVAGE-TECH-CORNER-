@@ -88,7 +88,7 @@ class NovaPlayer(
 
     /** ARVIO's engine abstraction; ExoPlayer is the only linked engine. */
     val engine: PlayerEngine =
-        PlayerEngineFactory.createEngine(PlayerEngineType.EXOPLAYER, context, exo, scope)
+        PlayerEngineFactory.createEngine(PlayerEngineType.EXOPLAYER, exo, scope)
 
     val engineState: StateFlow<PlayerEngineState> get() = engine.state
 

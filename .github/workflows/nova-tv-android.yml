@@ -33,6 +33,13 @@ concurrency:
   group: nova-tv-android-${{ github.ref }}
   cancel-in-progress: true
 
+# Explicit bash = `bash --noprofile --norc -eo pipefail`. GitHub's implicit
+# default is `bash -e` with no pipefail, under which `./gradlew test | tee log`
+# reported tee's exit status and stayed green when the tests failed.
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build:
     name: Build, lint and verify nova-tv APKs
@@ -72,19 +79,17 @@ jobs:
       - name: Assemble debug APK
         working-directory: nova-tv/android
         run: |
-          # GitHub's default shell is `bash -e`, so errexit is ON unless turned
-          # off explicitly. It is off here so a failing build cannot skip the
-          # diagnostics below.
-          set +e
+          # The build's status is kept, not ignored, so a failing build still
+          # prints the diagnostics below and then fails the step with it.
           chmod +x gradlew
-          ./gradlew :app:assembleDebug --stacktrace --no-daemon --console=plain > build.log 2>&1
-          STATUS=$?
+          STATUS=0
+          ./gradlew :app:assembleDebug --stacktrace --no-daemon --console=plain > build.log 2>&1 || STATUS=$?
           echo "gradle exit status: $STATUS"
           echo "----- errors -----"
-          grep -nE "^e: |error:|FAILURE:|What went wrong" build.log | head -40
+          awk '/^e: |error:|FAILURE:|What went wrong/ && n++ < 40 { print FNR ": " $0 }' build.log
           echo "----- tail -----"
           tail -45 build.log
-          exit $STATUS
+          exit "$STATUS"
 
       - name: Run unit tests
         working-directory: nova-tv/android
@@ -96,17 +101,17 @@ jobs:
       - name: Android lint
         working-directory: nova-tv/android
         run: |
-          set +e
-          ./gradlew :app:lintTvDebug :app:lintMobileDebug --no-daemon --console=plain > lint.log 2>&1
-          STATUS=$?
-          echo "lint exit: $STATUS"
-          grep -nE "Error:|Warning:|errors?, [0-9]+ warnings?" lint.log | head -30
-          # Only errors block; warnings are recorded.
-          if grep -qE "^.*Error: " lint.log; then
-            echo "lint reported errors"
+          # Lint's own exit status is the gate: abortOnError = true in
+          # app/build.gradle.kts fails the task on any error; warnings are
+          # recorded. The old step ran with errexit off, ignored that status and
+          # only failed if a line matched "Error: ".
+          if ! ./gradlew :app:lintTvDebug :app:lintMobileDebug --no-daemon --console=plain > lint.log 2>&1; then
+            echo "lint failed"
+            tail -80 lint.log
             exit 1
           fi
-          exit 0
+          echo "lint passed"
+          awk '/Error:|Warning:|errors?, [0-9]+ warnings?/ && n++ < 30 { print FNR ": " $0 }' lint.log
 
       # The release build is the one that has never existed. R8 shrinking is
       # where a serialization-based app fails at runtime rather than at compile
@@ -114,17 +119,16 @@ jobs:
       - name: Assemble release APK (R8)
         working-directory: nova-tv/android
         run: |
-          set +e
-          ./gradlew :app:assembleRelease --stacktrace --no-daemon --console=plain > release.log 2>&1
-          STATUS=$?
+          STATUS=0
+          ./gradlew :app:assembleRelease --stacktrace --no-daemon --console=plain > release.log 2>&1 || STATUS=$?
           echo "release exit: $STATUS"
           echo "----- errors -----"
-          grep -nE "^e: |error:|FAILURE:|What went wrong|R8|Missing class" release.log | head -40
+          awk '/^e: |error:|FAILURE:|What went wrong|R8|Missing class/ && n++ < 40 { print FNR ": " $0 }' release.log
           echo "----- R8 missing classes -----"
-          grep -nE "Missing class|R8: " release.log | head -30
+          awk '/Missing class|R8: / && n++ < 30 { print FNR ": " $0 }' release.log
           echo "----- tail -----"
           tail -50 release.log
-          exit $STATUS
+          exit "$STATUS"
 
       # An APK that exists is not an APK that installs. Verify the package, the
       # signature, and the alignment rather than trusting the file name.
@@ -142,8 +146,13 @@ jobs:
             FOUND=$((FOUND+1))
             echo "=== $apk"
             ls -l "$apk"
-            "$BT/aapt2" dump badging "$apk" | head -5
-            "$BT/apksigner" verify --print-certs "$apk" | head -6
+            # Full output to a file, then show the start: `tool | head` would
+            # stop reading early, and under pipefail the tool's SIGPIPE fails
+            # the step even when the APK is fine.
+            "$BT/aapt2" dump badging "$apk" > "$RUNNER_TEMP/badging.txt"
+            sed -n 1,5p "$RUNNER_TEMP/badging.txt"
+            "$BT/apksigner" verify --print-certs "$apk" > "$RUNNER_TEMP/signer.txt"
+            sed -n 1,6p "$RUNNER_TEMP/signer.txt"
             "$BT/zipalign" -c -v 4 "$apk" > /dev/null && echo "aligned: yes"
           done
           echo "verified $FOUND apk(s)"
@@ -166,10 +175,15 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: nova-build-log
+          # The build steps write their logs next to gradlew; only the unit
+          # test log goes to runner.temp. The old paths named a nova-build.log
+          # that no step writes, and `ignore` hid that nothing was uploaded.
           path: |
-            ${{ runner.temp }}/nova-build.log
+            nova-tv/android/build.log
+            nova-tv/android/lint.log
+            nova-tv/android/release.log
             ${{ runner.temp }}/nova-test.log
-          if-no-files-found: ignore
+          if-no-files-found: warn
           retention-days: 7
 
       - name: Upload release APK

@@ -38,6 +38,7 @@ On push, a fourth job commits the report files to `reports/` using
 | Guard | Tool | Upstream | Licence | What it catches |
 |---|---|---|---|---|
 | dead button | detekt 1.23.8 (CLI release jar) | [detekt/detekt](https://github.com/detekt/detekt) | Apache-2.0 | empty bodies; `TODO()` bodies; unused parameters, members, classes and imports (an unused `onClick` is a dead button) |
+| dead button | Nova's own button audit | `nova-tv/python/scripts/check_buttons.py` (already in this repo) | repo licence | settings and player state the UI writes and nothing reads; exits 2 when it finds any |
 | hallucination | Kotlin compiler, via Gradle 8.13 ([gradle/actions](https://github.com/gradle/actions)) | [JetBrains/kotlin](https://github.com/JetBrains/kotlin) | Apache-2.0 | calls to classes or functions that do not exist |
 | hallucination | actionlint 1.7.12, via [raven-actions/actionlint](https://github.com/raven-actions/actionlint) v2.2.0 | [rhysd/actionlint](https://github.com/rhysd/actionlint) | MIT | made-up workflow keys, action inputs, contexts and expression functions |
 | hallucination | ruff 0.17.5, via [astral-sh/ruff-action](https://github.com/astral-sh/ruff-action) v4.1.0 | [astral-sh/ruff](https://github.com/astral-sh/ruff) | MIT | Python names that are used but never defined (F821, F822, F823, F811, F632, PLE) |
@@ -56,6 +57,7 @@ and `EndBug/add-and-commit`.
 | Tool | Result |
 |---|---|
 | detekt | `reports/detekt.md` |
+| Nova button audit | `reports/check_buttons.txt` |
 | lychee | `reports/lychee.md`, plus the job summary |
 | swallowed | `reports/swallowed.txt` |
 | actionlint, ruff | annotations on the workflow run |
@@ -76,25 +78,27 @@ and `EndBug/add-and-commit`.
 
 ## Removed in favour of imported tools only
 
-Earlier versions had hand-written parts. They are gone, and so are the checks
-that only they performed. No upstream tool or rule set was found for these
-checks:
+Earlier versions had hand-written parts: `lib.sh`, the three `anti-*.sh`
+runners, `install-tools.sh`, `tools/workflow_shellcheck.py` and custom semgrep
+rules. They are gone. GitHub's own job and step results, annotations and
+summaries replace their report table, and swallowed reports the same
+pipe-without-pipefail steps the ShellCheck glue did.
 
-| Removed | What it caught that nothing imported catches now |
-|---|---|
-| `lib.sh` and the three `anti-*.sh` runners, `install-tools.sh` | nothing: GitHub's own job/step results, annotations and summaries replace the report table |
-| semgrep rule: setter that only records state | `ExoPlayerEngine.setResizeMode` and `setAudioDelayMs` |
-| semgrep rule: empty or `TODO()` click handler | nothing at the moment. detekt `NotImplementedDeclaration` now covers `TODO()`; an empty `onClick = {}` lambda is not covered |
-| semgrep rules: `@Test` without an assertion, `@Ignore`d tests | nothing at the moment. PIT covers tests without assertions indirectly |
-| semgrep rule: hard-coded `"ok": True` | the four `nova-tv/python/scripts/*.py` tools that always report success |
-| semgrep rule: `if-no-files-found: ignore` | `nova-tv-android.yml` (the build-log upload) |
-| `tools/workflow_shellcheck.py` (ShellCheck glue) | nothing: swallowed reports the same pipe-without-pipefail steps |
+The problems those custom rules found have since been fixed in the code:
 
-**Not run, and why:**
+| Custom rule | What it found | Status |
+|---|---|---|
+| setter that only records state | `ExoPlayerEngine.setResizeMode`, `setAudioDelayMs` | fixed: the PlayerView applies the resize mode, and there is a Picture size button; audio delay is removed (Nova has no renderer for it) |
+| hard-coded `"ok": True` | four `nova-tv/python/scripts/*.py` tools | fixed: they report their real verdict, and `nova/cli.py` exits 2 on a failing one |
+| `if-no-files-found: ignore` | the build-log upload in `nova-tv-android.yml` | fixed: correct log paths, `warn` |
 
-- **`nova-tv/python/scripts/check_buttons.py`**, the repo's own button audit.
-  It returns `"ok": True` and exits 0 whatever it finds, so a CI step running
-  it can never fail. Making it fail on its findings needs either glue code
-  or a change to the script.
-- **`nova-tv/python/scripts/verify_claims.py`**, the repo's claim checker. On
-  the current docs, all three of its findings were false positives.
+No imported tool covers these, so they are not checked any more:
+
+- an empty `onClick = {}` lambda. detekt `NotImplementedDeclaration` covers
+  `TODO()`.
+- `@Test` functions without an assertion, and `@Ignore`d tests. PIT covers
+  tests without assertions indirectly.
+
+**Not run, and why:** `nova-tv/python/scripts/verify_claims.py`, the repo's
+claim checker. On the current docs, all three of its findings were false
+positives.

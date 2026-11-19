@@ -64,7 +64,6 @@ import dev.nova.tv.ui.theme.NovaType
  */
 
 private val CardShape = RoundedCornerShape(NovaShape.card)
-private val SheetShape = RoundedCornerShape(NovaShape.sheet)
 private val PillShape = RoundedCornerShape(percent = NovaShape.pillPercent)
 
 // ---------------------------------------------------------------------------

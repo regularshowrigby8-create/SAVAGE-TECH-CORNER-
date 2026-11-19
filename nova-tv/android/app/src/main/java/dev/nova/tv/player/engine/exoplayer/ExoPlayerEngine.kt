@@ -114,6 +114,8 @@ class ExoPlayerEngine(
         _state.update { it.copy(playbackSpeed = speed) }
     }
 
+    // Nova: the PlayerView applies state.resizeMode (see playerViewMode() in
+    // ui/player/PlayerSurface.kt), as ARVIO's PlayerScreen does.
     override fun setResizeMode(mode: ResizeMode) {
         _state.update { it.copy(resizeMode = mode) }
     }
@@ -173,13 +175,9 @@ class ExoPlayerEngine(
         }
     }
 
-    override fun setAudioDelayMs(delayMs: Long) {
-        _state.update { it.copy(audioDelayMs = delayMs) }
-    }
-
     override fun setVolume(volume: Float) {
         exoPlayer.volume = volume.coerceIn(0f, 1f)
-        _state.update { it.copy(volume = volume, isMuted = volume == 0f) }
+        _state.update { it.copy(volume = volume) }
     }
 
     override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {

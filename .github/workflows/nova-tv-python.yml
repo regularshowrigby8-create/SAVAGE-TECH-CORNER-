@@ -32,21 +32,29 @@ jobs:
       - name: Unit tests
         working-directory: nova-tv/python
         run: python -m unittest discover -s tests -t . -v
+      # Smoke test: every script starts and produces a result. Exit 0 is a
+      # pass and 2 is a check that ran and reported a failing verdict (see
+      # nova/cli.py); both mean the script executed. 1 (the tool raised) or
+      # 124 (timeout) means it did not. Some tools need network access or an
+      # AI key the runner does not have, so this reports and does not gate.
       - name: Every script executes
         working-directory: nova-tv/python
+        shell: bash
         run: |
-          ok=0; bad=0
+          ran=0; failing=0; broken=0
           for f in scripts/*.py; do
             case "$f" in
               *github_watch*) continue ;;   # loops by design
             esac
-            if timeout 120 python "$f" --json 2>&1 | grep -q '"ok": true'; then
-              ok=$((ok+1))
-            else
-              bad=$((bad+1)); echo "::warning file=$f::script did not produce a result"
-            fi
+            status=0
+            timeout 120 python "$f" --json > /dev/null 2>&1 || status=$?
+            case "$status" in
+              0) ran=$((ran+1)) ;;
+              2) failing=$((failing+1)); echo "::notice file=nova-tv/python/$f::check ran and failed (exit 2)" ;;
+              *) broken=$((broken+1)); echo "::warning file=nova-tv/python/$f::script did not produce a result (exit $status)" ;;
+            esac
           done
-          echo "scripts ok=$ok failed=$bad"
+          echo "scripts passed=$ran failed-check=$failing did-not-run=$broken"
       - name: No committed secrets
         working-directory: nova-tv/python
         run: python scripts/qa_secrets.py --json

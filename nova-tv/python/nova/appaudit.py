@@ -418,7 +418,7 @@ def find_unguarded_io(sources: Dict[str, str]) -> List[Finding]:
             escaped = re.escape(name)
             call_guarded = any(
                 re.search(rf"(runCatching|try)\s*\{{[^}}]*\b{escaped}\s*\(", other)
-                for other in (clean_all.values() if False else _all_clean(sources))
+                for other in _all_clean(sources)
             )
             if call_guarded:
                 continue

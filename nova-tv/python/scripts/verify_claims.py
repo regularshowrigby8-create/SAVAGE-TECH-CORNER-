@@ -34,7 +34,7 @@ def verify(settings=None):
         "documents": len(docs),
         "summary": summary,
         "unsupported": [r.as_dict() for r in all_results if not r.ok][:40],
-        "ok": True,
+        "ok": summary["ok"],
     }
 
 

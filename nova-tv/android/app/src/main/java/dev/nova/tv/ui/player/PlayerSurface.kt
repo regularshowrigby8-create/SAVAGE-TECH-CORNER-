@@ -43,6 +43,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -57,6 +58,7 @@ import androidx.compose.runtime.setValue
 import androidx.tv.material3.Text
 import dev.nova.tv.player.NovaPlayer
 import dev.nova.tv.player.SkipSeconds
+import dev.nova.tv.player.engine.ResizeMode
 import dev.nova.tv.ui.components.FocusableRow
 import dev.nova.tv.ui.components.PrimaryButton
 import dev.nova.tv.ui.components.SecondaryButton
@@ -171,6 +173,7 @@ fun PlayerSurface(
                     this.player = exo
                 }
             },
+            update = { view -> view.resizeMode = engine.resizeMode.playerViewMode() },
             modifier = Modifier.fillMaxSize()
         )
 
@@ -200,7 +203,7 @@ fun PlayerSurface(
                 position = engine.currentPositionMs,
                 duration = engine.durationMs,
                 playing = engine.isPlaying,
-                buffering = engine.isBuffering,
+                resizeMode = engine.resizeMode,
                 sourceLabel = session.current?.label,
                 sourceIndex = session.index,
                 sourceCount = session.sources.size,
@@ -257,7 +260,7 @@ private fun Controls(
     position: Long,
     duration: Long,
     playing: Boolean,
-    buffering: Boolean,
+    resizeMode: ResizeMode,
     sourceLabel: String?,
     sourceIndex: Int,
     sourceCount: Int,
@@ -319,9 +322,13 @@ private fun Controls(
                 player.setPreload(next)
                 viewModel.setPreload(next)
             }
-            if (sourceCount > 1) SecondaryButton("Sources") { viewModel.openPlayerPanel(PlayerPanel.SOURCES) }
+            if (sourceCount > 1) {
+                SecondaryButton("Sources  ${sourceIndex + 1}/$sourceCount") { viewModel.openPlayerPanel(PlayerPanel.SOURCES) }
+            }
             SecondaryButton("Audio") { viewModel.openPlayerPanel(PlayerPanel.AUDIO) }
             SecondaryButton("Subtitles") { viewModel.openPlayerPanel(PlayerPanel.SUBTITLES) }
+            // Picture size: Auto -> Fit -> Stretch -> Crop (ARVIO's cycle).
+            SecondaryButton("Picture: ${resizeMode.label}", active = resizeMode != ResizeMode.AUTO) { player.engine.cycleResizeMode() }
             SecondaryButton("Close", onClick = viewModel::stopPlayback)
         }
     }
@@ -399,7 +406,7 @@ private fun Panel(panel: PlayerPanel, player: NovaPlayer, viewModel: NovaViewMod
         ) + engine.subtitleTracks.map { track ->
             PanelOption(
                 track.displayLabel(),
-                null,
+                if (track.isExternal) "External" else null,
                 track.id == engine.selectedSubtitleTrack?.id
             ) {
                 player.engine.selectSubtitleTrack(track)
@@ -464,6 +471,17 @@ private fun Panel(panel: PlayerPanel, player: NovaPlayer, viewModel: NovaViewMod
             }
         }
     }
+}
+
+/**
+ * PlayerView resize mode for a [ResizeMode], as in ARVIO's PlayerScreen
+ * (https://github.com/ProdigyV21/ARVIO, commit 31ce7d7, Apache-2.0): Auto and
+ * Fit letterbox, Stretch fills, Crop zooms.
+ */
+internal fun ResizeMode.playerViewMode(): Int = when (this) {
+    ResizeMode.AUTO, ResizeMode.FIT -> AspectRatioFrameLayout.RESIZE_MODE_FIT
+    ResizeMode.STRETCH -> AspectRatioFrameLayout.RESIZE_MODE_FILL
+    ResizeMode.CROP -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
 }
 
 internal fun formatTime(ms: Long): String {
