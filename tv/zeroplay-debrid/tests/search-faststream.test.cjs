@@ -121,16 +121,27 @@ const ok = (c, label) => { assert(c, label); n++; console.log('PASS', label); };
   ok(pkg.scripts.test.includes('search-faststream.test.cjs'), 'this suite runs in npm test');
 
   /* APK channel */
+  // One version everywhere: build.gradle.kts is the source of truth, CI
+  // derives every name from it, and both /tv.apk redirects must follow it.
+  const gradle = fs.readFileSync(path.join(repo, 'tv', 'android-tv', 'app', 'build.gradle.kts'), 'utf8');
+  const versionName = (gradle.match(/versionName = "([^"]+)"/) || [])[1];
+  const versionCode = Number((gradle.match(/versionCode = (\d+)/) || [])[1]);
+  ok(versionName === '1.0.4' && versionCode === 5,
+    'Android TV app bumped to 1.0.4 (versionCode 5) for the native shell fixes');
   const vercel = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8'));
   const redir = (vercel.redirects || []).find(r => r.source === '/tv.apk');
-  ok(redir && /zeroplay-tv-v1\.0\.3\/zeroplay-tv\.apk$/.test(redir.destination),
-    'zeroplay-rd.vercel.app/tv.apk permanently redirects to the signed TV APK asset');
-  const gradle = fs.readFileSync(path.join(repo, 'tv', 'android-tv', 'app', 'build.gradle.kts'), 'utf8');
-  ok(gradle.includes('versionName = "1.0.3"') && gradle.includes('versionCode = 4'),
-    'Android TV app bumped to 1.0.3 (versionCode 4) for the native input changes');
+  const tagAsset = 'zeroplay-tv-v' + versionName + '/zeroplay-tv.apk';
+  ok(redir && redir.destination.endsWith(tagAsset),
+    'zeroplay-rd.vercel.app/tv.apk redirects to the release of the version being built');
+  const netlify = fs.readFileSync(path.join(root, 'netlify.toml'), 'utf8');
+  ok(netlify.includes(tagAsset), 'Netlify /tv.apk redirect follows the same release');
   const workflow = fs.readFileSync(path.join(repo, '.github', 'workflows', 'zeroplay-android-tv.yml'), 'utf8');
-  ok(workflow.includes('ZeroPlay-TV-1.0.3-armeabi-v7a.apk') && !workflow.includes('1.0.2'),
-    'CI workflow names and releases the 1.0.3 APK consistently');
+  ok(workflow.includes('ZeroPlay-TV-${{ env.APP_VERSION }}-armeabi-v7a.apk')
+      && workflow.includes('zeroplay-tv-v${{ needs.build.outputs.version }}')
+      && workflow.includes('--expect-version-name "$APP_VERSION"')
+      && !/ZeroPlay-TV-\d+\.\d+\.\d+-armeabi/.test(workflow),
+    'CI derives APK, artifact and release names from build.gradle.kts (no hard-coded versions)');
+  ok(/branches:[\s\S]*?- tv\n/.test(workflow), 'pushes to the tv branch build and verify the APK');
 
   console.log('\n' + n + ' search/FastStream checks passed');
 })().catch(e => { console.error(e); process.exit(1); });

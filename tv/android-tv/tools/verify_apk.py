@@ -133,8 +133,18 @@ def find_sdk_tool(name: str) -> str | None:
                     candidates.append(candidate)
     if not candidates:
         return None
-    # The highest build-tools directory sorts last for normal numeric releases.
-    return str(sorted(candidates)[-1])
+    # Plain string sorting picks build-tools/9.0.0 over 34.0.0 and mixes in
+    # platform-tools paths. Prefer the numerically newest build-tools release.
+    return str(max(candidates, key=_tool_sort_key))
+
+
+def _tool_sort_key(path: Path) -> tuple:
+    parent = path.parent.name
+    in_build_tools = path.parent.parent.name == "build-tools"
+    numbers = tuple(int(part) for part in re.findall(r"\d+", parent)) if in_build_tools else ()
+    # Stable releases (34.0.0) rank above previews (35.0.0-rc1) of the same number.
+    is_stable = 1 if in_build_tools and re.fullmatch(r"[\d.]+", parent) else 0
+    return (1 if in_build_tools else 0, numbers, is_stable, str(path))
 
 
 def run_tool(args: list[str]) -> subprocess.CompletedProcess[str]:
@@ -145,7 +155,9 @@ def contains_binary_text(data: bytes, text: str) -> bool:
     return text.encode("utf-8") in data or text.encode("utf-16le") in data
 
 
-def verify(apk_path: Path, require_sdk_tools: bool = False) -> dict:
+def verify(apk_path: Path, require_sdk_tools: bool = False,
+           expect_version_name: str | None = None,
+           expect_version_code: str | None = None) -> dict:
     errors: list[str] = []
     warnings: list[str] = []
     metrics: dict[str, object] = {
@@ -189,20 +201,25 @@ def verify(apk_path: Path, require_sdk_tools: bool = False) -> dict:
             if disallowed:
                 errors.append(f"Native libraries use disallowed ABIs for the target box: {', '.join(disallowed)}")
 
-            if "classes.dex" in names:
-                dex = zf.read("classes.dex")
-                metrics["dex_size_bytes"] = len(dex)
+            # R8 can emit classes2.dex+; a corrupt secondary DEX crashes at
+            # runtime just like a corrupt primary one.
+            dex_names = sorted(name for name in names if re.fullmatch(r"classes\d*\.dex", name))
+            metrics["dex_files"] = dex_names
+            for dex_name in dex_names:
+                dex = zf.read(dex_name)
+                if dex_name == "classes.dex":
+                    metrics["dex_size_bytes"] = len(dex)
                 if len(dex) < 112 or not dex.startswith(b"dex\n"):
-                    errors.append("classes.dex has an invalid DEX header")
-                else:
-                    stored_checksum = struct.unpack_from("<I", dex, 8)[0]
-                    computed_checksum = zlib.adler32(dex[12:]) & 0xFFFFFFFF
-                    if stored_checksum != computed_checksum:
-                        errors.append("classes.dex Adler-32 checksum does not match its contents")
-                    stored_signature = dex[12:32]
-                    computed_signature = hashlib.sha1(dex[32:]).digest()
-                    if stored_signature != computed_signature:
-                        errors.append("classes.dex SHA-1 signature does not match its contents")
+                    errors.append(f"{dex_name} has an invalid DEX header")
+                    continue
+                stored_checksum = struct.unpack_from("<I", dex, 8)[0]
+                computed_checksum = zlib.adler32(dex[12:]) & 0xFFFFFFFF
+                if stored_checksum != computed_checksum:
+                    errors.append(f"{dex_name} Adler-32 checksum does not match its contents")
+                stored_signature = dex[12:32]
+                computed_signature = hashlib.sha1(dex[32:]).digest()
+                if stored_signature != computed_signature:
+                    errors.append(f"{dex_name} SHA-1 signature does not match its contents")
 
             manifest = zf.read("AndroidManifest.xml") if "AndroidManifest.xml" in names else b""
             fallback_checks = {
@@ -295,8 +312,16 @@ def verify(apk_path: Path, require_sdk_tools: bool = False) -> dict:
                 metrics["version_name"] = package_match.group(3)
                 if package_match.group(1) != EXPECTED_PACKAGE:
                     errors.append(f"Package mismatch: {package_match.group(1)}")
+                if expect_version_name and package_match.group(3) != expect_version_name:
+                    errors.append(f"versionName mismatch: APK has {package_match.group(3)!r}, "
+                                  f"expected {expect_version_name!r}")
+                if expect_version_code and package_match.group(2) != str(expect_version_code):
+                    errors.append(f"versionCode mismatch: APK has {package_match.group(2)!r}, "
+                                  f"expected {expect_version_code!r}")
             else:
                 errors.append("aapt badging did not report package/version")
+            if expect_version_name and not package_match:
+                errors.append("versionName could not be checked: aapt badging reported no version")
             sdk_match = re.search(r"sdkVersion:'(\d+)'", output)
             target_match = re.search(r"targetSdkVersion:'(\d+)'", output)
             if sdk_match:
@@ -313,6 +338,20 @@ def verify(apk_path: Path, require_sdk_tools: bool = False) -> dict:
                 metrics["aapt_native_code"] = badging_abis
                 if set(badging_abis) - ALLOWED_ABIS:
                     errors.append(f"aapt reports disallowed native ABIs: {badging_abis}")
+            required_features = set(re.findall(r"^\s*uses-feature: name='([^']+)'", output, re.M))
+            optional_features = set(re.findall(r"^\s*uses-feature-not-required: name='([^']+)'", output, re.M))
+            metrics["required_features"] = sorted(required_features)
+            metrics["optional_features"] = sorted(optional_features)
+            if "android.software.leanback" not in required_features:
+                errors.append("android.software.leanback is not a required feature; Google TV hides non-Leanback apps")
+            if "android.hardware.touchscreen" in required_features:
+                errors.append("android.hardware.touchscreen is required; TV launchers refuse apps that need touch")
+            leanback_activity = re.search(r"^leanback-launchable-activity: name='([^']+)'", output, re.M)
+            metrics["leanback_launchable_activity"] = leanback_activity.group(1) if leanback_activity else None
+            if not leanback_activity:
+                errors.append("aapt reports no leanback-launchable-activity")
+            elif leanback_activity.group(1) != EXPECTED_MAIN_ACTIVITY:
+                errors.append(f"Leanback launcher opens {leanback_activity.group(1)}, expected {EXPECTED_MAIN_ACTIVITY}")
             permissions = set(re.findall(r"uses-permission: name='([^']+)'", output))
             metrics["permissions"] = sorted(permissions)
             missing_permissions = REQUIRED_PERMISSIONS - permissions
@@ -405,8 +444,6 @@ def verify(apk_path: Path, require_sdk_tools: bool = False) -> dict:
             ):
                 if needle not in xml:
                     errors.append(f"Compiled manifest does not contain {label}: {needle}")
-            if 'android.hardware.touchscreen' in xml and 'required(0x010102bd)=true' in xml:
-                warnings.append("Touchscreen appears in the manifest; confirm it remains optional in aapt feature output")
 
     if apksigner:
         signed = run_tool([apksigner, "verify", "--verbose", "--print-certs", str(apk_path)])
@@ -451,9 +488,13 @@ def main(argv: Iterable[str] | None = None) -> int:
     parser.add_argument("apk", type=Path)
     parser.add_argument("--json", dest="json_path", type=Path, help="Write the full report to this JSON file")
     parser.add_argument("--require-sdk-tools", action="store_true", help="Fail unless aapt, apksigner and zipalign are available")
+    parser.add_argument("--expect-version-name", help="Fail unless the APK versionName equals this value")
+    parser.add_argument("--expect-version-code", help="Fail unless the APK versionCode equals this value")
     args = parser.parse_args(list(argv) if argv is not None else None)
 
-    report = verify(args.apk, require_sdk_tools=args.require_sdk_tools)
+    report = verify(args.apk, require_sdk_tools=args.require_sdk_tools,
+                    expect_version_name=args.expect_version_name,
+                    expect_version_code=args.expect_version_code)
     rendered = json.dumps(report, indent=2)
     print(rendered)
     if args.json_path:

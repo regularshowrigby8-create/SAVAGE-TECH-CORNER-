@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+      - tv
+      - tv-*
       - arena/*
     paths:
       - 'tv/android-tv/**'
@@ -38,9 +40,28 @@ jobs:
   build:
     name: Build and verify ARMv7 TV APK
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # Single source of truth: versionName in app/build.gradle.kts. Every APK,
+      # artifact, tag and release title below is derived from it so they can
+      # no longer drift from the app that was actually built.
+      - name: Read app version
+        id: version
+        run: |
+          set -euo pipefail
+          VERSION=$(sed -n 's/^[[:space:]]*versionName[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p' tv/android-tv/app/build.gradle.kts | head -n 1)
+          case "$VERSION" in
+            ''|*[!0-9A-Za-z._-]*)
+              echo "::error title=App version::could not read a safe versionName from app/build.gradle.kts (got '$VERSION')"
+              exit 1 ;;
+          esac
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "Building ZeroPlay TV $VERSION"
 
       # Selective factory use: the sealed component is checked out as a
       # separate, read-only tool source. Its verify/self-check and code tools
@@ -226,7 +247,7 @@ jobs:
             exit 1
           fi
           mkdir -p tv/android-tv/dist
-          TARGET_APK="tv/android-tv/dist/ZeroPlay-TV-1.0.3-armeabi-v7a.apk"
+          TARGET_APK="tv/android-tv/dist/ZeroPlay-TV-${{ env.APP_VERSION }}-armeabi-v7a.apk"
           cp "$SRC_APK" "$TARGET_APK"
           echo "apk_path=$TARGET_APK" >> "$GITHUB_OUTPUT"
           echo "Built $TARGET_APK from $SRC_APK"
@@ -234,7 +255,7 @@ jobs:
       - name: Verify package, Leanback contract, ABI, DEX and signature
         run: |
           set -uo pipefail
-          REPORT="tv/android-tv/dist/ZeroPlay-TV-1.0.3-armeabi-v7a.verify.json"
+          REPORT="tv/android-tv/dist/ZeroPlay-TV-${{ env.APP_VERSION }}-armeabi-v7a.verify.json"
           # GitHub's default bash invocation already enables -e. Disable it
           # around the verifier so a failing report can be surfaced as
           # annotations instead of only "exit code 1".
@@ -242,6 +263,7 @@ jobs:
           python3 tv/android-tv/tools/verify_apk.py \
             "${{ steps.apk.outputs.apk_path }}" \
             --require-sdk-tools \
+            --expect-version-name "$APP_VERSION" \
             --json "$REPORT"
           VERIFY_CODE=$?
           set -e
@@ -263,7 +285,7 @@ jobs:
           PYEOF
             exit "$VERIFY_CODE"
           fi
-          sha256sum "${{ steps.apk.outputs.apk_path }}" > tv/android-tv/dist/ZeroPlay-TV-1.0.3-armeabi-v7a.sha256
+          sha256sum "${{ steps.apk.outputs.apk_path }}" > tv/android-tv/dist/ZeroPlay-TV-${{ env.APP_VERSION }}-armeabi-v7a.sha256
           unzip -l "${{ steps.apk.outputs.apk_path }}"
 
       - name: Upload APK diagnostics on failure
@@ -281,11 +303,11 @@ jobs:
       - name: Upload APK and verification report
         uses: actions/upload-artifact@v4
         with:
-          name: ZeroPlay-TV-1.0.3-armeabi-v7a
+          name: ZeroPlay-TV-${{ env.APP_VERSION }}-armeabi-v7a
           path: |
-            tv/android-tv/dist/ZeroPlay-TV-1.0.3-armeabi-v7a.apk
-            tv/android-tv/dist/ZeroPlay-TV-1.0.3-armeabi-v7a.verify.json
-            tv/android-tv/dist/ZeroPlay-TV-1.0.3-armeabi-v7a.sha256
+            tv/android-tv/dist/ZeroPlay-TV-${{ env.APP_VERSION }}-armeabi-v7a.apk
+            tv/android-tv/dist/ZeroPlay-TV-${{ env.APP_VERSION }}-armeabi-v7a.verify.json
+            tv/android-tv/dist/ZeroPlay-TV-${{ env.APP_VERSION }}-armeabi-v7a.sha256
             tv/android-tv/dist/factory-evidence/**
           if-no-files-found: error
 
@@ -304,7 +326,7 @@ jobs:
       - name: Download the verified APK artifact
         uses: actions/download-artifact@v4
         with:
-          name: ZeroPlay-TV-1.0.3-armeabi-v7a
+          name: ZeroPlay-TV-${{ needs.build.outputs.version }}-armeabi-v7a
           path: release-dist
 
       - name: Publish GitHub release for TV Downloader
@@ -312,19 +334,19 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          TAG="zeroplay-tv-v1.0.3"
-          APK=$(find release-dist -type f -name 'ZeroPlay-TV-1.0.3-armeabi-v7a.apk' | head -n 1)
+          TAG="zeroplay-tv-v${{ needs.build.outputs.version }}"
+          APK=$(find release-dist -type f -name 'ZeroPlay-TV-${{ needs.build.outputs.version }}-armeabi-v7a.apk' | head -n 1)
           SHA=$(find release-dist -type f -name '*.sha256' | head -n 1)
           REPORT=$(find release-dist -type f -name '*.verify.json' | head -n 1)
           test -n "$APK" || { echo "::error title=Release::verified APK missing from artifact"; exit 1; }
           mkdir -p upload
           # Short asset name: this URL is typed with a TV remote in Downloader.
           cp "$APK" upload/zeroplay-tv.apk
-          cp "$APK" upload/ZeroPlay-TV-1.0.3-armeabi-v7a.apk
-          ASSETS=(upload/zeroplay-tv.apk upload/ZeroPlay-TV-1.0.3-armeabi-v7a.apk)
+          cp "$APK" upload/ZeroPlay-TV-${{ needs.build.outputs.version }}-armeabi-v7a.apk
+          ASSETS=(upload/zeroplay-tv.apk upload/ZeroPlay-TV-${{ needs.build.outputs.version }}-armeabi-v7a.apk)
           [ -n "$SHA" ] && ASSETS+=("$SHA")
           [ -n "$REPORT" ] && ASSETS+=("$REPORT")
-          NOTES="ZeroPlay TV 1.0.3 for Xiaomi TV Box S (3rd Gen, MDZ-32-AA) — ARMv7 (armeabi-v7a), Android TV / Leanback.
+          NOTES="ZeroPlay TV ${{ needs.build.outputs.version }} for Xiaomi TV Box S (3rd Gen, MDZ-32-AA) — ARMv7 (armeabi-v7a), Android TV / Leanback.
 
           Install on the TV with the Downloader app using this URL:
           https://github.com/${{ github.repository }}/releases/download/${TAG}/zeroplay-tv.apk
@@ -337,7 +359,7 @@ jobs:
             gh release create "$TAG" "${ASSETS[@]}" \
               --repo "${{ github.repository }}" \
               --target "${{ github.sha }}" \
-              --title "ZeroPlay TV 1.0.3 — Xiaomi TV Box S (ARMv7)" \
+              --title "ZeroPlay TV ${{ needs.build.outputs.version }} — Xiaomi TV Box S (ARMv7)" \
               --notes "$NOTES" \
               --prerelease
           fi

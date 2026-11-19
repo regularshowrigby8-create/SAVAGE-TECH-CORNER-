@@ -338,5 +338,5 @@ but is not endorsed or certified by TMDB.
   driven via its upstream EmbedAPI (`load` with explicit accelerated modes,
   `ping` confirmation, API subtitles) inside our own D-pad control shell.
 - Android TV APK: `https://zeroplay-rd.vercel.app/tv.apk` always serves the
-  latest CI-built `zeroplay-tv.apk` (v1.0.3+). The web app itself updates from
+  latest CI-built `zeroplay-tv.apk` (v1.0.4+). The web app itself updates from
   Vercel on every launch — no reinstall needed for web changes.

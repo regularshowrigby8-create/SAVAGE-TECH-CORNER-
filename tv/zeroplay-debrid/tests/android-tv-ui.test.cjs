@@ -300,6 +300,14 @@ const eq = (actual, expected, label) => { assert.strictEqual(actual, expected, l
     [html.includes('player-overlay.player-paused .player-action-shelf') && html.includes('chrome-hidden .player-action-shelf'), 'in-player tools appear on pause and disappear with playback chrome'],
     [html.includes('function openM3uExtractorForContext') && html.includes('location.hash=\"#/downloads\"'), 'M3U button opens the real extractor workflow with current stream context'],
     [html.includes('input,select,textarea{border-radius:14px}') && html.includes('setting-control,.setting-control input,.setting-control .slider{border-radius:999px}'), 'TV inputs and solid toggles use rounded controls'],
+    [androidJava.includes('final int seq = ++backEvaluationSeq;') && androidJava.includes('seq == backEvaluationSeq && backEvaluationPending'), 'a quick second Back press cannot be finished by the first press watchdog'],
+    [androidJava.includes('onRenderProcessGone') && androidJava.includes('MainActivity.this::recreate'), 'a killed WebView renderer reloads the app instead of crashing it'],
+    [androidJava.includes('registerDefaultNetworkCallback') && androidJava.includes('NET_CAPABILITY_VALIDATED') && androidJava.includes('unregisterNetworkCallback'), 'the offline screen reloads ZeroPlay as soon as a validated network returns'],
+    [androidJava.includes('clearHistoryOnAppLoad') && androidJava.includes('view.clearHistory()'), 'Back from Home after an offline recovery exits instead of returning to the offline page'],
+    [androidJava.includes('setSource(InputDevice.SOURCE_TOUCHSCREEN)'), 'TV cursor taps are delivered as touchscreen events'],
+    [!androidJava.includes('public void onReceivedError(WebView view, int errorCode') && !androidJava.includes('shouldOverrideUrlLoading(WebView view, String url)'), 'no deprecated WebViewClient twins that double-load the offline page'],
+    [androidJava.includes('setDestinationInExternalFilesDir'), 'downloads on Android 8/9 use the app folder that needs no storage permission'],
+    [!fs.readFileSync(path.join(repoRoot, 'tv/android-tv/app/src/main/assets/offline.html'), 'utf8').includes('shell=1.0.0'), 'offline retry reports the real shell version'],
     [((html.match(/in:name,description,readme/g)||[]).length >= 50), 'GitHub discovery registry contains at least 50 focused tool searches'],
   ];
   for (const [condition, label] of staticChecks) ok(condition, label);

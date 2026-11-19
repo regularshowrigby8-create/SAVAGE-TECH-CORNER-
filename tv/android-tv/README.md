@@ -86,25 +86,32 @@ app/build/outputs/apk/release/
 The GitHub workflow copies and names the deliverable:
 
 ```text
-ZeroPlay-TV-1.0.2-armeabi-v7a.apk
+ZeroPlay-TV-1.0.4-armeabi-v7a.apk
 ```
 
 ## Verify an APK
 
 ```bash
 python3 tv/android-tv/tools/verify_apk.py \
-  tv/android-tv/dist/ZeroPlay-TV-1.0.2-armeabi-v7a.apk \
+  tv/android-tv/dist/ZeroPlay-TV-1.0.4-armeabi-v7a.apk \
   --require-sdk-tools \
-  --json tv/android-tv/dist/ZeroPlay-TV-1.0.2-armeabi-v7a.verify.json
+  --expect-version-name 1.0.4 \
+  --json tv/android-tv/dist/ZeroPlay-TV-1.0.4-armeabi-v7a.verify.json
 ```
+
+CI reads `versionName` from `app/build.gradle.kts` and uses it for the APK
+name, artifact, release tag and `--expect-version-name`, so bumping the version
+there is the only edit a release needs (plus the `/tv.apk` redirects, which the
+web tests check against the same value).
 
 The verifier checks:
 
 - package `com.savage.zeroplay.tv`, version, min/target SDK;
-- Leanback launcher and Leanback feature declarations;
+- Leanback launcher and Leanback feature declarations (Leanback required,
+  touchscreen not required, launcher opens `MainActivity`);
 - `.MainActivity` and the 320×180 TV banner;
 - launcher PNGs and the bundled offline page;
-- DEX magic, Adler-32 checksum and SHA-1 signature;
+- DEX magic, Adler-32 checksum and SHA-1 signature for every `classes*.dex`;
 - stored-entry alignment plus `zipalign` when available;
 - `apksigner` v2/v3 signature verification;
 - native-library ABIs (only `armeabi-v7a` is allowed);
@@ -117,7 +124,7 @@ The verified APK is published as a GitHub Release asset with a direct,
 no-login download URL for the **Downloader** app on the TV:
 
 ```text
-https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/releases/download/zeroplay-tv-v1.0.2/zeroplay-tv.apk
+https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/releases/download/zeroplay-tv-v1.0.4/zeroplay-tv.apk
 ```
 
 1. Open **Downloader** on the Xiaomi TV Box and type the URL above into the URL box, then press **Go**.
