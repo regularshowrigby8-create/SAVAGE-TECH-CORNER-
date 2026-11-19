@@ -39,10 +39,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '17'
@@ -51,7 +51,7 @@ jobs:
       # because the lint jars in Compose 1.10 / lifecycle 2.8 need a newer Kotlin
       # Analysis API than AGP 8.7's lint ships; on 8.7.3 those detectors crashed.
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: '8.13'
 
@@ -163,7 +163,7 @@ jobs:
 
       - name: Upload build log on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nova-build-log
           path: |
@@ -174,7 +174,7 @@ jobs:
 
       - name: Upload release APK
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nova-tv-release-apk
           path: nova-tv/android/app/build/outputs/apk/release/*.apk
@@ -182,7 +182,7 @@ jobs:
 
       - name: Upload debug APK
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nova-tv-debug-apk
           path: nova-tv/android/app/build/outputs/apk/debug/*.apk
