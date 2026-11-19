@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -33,7 +35,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.tv.material3.Border
 import androidx.tv.material3.Card
 import androidx.tv.material3.CardDefaults
@@ -95,18 +99,18 @@ fun RestoreFocusFor(id: String, requester: FocusRequester) {
 }
 
 // ---------------------------------------------------------------------------
-// Poster
+// Cards
 // ---------------------------------------------------------------------------
 
+/** Poster size used by every row, so rows and placeholders line up exactly. */
+val PosterWidth = 150.dp
+val LandscapeWidth = 300.dp
+val CardGap = 18.dp
+
 /**
- * The most repeated element in the app, so its states are defined once.
- *
- * TV changes: focus used to be a 2dp border on an inner Column plus a manual
- * scale through onFocusChanged + graphicsLayer, which drew under the card's
- * own focus treatment and was easy to miss at three metres. It is now the
- * tv-material Card's own focused border (3dp accent), scale and glow, and the
- * title brightens with it. Artwork now loads (Coil); the typographic tile
- * stays underneath as the loading and failure state.
+ * Poster only, no caption: the artwork carries the title. A caption under
+ * every poster doubled the visual noise of a row and made scrolling feel like
+ * reading a list. The name appears only when there is no artwork to show.
  */
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -114,100 +118,164 @@ fun PosterCard(
     title: MetaPreview,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    /** dp; 0 fills the parent (grid cells). 132dp fits six across a 960dp TV canvas. */
-    width: Int = 132
+    /** 0 fills the parent (grid cells). */
+    width: Dp = PosterWidth,
+    onFocused: () -> Unit = {}
 ) {
-    var focused by remember { mutableStateOf(false) }
-    val reduced = LocalReduceMotion.current
     val requester = remember { FocusRequester() }
     RestoreFocusFor(title.id, requester)
-
-    Column(if (width > 0) modifier.width(width.dp) else modifier.fillMaxWidth()) {
-        Card(
-            onClick = onClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(2f / 3f)
-                .focusRequester(requester)
-                .onFocusChanged { focused = it.isFocused },
-            shape = CardDefaults.shape(CardShape),
-            colors = CardDefaults.colors(
-                containerColor = NovaPalette.surface,
-                focusedContainerColor = NovaPalette.surfaceHigh
-            ),
-            scale = CardDefaults.scale(focusedScale = if (reduced) 1f else 1.06f),
-            border = CardDefaults.border(
-                focusedBorder = Border(
-                    border = BorderStroke(FocusRingWidth, NovaPalette.accent),
-                    shape = CardShape
-                )
-            ),
-            glow = CardDefaults.glow(
-                focusedGlow = Glow(elevationColor = NovaPalette.accent.copy(alpha = 0.45f), elevation = 12.dp)
-            )
-        ) {
-            PosterArt(title = title)
-        }
-        Spacer(Modifier.height(12.dp))
-        Text(
-            text = title.name,
-            style = NovaType.cardTitle,
-            color = if (focused) NovaPalette.textPrimary else NovaPalette.textMuted,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
-        SecondaryLine(title)
+    NovaCard(
+        onClick = onClick,
+        modifier = (if (width > 0.dp) modifier.width(width) else modifier.fillMaxWidth())
+            .aspectRatio(2f / 3f)
+            .focusRequester(requester)
+            .onFocusChanged { if (it.isFocused) onFocused() }
+    ) {
+        Artwork(url = title.poster, fallback = title.name)
     }
 }
 
-/** Artwork over the initials tile; the tile shows while loading and on failure. */
+/** Continue Watching: a wide still with a thin progress bar. */
+@OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-private fun PosterArt(title: MetaPreview) {
-    Box(
-        Modifier
-            .fillMaxSize()
-            .clip(CardShape)
-            .background(
-                Brush.verticalGradient(
-                    listOf(NovaPalette.surfaceHigh, NovaPalette.surface)
-                )
-            ),
-        contentAlignment = Alignment.Center
+fun LandscapeCard(
+    title: MetaPreview,
+    progress: Float,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    width: Dp = LandscapeWidth,
+    onFocused: () -> Unit = {}
+) {
+    val requester = remember { FocusRequester() }
+    RestoreFocusFor(title.id, requester)
+    NovaCard(
+        onClick = onClick,
+        modifier = modifier
+            .width(width)
+            .aspectRatio(16f / 9f)
+            .focusRequester(requester)
+            .onFocusChanged { if (it.isFocused) onFocused() }
     ) {
+        Box(Modifier.fillMaxSize()) {
+            Artwork(url = title.background ?: title.poster, fallback = title.name)
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(Brush.verticalGradient(0.45f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.85f)))
+            )
+            Text(
+                text = title.name,
+                style = NovaType.cardTitle,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.align(Alignment.BottomStart).padding(start = 14.dp, end = 14.dp, bottom = 16.dp)
+            )
+            ProgressLine(progress, Modifier.align(Alignment.BottomCenter))
+        }
+    }
+}
+
+/** An episode: still, number, name, progress if started. */
+@OptIn(ExperimentalTvMaterial3Api::class)
+@Composable
+fun EpisodeCard(
+    number: Int,
+    name: String,
+    thumbnail: String?,
+    selected: Boolean,
+    progress: Float,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier.width(260.dp)) {
+        NovaCard(onClick = onClick, modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f)) {
+            Box(Modifier.fillMaxSize()) {
+                Artwork(url = thumbnail, fallback = "$number")
+                if (selected) {
+                    Box(
+                        Modifier
+                            .align(Alignment.TopStart)
+                            .padding(10.dp)
+                            .clip(PillShape)
+                            .background(NovaPalette.accent)
+                            .padding(horizontal = 10.dp, vertical = 3.dp)
+                    ) { Text("Up next", style = NovaType.meta, color = NovaPalette.background) }
+                }
+                if (progress > 0f) ProgressLine(progress, Modifier.align(Alignment.BottomCenter))
+            }
+        }
+        Spacer(Modifier.height(10.dp))
         Text(
-            text = initials(title.name),
-            style = NovaType.display,
-            color = NovaPalette.accent.copy(alpha = 0.55f),
-            textAlign = TextAlign.Center
+            text = "$number. $name",
+            style = NovaType.meta,
+            color = if (selected) NovaPalette.textPrimary else NovaPalette.textMuted,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
-        val poster = title.poster
-        if (!poster.isNullOrBlank()) {
+    }
+}
+
+@Composable
+private fun ProgressLine(progress: Float, modifier: Modifier = Modifier) {
+    Box(modifier.fillMaxWidth().height(4.dp).background(Color.White.copy(alpha = 0.18f))) {
+        Box(Modifier.fillMaxWidth(progress.coerceIn(0.02f, 1f)).fillMaxHeight().background(NovaPalette.accent))
+    }
+}
+
+/** The one card treatment: spring scale, 3dp ring, soft glow. */
+@OptIn(ExperimentalTvMaterial3Api::class)
+@Composable
+fun NovaCard(onClick: () -> Unit, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    val reduced = LocalReduceMotion.current
+    Card(
+        onClick = onClick,
+        modifier = modifier,
+        shape = CardDefaults.shape(CardShape),
+        colors = CardDefaults.colors(containerColor = NovaPalette.surface, focusedContainerColor = NovaPalette.surfaceHigh),
+        scale = CardDefaults.scale(focusedScale = if (reduced) 1f else 1.08f),
+        border = CardDefaults.border(
+            focusedBorder = Border(border = BorderStroke(FocusRingWidth, NovaPalette.textPrimary), shape = CardShape)
+        ),
+        glow = CardDefaults.glow(focusedGlow = Glow(elevationColor = NovaPalette.accent.copy(alpha = 0.35f), elevation = 16.dp))
+    ) { content() }
+}
+
+/** Artwork over a shimmer; the name shows only when there is no image. */
+@Composable
+fun Artwork(url: String?, fallback: String, modifier: Modifier = Modifier) {
+    var state by remember(url) { mutableStateOf(if (url.isNullOrBlank()) ArtState.FAILED else ArtState.LOADING) }
+    Box(modifier.fillMaxSize().clip(CardShape), contentAlignment = Alignment.Center) {
+        when (state) {
+            ArtState.LOADING -> Box(Modifier.fillMaxSize().background(shimmerBrush()))
+            ArtState.FAILED -> Box(
+                Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(NovaPalette.surfaceHigh, NovaPalette.surface))),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = fallback,
+                    style = NovaType.cardTitle,
+                    textAlign = TextAlign.Center,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+            ArtState.READY -> Unit
+        }
+        if (!url.isNullOrBlank()) {
             AsyncImage(
-                model = poster,
-                contentDescription = null,
+                model = url,
+                contentDescription = fallback,
                 contentScale = ContentScale.Crop,
+                onSuccess = { state = ArtState.READY },
+                onError = { state = ArtState.FAILED },
                 modifier = Modifier.fillMaxSize()
             )
         }
     }
 }
 
-/** One line, never two: year · rating. Anything more is noise at 3m. */
-@Composable
-private fun SecondaryLine(title: MetaPreview) {
-    val parts = buildList {
-        title.year?.takeIf { it.isNotBlank() }?.let { add(it) }
-        if (title.rating > 0.0) add("%.1f".format(title.rating))
-    }
-    if (parts.isEmpty()) return
-    Text(
-        text = parts.joinToString("  ·  "),
-        style = NovaType.meta,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        modifier = Modifier.padding(top = 2.dp)
-    )
-}
+private enum class ArtState { LOADING, READY, FAILED }
 
 /** "The Bear" -> "TB"; "Dune" -> "D". Two letters maximum so it never wraps. */
 internal fun initials(name: String): String {
@@ -232,6 +300,7 @@ internal fun initials(name: String): String {
 fun PrimaryButton(
     label: String,
     modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
     onClick: () -> Unit
 ) {
     Surface(
@@ -247,11 +316,7 @@ fun PrimaryButton(
         scale = focusScale(),
         border = focusBorder(PillShape)
     ) {
-        Text(
-            text = label,
-            style = NovaType.body.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold),
-            modifier = Modifier.padding(horizontal = 32.dp, vertical = 14.dp)
-        )
+        ButtonContent(label, icon, NovaType.body.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold))
     }
 }
 
@@ -261,6 +326,9 @@ fun PrimaryButton(
 fun SecondaryButton(
     label: String,
     modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    /** A switched-on toggle (Preload): tinted fill and accent outline. */
+    active: Boolean = false,
     onClick: () -> Unit
 ) {
     Surface(
@@ -268,23 +336,36 @@ fun SecondaryButton(
         modifier = modifier,
         shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(PillShape),
         colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(
-            containerColor = Color.Transparent,
-            contentColor = NovaPalette.textPrimary,
+            containerColor = if (active) NovaPalette.accent.copy(alpha = 0.22f) else Color.Transparent,
+            contentColor = if (active) NovaPalette.accent else NovaPalette.textPrimary,
             focusedContainerColor = NovaPalette.surfaceHigh,
             focusedContentColor = NovaPalette.textPrimary
         ),
         scale = focusScale(),
         // Outlined at rest so it reads as a button; the ring thickens on focus.
         border = androidx.tv.material3.ClickableSurfaceDefaults.border(
-            border = Border(BorderStroke(1.dp, NovaPalette.textMuted.copy(alpha = 0.5f)), shape = PillShape),
+            border = Border(
+                BorderStroke(1.dp, if (active) NovaPalette.accent else NovaPalette.textMuted.copy(alpha = 0.5f)),
+                shape = PillShape
+            ),
             focusedBorder = Border(BorderStroke(FocusRingWidth, NovaPalette.accent), shape = PillShape)
         )
     ) {
-        Text(
-            text = label,
-            style = NovaType.body,
-            modifier = Modifier.padding(horizontal = 28.dp, vertical = 14.dp)
-        )
+        ButtonContent(label, icon, NovaType.body)
+    }
+}
+
+@Composable
+private fun ButtonContent(label: String, icon: ImageVector?, style: androidx.compose.ui.text.TextStyle) {
+    Row(
+        Modifier.padding(start = if (icon != null) 22.dp else 30.dp, end = 30.dp, top = 13.dp, bottom = 13.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (icon != null) {
+            androidx.tv.material3.Icon(icon, contentDescription = null, modifier = Modifier.size(24.dp))
+            Spacer(Modifier.width(10.dp))
+        }
+        Text(text = label, style = style, maxLines = 1)
     }
 }
 
@@ -311,7 +392,7 @@ fun FilterChip(
         border = focusBorder(PillShape)
     ) {
         Text(
-            text = if (selected) "✓  $label" else label,
+            text = label,
             style = NovaType.meta,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
         )
@@ -383,40 +464,7 @@ fun FocusableRow(
  * when it arrives reads as a bug at three metres.
  */
 @Composable
-fun SkeletonRow(cardCount: Int = 6, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(NovaShape.card)
-    ) {
-        repeat(cardCount) {
-            Column(Modifier.width(168.dp)) {
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(2f / 3f)
-                        .clip(CardShape)
-                        .background(NovaPalette.surface)
-                )
-                Spacer(Modifier.height(10.dp))
-                Box(
-                    Modifier
-                        .fillMaxWidth(0.75f)
-                        .height(14.dp)
-                        .clip(RoundedCornerShape(NovaShape.card))
-                        .background(NovaPalette.surface)
-                )
-                Spacer(Modifier.height(6.dp))
-                Box(
-                    Modifier
-                        .fillMaxWidth(0.4f)
-                        .height(12.dp)
-                        .clip(RoundedCornerShape(NovaShape.card))
-                        .background(NovaPalette.surface.copy(alpha = 0.7f))
-                )
-            }
-        }
-    }
-}
+fun SkeletonRow(cardCount: Int = 7, modifier: Modifier = Modifier) = ShimmerPosterRow(cardCount, modifier = modifier)
 
 /**
  * The empty state.

@@ -1,231 +1,311 @@
 package dev.nova.tv.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
-import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.tv.foundation.lazy.list.TvLazyColumn
-import androidx.tv.foundation.lazy.list.itemsIndexed
 import androidx.tv.material3.Text
 import coil.compose.AsyncImage
 import dev.nova.tv.data.model.Stream
+import dev.nova.tv.ui.components.EpisodeCard
+import dev.nova.tv.ui.components.FilterChip
 import dev.nova.tv.ui.components.FocusableRow
 import dev.nova.tv.ui.components.PrimaryButton
 import dev.nova.tv.ui.components.SecondaryButton
-import dev.nova.tv.ui.components.SkeletonRow
-import dev.nova.tv.ui.components.StatusDot
+import dev.nova.tv.ui.focus.PivotScroll
+import dev.nova.tv.ui.focus.arvioDpadFocusGroup
+import dev.nova.tv.ui.theme.LocalReduceMotion
 import dev.nova.tv.ui.theme.NovaPalette
 import dev.nova.tv.ui.theme.NovaSpace
 import dev.nova.tv.ui.theme.NovaType
 
 /**
- * The detail surface.
+ * A title's page.
  *
- * It renders above the browse screen rather than replacing it, so BACK closes
- * the overlay and focus returns to the card that opened it.
- *
- * TV changes: it now takes initial focus on "Play best" (it used to open with
- * focus left on the hidden card behind it), traps D-pad inside itself, sits in
- * the safe area, shows the backdrop, and every row is the whole focus target.
- * Play hands the *entire* ranked list to the player, so a dead first source
- * fails over instead of ending playback.
+ * Sources are found in the background the moment it opens; the viewer sees
+ * one Play button that becomes live as soon as anything playable is ranked.
+ * The source list exists but stays behind a button, because most people
+ * just want to press Play. Series get season chips and an episode row.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun DetailOverlay(state: NovaState, viewModel: NovaViewModel) {
-    val title = state.opened ?: return
-    val streams = state.streams
-    val playable = streams.orEmpty().filter { it.isPlayable }
+fun DetailScreen(state: NovaState, viewModel: NovaViewModel) {
+    val detail = state.detail ?: return
+    val title = detail.title
     val primary = remember(title.id) { FocusRequester() }
+    val reduced = LocalReduceMotion.current
 
     LaunchedEffect(title.id) {
         withFrameNanos { }
         runCatching { primary.requestFocus() }
+    }
+    // The sheet held focus; when it closes, give it back to Play so the remote never goes dead.
+    var sheetWasOpen by remember { mutableStateOf(false) }
+    LaunchedEffect(detail.showSources) {
+        if (sheetWasOpen && !detail.showSources) {
+            withFrameNanos { }
+            runCatching { primary.requestFocus() }
+        }
+        sheetWasOpen = detail.showSources
     }
 
     Box(
         Modifier
             .fillMaxSize()
             .background(NovaPalette.background)
-            .focusGroup()
             .focusProperties { onExit = { cancelFocusChange() } }
+            .arvioDpadFocusGroup(enableFocusRestorer = false)
     ) {
+        // Slow push-in on the backdrop: the page feels alive without moving anything you read.
+        val zoom = if (reduced) 1f else {
+            val t = rememberInfiniteTransition(label = "kenburns")
+            val z by t.animateFloat(1f, 1.08f, infiniteRepeatable(tween(24_000, easing = LinearEasing), RepeatMode.Reverse), label = "zoom")
+            z
+        }
         val art = title.background ?: title.poster
         if (!art.isNullOrBlank()) {
             AsyncImage(
                 model = art,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = zoom; scaleY = zoom }
             )
         }
-        // Scrim: text must stay readable over any backdrop.
         Box(
-            Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.horizontalGradient(
-                        0f to NovaPalette.background,
-                        0.55f to NovaPalette.background.copy(alpha = 0.92f),
-                        1f to Color.Transparent
-                    )
-                )
+            Modifier.fillMaxSize().background(
+                Brush.horizontalGradient(0f to NovaPalette.background, 0.45f to NovaPalette.background.copy(alpha = 0.82f), 0.85f to Color.Transparent)
+            )
+        )
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.verticalGradient(0.45f to Color.Transparent, 1f to NovaPalette.background)
+            )
         )
 
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(horizontal = NovaSpace.safeHorizontal, vertical = NovaSpace.safeVertical)
+                .padding(start = NovaSpace.safeHorizontal + 24.dp, top = NovaSpace.safeVertical + 36.dp)
         ) {
-            Text(title.name, style = NovaType.hero, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Column(Modifier.fillMaxWidth(0.55f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                TitleArt(title, maxHeight = 120.dp)
+                InfoLine(detail)
+                val overview = detail.currentVideo?.overview?.takeIf { it.isNotBlank() } ?: title.description
+                if (overview.isNotBlank()) {
+                    Text(overview, style = NovaType.body.copy(color = NovaPalette.textPrimary.copy(alpha = 0.85f)), maxLines = 3, overflow = TextOverflow.Ellipsis)
+                }
+            }
+            Spacer(Modifier.height(26.dp))
+            Actions(detail, viewModel, primary)
 
-            Row(
-                Modifier.padding(top = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
-                verticalAlignment = Alignment.CenterVertically
+            if (detail.isSeries && title.videos.isNotEmpty()) {
+                Spacer(Modifier.weight(1f))
+                Episodes(detail, viewModel)
+                Spacer(Modifier.height(NovaSpace.safeVertical))
+            }
+        }
+
+        AnimatedVisibility(
+            visible = detail.showSources,
+            enter = if (reduced) fadeIn(tween(0)) else slideInHorizontally(tween(260)) { it } + fadeIn(),
+            exit = if (reduced) fadeOut(tween(0)) else slideOutHorizontally(tween(200)) { it } + fadeOut(),
+            modifier = Modifier.align(Alignment.CenterEnd)
+        ) {
+            SourceSheet(detail.sources.streams, viewModel)
+        }
+    }
+}
+
+@Composable
+private fun InfoLine(detail: DetailState) {
+    val title = detail.title
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        if (detail.isSeries) {
+            Text("S${detail.season} E${detail.episode}", style = NovaType.body, color = NovaPalette.textPrimary)
+            detail.currentVideo?.let { Text(it.label, style = NovaType.body, color = NovaPalette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        }
+        if (title.shortInfo.isNotBlank()) Text(title.shortInfo, style = NovaType.meta, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        detail.sources.streams.firstOrNull()?.quality?.takeIf { it.isNotBlank() }?.let { Badge(it) }
+    }
+}
+
+@Composable
+private fun Badge(text: String) {
+    Text(
+        text,
+        style = NovaType.meta.copy(color = NovaPalette.textPrimary),
+        modifier = Modifier
+            .background(Color.White.copy(alpha = 0.14f), RoundedCornerShape(6.dp))
+            .padding(horizontal = 8.dp, vertical = 2.dp)
+    )
+}
+
+@Composable
+private fun Actions(detail: DetailState, viewModel: NovaViewModel, primary: FocusRequester) {
+    val streams = detail.sources.streams
+    val ready = streams.isNotEmpty()
+    val resume = detail.resume
+    Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+        val label = when {
+            ready && resume != null -> "Resume"
+            ready -> "Play"
+            detail.resolving -> "Finding sources" + dots()
+            else -> "Not available yet"
+        }
+        PrimaryButton(
+            label = label,
+            icon = if (ready) Icons.Filled.PlayArrow else null,
+            modifier = Modifier.focusRequester(primary)
+        ) {
+            if (ready) viewModel.play(0) else if (!detail.resolving) viewModel.retrySources()
+        }
+        if (ready && resume != null) SecondaryButton("From start") { viewModel.play(0, fromStart = true) }
+        if (!ready && !detail.resolving) SecondaryButton("Try again", icon = Icons.Filled.Refresh, onClick = viewModel::retrySources)
+        SecondaryButton(
+            if (detail.inList) "In My List" else "My List",
+            icon = if (detail.inList) Icons.Filled.Check else Icons.Filled.Add,
+            onClick = viewModel::toggleMyList
+        )
+        if (streams.size > 1) SecondaryButton("Sources  ${streams.size}", onClick = viewModel::toggleSourcesSheet)
+    }
+    if (resume != null && ready) {
+        Box(Modifier.padding(top = 12.dp).width(160.dp).height(3.dp).background(Color.White.copy(alpha = 0.2f))) {
+            Box(Modifier.fillMaxWidth(resume.fraction.coerceIn(0.02f, 1f)).fillMaxHeight().background(NovaPalette.accent))
+        }
+    }
+}
+
+/** Three animated dots for the one thing that waits. */
+@Composable
+private fun dots(): String {
+    if (LocalReduceMotion.current) return "…"
+    val t = rememberInfiniteTransition(label = "dots")
+    val n by t.animateFloat(0f, 3.99f, infiniteRepeatable(tween(1200, easing = LinearEasing)), label = "n")
+    return ".".repeat(n.toInt()).padEnd(3, ' ')
+}
+
+@Composable
+private fun Episodes(detail: DetailState, viewModel: NovaViewModel) {
+    val title = detail.title
+    val seasons = title.seasons.filter { it > 0 }.ifEmpty { title.seasons }
+    val episodes = title.episodes(detail.season)
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        if (seasons.size > 1) {
+            LazyRow(modifier = Modifier.arvioDpadFocusGroup(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                items(seasons, key = { it }) { s ->
+                    FilterChip("Season $s", selected = s == detail.season) { viewModel.selectSeason(s) }
+                }
+            }
+        }
+        PivotScroll(parentFraction = 0.02f) {
+            LazyRow(
+                modifier = Modifier.arvioDpadFocusGroup(),
+                contentPadding = PaddingValues(end = 120.dp, top = 8.dp, bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                title.year?.takeIf { it.isNotBlank() }?.let { Text(it, style = NovaType.meta) }
-                if (title.rating > 0.0) {
-                    Text("★ %.1f".format(title.rating), style = NovaType.meta, color = NovaPalette.accent)
-                }
-                title.genres.take(3).forEach { Text(it, style = NovaType.meta) }
-            }
-
-            if (title.description.isNotBlank()) {
-                Text(
-                    text = title.description,
-                    style = NovaType.body,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 14.dp).fillMaxWidth(0.62f)
-                )
-            }
-
-            Spacer(Modifier.height(22.dp))
-
-            // Primary actions. "Play best" is always the first focus target so
-            // OK straight after opening plays the top-ranked source.
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                PrimaryButton(
-                    label = when {
-                        state.streamsLoading -> "Finding sources…"
-                        playable.isEmpty() -> "No playable source"
-                        else -> "Play best"
-                    },
-                    modifier = Modifier.focusRequester(primary)
-                ) { if (playable.isNotEmpty()) viewModel.play(playable, 0) }
-                SecondaryButton(
-                    if (state.finderSearching) "Searching more sources…" else "Find more sources"
-                ) { viewModel.findMoreSources() }
-                SecondaryButton("Close", onClick = viewModel::closeTitle)
-            }
-
-            if (title.isSeries) {
-                Spacer(Modifier.height(14.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("S${state.season} E${state.episode}", style = NovaType.sectionTitle)
-                    Spacer(Modifier.width(8.dp))
-                    SecondaryButton("Season −") { viewModel.stepEpisode(-1, 0) }
-                    SecondaryButton("Season +") { viewModel.stepEpisode(1, 0) }
-                    SecondaryButton("Episode −") { viewModel.stepEpisode(0, -1) }
-                    SecondaryButton("Episode +") { viewModel.stepEpisode(0, 1) }
-                }
-            }
-
-            Spacer(Modifier.height(22.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Sources", style = NovaType.sectionTitle)
-                Spacer(Modifier.width(14.dp))
-                Text(
-                    text = buildString {
-                        if (streams != null) append("${playable.size} playable of ${streams.size}")
-                        if (state.finderStreams > 0) append("  ·  ${state.finderStreams} from Source Finder")
-                    },
-                    style = NovaType.meta
-                )
-            }
-            Spacer(Modifier.height(10.dp))
-
-            when {
-                state.streamsLoading -> {
-                    Text("Asking every installed source…", style = NovaType.meta)
-                    Spacer(Modifier.height(12.dp))
-                    SkeletonRow(cardCount = 4)
-                }
-                streams == null -> Text("No sources asked yet.", style = NovaType.meta)
-                playable.isEmpty() -> Text(
-                    text = if (streams.isEmpty()) {
-                        "No installed source has a stream for this title. Try Find more sources."
-                    } else {
-                        "${streams.size} stream(s) answered, but none can be decoded here " +
-                            "(torrents, web embeds or browser-only links). Try Find more sources."
-                    },
-                    style = NovaType.meta
-                )
-                else -> TvLazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth(0.62f)
-                ) {
-                    itemsIndexed(playable) { i, stream ->
-                        StreamRow(index = i, stream = stream) { viewModel.play(playable, i) }
-                    }
+                items(episodes, key = { "${it.season}:${it.episode}" }) { v ->
+                    EpisodeCard(
+                        number = v.episode,
+                        name = v.label,
+                        thumbnail = v.thumbnail,
+                        selected = v.episode == detail.episode,
+                        progress = if (v.episode == detail.episode) detail.resume?.fraction ?: 0f else 0f,
+                        onClick = {
+                            if (v.episode == detail.episode && detail.sources.streams.isNotEmpty()) viewModel.play(0)
+                            else viewModel.selectEpisode(v.season, v.episode)
+                        }
+                    )
                 }
             }
         }
     }
 }
 
+/** Every ranked source, best first. Hidden until asked for. */
 @Composable
-private fun StreamRow(index: Int, stream: Stream, onPlay: () -> Unit) {
-    FocusableRow(
-        onClick = onPlay,
-        trailing = {
-            Text(
-                stream.quality.ifBlank { "Play" },
-                style = NovaType.meta,
-                color = NovaPalette.accent
-            )
-        }
+private fun SourceSheet(streams: List<Stream>, viewModel: NovaViewModel) {
+    val first = remember { FocusRequester() }
+    LaunchedEffect(Unit) {
+        withFrameNanos { }
+        runCatching { first.requestFocus() }
+    }
+    Column(
+        Modifier
+            .width(560.dp)
+            .fillMaxHeight()
+            .background(NovaPalette.surface.copy(alpha = 0.98f))
+            .padding(horizontal = 24.dp, vertical = NovaSpace.safeVertical)
+            .focusGroup()
+            // Modal: D-pad stays in the sheet until Back closes it.
+            .focusProperties { onExit = { cancelFocusChange() } }
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatusDot(active = true)
-            Column {
-                Text(
-                    text = "${index + 1}.  ${stream.sourceName.ifBlank { stream.name ?: "Stream" }}",
-                    style = NovaType.body,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                (stream.title ?: stream.description ?: stream.name)?.let {
-                    Text(
-                        it.lineSequence().joinToString("  ·  ") { line -> line.trim() },
-                        style = NovaType.meta,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+        Text("Sources", style = NovaType.sectionTitle)
+        Spacer(Modifier.height(14.dp))
+        LazyColumn(modifier = Modifier.arvioDpadFocusGroup(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            itemsIndexed(streams, key = { i, s -> s.url ?: "$i" }) { i, stream ->
+                FocusableRow(
+                    onClick = { viewModel.play(i) },
+                    modifier = if (i == 0) Modifier.focusRequester(first) else Modifier,
+                    trailing = {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            if (dev.nova.tv.finder.DualAudio.hasEnglishPlusOther(stream)) Badge("Dual")
+                            stream.quality.takeIf { it.isNotBlank() }?.let { Badge(it) }
+                        }
+                    }
+                ) {
+                    Column {
+                        Text(stream.sourceName.ifBlank { stream.name ?: "Source ${i + 1}" }, style = NovaType.body, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        val size = stream.sizeBytes.takeIf { it > 0 }?.let { dev.nova.tv.finder.FinderRules.formatSize(it) }
+                        if (size != null) Text(size, style = NovaType.meta)
+                    }
                 }
             }
         }

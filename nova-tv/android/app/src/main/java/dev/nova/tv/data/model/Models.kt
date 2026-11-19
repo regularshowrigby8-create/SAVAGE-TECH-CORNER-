@@ -68,11 +68,56 @@ data class MetaPreview(
     val genres: List<String> = emptyList(),
     @SerialName("imdbRating") val imdbRating: String? = null,
     @SerialName("moviedb_id") val moviedbId: Long? = null,
-    @SerialName("trailerStreams") val trailerStreams: List<Trailer> = emptyList()
+    @SerialName("trailerStreams") val trailerStreams: List<Trailer> = emptyList(),
+    /** "139 min". Used to estimate a file's bitrate from its size. */
+    val runtime: String? = null,
+    val releaseInfo: String? = null,
+    /** "Spain, Argentina": production countries, first is the main one (Dual Audio). */
+    val country: String? = null,
+    /** "Spanish, English": full metadata only; first is the original language. */
+    val language: String? = null,
+    /** Episodes, from the `meta` resource only (catalogue previews omit it). */
+    val videos: List<Video> = emptyList()
 ) {
     val rating: Double get() = imdbRating?.toDoubleOrNull() ?: 0.0
     val isSeries: Boolean get() = type == "series" || type == "tv"
+
+    /** Runtime in seconds, or 0 when the catalogue did not say. */
+    val runtimeSeconds: Int
+        get() = Regex("""(\d{1,4})\s*min""").find(runtime.orEmpty())?.groupValues?.get(1)?.toIntOrNull()?.times(60) ?: 0
+
+    /** Seasons that have at least one episode, specials (season 0) last. */
+    val seasons: List<Int>
+        get() = videos.map { it.season }.distinct().sortedWith(compareBy({ it == 0 }, { it }))
+
+    fun episodes(season: Int): List<Video> = videos.filter { it.season == season }.sortedBy { it.episode }
+
+    /** One short line: "2008 · 49 min" -- the only metadata a browse card shows. */
+    val shortInfo: String
+        get() = listOfNotNull(
+            (releaseInfo ?: year)?.takeIf { it.isNotBlank() },
+            runtime?.takeIf { it.isNotBlank() }
+        ).joinToString("  ·  ")
 }
+
+/** One episode of a series (`meta.videos[]`). */
+@Serializable
+data class Video(
+    val id: String = "",
+    val name: String? = null,
+    val title: String? = null,
+    val season: Int = 0,
+    val episode: Int = 0,
+    val number: Int? = null,
+    val thumbnail: String? = null,
+    val overview: String? = null,
+    val released: String? = null
+) {
+    val label: String get() = (name ?: title)?.takeIf { it.isNotBlank() } ?: "Episode $episode"
+}
+
+@Serializable
+data class MetaResponse(val meta: MetaPreview? = null)
 
 @Serializable
 data class Trailer(val ytId: String = "", val title: String = "")
@@ -114,23 +159,37 @@ data class Stream(
     val quality: String
         get() = FinderRules.guessQuality(listOfNotNull(name, title, description).joinToString(" "))
 
+    /**
+     * File size in bytes, or 0 when unknown: the addon's `videoSize`, else the
+     * "4.2 GB" most addons print in the title (ARVIO parseSizeToBytes).
+     */
+    val sizeBytes: Long
+        get() = behaviorHints?.videoSize?.takeIf { it > 0 }
+            ?: FinderRules.parseSizeBytes(listOfNotNull(title, name, description, behaviorHints?.filename).joinToString(" "))
+
     /** Request headers the addon asked for, e.g. Referer / User-Agent. */
     val requestHeaders: Map<String, String>
         get() = behaviorHints?.proxyHeaders?.request.orEmpty()
 
-    /** A one-line label for the source picker. */
+    /** A one-line label for the source picker: "Source · 1080p · 2.1 GB". */
     val label: String
         get() = listOfNotNull(
-            sourceName.ifBlank { null },
+            sourceName.ifBlank { null } ?: name?.lineSequence()?.firstOrNull()?.take(32),
             quality.ifBlank { null },
-            (title ?: name)?.lineSequence()?.firstOrNull()?.take(80)
+            "Dual audio".takeIf { dev.nova.tv.finder.DualAudio.hasEnglishPlusOther(this) },
+            FinderRules.formatSize(sizeBytes).ifBlank { null }
         ).distinct().joinToString("  ·  ").ifBlank { "Stream" }
 }
 
 @Serializable
 data class StreamHints(
     val notWebReady: Boolean = false,
-    val proxyHeaders: ProxyHeaders? = null
+    val proxyHeaders: ProxyHeaders? = null,
+    /** Bytes, when the addon knows (Stremio SDK `behaviorHints.videoSize`). */
+    val videoSize: Long? = null,
+    val filename: String? = null,
+    /** Same group = same source family; autoplay-next prefers it (WuPlay / ARVIO). */
+    val bingeGroup: String? = null
 )
 
 @Serializable

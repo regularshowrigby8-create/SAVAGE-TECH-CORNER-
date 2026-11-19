@@ -24,7 +24,9 @@ enum class Layer {
     /** Fullscreen playback. */
     PLAYER,
     /** Sources / Audio / Subtitles panel over the player. */
-    PLAYER_PANEL
+    PLAYER_PANEL,
+    /** A sheet over a screen: the detail's source list or the add-website keyboard. */
+    SHEET
 }
 
 enum class BackAction {
@@ -32,6 +34,7 @@ enum class BackAction {
     /** First BACK while watching only reveals the controls. */
     SHOW_PLAYER_CHROME,
     STOP_PLAYBACK,
+    CLOSE_SHEET,
     CLOSE_DETAIL,
     CLEAR_QUERY,
     GO_HOME,
@@ -45,13 +48,15 @@ data class NavSnapshot(
     val playing: Boolean,
     val panelOpen: Boolean,
     val chromeVisible: Boolean,
-    val queryNotEmpty: Boolean
+    val queryNotEmpty: Boolean,
+    val sheetOpen: Boolean = false
 ) {
     /** The stack, bottom first, as the UI draws it. */
     val stack: List<Layer>
         get() = buildList {
             add(Layer.ROUTE)
             if (detailOpen) add(Layer.DETAIL)
+            if (sheetOpen && !playing) add(Layer.SHEET)
             if (playing) add(Layer.PLAYER)
             if (playing && panelOpen) add(Layer.PLAYER_PANEL)
         }
@@ -60,6 +65,7 @@ data class NavSnapshot(
 fun resolveBack(s: NavSnapshot): BackAction = when (s.stack.last()) {
     Layer.PLAYER_PANEL -> BackAction.CLOSE_PLAYER_PANEL
     Layer.PLAYER -> if (s.chromeVisible) BackAction.STOP_PLAYBACK else BackAction.SHOW_PLAYER_CHROME
+    Layer.SHEET -> BackAction.CLOSE_SHEET
     Layer.DETAIL -> BackAction.CLOSE_DETAIL
     Layer.ROUTE -> when {
         s.queryNotEmpty -> BackAction.CLEAR_QUERY

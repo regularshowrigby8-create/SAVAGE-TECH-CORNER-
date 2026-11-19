@@ -35,6 +35,11 @@ class HttpClient(
         .callTimeout(30, TimeUnit.SECONDS)
         .followRedirects(true)
         .followSslRedirects(true)
+        // ARVIO: a larger pool keeps video hosts' connections warm between
+        // seeks and source switches; DNS is cached and IPv4-first (NovaDns).
+        .connectionPool(okhttp3.ConnectionPool(24, 5, TimeUnit.MINUTES))
+        .dns(NovaDns)
+        .retryOnConnectionFailure(true)
         .addNetworkInterceptor { chain ->
             val url = chain.request().url.toString()
             if (!isAllowedUrl(url)) throw HttpFailure("refused unsafe redirect: $url")

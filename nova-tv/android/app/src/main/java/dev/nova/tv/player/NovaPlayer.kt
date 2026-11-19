@@ -23,6 +23,9 @@ import dev.nova.tv.player.engine.exoplayer.NovaExoPlayerFactory
 import dev.nova.tv.player.engine.exoplayer.compatibleSurroundTrack
 import dev.nova.tv.player.engine.nextFailoverIndex
 import dev.nova.tv.player.engine.safePlaybackHeaders
+import dev.nova.tv.player.preload.FragmentPreloader
+import dev.nova.tv.player.preload.PreloadCache
+import dev.nova.tv.player.preload.PreloadMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -58,12 +61,29 @@ import kotlinx.coroutines.launch
  */
 class NovaPlayer(
     context: Context,
-    http: HttpClient
+    http: HttpClient,
+    initialBitrateEstimate: Long = 0L,
+    preferredAudioLanguage: String? = null,
+    initialPreload: PreloadMode = PreloadMode.OFF
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
-    private val bundle: NovaExoPlayerBundle =
-        NovaExoPlayerFactory.create(context, http.okHttp, http.agent)
+    private val cache = PreloadCache.get(context)
+
+    private val bundle: NovaExoPlayerBundle = NovaExoPlayerFactory.create(
+        context, http.okHttp, http.agent,
+        preferredAudioLanguage = preferredAudioLanguage,
+        initialBitrateEstimate = initialBitrateEstimate,
+        cache = cache
+    )
+
+    /** FastStream-style pre-download into the cache the player reads. */
+    private val preloader = FragmentPreloader(cache, http.okHttp, http.agent)
+    val preloadStatus: StateFlow<FragmentPreloader.Status> get() = preloader.status
+    private var preloadMode: PreloadMode = initialPreload
+    private var preloadTicker: Job? = null
+
+    private val probe = StreamProbe(http.okHttp)
     private val exo: ExoPlayer = bundle.player
 
     /** ARVIO's engine abstraction; ExoPlayer is the only linked engine. */
@@ -96,7 +116,10 @@ class NovaPlayer(
 
     private var startupJob: Job? = null
     private var noticeJob: Job? = null
+    private var stallJob: Job? = null
     private val recoveredOnce = mutableSetOf<String>()
+    private val stalls = StallTracker()
+    private var lastSeekAt = 0L
 
     init {
         exo.addListener(object : Player.Listener {
@@ -104,9 +127,20 @@ class NovaPlayer(
                 when (state) {
                     Player.STATE_READY -> {
                         startupJob?.cancel()
+                        stallJob?.cancel()
+                        val firstStart = !_session.value.started
                         _session.update { it.copy(started = true) }
+                        if (firstStart) {
+                            HostHealth.noteSuccess(_session.value.current?.url)
+                            prewarmNext()
+                            restartPreload()
+                        }
                     }
-                    Player.STATE_ENDED -> _session.update { it.copy(ended = true) }
+                    Player.STATE_BUFFERING -> if (_session.value.started) onRebuffer()
+                    Player.STATE_ENDED -> {
+                        stallJob?.cancel()
+                        _session.update { it.copy(ended = true) }
+                    }
                     else -> Unit
                 }
             }
@@ -133,9 +167,30 @@ class NovaPlayer(
             return
         }
         val start = index.coerceIn(0, playable.lastIndex)
+        stalls.reset()
         _session.value = Session(sources = playable, index = start, tried = setOf(start), subtitles = subtitles)
         prepareCurrent(startPositionMs)
     }
+
+    /**
+     * Sources keep arriving after Play (slow addons, the finders). Add the
+     * new ones to the end of the failover queue without touching playback.
+     */
+    fun appendSources(more: List<Stream>) {
+        val current = _session.value
+        if (current.sources.isEmpty()) return
+        val known = current.sources.mapNotNull { it.url }.toHashSet()
+        val fresh = more.filter { it.isPlayable && it.url !in known }
+        if (fresh.isEmpty()) return
+        _session.value = current.copy(sources = current.sources + fresh)
+        // Every source had failed; the first new one gets its turn.
+        if (current.failure != null) {
+            _failure.value = null
+            selectSource(current.sources.size)
+        }
+    }
+
+    fun durationMs(): Long = exo.duration.takeIf { it > 0 } ?: 0L
 
     /** The viewer picked another source; keep their place in the film. */
     fun selectSource(index: Int) {
@@ -143,7 +198,89 @@ class NovaPlayer(
         if (index !in current.sources.indices) return
         val resumeAt = if (current.started) exo.currentPosition.coerceAtLeast(0L) else 0L
         _session.value = current.copy(index = index, tried = current.tried + index, failure = null, notice = null, ended = false)
+        stalls.reset()
         prepareCurrent(resumeAt)
+    }
+
+    // -- anti-buffering -------------------------------------------------------
+
+    /** The player's Preload button: Off → Preload → Multi-thread → Off. */
+    fun setPreload(mode: PreloadMode) {
+        preloadMode = mode
+        restartPreload()
+    }
+
+    fun preloadMode(): PreloadMode = preloadMode
+
+    private fun restartPreload() {
+        preloadTicker?.cancel()
+        preloader.stop()
+        val stream = _session.value.current ?: return
+        val url = stream.url ?: return
+        val kind = (FinderRules.classifyStream(stream) as? FinderRules.Verdict.Playable)?.kind
+        when {
+            preloadMode == PreloadMode.OFF -> { preloader.start(PreloadMode.OFF, url, emptyMap(), 0); return }
+            // HLS / DASH fetch their own segments ahead; preloading is for single files.
+            kind != FinderRules.StreamKind.DIRECT -> { preloader.unavailable(preloadMode); return }
+            !_session.value.started -> { preloader.waiting(preloadMode); return }
+        }
+        preloader.start(preloadMode, url, stream.requestHeaders.safePlaybackHeaders(), 0)
+        // The workers run off the main thread; ExoPlayer may only be read on it.
+        preloadTicker = scope.launch {
+            while (true) {
+                preloader.playheadMs = exo.currentPosition.coerceAtLeast(0)
+                preloader.durationMs = exo.duration.takeIf { it > 0 } ?: 0
+                delay(PRELOAD_TICK_MS)
+            }
+        }
+    }
+
+    /**
+     * Watchdog: a single rebuffer longer than [StallTracker.LONG_STALL_MS], or
+     * [StallTracker.MAX_STALLS] rebuffers inside a minute, means this host
+     * cannot keep up. Switch to the next healthy source at the same position
+     * instead of letting the viewer watch a spinner.
+     */
+    private fun onRebuffer() {
+        val now = System.currentTimeMillis()
+        // A seek always buffers; that is the viewer's doing, not the host's.
+        if (now - lastSeekAt < SEEK_GRACE_MS) return
+        if (stalls.note(now)) {
+            switchForStall()
+            return
+        }
+        stallJob?.cancel()
+        stallJob = scope.launch {
+            delay(StallTracker.LONG_STALL_MS)
+            if (exo.playbackState == Player.STATE_BUFFERING) switchForStall()
+        }
+    }
+
+    private fun switchForStall() {
+        stallJob?.cancel()
+        val current = _session.value
+        HostHealth.noteStall(current.current?.url)
+        val next = nextFailoverIndex(current.sources, current.index, current.tried)
+        if (next < 0) return // nothing better to go to; keep buffering
+        val resumeAt = exo.currentPosition.coerceAtLeast(0L)
+        stalls.reset()
+        _session.value = current.copy(
+            index = next,
+            tried = current.tried + next,
+            failure = null,
+            notice = "Switching to a faster source"
+        )
+        showNoticeBriefly()
+        prepareCurrent(resumeAt)
+    }
+
+    /** Open connections to the next two failover sources while this one plays. */
+    private fun prewarmNext() {
+        val s = _session.value
+        val upcoming = generateSequence(s.index) { i ->
+            nextFailoverIndex(s.sources, i, s.tried + i).takeIf { it >= 0 && it != s.index }
+        }.drop(1).take(PREWARM_COUNT).mapNotNull { s.sources.getOrNull(it) }.toList()
+        scope.launch { upcoming.forEach { probe.prewarm(it) } }
     }
 
     /** Retry the current source from where it stopped. */
@@ -165,6 +302,9 @@ class NovaPlayer(
     private fun prepareCurrent(startPositionMs: Long, keepPlaying: Boolean = true) {
         val stream = _session.value.current ?: return
         val url = stream.url ?: return
+        // A new source restarts the preloader once it is READY.
+        preloadTicker?.cancel()
+        preloader.waiting(preloadMode)
         _failure.value = null
         _session.update { it.copy(failure = null, started = false, ended = false) }
 
@@ -212,18 +352,21 @@ class NovaPlayer(
     /** Move to the next untried source, or surface the failure if none is left. */
     private fun fail(problem: PlaybackFailure) {
         startupJob?.cancel()
+        stallJob?.cancel()
         val current = _session.value
+        HostHealth.noteFailure(current.current?.url)
+        val resumeAt = if (current.started) exo.currentPosition.coerceAtLeast(0L) else 0L
         val next = nextFailoverIndex(current.sources, current.index, current.tried)
         if (next >= 0) {
-            val from = current.index + 1
             _session.value = current.copy(
                 index = next,
                 tried = current.tried + next,
                 failure = null,
-                notice = "Source $from failed (${problem.reason}), trying source ${next + 1} of ${current.sources.size}"
+                notice = "Trying another source"
             )
             showNoticeBriefly()
-            prepareCurrent(0L)
+            // Keep the viewer's place: a source that dies mid-film resumes there.
+            prepareCurrent(resumeAt)
         } else {
             _failure.value = problem
             _session.value = current.copy(failure = problem, notice = null)
@@ -296,6 +439,7 @@ class NovaPlayer(
     fun togglePlay() = engine.togglePlayPause()
 
     fun seekBy(deltaMs: Long) {
+        lastSeekAt = System.currentTimeMillis()
         when (val result = seekBy(exo.currentPosition, deltaMs, exo.duration)) {
             is SeekResult.SeekedTo -> engine.seekTo(result.targetMs)
             is SeekResult.Clamped -> engine.seekTo(result.targetMs)
@@ -308,7 +452,10 @@ class NovaPlayer(
     fun resumePosition(): Long = exo.currentPosition.coerceAtLeast(0L)
 
     fun release() {
+        preloadTicker?.cancel()
+        preloader.release()
         startupJob?.cancel()
+        stallJob?.cancel()
         noticeJob?.cancel()
         engine.release()
         exo.release()
@@ -319,8 +466,12 @@ class NovaPlayer(
     private fun classify(error: PlaybackException): PlaybackFailure = classifyError(error.errorCode, error.message)
 
     companion object {
-        const val STARTUP_TIMEOUT_MS = 20_000L
+        /** ARVIO uses 20 s; with probed sources a dead start is obvious sooner. */
+        const val STARTUP_TIMEOUT_MS = 15_000L
+        private const val PREWARM_COUNT = 2
+        private const val SEEK_GRACE_MS = 4_000L
         private const val NOTICE_MS = 4_000L
+        private const val PRELOAD_TICK_MS = 500L
 
         internal fun classifyError(code: Int, message: String?): PlaybackFailure = when (code) {
             PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS ->
@@ -350,6 +501,28 @@ class NovaPlayer(
                 else -> MimeTypes.APPLICATION_SUBRIP
             }
         }
+    }
+}
+
+/**
+ * Counts rebuffers in a sliding minute. Pure, so the thresholds are tested.
+ */
+class StallTracker {
+    private val times = ArrayDeque<Long>()
+
+    /** Record a rebuffer; true when the source should be abandoned. */
+    fun note(now: Long): Boolean {
+        times.addLast(now)
+        while (times.isNotEmpty() && now - times.first() > WINDOW_MS) times.removeFirst()
+        return times.size >= MAX_STALLS
+    }
+
+    fun reset() = times.clear()
+
+    companion object {
+        const val WINDOW_MS = 60_000L
+        const val MAX_STALLS = 3
+        const val LONG_STALL_MS = 8_000L
     }
 }
 

@@ -53,13 +53,20 @@ class AddonClient(private val http: HttpClient) {
 
     suspend fun fetchCatalog(addon: NovaAddon, catalog: CatalogDef, extra: Map<String, String> = emptyMap()): List<MetaPreview> {
         val suffix = if (extra.isEmpty()) "" else {
-            "/" + extra.entries.joinToString("&") { "${it.key}=${it.value}" }
+            "/" + extra.entries.joinToString("&") { "${it.key}=${encodeExtra(it.value)}" }
         }
         val url = normalise(addon.baseUrl) + "/catalog/${catalog.type}/${catalog.id}$suffix.json"
         val raw = http.get(url)
         return runCatching {
             json.decodeFromString(CatalogResponse.serializer(), raw).metas
         }.getOrElse { emptyList() }
+    }
+
+    /** `/meta/{type}/{id}.json`: full details, including the episode list. */
+    suspend fun fetchMeta(addon: NovaAddon, type: String, id: String): MetaPreview? {
+        val url = normalise(addon.baseUrl) + "/meta/$type/${FinderRules.streamSegment(id)}.json"
+        val raw = runCatching { http.get(url, attempts = 2) }.getOrElse { return null }
+        return runCatching { json.decodeFromString(dev.nova.tv.data.model.MetaResponse.serializer(), raw).meta }.getOrNull()
     }
 
     suspend fun fetchStreams(addon: NovaAddon, type: String, id: String): List<Stream> {
@@ -91,9 +98,12 @@ class AddonClient(private val http: HttpClient) {
      * catalogue already in memory.
      */
     suspend fun searchCatalog(addon: NovaAddon, catalog: CatalogDef, query: String): List<MetaPreview> {
-        val q = java.net.URLEncoder.encode(query.trim(), "UTF-8").replace("+", "%20")
-        return fetchCatalog(addon, catalog, mapOf("search" to q))
+        return fetchCatalog(addon, catalog, mapOf("search" to query.trim()))
     }
+
+    /** Extra values are path segments: "Sci-Fi" stays, "a b" becomes "a%20b". */
+    private fun encodeExtra(value: String): String =
+        java.net.URLEncoder.encode(value, "UTF-8").replace("+", "%20")
 
     private fun normalise(base: String): String =
         base.trim().trimEnd('/').replace(Regex("""/manifest\.json$""", RegexOption.IGNORE_CASE), "")

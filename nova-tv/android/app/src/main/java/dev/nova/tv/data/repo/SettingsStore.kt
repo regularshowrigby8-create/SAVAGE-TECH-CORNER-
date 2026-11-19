@@ -1,6 +1,9 @@
 package dev.nova.tv.data.repo
 
 import android.content.SharedPreferences
+import dev.nova.tv.data.remote.DnsProvider
+import dev.nova.tv.finder.FinderKind
+import dev.nova.tv.player.preload.PreloadMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +18,13 @@ class SettingsStore(private val prefs: SharedPreferences) : CatalogRepository.Ad
         val subtitleSize: Int = 100,
         val reduceMotion: Boolean = false,
         val volume: Float = 1f,
-        val playbackRate: Float = 1f
+        val playbackRate: Float = 1f,
+        val finders: Set<FinderKind> = FinderKind.entries.toSet(),
+        /** FastStream-style pre-download; switched from the player. */
+        val preload: PreloadMode = PreloadMode.OFF,
+        val dns: DnsProvider = DnsProvider.AUTO,
+        /** Dual Audio picks: prefer English audio and dual/multi audio files. */
+        val preferEnglishAudio: Boolean = true
     )
 
     private val _settings = MutableStateFlow(load())
@@ -31,7 +40,11 @@ class SettingsStore(private val prefs: SharedPreferences) : CatalogRepository.Ad
         subtitleSize = prefs.getInt(KEY_SUBTITLE, 100),
         reduceMotion = prefs.getBoolean(KEY_MOTION, false),
         volume = prefs.getFloat(KEY_VOLUME, 1f),
-        playbackRate = prefs.getFloat(KEY_RATE, 1f)
+        playbackRate = prefs.getFloat(KEY_RATE, 1f),
+        finders = FinderKind.entries.filter { prefs.getBoolean(KEY_FINDER + it.name, true) }.toSet(),
+        preload = PreloadMode.entries.firstOrNull { it.name == prefs.getString(KEY_PRELOAD, null) } ?: PreloadMode.OFF,
+        dns = DnsProvider.entries.firstOrNull { it.name == prefs.getString(KEY_DNS, null) } ?: DnsProvider.AUTO,
+        preferEnglishAudio = prefs.getBoolean(KEY_ENGLISH, true)
     )
 
     override fun savedAddonUrls(): List<String> = _settings.value.addonUrls
@@ -65,6 +78,28 @@ class SettingsStore(private val prefs: SharedPreferences) : CatalogRepository.Ad
         _settings.value = _settings.value.copy(playbackRate = clamped)
     }
 
+    fun setFinders(kinds: Set<FinderKind>) {
+        val edit = prefs.edit()
+        FinderKind.entries.forEach { edit.putBoolean(KEY_FINDER + it.name, it in kinds) }
+        edit.apply()
+        _settings.value = _settings.value.copy(finders = kinds)
+    }
+
+    fun setPreload(mode: PreloadMode) {
+        prefs.edit().putString(KEY_PRELOAD, mode.name).apply()
+        _settings.value = _settings.value.copy(preload = mode)
+    }
+
+    fun setDns(provider: DnsProvider) {
+        prefs.edit().putString(KEY_DNS, provider.name).apply()
+        _settings.value = _settings.value.copy(dns = provider)
+    }
+
+    fun setPreferEnglishAudio(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_ENGLISH, enabled).apply()
+        _settings.value = _settings.value.copy(preferEnglishAudio = enabled)
+    }
+
     fun clear() {
         prefs.edit().clear().apply()
         _settings.value = Settings()
@@ -78,5 +113,9 @@ class SettingsStore(private val prefs: SharedPreferences) : CatalogRepository.Ad
         private const val KEY_MOTION = "reduce_motion"
         private const val KEY_VOLUME = "volume"
         private const val KEY_RATE = "playback_rate"
+        private const val KEY_FINDER = "finder_"
+        private const val KEY_PRELOAD = "preload_mode"
+        private const val KEY_DNS = "dns_provider"
+        private const val KEY_ENGLISH = "prefer_english_audio"
     }
 }

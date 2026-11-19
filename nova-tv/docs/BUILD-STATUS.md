@@ -1,5 +1,14 @@
 # nova-tv — build status
 
+## Current (nova-tv-v2, local build)
+
+`./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleRelease` —
+BUILD SUCCESSFUL. 81 unit tests, 0 failures. Lint: 0 errors, 70 warnings.
+`app-release.apk` 8,541,304 bytes, signed (`apksigner verify` passes).
+Not installed on a device from this environment.
+
+## Earlier CI run (v1)
+
 **The build is finalised: both variants compile, are signed, and are verified.**
 
 Workflow: `nova-tv Android` (`.github/workflows/nova-tv-android.yml`)

@@ -29,6 +29,12 @@ object FinderRules {
     const val MAX_MANIFEST_BYTES = 160_000L
     const val MAX_JSON_BYTES = 1_200_000L
 
+    /**
+     * The file-size cap: nothing larger than 5 GB is played or even offered.
+     * GiB, because that is what addons print ("4.98 GB" is 4.98 GiB).
+     */
+    const val MAX_FILE_BYTES = 5L * 1024 * 1024 * 1024
+
     /** core.js SOURCE_IDS. */
     val SOURCE_IDS = listOf("stremio-addons", "catalog-graph", "github")
 
@@ -91,6 +97,9 @@ object FinderRules {
             }
         }.filter { it.isNotBlank() }.distinct()
         if ("stream" !in resources) return null
+        // A manifest that declares itself peer-to-peer serves torrents.
+        val hints = obj["behaviorHints"] as? JsonObject
+        if ((hints?.get("p2p") as? JsonPrimitive)?.contentOrNull == "true") return null
         val types = (obj["types"] as? JsonArray).strings().map { it.lowercase() }.distinct()
         if (types.none { it == "movie" || it == "series" || it == "tv" }) return null
         val prefixPattern = Regex("^[a-z0-9_-]{1,24}$")
@@ -195,6 +204,7 @@ object FinderRules {
         if (Regex("^(magnet:|ed2k:|thunder:)", RegexOption.IGNORE_CASE).containsMatchIn(url)) return Verdict.Rejected("magnet")
         if (Regex("""\.torrent(\?|$)""", RegexOption.IGNORE_CASE).containsMatchIn(url)) return Verdict.Rejected("torrent-file")
         if (stream.behaviorHints?.notWebReady == true) return Verdict.Rejected("not-web-ready")
+        if (stream.sizeBytes > MAX_FILE_BYTES) return Verdict.Rejected("oversize")
         // ExoPlayer only speaks http(s); anything else is not a stream here.
         if (!url.startsWith("http://", ignoreCase = true) && !url.startsWith("https://", ignoreCase = true)) {
             return Verdict.Rejected("unsupported-scheme")
@@ -217,6 +227,30 @@ object FinderRules {
         val found = (match.groupValues[1].ifEmpty { match.value }).lowercase()
         if (found == "4k") return "2160p"
         return if (found.endsWith("p")) found else found + "p"
+    }
+
+    /**
+     * "2.5 GB", "800 MB", "5,71 GB" -> bytes; 0 when no size is printed.
+     * Ported from ARVIO's StreamRepository.parseSizeToBytes (Apache-2.0).
+     */
+    fun parseSizeBytes(text: String?): Long {
+        val match = Regex("""(\d+(?:[.,]\d+)?)\s*(TB|GB|MB|GiB|MiB|TiB)\b""", RegexOption.IGNORE_CASE)
+            .find(text.orEmpty()) ?: return 0L
+        val value = match.groupValues[1].replace(',', '.').toDoubleOrNull() ?: return 0L
+        val unit = when (match.groupValues[2].uppercase().replace("I", "")) {
+            "TB" -> 1024.0 * 1024 * 1024 * 1024
+            "GB" -> 1024.0 * 1024 * 1024
+            "MB" -> 1024.0 * 1024
+            else -> 0.0
+        }
+        return (value * unit).toLong()
+    }
+
+    /** 2254857830 -> "2.1 GB"; "" for unknown. */
+    fun formatSize(bytes: Long): String = when {
+        bytes <= 0 -> ""
+        bytes >= 1024L * 1024 * 1024 -> "%.1f GB".format(java.util.Locale.US, bytes / (1024.0 * 1024 * 1024))
+        else -> "%d MB".format(java.util.Locale.US, bytes / (1024 * 1024))
     }
 
     /** Ranking weight for a quality label, highest first. */
