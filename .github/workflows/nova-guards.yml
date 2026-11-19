@@ -124,5 +124,6 @@ jobs:
           fi
           git commit -m "ci(nova): guard reports for run $GITHUB_RUN_ID"
           git status --short
-          git pull --rebase --autostash origin "$GITHUB_REF_NAME"
+          # A newer run may have pushed reports meanwhile; this run's reports win.
+          git pull --rebase --autostash -X theirs origin "$GITHUB_REF_NAME"
           git push origin "HEAD:$GITHUB_REF_NAME"
