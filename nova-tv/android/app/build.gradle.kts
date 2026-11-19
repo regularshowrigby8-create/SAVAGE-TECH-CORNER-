@@ -102,9 +102,12 @@ android {
         }
     }
 
-    tasks.matching {
-        it.name.startsWith("packageRelease") || it.name.startsWith("validateSigningRelease")
-    }.configureEach {
+    // Flavoured names too: with the tv / mobile flavours the tasks are
+    // packageTvRelease, validateSigningMobileRelease, ... -- the old
+    // startsWith("packageRelease") matched none of them, so the key was never
+    // generated and every release build failed at validateSigning*Release.
+    val needsKeystore = Regex("""^(package|validateSigning)\w*Release$""")
+    tasks.matching { needsKeystore.matches(it.name) }.configureEach {
         dependsOn(ensureKeystore)
     }
 
