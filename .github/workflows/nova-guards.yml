@@ -91,7 +91,11 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: guard-report-dead-button
-          path: nova-tv/guards/reports/
+          # Only this job's own files: the checkout also holds the previous
+          # run's reports, which would overwrite newer ones when merged.
+          path: |
+            nova-tv/guards/reports/detekt.md
+            nova-tv/guards/reports/check_buttons.txt
           if-no-files-found: error
 
   hallucination:
@@ -151,7 +155,10 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: guard-report-hallucination
-          path: nova-tv/guards/reports/
+          # Only this job's own files: the checkout also holds the previous
+          # run's reports, which would overwrite newer ones when merged.
+          path: |
+            nova-tv/guards/reports/lychee.md
           if-no-files-found: error
 
   false-green:
@@ -238,7 +245,10 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: guard-report-false-green
-          path: nova-tv/guards/reports/
+          # Only this job's own files: the checkout also holds the previous
+          # run's reports, which would overwrite newer ones when merged.
+          path: |
+            nova-tv/guards/reports/swallowed.txt
           if-no-files-found: error
 
   # Commits the tools' own report files to nova-tv/guards/reports so they can
