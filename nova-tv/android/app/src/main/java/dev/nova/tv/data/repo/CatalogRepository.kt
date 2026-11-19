@@ -41,16 +41,31 @@ class CatalogRepository(
     private val _lastErrors = MutableStateFlow<List<String>>(emptyList())
     val lastErrors: StateFlow<List<String>> = _lastErrors.asStateFlow()
 
+    /**
+     * Load the built-in sources and the user's saved addons.
+     *
+     * Each manifest gets [MANIFEST_TIMEOUT_MS]: the home screen waits for this,
+     * so one slow or dead host must not hold every other source back. A
+     * built-in that failed (offline at launch) is retried on the next call --
+     * Reload catalogue -- instead of staying missing until a restart.
+     */
     suspend fun installDefaults() = coroutineScope {
-        if (_addons.value.isNotEmpty()) return@coroutineScope
         val builtIns = FinderRules.DEFAULT_SOURCES
-        val saved = store?.savedAddonUrls().orEmpty().filter { url -> builtIns.none { same(it, url) } }
-        val loaded = (builtIns.map { it to true } + saved.map { it to false }).map { (url, builtIn) ->
+        val current = _addons.value
+        val missing = builtIns.filter { url -> current.none { same(it.baseUrl, url) } }
+        if (current.isNotEmpty() && missing.isEmpty()) return@coroutineScope
+        val saved = if (current.isNotEmpty()) emptyList<String>() else
+            store?.savedAddonUrls().orEmpty().filter { url -> builtIns.none { same(it, url) } }
+        val loaded = (missing.map { it to true } + saved.map { it to false }).map { (url, builtIn) ->
             async {
-                runCatching { client.loadAddon(url).copy(isBuiltIn = builtIn) }.getOrNull()
+                withTimeoutOrNull(MANIFEST_TIMEOUT_MS) {
+                    runCatching { client.loadAddon(url).copy(isBuiltIn = builtIn) }.getOrNull()
+                }
             }
         }.awaitAll().filterNotNull()
-        _addons.value = loaded.distinctBy { it.baseUrl.lowercase() }
+        // Built-ins first, in DEFAULT_SOURCES order, then the user's own.
+        val order = { a: NovaAddon -> builtIns.indexOfFirst { same(it, a.baseUrl) }.let { if (it < 0) Int.MAX_VALUE else it } }
+        _addons.value = (_addons.value + loaded).distinctBy { it.baseUrl.lowercase() }.sortedBy(order)
     }
 
     suspend fun add(baseUrl: String): Result<NovaAddon> = runCatching {
@@ -94,9 +109,16 @@ class CatalogRepository(
      * One page of one catalogue, for endless rows: Popular / Featured / New,
      * optionally narrowed to a genre, from the first addon that declares it
      * (Cinemeta for the built-in rows). `skip` is the number already shown.
+     * [source] pins the row to one addon's catalogue (the per-source rows).
      */
-    suspend fun loadPage(type: String, catalogId: String, genre: String? = null, skip: Int = 0): List<MetaPreview> {
-        val pair = _addons.value.filter { it.enabled }.firstNotNullOfOrNull { addon ->
+    suspend fun loadPage(
+        type: String,
+        catalogId: String,
+        genre: String? = null,
+        skip: Int = 0,
+        source: String? = null
+    ): List<MetaPreview> {
+        val pair = _addons.value.filter { it.enabled && (source == null || same(it.baseUrl, source)) }.firstNotNullOfOrNull { addon ->
             addon.catalogDefs.firstOrNull { it.type == type && it.id == catalogId }?.let { addon to it }
         } ?: return emptyList()
         val (addon, def) = pair
@@ -108,6 +130,9 @@ class CatalogRepository(
         return withTimeoutOrNull(PAGE_TIMEOUT_MS) {
             runCatching { client.fetchCatalog(addon, def, extra) }.getOrDefault(emptyList())
         }.orEmpty().filter { it.id.isNotBlank() && it.name.isNotBlank() }
+            // Rows are keyed by id; a catalogue that repeats a title (or two TMDB
+            // entries that map to one IMDb id) must not crash the row.
+            .distinctBy { it.id }
     }
 
     /** Genres the first matching catalogue offers ("Action", "Comedy", ...). */
@@ -175,5 +200,6 @@ class CatalogRepository(
     private companion object {
         const val SEARCH_TIMEOUT_MS = 8_000L
         const val PAGE_TIMEOUT_MS = 10_000L
+        const val MANIFEST_TIMEOUT_MS = 12_000L
     }
 }

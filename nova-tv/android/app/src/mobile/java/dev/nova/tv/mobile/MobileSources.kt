@@ -2,6 +2,8 @@ package dev.nova.tv.mobile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -178,7 +180,11 @@ fun MobileSources(state: NovaState, viewModel: NovaViewModel, onBack: () -> Unit
 fun MobileSettings(state: NovaState, viewModel: NovaViewModel, onBack: () -> Unit) {
     Column(Modifier.fillMaxSize()) {
         ScreenHeader("Settings", onBack = onBack)
-        Column(Modifier.padding(horizontal = ScreenPadding), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // Scrolls: on a landscape phone the lower options were cut off and unreachable.
+        Column(
+            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = ScreenPadding).padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             SettingRow("Autoplay next episode", onClick = viewModel::toggleAutoplay) { NovaSwitch(state.autoplayNext) { viewModel.toggleAutoplay() } }
             SettingRow("Reduce motion", onClick = { viewModel.setReduceMotion(!state.reduceMotion) }) {
                 NovaSwitch(state.reduceMotion) { viewModel.setReduceMotion(it) }

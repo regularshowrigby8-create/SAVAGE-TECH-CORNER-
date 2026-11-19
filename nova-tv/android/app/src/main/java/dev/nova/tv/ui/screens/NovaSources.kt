@@ -195,37 +195,61 @@ private fun AddWebsiteSheet(state: NovaState, viewModel: NovaViewModel) {
     }
 }
 
-/** Settings: only what a viewer would actually change. */
+/**
+ * Settings: only what a viewer would actually change.
+ *
+ * A scrolling list, not a plain Column: on a 540 dp-high TV screen the last
+ * rows sat below the edge, and a Column cannot scroll them into view. Focus
+ * moves to the first option when the screen opens, as Home and the grids do;
+ * before, it stayed on the rail, which stayed expanded on top of the options.
+ */
 @Composable
 fun SettingsScreen(state: NovaState, viewModel: NovaViewModel) {
-    Column(
-        Modifier
-            .fillMaxSize()
-            .padding(start = ContentStart, end = NovaSpace.safeHorizontal, top = NovaSpace.safeVertical),
+    val first = remember { FocusRequester() }
+    LaunchedEffect(Unit) {
+        withFrameNanos { }
+        runCatching { first.requestFocus() }
+    }
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().arvioDpadFocusGroup(),
+        contentPadding = PaddingValues(start = ContentStart, end = NovaSpace.safeHorizontal, top = NovaSpace.safeVertical, bottom = 120.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("Settings", style = NovaType.display)
-        Spacer(Modifier.height(8.dp))
-        FocusableRow(onClick = viewModel::toggleAutoplay, trailing = { Toggle(state.autoplayNext) }) {
-            Text("Autoplay next episode", style = NovaType.body)
+        item { Text("Settings", style = NovaType.display, modifier = Modifier.padding(bottom = 8.dp)) }
+        item {
+            FocusableRow(onClick = viewModel::toggleAutoplay, modifier = Modifier.focusRequester(first), trailing = { Toggle(state.autoplayNext) }) {
+                Text("Autoplay next episode", style = NovaType.body)
+            }
         }
-        FocusableRow(onClick = { viewModel.setReduceMotion(!state.reduceMotion) }, trailing = { Toggle(state.reduceMotion) }) {
-            Text("Reduce motion", style = NovaType.body)
+        item {
+            FocusableRow(onClick = { viewModel.setReduceMotion(!state.reduceMotion) }, trailing = { Toggle(state.reduceMotion) }) {
+                Text("Reduce motion", style = NovaType.body)
+            }
         }
-        FocusableRow(onClick = viewModel::cyclePreload, trailing = { Text(state.preload.label, style = NovaType.meta) }) {
-            Text("Anti-buffering", style = NovaType.body)
+        item {
+            FocusableRow(onClick = viewModel::cyclePreload, trailing = { Text(state.preload.label, style = NovaType.meta) }) {
+                Text("Anti-buffering", style = NovaType.body)
+            }
         }
-        FocusableRow(onClick = viewModel::cycleDns, trailing = { Text(state.dns.label, style = NovaType.meta) }) {
-            Text("DNS", style = NovaType.body)
+        item {
+            FocusableRow(onClick = viewModel::cycleDns, trailing = { Text(state.dns.label, style = NovaType.meta) }) {
+                Text("DNS", style = NovaType.body)
+            }
         }
-        FocusableRow(onClick = viewModel::togglePreferEnglishAudio, trailing = { Toggle(state.preferEnglishAudio) }) {
-            Text("Prefer English audio", style = NovaType.body)
+        item {
+            FocusableRow(onClick = viewModel::togglePreferEnglishAudio, trailing = { Toggle(state.preferEnglishAudio) }) {
+                Text("Prefer English audio", style = NovaType.body)
+            }
         }
-        FocusableRow(onClick = viewModel::clearHistory) {
-            Text("Clear watch history", style = NovaType.body)
+        item {
+            FocusableRow(onClick = viewModel::clearHistory) {
+                Text("Clear watch history", style = NovaType.body)
+            }
         }
-        FocusableRow(onClick = viewModel::refresh, trailing = { Text("Nova ${BuildConfig.VERSION_NAME}", style = NovaType.meta) }) {
-            Text("Reload catalogue", style = NovaType.body)
+        item {
+            FocusableRow(onClick = viewModel::refresh, trailing = { Text("Nova ${BuildConfig.VERSION_NAME}", style = NovaType.meta) }) {
+                Text("Reload catalogue", style = NovaType.body)
+            }
         }
     }
 }

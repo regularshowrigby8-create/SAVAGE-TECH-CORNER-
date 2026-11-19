@@ -68,6 +68,8 @@ data class MetaPreview(
     val genres: List<String> = emptyList(),
     @SerialName("imdbRating") val imdbRating: String? = null,
     @SerialName("moviedb_id") val moviedbId: Long? = null,
+    /** The IMDb id, from catalogues that key titles another way (TMDB's `tmdb:123`). */
+    @SerialName("imdb_id") val imdbId: String? = null,
     @SerialName("trailerStreams") val trailerStreams: List<Trailer> = emptyList(),
     /** "139 min". Used to estimate a file's bitrate from its size. */
     val runtime: String? = null,

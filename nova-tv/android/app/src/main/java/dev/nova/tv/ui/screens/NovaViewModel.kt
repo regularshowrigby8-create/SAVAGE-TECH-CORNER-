@@ -69,7 +69,9 @@ data class Shelf(
     val progress: Map<String, Float> = emptyMap(),
     /** Dual Audio rows keep only international titles, so they page by [cursor], not item count. */
     val international: Boolean = false,
-    val cursor: Int = 0
+    val cursor: Int = 0,
+    /** Base URL of the addon this row belongs to; null = first addon with [catalog] (Cinemeta). */
+    val source: String? = null
 )
 
 /** Movies / Series screens: one genre at a time, endless grid. */
@@ -258,7 +260,7 @@ class NovaViewModel : ViewModel() {
             engine.warmUp(_state.value.finders)
             shelfPlan = planShelves()
             val first = shelfPlan.take(INITIAL_SHELVES)
-            val loaded = first.map { shelf -> async { shelf.copy(items = repository.loadPage(shelf.type, shelf.catalog, shelf.genre)) } }
+            val loaded = first.map { shelf -> async { shelf.copy(items = repository.loadPage(shelf.type, shelf.catalog, shelf.genre, source = shelf.source)) } }
                 .awaitAll().filter { it.items.isNotEmpty() }
             val hero = loaded.firstOrNull()?.items.orEmpty().filter { !it.background.isNullOrBlank() }.take(HERO_COUNT)
             _state.update {
@@ -297,7 +299,66 @@ class NovaViewModel : ViewModel() {
                 seriesGenres.getOrNull(i)?.let { Shelf("series:top:$it", "$it Series", "series", "top", it) }
             )
         }
-        return base + genreShelves
+        // The other catalogue sources (TMDB, streaming services, IMDb, Trakt,
+        // anime, public domain) are woven between the Cinemeta rows, so the
+        // first screen already shows more than one source.
+        val sources = sourceShelves()
+        val mixed = buildList {
+            val extra = sources.iterator()
+            base.forEachIndexed { i, shelf ->
+                add(shelf)
+                if (i >= 1 && extra.hasNext()) add(extra.next())
+            }
+            extra.forEachRemaining { add(it) }
+        }
+        return mixed + genreShelves
+    }
+
+    /**
+     * One row per browsable catalogue of every source other than Cinemeta,
+     * taken round-robin across sources. Search-only and filter-only catalogues
+     * (those with a required extra) are not rows.
+     */
+    private fun sourceShelves(): List<Shelf> {
+        val perSource = repository.addons.value
+            .filter { it.enabled && !it.baseUrl.trimEnd('/').equals(NovaAddon.CINEMETA_URL, ignoreCase = true) }
+            .map { addon ->
+                addon.catalogDefs
+                    .filter { def -> def.id.isNotBlank() && def.id !in SKIP_SOURCE_CATALOGS && def.extra.none { it.isRequired } }
+                    .distinctBy { it.type to it.id }
+                    .map { def ->
+                        Shelf(
+                            key = "src:${addon.id}:${def.type}:${def.id}",
+                            title = sourceShelfTitle(addon, def),
+                            type = def.type,
+                            catalog = def.id,
+                            source = addon.baseUrl
+                        )
+                    }
+            }
+            .filter { it.isNotEmpty() }
+        val out = mutableListOf<Shelf>()
+        var round = 0
+        while (perSource.any { round < it.size }) {
+            perSource.forEach { rows -> rows.getOrNull(round)?.let { out.add(it) } }
+            round++
+        }
+        return out
+    }
+
+    /** "TMDB · Trending Movies", "Netflix Series", "Kitsu Trending Anime". */
+    private fun sourceShelfTitle(addon: NovaAddon, def: dev.nova.tv.data.model.CatalogDef): String {
+        val name = def.name.substringAfter(" - ").trim().ifBlank { addon.name }
+        val kind = when (def.type) {
+            "movie" -> "Movies"
+            "series" -> "Series"
+            "anime" -> "Anime"
+            else -> ""
+        }
+        val stem = kind.removeSuffix("s").lowercase()
+        val titled = if (kind.isEmpty() || name.lowercase().contains(stem)) name else "$name $kind"
+        val label = SOURCE_LABELS[addon.manifest.id]
+        return if (label.isNullOrBlank()) titled else "$label · $titled"
     }
 
     private fun libraryShelves(): List<Shelf> = buildList {
@@ -329,7 +390,7 @@ class NovaViewModel : ViewModel() {
         val next = shelfPlan.filter { it.key !in loadedKeys }.take(MORE_SHELVES)
         if (next.isEmpty()) return
         shelfJobs[KEY_MORE] = viewModelScope.launch {
-            val loaded = next.map { shelf -> async { shelf.copy(items = repository.loadPage(shelf.type, shelf.catalog, shelf.genre)) } }
+            val loaded = next.map { shelf -> async { shelf.copy(items = repository.loadPage(shelf.type, shelf.catalog, shelf.genre, source = shelf.source)) } }
                 .awaitAll()
             // Empty genre rows are dropped from the plan, not shown.
             shelfPlan = shelfPlan.filterNot { p -> loaded.any { it.key == p.key && it.items.isEmpty() } }
@@ -355,7 +416,7 @@ class NovaViewModel : ViewModel() {
             return
         }
         shelfJobs[key] = viewModelScope.launch {
-            val page = repository.loadPage(shelf.type, shelf.catalog, shelf.genre, skip = shelf.items.size)
+            val page = repository.loadPage(shelf.type, shelf.catalog, shelf.genre, skip = shelf.items.size, source = shelf.source)
             updateShelf(key) { current ->
                 val fresh = page.filter { p -> current.items.none { it.id == p.id } }
                 current.copy(items = current.items + fresh, loading = false, exhausted = fresh.isEmpty())
@@ -896,6 +957,10 @@ class NovaViewModel : ViewModel() {
         const val DUAL_FIRST = 12
         const val DUAL_MORE = 10
         const val DUAL_PAGES = 6
+        /** Short row prefixes for sources whose catalogue names are generic ("Popular"). */
+        val SOURCE_LABELS = mapOf("tmdb-addon" to "TMDB", "community.trakt-tv" to "Trakt")
+        /** Catalogues that are filters (pick a year / language), not lists. */
+        val SKIP_SOURCE_CATALOGS = setOf("tmdb.year", "tmdb.language")
         val DUAL_GENRES = listOf("Drama", "Action", "Crime", "Thriller", "Romance", "Comedy", "Animation", "Horror", "Mystery", "Fantasy")
     }
 }

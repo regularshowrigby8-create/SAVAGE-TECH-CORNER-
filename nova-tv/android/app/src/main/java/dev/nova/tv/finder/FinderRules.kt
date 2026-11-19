@@ -45,8 +45,21 @@ object FinderRules {
      */
     val DEFAULT_SOURCES = listOf(
         "https://v3-cinemeta.strem.io",
-        "https://opensubtitles-v3.strem.io"
+        "https://opensubtitles-v3.strem.io",
+        // Built-in catalogues. All are public hosted addons: any API key they
+        // need (TMDB's, Trakt's) lives on their server, so nothing is entered
+        // on the TV. Cinemeta stays first, because the home rows that name a
+        // Cinemeta catalogue ("top", "imdbRating", "year") take the first match.
+        TMDB_SOURCE,
+        "https://7a82163c306e-stremio-netflix-catalog-addon.baby-beamup.club", // Netflix, Disney+, HBO Max, Prime Video, Apple TV+
+        "https://1fe84bc728af-imdb-catalogs.baby-beamup.club",                // IMDb lists
+        "https://2ecbbd610840-trakt.baby-beamup.club",                        // Trakt popular / trending
+        "https://anime-kitsu.strem.fun",                                      // Kitsu anime
+        "https://caching.stremio.net/publicdomainmovies.now.sh"               // Public Domain Movies
     )
+
+    /** The TMDB addon (TMDB metadata, served with the addon's own API key). */
+    const val TMDB_SOURCE = "https://94c8cb9f702d-tmdb-addon.baby-beamup.club"
 
     /**
      * core.js publicHttpsUrl: https only, no credentials in the URL, no IP
