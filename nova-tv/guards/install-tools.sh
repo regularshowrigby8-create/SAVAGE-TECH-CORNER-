@@ -9,6 +9,12 @@ set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 set -e
 
+# Everything below is also written to reports/install-tools.md.
+mkdir -p "$REPORT_DIR"
+exec > >(tee "$REPORT_DIR/install-tools.md") 2>&1
+echo '```'
+trap 'rc=$?; echo "install-tools exit status: $rc"; echo "\`\`\`"; exit $rc' EXIT
+
 ACTIONLINT_VERSION="1.7.12"
 LYCHEE_VERSION="0.24.2"
 
@@ -39,11 +45,17 @@ if [[ ! -x bin/lychee ]]; then
   echo "lychee $LYCHEE_VERSION"
   file="lychee-x86_64-unknown-linux-gnu.tar.gz"
   base="https://github.com/lycheeverse/lychee/releases/download/lychee-v$LYCHEE_VERSION"
-  curl -fsSL -o "$file" "$base/$file"
-  curl -fsSL -o "$file.sha256" "$base/$file.sha256"
-  echo "$(cut -d' ' -f1 "$file.sha256")  $file" | sha256sum -c -
-  tar -xzf "$file" -C bin
-  rm -f "$file" "$file.sha256"
+  tmp="$(mktemp -d)"
+  curl -fsSL -o "$tmp/$file" "$base/$file"
+  curl -fsSL -o "$tmp/$file.sha256" "$base/$file.sha256"
+  (cd "$tmp" && echo "$(cut -d' ' -f1 "$file.sha256")  $file" | sha256sum -c -)
+  tar -xzf "$tmp/$file" -C "$tmp"
+  # The binary sits at the archive root or in a lychee-* folder, depending on
+  # the release (same detection as lycheeverse/lychee-action).
+  bin="$(find "$tmp" -type f -name lychee | head -n 1)"
+  [[ -n "$bin" ]] || { echo "no lychee binary in $file"; ls -R "$tmp"; exit 1; }
+  install -m 0755 "$bin" bin/lychee
+  rm -rf "$tmp"
 fi
 
 echo "installed:"

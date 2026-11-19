@@ -1,4 +1,6 @@
 # Downloaded tool binaries (install-tools.sh)
 .tools/
-# Full tool logs; the per-guard .md reports are kept
+# nova-tv/.gitignore ignores every reports/ directory; the guard reports are
+# meant to be committed, the full tool logs are not.
+!reports/
 reports/logs/
