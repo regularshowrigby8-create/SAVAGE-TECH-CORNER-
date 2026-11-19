@@ -1,0 +1,76 @@
+swallowed 0.1.0 · /home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-
+
+7 verification steps · 4 can actually fail the build · 3 cannot
+  █████████████████▏              57%
+
+  8 workflow(s) · 12 job(s) · 62 step(s)
+
+error   verification-cannot-fail .github/workflows/nova-tv-android.yml · build:89
+  "Run unit tests" pipes a command into another, in a shell without `pipefail`.
+  so: GitHub's default shell is `bash -e {0}` — errexit, but **no pipefail**. In a pipeline only the last command's exit code counts, so `npm test | tee test.log` reports the exit code of `tee`, which is always zero. This step is checking something, so what is discarded is the answer to whether that something is wrong — and the build reports success either way.
+  fix: Add `shell: bash` to the step — the explicit form is invoked with `-eo pipefail` — or put `set -o pipefail` at the top of the script.
+    .github/workflows/nova-tv-android.yml:89 — ./gradlew :app:testTvDebugUnitTest :app:testMobileDebugUnitT…
+
+error   verification-cannot-fail .github/workflows/nova-tv-android.yml · build:96
+  "Android lint" turns errexit off with `set +e`, and pipes a command into another, in a shell without `pipefail`, and ends with `exit 0`.
+  so: Every command after this line is advisory. A failure part-way through the script no longer stops it, and the step exits with whatever the last command returned. This step is checking something, so what is discarded is the answer to whether that something is wrong — and the build reports success either way.
+  fix: Restore it with `set -e` once past the command that needed the exemption, or check `$?` explicitly.
+    .github/workflows/nova-tv-android.yml:96 — set +e
+    .github/workflows/nova-tv-android.yml:100 — grep -nE "Error:|Warning:|errors?, [0-9]+ warnings?" lint.l…
+    .github/workflows/nova-tv-android.yml:106 — exit 0
+
+error   verification-cannot-fail .github/workflows/nova-tv-android.yml · build:133
+  "Verify both APKs" pipes a command into another, in a shell without `pipefail`, and pipes a command into another, in a shell without `pipefail`, and pipes a command into another, in a shell without `pipefail`, and pipes a command into another, in a shell without `pipefail`.
+  so: GitHub's default shell is `bash -e {0}` — errexit, but **no pipefail**. In a pipeline only the last command's exit code counts, so `npm test | tee test.log` reports the exit code of `tee`, which is always zero. This step is checking something, so what is discarded is the answer to whether that something is wrong — and the build reports success either way.
+  fix: Add `shell: bash` to the step — the explicit form is invoked with `-eo pipefail` — or put `set -o pipefail` at the top of the script.
+    .github/workflows/nova-tv-android.yml:133 — BT=$(ls -d "$SDK"/build-tools/* | sort -V | tail -1)
+    .github/workflows/nova-tv-android.yml:133 — BT=$(ls -d "$SDK"/build-tools/* | sort -V | tail -1)
+    .github/workflows/nova-tv-android.yml:142 — "$BT/aapt2" dump badging "$apk" | head -5
+    .github/workflows/nova-tv-android.yml:143 — "$BT/apksigner" verify --print-certs "$apk" | head -6
+
+info    step-cannot-fail .github/workflows/android-build.yml · build:57
+  "Locate Output APK" pipes a command into another, in a shell without `pipefail`, and pipes a command into another, in a shell without `pipefail`.
+  so: GitHub's default shell is `bash -e {0}` — errexit, but **no pipefail**. In a pipeline only the last command's exit code counts, so `npm test | tee test.log` reports the exit code of `tee`, which is always zero.
+  fix: Add `shell: bash` to the step — the explicit form is invoked with `-eo pipefail` — or put `set -o pipefail` at the top of the script.
+    .github/workflows/android-build.yml:57 — SRC_APK=$(find shell/android_project/app/build/outputs/apk/deb…
+    .github/workflows/android-build.yml:69 — unzip -l "$NAMED_APK" | head -n 35
+
+info    step-cannot-fail .github/workflows/android-build.yml · build:78
+  "Run Production APK through Android VM Verifier & Diagnostics" pipes a command into another, in a shell without `pipefail`.
+  so: GitHub's default shell is `bash -e {0}` — errexit, but **no pipefail**. In a pipeline only the last command's exit code counts, so `npm test | tee test.log` reports the exit code of `tee`, which is always zero.
+  fix: Add `shell: bash` to the step — the explicit form is invoked with `-eo pipefail` — or put `set -o pipefail` at the top of the script.
+    .github/workflows/android-build.yml:78 — python3 tools/vm_crash_and_install_debugger.py "${{ steps.apk_…
+
+info    step-cannot-fail .github/workflows/nova-tv-android.yml · build:75
+  "Assemble debug APK" turns errexit off with `set +e`, and pipes a command into another, in a shell without `pipefail`.
+  so: Every command after this line is advisory. A failure part-way through the script no longer stops it, and the step exits with whatever the last command returned.
+  fix: Restore it with `set -e` once past the command that needed the exemption, or check `$?` explicitly.
+    .github/workflows/nova-tv-android.yml:75 — set +e
+    .github/workflows/nova-tv-android.yml:81 — grep -nE "^e: |error:|FAILURE:|What went wrong" build.log | …
+
+info    step-cannot-fail .github/workflows/nova-tv-android.yml · build:114
+  "Assemble release APK (R8)" turns errexit off with `set +e`, and pipes a command into another, in a shell without `pipefail`, and pipes a command into another, in a shell without `pipefail`.
+  so: Every command after this line is advisory. A failure part-way through the script no longer stops it, and the step exits with whatever the last command returned.
+  fix: Restore it with `set -e` once past the command that needed the exemption, or check `$?` explicitly.
+    .github/workflows/nova-tv-android.yml:114 — set +e
+    .github/workflows/nova-tv-android.yml:119 — grep -nE "^e: |error:|FAILURE:|What went wrong|R8|Missing c…
+    .github/workflows/nova-tv-android.yml:121 — grep -nE "Missing class|R8: " release.log | head -30
+
+info    step-cannot-fail .github/workflows/nova-tv-android.yml · build:203
+  "Publish build diagnostics" turns errexit off with `set +e`, and pipes a command into another, in a shell without `pipefail`.
+  so: Every command after this line is advisory. A failure part-way through the script no longer stops it, and the step exits with whatever the last command returned.
+  fix: Restore it with `set -e` once past the command that needed the exemption, or check `$?` explicitly.
+    .github/workflows/nova-tv-android.yml:203 — set +e
+    .github/workflows/nova-tv-android.yml:226 — grep -nE "^e: |error:|FAILURE:|What went wrong|Caused by|Ex…
+
+info    step-cannot-fail .github/workflows/nova-tv-android.yml · build:240
+  "Commit diagnostics" turns errexit off with `set +e`.
+  so: Every command after this line is advisory. A failure part-way through the script no longer stops it, and the step exits with whatever the last command returned.
+  fix: Restore it with `set -e` once past the command that needed the exemption, or check `$?` explicitly.
+    .github/workflows/nova-tv-android.yml:240 — set +e
+
+info    step-cannot-fail .github/workflows/nova-tv-python.yml · collect:63
+  "One collection pass" ends a command with `|| true`.
+  so: This is an explicit instruction to ignore whatever just happened. It was almost always added to get past one bad afternoon and has outlived the reason.
+  fix: Remove it, or capture the exit code and decide about it deliberately.
+    .github/workflows/nova-tv-python.yml:63 — python scripts/github_collect.py --json --budget 3 || true
