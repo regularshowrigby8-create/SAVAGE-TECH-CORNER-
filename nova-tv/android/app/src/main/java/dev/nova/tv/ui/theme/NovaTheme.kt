@@ -138,8 +138,13 @@ object NovaSpace {
     val safeHorizontal = 48.dp
     val safeVertical = 36.dp
 
-    val gutter = 16.dp
-    val rowGap = 32.dp
+    val gutter = 20.dp
+
+    /** Between two shelves, and between the screen title and its content. */
+    val rowGap = 44.dp
+
+    /** Between two rows in a settings-style list. */
+    val listGap = 14.dp
 }
 
 @Composable

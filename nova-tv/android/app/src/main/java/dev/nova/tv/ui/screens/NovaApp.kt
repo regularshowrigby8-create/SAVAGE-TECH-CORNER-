@@ -53,6 +53,11 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -66,7 +71,9 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Icon
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
+import dev.nova.tv.ui.components.ContentEntry
 import dev.nova.tv.ui.components.FocusRestore
+import dev.nova.tv.ui.components.LocalContentEntry
 import dev.nova.tv.ui.components.LocalFocusRestore
 import dev.nova.tv.ui.focus.arvioDpadFocusGroup
 import dev.nova.tv.ui.theme.LocalReduceMotion
@@ -98,8 +105,10 @@ fun NovaApp(viewModel: NovaViewModel = viewModel()) {
         val reduced = LocalReduceMotion.current
 
         val restoreId = if (state.detail == null && state.playback == null) state.restoreFocusId else null
+        val contentEntry = remember { ContentEntry() }
         CompositionLocalProvider(
-            LocalFocusRestore provides FocusRestore(restoreId, viewModel::consumeFocusRestore)
+            LocalFocusRestore provides FocusRestore(restoreId, viewModel::consumeFocusRestore),
+            LocalContentEntry provides contentEntry
         ) {
             Box(Modifier.fillMaxSize().dpadRepeatGate().background(NovaPalette.background)) {
                 val covered = state.detail != null || state.playback != null
@@ -150,9 +159,9 @@ fun NovaApp(viewModel: NovaViewModel = viewModel()) {
 }
 
 /** Where screen content starts, clear of the collapsed rail. */
-internal val ContentStart = 112.dp
-private val RailCollapsed = 88.dp
-private val RailExpanded = 236.dp
+internal val ContentStart = 124.dp
+private val RailCollapsed = 96.dp
+private val RailExpanded = 264.dp
 
 @Composable
 private fun Toast(message: String?, modifier: Modifier = Modifier) {
@@ -183,6 +192,7 @@ private fun Toast(message: String?, modifier: Modifier = Modifier) {
 private fun SideRail(current: Route, onSelect: (Route) -> Unit, modifier: Modifier = Modifier) {
     var expanded by remember { mutableStateOf(false) }
     val reduced = LocalReduceMotion.current
+    val contentEntry = LocalContentEntry.current
     val width by animateDpAsState(
         targetValue = if (expanded) RailExpanded else RailCollapsed,
         animationSpec = if (reduced) snap() else tween(200),
@@ -202,11 +212,18 @@ private fun SideRail(current: Route, onSelect: (Route) -> Unit, modifier: Modifi
                 }
             )
             .onFocusChanged { expanded = it.hasFocus }
+            // Right hands focus to the screen's first control instead of whatever
+            // row happens to line up with the icon.
+            .onPreviewKeyEvent { event ->
+                event.type == KeyEventType.KeyDown &&
+                    event.key == Key.DirectionRight &&
+                    contentEntry.focusFirst()
+            }
             // Compose's own focus history: re-entering lands on the last item.
             .arvioDpadFocusGroup()
-            .padding(vertical = NovaSpace.safeVertical, horizontal = 14.dp),
-        // 8 destinations × 46 dp + gaps fit under the NOVA mark on a 540 dp-high TV screen.
-        verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically)
+            .padding(vertical = NovaSpace.safeVertical, horizontal = 16.dp),
+        // 8 destinations × 48 dp + gaps fit under the NOVA mark on a 540 dp-high TV screen.
+        verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically)
     ) {
         Route.entries.forEach { entry ->
             RailItem(
@@ -222,7 +239,7 @@ private fun SideRail(current: Route, onSelect: (Route) -> Unit, modifier: Modifi
         text = "NOVA",
         style = NovaType.sectionTitle.copy(fontSize = 18.sp, fontWeight = FontWeight.Black, letterSpacing = 4.sp),
         color = NovaPalette.accent,
-        modifier = Modifier.padding(start = 26.dp, top = NovaSpace.safeVertical).zIndex(1f)
+        modifier = Modifier.padding(start = 28.dp, top = NovaSpace.safeVertical).zIndex(1f)
     )
 }
 
@@ -239,7 +256,7 @@ private fun RailItem(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(46.dp)
+            .height(48.dp)
             .focusRequester(requester),
         shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(RoundedCornerShape(percent = NovaShape.pillPercent)),
         colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(

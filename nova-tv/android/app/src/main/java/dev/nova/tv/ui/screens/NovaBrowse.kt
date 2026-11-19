@@ -37,6 +37,7 @@ import dev.nova.tv.ui.components.CardGap
 import dev.nova.tv.ui.components.EmptyState
 import dev.nova.tv.ui.components.FilterChip
 import dev.nova.tv.ui.components.PosterCard
+import dev.nova.tv.ui.components.RegisterContentEntry
 import dev.nova.tv.ui.components.ShimmerBox
 import dev.nova.tv.ui.focus.PivotScroll
 import dev.nova.tv.ui.focus.arvioDpadFocusGroup
@@ -44,7 +45,7 @@ import dev.nova.tv.ui.theme.NovaPalette
 import dev.nova.tv.ui.theme.NovaSpace
 import dev.nova.tv.ui.theme.NovaType
 
-private const val GRID_COLUMNS = 7
+private const val GRID_COLUMNS = 6
 
 /** Movies / Series: a genre strip over an endless poster grid. */
 @Composable
@@ -53,20 +54,33 @@ fun BrowseScreen(route: Route, state: NovaState, viewModel: NovaViewModel) {
     val browse = state.browse[route] ?: BrowseState(loading = true)
     val genres = state.genres[type].orEmpty()
 
+    // Entering the catalogue puts focus on the genre strip, and the rail's Right
+    // lands here too, so the grid is always one Down away.
+    val entry = remember { FocusRequester() }
+    RegisterContentEntry(entry)
+    LaunchedEffect(route) {
+        withFrameNanos { }
+        runCatching { entry.requestFocus() }
+    }
+
     Column(Modifier.fillMaxSize().padding(top = NovaSpace.safeVertical)) {
         Text(route.label, style = NovaType.display, modifier = Modifier.padding(start = ContentStart))
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(24.dp))
         PivotScroll(parentFraction = 0.05f) {
             LazyRow(
                 modifier = Modifier.arvioDpadFocusGroup(),
-                contentPadding = PaddingValues(start = ContentStart, end = 120.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                contentPadding = PaddingValues(start = ContentStart, end = 140.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                item(key = "all") { FilterChip("All", selected = browse.genre == null) { viewModel.selectGenre(route, null) } }
+                item(key = "all") {
+                    FilterChip("All", selected = browse.genre == null, modifier = Modifier.focusRequester(entry)) {
+                        viewModel.selectGenre(route, null)
+                    }
+                }
                 items(genres, key = { it }) { g -> FilterChip(g, selected = browse.genre == g) { viewModel.selectGenre(route, g) } }
             }
         }
-        Spacer(Modifier.height(14.dp))
+        Spacer(Modifier.height(24.dp))
         PosterGrid(
             items = browse.items,
             loading = browse.loading,
@@ -81,6 +95,7 @@ fun BrowseScreen(route: Route, state: NovaState, viewModel: NovaViewModel) {
 @Composable
 fun SearchScreen(state: NovaState, viewModel: NovaViewModel) {
     val firstKey = remember { FocusRequester() }
+    RegisterContentEntry(firstKey)
     LaunchedEffect(Unit) {
         withFrameNanos { }
         runCatching { firstKey.requestFocus() }
@@ -143,7 +158,7 @@ internal fun QueryField(text: String, placeholder: Boolean) {
 fun MyListScreen(state: NovaState, viewModel: NovaViewModel) {
     Column(Modifier.fillMaxSize().padding(top = NovaSpace.safeVertical)) {
         Text("My List", style = NovaType.display, modifier = Modifier.padding(start = ContentStart))
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(28.dp))
         if (state.myList.isEmpty()) {
             EmptyState(title = "Nothing here yet", message = "Add titles from their page and they will wait for you here.")
         } else {
@@ -176,9 +191,9 @@ internal fun PosterGrid(
         LazyVerticalGrid(
             columns = GridCells.Fixed(columns),
             modifier = Modifier.fillMaxSize().arvioDpadFocusGroup(),
-            contentPadding = PaddingValues(start = startPadding, end = NovaSpace.safeHorizontal, top = 10.dp, bottom = 120.dp),
+            contentPadding = PaddingValues(start = startPadding, end = NovaSpace.safeHorizontal, top = 16.dp, bottom = 140.dp),
             horizontalArrangement = Arrangement.spacedBy(CardGap),
-            verticalArrangement = Arrangement.spacedBy(CardGap + 6.dp)
+            verticalArrangement = Arrangement.spacedBy(CardGap + 12.dp)
         ) {
             if (header != null) {
                 item(span = { GridItemSpan(maxLineSpan) }, key = "header") { Text(header, style = NovaType.sectionTitle) }

@@ -46,6 +46,7 @@ import dev.nova.tv.ui.components.CardGap
 import dev.nova.tv.ui.components.ErrorState
 import dev.nova.tv.ui.components.LandscapeCard
 import dev.nova.tv.ui.components.PosterCard
+import dev.nova.tv.ui.components.RegisterContentEntry
 import dev.nova.tv.ui.components.ShimmerHero
 import dev.nova.tv.ui.components.ShimmerPosterRow
 import dev.nova.tv.ui.focus.PivotScroll
@@ -158,6 +159,7 @@ private fun SpotlightShelves(
 @Composable
 private fun Shelves(shelves: List<Shelf>, viewModel: NovaViewModel, onMoreShelves: () -> Unit, onFocused: (MetaPreview) -> Unit) {
     val first = remember { FocusRequester() }
+    RegisterContentEntry(first)
     LaunchedEffect(Unit) {
         withFrameNanos { }
         runCatching { first.requestFocus() }
@@ -165,8 +167,8 @@ private fun Shelves(shelves: List<Shelf>, viewModel: NovaViewModel, onMoreShelve
     PivotScroll(parentFraction = 0f) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(top = 8.dp, bottom = 160.dp),
-            verticalArrangement = Arrangement.spacedBy(30.dp)
+            contentPadding = PaddingValues(top = 16.dp, bottom = 180.dp),
+            verticalArrangement = Arrangement.spacedBy(NovaSpace.rowGap)
         ) {
             itemsIndexed(shelves, key = { _, s -> s.key }) { index, shelf ->
                 if (index >= shelves.size - 3) LaunchedEffect(shelves.size) { onMoreShelves() }
@@ -196,12 +198,12 @@ internal fun ShelfRow(
         Text(
             shelf.title,
             style = NovaType.sectionTitle,
-            modifier = Modifier.padding(start = ContentStart, bottom = 14.dp)
+            modifier = Modifier.padding(start = ContentStart, bottom = 18.dp)
         )
         PivotScroll(parentFraction = 0.05f) {
             LazyRow(
                 modifier = Modifier.fillMaxWidth().arvioDpadFocusGroup(),
-                contentPadding = PaddingValues(start = ContentStart, end = 200.dp, top = 10.dp, bottom = 10.dp),
+                contentPadding = PaddingValues(start = ContentStart, end = 220.dp, top = 16.dp, bottom = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(CardGap)
             ) {
                 itemsIndexed(shelf.items, key = { _, m -> m.id }) { i, meta ->
@@ -291,7 +293,7 @@ internal fun TitleArt(meta: MetaPreview, maxHeight: androidx.compose.ui.unit.Dp 
     Spacer(Modifier.height(2.dp))
 }
 
-private val SPOTLIGHT_HEIGHT = 230.dp
+private val SPOTLIGHT_HEIGHT = 250.dp
 private const val SPOTLIGHT_SETTLE_MS = 220L
 private const val HERO_ROTATE_MS = 8_000L
 private const val PAGE_AHEAD = 8

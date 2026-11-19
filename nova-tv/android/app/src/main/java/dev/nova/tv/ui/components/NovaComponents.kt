@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.withFrameNanos
@@ -28,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.layout.ContentScale
@@ -85,6 +87,75 @@ data class FocusRestore(val id: String?, val consume: () -> Unit)
 
 val LocalFocusRestore = staticCompositionLocalOf { FocusRestore(null) {} }
 
+/**
+ * Bridges the shell's rail to whichever screen is showing.
+ *
+ * The rail sits beside the content, so pressing Right on it used to rely on
+ * geometric search: focus went to whichever row happened to sit at the same
+ * height as the icon, which on Settings meant landing on "DNS" instead of the
+ * first row. The screen registers its first control and the rail hands focus
+ * straight to it.
+ */
+class ContentEntry {
+    private var owner: Any? = null
+    private var request: (() -> Boolean)? = null
+
+    fun register(owner: Any, request: () -> Boolean) {
+        this.owner = owner
+        this.request = request
+    }
+
+    fun unregister(owner: Any) {
+        if (this.owner === owner) {
+            this.owner = null
+            this.request = null
+        }
+    }
+
+    /** True when something on screen took focus. */
+    fun focusFirst(): Boolean = request?.invoke() == true
+}
+
+val LocalContentEntry = staticCompositionLocalOf { ContentEntry() }
+
+/** Register [requester] as "the first thing on this screen" for the rail. */
+@Composable
+fun RegisterContentEntry(requester: FocusRequester) {
+    val entry = LocalContentEntry.current
+    DisposableEffect(entry, requester) {
+        entry.register(requester) { runCatching { requester.requestFocus() }.isSuccess }
+        onDispose { entry.unregister(requester) }
+    }
+}
+
+/**
+ * One requester per row of a vertical list, for [focusColumnRow].
+ */
+@Composable
+fun rememberFocusColumn(count: Int): List<FocusRequester> = remember(count) {
+    List(count) { FocusRequester() }
+}
+
+/**
+ * Deterministic Up/Down movement inside a settings-style list.
+ *
+ * Geometric D-pad search treats every focusable on screen as a candidate, so
+ * with rows of different heights and the rail directly to the left, one press
+ * could skip a row or leave the list sideways. Wiring the neighbours by index
+ * makes each press move exactly one row; Right is cancelled because there is
+ * nothing to the right of a full-width row.
+ */
+fun Modifier.focusColumnRow(index: Int, order: List<FocusRequester>): Modifier {
+    if (index !in order.indices) return this
+    return this
+        .focusRequester(order[index])
+        .focusProperties {
+            up = order.getOrNull(index - 1) ?: FocusRequester.Cancel
+            down = order.getOrNull(index + 1) ?: FocusRequester.Cancel
+            right = FocusRequester.Cancel
+        }
+}
+
 /** Request focus on [requester] when [id] is the one being restored. */
 @Composable
 fun RestoreFocusFor(id: String, requester: FocusRequester) {
@@ -103,9 +174,9 @@ fun RestoreFocusFor(id: String, requester: FocusRequester) {
 // ---------------------------------------------------------------------------
 
 /** Poster size used by every row, so rows and placeholders line up exactly. */
-val PosterWidth = 150.dp
-val LandscapeWidth = 300.dp
-val CardGap = 18.dp
+val PosterWidth = 172.dp
+val LandscapeWidth = 336.dp
+val CardGap = 24.dp
 
 /**
  * Poster only, no caption: the artwork carries the title. A caption under
@@ -358,7 +429,7 @@ fun SecondaryButton(
 @Composable
 private fun ButtonContent(label: String, icon: ImageVector?, style: androidx.compose.ui.text.TextStyle) {
     Row(
-        Modifier.padding(start = if (icon != null) 22.dp else 30.dp, end = 30.dp, top = 13.dp, bottom = 13.dp),
+        Modifier.padding(start = if (icon != null) 24.dp else 32.dp, end = 32.dp, top = 16.dp, bottom = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (icon != null) {
@@ -394,7 +465,7 @@ fun FilterChip(
         Text(
             text = label,
             style = NovaType.meta,
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
+            modifier = Modifier.padding(horizontal = 22.dp, vertical = 12.dp)
         )
     }
 }
@@ -443,7 +514,7 @@ fun FocusableRow(
         border = focusBorder(CardShape)
     ) {
         Row(
-            Modifier.padding(horizontal = 24.dp, vertical = 18.dp),
+            Modifier.padding(horizontal = 26.dp, vertical = 22.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {

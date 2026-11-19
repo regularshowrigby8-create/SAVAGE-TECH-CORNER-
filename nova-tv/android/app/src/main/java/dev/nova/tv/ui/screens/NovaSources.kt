@@ -41,6 +41,9 @@ import dev.nova.tv.BuildConfig
 import dev.nova.tv.finder.FinderKind
 import dev.nova.tv.ui.components.FocusableRow
 import dev.nova.tv.ui.components.PrimaryButton
+import dev.nova.tv.ui.components.RegisterContentEntry
+import dev.nova.tv.ui.components.focusColumnRow
+import dev.nova.tv.ui.components.rememberFocusColumn
 import dev.nova.tv.ui.components.SecondaryButton
 import dev.nova.tv.ui.components.StatusDot
 import dev.nova.tv.ui.focus.arvioDpadFocusGroup
@@ -65,11 +68,19 @@ fun SourcesScreen(state: NovaState, viewModel: NovaViewModel) {
         }
         sheetWasOpen = state.addingWebsite
     }
+    // The rail hands focus to the first finder (see RegisterContentEntry), and the
+    // screen takes focus on its own when the route is clicked in the rail.
+    val firstRow = remember { FocusRequester() }
+    RegisterContentEntry(firstRow)
+    LaunchedEffect(Unit) {
+        withFrameNanos { }
+        runCatching { firstRow.requestFocus() }
+    }
     Box(Modifier.fillMaxSize()) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = ContentStart, end = NovaSpace.safeHorizontal, top = NovaSpace.safeVertical, bottom = 120.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.fillMaxSize().arvioDpadFocusGroup(),
+            contentPadding = PaddingValues(start = ContentStart, end = NovaSpace.safeHorizontal, top = NovaSpace.safeVertical, bottom = 140.dp),
+            verticalArrangement = Arrangement.spacedBy(NovaSpace.listGap)
         ) {
             item { Text("Sources", style = NovaType.display) }
             item { SectionLabel("Finders") }
@@ -79,6 +90,7 @@ fun SourcesScreen(state: NovaState, viewModel: NovaViewModel) {
                 val found = state.finderReports[kind]?.candidates?.size
                 FocusableRow(
                     onClick = { viewModel.toggleFinder(kind) },
+                    modifier = if (kind == FinderKind.entries.first()) Modifier.focusRequester(firstRow) else Modifier,
                     trailing = {
                         Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
                             if (running) Text("Searching", style = NovaType.meta, color = NovaPalette.accent)
@@ -95,7 +107,7 @@ fun SourcesScreen(state: NovaState, viewModel: NovaViewModel) {
                 }
             }
             item {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 4.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.padding(top = 6.dp)) {
                     FinderKind.entries.filter { it in state.finders }.forEach { kind ->
                         SecondaryButton("Run ${kind.label.substringBefore(' ')}", icon = Icons.Filled.Refresh) { viewModel.runFinder(kind) }
                     }
@@ -116,7 +128,7 @@ fun SourcesScreen(state: NovaState, viewModel: NovaViewModel) {
                 ) { Text("Working servers", style = NovaType.body) }
             }
             item {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 4.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.padding(top = 6.dp)) {
                     SecondaryButton("Scramble servers", icon = Icons.Filled.Refresh, onClick = viewModel::scrambleServers)
                     if (state.pool.canRevert) SecondaryButton("Revert", onClick = viewModel::revertServers)
                 }
@@ -198,41 +210,65 @@ private fun AddWebsiteSheet(state: NovaState, viewModel: NovaViewModel) {
 /** Settings: only what a viewer would actually change. */
 @Composable
 fun SettingsScreen(state: NovaState, viewModel: NovaViewModel) {
+    // Seven rows, wired in order: Up/Down always move exactly one row and the
+    // rail's Right lands on Autoplay rather than the row level with its icon.
+    val rows = rememberFocusColumn(SETTINGS_ROWS)
+    RegisterContentEntry(rows.first())
+    LaunchedEffect(Unit) {
+        withFrameNanos { }
+        runCatching { rows.first().requestFocus() }
+    }
     Column(
         Modifier
             .fillMaxSize()
-            .padding(start = ContentStart, end = NovaSpace.safeHorizontal, top = NovaSpace.safeVertical),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(start = ContentStart, end = NovaSpace.safeHorizontal, top = NovaSpace.safeVertical)
+            .arvioDpadFocusGroup(),
+        verticalArrangement = Arrangement.spacedBy(NovaSpace.listGap)
     ) {
         Text("Settings", style = NovaType.display)
-        Spacer(Modifier.height(8.dp))
-        FocusableRow(onClick = viewModel::toggleAutoplay, trailing = { Toggle(state.autoplayNext) }) {
-            Text("Autoplay next episode", style = NovaType.body)
-        }
-        FocusableRow(onClick = { viewModel.setReduceMotion(!state.reduceMotion) }, trailing = { Toggle(state.reduceMotion) }) {
-            Text("Reduce motion", style = NovaType.body)
-        }
-        FocusableRow(onClick = viewModel::cyclePreload, trailing = { Text(state.preload.label, style = NovaType.meta) }) {
-            Text("Anti-buffering", style = NovaType.body)
-        }
-        FocusableRow(onClick = viewModel::cycleDns, trailing = { Text(state.dns.label, style = NovaType.meta) }) {
-            Text("DNS", style = NovaType.body)
-        }
-        FocusableRow(onClick = viewModel::togglePreferEnglishAudio, trailing = { Toggle(state.preferEnglishAudio) }) {
-            Text("Prefer English audio", style = NovaType.body)
-        }
-        FocusableRow(onClick = viewModel::clearHistory) {
-            Text("Clear watch history", style = NovaType.body)
-        }
-        FocusableRow(onClick = viewModel::refresh, trailing = { Text("Nova ${BuildConfig.VERSION_NAME}", style = NovaType.meta) }) {
-            Text("Reload catalogue", style = NovaType.body)
-        }
+        Spacer(Modifier.height(NovaSpace.rowGap - NovaSpace.listGap))
+        FocusableRow(
+            onClick = viewModel::toggleAutoplay,
+            modifier = Modifier.focusColumnRow(0, rows),
+            trailing = { Toggle(state.autoplayNext) }
+        ) { Text("Autoplay next episode", style = NovaType.body) }
+        FocusableRow(
+            onClick = { viewModel.setReduceMotion(!state.reduceMotion) },
+            modifier = Modifier.focusColumnRow(1, rows),
+            trailing = { Toggle(state.reduceMotion) }
+        ) { Text("Reduce motion", style = NovaType.body) }
+        FocusableRow(
+            onClick = viewModel::cyclePreload,
+            modifier = Modifier.focusColumnRow(2, rows),
+            trailing = { Text(state.preload.label, style = NovaType.meta) }
+        ) { Text("Anti-buffering", style = NovaType.body) }
+        FocusableRow(
+            onClick = viewModel::cycleDns,
+            modifier = Modifier.focusColumnRow(3, rows),
+            trailing = { Text(state.dns.label, style = NovaType.meta) }
+        ) { Text("DNS", style = NovaType.body) }
+        FocusableRow(
+            onClick = viewModel::togglePreferEnglishAudio,
+            modifier = Modifier.focusColumnRow(4, rows),
+            trailing = { Toggle(state.preferEnglishAudio) }
+        ) { Text("Prefer English audio", style = NovaType.body) }
+        FocusableRow(
+            onClick = viewModel::clearHistory,
+            modifier = Modifier.focusColumnRow(5, rows)
+        ) { Text("Clear watch history", style = NovaType.body) }
+        FocusableRow(
+            onClick = viewModel::refresh,
+            modifier = Modifier.focusColumnRow(6, rows),
+            trailing = { Text("Nova ${BuildConfig.VERSION_NAME}", style = NovaType.meta) }
+        ) { Text("Reload catalogue", style = NovaType.body) }
     }
 }
 
+private const val SETTINGS_ROWS = 7
+
 @Composable
 private fun SectionLabel(text: String) {
-    Text(text, style = NovaType.sectionTitle, modifier = Modifier.padding(top = 18.dp, bottom = 2.dp))
+    Text(text, style = NovaType.sectionTitle, modifier = Modifier.padding(top = 26.dp, bottom = 4.dp))
 }
 
 /** A switch drawn to match the rest of the app. */
