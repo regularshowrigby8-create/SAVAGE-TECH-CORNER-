@@ -214,18 +214,22 @@ offering a dead download button.
   cross-origin iframe cannot trap the whole interface.
 - Native and FastStream-API playback expose ZeroPlay play/pause, seek, ±10
   seconds, volume/mute, playback speed, quality, PiP and fullscreen controls.
-  Cross-origin embeds expose an explicit **Video controls** focus button
-  because their internal controls cannot be driven from the parent page.
-- FastStream is the default player for every verified direct stream returned by
-  a selected or discovered server. ZeroPlay first attempts FastStream's
-  EmbedAPI: when the hosted build sends `ready`, it subscribes and drives
-  FastStream with `load`, seek, volume, rate, PiP and
-  `getLevels`/`setVideoLevel`. If the API is unavailable, the hosted FastStream
-  player is used; only an explicit ZeroPlay player selection or a guarded
-  compatibility fallback uses the native responsive `<video>` engine.
-- **FastStream — default**, **Automatic fallback — FastStream first**, and
-  **ZeroPlay responsive player** remain selectable in **Settings → Advanced
-  playback**.
+  Cross-origin embeds expose an explicit **Video controls** /
+  **Site controls · experimental** focus button because their internal
+  controls cannot be driven from the parent page.
+- Source strategy by kind: direct files use the native engine; HLS/DASH use
+  FastStream through its EmbedAPI when the hosted build sends `ready`
+  (subscribed and driven with `load`, seek, volume, rate, PiP and
+  `getLevels`/`setVideoLevel`), with the native engine covering
+  WebView-playable HLS while the API is probed in the background; embed
+  pages keep their own UI. On Android TV this becomes the **TV shell**: our
+  control bar is the only D-pad focus target, player frames are
+  `tabindex="-1"` and pointer-blocked, the mouse-driven hosted FastStream
+  surface never mounts, DASH without a working control API fails to an
+  honest Servers prompt, and embed sites are marked **EXPERIMENTAL ON TV**.
+  On desktop, **Auto**, **ZeroPlay responsive player** and
+  **FastStream web player only** remain selectable in
+  **Settings → Advanced playback**.
 - Quality selection is real where the engine exposes it: FastStream levels
   for API playback and actual returned direct-stream variants for file
   playback. A single fixed file has only its source quality. For third-party
@@ -324,3 +328,15 @@ buttons exist.
 
 ZeroPlay hosts no media files. This product uses the TMDB API when configured
 but is not endorsed or certified by TMDB.
+
+## Search & playback engines (2026-10-21)
+
+- Keyless search runs on Cinemeta: previews are hydrated through the full meta
+  endpoint because search previews omit `moviedb_id` (see `cmSearchCatalog`).
+- HLS/DASH playback: native platform HLS when available; otherwise self-hosted
+  hls.js 1.7.3 / dash.js 5.2.1 from `vendor/` (lazy-loaded); FastStream is
+  driven via its upstream EmbedAPI (`load` with explicit accelerated modes,
+  `ping` confirmation, API subtitles) inside our own D-pad control shell.
+- Android TV APK: `https://zeroplay-rd.vercel.app/tv.apk` always serves the
+  latest CI-built `zeroplay-tv.apk` (v1.0.4+). The web app itself updates from
+  Vercel on every launch — no reinstall needed for web changes.

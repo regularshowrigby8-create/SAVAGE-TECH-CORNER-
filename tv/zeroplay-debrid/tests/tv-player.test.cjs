@@ -103,15 +103,28 @@ eq(sorted.map(x => x.id), ['direct:a', 'route:vidstuck', 'route:embedwave'], 've
     [html.includes('function renderCategories()') && html.includes('route==="categories"'), 'Categories route is wired'],
     [html.includes('class="trailer-layer"') && html.includes('function startCardPreview'), 'trailer preview lives inside poster title blocks'],
     [html.includes('id="playerQuality"') && html.includes('setVideoLevel'), 'unified player exposes real FastStream quality selection'],
-    [html.includes('frame.src="https://faststream.online/player/"') && html.includes('waitForFastStreamReady(4500)'), 'FastStream API handshake precedes fallback'],
-    [html.includes('player:"faststream-only"') && html.includes('const mode=String(settings.stream.player||"faststream-only")') && html.includes('settings.stream.player==="auto"||settings.stream.player==="faststream"'), 'FastStream is the default for selected and discovered direct servers'],
+    [html.includes('frame.src="https://faststream.online/player/"') && html.includes('waitForFastStreamReady(ANDROID_TV_APP?12000:6000)'), 'FastStream API handshake precedes fallback'],
+    // TV-shell contract: FastStream's own UI is not D-pad compatible, so on
+    // Android TV our controls own the remote and FastStream is only driven
+    // through its EmbedAPI (decoder), with the native engine for files and
+    // WebView-playable streams. The legacy FastStream surface remains a
+    // desktop-only explicit mode.
+    [html.includes('player:"auto"') && html.includes('const mode=String(settings.stream.player||"auto")') && html.includes('st.surfaceEngine="tv-shell"') && html.includes('{allowApi:true,tvShell:true}') && html.includes('if(mode==="faststream-only")'), 'TV shell owns direct playback on Android TV; FastStream is an API-driven decoder there'],
     [html.includes('https://faststream.online/player/#'), 'legacy FastStream HLS/DASH fallback retained'],
     [html.includes('r.status!==206') && html.includes('Math.min(4,Number(cfg.primeThreads)||2)') && html.includes('primeBudgetMb'), 'direct priming capped to genuine range responses and configured worker/budget limits'],
     [html.includes('async function tryNextDirectVariant(reason){\n  const st=playerState; if(!st) return false;\n  if(streamCfg().autoFailover===false) return false;') && html.includes('Confirmed direct playback stalled on ') && html.includes('hasAdvanced&&lastObservedAdvanceAt'), 'automatic switching master switch and confirmed native stall detection are wired'],
     [html.includes('servers appear only after a match') && html.includes('groupStreamsByServer'), 'server list is title-specific and grouped'],
     [!/id=\\"playerSource\\"(?!Line)/.test(html) && !html.includes('id="detailSource"'), 'all-server player/detail dropdowns removed'],
     [html.includes('function moveTvFocus') && html.includes('handlePlayerKeyboard'), 'TV spatial and player keyboard navigation present'],
-    [html.includes('tabindex="-1" src="https://faststream.online/player/#') || html.includes('f.setAttribute("tabindex","-1")'), 'cross-origin frames do not steal initial TV focus'],
+    [html.includes('f.setAttribute("tabindex","-1")') && html.includes('frame.setAttribute("tabindex","-1")') && html.includes('full?"btnPlayPause":"btnFocusEmbed"'), 'cross-origin frames stay out of the TV focus order; embed frames focus only on explicit experimental request'],
+    [html.includes('subtitleTracks') && html.includes('subtitleDisplay') && html.includes('SUBTITLE_TRACKS_UPDATED'), 'hls.js subtitle tracks drive the ZeroPlay CC button'],
+    [html.includes('getTracksFor("text")') && html.includes('setTextTrack') && html.includes('TEXT_TRACKS_ADDED'), 'dash.js text tracks drive the ZeroPlay CC button'],
+    [html.includes('focusedSelect.id==="playerQuality"') && html.includes('focusedSelect.dispatchEvent'), 'focused player quality and rate selects consume D-pad left/right to change value'],
+    [html.includes('document.activeElement!==rate'), 'playback UI never overwrites the focused rate select'],
+    [html.includes('fullscreenBtn.style.display=hideFullscreen?"none":"inline-flex"'), 'fullscreen stays out of TV and limited player modes'],
+    [html.includes('cs.display==="none"') && html.includes('cs.visibility==="hidden"'), 'computed-hidden controls cannot receive D-pad focus'],
+    [html.includes('queueSettingsSave(700)'), 'volume persistence is debounced'],
+    [html.includes('tvAuditDefaultsVersion') && html.includes('warmAllSourcesTimer=setTimeout(run,20000)'), 'TV background warming and discovery quiet defaults are deferred'],
   ];
   for (const [cond, label] of statics) ok(cond, label);
   console.log(`\n${n} TV/player checks passed`);

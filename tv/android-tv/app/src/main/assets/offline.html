@@ -21,12 +21,20 @@
   <div class="mark">▶</div>
   <h1>ZeroPlay needs a connection</h1>
   <p>Check the TV box Wi‑Fi or Ethernet, then press OK on Retry. Your watchlist, history and downloads stored by ZeroPlay are not deleted.</p>
-  <a id="retry" href="https://zeroplay-rd.vercel.app/?androidtv=1&amp;shell=1.0.0#/home" autofocus>Retry ZeroPlay</a>
-  <small>ZeroPlay TV will also retry automatically in 30 seconds.</small>
+  <a id="retry" href="https://zeroplay-rd.vercel.app/?androidtv=1#/home" autofocus>Retry ZeroPlay</a>
+  <small>ZeroPlay TV retries by itself as soon as the network is back, and every 30 seconds.</small>
 </main>
 <script>
-  window.addEventListener('load',function(){document.getElementById('retry').focus();});
-  setTimeout(function(){location.replace('https://zeroplay-rd.vercel.app/?androidtv=1&shell=1.0.0#/home');},30000);
+  // Report the real shell version (from the native user agent) instead of a
+  // hard-coded one, so the web app sees the same shell= value as a normal launch.
+  function appUrl(){
+    var m=/ZeroPlayTV\/([0-9A-Za-z._-]+)/.exec(navigator.userAgent||'');
+    return 'https://zeroplay-rd.vercel.app/?androidtv=1'+(m?'&shell='+encodeURIComponent(m[1]):'')+'#/home';
+  }
+  var retry=document.getElementById('retry');
+  retry.href=appUrl();
+  window.addEventListener('load',function(){retry.focus();});
+  setTimeout(function(){location.replace(appUrl());},30000);
 </script>
 </body>
 </html>

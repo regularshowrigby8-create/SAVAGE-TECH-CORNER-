@@ -9,6 +9,10 @@ This folder is the working area for the TV project.
 | `android-tv/` | Dependency-light Leanback shell and ARMv7 APK project for the Xiaomi TV Box S (3rd Gen). |
 
 **Live prototype:** https://zeroplay-rd.vercel.app
+
+**Start here:** `INVESTIGATION.md` — Vercel↔branch mapping, Xiaomi TV Box S
+(3rd Gen) remote/input & performance contract, TV-shell player model, and
+the prioritised debug/rewire/rebrand backlog.
 (Vercel project `zeroplay-rd`, root directory `tv/zeroplay-debrid`.)
 
 **Status:** the web app now has a couch-first Android TV mode, and the
@@ -81,12 +85,17 @@ details.
   quality variant. Built-in/custom players that can merely address the exact
   TMDB/IMDb ID are shown separately as exact-ID routes, not falsely labelled
   verified.
-- FastStream is integrated through its official EmbedAPI when the hosted
-  player advertises `ready`: ZeroPlay controls then drive FastStream and its
-  `getLevels` quality menu. The currently hosted player lags that API, so Auto
-  mode does not delay playable files: MP4/WebM use the responsive ZeroPlay
-  engine while capability is probed in the background, and HLS/DASH use the
-  embedded FastStream player inside the same shell.
+- On Android TV the app is a **TV shell** around every engine: our control
+  bar owns the D-pad and nothing else can take remote focus. FastStream —
+  whose own UI needs a mouse — is used as a decoder through its official
+  EmbedAPI when the hosted player advertises `ready`: ZeroPlay controls then
+  drive play/pause, seek, volume, rate, PiP and its `getLevels` quality menu.
+  Files and WebView-playable streams use the native ZeroPlay engine while
+  API capability is probed in the background; DASH requires the API path and
+  fails honestly to Servers if it does not answer. The mouse-driven hosted
+  FastStream player surface remains available on desktop only. Embed sites
+  are marked **EXPERIMENTAL ON TV** and take control only on explicit
+  request. See `INVESTIGATION.md` for the full model.
 - Player responsiveness protections include throttled progress writes,
   parent-shell focus retention, safe 206-only range priming with configurable
   1–4 worker/chunk/budget/buffer limits, cancellable server searches, and
