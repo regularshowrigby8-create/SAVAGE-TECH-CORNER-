@@ -210,6 +210,13 @@ pitest {
     timestampedReports.set(false)
     outputFormats.set(setOf("XML", "HTML"))
     failWhenNoMutations.set(true)
+    // Ratchet from the first measured run (guards CI run 44497551571):
+    // 3,589 mutants, test strength 75 % (530 killed + 4 timed out of 715 the
+    // tests execute), overall 15 % (2,874 mutants in code no test reaches).
+    // One point below each, so timing-dependent timeouts cannot flip the
+    // result. Raise these as tests improve; never lower them to get green.
+    testStrengthThreshold.set(74)
+    mutationThreshold.set(14)
 }
 
 // JVM target is set through compileOptions above; on AGP 8.5 the Kotlin compiler
