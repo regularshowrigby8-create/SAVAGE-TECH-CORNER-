@@ -70,11 +70,114 @@ def kotlin_files(root: Path) -> List[Path]:
     return []
 
 
+def _scan_kotlin(text: str, keep_strings: bool) -> str:
+    """Single pass over Kotlin source that drops comments.
+
+    Strings are scanned *before* comment markers can match, so a literal such as
+    "https://host/x" is not mistaken for a `//` comment (the regex approach cut
+    the rest of the line, then mis-paired every later quote). With
+    keep_strings=False, literal text is blanked to "" but `${...}` template
+    expressions are kept, because the identifiers inside them are real uses.
+    Nested block comments are handled, as Kotlin allows them.
+    """
+    out: list[str] = []
+    i, n = 0, len(text)
+
+    def template(j: int) -> int:
+        # text[j:j+2] == "${"; copy the balanced expression, return index after it.
+        depth, k = 0, j + 1
+        while k < n:
+            ch = text[k]
+            if ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    if not keep_strings:
+                        out.append(" " + _scan_kotlin(text[j + 2:k], keep_strings) + " ")
+                    return k + 1
+            elif ch == '"':
+                # nested string inside the template
+                end = text.find('"', k + 1)
+                k = end if end != -1 else n
+            k += 1
+        return n
+
+    while i < n:
+        c = text[i]
+        if text.startswith("//", i):
+            j = text.find("\n", i)
+            i = n if j == -1 else j
+        elif text.startswith("/*", i):
+            depth, i = 1, i + 2
+            while i < n and depth:
+                if text.startswith("/*", i):
+                    depth, i = depth + 1, i + 2
+                elif text.startswith("*/", i):
+                    depth, i = depth - 1, i + 2
+                else:
+                    if text[i] == "\n":
+                        out.append("\n")
+                    i += 1
+            out.append(" ")
+        elif text.startswith('"""', i):
+            j = i + 3
+            start = len(out)
+            while j < n and not text.startswith('"""', j):
+                if text.startswith("${", j):
+                    j = template(j)
+                    continue
+                if text[j] == "\n" and not keep_strings:
+                    out.append("\n")
+                j += 1
+            while j + 3 < n and text[j + 3] == '"':  # """...""""  -> trailing quote belongs to the string
+                j += 1
+            end = min(j + 3, n)
+            if keep_strings:
+                del out[start:]
+                out.append(text[i:end])
+            else:
+                out.insert(start, '""')
+            i = end
+        elif c == '"':
+            j = i + 1
+            start = len(out)
+            while j < n and text[j] != '"' and text[j] != "\n":
+                if text[j] == "\\":
+                    j += 2
+                    continue
+                if text.startswith("${", j):
+                    j = template(j)
+                    continue
+                j += 1
+            end = min(j + 1, n)
+            if keep_strings:
+                del out[start:]
+                out.append(text[i:end])
+            else:
+                out.insert(start, '""')
+            i = end
+        elif c == "'":
+            # char literal: '{', '\n', '\u0041'
+            j = text.find("'", i + 1 + (1 if text[i + 1:i + 2] == "\\" else 0))
+            if j != -1 and j - i <= 8:
+                out.append(text[i:j + 1] if keep_strings else "' '")
+                i = j + 1
+            else:
+                out.append(c)
+                i += 1
+        else:
+            out.append(c)
+            i += 1
+    return "".join(out)
+
+
 def _strip_comments(text: str) -> str:
-    """Remove // and /* */ comments so commented-out code is not counted as use."""
-    text = re.sub(r"/\*.*?\*/", "", text, flags=re.DOTALL)
-    text = re.sub(r"//[^\n]*", "", text)
-    return text
+    """Remove // and /* */ comments so commented-out code is not counted as use.
+
+    String literals are kept intact (callers match on their contents).
+    """
+    return _scan_kotlin(text, keep_strings=True)
 
 
 def _relative(root: Path, path: Path) -> str:
