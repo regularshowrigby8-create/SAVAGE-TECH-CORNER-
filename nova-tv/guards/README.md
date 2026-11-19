@@ -1,76 +1,100 @@
 # Nova guards
 
-Three scripts that fail when Nova has dead buttons, made-up references, or
+Three guards that fail when Nova has dead buttons, made-up references, or
 checks that pass without proving anything.
 
-Each script runs existing open-source tools and adds as little of its own
-logic as possible. The detection itself comes from the tools listed below. The
-only Nova-specific parts are some rule files and one small piece of glue, all
-listed under [What is written here](#what-is-written-here-and-why).
+**No code is written here for the guards.** Each check is an imported tool or
+upstream GitHub Action, wired up in `.github/workflows/nova-guards.yml`. The
+only files in this directory are configuration for those tools:
 
-```bash
-nova-tv/guards/install-tools.sh      # pinned tools into nova-tv/guards/.tools
-nova-tv/guards/anti-dead-button.sh
-nova-tv/guards/anti-hallucination.sh
-nova-tv/guards/anti-false-green.sh
-```
+| File | What it is |
+|---|---|
+| `detekt-dead-code.yml` | which of detekt's built-in rules run (no rules are written here) |
+| `lychee.toml` | lychee settings: which files, which status codes count as alive |
+| `reports/` | the tools' own report files, committed by CI |
 
-- A script exits 0 only if every one of its checks passed.
-- A tool that is not installed is reported as **NOT RUN**, and that also fails
-  the guard. A skipped check would be a false green.
-- Each script writes `reports/<guard>.md`.
-- CI runs all three in `.github/workflows/nova-guards.yml` and commits the
-  reports back to the branch.
+## How they run
+
+Each guard is one job in `nova-guards.yml`, so the workflow run shows one
+pass/fail per guard and one step per tool:
+
+- **Anti-dead-button**
+- **Anti-hallucination**
+- **Anti-false-green**
+
+The rules for every step:
+
+- No `continue-on-error` and no `|| true`.
+- Steps use `if: !cancelled()`, so a failing tool does not hide the tools
+  after it. The job still fails if any of them failed.
+- The workflow's default shell is explicit `bash`, which GitHub runs with
+  `-eo pipefail`. That makes `tool | tee file` fail when the tool fails.
+
+On push, a fourth job commits the report files to `reports/` using
+`EndBug/add-and-commit`.
 
 ## Imported tools
 
 | Guard | Tool | Upstream | Licence | What it catches |
 |---|---|---|---|---|
-| dead button | semgrep 1.186.0 | [semgrep/semgrep](https://github.com/semgrep/semgrep) | LGPL-2.1 | empty or `TODO()` click handlers; setters that only record a value |
-| dead button | detekt 1.23.8 | [detekt/detekt](https://github.com/detekt/detekt) | Apache-2.0 | empty bodies; unused parameters, members, classes and imports |
-| dead button | Nova's own button audit | `nova-tv/python/nova/buttons.py` (already in this repo) | repo licence | settings and state the UI writes and nothing reads |
-| hallucination | Kotlin compiler, via Gradle | [JetBrains/kotlin](https://github.com/JetBrains/kotlin) | Apache-2.0 | calls to classes or functions that do not exist |
-| hallucination | actionlint 1.7.12 | [rhysd/actionlint](https://github.com/rhysd/actionlint) | MIT | made-up workflow keys, action inputs, contexts and expression functions |
-| hallucination | lychee 0.24.2 | [lycheeverse/lychee](https://github.com/lycheeverse/lychee) | Apache-2.0 / MIT | dead URLs, missing files and missing `#anchors` cited in docs |
-| hallucination | ruff 0.17.5 | [astral-sh/ruff](https://github.com/astral-sh/ruff) | MIT | Python names that are used but never defined |
-| false green | semgrep 1.186.0 | as above | LGPL-2.1 | see the semgrep list below |
-| false green | ShellCheck 0.11.0 | [koalaman/shellcheck](https://github.com/koalaman/shellcheck) | GPL-3.0 (run as a tool, not linked) | workflow steps whose failure is thrown away by a pipe (SC2312) |
-| false green | PIT 1.22.1 | [hcoles/pitest](https://github.com/hcoles/pitest), via [koral--/gradle-pitest-plugin](https://github.com/koral--/gradle-pitest-plugin) 0.3.0 | Apache-2.0 | tests that stay green when the code is broken on purpose |
-| false green (CI) | action-junit-report v6 | [mikepenz/action-junit-report](https://github.com/mikepenz/action-junit-report) | Apache-2.0 | no test results, or no passing tests |
+| dead button | detekt 1.23.8 (CLI release jar) | [detekt/detekt](https://github.com/detekt/detekt) | Apache-2.0 | empty bodies; `TODO()` bodies; unused parameters, members, classes and imports (an unused `onClick` is a dead button) |
+| hallucination | Kotlin compiler, via Gradle 8.13 ([gradle/actions](https://github.com/gradle/actions)) | [JetBrains/kotlin](https://github.com/JetBrains/kotlin) | Apache-2.0 | calls to classes or functions that do not exist |
+| hallucination | actionlint 1.7.12, via [raven-actions/actionlint](https://github.com/raven-actions/actionlint) v2.2.0 | [rhysd/actionlint](https://github.com/rhysd/actionlint) | MIT | made-up workflow keys, action inputs, contexts and expression functions |
+| hallucination | ruff 0.17.5, via [astral-sh/ruff-action](https://github.com/astral-sh/ruff-action) v4.1.0 | [astral-sh/ruff](https://github.com/astral-sh/ruff) | MIT | Python names that are used but never defined (F821, F822, F823, F811, F632, PLE) |
+| hallucination | lychee 0.24.2, via [lycheeverse/lychee-action](https://github.com/lycheeverse/lychee-action) v2.9.0 | [lycheeverse/lychee](https://github.com/lycheeverse/lychee) | Apache-2.0 / MIT | dead URLs, missing files and missing `#anchors` cited in Nova's docs |
+| false green | swallowed 0.1.0 (commit `4501bf3`) | [hamodywe/swallowed](https://github.com/hamodywe/swallowed) | MIT | CI steps that verify something and cannot fail: `continue-on-error`, `\|\| true`, pipes in a shell without `pipefail`, `set +e` |
+| false green | Gradle unit-test tasks | as above | Apache-2.0 | the unit tests run and pass |
+| false green | action-junit-report v6.7.1 | [mikepenz/action-junit-report](https://github.com/mikepenz/action-junit-report) | Apache-2.0 | no test results, no passing tests, or any failing test |
+| false green | PIT 1.22.1, via [koral--/gradle-pitest-plugin](https://github.com/koral--/gradle-pitest-plugin) 0.3.0 | [hcoles/pitest](https://github.com/hcoles/pitest) | Apache-2.0 | tests that stay green when the code is broken on purpose. Thresholds are in `android/app/build.gradle.kts` (`pitest {}`) |
 
-**What the semgrep false-green rules look for:**
-- `@Test` functions with no assertion
-- `@Ignore`d tests
-- tools that return `"ok": True` whatever they found
-- `|| true` in CI steps
-- `continue-on-error: true`
-- `if-no-files-found: ignore` on uploads
+Supporting upstream actions: `actions/checkout`, `actions/setup-java`,
+`actions/setup-node`, `actions/upload-artifact`, `actions/download-artifact`
+and `EndBug/add-and-commit`.
 
-## What is written here, and why
+## Where the results are
 
-Only the parts no existing tool provides:
+| Tool | Result |
+|---|---|
+| detekt | `reports/detekt.md` |
+| lychee | `reports/lychee.md`, plus the job summary |
+| swallowed | `reports/swallowed.txt` |
+| actionlint, ruff | annotations on the workflow run |
+| unit tests | the "nova unit tests (guards)" check |
+| PIT | the step log, plus the `nova-pitest-report` artifact (HTML and XML) |
 
-- **`semgrep/*/*.yml`**: rules for semgrep's engine.
-  - Each rule comes with a fixture file, and `semgrep --test` proves the rule
-    fires on the bad shape and stays quiet on the good one.
-  - Each guard runs that self-test first, so a rule that has stopped matching
-    fails loudly instead of passing quietly.
-- **`detekt-dead-code.yml`**: chooses which detekt rules run. No rules are
-  written here.
-- **`tools/workflow_shellcheck.py`**: about 60 lines of glue that hand
-  workflow `run:` blocks to ShellCheck.
-  - The usual wrapper, actionlint, adds `set -eo pipefail` to every bash step.
-  - GitHub only does that when a step says `shell: bash`. A step with no
-    `shell:` runs as `bash -e`, so `./gradlew test | tee log` is green even
-    when the tests fail.
-  - The glue gives ShellCheck the shell GitHub really uses. The finding itself
-    is ShellCheck's.
-- **`lib.sh`**: runs each tool, keeps its exit status, and writes the report.
+## Scope limits
 
-**Considered and left out:**
-- `nova-tv/python/scripts/verify_claims.py`, the repo's existing claim
-  checker. On the current docs, all three of its findings were false
-  positives: a shortened path, and two folder paths read as GitHub repo
-  names. A gate that is wrong every time teaches people to ignore it.
-- compose-rules for detekt. Its rules are about Compose API style, not dead
-  controls.
+- swallowed reads every workflow in `.github/workflows`. Jobs from non-Nova
+  workflows are left out with `--ignore <job-id>`.
+- `android-build.yml` has a job called `build`, the same id as Nova's. It
+  cannot be ignored without also ignoring Nova's. Its steps only produce
+  `info` findings today, which do not fail the guard (swallowed fails on
+  `error`).
+- swallowed rates `nova-tv-python.yml`'s `github_collect.py … || true` as a
+  data-collection step, not a verification step. That is an `info` finding and
+  does not fail the guard.
+
+## Removed in favour of imported tools only
+
+Earlier versions had hand-written parts. They are gone, and so are the checks
+that only they performed. No upstream tool or rule set was found for these
+checks:
+
+| Removed | What it caught that nothing imported catches now |
+|---|---|
+| `lib.sh` and the three `anti-*.sh` runners, `install-tools.sh` | nothing: GitHub's own job/step results, annotations and summaries replace the report table |
+| semgrep rule: setter that only records state | `ExoPlayerEngine.setResizeMode` and `setAudioDelayMs` |
+| semgrep rule: empty or `TODO()` click handler | nothing at the moment. detekt `NotImplementedDeclaration` now covers `TODO()`; an empty `onClick = {}` lambda is not covered |
+| semgrep rules: `@Test` without an assertion, `@Ignore`d tests | nothing at the moment. PIT covers tests without assertions indirectly |
+| semgrep rule: hard-coded `"ok": True` | the four `nova-tv/python/scripts/*.py` tools that always report success |
+| semgrep rule: `if-no-files-found: ignore` | `nova-tv-android.yml` (the build-log upload) |
+| `tools/workflow_shellcheck.py` (ShellCheck glue) | nothing: swallowed reports the same pipe-without-pipefail steps |
+
+**Not run, and why:**
+
+- **`nova-tv/python/scripts/check_buttons.py`**, the repo's own button audit.
+  It returns `"ok": True` and exits 0 whatever it finds, so a CI step running
+  it can never fail. Making it fail on its findings needs either glue code
+  or a change to the script.
+- **`nova-tv/python/scripts/verify_claims.py`**, the repo's claim checker. On
+  the current docs, all three of its findings were false positives.

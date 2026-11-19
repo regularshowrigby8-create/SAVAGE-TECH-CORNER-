@@ -1,13 +1,14 @@
 name: nova guards
 
-# Runs the three guards in nova-tv/guards: anti-dead-button,
-# anti-hallucination and anti-false-green. Every check comes from an imported
-# tool (see nova-tv/guards/README.md). The APK build is a separate workflow
-# (nova-tv-android.yml) and is not affected by this one.
+# Three guards for Nova: anti-dead-button, anti-hallucination and
+# anti-false-green. Each guard is one job, and each check in it is one imported
+# tool or upstream action. Nothing here is a script written for this repo: the
+# steps are tool invocations plus configuration (nova-tv/guards/*.yml|toml).
+# See nova-tv/guards/README.md for the tools, versions and licences.
 #
-# Each guard is its own step and fails honestly: no continue-on-error, no
-# `|| true`. Later guards still run after an earlier one fails (`if: always()`
-# on the step), so one run shows all three results.
+# Every check step fails honestly (no continue-on-error, no `|| true`). Steps
+# use `if: !cancelled()` so a failing check does not hide the ones after it;
+# the job still fails if any of them failed.
 
 on:
   push:
@@ -27,73 +28,173 @@ on:
       - '.github/workflows/nova-tv-python.yml'
   workflow_dispatch:
 
-# contents: write commits the reports back (logs and artifacts have not been
-# downloadable through the API from the agent environment, a committed file
-# always is). checks: write lets action-junit-report publish its check.
 permissions:
-  contents: write
-  checks: write
+  contents: read
 
 concurrency:
   group: nova-guards-${{ github.ref }}
   cancel-in-progress: true
 
-# Explicit bash = `bash --noprofile --norc -eo pipefail`. Without this, GitHub
-# runs `bash -e` and a failing command on the left of a pipe is ignored.
+# Explicit bash = `bash --noprofile --norc -eo pipefail`, so `tool | tee file`
+# fails when the tool fails.
 defaults:
   run:
     shell: bash
 
+env:
+  DETEKT_VERSION: '1.23.8'
+  # hamodywe/swallowed has no release or npm package yet; pinned to a commit.
+  SWALLOWED_REF: 4501bf3e9aed442c64c00f1f77c0e5c2bb8798b3
+
 jobs:
-  guards:
-    name: Dead buttons, hallucinations, false greens
+  dead-button:
+    name: Anti-dead-button
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 20
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v7
 
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: '3.12'
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v6
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v6
+      - name: Fetch detekt CLI (detekt/detekt release asset)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download "v$DETEKT_VERSION" --repo detekt/detekt --pattern "detekt-cli-$DETEKT_VERSION-all.jar" --dir nova-tv/guards/.tools
+
+      # Empty bodies, TODO() bodies, unused parameters / members / imports.
+      # Rule selection: nova-tv/guards/detekt-dead-code.yml.
+      - name: detekt - code that exists but does nothing
+        run: >-
+          java -jar "nova-tv/guards/.tools/detekt-cli-$DETEKT_VERSION-all.jar"
+          --input nova-tv/android/app/src
+          --excludes '**/test/**,**/androidTest/**'
+          --config nova-tv/guards/detekt-dead-code.yml
+          --report md:nova-tv/guards/reports/detekt.md
+
+      - name: Keep report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: guard-report-dead-button
+          path: nova-tv/guards/reports/
+          if-no-files-found: error
+
+  hallucination:
+    name: Anti-hallucination
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: '8.13'
 
-      - name: Install guard tools (pinned)
-        run: nova-tv/guards/install-tools.sh
+      # Every class, function and import the app and its tests use exists.
+      - name: Kotlin compiler - app and unit tests, both flavours
+        working-directory: nova-tv/android
+        run: gradle --no-daemon --console=plain :app:compileTvDebugUnitTestKotlin :app:compileMobileDebugUnitTestKotlin
 
-      - name: Anti-dead-button guard
-        id: dead
-        if: always()
-        run: nova-tv/guards/anti-dead-button.sh
+      # Made-up workflow keys, action inputs, contexts and expression functions.
+      # Pipe and exit-status problems are the anti-false-green job's.
+      - name: actionlint - workflow keys, inputs, expressions
+        if: ${{ !cancelled() }}
+        uses: raven-actions/actionlint@v2.2.0
+        with:
+          version: '1.7.12'
+          files: '.github/workflows/nova-tv-android.yml, .github/workflows/nova-tv-python.yml, .github/workflows/nova-guards.yml'
+          shellcheck: false
+          pyflakes: false
 
-      - name: Anti-hallucination guard
-        id: halluc
-        if: always()
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: nova-tv/guards/anti-hallucination.sh
+      # Python names that are used but never defined.
+      - name: ruff - undefined Python names
+        if: ${{ !cancelled() }}
+        uses: astral-sh/ruff-action@v4.1.0
+        with:
+          version: '0.17.5'
+          src: nova-tv/python
+          args: check --isolated --output-format github --select F821,F822,F823,F811,F632,PLE
 
-      - name: Anti-false-green guard
-        id: falsegreen
-        if: always()
-        run: nova-tv/guards/anti-false-green.sh
+      # URLs, relative file paths and #anchors cited in Nova's docs exist.
+      - name: lychee - links, paths and anchors in docs
+        if: ${{ !cancelled() }}
+        uses: lycheeverse/lychee-action@v2.9.0
+        with:
+          lycheeVersion: v0.24.2
+          args: --config nova-tv/guards/lychee.toml --root-dir ${{ github.workspace }} nova-tv
+          output: nova-tv/guards/reports/lychee.md
+          fail: true
+          failIfEmpty: true
 
-      # Independent check that the unit tests really ran: fails when no test
-      # results exist, when none passed, or when any failed.
-      - name: Unit test results are real (action-junit-report)
-        if: always()
-        uses: mikepenz/action-junit-report@v6
+      - name: Keep report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: guard-report-hallucination
+          path: nova-tv/guards/reports/
+          if-no-files-found: error
+
+  false-green:
+    name: Anti-false-green
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    # checks: write lets action-junit-report publish its check run.
+    permissions:
+      contents: read
+      checks: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Fetch swallowed (hamodywe/swallowed)
+        uses: actions/checkout@v7
+        with:
+          repository: hamodywe/swallowed
+          ref: ${{ env.SWALLOWED_REF }}
+          path: nova-tv/guards/.tools/swallowed
+          persist-credentials: false
+
+      # swallowed ships TypeScript sources; Node 24 runs them directly.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      # CI steps that verify something and cannot fail: continue-on-error,
+      # `|| true`, pipes in a shell without pipefail. Jobs of non-Nova
+      # workflows are left out with --ignore.
+      - name: swallowed - CI steps that cannot fail
+        run: >-
+          node nova-tv/guards/.tools/swallowed/src/cli.ts .
+          --ignore conveyor_belt --ignore dual_code_review --ignore debug-agents --ignore scan-models
+          | tee nova-tv/guards/reports/swallowed.txt
+
+      - uses: actions/setup-java@v6
+        if: ${{ !cancelled() }}
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v6
+        if: ${{ !cancelled() }}
+        with:
+          gradle-version: '8.13'
+
+      - name: Unit tests - both flavours
+        if: ${{ !cancelled() }}
+        working-directory: nova-tv/android
+        run: gradle --no-daemon --console=plain :app:testTvDebugUnitTest :app:testMobileDebugUnitTest
+
+      # Fails when no test results exist, when none passed, or any failed.
+      - name: action-junit-report - the tests really ran
+        if: ${{ !cancelled() }}
+        uses: mikepenz/action-junit-report@v6.7.1
         with:
           report_paths: 'nova-tv/android/app/build/test-results/**/TEST-*.xml'
           check_name: nova unit tests (guards)
@@ -103,8 +204,16 @@ jobs:
           fail_on_parse_error: true
           include_skipped: true
 
-      - name: Upload PIT report
-        if: always()
+      # PIT breaks the code on purpose; the thresholds in
+      # nova-tv/android/app/build.gradle.kts (pitest {}) fail the task when the
+      # tests notice too few of the broken versions.
+      - name: PIT mutation testing - tests must catch broken code
+        if: ${{ !cancelled() }}
+        working-directory: nova-tv/android
+        run: gradle --no-daemon --console=plain :app:pitestTvDebug
+
+      - name: Keep PIT report
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
           name: nova-pitest-report
@@ -112,18 +221,37 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      - name: Commit guard reports
-        if: always() && github.event_name == 'push'
-        run: |
-          git config user.name "nova-ci"
-          git config user.email "nova-ci@users.noreply.github.com"
-          git add nova-tv/guards/reports/*.md
-          if git diff --cached --quiet; then
-            echo "reports unchanged"
-            exit 0
-          fi
-          git commit -m "ci(nova): guard reports for run $GITHUB_RUN_ID"
-          git status --short
-          # A newer run may have pushed reports meanwhile; this run's reports win.
-          git pull --rebase --autostash -X theirs origin "$GITHUB_REF_NAME"
-          git push origin "HEAD:$GITHUB_REF_NAME"
+      - name: Keep report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: guard-report-false-green
+          path: nova-tv/guards/reports/
+          if-no-files-found: error
+
+  # Commits the tools' own report files to nova-tv/guards/reports so they can
+  # be read without downloading logs or artifacts.
+  reports:
+    name: Commit tool reports
+    needs: [dead-button, hallucination, false-green]
+    if: ${{ !cancelled() && github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: guard-report-*
+          merge-multiple: true
+          path: nova-tv/guards/reports
+
+      - uses: EndBug/add-and-commit@v11.1.1
+        with:
+          add: nova-tv/guards/reports
+          message: 'ci(nova): guard reports for run ${{ github.run_id }}'
+          default_author: github_actions
+          # A newer run may have pushed reports meanwhile; this run's win.
+          pull: '--rebase --autostash -X theirs'
+          push_attempts: '3'

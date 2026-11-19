@@ -1,6 +1,5 @@
-# Downloaded tool binaries (install-tools.sh)
+# Imported tools fetched by CI (detekt jar, swallowed checkout)
 .tools/
-# nova-tv/.gitignore ignores every reports/ directory; the guard reports are
-# meant to be committed, the full tool logs are not.
+# nova-tv/.gitignore ignores every reports/ directory; the tool reports that
+# CI commits here are meant to be tracked.
 !reports/
-reports/logs/

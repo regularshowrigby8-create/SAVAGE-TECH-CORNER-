@@ -67,3 +67,9 @@ potential-bugs:
   active: true
   UnreachableCatchBlock:
     active: true
+
+# A click handler that is `TODO()` throws instead of doing something.
+exceptions:
+  active: true
+  NotImplementedDeclaration:
+    active: true

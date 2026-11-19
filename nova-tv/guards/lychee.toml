@@ -1,5 +1,9 @@
-# lychee (https://github.com/lycheeverse/lychee, Apache-2.0/MIT).
-# Every link and relative file path a document cites must exist.
+# lychee (https://github.com/lycheeverse/lychee, Apache-2.0/MIT), run by
+# lycheeverse/lychee-action. Every link and relative file path a document
+# cites must exist. Configuration only; keys are from lychee.example.toml.
+
+# Markdown documents only.
+extensions = ["md"]
 
 # Anchors (`file.md#section`) are claims too.
 include_fragments = "anchor-only"
@@ -16,4 +20,13 @@ exclude = [
   '^https?://127\.0\.0\.1',
   '^https?://0\.0\.0\.0',
   '^https?://10\.0\.2\.2',
+]
+
+# Build output, downloaded tools and the generated reports are not docs.
+exclude_path = [
+  '(^|/)build/',
+  '(^|/)\.gradle/',
+  '(^|/)node_modules/',
+  '(^|/)\.tools/',
+  'guards/reports/',
 ]

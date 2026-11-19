@@ -1,5 +1,0 @@
-# Guards must read tests too: semgrep skips test/ and tests/ by default.
-# Only generated or vendored output is ignored here.
-build/
-.gradle/
-.nova-cache/

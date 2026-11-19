@@ -1,8 +1,0 @@
-# Python-installable tools the guards run (pinned). Install with
-#   python3 -m pip install -r nova-tv/guards/requirements.txt
-# or run nova-tv/guards/install-tools.sh, which also fetches detekt,
-# actionlint and lychee.
-semgrep==1.186.0
-ruff==0.17.5
-shellcheck-py==0.11.0.1
-PyYAML==6.0.3

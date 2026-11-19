@@ -185,7 +185,7 @@ android {
     }
 }
 
-// Mutation testing, run by nova-tv/guards/anti-false-green.sh as
+// Mutation testing, run by the anti-false-green job of nova-guards.yml as
 // `:app:pitestTvDebug`. PIT changes the compiled code on purpose (flips a
 // condition, drops a return value) and re-runs the unit tests; a change no
 // test notices is a test that would stay green over a real bug.
