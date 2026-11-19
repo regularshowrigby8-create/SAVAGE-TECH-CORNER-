@@ -188,3 +188,18 @@ lines it saves.
 - **It does not claim the sources work.** They could not be reached from this
   sandbox; the plan says so.
 - **It does not touch code.** The compiler stays green.
+
+## Implemented (2026-11-19): TV pass, Source Finder, single player
+
+- Focus: every screen has an initial focus target (Hero "Watch", Detail "Play best"),
+  the side rail restores the last focused item, and Detail/player panels trap focus.
+  Cards scale, glow and show a border on focus; rows (`FocusableRow`) do the same.
+- Navigation: one `BackHandler` routes through `NovaViewModel.back()`
+  (`ui/nav/NovaNav.resolveBack`): close panel -> close player -> close detail ->
+  return to Home -> exit. Covered by `NovaNavTest`.
+- Source Finder (`Route.FINDER`, rail "F"): Kotlin port of ZeroPlay's
+  `tv/source-finder` core + sources (`finder/`). Run finder, test candidates,
+  add working addons. Detail also offers "Find more sources".
+- Player: ARVIO's ExoPlayer engine (Apache-2.0, `player/engine`, see
+  `THIRD_PARTY_NOTICES.md`). All addon streams for a title feed one `NovaPlayer`
+  queue; the Sources panel picks any of them, and failures fail over to the next.

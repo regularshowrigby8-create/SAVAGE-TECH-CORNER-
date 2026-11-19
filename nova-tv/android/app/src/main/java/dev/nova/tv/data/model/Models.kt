@@ -1,7 +1,9 @@
 package dev.nova.tv.data.model
 
+import dev.nova.tv.finder.FinderRules
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 /**
  * The Stremio addon protocol is what Stremio, WuPlay, Nuvio and ARVIO all speak,
@@ -86,24 +88,43 @@ data class Stream(
     val ytId: String? = null,
     val infoHash: String? = null,
     val fileIdx: Int? = null,
+    val nzbUrl: String? = null,
+    val externalUrl: String? = null,
     val name: String? = null,
     val title: String? = null,
     val description: String? = null,
-    val behaviorHints: StreamHints? = null
+    val behaviorHints: StreamHints? = null,
+    /** Which addon answered with this stream. Set by the repository, never parsed. */
+    @Transient val sourceName: String = "",
+    @Transient val sourceBase: String = ""
 ) {
     /**
-     * True when Nova can decode this itself. A page embed is not a stream, and
-     * framing someone else's web player is exactly what this app does not do.
+     * True when Nova can decode this itself. The rule is the source finder's
+     * (`FinderRules.classifyStream`), so the detail list, the finder and the
+     * player cannot disagree about what is playable.
+     *
+     * The old rule only accepted URLs ending in .mp4/.m3u8/.mpd/.webm, which
+     * dropped every extensionless CDN HLS link and every .mkv debrid file --
+     * most real addon streams.
      */
     val isPlayable: Boolean
-        get() {
-            val target = url ?: return false
-            if (target.isBlank()) return false
-            val lowered = target.lowercase()
-            return lowered.endsWith(".mp4") || lowered.endsWith(".m3u8") ||
-                lowered.endsWith(".mpd") || lowered.endsWith(".webm") ||
-                lowered.contains("format=mp4") || lowered.contains("type=video")
-        }
+        get() = FinderRules.classifyStream(this) is FinderRules.Verdict.Playable
+
+    /** "1080p", "2160p", or "" when the addon did not say. */
+    val quality: String
+        get() = FinderRules.guessQuality(listOfNotNull(name, title, description).joinToString(" "))
+
+    /** Request headers the addon asked for, e.g. Referer / User-Agent. */
+    val requestHeaders: Map<String, String>
+        get() = behaviorHints?.proxyHeaders?.request.orEmpty()
+
+    /** A one-line label for the source picker. */
+    val label: String
+        get() = listOfNotNull(
+            sourceName.ifBlank { null },
+            quality.ifBlank { null },
+            (title ?: name)?.lineSequence()?.firstOrNull()?.take(80)
+        ).distinct().joinToString("  ·  ").ifBlank { "Stream" }
 }
 
 @Serializable
@@ -114,3 +135,17 @@ data class StreamHints(
 
 @Serializable
 data class ProxyHeaders(val request: Map<String, String> = emptyMap())
+
+/** One external subtitle file from a `subtitles` addon. */
+@Serializable
+data class SubtitleRef(
+    val id: String = "",
+    val url: String = "",
+    val lang: String = ""
+) {
+    /** ISO 639-2 codes from OpenSubtitles ("eng") shown as-is, upper-cased. */
+    val label: String get() = lang.ifBlank { "Subtitle" }.uppercase()
+}
+
+@Serializable
+data class SubtitleResponse(val subtitles: List<SubtitleRef> = emptyList())

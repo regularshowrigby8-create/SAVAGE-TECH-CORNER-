@@ -19,6 +19,19 @@ data class NovaAddon(
     fun supportsStreams(): Boolean =
         manifest.resources.any { it.name.equals("stream", ignoreCase = true) }
 
+    fun supportsSubtitles(): Boolean =
+        manifest.resources.any { it.name.equals("subtitles", ignoreCase = true) }
+
+    /**
+     * Whether this addon can answer for an id. An addon that declares
+     * `idPrefixes: ["kitsu"]` will only 404 on `tt...`, so it is not asked.
+     */
+    fun acceptsId(id: String): Boolean {
+        val prefixes = manifest.idPrefixes.orEmpty() +
+            manifest.resources.flatMap { it.idPrefixes.orEmpty() }
+        return prefixes.isEmpty() || prefixes.any { id.startsWith(it, ignoreCase = true) }
+    }
+
     private fun hostLabel(): String = runCatching {
         URI(baseUrl).host ?: baseUrl
     }.getOrDefault(baseUrl)

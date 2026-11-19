@@ -2,38 +2,13 @@
 <!--
     Lint configuration.
 
-    This file is not a place to silence findings. It exists for exactly one
-    entry, and that entry is a tooling bug rather than a code problem.
+    This file is not a place to silence findings. It previously disabled
+    NullSafeMutableLiveData, RememberInComposition and FrequentlyChangingValue
+    because their detectors (shipped in lifecycle / compose-runtime 1.10 lint
+    jars) crashed with IncompatibleClassChangeError on AGP 8.7.3's older Kotlin
+    Analysis API. AGP is now 8.13.0, whose lint matches those jars, so every
+    detector runs again. Add an entry here only for a proven detector crash,
+    with the rationale.
 -->
 <lint>
-
-    <!--
-        `NullSafeMutableLiveData` is disabled because the detector crashes.
-
-        What happens: `androidx.lifecycle` ships a lint jar containing
-        `NonNullableMutableLiveDataDetector`, compiled against a Kotlin Analysis
-        API in which `KaCallableMemberCall` is an interface. AGP 8.7.3 bundles an
-        older Analysis API in which it is a class. When the detector runs it dies
-        with `IncompatibleClassChangeError`, and lint reports that as
-        "Unexpected failure during lint analysis (this is a bug in lint or one of
-        the libraries it depends on)".
-
-        This is a known AGP 8.7.x incompatibility, not a nova-tv defect. The
-        release build fails because `assembleRelease` runs `lintVitalRelease`,
-        which hits the same crash -- so a tooling bug in an unrelated detector
-        was blocking the entire release artefact.
-
-        Why disabling it costs nothing here: the detector looks for nullable
-        `MutableLiveData` being observed unsafely. This project contains no
-        LiveData of any kind -- it uses `StateFlow` and `collectAsStateWithLifecycle`
-        throughout. A grep for `LiveData` across src/ returns nothing. The
-        detector has no input, so no coverage is lost.
-
-        The real fix is aligning AGP with the lifecycle lint jar (AGP 8.10.1+
-        bundles a matching Analysis API). That is a toolchain-wide change, and
-        this app's only untested component should not be the build stack. When
-        AGP is upgraded, delete this entry and let the detector run.
-    -->
-    <issue id="NullSafeMutableLiveData" severity="ignore" />
-
 </lint>

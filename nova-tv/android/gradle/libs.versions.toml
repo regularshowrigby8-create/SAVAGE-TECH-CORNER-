@@ -22,12 +22,18 @@
 #   agp 8.5.0 / gradle 8.7
 #     this repository, tv/android-tv -> proven green in CI
 #
+# 2026-11-19: AGP raised 8.7.3 -> 8.13.0 (Gradle 8.13). tv-material 1.1.0 pulls
+# Compose 1.10.x, whose lint jars are compiled against a newer Kotlin Analysis
+# API than AGP 8.7's lint; RememberInComposition, FrequentlyChangingValue,
+# AutoboxingStateCreation and NullSafeMutableLiveData all crashed lint there.
+# On 8.13.0 every detector runs and app/lint.xml no longer exempts any.
+#
 # Rejected for licensing, not quality: damontecres/Wholphin is GPL-2.0 latest,
 # NuvioMedia/NuvioMobile could not be licence-checked, and the highest-starred
 # "vibe coded android app" repo (DeadWaveWave/demo2apk) ships no licence at all.
 
 [versions]
-agp = "8.7.3"
+agp = "8.13.0"
 kotlin = "2.0.21"
 compileSdk = "35"
 minSdk = "26"
@@ -43,7 +49,15 @@ tvMaterial = "1.1.0"
 tvFoundation = "1.0.0-alpha11"
 
 # Media3 / ExoPlayer
-media3 = "1.5.1"
+# 1.9.0 + Jellyfin's FFmpeg decoder build are the exact pair ARVIO ships
+# (ProdigyV21/ARVIO app/build.gradle.kts), which is where the imported player
+# engine under player/engine was tuned. Both need compileSdk >= 35 (checked in
+# their aar-metadata), which this project already uses.
+media3 = "1.9.0"
+media3Ffmpeg = "1.9.0+1"
+
+# Artwork. Coil 2.x is the OkHttp 4 line, so it shares Nova's client.
+coil = "2.7.0"
 
 # Network + serialization
 okhttp = "4.12.0"
@@ -73,6 +87,11 @@ lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-
 media3-common = { group = "androidx.media3", name = "media3-common", version.ref = "media3" }
 media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }
 media3-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "media3" }
+media3-hls = { group = "androidx.media3", name = "media3-exoplayer-hls", version.ref = "media3" }
+media3-dash = { group = "androidx.media3", name = "media3-exoplayer-dash", version.ref = "media3" }
+media3-okhttp = { group = "androidx.media3", name = "media3-datasource-okhttp", version.ref = "media3" }
+media3-ffmpeg = { group = "org.jellyfin.media3", name = "media3-ffmpeg-decoder", version.ref = "media3Ffmpeg" }
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
