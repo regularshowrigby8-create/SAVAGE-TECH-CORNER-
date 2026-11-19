@@ -123,5 +123,6 @@ jobs:
             exit 0
           fi
           git commit -m "ci(nova): guard reports for run $GITHUB_RUN_ID"
-          git pull --rebase origin "$GITHUB_REF_NAME"
+          git status --short
+          git pull --rebase --autostash origin "$GITHUB_REF_NAME"
           git push origin "HEAD:$GITHUB_REF_NAME"
