@@ -174,6 +174,7 @@ class NovaViewModel : ViewModel() {
     private var menuHold: (() -> Unit)? = null
 
     private var resolveJob: Job? = null
+    private var autoPlayJob: Job? = null
     private var searchJob: Job? = null
     private var toastJob: Job? = null
     private val shelfJobs = HashMap<String, Job>()
@@ -501,6 +502,32 @@ class NovaViewModel : ViewModel() {
         resolve()
     }
 
+    /**
+     * Play straight from a card: open the title, then start the best source
+     * the moment one is ranked. Leaving the page cancels the wait.
+     */
+    fun openAndPlay(title: MetaPreview) {
+        openTitle(title)
+        autoPlayJob?.cancel()
+        autoPlayJob = viewModelScope.launch {
+            val ready = withTimeoutOrNull(NEXT_WAIT_MS) {
+                state.first { s ->
+                    val d = s.detail
+                    d == null || d.meta.id != title.id || s.playback != null ||
+                        (d.sources.streams.isNotEmpty() && (d.sources.probes.isNotEmpty() || d.sources.done)) || d.sources.done
+                }
+            }
+            val s = _state.value
+            val d = s.detail
+            if (d == null || d.meta.id != title.id || s.playback != null) return@launch
+            when {
+                d.sources.streams.isNotEmpty() -> play(0)
+                ready != null -> toast("No source found yet")
+                else -> Unit // still searching: the page's Play button takes over
+            }
+        }
+    }
+
     fun selectEpisode(season: Int, episode: Int) {
         val d = _state.value.detail ?: return
         if (!d.isSeries || (d.season == season && d.episode == episode)) return
@@ -550,6 +577,7 @@ class NovaViewModel : ViewModel() {
 
     fun closeTitle() {
         resolveJob?.cancel()
+        autoPlayJob?.cancel()
         _state.update { it.copy(detail = null) }
     }
 
@@ -747,6 +775,8 @@ class NovaViewModel : ViewModel() {
     fun cancelAddWebsite() = _state.update { it.copy(addingWebsite = false) }
     fun typeWebsite(c: Char) = _state.update { it.copy(websiteDraft = (it.websiteDraft + c).take(120)) }
     fun backspaceWebsite() = _state.update { it.copy(websiteDraft = it.websiteDraft.dropLast(1)) }
+    /** Phones type with the system keyboard, so the whole field arrives at once. */
+    fun setWebsiteDraft(text: String) = _state.update { it.copy(websiteDraft = text.trim().take(120)) }
 
     fun saveWebsite() {
         val draft = _state.value.websiteDraft.trim()

@@ -24,7 +24,14 @@ import kotlinx.coroutines.delay
  * Watching and Resume read.
  */
 @Composable
-fun NovaPlayerHost(request: PlaybackRequest, viewModel: NovaViewModel) {
+fun NovaPlayerHost(
+    request: PlaybackRequest,
+    viewModel: NovaViewModel,
+    /** The chrome drawn over the video: D-pad on TV, touch on phones. */
+    surface: @Composable (player: NovaPlayer, title: String) -> Unit = { player, title ->
+        PlayerSurface(player = player, title = title, viewModel = viewModel)
+    }
+) {
     val context = LocalContext.current
     val app = context.applicationContext as NovaApplication
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -79,7 +86,7 @@ fun NovaPlayerHost(request: PlaybackRequest, viewModel: NovaViewModel) {
         }
     }
 
-    PlayerSurface(player = player, title = request.title, viewModel = viewModel)
+    surface(player, request.title)
 }
 
 private const val PROGRESS_EVERY_MS = 10_000L

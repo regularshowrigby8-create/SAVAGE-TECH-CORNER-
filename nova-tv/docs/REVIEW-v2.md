@@ -111,14 +111,33 @@ source); DebridStream is closed too. Only WuPlay's public addon SDK ideas
 
 ## Checks run
 
-- `./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleRelease`
+- `./gradlew :app:testTvDebugUnitTest :app:testMobileDebugUnitTest :app:lintTvDebug :app:lintMobileDebug :app:assembleRelease`
   (see BUILD-STATUS.md for the result).
 - `python3 nova-tv/ops/kotlin_lint.py` — clean.
 - Python unit tests — 103 OK.
-- Kotlin unit tests — 81 run, 0 failed. Android lint — 0 errors (70 warnings).
-- Release APK built and signed locally (8.5 MB, `apksigner verify` passes).
-- `scripts/check_buttons.py buttons` — ok (the `audioDelayMs` note is pre-existing).
+- Kotlin unit tests — 81 run per flavor, 0 failed. Android lint — 0 errors
+  (tv 70 warnings, mobile 74).
+- TV and mobile release APKs built and signed locally (8.5 / 8.9 MB,
+  `apksigner verify` passes on both).
+- `scripts/check_buttons.py buttons` — 8 "unrendered-state" findings, all
+  pre-existing (10 before the mobile build; its seek bar now renders
+  `bufferedPositionMs`). An earlier version of this note said only
+  `audioDelayMs` — that undercounted. None is a dead button: no control sets
+  them; they are engine/settings fields (`preferredQuality`, `subtitleSize`,
+  `playbackRate` x2, `isExternal`, `playbackSpeed`, `isMuted`, `audioDelayMs`)
+  that are populated and not displayed.
 - `--help` smoke test over all 62 scripts — 0 failed.
+
+## Mobile build
+
+Same data, finders (ZeroPlay, Stremio, Title), 3000-server pool with
+scramble/revert, DNS and FastStream-style preload as the TV build — only the
+UI differs (`src/mobile`). Bottom tabs (Home, Movies, Series, Search, More),
+auto-advancing spotlight, endless shelves and grids, pull to refresh, detail
+page with episodes and a sources sheet. Touch player: tap for controls,
+double-tap ±10 s, swipe for brightness/volume, seek bar showing buffered +
+preloaded range, preload/sources/audio/subtitles/speed/next controls,
+landscape full screen, picture-in-picture (auto-enter on Android 12+).
 
 ## Known limits
 

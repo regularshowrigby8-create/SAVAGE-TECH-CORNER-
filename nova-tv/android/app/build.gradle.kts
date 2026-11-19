@@ -108,6 +108,26 @@ android {
         dependsOn(ensureKeystore)
     }
 
+    /**
+     * Two form factors, one codebase. Everything under src/main (catalogue,
+     * finders, server pool, player engine, view model) is shared; only the
+     * shell differs. `tv` keeps the D-pad UI in src/main + src/tv; `mobile`
+     * adds a touch UI in src/mobile. Different application ids, so both can
+     * be installed on one device.
+     */
+    flavorDimensions += "device"
+    productFlavors {
+        create("tv") {
+            dimension = "device"
+            applicationId = "dev.nova.tv"
+        }
+        create("mobile") {
+            dimension = "device"
+            applicationId = "dev.nova.mobile"
+            versionNameSuffix = "-mobile"
+        }
+    }
+
     buildTypes {
         debug {
             isMinifyEnabled = false

@@ -2,10 +2,30 @@
 
 ## Current (nova-tv-v2, local build)
 
-`./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleRelease` —
-BUILD SUCCESSFUL. 81 unit tests, 0 failures. Lint: 0 errors, 70 warnings.
-`app-release.apk` 8,541,304 bytes, signed (`apksigner verify` passes).
-Not installed on a device from this environment.
+One module, two product flavors (`device` dimension):
+
+| Flavor | applicationId | APK | Bytes |
+|---|---|---|---|
+| `tv` | `dev.nova.tv` | `apk/tv/release/app-tv-release.apk` | 8,541,300 |
+| `mobile` | `dev.nova.mobile` | `apk/mobile/release/app-mobile-release.apk` | 8,867,067 |
+
+`./gradlew :app:testTvDebugUnitTest :app:testMobileDebugUnitTest :app:lintTvDebug
+:app:lintMobileDebug :app:assembleRelease` — BUILD SUCCESSFUL.
+81 unit tests per flavor, 0 failures. Lint: 0 errors (tv 70 warnings, mobile 74).
+Both release APKs signed (`apksigner verify` passes). Different package names,
+so both install side by side. Neither has been installed on a device from this
+environment.
+
+### Why the APK is ~8.5 MB and not 20–30 MB
+
+Measured from the APK itself: ~5.9 MB is native code (the Media3 FFmpeg audio
+decoder, `libffmpegJNI.so`, ~1.4 MB for each of 4 ABIs), ~3.9 MB is dex after
+R8, ~0.5 MB resources. R8 minify + resource shrinking are on for release.
+Size is not a quality signal. Larger players usually bundle things Nova
+deliberately does not: a torrent/streaming server (Nova plays direct HTTP
+only, no torrents), a second player engine such as libVLC/libmpv, analytics
+and crash SDKs, or unminified builds. Splitting by ABI would make each
+device's download several MB smaller still.
 
 ## Earlier CI run (v1)
 
