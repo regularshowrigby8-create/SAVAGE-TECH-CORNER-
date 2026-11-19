@@ -1,0 +1,19 @@
+# lychee (https://github.com/lycheeverse/lychee, Apache-2.0/MIT).
+# Every link and relative file path a document cites must exist.
+
+# Anchors (`file.md#section`) are claims too.
+include_fragments = true
+max_retries = 3
+retry_wait_time = 5
+timeout = 30
+no_progress = true
+
+# 403 and 429 are bot blocking and rate limits: the page exists.
+accept = ["200..=299", "403", "429"]
+
+exclude = [
+  '^https?://localhost',
+  '^https?://127\.0\.0\.1',
+  '^https?://0\.0\.0\.0',
+  '^https?://10\.0\.2\.2',
+]

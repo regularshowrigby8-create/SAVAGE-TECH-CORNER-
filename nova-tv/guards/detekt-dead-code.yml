@@ -1,0 +1,69 @@
+# detekt (https://github.com/detekt/detekt, Apache-2.0) limited to the rules
+# that find code which exists but does nothing: empty bodies, and members,
+# parameters and imports that nothing uses. An unused `onClick`
+# parameter on a composable is the classic dead button.
+#
+# This file is used WITHOUT --build-upon-default-config, so every rule not
+# listed here is off (detekt-api ConfigAware.active defaults to false).
+# config.validation rejects any rule name detekt does not know, so a typo here
+# fails the run instead of silently checking nothing.
+config:
+  validation: true
+  warningsAsErrors: false
+
+build:
+  maxIssues: 0
+
+empty-blocks:
+  active: true
+  EmptyCatchBlock:
+    active: true
+    allowedExceptionNameRegex: '_|(ignore|expected).*'
+  EmptyDefaultConstructor:
+    active: true
+  EmptyDoWhileBlock:
+    active: true
+  EmptyElseBlock:
+    active: true
+  EmptyFinallyBlock:
+    active: true
+  EmptyForBlock:
+    active: true
+  EmptyFunctionBlock:
+    active: true
+    ignoreOverridden: false
+  EmptyIfBlock:
+    active: true
+  EmptyInitBlock:
+    active: true
+  EmptyKtFile:
+    active: true
+  EmptySecondaryConstructor:
+    active: true
+  EmptyTryBlock:
+    active: true
+  EmptyWhenBlock:
+    active: true
+  EmptyWhileBlock:
+    active: true
+
+style:
+  active: true
+  UnusedImports:
+    active: true
+  UnusedParameter:
+    active: true
+    allowedNames: 'ignored|expected'
+  UnusedPrivateClass:
+    active: true
+  UnusedPrivateMember:
+    active: true
+    # @Preview composables are only called by the IDE.
+    ignoreAnnotated: ['Preview']
+  UnusedPrivateProperty:
+    active: true
+
+potential-bugs:
+  active: true
+  UnreachableCatchBlock:
+    active: true

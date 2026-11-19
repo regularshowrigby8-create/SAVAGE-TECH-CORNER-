@@ -1,0 +1,166 @@
+rules:
+  # --- tests that cannot fail -------------------------------------------------
+  - id: test-without-assertion
+    languages: [kotlin]
+    severity: ERROR
+    message: >-
+      `$T` is a @Test with no assertion. It passes whatever the code does, so
+      it can only ever be green.
+    paths:
+      include: ["**/src/test/**", "**/src/androidTest/**"]
+    patterns:
+      - pattern: |
+          @Test
+          fun $T(...) { ... }
+      - pattern-not: |
+          @Test(expected = $E::class)
+          fun $T(...) { ... }
+      - pattern-not: |
+          @Test
+          fun $T(...) {
+            ...
+            assertEquals(...)
+            ...
+          }
+      - pattern-not: |
+          @Test
+          fun $T(...) {
+            ...
+            assertNotEquals(...)
+            ...
+          }
+      - pattern-not: |
+          @Test
+          fun $T(...) {
+            ...
+            assertTrue(...)
+            ...
+          }
+      - pattern-not: |
+          @Test
+          fun $T(...) {
+            ...
+            assertFalse(...)
+            ...
+          }
+      - pattern-not: |
+          @Test
+          fun $T(...) {
+            ...
+            assertNull(...)
+            ...
+          }
+      - pattern-not: |
+          @Test
+          fun $T(...) {
+            ...
+            assertNotNull(...)
+            ...
+          }
+      - pattern-not: |
+          @Test
+          fun $T(...) {
+            ...
+            assertSame(...)
+            ...
+          }
+      - pattern-not: |
+          @Test
+          fun $T(...) {
+            ...
+            assertNotSame(...)
+            ...
+          }
+      - pattern-not: |
+          @Test
+          fun $T(...) {
+            ...
+            assertArrayEquals(...)
+            ...
+          }
+      - pattern-not: |
+          @Test
+          fun $T(...) {
+            ...
+            assertContentEquals(...)
+            ...
+          }
+      - pattern-not: |
+          @Test
+          fun $T(...) {
+            ...
+            assertThat(...)
+            ...
+          }
+      - pattern-not: |
+          @Test
+          fun $T(...) {
+            ...
+            assertFailsWith(...)
+            ...
+          }
+      - pattern-not: |
+          @Test
+          fun $T(...) {
+            ...
+            assertThrows(...)
+            ...
+          }
+      - pattern-not: |
+          @Test
+          fun $T(...) {
+            ...
+            assertIs(...)
+            ...
+          }
+      - pattern-not: |
+          @Test
+          fun $T(...) {
+            ...
+            fail(...)
+            ...
+          }
+      - pattern-not: |
+          @Test
+          fun $T(...) {
+            ...
+            assert(...)
+            ...
+          }
+      - pattern-not: |
+          @Test
+          fun $T(...) {
+            ...
+            check(...)
+            ...
+          }
+
+  - id: test-is-ignored
+    languages: [kotlin]
+    severity: ERROR
+    message: >-
+      This test is switched off with @Ignore. It is reported as skipped, and a
+      skipped test keeps the run green while proving nothing.
+    paths:
+      include: ["**/src/test/**", "**/src/androidTest/**"]
+    pattern-either:
+      - pattern: |
+          @Ignore
+          fun $T(...) { ... }
+      - pattern: |
+          @Ignore($WHY)
+          fun $T(...) { ... }
+      - pattern: |
+          @Ignore
+          class $C { ... }
+
+  # --- tools that always report success ---------------------------------------
+  - id: hardcoded-ok-true
+    languages: [python]
+    severity: ERROR
+    message: >-
+      The result says "ok": True no matter what was found. Callers that check
+      "ok" (the Makefile does) will report success even when findings exist.
+      Derive it from the findings instead.
+    pattern-either:
+      - pattern: 'return {..., "ok": True, ...}'

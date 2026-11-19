@@ -66,6 +66,10 @@ coroutines = "1.9.0"
 
 # Test
 junit = "4.13.2"
+# Mutation testing for the anti-false-green guard (nova-tv/guards). PIT via
+# koral--/gradle-pitest-plugin (Apache-2.0), the Android fork of
+# szpak/gradle-pitest-plugin. 0.3.0 supports AGP 8.5.1+ and ships PIT 1.22.1.
+pitest = "0.3.0"
 
 [libraries]
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
@@ -109,3 +113,4 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+pitest = { id = "pl.droidsonroids.pitest", version.ref = "pitest" }

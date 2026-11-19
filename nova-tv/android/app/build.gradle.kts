@@ -12,6 +12,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    // Adds pitest<Variant> tasks only; assemble and test tasks are unchanged.
+    alias(libs.plugins.pitest)
 }
 
 android {
@@ -181,6 +183,33 @@ android {
     testOptions {
         unitTests.isReturnDefaultValues = true
     }
+}
+
+// Mutation testing, run by nova-tv/guards/anti-false-green.sh as
+// `:app:pitestTvDebug`. PIT changes the compiled code on purpose (flips a
+// condition, drops a return value) and re-runs the unit tests; a change no
+// test notices is a test that would stay green over a real bug.
+//
+// Scope is the code the unit tests are about. Test strength counts only
+// mutants the tests actually execute, so untested files do not distort it.
+pitest {
+    targetClasses.set(
+        setOf(
+            "dev.nova.tv.data.*",
+            "dev.nova.tv.finder.*",
+            "dev.nova.tv.player.*",
+            "dev.nova.tv.ui.nav.*",
+        )
+    )
+    excludedClasses.set(setOf("*ComposableSingletons*", "*\$\$serializer"))
+    // Compiler-generated members and Kotlin's null-check intrinsics are not
+    // behaviour; mutating them only produces noise.
+    excludedMethods.set(setOf("equals", "hashCode", "toString", "copy", "copy\$default", "component*"))
+    avoidCallsTo.set(setOf("kotlin.jvm.internal"))
+    threads.set(4)
+    timestampedReports.set(false)
+    outputFormats.set(setOf("XML", "HTML"))
+    failWhenNoMutations.set(true)
 }
 
 // JVM target is set through compileOptions above; on AGP 8.5 the Kotlin compiler

@@ -1,0 +1,4 @@
+# Downloaded tool binaries (install-tools.sh)
+.tools/
+# Full tool logs; the per-guard .md reports are kept
+reports/logs/
