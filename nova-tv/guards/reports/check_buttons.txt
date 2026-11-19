@@ -1,0 +1,9 @@
+summary:
+{
+  "total": 0,
+  "by_kind": {},
+  "ok": true
+}
+findings:
+[]
+ok: True
