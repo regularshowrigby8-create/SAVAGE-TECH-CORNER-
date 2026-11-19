@@ -9,6 +9,7 @@ import dev.nova.tv.data.model.Stream
 import dev.nova.tv.data.model.SubtitleRef
 import dev.nova.tv.data.model.Video
 import dev.nova.tv.data.repo.WatchProgress
+import dev.nova.tv.download.DownloadJob
 import dev.nova.tv.data.remote.DnsProvider
 import dev.nova.tv.data.remote.NovaDns
 import dev.nova.tv.finder.DualAudio
@@ -149,6 +150,12 @@ data class NovaState(
     val preload: PreloadMode = PreloadMode.OFF,
     val dns: DnsProvider = DnsProvider.AUTO,
     val preferEnglishAudio: Boolean = true,
+    /** Standard play target; 720p unless changed in Settings. */
+    val preferredQuality: String = "720p",
+    /** Offline downloads, newest last. */
+    val downloads: List<DownloadJob> = emptyList(),
+    /** Pool servers that have answered for a title; the only ones listed. */
+    val workingServers: List<String> = emptyList(),
     val dualShelves: List<Shelf> = emptyList(),
     val dualLoading: Boolean = false,
     val pool: PoolState = PoolState(),
@@ -191,12 +198,25 @@ class NovaViewModel : ViewModel() {
             preload = saved.preload,
             dns = saved.dns,
             preferEnglishAudio = saved.preferEnglishAudio,
+            preferredQuality = saved.preferredQuality,
             pool = engine.pool?.state?.value ?: PoolState(),
+            workingServers = engine.pool?.working()?.map { it.name.ifBlank { it.baseUrl } }.orEmpty(),
             websites = library.websites.value,
             myList = library.myList.value.map { it.toMeta() }
         )
         refresh()
-        engine.pool?.let { pool -> viewModelScope.launch { pool.state.collect { p -> _state.update { it.copy(pool = p) } } } }
+        engine.pool?.let { pool ->
+            viewModelScope.launch {
+                pool.state.collect { p ->
+                    _state.update {
+                        it.copy(pool = p, workingServers = pool.working().map { entry -> entry.name.ifBlank { entry.baseUrl } })
+                    }
+                }
+            }
+        }
+        viewModelScope.launch {
+            app.downloads.jobs.collect { jobs -> _state.update { it.copy(downloads = jobs) } }
+        }
     }
 
     // -- navigation -----------------------------------------------------------
@@ -548,7 +568,10 @@ class NovaViewModel : ViewModel() {
         resolveJob?.cancel()
         val st = _state.value
         val dual = st.preferEnglishAudio && (st.route == Route.DUAL_AUDIO || DualAudio.isInternational(d.title))
-        val request = TitleRequest(d.title, d.season, d.episode, st.finders, preferDualAudio = dual)
+        val request = TitleRequest(
+            d.title, d.season, d.episode, st.finders,
+            preferDualAudio = dual, preferredQuality = st.preferredQuality
+        )
         val id = d.streamId
         _state.update { s -> s.copy(detail = s.detail?.copy(sources = SourceSnapshot(), resolving = true)) }
         resolveJob = viewModelScope.launch {
@@ -804,6 +827,37 @@ class NovaViewModel : ViewModel() {
     fun setReduceMotion(enabled: Boolean) {
         settings.setReduceMotion(enabled)
         _state.update { it.copy(reduceMotion = enabled) }
+    }
+
+    // -- downloads ------------------------------------------------------------
+
+    /** Queue the best-ranked source for the open title. */
+    fun downloadBest() {
+        val detail = _state.value.detail ?: return
+        val stream = detail.sources.streams.firstOrNull()
+        val url = stream?.url
+        if (stream == null || url.isNullOrBlank()) {
+            toast(if (detail.resolving) "Still finding sources" else "No source to download")
+            return
+        }
+        val label = if (detail.isSeries) "${detail.title.name}  S${detail.season} E${detail.episode}" else detail.title.name
+        val id = app.downloads.start(detail.title.name, label, url, stream.requestHeaders)
+        toast(if (id == null) "Already downloading" else "Download started")
+    }
+
+    fun pauseDownload(id: String) = app.downloads.pause(id)
+
+    fun resumeDownload(id: String) = app.downloads.resume(id)
+
+    fun removeDownload(id: String) = app.downloads.remove(id)
+
+    /** 720p is the standard; this cycles the target for anyone who wants more. */
+    fun cycleQuality() {
+        val options = listOf("720p", "1080p", "2160p", "auto")
+        val next = options[(options.indexOf(_state.value.preferredQuality).coerceAtLeast(0) + 1) % options.size]
+        settings.setPreferredQuality(next)
+        _state.update { it.copy(preferredQuality = next) }
+        toast(if (next == "auto") "Best available" else next)
     }
 
     fun toggleAutoplay() {

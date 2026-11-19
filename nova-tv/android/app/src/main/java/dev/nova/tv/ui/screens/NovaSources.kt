@@ -108,12 +108,12 @@ fun SourcesScreen(state: NovaState, viewModel: NovaViewModel) {
                     onClick = viewModel::fillServers,
                     trailing = {
                         Text(
-                            if (state.poolBusy) "Updating" else "${state.pool.size} / ${state.pool.capacity}",
+                            if (state.poolBusy) "Updating" else "${state.workingServers.size} working",
                             style = NovaType.meta,
                             color = if (state.poolBusy) NovaPalette.accent else NovaPalette.textMuted
                         )
                     }
-                ) { Text("Server pool", style = NovaType.body) }
+                ) { Text("Working servers", style = NovaType.body) }
             }
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 4.dp)) {

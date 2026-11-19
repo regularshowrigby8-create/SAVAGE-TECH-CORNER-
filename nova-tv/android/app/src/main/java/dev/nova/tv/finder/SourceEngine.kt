@@ -44,7 +44,9 @@ data class TitleRequest(
     val season: Int = 0,
     val episode: Int = 0,
     val finders: Set<FinderKind> = FinderKind.entries.toSet(),
-    val preferDualAudio: Boolean = false
+    val preferDualAudio: Boolean = false,
+    /** Standard play target, from Settings; 720p by default. */
+    val preferredQuality: String = StreamRanker.DEFAULT_QUALITY
 ) {
     val type: String get() = if (meta.isSeries) "series" else "movie"
     val streamId: String get() = FinderRules.catalogueId(meta.id, meta.isSeries, season, episode)
@@ -172,7 +174,8 @@ class SourceEngine(
             preferredGroup = last?.bingeGroup,
             preferredSource = last?.sourceBase?.ifBlank { null },
             hostScore = HostHealth::score,
-            preferDualAudio = request.preferDualAudio
+            preferDualAudio = request.preferDualAudio,
+            preferredQuality = request.preferredQuality
         )
 
         coroutineScope {
@@ -330,8 +333,13 @@ class SourceEngine(
 
         fun snapshot(done: Boolean): SourceSnapshot = synchronized(lock) {
             val p = probes.toMap()
+            val ranked = StreamRanker.rank(streams.values.toList(), ctx.copy(probes = p))
+            // "Only ones that work": once anything has been probed, a stream
+            // that failed its probe is not shown. Before the first probe there
+            // is nothing to filter by, so the discoverable list stays live.
+            val working = ranked.filter { p[it.url]?.ok == true }
             SourceSnapshot(
-                streams = StreamRanker.rank(streams.values.toList(), ctx.copy(probes = p)),
+                streams = (if (working.isNotEmpty()) working else ranked).take(MAX_SHOWN),
                 probes = p,
                 running = running.toSet(),
                 installed = installed.toList(),
@@ -346,6 +354,8 @@ class SourceEngine(
         const val POOL_BATCH = 150
         const val SCRAMBLE_LABEL = "New servers"
         private const val MAX_VERIFY = 60
+        /** The source sheet lists at most this many entries; the rest add noise. */
+        private const val MAX_SHOWN = 24
         private const val MAX_AUTO_INSTALL = 3
         private const val DISCOVERY_TTL_MS = 30 * 60_000L
         private const val DISCOVERY_BUDGET_MS = 30_000L

@@ -41,6 +41,8 @@ private data class Persisted(
 
 data class PoolState(
     val size: Int = 0,
+    /** Servers that have answered for at least one title; the only ones offered. */
+    val working: Int = 0,
     val capacity: Int = ServerPool.CAPACITY,
     val generation: Int = 0,
     val canRevert: Boolean = false,
@@ -84,6 +86,16 @@ class ServerPool(private val store: PoolStore, private val random: Random = Rand
         set(value) = synchronized(lock) { data = data.copy(cursor = value); save() }
 
     fun entries(): List<PoolEntry> = synchronized(lock) { data.entries }
+
+    /**
+     * Only servers that have actually answered for a title. The pool may hold
+     * 3000 discoveries, but an unproven one is not a source the UI should show:
+     * the Sources screen lists exactly what has worked.
+     */
+    fun working(): List<PoolEntry> = synchronized(lock) {
+        data.entries.filter { it.hits > 0 }
+            .sortedWith(compareByDescending<PoolEntry> { it.hits }.thenBy { it.misses }.thenByDescending { it.stars })
+    }
 
     /** Merge discovered servers; returns how many were new. */
     fun add(candidates: List<FinderCandidate>): Int = synchronized(lock) {
@@ -183,6 +195,7 @@ class ServerPool(private val store: PoolStore, private val random: Random = Rand
 
     private fun stateOf() = PoolState(
         size = data.entries.size,
+        working = data.entries.count { it.hits > 0 },
         generation = data.generation,
         canRevert = data.history.isNotEmpty(),
         retired = data.retired.size,

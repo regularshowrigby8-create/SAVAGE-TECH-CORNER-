@@ -36,6 +36,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
@@ -227,6 +228,7 @@ private fun Actions(detail: DetailState, viewModel: NovaViewModel) {
                 icon = Icons.AutoMirrored.Filled.List,
                 onClick = viewModel::toggleSourcesSheet
             )
+            ActionIcon(label = "Download", icon = Icons.Filled.KeyboardArrowDown, onClick = viewModel::downloadBest)
             ActionIcon(label = "Search again", icon = Icons.Filled.Refresh, onClick = viewModel::retrySources)
         }
     }

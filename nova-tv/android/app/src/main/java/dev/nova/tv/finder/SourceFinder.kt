@@ -305,6 +305,8 @@ class SourceFinder(
             if (safe.isEmpty()) return null
             val base = FinderRules.baseFromManifestUrl(safe)
             if (base.isEmpty()) return null
+            // Torrent indexes and duplicate VOD providers never enter the pool.
+            if (FinderRules.isRedundantSource(info.name, base)) return null
             return FinderCandidate(
                 manifestUrl = safe,
                 baseUrl = base,

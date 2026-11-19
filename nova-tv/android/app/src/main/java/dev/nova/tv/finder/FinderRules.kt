@@ -102,6 +102,7 @@ object FinderRules {
         if ((hints?.get("p2p") as? JsonPrimitive)?.contentOrNull == "true") return null
         val types = (obj["types"] as? JsonArray).strings().map { it.lowercase() }.distinct()
         if (types.none { it == "movie" || it == "series" || it == "tv" }) return null
+        if (isRedundantSource(obj.string("name"))) return null
         val prefixPattern = Regex("^[a-z0-9_-]{1,24}$")
         val prefixes = ((obj["idPrefixes"] as? JsonArray).strings() +
             resourceRows.filterIsInstance<JsonObject>().flatMap { (it["idPrefixes"] as? JsonArray).strings() })
@@ -157,6 +158,24 @@ object FinderRules {
     }
 
     // -- stream rules (global-resolver/sources.js) --------------------------
+
+    /**
+     * Providers Nova deliberately does not use: torrent indexes (no torrents
+     * here) and VOD addons that only repeat the same catalogue under another
+     * name (penguplay). Matched against the addon name and its host, never its
+     * description, so a legitimate provider cannot be dropped by prose.
+     */
+    private val REDUNDANT_NAMES = listOf(
+        "penguplay", "pengu play", "pengu-play", "torrentio", "torrent",
+        "thepiratebay", "pirate bay", "1337x", "rarbg", "yts", "nyaa",
+        "eztv", "kickass", "limetorrents", "magnetdl", "bitsearch"
+    )
+
+    fun isRedundantSource(name: String?, baseUrl: String? = null): Boolean {
+        val haystack = (name.orEmpty() + " " + baseUrl.orEmpty()).lowercase()
+        if (haystack.isBlank()) return false
+        return REDUNDANT_NAMES.any { it in haystack }
+    }
 
     /**
      * sources.js catalogueId: `tt0903747` for a film, `tt0903747:1:2` for an

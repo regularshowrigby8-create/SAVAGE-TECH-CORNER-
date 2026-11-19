@@ -56,6 +56,21 @@ class StreamRankerTest {
     }
 
     @Test
+    fun `standard play prefers 720p over 1080p`() {
+        val hd = s("https://a.example/1080.mp4", "1080p")
+        val standard = s("https://b.example/720.mp4", "720p")
+        val ranked = StreamRanker.rank(listOf(hd, standard), StreamRanker.Context())
+        assertEquals(standard.url, ranked.first().url)
+        assertEquals(70, StreamRanker.qualityPreference("720p", "720p"))
+        // An explicit 1080p setting flips the order back.
+        val hdPreferred = StreamRanker.rank(
+            listOf(hd, standard),
+            StreamRanker.Context(preferredQuality = "1080p")
+        )
+        assertEquals(hd.url, hdPreferred.first().url)
+    }
+
+    @Test
     fun `1080p is the sweet spot`() {
         assertTrue(StreamRanker.qualityScore("1080p") > StreamRanker.qualityScore("2160p"))
         assertTrue(StreamRanker.qualityScore("2160p") > StreamRanker.qualityScore("480p"))

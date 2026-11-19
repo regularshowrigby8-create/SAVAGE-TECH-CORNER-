@@ -20,6 +20,16 @@ class FinderRulesTest {
     private fun json(text: String) = Json.parseToJsonElement(text)
 
     @Test
+    fun `torrent indexes and duplicate vod addons are refused`() {
+        org.junit.Assert.assertTrue(FinderRules.isRedundantSource("PenguPlay"))
+        org.junit.Assert.assertTrue(FinderRules.isRedundantSource("Torrentio"))
+        org.junit.Assert.assertTrue(FinderRules.isRedundantSource(null, "https://torrentio.strem.fun/x"))
+        org.junit.Assert.assertFalse(FinderRules.isRedundantSource("Cinemeta"))
+        val manifest = json("""{"id":"p","name":"PenguPlay","resources":["stream"],"types":["movie"]}""")
+        assertNull(FinderRules.parseManifest(manifest))
+    }
+
+    @Test
     fun `publicHttpsUrl refuses http, credentials, ip literals and local names`() {
         assertEquals("https://a.example/manifest.json", FinderRules.publicHttpsUrl("https://a.example/manifest.json"))
         assertEquals("", FinderRules.publicHttpsUrl("http://a.example/manifest.json"))

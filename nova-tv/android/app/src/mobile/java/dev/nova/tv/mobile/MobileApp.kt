@@ -91,6 +91,7 @@ fun MobileApp(viewModel: NovaViewModel = viewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val activity = LocalContext.current as? Activity
     var moreMenu by rememberSaveable { mutableStateOf(false) }
+    var downloadsOpen by rememberSaveable { mutableStateOf(false) }
 
     MobileTheme(reduceMotion = state.reduceMotion) {
         val reduced = LocalReduceMotion.current
@@ -98,6 +99,7 @@ fun MobileApp(viewModel: NovaViewModel = viewModel()) {
             when {
                 state.playback != null -> if (state.playerPanel != null) viewModel.closePlayerPanel() else viewModel.stopPlayback()
                 state.detail != null || state.addingWebsite -> viewModel.back()
+                downloadsOpen -> downloadsOpen = false
                 moreMenu -> moreMenu = false
                 state.route in MoreRoutes -> moreMenu = true
                 else -> if (!viewModel.back()) activity?.finish()
@@ -117,6 +119,7 @@ fun MobileApp(viewModel: NovaViewModel = viewModel()) {
                                 moreMenu = true
                             } else {
                                 moreMenu = false
+                                downloadsOpen = false
                                 viewModel.navigate(route)
                             }
                         }
@@ -135,7 +138,10 @@ fun MobileApp(viewModel: NovaViewModel = viewModel()) {
                 ) { target ->
                     val backToMore = { moreMenu = true }
                     when (target) {
-                        null -> MoreScreen(onOpen = { route -> moreMenu = false; viewModel.navigate(route) })
+                        null -> MoreScreen(
+                            onOpen = { route -> moreMenu = false; viewModel.navigate(route) },
+                            onDownloads = { downloadsOpen = true }
+                        )
                         Route.HOME -> MobileHome(state, viewModel, onDualAudio = { moreMenu = false; viewModel.navigate(Route.DUAL_AUDIO) })
                         Route.MOVIES -> MobileBrowse(Route.MOVIES, state, viewModel)
                         Route.SERIES -> MobileBrowse(Route.SERIES, state, viewModel)
@@ -155,6 +161,17 @@ fun MobileApp(viewModel: NovaViewModel = viewModel()) {
                 modifier = Modifier.zIndex(2f)
             ) {
                 MobileDetail(state, viewModel)
+            }
+
+            AnimatedVisibility(
+                visible = downloadsOpen && state.detail == null && state.playback == null,
+                enter = if (reduced) EnterTransition.None else fadeIn(tween(200)) + slideInVertically(tween(260)) { it / 10 },
+                exit = if (reduced) ExitTransition.None else fadeOut(tween(160)) + slideOutVertically(tween(200)) { it / 12 },
+                modifier = Modifier.zIndex(2f)
+            ) {
+                Box(Modifier.fillMaxSize().background(NovaPalette.background)) {
+                    MobileDownloads(state, viewModel, onBack = { downloadsOpen = false })
+                }
             }
 
             state.playback?.let { request ->

@@ -10,6 +10,7 @@ import dev.nova.tv.finder.pool.PoolStore
 import dev.nova.tv.finder.pool.ServerHarvester
 import dev.nova.tv.finder.pool.ServerPool
 import dev.nova.tv.data.repo.CatalogRepository
+import dev.nova.tv.download.DownloadManager
 import dev.nova.tv.data.repo.LibraryStore
 import dev.nova.tv.data.repo.SettingsStore
 import dev.nova.tv.finder.SourceEngine
@@ -20,6 +21,7 @@ import dev.nova.tv.player.StreamProbe
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import java.io.File
 
 /**
  * Manual dependency graph.
@@ -55,6 +57,18 @@ class NovaApplication : Application(), ImageLoaderFactory {
                 if (!tmp.renameTo(file)) { file.writeText(text); tmp.delete() }
             }
         })
+    }
+
+    /**
+     * Offline downloads. Files live in app-specific external storage, which
+     * needs no runtime permission and is removed with the app.
+     */
+    val downloads: DownloadManager by lazy {
+        DownloadManager(
+            dir = File(getExternalFilesDir(null) ?: filesDir, "Downloads"),
+            client = http.okHttp,
+            scope = appScope
+        )
     }
 
     /** One engine for the whole app so discovery and probes are cached across titles. */

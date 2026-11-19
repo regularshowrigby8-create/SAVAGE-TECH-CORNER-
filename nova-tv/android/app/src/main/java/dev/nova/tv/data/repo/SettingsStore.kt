@@ -14,7 +14,8 @@ class SettingsStore(private val prefs: SharedPreferences) : CatalogRepository.Ad
     data class Settings(
         val addonUrls: List<String> = emptyList(),
         val autoplayNext: Boolean = true,
-        val preferredQuality: String = "auto",
+        /** Standard play starts at 720p: less buffering than 1080p or 4K. */
+        val preferredQuality: String = "720p",
         val subtitleSize: Int = 100,
         val reduceMotion: Boolean = false,
         val volume: Float = 1f,
@@ -36,7 +37,7 @@ class SettingsStore(private val prefs: SharedPreferences) : CatalogRepository.Ad
             ?.filter { it.isNotBlank() }
             ?: emptyList(),
         autoplayNext = prefs.getBoolean(KEY_AUTOPLAY, true),
-        preferredQuality = prefs.getString(KEY_QUALITY, "auto") ?: "auto",
+        preferredQuality = prefs.getString(KEY_QUALITY, "720p") ?: "720p",
         subtitleSize = prefs.getInt(KEY_SUBTITLE, 100),
         reduceMotion = prefs.getBoolean(KEY_MOTION, false),
         volume = prefs.getFloat(KEY_VOLUME, 1f),
@@ -59,6 +60,12 @@ class SettingsStore(private val prefs: SharedPreferences) : CatalogRepository.Ad
     fun setAutoplayNext(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_AUTOPLAY, enabled).apply()
         _settings.value = _settings.value.copy(autoplayNext = enabled)
+    }
+
+    fun setPreferredQuality(quality: String) {
+        val normalised = quality.ifBlank { "720p" }
+        prefs.edit().putString(KEY_QUALITY, normalised).apply()
+        _settings.value = _settings.value.copy(preferredQuality = normalised)
     }
 
     fun setReduceMotion(enabled: Boolean) {

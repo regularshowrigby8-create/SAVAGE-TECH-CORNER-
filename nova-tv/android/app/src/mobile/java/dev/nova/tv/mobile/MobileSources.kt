@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
@@ -56,9 +57,10 @@ import dev.nova.tv.ui.theme.NovaPalette
 
 /** The More tab: the pages that do not need a tab of their own. */
 @Composable
-fun MoreScreen(onOpen: (Route) -> Unit) {
+fun MoreScreen(onOpen: (Route) -> Unit, onDownloads: () -> Unit) {
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(top = 12.dp)) {
         Text("NOVA", style = MType.wordmark, modifier = Modifier.padding(horizontal = ScreenPadding, vertical = 12.dp))
+        MoreRow("Downloads", Icons.Filled.KeyboardArrowDown, onDownloads)
         MoreRow("My List", Icons.Filled.Favorite) { onOpen(Route.MY_LIST) }
         MoreRow("Dual Audio", Icons.Filled.Star) { onOpen(Route.DUAL_AUDIO) }
         MoreRow("Sources", Icons.Filled.Search) { onOpen(Route.SOURCES) }
@@ -112,9 +114,23 @@ fun MobileSources(state: NovaState, viewModel: NovaViewModel, onBack: () -> Unit
 
             item { Section("Servers") }
             item {
-                SettingRow("Server pool", onClick = viewModel::fillServers) {
+                // Only servers that have answered for a title are listed; the
+                // 3000-slot pool is an internal queue, not a user-facing count.
+                SettingRow("Working servers", onClick = viewModel::fillServers) {
                     if (state.poolBusy) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = NovaPalette.accent)
-                    else Text("${state.pool.size} / ${state.pool.capacity}", style = MType.meta)
+                    else Text("${state.workingServers.size}", style = MType.meta)
+                }
+            }
+            items(state.workingServers.take(8), key = { "srv:" + it }) { name ->
+                SettingRow(name, onClick = null) { Text("Working", style = MType.meta.copy(color = NovaPalette.accent)) }
+            }
+            if (state.workingServers.isEmpty()) {
+                item {
+                    Text(
+                        "No server has answered yet. Fill or scramble to find new ones.",
+                        style = MType.meta,
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                    )
                 }
             }
             item {
@@ -183,6 +199,7 @@ fun MobileSettings(state: NovaState, viewModel: NovaViewModel, onBack: () -> Uni
             SettingRow("Reduce motion", onClick = { viewModel.setReduceMotion(!state.reduceMotion) }) {
                 NovaSwitch(state.reduceMotion) { viewModel.setReduceMotion(it) }
             }
+            SettingRow("Video quality", onClick = viewModel::cycleQuality) { Text(if (state.preferredQuality == "auto") "Best available" else state.preferredQuality, style = MType.meta) }
             SettingRow("Anti-buffering", onClick = viewModel::cyclePreload) { Text(state.preload.label, style = MType.meta) }
             SettingRow("DNS", onClick = viewModel::cycleDns) { Text(state.dns.label, style = MType.meta) }
             SettingRow("Prefer English audio", onClick = viewModel::togglePreferEnglishAudio) {

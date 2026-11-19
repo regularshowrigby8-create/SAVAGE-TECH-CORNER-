@@ -17,8 +17,9 @@ import dev.nova.tv.finder.FinderRules
  *     (size x 8 / runtime). Under 1.3x will stall; it goes to the bottom.
  *  3. The source family that worked last time (bingeGroup, then addon) --
  *     WuPlay and ARVIO both continue a series on the same source.
- *  4. Quality, with 1080p preferred over 2160p: a 4K file under the 5 GB cap
- *     is either short or heavily compressed, and 1080p buffers less.
+ *  4. Quality, with 720p as the standard: it buffers less than 1080p or 4K on
+ *     a phone or a TV stick. 1080p and 2160p are still offered, ranked below
+ *     the preferred quality, and the preference is user-settable.
  *  5. Adaptive streams (HLS/DASH) get a small bonus: they step down instead
  *     of stalling when the network dips.
  */
@@ -31,7 +32,9 @@ object StreamRanker {
         val preferredSource: String? = null,
         val hostScore: (String?) -> Int = { 0 },
         /** Opened from Dual Audio: English-plus-original releases go first. */
-        val preferDualAudio: Boolean = false
+        val preferDualAudio: Boolean = false,
+        /** Standard play target: 720p unless changed in Settings. */
+        val preferredQuality: String = DEFAULT_QUALITY
     )
 
     /** Streams that may be offered at all. */
@@ -53,6 +56,9 @@ object StreamRanker {
     fun score(stream: Stream, ctx: Context): Int {
         val probe = ctx.probes[stream.url]
         var score = qualityScore(stream.quality)
+        if (ctx.preferredQuality.isNotBlank() && !ctx.preferredQuality.equals("auto", ignoreCase = true)) {
+            score += qualityPreference(stream.quality, ctx.preferredQuality)
+        }
         val kind = (FinderRules.classifyStream(stream) as? FinderRules.Verdict.Playable)?.kind
         if (kind == FinderRules.StreamKind.HLS || kind == FinderRules.StreamKind.DASH) score += 15
 
@@ -101,5 +107,24 @@ object StreamRanker {
         else -> 60
     }
 
+    /**
+     * Bonus for matching the standard-play quality. Large enough that the
+     * preferred rendition beats a healthier-looking 1080p/4K source, while an
+     * otherwise much better source can still win.
+     */
+    fun qualityPreference(quality: String, preferred: String): Int {
+        val want = FinderRules.qualityRank(preferred)
+        if (want <= 0) return 0
+        val got = FinderRules.qualityRank(quality)
+        if (got <= 0) return -10
+        return when {
+            got == want -> 70
+            got > 1440 -> -45 // 4K costs bandwidth for no visible gain on a phone
+            got > want -> -20 // 1080p when 720p is the target
+            else -> -35 // 480p and below
+        }
+    }
+
+    const val DEFAULT_QUALITY = "720p"
     const val MIN_HEADROOM = 1.3
 }

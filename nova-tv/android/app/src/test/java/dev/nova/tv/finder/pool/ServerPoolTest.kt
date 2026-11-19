@@ -24,6 +24,16 @@ class ServerPoolTest {
     private fun many(n: Int, prefix: String = "s") = (0 until n).map { c("$prefix$it.example") }
 
     @Test
+    fun `only servers that answered are listed as working`() {
+        val pool = ServerPool(MemoryStore())
+        pool.add(many(3))
+        pool.noteResult("https://s1.example", hit = true)
+        assertEquals(listOf("https://s1.example"), pool.working().map { it.baseUrl })
+        assertEquals(1, pool.state.value.working)
+        assertEquals(3, pool.state.value.size)
+    }
+
+    @Test
     fun `the same server is never added twice`() {
         val pool = ServerPool(MemoryStore())
         assertEquals(1, pool.add(listOf(c("a.example"))))
