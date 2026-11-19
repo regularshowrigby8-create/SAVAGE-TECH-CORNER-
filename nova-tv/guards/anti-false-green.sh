@@ -43,19 +43,25 @@ check "unit tests run and pass (both flavours)" java -- \
 # so PIT itself fails the build when the tests catch too few broken versions.
 run_pitest() (
   cd "$NOVA_DIR/android" || return 1
-  ./gradlew --no-daemon --console=plain :app:pitestTvDebug
+  local log
+  log="$(mktemp)"
+  ./gradlew --no-daemon --console=plain :app:pitestTvDebug > "$log" 2>&1
   local rc=$?
+  cat "$log"
   local xml=app/build/reports/pitest/tvDebug/mutations.xml
   if [[ -f "$xml" ]]; then
-    echo "--- PIT summary (counted from mutations.xml) ---"
+    echo "--- surviving mutants: code was broken and no test noticed (first 60) ---"
+    grep "status='SURVIVED'" "$xml" \
+      | sed -E 's|.*<sourceFile>([^<]*)</sourceFile>.*<lineNumber>([^<]*)</lineNumber>.*<description>([^<]*)</description>.*|\1:\2  \3|' \
+      | head -60
+    echo "--- PIT statistics ---"
+    grep -E "^>> |Generated [0-9]+ mutations|Test strength|Mutations with no coverage|Line Coverage" "$log"
+    echo "--- mutant status counts (from mutations.xml) ---"
     for s in KILLED SURVIVED NO_COVERAGE TIMED_OUT MEMORY_ERROR RUN_ERROR; do
       printf '%-12s %s\n' "$s" "$(grep -c "status='$s'" "$xml")"
     done
-    echo "--- surviving mutants: code was broken and no test noticed ---"
-    grep "status='SURVIVED'" "$xml" \
-      | sed -E 's|.*<sourceFile>([^<]*)</sourceFile>.*<lineNumber>([^<]*)</lineNumber>.*<description>([^<]*)</description>.*|\1:\2  \3|' \
-      | head -80
   fi
+  rm -f "$log"
   return $rc
 )
 check "PIT mutation testing: tests must catch deliberately broken code" java -- run_pitest
