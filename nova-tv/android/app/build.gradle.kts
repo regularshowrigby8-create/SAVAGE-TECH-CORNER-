@@ -102,8 +102,12 @@ android {
         }
     }
 
+    // Flavored tasks are named packageTvRelease / validateSigningMobileRelease,
+    // so matching the unflavored names never wired the keystore generator and
+    // the mobile release failed in CI with "Keystore file not found".
     tasks.matching {
-        it.name.startsWith("packageRelease") || it.name.startsWith("validateSigningRelease")
+        (it.name.startsWith("package") && it.name.endsWith("Release")) ||
+            (it.name.startsWith("validateSigning") && it.name.endsWith("Release"))
     }.configureEach {
         dependsOn(ensureKeystore)
     }
