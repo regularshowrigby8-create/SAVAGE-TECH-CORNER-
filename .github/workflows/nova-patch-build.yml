@@ -1,0 +1,164 @@
+name: Nova patch build
+
+# The one check that cannot be faked: does the patched nova tree compile?
+#
+# `nova-patch/` is a drop-in patch against `arena/nova-final-debug`. It has been
+# audited statically (tools/debug_nova.py) and its logic is covered by JVM tests,
+# but it has never been through kotlinc. This workflow is that first compile, and
+# it deliberately does the honest thing when a patch fails to apply:
+#
+#   * if a file has drifted, the job reports WHICH file and still builds the rest,
+#     so one stale file does not hide the state of the other six;
+#   * the compile is run twice -- once as applied, once with the patch reverted --
+#     so a failure can be attributed. A build that fails both ways was already
+#     broken and is not this patch's fault.
+#
+# That last point matters: the base branch is green today, and the moment it is
+# not, "the patch broke it" is the wrong conclusion to draw from a red run.
+#
+# One job, per the repository's own GATE 2 rule.
+
+on:
+  workflow_dispatch:
+    inputs:
+      sources:
+        description: "Branch the patched app lives on"
+        required: false
+        default: "arena/nova-final-debug"
+  push:
+    paths:
+      - 'nova-patch/**'
+      - 'tools/apply_nova_patch.py'
+      - '.github/workflows/nova-patch-build.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nova-patch-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Apply the patch and compile both flavors
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      NOVA_SOURCES: ${{ inputs.sources || 'arena/nova-final-debug' }}
+    steps:
+      - name: Checkout the patch
+        uses: actions/checkout@v4
+
+      - name: Fetch the nova sources
+        run: |
+          set -euo pipefail
+          git fetch --depth=1 origin "$NOVA_SOURCES:refs/remotes/origin/nova-src"
+          NOVA_SHA=$(git rev-parse --short origin/nova-src)
+          echo "NOVA_SHA=$NOVA_SHA" >> "$GITHUB_ENV"
+          echo "nova sources: $NOVA_SOURCES @ $NOVA_SHA"
+          rm -rf work && mkdir -p work
+          git archive origin/nova-src | tar -x -C work
+          test -f work/nova-tv/android/gradlew || { echo "no gradlew in $NOVA_SOURCES"; exit 1; }
+
+      - name: Apply the patch (report drift, do not abort)
+        run: |
+          set -uo pipefail
+          python3 tools/apply_nova_patch.py --target work --write 2>&1 | tee apply.log
+          # A missing target file is a hard failure (the patch cannot create the
+          # module). A drifted file is recorded and tolerated so the compile still
+          # tells us something.
+          if grep -q "has no nova-tv/ directory" apply.log; then exit 1; fi
+          grep -E "^\s+[~+] " apply.log | sed 's/^ *//' >> "$GITHUB_STEP_SUMMARY" || true
+          echo "drifted: $(grep -c 'replaces' apply.log || true)"
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.13'
+
+      - name: Compile both flavors with the patch
+        id: patched
+        working-directory: work/nova-tv/android
+        run: |
+          set +e
+          chmod +x gradlew
+          ./gradlew :app:compileTvDebugKotlin :app:compileMobileDebugKotlin \
+            --no-daemon --console=plain --stacktrace > compile.log 2>&1
+          STATUS=$?
+          echo "--- errors ---"
+          grep -nE "^e: |error:|FAILURE:" compile.log | head -60
+          echo "--- tail ---"
+          tail -30 compile.log
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Compile both flavors WITHOUT the patch
+        # Only meaningful if the patched build failed: it separates "this patch
+        # broke the build" from "the branch was already broken".
+        if: steps.patched.outputs.status != '0'
+        working-directory: work
+        run: |
+          set +e
+          # Restore every file the patch replaced, and delete the ones it added.
+          if [ -d .nova-patch-backup ]; then
+            (cd .nova-patch-backup && find . -type f -print0) | while IFS= read -r -d '' f; do
+              cp ".nova-patch-backup/$f" "$f"
+            done
+          fi
+          cd nova-tv/android
+          ./gradlew :app:compileTvDebugKotlin :app:compileMobileDebugKotlin \
+            --no-daemon --console=plain > baseline.log 2>&1
+          echo "baseline status: $?"
+          grep -nE "^e: " baseline.log | head -20
+
+      - name: Run the patched unit tests
+        if: steps.patched.outputs.status == '0'
+        working-directory: work/nova-tv/android
+        run: |
+          set +e
+          ./gradlew :app:testTvDebugUnitTest :app:testMobileDebugUnitTest \
+            --no-daemon --console=plain > tests.log 2>&1
+          echo "test status: $?"
+          grep -nE "tests? (completed|failed)|FAILED|BUILD" tests.log | tail -20
+
+      - name: Report
+        if: always()
+        run: |
+          {
+            echo "## Nova patch build"
+            echo
+            echo "- sources: \`$NOVA_SOURCES\` @ \`$NOVA_SHA\`"
+            echo "- patch files applied: $(grep -cE '^\s+[~+] ' apply.log || echo 0)"
+            echo "- compile (patched): **$([ '${{ steps.patched.outputs.status }}' = '0' ] && echo PASS || echo FAIL)**"
+            echo
+            if [ '${{ steps.patched.outputs.status }}' != '0' ]; then
+              echo '```'
+              grep -E "^e: " work/nova-tv/android/compile.log | head -40 || echo "no compiler errors captured"
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nova-patch-build
+          path: |
+            apply.log
+            work/nova-tv/android/compile.log
+            work/nova-tv/android/baseline.log
+            work/nova-tv/android/tests.log
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Fail if the patched build did not compile
+        if: steps.patched.outputs.status != '0'
+        run: |
+          echo "the patched tree did not compile; see the compiler errors above"
+          exit 1
