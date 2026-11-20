@@ -967,7 +967,7 @@ class NovaViewModel : ViewModel() {
             // report a final count.
             if (installed == 0 && found == 0 && !noServers && probe != null) {
                 val pool = engine.pool
-                val capacity = pool?.capacity ?: 0
+                val capacity = pool?.state?.value?.capacity ?: 0
                 var rounds = 0
                 while (isActive && pool != null &&
                     pool.state.value.size < capacity && rounds < MAX_FINDER_ROUNDS
@@ -982,7 +982,7 @@ class NovaViewModel : ViewModel() {
                 found = engine.pool?.state?.value?.size ?: 0
             }
             val size = engine.pool?.state?.value?.size ?: 0
-            val capacity = engine.pool?.capacity ?: 0
+            val capacity = engine.pool?.state?.value?.capacity ?: 0
             toast(
                 when {
                     installed > 0 -> "Added $installed new source${if (installed == 1) "" else "s"}"
@@ -1190,7 +1190,7 @@ class NovaViewModel : ViewModel() {
             val added = runCatching { engine.scramblePool() }.getOrDefault(0)
             _state.update { it.copy(poolBusy = false) }
             val size = engine.pool?.state?.value?.size ?: 0
-            val capacity = engine.pool?.capacity ?: 0
+            val capacity = engine.pool?.state?.value?.capacity ?: 0
             toast(if (added > 0) "$added new servers \u00b7 $size / $capacity" else "Rotating \u00b7 $size / $capacity")
         }
     }
@@ -1208,7 +1208,7 @@ class NovaViewModel : ViewModel() {
         _state.update { it.copy(poolBusy = true) }
         viewModelScope.launch {
             val pool = engine.pool
-            val capacity = pool?.capacity ?: 0
+            val capacity = pool?.state?.value?.capacity ?: 0
             var added = 0
             var rounds = 0
             var lastSize = pool?.state?.value?.size ?: 0

@@ -302,5 +302,5 @@ internal fun icon(route: Route): ImageVector = when (route) {
     Route.MY_LIST -> Icons.Filled.Favorite
     Route.SOURCES -> Icons.Filled.Build
     Route.SETTINGS -> Icons.Filled.Settings
-    Route.DEBUG -> Icons.Filled.BugReport
+    Route.DEBUG -> Icons.Filled.Build
 }

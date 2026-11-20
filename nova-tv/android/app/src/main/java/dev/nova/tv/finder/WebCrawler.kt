@@ -337,18 +337,21 @@ class WebCrawler(private val http: HttpClient) {
             val full = obj.str("full_name") ?: return@mapNotNull null
             if (!SLUG.matches(full)) return@mapNotNull null
             val pages = obj["has_pages"]?.toString()?.trim('"')?.toBooleanStrictOrNull() ?: false
-            val branch = obj.str("default_branch")
+            val branch = obj.str("default_branch").orEmpty()
                 .replace(Regex("[^A-Za-z0-9_.-]"), "")
                 .take(80)
                 .ifBlank { "main" }
-            val topics = (obj["topics"] as? JsonArray).strings().take(20)
+            val topics = (obj["topics"] as? JsonArray)
+                .orEmpty()
+                .mapNotNull { (it as? JsonPrimitive)?.contentOrNull }
+                .take(20)
             val stars = obj["stargazers_count"]?.toString()?.toIntOrNull() ?: 0
             RepoRef(
                 full = full,
                 hasPages = pages,
                 branch = branch,
-                homepage = obj.str("homepage"),
-                description = obj.str("description"),
+                homepage = obj.str("homepage").orEmpty(),
+                description = obj.str("description").orEmpty(),
                 topics = topics,
                 stars = stars
             )
@@ -394,7 +397,9 @@ class WebCrawler(private val http: HttpClient) {
                             val body = withTimeoutOrNull(MANIFEST_TIMEOUT_MS) {
                                 http.get(url, ACCEPT_JSON, limitBytes = FinderRules.MAX_MANIFEST_BYTES.toLong())
                             } ?: return@withPermit null
-                            val manifest = FinderRules.parseManifest(body) ?: return@withPermit null
+                            val manifest = FinderRules.parseManifest(
+                                runCatching { json.parseToJsonElement(body) }.getOrNull()
+                            ) ?: return@withPermit null
                             val base = FinderRules.baseFromManifestUrl(url)
                             if (base.isEmpty()) return@withPermit null
                             if (!FinderRules.isStorable(manifest.name, base)) return@withPermit null

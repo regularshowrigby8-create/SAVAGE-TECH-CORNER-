@@ -2,6 +2,7 @@ package dev.nova.tv.mobile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -95,7 +96,7 @@ fun MobileDebug(state: NovaState, viewModel: NovaViewModel, onBack: () -> Unit) 
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Column(Modifier.size(10.dp).background(CheckColor(check.status), CircleShape))
+                            Box(Modifier.size(10.dp).background(CheckColor(check.status), CircleShape))
                             Spacer(Modifier.size(8.dp))
                             Text(check.name, style = MType.body, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         }
