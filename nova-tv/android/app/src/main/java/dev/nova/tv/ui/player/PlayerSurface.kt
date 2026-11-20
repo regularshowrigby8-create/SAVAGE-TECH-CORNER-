@@ -186,7 +186,9 @@ fun PlayerSurface(
         }
 
         // Counted, not just spinning: the ring shows how far the buffer is.
-        if (failure == null && panel == null) {
+        // Only while the player is really waiting to play — a paused player can
+        // sit in STATE_BUFFERING, and a ring over a paused film reads as broken.
+        if (failure == null && panel == null && engine.isBuffering) {
             buffering?.let { status ->
                 BufferingOverlay(status, Modifier.align(Alignment.Center))
             }

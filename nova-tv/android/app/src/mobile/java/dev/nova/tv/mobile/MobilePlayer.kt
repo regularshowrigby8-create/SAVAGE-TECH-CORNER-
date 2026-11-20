@@ -180,8 +180,9 @@ fun MobilePlayerSurface(player: NovaPlayer, title: String, viewModel: NovaViewMo
             )
         }
 
-        // Buffering is shown once, in the middle, with its percentage.
-        if (!showChrome && failure == null && !pip.active) {
+        // Buffering is shown once, in the middle, with its percentage, and
+        // only while playback is actually waiting (never over a paused film).
+        if (!showChrome && failure == null && !pip.active && engine.isBuffering) {
             buffering?.let { status ->
                 BufferingOverlay(status, Modifier.align(Alignment.Center), ringSize = 88.dp)
             }

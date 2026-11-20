@@ -111,13 +111,15 @@ object FragmentPlan {
         durationMs: Long,
         totalBytes: Long,
         aheadMs: Long = AHEAD_MS,
-        fragmentBytes: Long = FRAGMENT_BYTES
+        fragmentBytes: Long = FRAGMENT_BYTES,
+        /** Cap on offsets returned; the preloader re-plans from the playhead anyway. */
+        limit: Int = Int.MAX_VALUE
     ): List<Long> {
-        if (totalBytes <= 0 || durationMs <= 0 || fragmentBytes <= 0) return emptyList()
+        if (totalBytes <= 0 || durationMs <= 0 || fragmentBytes <= 0 || limit <= 0) return emptyList()
         val from = fragmentStart(byteAt(positionMs, totalBytes, durationMs), fragmentBytes)
         val until = minOf(totalBytes, byteAt(positionMs + aheadMs, totalBytes, durationMs) + 1)
         if (from >= until) return emptyList()
-        return generateSequence(from) { it + fragmentBytes }.takeWhile { it < until }.toList()
+        return generateSequence(from) { it + fragmentBytes }.takeWhile { it < until }.take(limit).toList()
     }
 
     /**

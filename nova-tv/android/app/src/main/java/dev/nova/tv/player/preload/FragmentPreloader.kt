@@ -282,7 +282,10 @@ class FragmentPreloader(
         headCursor: Long
     ): Long? {
         val starts = if (durationMs > 0) {
-            FragmentPlan.window(playheadMs, durationMs, total, depthMs, fragmentBytes)
+            // Bounded: a whole-film depth is thousands of offsets, and this runs
+            // several times a second on a TV. Cached fragments are skipped, so
+            // the next plan picks up where this one stopped.
+            FragmentPlan.window(playheadMs, durationMs, total, depthMs, fragmentBytes, PLAN_LIMIT)
         } else {
             FragmentPlan.headStarts(headCursor, total, FragmentPlan.HEAD_FRAGMENTS, fragmentBytes)
         }
@@ -337,6 +340,9 @@ class FragmentPreloader(
         private const val TICK_MS = 250L
         private const val IDLE_MS = 1_000L
         private const val MAX_FAILURES = 8
+
+        /** Offsets planned per pass (~192 MiB at the default fragment size). */
+        private const val PLAN_LIMIT = 96
         private const val SEQUENTIAL_MAX_START_MS = 90_000L
 
         /** Only used to place a head fragment before the container reports a duration. */

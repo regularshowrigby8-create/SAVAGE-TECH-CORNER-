@@ -346,6 +346,9 @@ class NovaPlayer(
      */
     private fun downshiftQuality(url: String?): Boolean {
         if (url == null || url in downshifted) return false
+        // A single-track file has nothing to switch down to. Capping there would
+        // only delay the source switch and promise a fix that cannot happen.
+        if (videoTrackCount() <= 1) return false
         val estimate = bundle.bandwidthMeter.bitrateEstimate.takeIf { it > 0 } ?: return false
         val cap = (estimate * BITRATE_MARGIN).toInt().coerceAtLeast(MIN_BITRATE_CAP)
         val currentCap = exo.trackSelectionParameters.maxVideoBitrate
@@ -355,6 +358,11 @@ class NovaPlayer(
             .setMaxVideoBitrate(cap)
             .build()
         return true
+    }
+
+    private fun videoTrackCount(): Int {
+        val tracks = exo.currentTracks
+        return tracks.groups.filter { it.type == androidx.media3.common.C.TRACK_TYPE_VIDEO }.sumOf { it.length }
     }
 
     private fun clearQualityCeiling() {
@@ -384,12 +392,14 @@ class NovaPlayer(
         if (subtitles == _session.value.subtitles) return
         _session.update { it.copy(subtitles = subtitles) }
         // Sideloaded files are part of the MediaItem, so re-prepare in place.
+        // The preloader is left running: a caption arriving must not throw away
+        // fragments that are already in flight.
         if (_session.value.current != null && _session.value.started) {
-            prepareCurrent(exo.currentPosition.coerceAtLeast(0L), keepPlaying = exo.playWhenReady)
+            prepareCurrent(exo.currentPosition.coerceAtLeast(0L), keepPlaying = exo.playWhenReady, restartPreload = false)
         }
     }
 
-    private fun prepareCurrent(startPositionMs: Long, keepPlaying: Boolean = true) {
+    private fun prepareCurrent(startPositionMs: Long, keepPlaying: Boolean = true, restartPreload: Boolean = true) {
         val stream = _session.value.current ?: return
         val url = stream.url ?: return
         // A new source restarts the preloader once it is READY.
@@ -422,8 +432,11 @@ class NovaPlayer(
         exo.setMediaSource(bundle.mediaSource(item, progressive = kind == FinderRules.StreamKind.DIRECT), startPositionMs)
         exo.prepare()
         exo.playWhenReady = keepPlaying
+        // A new prepare is a new buffering episode: without this the ring would
+        // hold the previous episode's 97% through a failover.
+        endBuffering()
         beginBuffering()
-        restartPreload(startPositionMs)
+        if (restartPreload) restartPreload(startPositionMs)
         armStartupTimeout()
     }
 
