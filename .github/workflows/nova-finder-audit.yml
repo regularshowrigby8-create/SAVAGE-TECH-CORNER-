@@ -1,0 +1,113 @@
+name: Nova finder audit
+
+# Why this workflow exists:
+#
+# The other nova workflow (`nova-tv-android.yml`) answers one question -- does it
+# compile. It cannot answer "does the finder do what it claims", because that is
+# a property of the Kotlin, not of the APK. This job runs the two static gates
+# that can answer it, on every manual run and on every change to the nova branch:
+#
+#   tools/debug_nova.py           -- unresolved names, dead controls, failures
+#                                    reported as empty results, non-atomic saves,
+#                                    and the APK-level launch-fatal checks.
+#   tools/verify_no_false_green.py -- proves each of those rules fires on a
+#                                    planted defect and stays quiet on correct
+#                                    code, so "0 findings" cannot mean "the rule
+#                                    never ran".
+#
+# Both live on this branch; the nova sources live on `nova-sources` below. That
+# split is deliberate: the tools evolve here, the app evolves there, and this job
+# is the join.
+#
+# One job, by the repository's own rule (see .claude/scripts/gates.sh GATE 2).
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Daily, so a regression on the nova branch is noticed without a push here.
+    - cron: "17 5 * * *"
+  push:
+    paths:
+      - 'tools/nova_debug/**'
+      - 'tools/debug_nova.py'
+      - 'tools/verify_no_false_green.py'
+      - '.github/workflows/nova-finder-audit.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nova-finder-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The branch the app lives on. Changing this is the only edit needed to audit
+  # a different line of development.
+  NOVA_SOURCES: arena/nova-final-debug
+
+jobs:
+  audit:
+    name: Static finder audit and false-green gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the tooling
+        uses: actions/checkout@v4
+
+      - name: Fetch the nova sources
+        run: |
+          set -euo pipefail
+          git fetch --depth=1 origin "$NOVA_SOURCES:refs/remotes/origin/nova-src"
+          echo "nova tip: $(git rev-parse --short origin/nova-src)"
+          mkdir -p .nova-audit
+          git archive origin/nova-src nova-tv | tar -x -C .nova-audit
+          # A fetch that silently produced no sources would make every check
+          # below pass on nothing. Fail here instead.
+          test -d .nova-audit/nova-tv/android/app/src \
+            || { echo "no Kotlin sources in $NOVA_SOURCES"; exit 1; }
+          find .nova-audit/nova-tv/android/app/src -name '*.kt' | wc -l
+
+      - name: Verify the rules themselves (no false green)
+        run: |
+          set -euo pipefail
+          python3 tools/verify_no_false_green.py --nova .nova-audit/nova-tv | tee .nova-audit/gate.txt
+          # The gate prints a SKIP for the broad corpus that is exempt by name.
+          # A SKIP is not a pass, so it is counted here and reported, not hidden.
+          grep -q "0 FAIL" .nova-audit/gate.txt
+
+      - name: Audit the sources
+        run: |
+          set -euo pipefail
+          mkdir -p .nova-audit/report
+          python3 tools/debug_nova.py \
+            --nova .nova-audit/nova-tv \
+            --out .nova-audit/report | tee .nova-audit/audit.txt
+          # debug_nova exits 1 when it finds an error; that is a failing gate.
+
+      - name: Summarise
+        if: always()
+        run: |
+          {
+            echo "## Nova finder audit"
+            echo
+            echo "Sources: \`$NOVA_SOURCES\` at \`$(git rev-parse --short origin/nova-src 2>/dev/null || echo unknown)\`"
+            echo
+            echo '```'
+            cat .nova-audit/gate.txt 2>/dev/null | head -40 || echo "gate did not run"
+            echo '```'
+            echo
+            echo '```'
+            cat .nova-audit/audit.txt 2>/dev/null | tail -20 || echo "audit did not run"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nova-finder-audit
+          path: |
+            .nova-audit/report/
+            .nova-audit/gate.txt
+            .nova-audit/audit.txt
+          if-no-files-found: warn
+          retention-days: 14

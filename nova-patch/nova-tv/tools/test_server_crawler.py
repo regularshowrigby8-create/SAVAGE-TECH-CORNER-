@@ -38,6 +38,7 @@ class FakeFetcher:
         self.stats = stats
         self.asked: list[str] = []
         self.github_token = ""
+        self.shut_down = False
 
     def get(self, url, headers=None):
         self.asked.append(url)
@@ -56,8 +57,9 @@ class FakeFetcher:
             future.set_exception(error)
         return future
 
-    def shutdown(self):
-        pass
+    def shutdown(self) -> None:
+        """Nothing to tear down: there is no thread pool in the fake."""
+        self.shut_down = True
 
 
 def crawler_with(pages: dict, target: int = 10) -> tuple[sc.Crawler, sc.Pool, sc.Stats]:
