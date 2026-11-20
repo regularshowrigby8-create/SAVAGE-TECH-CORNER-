@@ -1,51 +1,593 @@
-# Nova pool crawl — measured results
+# Nova pool crawl
 
-Two pools, two 3000 ceilings, run on a GitHub runner by
-`.github/workflows/nova-pool-crawl.yml`. These are the numbers from run
-44788418728 on 2026-11-20, not targets.
+| pool | entries | ceiling |
+|---|---|---|
+| server_pool.json | 505 | 3000 |
+| site_pool.json | 18 | 3000 |
 
-| pool | entries | ceiling | time |
-|---|---|---|---|
-| `server_pool.json` (addon manifests) | **502** | 3000 | 45 min budget, used |
-| `site_pool.json` (streaming sites) | **83** | 3000 | 45 min budget, used |
+## Sites dropped, by reason
 
-## What the site crawl rejected
+-  1045  search returned nothing usable
+-   733  no homepage
 
-| reason | count |
-|---|---|
-| no homepage (dead, parked, or refusing) | 1290 |
-| homepage loaded, search returned nothing usable | 1266 |
+## server_pool source evidence (this run)
 
-2,639 candidate hosts were tried before 83 passed. That ratio is the point of the
-verification step: without it the pool would hold 2,722 entries, roughly 2,600 of
-which are dead, and the app would spend a minute per title failing on them.
+| source | page attempts | page failures | candidates | new entries |
+|---|---:|---:|---:|---:|
+| cinemeta-community | 1 | 0 | 83 | 0 |
+| cinemeta-official | 1 | 0 | 5 | 1 |
+| community | 13 | 12 | 0 | 0 |
+| github | 101 | 0 | 55 | 4 |
+| github-pages | 0 | 0 | 3735 | 0 |
+| github-readme | 0 | 0 | 588 | 28 |
+| homepage | 0 | 0 | 603 | 30 |
+| stremio-addons.net | 29 | 0 | 2880 | 435 |
+| stremio-collection | 1 | 0 | 97 | 7 |
 
-## Why this is below 3000, and what would raise it
+## site_pool source evidence (this run)
 
-This is a **bounded** result, not an exhaustion claim. Three separate limits:
+| source | page attempts | page failures | candidates | new entries |
+|---|---:|---:|---:|---:|
+| addon-manifest | 0 | 0 | 481 | 0 |
+| ani-cli | 3 | 0 | 19 | 0 |
+| animdl | 3 | 3 | 0 | 0 |
+| anime-api-lists | 3 | 3 | 0 | 0 |
+| anime-list | 3 | 3 | 0 | 0 |
+| anime-sites-list | 3 | 3 | 0 | 0 |
+| anime-websites | 3 | 3 | 0 | 0 |
+| awesome-selfhosted | 3 | 0 | 60 | 0 |
+| github-lists | 30 | 9 | 311 | 2 |
+| github-lists:-ReelFind-Movie-Search-A | 4 | 3 | 0 | 0 |
+| github-lists:.github | 4 | 3 | 0 | 0 |
+| github-lists:241stream | 4 | 4 | 0 | 0 |
+| github-lists:3-tier-web-application | 4 | 3 | 2 | 0 |
+| github-lists:AI-Anime-Recomender | 4 | 3 | 0 | 0 |
+| github-lists:AN-streaming | 4 | 4 | 0 | 0 |
+| github-lists:API | 4 | 3 | 2 | 0 |
+| github-lists:ActivityStreamBundle | 4 | 3 | 0 | 0 |
+| github-lists:Ai-anime | 4 | 3 | 2 | 0 |
+| github-lists:AniLibDown | 4 | 3 | 2 | 1 |
+| github-lists:AniMovie | 4 | 3 | 0 | 0 |
+| github-lists:AniPlay | 4 | 3 | 1 | 0 |
+| github-lists:AniTrace | 4 | 3 | 8 | 0 |
+| github-lists:AniWatcher | 4 | 3 | 0 | 0 |
+| github-lists:Anifufu | 4 | 3 | 1 | 0 |
+| github-lists:AnimVille | 4 | 3 | 1 | 0 |
+| github-lists:Animanga-List | 4 | 3 | 2 | 0 |
+| github-lists:Animasi | 4 | 3 | 4 | 0 |
+| github-lists:Anime | 4 | 3 | 10 | 0 |
+| github-lists:Anime-Data-App | 4 | 3 | 0 | 0 |
+| github-lists:Anime-Frog | 4 | 3 | 1 | 0 |
+| github-lists:Anime-Generator | 4 | 4 | 0 | 0 |
+| github-lists:Anime-List | 8 | 6 | 3 | 0 |
+| github-lists:Anime-List_Website | 4 | 3 | 1 | 0 |
+| github-lists:Anime-Liste | 4 | 3 | 0 | 0 |
+| github-lists:Anime-Log-Website | 4 | 3 | 0 | 0 |
+| github-lists:Anime-Manga-Recommender | 4 | 3 | 0 | 0 |
+| github-lists:Anime-To-Watch-List | 4 | 4 | 0 | 0 |
+| github-lists:Anime-Watch-Order-Api | 4 | 3 | 0 | 0 |
+| github-lists:Anime-Watchlist | 4 | 3 | 0 | 0 |
+| github-lists:Anime-Watchlist-Website | 4 | 3 | 0 | 0 |
+| github-lists:AnimeAPI | 4 | 3 | 0 | 0 |
+| github-lists:AnimeArray | 4 | 3 | 1 | 0 |
+| github-lists:AnimeCalendar | 4 | 3 | 0 | 0 |
+| github-lists:AnimeDataAPI | 4 | 3 | 2 | 0 |
+| github-lists:AnimeDex | 4 | 3 | 4 | 0 |
+| github-lists:AnimeEpisodes | 4 | 3 | 1 | 0 |
+| github-lists:AnimeHaven | 4 | 4 | 0 | 0 |
+| github-lists:AnimeLegacy | 4 | 3 | 8 | 1 |
+| github-lists:AnimeList | 32 | 24 | 1 | 0 |
+| github-lists:AnimeListBot-Website | 4 | 3 | 0 | 0 |
+| github-lists:AnimeListWebsite | 4 | 4 | 0 | 0 |
+| github-lists:AnimeTV | 4 | 3 | 2 | 0 |
+| github-lists:AnimeTracker | 4 | 3 | 0 | 0 |
+| github-lists:AnimeTrix | 4 | 3 | 1 | 0 |
+| github-lists:AnimeWatcher.API | 4 | 4 | 0 | 0 |
+| github-lists:AnimeWatchlist | 4 | 3 | 0 | 0 |
+| github-lists:AnimeWatchlistManager | 4 | 3 | 0 | 0 |
+| github-lists:AnimeZone | 4 | 3 | 0 | 0 |
+| github-lists:Anime_-recommendation_-s | 4 | 3 | 0 | 0 |
+| github-lists:Anime_List | 4 | 4 | 0 | 0 |
+| github-lists:Animeist | 4 | 3 | 1 | 0 |
+| github-lists:Animevault | 4 | 3 | 0 | 0 |
+| github-lists:Animeworld-list-export | 4 | 3 | 1 | 0 |
+| github-lists:AnistreamIN | 4 | 3 | 1 | 0 |
+| github-lists:Anisync | 4 | 3 | 3 | 0 |
+| github-lists:Anivexa-API | 16 | 12 | 3 | 0 |
+| github-lists:ArduinoStreaming | 4 | 3 | 0 | 0 |
+| github-lists:BASEDFLIX_BACKEND_DJANGO | 4 | 4 | 0 | 0 |
+| github-lists:Badger | 4 | 3 | 0 | 0 |
+| github-lists:Better_anime_list | 4 | 3 | 1 | 0 |
+| github-lists:BingeFlix | 4 | 3 | 0 | 0 |
+| github-lists:BlackEagleLK | 4 | 3 | 1 | 0 |
+| github-lists:CClone | 4 | 4 | 0 | 0 |
+| github-lists:CYNE-API | 4 | 3 | 2 | 0 |
+| github-lists:Chatbot | 4 | 3 | 0 | 0 |
+| github-lists:CineClassics---AI-Movie- | 4 | 4 | 0 | 0 |
+| github-lists:CineMatch | 4 | 3 | 0 | 0 |
+| github-lists:CineMatch-AI | 4 | 3 | 5 | 0 |
+| github-lists:CinePulse | 4 | 3 | 0 | 0 |
+| github-lists:CineRag | 4 | 3 | 0 | 0 |
+| github-lists:CineStreamX | 4 | 3 | 0 | 0 |
+| github-lists:CineVerse | 4 | 3 | 0 | 0 |
+| github-lists:Cineflix | 4 | 4 | 0 | 0 |
+| github-lists:Cinelink | 4 | 3 | 0 | 0 |
+| github-lists:Cinemava | 8 | 6 | 0 | 0 |
+| github-lists:Cinemay | 4 | 4 | 0 | 0 |
+| github-lists:Cineverse | 4 | 3 | 0 | 0 |
+| github-lists:Cinezap | 4 | 4 | 0 | 0 |
+| github-lists:Clubedofilme | 4 | 4 | 0 | 0 |
+| github-lists:CondMais | 4 | 4 | 0 | 0 |
+| github-lists:CrunchyrollPlusXamarin | 4 | 3 | 0 | 0 |
+| github-lists:Dejavu-API | 4 | 3 | 15 | 0 |
+| github-lists:Deploying_a_Sentiment_An | 4 | 3 | 0 | 0 |
+| github-lists:DevEvil-TV | 4 | 3 | 2 | 0 |
+| github-lists:Discord-Movie-Recommenda | 4 | 3 | 0 | 0 |
+| github-lists:Django-Netflix-Clone | 4 | 3 | 1 | 0 |
+| github-lists:DokiDoki-AnimeExplorer | 4 | 3 | 0 | 0 |
+| github-lists:DungeonScrawlers | 4 | 4 | 0 | 0 |
+| github-lists:DzulAnimeList | 4 | 3 | 0 | 0 |
+| github-lists:Eleven-Stream | 4 | 4 | 0 | 0 |
+| github-lists:FINN-AnimeList | 4 | 3 | 0 | 0 |
+| github-lists:Fananime-List | 4 | 3 | 0 | 0 |
+| github-lists:FetchJAV_Public | 4 | 3 | 3 | 0 |
+| github-lists:Filmanesia_v3 | 4 | 3 | 5 | 0 |
+| github-lists:Flickr-Archiver-Ruby | 4 | 4 | 0 | 0 |
+| github-lists:FlixTools-CLI | 4 | 3 | 0 | 0 |
+| github-lists:Flixora | 4 | 3 | 0 | 0 |
+| github-lists:Free-Movie-Series-DB-API | 4 | 3 | 4 | 0 |
+| github-lists:Free-Movie-Streaming-Web | 8 | 6 | 0 | 0 |
+| github-lists:Freeplix | 4 | 3 | 3 | 0 |
+| github-lists:Full-stack-Free-Movie-St | 8 | 6 | 0 | 0 |
+| github-lists:Funanime | 4 | 3 | 0 | 0 |
+| github-lists:GMTCloud-Video-Downloade | 4 | 3 | 1 | 0 |
+| github-lists:Gab-stream- | 4 | 3 | 0 | 0 |
+| github-lists:GameVault | 4 | 3 | 0 | 0 |
+| github-lists:GenderDebiasing-Bollywoo | 4 | 3 | 0 | 0 |
+| github-lists:Global-Cinema_OMDb-API | 4 | 3 | 1 | 0 |
+| github-lists:HACHI-API | 1 | 0 | 0 | 0 |
+| github-lists:HiAnime-API | 4 | 3 | 4 | 0 |
+| github-lists:Hotstar-clone- | 4 | 3 | 0 | 0 |
+| github-lists:IPTV | 4 | 3 | 0 | 0 |
+| github-lists:Image-to-Movie-Recogniti | 4 | 3 | 0 | 0 |
+| github-lists:Itadakimasu | 4 | 3 | 0 | 0 |
+| github-lists:JRMatchServer | 4 | 3 | 0 | 0 |
+| github-lists:JiuTube | 4 | 3 | 4 | 0 |
+| github-lists:Jr-Movies | 4 | 3 | 0 | 0 |
+| github-lists:Kairo | 4 | 3 | 0 | 0 |
+| github-lists:Kitty-cli | 8 | 6 | 8 | 0 |
+| github-lists:KokoroNoKiroku | 4 | 3 | 0 | 0 |
+| github-lists:KurioNime | 4 | 3 | 0 | 0 |
+| github-lists:KuroList | 4 | 4 | 0 | 0 |
+| github-lists:KuyAnime | 4 | 3 | 0 | 0 |
+| github-lists:KyoukaLive | 4 | 3 | 1 | 0 |
+| github-lists:Liberty | 4 | 3 | 0 | 0 |
+| github-lists:LibertyNow | 4 | 3 | 5 | 0 |
+| github-lists:Lister | 4 | 3 | 4 | 0 |
+| github-lists:Locadora | 4 | 3 | 0 | 0 |
+| github-lists:LoukoFlix | 4 | 3 | 0 | 0 |
+| github-lists:Lynn-AnimeList | 4 | 3 | 3 | 0 |
+| github-lists:Lysto | 4 | 3 | 0 | 0 |
+| github-lists:MELOCAST-music-website | 4 | 3 | 0 | 0 |
+| github-lists:MajutsuIndexBackend | 4 | 3 | 1 | 0 |
+| github-lists:Mark1 | 4 | 3 | 0 | 0 |
+| github-lists:Marketing-Platform- | 4 | 3 | 1 | 0 |
+| github-lists:MeatFlicks | 4 | 3 | 0 | 0 |
+| github-lists:Mega-Flix-Vfinal | 4 | 4 | 0 | 0 |
+| github-lists:MegaFlix | 4 | 4 | 0 | 0 |
+| github-lists:Meu-cinema | 4 | 3 | 1 | 0 |
+| github-lists:Mini-MAL | 4 | 3 | 0 | 0 |
+| github-lists:Miru | 4 | 3 | 1 | 0 |
+| github-lists:Modules.PsoDownloader | 4 | 3 | 0 | 0 |
+| github-lists:MongoDB-and-Hugging-Face | 4 | 4 | 0 | 0 |
+| github-lists:MorAnimeList | 4 | 4 | 0 | 0 |
+| github-lists:Movie-Discovery | 4 | 3 | 0 | 0 |
+| github-lists:Movie-Finder-App | 4 | 3 | 0 | 0 |
+| github-lists:Movie-Info-App | 4 | 3 | 5 | 0 |
+| github-lists:Movie-Recommendation-Sys | 4 | 3 | 0 | 0 |
+| github-lists:Movie-Sentimental-Analys | 4 | 4 | 0 | 0 |
+| github-lists:Movie-Spider | 4 | 3 | 6 | 0 |
+| github-lists:Movie-Streaming | 4 | 3 | 1 | 0 |
+| github-lists:Movie-ai-app-PopChoice- | 4 | 4 | 0 | 0 |
+| github-lists:Movie-app | 4 | 4 | 0 | 0 |
+| github-lists:MovieCorn | 4 | 3 | 0 | 0 |
+| github-lists:MovieFeast | 4 | 4 | 0 | 0 |
+| github-lists:MovieMatch-Studio | 4 | 3 | 0 | 0 |
+| github-lists:MovieMind-AI | 4 | 3 | 0 | 0 |
+| github-lists:MovieOne | 4 | 4 | 0 | 0 |
+| github-lists:MovieWebsite | 4 | 3 | 0 | 0 |
+| github-lists:Movie_Explorer | 4 | 4 | 0 | 0 |
+| github-lists:Movie_explorer | 4 | 3 | 0 | 0 |
+| github-lists:Movieflex | 4 | 4 | 0 | 0 |
+| github-lists:Moviemeld | 4 | 4 | 0 | 0 |
+| github-lists:Multi-Stream-Recorder | 4 | 3 | 2 | 0 |
+| github-lists:Multimodal-Movie-Recomme | 4 | 4 | 0 | 0 |
+| github-lists:My-anime-list | 4 | 4 | 0 | 0 |
+| github-lists:MyAnimeIndex | 4 | 4 | 0 | 0 |
+| github-lists:MyAnimeList | 8 | 6 | 0 | 0 |
+| github-lists:MyAnimeList-API-Viewer | 4 | 3 | 0 | 0 |
+| github-lists:MyAnimeList-Classic-RDJ- | 4 | 3 | 0 | 0 |
+| github-lists:MyAnimeList-Modern-RDJ-T | 4 | 3 | 2 | 0 |
+| github-lists:MyAnimeList-Replica-usin | 4 | 3 | 0 | 0 |
+| github-lists:MyAnimeList-Web-Scraper | 4 | 3 | 0 | 0 |
+| github-lists:MyAnimeList-discord-bot | 4 | 3 | 1 | 0 |
+| github-lists:MyAnimeList-tracker | 4 | 3 | 1 | 0 |
+| github-lists:MyAnime_app | 4 | 3 | 0 | 0 |
+| github-lists:MyCrunchyList | 4 | 3 | 3 | 0 |
+| github-lists:NekoView | 4 | 4 | 0 | 0 |
+| github-lists:NetWatch | 4 | 4 | 0 | 0 |
+| github-lists:Netflix-Clone | 4 | 3 | 0 | 0 |
+| github-lists:Netflix-clone | 8 | 7 | 0 | 0 |
+| github-lists:Netflix-clone---Landing- | 4 | 4 | 0 | 0 |
+| github-lists:Netflix-movie-recommende | 4 | 3 | 0 | 0 |
+| github-lists:Netlfix-Clone | 4 | 3 | 1 | 0 |
+| github-lists:Next-Mein-animelist | 4 | 3 | 0 | 0 |
+| github-lists:Next.js-AnimeCatalog | 4 | 3 | 0 | 0 |
+| github-lists:Nginx-Lua-Secure-Link-An | 4 | 3 | 0 | 0 |
+| github-lists:Nxt-watch-React-ott-App | 4 | 3 | 3 | 0 |
+| github-lists:Omni-Stream | 4 | 4 | 0 | 0 |
+| github-lists:OmniGate | 4 | 3 | 1 | 0 |
+| github-lists:Ott-platform | 4 | 3 | 0 | 0 |
+| github-lists:PinguSync | 4 | 3 | 6 | 1 |
+| github-lists:Plotwise-movie-recommend | 4 | 3 | 0 | 0 |
+| github-lists:ProjetWebH25 | 4 | 3 | 2 | 0 |
+| github-lists:Projeto-StreamTV-feito-c | 4 | 3 | 0 | 0 |
+| github-lists:Projeto-streaming-carava | 4 | 4 | 0 | 0 |
+| github-lists:Que-Ver-Online | 4 | 3 | 1 | 0 |
+| github-lists:RAG-movieQA-Chatbot | 4 | 3 | 0 | 0 |
+| github-lists:RadioPlayer | 4 | 3 | 7 | 0 |
+| github-lists:RadioPlayer-ZenoRadio | 4 | 3 | 2 | 0 |
+| github-lists:Raegetys-Anime-List | 4 | 3 | 0 | 0 |
+| github-lists:React_movie | 4 | 3 | 0 | 0 |
+| github-lists:RecoHub | 4 | 3 | 0 | 0 |
+| github-lists:ReleaseRadar | 4 | 3 | 1 | 0 |
+| github-lists:Rename-videos-from-movie | 4 | 3 | 0 | 0 |
+| github-lists:Ronajo | 4 | 3 | 2 | 0 |
+| github-lists:RoninX-Anime-Client | 4 | 3 | 0 | 0 |
+| github-lists:SITE-TEST_streaming | 4 | 3 | 0 | 0 |
+| github-lists:Sal019.github.io | 4 | 3 | 0 | 0 |
+| github-lists:SapphoLive | 4 | 3 | 0 | 0 |
+| github-lists:Shikicinena-Android | 4 | 4 | 0 | 0 |
+| github-lists:Shou | 4 | 3 | 1 | 0 |
+| github-lists:ShowUp-web | 4 | 3 | 0 | 0 |
+| github-lists:Simple-Weather-Overlay | 4 | 3 | 1 | 0 |
+| github-lists:Site-de-Streaming | 4 | 3 | 0 | 0 |
+| github-lists:Site_Streaming | 4 | 3 | 0 | 0 |
+| github-lists:SpringAPI_EspacoGeek | 4 | 3 | 4 | 0 |
+| github-lists:Stream | 4 | 3 | 1 | 0 |
+| github-lists:Stream-Enhancer-Site | 4 | 3 | 1 | 0 |
+| github-lists:StreamBDIXPlus | 4 | 3 | 1 | 0 |
+| github-lists:StreamHub | 4 | 3 | 1 | 0 |
+| github-lists:StreamNest | 4 | 3 | 0 | 0 |
+| github-lists:StreamRush | 4 | 4 | 0 | 0 |
+| github-lists:Streamify | 4 | 4 | 0 | 0 |
+| github-lists:Streaming-Site | 4 | 3 | 59 | 0 |
+| github-lists:Streamly | 4 | 3 | 0 | 0 |
+| github-lists:Strideo | 4 | 4 | 0 | 0 |
+| github-lists:Sushi-Unofficial-MyAnime | 4 | 3 | 2 | 0 |
+| github-lists:Suzune | 4 | 3 | 2 | 0 |
+| github-lists:THE-ULTIMATE | 8 | 6 | 0 | 0 |
+| github-lists:Test-Anime-Site | 4 | 3 | 3 | 0 |
+| github-lists:Top10List-React | 4 | 3 | 1 | 0 |
+| github-lists:TrabalhoSemestralDAAW | 4 | 4 | 0 | 0 |
+| github-lists:Tube-DL | 4 | 3 | 3 | 0 |
+| github-lists:UniSphere | 4 | 3 | 0 | 0 |
+| github-lists:User-Animelist-Dataset | 4 | 3 | 1 | 0 |
+| github-lists:V-Anime-App | 4 | 3 | 2 | 0 |
+| github-lists:VAIXLNS | 4 | 3 | 0 | 0 |
+| github-lists:VPN-Proxy-Master-Pro-Fre | 4 | 4 | 0 | 0 |
+| github-lists:VidSrc-Alternative-for-2 | 4 | 3 | 1 | 0 |
+| github-lists:VideoStreaming | 4 | 3 | 0 | 0 |
+| github-lists:Vidlo-Free-Movies | 4 | 3 | 0 | 0 |
+| github-lists:Void | 4 | 3 | 0 | 0 |
+| github-lists:WP-Movie-Showcase | 4 | 3 | 2 | 0 |
+| github-lists:Watch-free-movies-and-se | 4 | 3 | 1 | 0 |
+| github-lists:WatchAnimes | 4 | 3 | 0 | 0 |
+| github-lists:Watched | 4 | 3 | 0 | 0 |
+| github-lists:Watchiru | 4 | 3 | 0 | 0 |
+| github-lists:Web--AnimeList-JS | 4 | 4 | 0 | 0 |
+| github-lists:WebFree | 4 | 3 | 0 | 0 |
+| github-lists:WhoamiBangumi | 4 | 3 | 1 | 0 |
+| github-lists:Window | 4 | 4 | 0 | 0 |
+| github-lists:XanAnimeList.github.io | 4 | 3 | 0 | 0 |
+| github-lists:YAMR_MVP | 4 | 3 | 0 | 0 |
+| github-lists:YGFlix---Netflix-Style-S | 4 | 3 | 3 | 0 |
+| github-lists:YourAnimeList | 8 | 6 | 2 | 1 |
+| github-lists:ZenAnime | 8 | 6 | 0 | 0 |
+| github-lists:Zenix-Streaming | 4 | 3 | 1 | 0 |
+| github-lists:ZeroNime | 4 | 3 | 0 | 0 |
+| github-lists:ZoharHQ | 4 | 3 | 0 | 0 |
+| github-lists:aa.py | 4 | 4 | 0 | 0 |
+| github-lists:acts_as_video_fu | 4 | 4 | 0 | 0 |
+| github-lists:adezflixmovie | 4 | 3 | 1 | 0 |
+| github-lists:afreeca-downloader | 4 | 3 | 6 | 0 |
+| github-lists:aguiaplay | 4 | 4 | 0 | 0 |
+| github-lists:airing-anime | 4 | 3 | 2 | 0 |
+| github-lists:akidev | 4 | 3 | 5 | 0 |
+| github-lists:aluraplus | 4 | 3 | 0 | 0 |
+| github-lists:alvesflix-streaming-html | 4 | 3 | 0 | 0 |
+| github-lists:angularflix | 4 | 3 | 2 | 0 |
+| github-lists:ani-watch | 4 | 3 | 0 | 0 |
+| github-lists:aniTS | 4 | 3 | 1 | 0 |
+| github-lists:aniapi2.0 | 4 | 3 | 0 | 0 |
+| github-lists:animanage-api-webserver | 4 | 3 | 0 | 0 |
+| github-lists:anime | 8 | 6 | 2 | 0 |
+| github-lists:anime-api | 8 | 6 | 2 | 0 |
+| github-lists:anime-cli | 4 | 3 | 2 | 0 |
+| github-lists:anime-dl-core | 4 | 3 | 1 | 0 |
+| github-lists:anime-filler-checker | 4 | 3 | 3 | 0 |
+| github-lists:anime-info-provider-for- | 4 | 3 | 5 | 0 |
+| github-lists:anime-list | 20 | 15 | 3 | 0 |
+| github-lists:anime-list-website | 4 | 3 | 0 | 0 |
+| github-lists:anime-management-fronten | 4 | 3 | 0 | 0 |
+| github-lists:anime-parser | 4 | 3 | 0 | 0 |
+| github-lists:anime-stream-website | 4 | 4 | 0 | 0 |
+| github-lists:anime-streaming-platform | 4 | 3 | 0 | 0 |
+| github-lists:anime-streaming-website | 4 | 3 | 0 | 0 |
+| github-lists:anime-tier-list | 4 | 3 | 0 | 0 |
+| github-lists:anime-tracker-api | 4 | 3 | 0 | 0 |
+| github-lists:anime-watch-list-API | 4 | 3 | 6 | 0 |
+| github-lists:anime-watchlist | 4 | 3 | 0 | 0 |
+| github-lists:anime-watchlist-telegram | 4 | 3 | 0 | 0 |
+| github-lists:anime-website | 4 | 3 | 5 | 0 |
+| github-lists:anime777.js | 4 | 3 | 1 | 0 |
+| github-lists:animeDiscordBot- | 4 | 4 | 0 | 0 |
+| github-lists:animeWatcherApi | 4 | 3 | 1 | 0 |
+| github-lists:animeWebsite-v2 | 4 | 3 | 3 | 0 |
+| github-lists:anime_chill | 4 | 3 | 1 | 0 |
+| github-lists:anime_indonesia | 4 | 4 | 0 | 0 |
+| github-lists:anime_lister | 4 | 3 | 1 | 0 |
+| github-lists:anime_scrapers | 4 | 3 | 1 | 0 |
+| github-lists:animelist | 4 | 3 | 1 | 0 |
+| github-lists:animelist.fe | 4 | 3 | 0 | 0 |
+| github-lists:animepixels | 4 | 3 | 1 | 0 |
+| github-lists:animetosho-provider | 4 | 3 | 0 | 0 |
+| github-lists:animetsu-scraper | 8 | 6 | 4 | 0 |
+| github-lists:animitchures | 4 | 3 | 0 | 0 |
+| github-lists:animixplay.to-anime-stre | 4 | 3 | 1 | 0 |
+| github-lists:animu-desu | 4 | 3 | 0 | 0 |
+| github-lists:animunet | 4 | 3 | 2 | 0 |
+| github-lists:anipy-cli | 4 | 3 | 3 | 0 |
+| github-lists:anirush | 4 | 3 | 0 | 0 |
+| github-lists:anisteam-api-animistad1 | 4 | 4 | 0 | 0 |
+| github-lists:anistream | 4 | 3 | 0 | 0 |
+| github-lists:anivault-scraper | 4 | 3 | 1 | 0 |
+| github-lists:anivexa | 4 | 3 | 0 | 0 |
+| github-lists:anivexa-api | 4 | 3 | 3 | 0 |
+| github-lists:aniview | 4 | 3 | 0 | 0 |
+| github-lists:aniways | 4 | 3 | 0 | 0 |
+| github-lists:anixo1 | 4 | 3 | 0 | 0 |
+| github-lists:anized | 4 | 3 | 0 | 0 |
+| github-lists:anonime | 4 | 3 | 0 | 0 |
+| github-lists:api | 4 | 3 | 0 | 0 |
+| github-lists:astro-chat-widget | 4 | 3 | 2 | 0 |
+| github-lists:atmo | 4 | 3 | 0 | 0 |
+| github-lists:awesome-entertainment | 8 | 6 | 100 | 3 |
+| github-lists:awesome-piracy | 4 | 3 | 59 | 2 |
+| github-lists:ayoko | 4 | 3 | 0 | 0 |
+| github-lists:azure-media-services-mvc | 4 | 3 | 0 | 0 |
+| github-lists:best | 4 | 3 | 4 | 0 |
+| github-lists:best-vidsrc-alternative | 4 | 3 | 1 | 0 |
+| github-lists:bestMoviesWithReact | 4 | 3 | 0 | 0 |
+| github-lists:booru-nsfw-anime-bot | 4 | 3 | 0 | 0 |
+| github-lists:bottom_radioplayer | 4 | 3 | 0 | 0 |
+| github-lists:brandshop-client-10 | 4 | 3 | 1 | 0 |
+| github-lists:broken-hentai | 4 | 3 | 0 | 0 |
+| github-lists:butter-provider-anime-es | 4 | 3 | 0 | 0 |
+| github-lists:bytebox | 4 | 4 | 0 | 0 |
+| github-lists:cassette | 4 | 3 | 4 | 0 |
+| github-lists:castan | 4 | 4 | 0 | 0 |
+| github-lists:chumon-server-js | 4 | 3 | 2 | 0 |
+| github-lists:cine-sync-v2 | 4 | 3 | 3 | 0 |
+| github-lists:cinescope | 8 | 6 | 0 | 0 |
+| github-lists:cineva | 4 | 3 | 0 | 0 |
+| github-lists:cinevia | 4 | 3 | 7 | 0 |
+| github-lists:cinevoid | 4 | 3 | 0 | 0 |
+| github-lists:comic-site | 4 | 3 | 3 | 0 |
+| github-lists:darelchaabi-tv | 4 | 4 | 0 | 0 |
+| github-lists:dcmp | 4 | 3 | 58 | 0 |
+| github-lists:digital-marketing- | 4 | 3 | 0 | 0 |
+| github-lists:djamelmov | 4 | 4 | 0 | 0 |
+| github-lists:docflare-ai | 4 | 3 | 8 | 0 |
+| github-lists:donde-lo-veo | 4 | 4 | 0 | 0 |
+| github-lists:downloader_api | 4 | 3 | 3 | 0 |
+| github-lists:drupal-bootstrap-live-de | 4 | 3 | 2 | 0 |
+| github-lists:ecchi-fanservice-anime-l | 4 | 3 | 2 | 0 |
+| github-lists:emby-plugin-bangumi | 4 | 3 | 4 | 0 |
+| github-lists:emnexmovies-api | 4 | 3 | 3 | 0 |
+| github-lists:enime.moe | 8 | 6 | 0 | 0 |
+| github-lists:enimet-api | 4 | 3 | 0 | 0 |
+| github-lists:entertainment-recommende | 4 | 3 | 2 | 0 |
+| github-lists:escolhe-pra-mim | 4 | 3 | 0 | 0 |
+| github-lists:fanime | 4 | 3 | 6 | 0 |
+| github-lists:fidalgo-tv | 4 | 3 | 0 | 0 |
+| github-lists:film-search-engine | 4 | 3 | 0 | 0 |
+| github-lists:filmantic | 4 | 3 | 0 | 0 |
+| github-lists:find-my-anime | 4 | 3 | 9 | 0 |
+| github-lists:flixfree | 4 | 3 | 0 | 0 |
+| github-lists:free-streaming-resources | 4 | 3 | 58 | 5 |
+| github-lists:freereels-api | 4 | 3 | 1 | 0 |
+| github-lists:generator-stratic | 4 | 3 | 3 | 0 |
+| github-lists:gstreamer-android-sample | 4 | 3 | 2 | 0 |
+| github-lists:hareshi-my-list | 4 | 3 | 3 | 0 |
+| github-lists:hasdata-mcp | 4 | 3 | 7 | 0 |
+| github-lists:hentai-api | 4 | 3 | 0 | 0 |
+| github-lists:himym | 4 | 3 | 1 | 0 |
+| github-lists:hiruki-api | 4 | 3 | 2 | 0 |
+| github-lists:hokago | 4 | 3 | 0 | 0 |
+| github-lists:hounds | 4 | 3 | 3 | 0 |
+| github-lists:hxavatars | 4 | 3 | 3 | 0 |
+| github-lists:hybrid-movie-recommender | 4 | 3 | 1 | 0 |
+| github-lists:hybride_recommendation_s | 4 | 3 | 0 | 0 |
+| github-lists:iWatchThis | 4 | 3 | 0 | 0 |
+| github-lists:imdb-movie-app | 4 | 3 | 0 | 0 |
+| github-lists:java-mystream-using-spri | 4 | 3 | 0 | 0 |
+| github-lists:jellyfin-css | 4 | 3 | 0 | 0 |
+| github-lists:jigsaw-photo-stream | 4 | 3 | 2 | 0 |
+| github-lists:jr.flix | 4 | 4 | 0 | 0 |
+| github-lists:js-capstone-group | 4 | 3 | 3 | 0 |
+| github-lists:kari | 4 | 3 | 5 | 0 |
+| github-lists:ke1th.streams | 4 | 3 | 2 | 0 |
+| github-lists:kinshow | 4 | 3 | 2 | 1 |
+| github-lists:kitsu-updater | 4 | 3 | 1 | 0 |
+| github-lists:konzole | 4 | 4 | 0 | 0 |
+| github-lists:kumostamp | 4 | 3 | 0 | 0 |
+| github-lists:laravel-api | 4 | 4 | 0 | 0 |
+| github-lists:leflix | 4 | 3 | 1 | 0 |
+| github-lists:lemontv-scrapers | 4 | 3 | 0 | 0 |
+| github-lists:lhai36366 | 4 | 4 | 0 | 0 |
+| github-lists:limitr | 4 | 3 | 1 | 0 |
+| github-lists:lmovies | 4 | 3 | 1 | 0 |
+| github-lists:loopifi | 4 | 3 | 3 | 0 |
+| github-lists:m3u8-grabber-downloader | 4 | 3 | 2 | 0 |
+| github-lists:m3u8_StreamSniper | 4 | 3 | 1 | 0 |
+| github-lists:mal-ani-cli-sync | 4 | 3 | 0 | 0 |
+| github-lists:mal-streaming | 4 | 3 | 3 | 0 |
+| github-lists:mal-stremio-addon | 4 | 3 | 3 | 0 |
+| github-lists:malrework | 4 | 3 | 1 | 0 |
+| github-lists:malted.dev | 4 | 3 | 0 | 0 |
+| github-lists:martv | 4 | 3 | 2 | 0 |
+| github-lists:mcp-unifi | 4 | 3 | 4 | 0 |
+| github-lists:media-control | 4 | 3 | 0 | 0 |
+| github-lists:mega-flix | 4 | 4 | 0 | 0 |
+| github-lists:modb-core | 4 | 3 | 0 | 0 |
+| github-lists:mongodb-atlas-vector-sea | 4 | 3 | 3 | 0 |
+| github-lists:mongodb-vector-semantic- | 4 | 3 | 1 | 0 |
+| github-lists:movbor | 4 | 4 | 0 | 0 |
+| github-lists:movie | 4 | 3 | 0 | 0 |
+| github-lists:movie--mania | 4 | 3 | 0 | 0 |
+| github-lists:movie-filtering-ML-pipel | 4 | 3 | 0 | 0 |
+| github-lists:movie-ligel | 4 | 4 | 0 | 0 |
+| github-lists:movieCreator-Recommender | 4 | 4 | 0 | 0 |
+| github-lists:movie_rag | 4 | 3 | 1 | 0 |
+| github-lists:movie_recommender | 4 | 3 | 0 | 0 |
+| github-lists:movie_streamer | 4 | 3 | 1 | 0 |
+| github-lists:moviebox-internal-api | 4 | 3 | 1 | 0 |
+| github-lists:moviedatabase | 4 | 3 | 1 | 0 |
+| github-lists:movieflix-clone | 4 | 3 | 1 | 0 |
+| github-lists:movielab | 4 | 3 | 2 | 0 |
+| github-lists:movielala | 4 | 3 | 2 | 0 |
+| github-lists:movito.ai | 4 | 3 | 0 | 0 |
+| github-lists:mtdb-angular-laravel | 4 | 3 | 0 | 0 |
+| github-lists:multisite-streams-page | 4 | 3 | 0 | 0 |
+| github-lists:my-sweet-revenge | 4 | 3 | 2 | 0 |
+| github-lists:myentertainmenthub | 4 | 3 | 0 | 0 |
+| github-lists:mymanganimelist.com | 4 | 3 | 2 | 0 |
+| github-lists:nagare | 8 | 6 | 0 | 0 |
+| github-lists:natflix | 4 | 4 | 0 | 0 |
+| github-lists:nebula-player | 4 | 3 | 2 | 0 |
+| github-lists:nebulaflix | 4 | 3 | 0 | 0 |
+| github-lists:nekonode-site | 4 | 4 | 0 | 0 |
+| github-lists:nekosia | 4 | 3 | 2 | 0 |
+| github-lists:netflix-clone | 4 | 3 | 0 | 0 |
+| github-lists:netflix-movie-clustering | 4 | 3 | 0 | 0 |
+| github-lists:netphim | 4 | 3 | 3 | 0 |
+| github-lists:neural-collaborative-fil | 4 | 3 | 0 | 0 |
+| github-lists:next-anime | 4 | 3 | 5 | 0 |
+| github-lists:ngewibu-wesite | 4 | 3 | 0 | 0 |
+| github-lists:nlp-movie-recommender-st | 4 | 3 | 1 | 0 |
+| github-lists:node-vidstreaming | 4 | 3 | 2 | 0 |
+| github-lists:notalone.py | 4 | 3 | 2 | 0 |
+| github-lists:novelas | 4 | 4 | 0 | 0 |
+| github-lists:ohiyo | 4 | 3 | 1 | 0 |
+| github-lists:orionfilmes.io | 4 | 4 | 0 | 0 |
+| github-lists:otakubec | 4 | 3 | 0 | 0 |
+| github-lists:otakudesu-scraping | 4 | 3 | 1 | 0 |
+| github-lists:otakustv | 4 | 3 | 1 | 0 |
+| github-lists:ott | 4 | 3 | 0 | 0 |
+| github-lists:personalized_entertainme | 4 | 3 | 0 | 0 |
+| github-lists:phlix-plugin-anidb | 4 | 3 | 2 | 0 |
+| github-lists:phlix-plugin-myanimelist | 4 | 3 | 1 | 0 |
+| github-lists:play-movies-series-api | 4 | 3 | 4 | 0 |
+| github-lists:plex-anime-metadata-prov | 4 | 3 | 1 | 0 |
+| github-lists:plex-tmdb-proxy | 4 | 3 | 1 | 0 |
+| github-lists:plugin.video.anitube | 4 | 3 | 3 | 0 |
+| github-lists:polish-http-stremio-addo | 4 | 3 | 2 | 0 |
+| github-lists:popcorntimestreaming | 4 | 3 | 0 | 0 |
+| github-lists:projetodio-interface-rob | 4 | 4 | 0 | 0 |
+| github-lists:projetofriends | 4 | 3 | 0 | 0 |
+| github-lists:railgun | 4 | 3 | 0 | 0 |
+| github-lists:random-watch | 8 | 8 | 0 | 0 |
+| github-lists:rawoi | 4 | 3 | 1 | 0 |
+| github-lists:rdm | 4 | 3 | 1 | 0 |
+| github-lists:react-anime-watchlist | 4 | 3 | 0 | 0 |
+| github-lists:react-movie-app | 4 | 3 | 0 | 0 |
+| github-lists:reactjs-netflix-clone | 4 | 3 | 0 | 0 |
+| github-lists:reactjs-netflixclone | 4 | 3 | 0 | 0 |
+| github-lists:recsys | 4 | 3 | 1 | 0 |
+| github-lists:reprint | 4 | 3 | 3 | 0 |
+| github-lists:roig_AniDb_api | 4 | 3 | 0 | 0 |
+| github-lists:ronix-backend | 4 | 3 | 6 | 0 |
+| github-lists:rust-server | 4 | 3 | 0 | 0 |
+| github-lists:sans-anime-list | 4 | 3 | 0 | 0 |
+| github-lists:sastaMovies_Backend | 4 | 4 | 0 | 0 |
+| github-lists:sastaMovies_Frontend | 4 | 3 | 0 | 0 |
+| github-lists:scrimba-pop-choice | 4 | 3 | 0 | 0 |
+| github-lists:scrimba-simple-app-ReelR | 4 | 3 | 1 | 0 |
+| github-lists:script | 4 | 4 | 0 | 0 |
+| github-lists:serie-streaming-base-dem | 4 | 4 | 0 | 0 |
+| github-lists:sf2tweets | 4 | 3 | 0 | 0 |
+| github-lists:signup-website | 4 | 4 | 0 | 0 |
+| github-lists:simple-movie-app | 4 | 3 | 0 | 0 |
+| github-lists:snatchflix | 4 | 3 | 0 | 0 |
+| github-lists:statamic-mux | 4 | 3 | 5 | 0 |
+| github-lists:stream | 4 | 3 | 2 | 0 |
+| github-lists:stream-locker | 4 | 3 | 1 | 0 |
+| github-lists:streamelopers | 4 | 4 | 0 | 0 |
+| github-lists:streamflix | 4 | 3 | 0 | 0 |
+| github-lists:streaming-de-filmes | 4 | 3 | 0 | 0 |
+| github-lists:streaming_availability_p | 4 | 3 | 0 | 0 |
+| github-lists:streamx-web | 4 | 3 | 2 | 0 |
+| github-lists:streemi | 4 | 3 | 0 | 0 |
+| github-lists:stremio-aniskip | 4 | 3 | 5 | 0 |
+| github-lists:struct-tv | 4 | 3 | 1 | 0 |
+| github-lists:supawatch | 4 | 3 | 2 | 0 |
+| github-lists:superfilmes | 4 | 3 | 0 | 0 |
+| github-lists:tela-seriesflix | 4 | 3 | 0 | 0 |
+| github-lists:the-movie-pipeline | 4 | 3 | 10 | 0 |
+| github-lists:the-watcher | 8 | 6 | 1 | 0 |
+| github-lists:tioanime | 4 | 3 | 7 | 1 |
+| github-lists:tmdb | 8 | 6 | 1 | 0 |
+| github-lists:trabalho-de-programa-o-s | 4 | 4 | 0 | 0 |
+| github-lists:tubeo | 8 | 6 | 2 | 0 |
+| github-lists:tweetwatcher | 4 | 3 | 0 | 0 |
+| github-lists:twitch_discovery | 4 | 3 | 1 | 0 |
+| github-lists:udfread-ERROR-ECMA-167-V | 4 | 3 | 0 | 0 |
+| github-lists:uniheroes | 4 | 3 | 1 | 0 |
+| github-lists:universal-extension | 4 | 3 | 2 | 0 |
+| github-lists:uzmovi | 4 | 4 | 0 | 0 |
+| github-lists:vegenta | 4 | 3 | 5 | 0 |
+| github-lists:vetra-providers | 4 | 3 | 0 | 0 |
+| github-lists:vibe-coding | 4 | 3 | 1 | 0 |
+| github-lists:vicous | 4 | 4 | 0 | 0 |
+| github-lists:video-api | 4 | 3 | 1 | 0 |
+| github-lists:videojs-skin-twitchy | 4 | 3 | 0 | 0 |
+| github-lists:videostream | 4 | 3 | 9 | 0 |
+| github-lists:vidlux-streaming-api | 4 | 3 | 1 | 0 |
+| github-lists:vidstream-api | 4 | 3 | 1 | 0 |
+| github-lists:vidsuper | 4 | 3 | 6 | 0 |
+| github-lists:vitepress-chat | 4 | 3 | 7 | 0 |
+| github-lists:watch-hub | 4 | 3 | 3 | 0 |
+| github-lists:watchAnime | 4 | 4 | 0 | 0 |
+| github-lists:watcharoo | 4 | 3 | 2 | 0 |
+| github-lists:watchers-heaven | 8 | 6 | 5 | 0 |
+| github-lists:website-portal-anime-Rea | 4 | 3 | 0 | 0 |
+| github-lists:webtech2-netflix-2 | 4 | 3 | 0 | 0 |
+| github-lists:weeb-e-fied | 4 | 4 | 0 | 0 |
+| github-lists:weeb.terebi | 4 | 4 | 0 | 0 |
+| github-lists:weever-streaming | 4 | 3 | 2 | 0 |
+| github-lists:wew | 4 | 4 | 0 | 0 |
+| github-lists:where-to-watch-app | 4 | 3 | 3 | 0 |
+| github-lists:whoapi | 4 | 3 | 4 | 0 |
+| github-lists:wp-kal | 4 | 3 | 0 | 0 |
+| github-lists:wv-backend-downloader | 4 | 3 | 0 | 0 |
+| github-lists:www-th3-z-xyz | 4 | 3 | 1 | 0 |
+| github-lists:zero-mapper | 4 | 3 | 6 | 0 |
+| github-lists:zonetelechargement1 | 4 | 4 | 0 | 0 |
+| movie-sites-list | 3 | 3 | 0 | 0 |
+| movie-web | 3 | 3 | 0 | 0 |
+| streaming-sites | 3 | 3 | 0 | 0 |
 
-1. **Time.** Both crawlers stopped at the 45-minute ceiling with work left. The
-   GitHub search rotation had not finished its pages.
-2. **Source list.** The site crawl profiles hosts named by ten public lists and
-   ten GitHub queries. There are more lists; adding them is the cheapest win and
-   needs no code change (see `LIST_SOURCES` / `GITHUB_QUERIES`).
-3. **The bar.** A site must answer a real search with title links. That is what
-   makes an entry usable, and it is why the yield is 83 and not 2,639.
+Counts reflect the configured sources and time budget, not internet-wide exhaustion.
 
-To go further: raise `minutes`, add list sources, or run it again later — GitHub's
-index and public lists change, so a re-run finds different hosts.
-
-## The manifest pool stopped at 502 for a different reason
-
-`server_crawler.py` is rate-limited by GitHub's unauthenticated search allowance
-(10 requests/minute, 30/minute with a token). It also stops when a whole round
-finds nothing new. 502 is what the public, keyless addon directories and GitHub
-yield in 45 minutes. A `GITHUB_TOKEN` secret would raise this materially; it is
-not configured, and the crawler says so rather than pretending.
-
-## Honest summary
-
-- 3000 manifest entries: **not reached** (502).
-- 3000 verified streaming sites: **not reached** (83).
-- Neither number is a claim of failure or success — they are what the public
-  internet yielded under the stated bar in 45 minutes.
+_generated 2026-11-20T20:22:55Z by run 44808312971_

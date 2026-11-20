@@ -1,6 +1,8283 @@
 {
+ "by_source": {
+  "stremio-collection": 7,
+  "stremio-addons.net": 435,
+  "cinemeta-official": 1,
+  "github-readme": 28,
+  "homepage": 30,
+  "github": 4
+ },
+ "source_evidence": {
+  "stremio-addons.net": {
+   "pages_requested": 29,
+   "candidates": 2880,
+   "added": 435
+  },
+  "stremio-collection": {
+   "pages_requested": 1,
+   "candidates": 97,
+   "candidate_fetch_failed": 17,
+   "added": 7
+  },
+  "cinemeta-community": {
+   "pages_requested": 1,
+   "candidates": 83,
+   "candidate_fetch_failed": 19
+  },
+  "cinemeta-official": {
+   "pages_requested": 1,
+   "candidates": 5,
+   "added": 1
+  },
+  "community": {
+   "pages_requested": 13,
+   "pages_failed": 12
+  },
+  "github": {
+   "pages_requested": 101,
+   "candidates": 55,
+   "candidate_fetch_failed": 35,
+   "added": 4
+  },
+  "github-readme": {
+   "candidates": 588,
+   "candidate_fetch_failed": 328,
+   "added": 28
+  },
+  "homepage": {
+   "candidates": 603,
+   "candidate_fetch_failed": 460,
+   "added": 30
+  },
+  "github-pages": {
+   "candidates": 3735,
+   "candidate_fetch_failed": 3661
+  }
+ },
  "generation": 0,
- "entries": [],
+ "entries": [
+  {
+   "manifestUrl": "https://a00f518e60ff-wheresthejump.baby-beamup.club/manifest.json",
+   "baseUrl": "https://a00f518e60ff-wheresthejump.baby-beamup.club",
+   "name": "Where's The Jump",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 stremio-collection",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://099757617587-watch-next.baby-beamup.club/manifest.json",
+   "baseUrl": "https://099757617587-watch-next.baby-beamup.club",
+   "name": "Watch Next",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 stremio-collection",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-content-deepdive-addon-dc8f7b513289.herokuapp.com/manifest.json",
+   "baseUrl": "https://stremio-content-deepdive-addon-dc8f7b513289.herokuapp.com",
+   "name": "Content Deep Dive Companion",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 stremio-collection",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://comet.elfhosted.com/manifest.json",
+   "baseUrl": "https://comet.elfhosted.com",
+   "name": "Comet | ElfHosted",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [],
+   "stars": 968,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://cometfortheweebs.midnightignite.me/stremio/manifest.json",
+   "baseUrl": "https://cometfortheweebs.midnightignite.me/stremio",
+   "name": "Comet",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [],
+   "stars": 28,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://comet.feels.legal/manifest.json",
+   "baseUrl": "https://comet.feels.legal",
+   "name": "Comet",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [],
+   "stars": 18,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://cometa.stremx.net/manifest.json",
+   "baseUrl": "https://cometa.stremx.net",
+   "name": "Cometa",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [],
+   "stars": 11,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://comet.stremio.ru/manifest.json",
+   "baseUrl": "https://comet.stremio.ru",
+   "name": "Comet",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://comet.forthewizards.uk/manifest.json",
+   "baseUrl": "https://comet.forthewizards.uk",
+   "name": "Comet",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [],
+   "stars": 3,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://comet.creepso.com/manifest.json",
+   "baseUrl": "https://comet.creepso.com",
+   "name": "Comet Creepso",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [],
+   "stars": 968,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://thepiratebay-plus.strem.fun/manifest.json",
+   "baseUrl": "https://thepiratebay-plus.strem.fun",
+   "name": "ThePirateBay+",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 629,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://lat-add.lzid.me/1mgpZVfBxAtZkeGzXkVBcVMkawBkRXCS/manifest.json",
+   "baseUrl": "https://lat-add.lzid.me/1mgpZVfBxAtZkeGzXkVBcVMkawBkRXCS",
+   "name": "LAT-ADD",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 616,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://848b3516657c-usatv.baby-beamup.club/manifest.json",
+   "baseUrl": "https://848b3516657c-usatv.baby-beamup.club",
+   "name": "USA TV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "ustv"
+   ],
+   "stars": 546,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://addon.notorrent2.workers.dev/manifest.json",
+   "baseUrl": "https://addon.notorrent2.workers.dev",
+   "name": "NoTorrent",
+   "types": [
+    "series",
+    "movie"
+   ],
+   "idPrefixes": [
+    "tmdb_",
+    "tt"
+   ],
+   "stars": 488,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://froststream.cloutteam.com/manifest.json",
+   "baseUrl": "https://froststream.cloutteam.com",
+   "name": "FrostStream",
+   "types": [
+    "movie",
+    "series",
+    "tv"
+   ],
+   "idPrefixes": [
+    "tt",
+    "cs:",
+    "tmdb:"
+   ],
+   "stars": 477,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://fenixflix.fenixhub.online/manifest.json",
+   "baseUrl": "https://fenixflix.fenixhub.online",
+   "name": "FenixFlix",
+   "types": [
+    "movie",
+    "series",
+    "anime"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb",
+    "dramabox",
+    "kitsu",
+    "mal",
+    "anilist",
+    "anidb",
+    "zeusanime2:"
+   ],
+   "stars": 413,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://94c8cb9f702d-brazuca-torrents.baby-beamup.club/manifest.json",
+   "baseUrl": "https://94c8cb9f702d-brazuca-torrents.baby-beamup.club",
+   "name": "Brazuca Torrents",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [],
+   "stars": 400,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://torrentsdb.com/manifest.json",
+   "baseUrl": "https://torrentsdb.com",
+   "name": "TorrentsDB",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [],
+   "stars": 398,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://da5f663b4690-minhatv.baby-beamup.club/manifest.json",
+   "baseUrl": "https://da5f663b4690-minhatv.baby-beamup.club",
+   "name": "Minha TV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 301,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://hdhub.thevolecitor.qzz.io/eyJ0b3Jib3giOiJ1bnNldCIsInF1YWxpdGllcyI6IjIxNjBwLDEwODBwLDcyMHAiLCJzb3J0IjoiZGVzYyJ9/manifest.json",
+   "baseUrl": "https://hdhub.thevolecitor.qzz.io/eyJ0b3Jib3giOiJ1bnNldCIsInF1YWxpdGllcyI6IjIxNjBwLDEwODBwLDcyMHAiLCJzb3J0IjoiZGVzYyJ9",
+   "name": "HdHub",
+   "types": [
+    "movie",
+    "series",
+    "HdHub"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb:",
+    "kitsu:"
+   ],
+   "stars": 262,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://streamvix.hayd.uk/%7B%22tmdbApiKey%22%3A%22%22%2C%22mediaFlowProxyUrl%22%3A%22%22%2C%22mediaFlowProxyPassword%22%3A%22%22%2C%22animeunityEnabled%22%3A%22on%22%2C%22animesaturnEnabled%22%3A%22on%22%2C%22animeworldEnabled%22%3A%22on%22%7D/manifest.json",
+   "baseUrl": "https://streamvix.hayd.uk/%7B%22tmdbApiKey%22%3A%22%22%2C%22mediaFlowProxyUrl%22%3A%22%22%2C%22mediaFlowProxyPassword%22%3A%22%22%2C%22animeunityEnabled%22%3A%22on%22%2C%22animesaturnEnabled%22%3A%22on%22%2C%22animeworldEnabled%22%3A%22on%22%7D",
+   "name": "StreamViX | ElfHosted",
+   "types": [
+    "movie",
+    "series",
+    "tv",
+    "anime"
+   ],
+   "idPrefixes": [
+    "tt",
+    "kitsu",
+    "tv",
+    "mal",
+    "tmdb"
+   ],
+   "stars": 254,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://tvvoo.stremio-italia.eu/cfg-it-uk-fr/manifest.json",
+   "baseUrl": "https://tvvoo.stremio-italia.eu/cfg-it-uk-fr",
+   "name": "TvVoo | ElfHosted",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "vavoo",
+    "vavoo_"
+   ],
+   "stars": 249,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://icv.stremio-italia.eu/manifest.json",
+   "baseUrl": "https://icv.stremio-italia.eu",
+   "name": "IlCorsaroViola",
+   "types": [
+    "movie",
+    "series",
+    "anime"
+   ],
+   "idPrefixes": [
+    "tt",
+    "kitsu"
+   ],
+   "stars": 235,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://streailer.elfhosted.com/manifest.json",
+   "baseUrl": "https://streailer.elfhosted.com",
+   "name": "Streailer | ElfHosted",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb:",
+    "kitsu:"
+   ],
+   "stars": 212,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://meteorfortheweebs.midnightignite.me/stremio/manifest.json",
+   "baseUrl": "https://meteorfortheweebs.midnightignite.me/stremio",
+   "name": "Meteor",
+   "types": [
+    "movie",
+    "series",
+    "anime"
+   ],
+   "idPrefixes": [
+    "tt",
+    "kitsu",
+    "anilist",
+    "anidb",
+    "mal"
+   ],
+   "stars": 189,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://peerflix.mov/manifest.json",
+   "baseUrl": "https://peerflix.mov",
+   "name": "Peerflix",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 181,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://mytrakt.elfhosted.com/manifest.json",
+   "baseUrl": "https://mytrakt.elfhosted.com",
+   "name": "MyTrakt Sync | ElfHosted",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb",
+    "anilist",
+    "kitsu",
+    "mal",
+    "mal:anime",
+    "mal:manga",
+    "tvdb"
+   ],
+   "stars": 167,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://pilot.mytrakt.com/manifest.json",
+   "baseUrl": "https://pilot.mytrakt.com",
+   "name": "MyTrakt Sync | Pilot",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb",
+    "anilist",
+    "kitsu",
+    "mal",
+    "mal:anime",
+    "mal:manga",
+    "tvdb"
+   ],
+   "stars": 8,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://87d6a6ef6b58-webstreamrmbg.baby-beamup.club/manifest.json",
+   "baseUrl": "https://87d6a6ef6b58-webstreamrmbg.baby-beamup.club",
+   "name": "WebStreamrMBG",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tmdb:",
+    "tt"
+   ],
+   "stars": 164,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://87d6a6ef6b58-webstreamrmbg-dev.baby-beamup.club/manifest.json",
+   "baseUrl": "https://87d6a6ef6b58-webstreamrmbg-dev.baby-beamup.club",
+   "name": "WebStreamrMBG",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tmdb:",
+    "tt"
+   ],
+   "stars": 8,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://webstreamrmbg-watcher.vercel.app/manifest.json",
+   "baseUrl": "https://webstreamrmbg-watcher.vercel.app",
+   "name": "WebStreamrMBG",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tmdb:",
+    "tt"
+   ],
+   "stars": 1,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://72059fbbd1e5-stremio-addon-ratings.baby-beamup.club/manifest.json",
+   "baseUrl": "https://72059fbbd1e5-stremio-addon-ratings.baby-beamup.club",
+   "name": "Ratings",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 143,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://27a5b2bfe3c0-stremio-brazilian-addon.baby-beamup.club/manifest.json",
+   "baseUrl": "https://27a5b2bfe3c0-stremio-brazilian-addon.baby-beamup.club",
+   "name": "Mico-Le\u00e3o Dublado \ud83c\udde7\ud83c\uddf7",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 139,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://5a0d1888fa64-orion.baby-beamup.club/manifest.json",
+   "baseUrl": "https://5a0d1888fa64-orion.baby-beamup.club",
+   "name": "Orion",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "kitsu"
+   ],
+   "stars": 132,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://flixnest.app/flix-streams/manifest.json",
+   "baseUrl": "https://flixnest.app/flix-streams",
+   "name": "Flix-Streams",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "tv"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb",
+    "aniways",
+    "kitsu",
+    "kisskh"
+   ],
+   "stars": 127,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://torrentclaw.com/api/stremio/manifest.json",
+   "baseUrl": "https://torrentclaw.com/api/stremio",
+   "name": "TorrentClaw",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 120,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://leviathanaddon.dpdns.org/manifest.json",
+   "baseUrl": "https://leviathanaddon.dpdns.org",
+   "name": "Leviathan",
+   "types": [
+    "movie",
+    "series",
+    "anime"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb:",
+    "kitsu:"
+   ],
+   "stars": 117,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremthru.13377001.xyz/stremio/torz/manifest.json",
+   "baseUrl": "https://stremthru.13377001.xyz/stremio/torz",
+   "name": "StremThru Torz",
+   "types": [],
+   "idPrefixes": [],
+   "stars": 109,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremthrufortheweebs.midnightignite.me/stremio/torz/manifest.json",
+   "baseUrl": "https://stremthrufortheweebs.midnightignite.me/stremio/torz",
+   "name": "StremThru Torz",
+   "types": [],
+   "idPrefixes": [],
+   "stars": 14,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremthru.fortheweak.cloud/stremio/torz/manifest.json",
+   "baseUrl": "https://stremthru.fortheweak.cloud/stremio/torz",
+   "name": "StremThru Torz",
+   "types": [],
+   "idPrefixes": [],
+   "stars": 1,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremthru.elfhosted.com/stremio/torz/manifest.json",
+   "baseUrl": "https://stremthru.elfhosted.com/stremio/torz",
+   "name": "StremThru Torz",
+   "types": [],
+   "idPrefixes": [],
+   "stars": 1,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://skyflix.onrender.com/manifest.json",
+   "baseUrl": "https://skyflix.onrender.com",
+   "name": "SKYFLIX",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "skyflix"
+   ],
+   "stars": 107,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://fenixtv.fenixhub.online/manifest.json",
+   "baseUrl": "https://fenixtv.fenixhub.online",
+   "name": "Fenix TV",
+   "types": [
+    "tv",
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tv",
+    "tt",
+    "tmdb"
+   ],
+   "stars": 104,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://bbab4a35b833-more-like-this.baby-beamup.club/manifest.json",
+   "baseUrl": "https://bbab4a35b833-more-like-this.baby-beamup.club",
+   "name": "More Like This",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    ""
+   ],
+   "stars": 104,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://nebulastreams.onrender.com/manifest.json",
+   "baseUrl": "https://nebulastreams.onrender.com",
+   "name": "NebulaStreams",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb:"
+   ],
+   "stars": 102,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://61ab9c85a149-tmdb-collections.baby-beamup.club/manifest.json",
+   "baseUrl": "https://61ab9c85a149-tmdb-collections.baby-beamup.club",
+   "name": "TMDB Collections",
+   "types": [
+    "movie",
+    "collections"
+   ],
+   "idPrefixes": [
+    "ctmdb."
+   ],
+   "stars": 101,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://tmdb-collections.stremio.ru/manifest.json",
+   "baseUrl": "https://tmdb-collections.stremio.ru",
+   "name": "TMDB Collections",
+   "types": [
+    "movie",
+    "collections"
+   ],
+   "idPrefixes": [
+    "ctmdb."
+   ],
+   "stars": 1,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://ytztvio.galacticcapsule.workers.dev/manifest.json",
+   "baseUrl": "https://ytztvio.galacticcapsule.workers.dev",
+   "name": "Ytztvio",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 101,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://addonlatam.duckdns.org/A0wrYOb7z4LiG5vrhQwcb-g4/manifest.json",
+   "baseUrl": "https://addonlatam.duckdns.org/A0wrYOb7z4LiG5vrhQwcb-g4",
+   "name": "Addon Latam",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 100,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://yastream.tamthai.de/manifest.json",
+   "baseUrl": "https://yastream.tamthai.de",
+   "name": "yastream",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb",
+    "tvdb",
+    "idrama",
+    "kisskh",
+    "onetouchtv"
+   ],
+   "stars": 96,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://5db836ec3ef8-thepiratebay-ctl.baby-beamup.club/manifest.json",
+   "baseUrl": "https://5db836ec3ef8-thepiratebay-ctl.baby-beamup.club",
+   "name": "ThePirateBay Catalog",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tpb_ctl"
+   ],
+   "stars": 95,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://sootio.elfhosted.com/manifest.json",
+   "baseUrl": "https://sootio.elfhosted.com",
+   "name": "Sootio",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 93,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://sootiofortheweebs.midnightignite.me/manifest.json",
+   "baseUrl": "https://sootiofortheweebs.midnightignite.me",
+   "name": "Sootio",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 24,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://sootio.forthewizards.uk/manifest.json",
+   "baseUrl": "https://sootio.forthewizards.uk",
+   "name": "Sootio",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 93,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-dramacool-addon.xyz/manifest.json",
+   "baseUrl": "https://stremio-dramacool-addon.xyz",
+   "name": "StreamAsia",
+   "types": [
+    "movie",
+    "series",
+    "kisskh",
+    "kdramahood",
+    "onetouchtv",
+    "[DDL] Asian Drama",
+    "[DDL 2] Asian Drama"
+   ],
+   "idPrefixes": [],
+   "stars": 93,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://nodebrid.fly.dev/manifest.json",
+   "baseUrl": "https://nodebrid.fly.dev",
+   "name": "NoDebrid",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 91,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://150203dd784e-cinetorrent-addon.baby-beamup.club/manifest.json",
+   "baseUrl": "https://150203dd784e-cinetorrent-addon.baby-beamup.club",
+   "name": "CineTorrent",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 86,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stiptv.ddns.me/eyJwcm92aWRlciI6ImRpcmVjdCIsIm0zdVVybCI6Imh0dHBzOi8vaXB0di1vcmcuZ2l0aHViLmlvL2lwdHYvaW5kZXgubTN1IiwiZW5hYmxlRXBnIjpmYWxzZSwicHJlc2NhbiI6eyJlbnRyaWVzIjoxMDg2MiwiYXBwcm94VHYiOjEwNzUxLCJhcHByb3hNb3ZpZXMiOjExMSwiZXBnUHJvZ3JhbW1lcyI6MCwiZXBnQ2hhbm5lbHMiOjB9LCJpbnN0YW5jZUlkIjoiOGFmZDM0NTQtNjYyOS00YmE3LWE3ZWMtMDc3ZWY3OWUzNTBjIn0/manifest.json",
+   "baseUrl": "https://stiptv.ddns.me/eyJwcm92aWRlciI6ImRpcmVjdCIsIm0zdVVybCI6Imh0dHBzOi8vaXB0di1vcmcuZ2l0aHViLmlvL2lwdHYvaW5kZXgubTN1IiwiZW5hYmxlRXBnIjpmYWxzZSwicHJlc2NhbiI6eyJlbnRyaWVzIjoxMDg2MiwiYXBwcm94VHYiOjEwNzUxLCJhcHByb3hNb3ZpZXMiOjExMSwiZXBnUHJvZ3JhbW1lcyI6MCwiZXBnQ2hhbm5lbHMiOjB9LCJpbnN0YW5jZUlkIjoiOGFmZDM0NTQtNjYyOS00YmE3LWE3ZWMtMDc3ZWY3OWUzNTBjIn0",
+   "name": "M3U/EPG TV Addon",
+   "types": [
+    "tv",
+    "movie"
+   ],
+   "idPrefixes": [
+    "iptv_"
+   ],
+   "stars": 84,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://68d69db7dc40-debrid-search.baby-beamup.club/manifest.json",
+   "baseUrl": "https://68d69db7dc40-debrid-search.baby-beamup.club",
+   "name": "Debrid Search",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 83,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://rating-aggregator.elfhosted.com/manifest.json",
+   "baseUrl": "https://rating-aggregator.elfhosted.com",
+   "name": "\ud83c\udfaf Ratings Aggregator | ElfHosted",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 81,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://animesub.duckdns.org/manifest.json",
+   "baseUrl": "https://animesub.duckdns.org",
+   "name": "AnimeSub+",
+   "types": [
+    "anime",
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 80,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://fun.lnpx.workers.dev/manifest.json",
+   "baseUrl": "https://fun.lnpx.workers.dev",
+   "name": "All IPTV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 77,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://pipe.boringways.workers.dev/manifest.json",
+   "baseUrl": "https://pipe.boringways.workers.dev",
+   "name": "Pipe",
+   "types": [
+    "movie",
+    "series",
+    "anime"
+   ],
+   "idPrefixes": [
+    "tt",
+    "kitsu"
+   ],
+   "stars": 72,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://mycine.alwaysdata.net/manifest.json",
+   "baseUrl": "https://mycine.alwaysdata.net",
+   "name": "MY CINE",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 72,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://animes-br-self.vercel.app/manifest.json",
+   "baseUrl": "https://animes-br-self.vercel.app",
+   "name": "Animes BR",
+   "types": [
+    "movie",
+    "series",
+    "other"
+   ],
+   "idPrefixes": [],
+   "stars": 70,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://str.zmb.lat/manifest.json",
+   "baseUrl": "https://str.zmb.lat",
+   "name": "ZMB",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 70,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://c5541ffce7d3-aniscraper.baby-beamup.club/manifest.json",
+   "baseUrl": "https://c5541ffce7d3-aniscraper.baby-beamup.club",
+   "name": "AniScraper",
+   "types": [
+    "anime",
+    "series",
+    "movie"
+   ],
+   "idPrefixes": [],
+   "stars": 69,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://meufutebol.oneplayhd.com/manifest.json",
+   "baseUrl": "https://meufutebol.oneplayhd.com",
+   "name": "Meu Futebol",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "meufutebol:"
+   ],
+   "stars": 69,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://cncverse.dpdns.org/manifest.json",
+   "baseUrl": "https://cncverse.dpdns.org",
+   "name": "CNCVerse Bridge",
+   "types": [
+    "movie",
+    "series",
+    "other",
+    "tv"
+   ],
+   "idPrefixes": [
+    "cnc:",
+    "tt",
+    "tmdb:",
+    "tvdb:",
+    "mal:",
+    "kitsu:",
+    "tvmaze:",
+    "anilist:"
+   ],
+   "stars": 69,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremify.elfhosted.com/manifest.json",
+   "baseUrl": "https://stremify.elfhosted.com",
+   "name": "Stremify | Hayduk",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tmdb:",
+    "tt",
+    "kitsu:"
+   ],
+   "stars": 68,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://watchio-addon.pages.dev/manifest.json",
+   "baseUrl": "https://watchio-addon.pages.dev",
+   "name": "Watchio.live TV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 67,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://nuviosports.xyz/manifest.json",
+   "baseUrl": "https://nuviosports.xyz",
+   "name": "\ud83c\udfc6 Nuvio Live Sports",
+   "types": [
+    "tv",
+    "series",
+    "channel"
+   ],
+   "idPrefixes": [
+    "nuvio_sport_"
+   ],
+   "stars": 67,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://263f84288ddb-nexotv.baby-beamup.club/manifest.json",
+   "baseUrl": "https://263f84288ddb-nexotv.baby-beamup.club",
+   "name": "NexoTV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "xc",
+    "io",
+    "m3"
+   ],
+   "stars": 66,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://hyper.stravo.site/local/manifest.json",
+   "baseUrl": "https://hyper.stravo.site/local",
+   "name": "Hyper",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb:",
+    "tvdb:"
+   ],
+   "stars": 66,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://badboysxs-morpheus.hf.space/manifest.json",
+   "baseUrl": "https://badboysxs-morpheus.hf.space",
+   "name": "\ud83c\udfac By Murph Streams \u26a1",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 65,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://6880ee460bc3-iracemaflix.baby-beamup.club/manifest.json",
+   "baseUrl": "https://6880ee460bc3-iracemaflix.baby-beamup.club",
+   "name": "Iracemaflix",
+   "types": [
+    "movie",
+    "series",
+    "tv"
+   ],
+   "idPrefixes": [
+    "m3u-",
+    "m3u-series-",
+    "xtream-",
+    "tt",
+    "iracematv_channel_",
+    "iracematv_event_",
+    "iracematv_embedtv_channel_",
+    "iracematv_embedtv_event_"
+   ],
+   "stars": 64,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://sword-watch.vercel.app/manifest.json",
+   "baseUrl": "https://sword-watch.vercel.app",
+   "name": "WatchNow",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tmdb:",
+    "tt"
+   ],
+   "stars": 63,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://c69e439124f3-tvvio.baby-beamup.club/manifest.json",
+   "baseUrl": "https://c69e439124f3-tvvio.baby-beamup.club",
+   "name": "Tvvio",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "ec"
+   ],
+   "stars": 62,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://streamio-hianime.onrender.com/manifest.json",
+   "baseUrl": "https://streamio-hianime.onrender.com",
+   "name": "HiAnime Streams",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "hianime:"
+   ],
+   "stars": 62,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://flixo-o.vercel.app/manifest.json",
+   "baseUrl": "https://flixo-o.vercel.app",
+   "name": "FLIXOO",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 17,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://api.poltronaplay.top/manifest.json",
+   "baseUrl": "https://api.poltronaplay.top",
+   "name": "PoltronaPlay",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 16,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stream.pencarimovie.com/66ff097863dedb7ccd8401d5ffe616f3/manifest.json",
+   "baseUrl": "https://stream.pencarimovie.com/66ff097863dedb7ccd8401d5ffe616f3",
+   "name": "PencariMovie",
+   "types": [
+    "movie",
+    "series",
+    "other",
+    "anime",
+    "collection",
+    "anime.series",
+    "anime.movie"
+   ],
+   "idPrefixes": [
+    "pm_",
+    "pm:",
+    "tt",
+    "tmdb:",
+    "kitsu:",
+    "kitsu",
+    "mal:",
+    "anilist:"
+   ],
+   "stars": 16,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://cinecalidad-stremio-addon.fly.dev/manifest.json",
+   "baseUrl": "https://cinecalidad-stremio-addon.fly.dev",
+   "name": "Pel\u00edculas de Cinecalidad",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "cc_",
+    "tt"
+   ],
+   "stars": 16,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://b89262c192b0-stremio-nzb-addon.baby-beamup.club/nzbhydra/manifest.json",
+   "baseUrl": "https://b89262c192b0-stremio-nzb-addon.baby-beamup.club/nzbhydra",
+   "name": "NZBHydra 2",
+   "types": [
+    "movie",
+    "series",
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 16,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://archive-addon.onrender.com/manifest.json",
+   "baseUrl": "https://archive-addon.onrender.com",
+   "name": "Internet Archive Movies & Shows",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 15,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://ozpwgjjkvrpxbeuhmmdr.supabase.co/functions/v1/bidooo-addon/manifest.json",
+   "baseUrl": "https://ozpwgjjkvrpxbeuhmmdr.supabase.co/functions/v1/bidooo-addon",
+   "name": "Bidooo Arabic Catalog",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 15,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://8bcec99c5d97-spanish-links-addon.baby-beamup.club/manifest.json",
+   "baseUrl": "https://8bcec99c5d97-spanish-links-addon.baby-beamup.club",
+   "name": "Linka\u00f1ol",
+   "types": [
+    "series",
+    "movie"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 15,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://origami-ltd.github.io/stremio-local-debrid/manifest.json",
+   "baseUrl": "https://origami-ltd.github.io/stremio-local-debrid",
+   "name": "Stremio Local Debrid",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [],
+   "stars": 15,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://addon.torrin.app/manifest.json",
+   "baseUrl": "https://addon.torrin.app",
+   "name": "Torrin",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [],
+   "stars": 15,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://torrin.elfhosted.com/manifest.json",
+   "baseUrl": "https://torrin.elfhosted.com",
+   "name": "Torrin | ElfHosted",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 3,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://disney-arabic-dub.onrender.com/manifest.json",
+   "baseUrl": "https://disney-arabic-dub.onrender.com",
+   "name": "Disney Arabic Dub",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 15,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://easyanime.stremio.dpdns.org/eyJsYW5ndWFnZSI6ImVuLVVTIiwidGl0bGVfbGFuZ3VhZ2UiOiJlbiIsInByaW9yaXR5X29yZGVyIjpbImtpdHN1X2xhdGVzdF9lcGlzb2RlIiwia2l0c3VfbGF0ZXN0X21vdmllIiwia2l0c3VfbGF0ZXN0X290aGVyIiwia2l0c3VfcG9wdWxhcl9zZXJpZSIsImtpdHN1X3BvcHVsYXJfbW92aWUiLCJraXRzdV90b3ByYXRlZF9zZXJpZSIsImtpdHN1X3RvcHJhdGVkX21vdmllIiwia2l0c3Vfc2VhcmNoX3NlcmllIiwia2l0c3Vfc2VhcmNoX21vdmllIiwia2l0c3VfcG9wdWxhcl9vdmEiLCJraXRzdV9wb3B1bGFyX29uYSIsImtpdHN1X3BvcHVsYXJfc3BlY2lhbCJdfQ==/manifest.json",
+   "baseUrl": "https://easyanime.stremio.dpdns.org/eyJsYW5ndWFnZSI6ImVuLVVTIiwidGl0bGVfbGFuZ3VhZ2UiOiJlbiIsInByaW9yaXR5X29yZGVyIjpbImtpdHN1X2xhdGVzdF9lcGlzb2RlIiwia2l0c3VfbGF0ZXN0X21vdmllIiwia2l0c3VfbGF0ZXN0X290aGVyIiwia2l0c3VfcG9wdWxhcl9zZXJpZSIsImtpdHN1X3BvcHVsYXJfbW92aWUiLCJraXRzdV90b3ByYXRlZF9zZXJpZSIsImtpdHN1X3RvcHJhdGVkX21vdmllIiwia2l0c3Vfc2VhcmNoX3NlcmllIiwia2l0c3Vfc2VhcmNoX21vdmllIiwia2l0c3VfcG9wdWxhcl9vdmEiLCJraXRzdV9wb3B1bGFyX29uYSIsImtpdHN1X3BvcHVsYXJfc3BlY2lhbCJdfQ==",
+   "name": "EasyAnime",
+   "types": [
+    "anime",
+    "series",
+    "movie"
+   ],
+   "idPrefixes": [
+    "kitsu:",
+    "tt"
+   ],
+   "stars": 14,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://tmdb-streaming-services.orkestr.run/api/stremio/manifest.json",
+   "baseUrl": "https://tmdb-streaming-services.orkestr.run/api/stremio",
+   "name": "TMDB Streaming ES",
+   "types": [
+    "movie",
+    "series",
+    "channel"
+   ],
+   "idPrefixes": [
+    "tt",
+    "music:"
+   ],
+   "stars": 14,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://subdetect-addonv2.onrcvndev.com.tr/642a8e1c-d6ca-4058-8c73-59da5e682d25/manifest.json",
+   "baseUrl": "https://subdetect-addonv2.onrcvndev.com.tr/642a8e1c-d6ca-4058-8c73-59da5e682d25",
+   "name": "Embed SubFilter",
+   "types": [
+    "movie",
+    "series",
+    "anime"
+   ],
+   "idPrefixes": [],
+   "stars": 14,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-animepahe.tsz1da2a.workers.dev/manifest.json",
+   "baseUrl": "https://stremio-animepahe.tsz1da2a.workers.dev",
+   "name": "AnimePahe",
+   "types": [
+    "series",
+    "movie"
+   ],
+   "idPrefixes": [
+    "ap"
+   ],
+   "stars": 14,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://addon.akashitv.com.br/free/manifest.json",
+   "baseUrl": "https://addon.akashitv.com.br/free",
+   "name": "Akashi TV (Free)",
+   "types": [
+    "movie",
+    "series",
+    "tv",
+    "channel"
+   ],
+   "idPrefixes": [
+    "tmdb",
+    "tt",
+    "channel",
+    "event",
+    "evt_",
+    "tmdbcol"
+   ],
+   "stars": 14,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://4aae76180a36-stremiozamundaaddon.baby-beamup.club/manifest.json",
+   "baseUrl": "https://4aae76180a36-stremiozamundaaddon.baby-beamup.club",
+   "name": "Zamunda Torrents",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 14,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://one-pace-latam-stremio.pages.dev/manifest.json",
+   "baseUrl": "https://one-pace-latam-stremio.pages.dev",
+   "name": "One Pace - Complete Series",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [
+    "onepace_"
+   ],
+   "stars": 14,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://dosports.vercel.app/manifest.json",
+   "baseUrl": "https://dosports.vercel.app",
+   "name": "MUVIBLOX",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "zeld",
+    "tt"
+   ],
+   "stars": 14,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://sports-replay.michaelrobgrove.workers.dev/stremio/ce5f843e6a731091cf7eec239cd1f77e8bf9dd8fd64cc35c/manifest.json",
+   "baseUrl": "https://sports-replay.michaelrobgrove.workers.dev/stremio/ce5f843e6a731091cf7eec239cd1f77e8bf9dd8fd64cc35c",
+   "name": "Sports Replay | Powered By LowDefPirate",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 14,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://omnistreamdeploy.vercel.app/manifest.json",
+   "baseUrl": "https://omnistreamdeploy.vercel.app",
+   "name": "OmniStream \ud83c\udf0d (Multi-Audio + Anime)",
+   "types": [
+    "movie",
+    "series",
+    "anime"
+   ],
+   "idPrefixes": [
+    "tt",
+    "kitsu"
+   ],
+   "stars": 14,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://iptvbridge.vercel.app/manifest.json",
+   "baseUrl": "https://iptvbridge.vercel.app",
+   "name": "IPTV Bridge",
+   "types": [
+    "tv",
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "iptv:",
+    "tt",
+    "tmdb:"
+   ],
+   "stars": 14,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://dizipal-stremio-addon.mycodelab.live/manifest.json",
+   "baseUrl": "https://dizipal-stremio-addon.mycodelab.live",
+   "name": "Dizipal",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "/"
+   ],
+   "stars": 13,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://zamunda-stremio.tzkppv.com/manifest.json",
+   "baseUrl": "https://zamunda-stremio.tzkppv.com",
+   "name": "Zamunda BG",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 13,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://frenchio.elfhosted.com/manifest.json",
+   "baseUrl": "https://frenchio.elfhosted.com",
+   "name": "Frenchio | ElfHosted",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 13,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://frenchio.creepso.com/manifest.json",
+   "baseUrl": "https://frenchio.creepso.com",
+   "name": "Frenchio | Creepso",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 13,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-njk1.onrender.com/manifest.json",
+   "baseUrl": "https://stremio-njk1.onrender.com",
+   "name": "Hellspy",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "kitsu"
+   ],
+   "stars": 13,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://ac.aransystems.duckdns.org/manifest.json",
+   "baseUrl": "https://ac.aransystems.duckdns.org",
+   "name": "Asian Club",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 13,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://epg.akahobby.com/epg-tv-addon/manifest.json",
+   "baseUrl": "https://epg.akahobby.com/epg-tv-addon",
+   "name": "EPG - TV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 13,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://39427cdac546-streambridge.baby-beamup.club/manifest.json",
+   "baseUrl": "https://39427cdac546-streambridge.baby-beamup.club",
+   "name": "StreamBridge: Emby to Stremio",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 13,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-anitube-forpublic.vercel.app/manifest.json",
+   "baseUrl": "https://stremio-anitube-forpublic.vercel.app",
+   "name": "\ud83c\udf8c AniTube.news (V3.4.2 PRO)",
+   "types": [
+    "series",
+    "anime"
+   ],
+   "idPrefixes": [
+    "anitube:"
+   ],
+   "stars": 13,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://noirplus.shardweb.app/manifest.json",
+   "baseUrl": "https://noirplus.shardweb.app",
+   "name": "NoirPlus",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb:"
+   ],
+   "stars": 13,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://dragonball.2red.com.es/manifest.json",
+   "baseUrl": "https://dragonball.2red.com.es",
+   "name": "DragonBall Addon",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 13,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://tubi-stremio.duckdns.org/manifest.json",
+   "baseUrl": "https://tubi-stremio.duckdns.org",
+   "name": "Tubi Movies",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "tubi:"
+   ],
+   "stars": 13,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://tv.stremiofr.com/manifest.json",
+   "baseUrl": "https://tv.stremiofr.com",
+   "name": "\ud83d\udcfa TV en Direct",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 13,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://animvault.onrender.com/manifest.json",
+   "baseUrl": "https://animvault.onrender.com",
+   "name": "AnimVault",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 13,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://ip-tv.hatip.dev/manifest.json",
+   "baseUrl": "https://ip-tv.hatip.dev",
+   "name": "IPTV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "iptv:"
+   ],
+   "stars": 13,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://fun.3dmovies.workers.dev/manifest.json",
+   "baseUrl": "https://fun.3dmovies.workers.dev",
+   "name": "3D Movies",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [],
+   "stars": 12,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-tv-sdvo.onrender.com/manifest.json",
+   "baseUrl": "https://stremio-tv-sdvo.onrender.com",
+   "name": "Live Channels PT",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "live_"
+   ],
+   "stars": 12,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://anime-world-stremio-addon.onrender.com/manifest.json",
+   "baseUrl": "https://anime-world-stremio-addon.onrender.com",
+   "name": "Anime World India Addon",
+   "types": [
+    "anime",
+    "series",
+    "movie"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 12,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://streambr.onrender.com/manifest.json",
+   "baseUrl": "https://streambr.onrender.com",
+   "name": "ZinTV BR",
+   "types": [
+    "tv",
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "zintv:"
+   ],
+   "stars": 12,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://moviesindetail-addon.recurso.workers.dev/manifest.json",
+   "baseUrl": "https://moviesindetail-addon.recurso.workers.dev",
+   "name": "MoviesInDetail: Open Link",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb",
+    "tvdb",
+    "trakt",
+    "anidb",
+    "mal",
+    "kitsu"
+   ],
+   "stars": 12,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://7043eb19dc52-greflix.baby-beamup.club/addon/e30/manifest.json",
+   "baseUrl": "https://7043eb19dc52-greflix.baby-beamup.club/addon/e30",
+   "name": "GreFlix",
+   "types": [
+    "movie",
+    "series",
+    "other"
+   ],
+   "idPrefixes": [
+    "tt",
+    "greflix_mov",
+    "greflix_ser",
+    "greflix_ser_ep"
+   ],
+   "stars": 12,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://ltan.onrender.com/addon/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzbGlyZW5kZXYiLCJleHAiOjE3OTUwNjgzODZ9.AB7EDLJ8m5ZzRF6MheR34MB7MCiSDkTDcCG_A04emD8/manifest.json",
+   "baseUrl": "https://ltan.onrender.com/addon/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzbGlyZW5kZXYiLCJleHAiOjE3OTUwNjgzODZ9.AB7EDLJ8m5ZzRF6MheR34MB7MCiSDkTDcCG_A04emD8",
+   "name": "LTAN - ANIME",
+   "types": [
+    "anime",
+    "series"
+   ],
+   "idPrefixes": [
+    "kitsu",
+    "tt"
+   ],
+   "stars": 12,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://itsout.elfhosted.com/manifest.json",
+   "baseUrl": "https://itsout.elfhosted.com",
+   "name": "\ud83d\udceb ItsOut! | ElfHosted",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 12,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://94c8cb9f702d-aiolivetv.baby-beamup.club/stremio/manifest.json",
+   "baseUrl": "https://94c8cb9f702d-aiolivetv.baby-beamup.club/stremio",
+   "name": "AIOLiveTV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 11,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://live-addon.vercel.app/manifest.json",
+   "baseUrl": "https://live-addon.vercel.app",
+   "name": "TENIES.SPACE Live TV & Sports",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 11,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://filme-series-e-novelas-portuguesas.vercel.app/manifest.json",
+   "baseUrl": "https://filme-series-e-novelas-portuguesas.vercel.app",
+   "name": "Filmes, Series e Novelas Portuguesas Addon Stremio",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "novelaspt_movie_",
+    "novelaspt_series_"
+   ],
+   "stars": 11,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://sportvibe.win/api/addon/80635bf20325521359ef7cac40a90ffb2842ddb752ad29db40849fe968bee7a6/manifest.json",
+   "baseUrl": "https://sportvibe.win/api/addon/80635bf20325521359ef7cac40a90ffb2842ddb752ad29db40849fe968bee7a6",
+   "name": "SportVibe",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 11,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://b89262c192b0-stremio-nzb-addon.baby-beamup.club/nzb/manifest.json",
+   "baseUrl": "https://b89262c192b0-stremio-nzb-addon.baby-beamup.club/nzb",
+   "name": "NZB",
+   "types": [
+    "movie",
+    "series",
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 11,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio.ember.film/manifest.json",
+   "baseUrl": "https://stremio.ember.film",
+   "name": "ember",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 11,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremy.eu/manifest.json",
+   "baseUrl": "https://stremy.eu",
+   "name": "Stremy",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 11,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://da5f663b4690-superstream.baby-beamup.club/manifest.json",
+   "baseUrl": "https://da5f663b4690-superstream.baby-beamup.club",
+   "name": "SuperStream",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb"
+   ],
+   "stars": 11,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://naitor.cc.cd/manifest.json",
+   "baseUrl": "https://naitor.cc.cd",
+   "name": "naiTor",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 11,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://edersonff.github.io/40thproject-stremio-addon/manifest.json",
+   "baseUrl": "https://edersonff.github.io/40thproject-stremio-addon",
+   "name": "40th PROJECT",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 11,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://addontb.cinehack.net/manifest.json",
+   "baseUrl": "https://addontb.cinehack.net",
+   "name": "CineHack Torbox",
+   "types": [
+    "movie",
+    "series",
+    "anime"
+   ],
+   "idPrefixes": [
+    "tt",
+    "ch:"
+   ],
+   "stars": 11,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://progreso-latino.xyz/api/addon/manifest.json",
+   "baseUrl": "https://progreso-latino.xyz/api/addon",
+   "name": "Progreso Latino",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb"
+   ],
+   "stars": 11,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://watchario.app/AwwAAQ/manifest.json",
+   "baseUrl": "https://watchario.app/AwwAAQ",
+   "name": "Watchario",
+   "types": [
+    "movie",
+    "series",
+    "anime"
+   ],
+   "idPrefixes": [
+    "anilist:",
+    "kitsu:",
+    "tt",
+    "tmdb:",
+    "mal:"
+   ],
+   "stars": 11,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://nightknight-cinema.nightknight24.workers.dev/manifest.json",
+   "baseUrl": "https://nightknight-cinema.nightknight24.workers.dev",
+   "name": "NightKnight Cinema",
+   "types": [
+    "movie",
+    "series",
+    "channel"
+   ],
+   "idPrefixes": [
+    "tmdb:",
+    "tt",
+    "yt:",
+    "twitch:",
+    "tv:",
+    "drmfree:"
+   ],
+   "stars": 11,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://anima-o-pt-pt-addon-stremio-6dzv.vercel.app/manifest.json",
+   "baseUrl": "https://anima-o-pt-pt-addon-stremio-6dzv.vercel.app",
+   "name": "Kids Filmes e Series de Animacao PT-PT Addon Stremio",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "kidspt_movie_",
+    "kidspt_series_"
+   ],
+   "stars": 11,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://game-cinema.ip-checker.workers.dev/manifest.json",
+   "baseUrl": "https://game-cinema.ip-checker.workers.dev",
+   "name": "Game Cinema",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 11,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://lelibrary.uk/manifest.json",
+   "baseUrl": "https://lelibrary.uk",
+   "name": "LeLibrary",
+   "types": [
+    "movie",
+    "series",
+    "anime"
+   ],
+   "idPrefixes": [
+    "torbox:",
+    "tt",
+    "kitsu:"
+   ],
+   "stars": 11,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://965d83ef8484-stremio-latino.baby-beamup.club/manifest.json",
+   "baseUrl": "https://965d83ef8484-stremio-latino.baby-beamup.club",
+   "name": "Spanish Streams",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 11,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://1fe84bc728af-stremio-radios.baby-beamup.club/manifest.json",
+   "baseUrl": "https://1fe84bc728af-stremio-radios.baby-beamup.club",
+   "name": "Radios",
+   "types": [
+    "music",
+    "movie"
+   ],
+   "idPrefixes": [
+    "radios:"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 stremio-collection",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://nuvio-addon.tenies.site/abckdhfik-34585674/manifest.json",
+   "baseUrl": "https://nuvio-addon.tenies.site/abckdhfik-34585674",
+   "name": "TENIES.SITE",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb"
+   ],
+   "stars": 28,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-addon.ehtudo.app/manifest.json",
+   "baseUrl": "https://stremio-addon.ehtudo.app",
+   "name": "Eh! Iptv",
+   "types": [
+    "tv",
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "ehiptv:",
+    "tt"
+   ],
+   "stars": 27,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://cinnn.vercel.app/manifest.json",
+   "baseUrl": "https://cinnn.vercel.app",
+   "name": "CIN",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 27,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://pleiadesstream.duckdns.org/addon/pleiades/manifest.json",
+   "baseUrl": "https://pleiadesstream.duckdns.org/addon/pleiades",
+   "name": "PleiadesStream",
+   "types": [
+    "movie",
+    "series",
+    "anime"
+   ],
+   "idPrefixes": [
+    "tt",
+    "kitsu",
+    "tmdb"
+   ],
+   "stars": 27,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://statusio.elfhosted.com/manifest.json",
+   "baseUrl": "https://statusio.elfhosted.com",
+   "name": "Statusio",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 27,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://watcho3.rafaelzioneverest.workers.dev/manifest.json",
+   "baseUrl": "https://watcho3.rafaelzioneverest.workers.dev",
+   "name": "WATCHO",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb:",
+    "kitsu"
+   ],
+   "stars": 27,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://dev-streamz-navy.vercel.app/manifest.json",
+   "baseUrl": "https://dev-streamz-navy.vercel.app",
+   "name": "WatchFlix | DevStreamz",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb"
+   ],
+   "stars": 26,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://trakt-sync-rating-addon.vercel.app/manifest.json",
+   "baseUrl": "https://trakt-sync-rating-addon.vercel.app",
+   "name": "Trakt Sync & Rate",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 26,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://audiobookbay-stremio.obamarama.workers.dev/manifest.json",
+   "baseUrl": "https://audiobookbay-stremio.obamarama.workers.dev",
+   "name": "AudioBookBay",
+   "types": [
+    "audiobook",
+    "series"
+   ],
+   "idPrefixes": [
+    "abb:"
+   ],
+   "stars": 26,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://liteaio.com/manifest.json",
+   "baseUrl": "https://liteaio.com",
+   "name": "LiteAIO",
+   "types": [
+    "movie",
+    "series",
+    "tv"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 26,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://sup-nyp1.onrender.com/manifest.json",
+   "baseUrl": "https://sup-nyp1.onrender.com",
+   "name": "SUPREME",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [],
+   "stars": 26,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://add-torr-main.vercel.app/manifest.json",
+   "baseUrl": "https://add-torr-main.vercel.app",
+   "name": "AddTORR",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 25,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://renoviana.com.br/stremio/manifest.json",
+   "baseUrl": "https://renoviana.com.br/stremio",
+   "name": "LimonTorrents",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 25,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://manifest.desitvhub.eu.org/manifest.json",
+   "baseUrl": "https://manifest.desitvhub.eu.org",
+   "name": "DesiFlix",
+   "types": [
+    "series",
+    "movie"
+   ],
+   "idPrefixes": [
+    "dsx:",
+    "tt",
+    "tmdb:"
+   ],
+   "stars": 25,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://www.animefillerchecker.com/stremio/manifest.json",
+   "baseUrl": "https://www.animefillerchecker.com/stremio",
+   "name": "Anime Filler Checker",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "kitsu:"
+   ],
+   "stars": 25,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://playimdb-stremio-addon.vercel.app/manifest.json",
+   "baseUrl": "https://playimdb-stremio-addon.vercel.app",
+   "name": "IMDb.su Addon",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 25,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://h-gate.site/dc/manifest.json",
+   "baseUrl": "https://h-gate.site/dc",
+   "name": "DC Universe",
+   "types": [
+    "DC Universe",
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "hub:"
+   ],
+   "stars": 24,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremthru.13377001.xyz/stremio/store/manifest.json",
+   "baseUrl": "https://stremthru.13377001.xyz/stremio/store",
+   "name": "StremThru Store",
+   "types": [],
+   "idPrefixes": [],
+   "stars": 24,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremthrufortheweebs.midnightignite.me/stremio/store/manifest.json",
+   "baseUrl": "https://stremthrufortheweebs.midnightignite.me/stremio/store",
+   "name": "StremThru Store",
+   "types": [],
+   "idPrefixes": [],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://animee.stravo.site/local/manifest.json",
+   "baseUrl": "https://animee.stravo.site/local",
+   "name": "Animee",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "oa"
+   ],
+   "stars": 24,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://amatsu.ruka.pw/manifest.json",
+   "baseUrl": "https://amatsu.ruka.pw",
+   "name": "Amatsu",
+   "types": [
+    "anime",
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 24,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://addon.bettermetadata.com/manifest.json",
+   "baseUrl": "https://addon.bettermetadata.com",
+   "name": "Better Metadata",
+   "types": [
+    "movie",
+    "series",
+    "anime"
+   ],
+   "idPrefixes": [],
+   "stars": 24,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://addon.scary.network/manifest.json",
+   "baseUrl": "https://addon.scary.network",
+   "name": "Scary Only \u2014 Horror by Subgenre",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 23,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://thebeginningjuststarted.xyz/5f5b2c7060f6cf0a/manifest.json",
+   "baseUrl": "https://thebeginningjuststarted.xyz/5f5b2c7060f6cf0a",
+   "name": "TheBeginning",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 23,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://aradeb.518878.xyz/manifest.json",
+   "baseUrl": "https://aradeb.518878.xyz",
+   "name": "Aradeb",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb",
+    "tvdb"
+   ],
+   "stars": 23,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://novastream.sudolocal.qzz.io/manifest.json",
+   "baseUrl": "https://novastream.sudolocal.qzz.io",
+   "name": "NovaStream",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 22,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://novastream.sudoaddon.dpdns.org/manifest.json",
+   "baseUrl": "https://novastream.sudoaddon.dpdns.org",
+   "name": "NovaStream",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://pleiadesstream.duckdns.org/addon/torrents/manifest.json",
+   "baseUrl": "https://pleiadesstream.duckdns.org/addon/torrents",
+   "name": "PleiadesStream Torrents",
+   "types": [
+    "movie",
+    "series",
+    "anime"
+   ],
+   "idPrefixes": [
+    "tt",
+    "kitsu",
+    "tmdb"
+   ],
+   "stars": 22,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://akwam.driviumapp.com/manifest.json",
+   "baseUrl": "https://akwam.driviumapp.com",
+   "name": "Akwam",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 22,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://cotonetnet-cotonet.hf.space/manifest.json",
+   "baseUrl": "https://cotonetnet-cotonet.hf.space",
+   "name": "Cotonet",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "cotonet:",
+    "tt"
+   ],
+   "stars": 22,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://m3umux.joaotolovi.com/manifest.json",
+   "baseUrl": "https://m3umux.joaotolovi.com",
+   "name": "M3U Mux",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 22,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://einthusan.asaddon.com/manifest.json",
+   "baseUrl": "https://einthusan.asaddon.com",
+   "name": "EinthusanTV",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "tt",
+    "einthusan"
+   ],
+   "stars": 22,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-stream-store.vercel.app/manifest.json",
+   "baseUrl": "https://stremio-stream-store.vercel.app",
+   "name": "Stremio Stream Store",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 22,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://addon.peario.xyz/manifest.json",
+   "baseUrl": "https://addon.peario.xyz",
+   "name": "Peario",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 21,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://onepace.e6ip.com/manifest.json",
+   "baseUrl": "https://onepace.e6ip.com",
+   "name": "One Pace Addon",
+   "types": [
+    "series",
+    "movie",
+    "anime"
+   ],
+   "idPrefixes": [
+    "pp",
+    "onepace",
+    "MUHN",
+    "ONIG",
+    "A",
+    "B",
+    "C",
+    "D"
+   ],
+   "stars": 21,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://inmax-tmv.onrender.com/manifest.json",
+   "baseUrl": "https://inmax-tmv.onrender.com",
+   "name": "InMax",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tamilmv-"
+   ],
+   "stars": 21,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://webtor.io/stremio/manifest.json",
+   "baseUrl": "https://webtor.io/stremio",
+   "name": "Webtor.io",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 21,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://adlencin-vv.onrender.com/manifest.json",
+   "baseUrl": "https://adlencin-vv.onrender.com",
+   "name": "Torrent\u2666\ufe0fDz",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb:",
+    "kitsu"
+   ],
+   "stars": 20,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://plexio.elfhosted.com/manifest.json",
+   "baseUrl": "https://plexio.elfhosted.com",
+   "name": "Plexio | ElfHosted",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "plexio"
+   ],
+   "stars": 20,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://edersonff.github.io/selecta-vision-stremio/manifest.json",
+   "baseUrl": "https://edersonff.github.io/selecta-vision-stremio",
+   "name": "SelectaVision",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 20,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://toastflix.stremio-italia.eu/manifest.json",
+   "baseUrl": "https://toastflix.stremio-italia.eu",
+   "name": "\ud83e\udd6aToastFlix\ud83e\udd6a",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "kitsu",
+    "tmdb"
+   ],
+   "stars": 20,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-stinger-pro.up.railway.app/manifest.json",
+   "baseUrl": "https://stremio-stinger-pro.up.railway.app",
+   "name": "Stremio Stinger Pro",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 20,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://smove.manucn.dpdns.org/manifest.json",
+   "baseUrl": "https://smove.manucn.dpdns.org",
+   "name": "SM Addon",
+   "types": [
+    "sm",
+    "tv",
+    "thethao",
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 19,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://nova.livebx.net/manifest.json",
+   "baseUrl": "https://nova.livebx.net",
+   "name": "Nova Channels",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "channel:",
+    "event:"
+   ],
+   "stars": 19,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://ntcstudios.com.br/ntctv/manifest.json",
+   "baseUrl": "https://ntcstudios.com.br/ntctv",
+   "name": "NTC TV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "ntctv",
+    "ntc"
+   ],
+   "stars": 19,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://b89262c192b0-stremio-easynews-addon.baby-beamup.club/manifest.json",
+   "baseUrl": "https://b89262c192b0-stremio-easynews-addon.baby-beamup.club",
+   "name": "Easynews+",
+   "types": [
+    "movie",
+    "series",
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 19,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://easynewsplus.elfhosted.com/manifest.json",
+   "baseUrl": "https://easynewsplus.elfhosted.com",
+   "name": "Easynews+",
+   "types": [
+    "movie",
+    "series",
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 19,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://filmora2.vercel.app/manifest.json",
+   "baseUrl": "https://filmora2.vercel.app",
+   "name": "Filmora",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb:",
+    "kitsu"
+   ],
+   "stars": 19,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://addon-m3u-friendly-7l9c.onrender.com/manifest.json",
+   "baseUrl": "https://addon-m3u-friendly-7l9c.onrender.com",
+   "name": "M3U IPTV",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 19,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://kod-three.vercel.app/manifest.json",
+   "baseUrl": "https://kod-three.vercel.app",
+   "name": "KOD",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [],
+   "stars": 18,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://febbox-addon.onrender.com/manifest.json",
+   "baseUrl": "https://febbox-addon.onrender.com",
+   "name": "FebBox Addon",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 18,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://cinepro-addon.onrender.com/manifest.json",
+   "baseUrl": "https://cinepro-addon.onrender.com",
+   "name": "\ud83c\udfac Pulp Watch",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 18,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://cinepro.iheartbarakobama.workers.dev/manifest.json",
+   "baseUrl": "https://cinepro.iheartbarakobama.workers.dev",
+   "name": "\ud83c\udfac Pulp Watch",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremtv.vercel.app/manifest.json",
+   "baseUrl": "https://stremtv.vercel.app",
+   "name": "StremTV US",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "stremtv-us:"
+   ],
+   "stars": 18,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://cartoon-aziz-addon.onrender.com/manifest.json",
+   "baseUrl": "https://cartoon-aziz-addon.onrender.com",
+   "name": "Cartoon Aziz",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [
+    "cartoon-aziz:"
+   ],
+   "stars": 18,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio.eletroclay.com/manifest.json",
+   "baseUrl": "https://stremio.eletroclay.com",
+   "name": "Torrent to weblink",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 18,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://addon.plavio.site/manifest.json",
+   "baseUrl": "https://addon.plavio.site",
+   "name": "PlavioLive",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 17,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://jsn.eclipsia.dpdns.org/manifest.json",
+   "baseUrl": "https://jsn.eclipsia.dpdns.org",
+   "name": "Eclipsia",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb:"
+   ],
+   "stars": 17,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://6172e63fd702-del-kdrama-series-movies.baby-beamup.club/manifest.json",
+   "baseUrl": "https://6172e63fd702-del-kdrama-series-movies.baby-beamup.club",
+   "name": "DEL KDRAMA SERIES/MOVIES",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tmdb"
+   ],
+   "stars": 17,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://sc.k-20.xyz/manifest.json",
+   "baseUrl": "https://sc.k-20.xyz",
+   "name": "K20 Phim T\u1ed5ng H\u1ee3p",
+   "types": [
+    "movie",
+    "series",
+    "tv"
+   ],
+   "idPrefixes": [
+    "tt",
+    "nguonc:",
+    "stp:",
+    "clbpx:",
+    "vsmov:",
+    "kkphim:",
+    "sf:",
+    "streamfree:"
+   ],
+   "stars": 17,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://viptorrent.nadan.cloud/manifest.json",
+   "baseUrl": "https://viptorrent.nadan.cloud",
+   "name": "VipTorrent",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "tv",
+    "other"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb:",
+    "kitsu",
+    "viptorrent:",
+    "viptorrent_iptv_"
+   ],
+   "stars": 17,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stream.metegol.dpdns.org/manifest.json",
+   "baseUrl": "https://stream.metegol.dpdns.org",
+   "name": "MeteGol",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "metegol",
+    "metegol:"
+   ],
+   "stars": 17,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://megasource.wasmer.app/manifest.json",
+   "baseUrl": "https://megasource.wasmer.app",
+   "name": "MegaSource",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 17,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://basedon.media/manifest.json",
+   "baseUrl": "https://basedon.media",
+   "name": "BasedOn",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 17,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://addons.zrk.app/plotcard/manifest.json",
+   "baseUrl": "https://addons.zrk.app/plotcard",
+   "name": "PlotCard",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 17,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://fayatv.stravo.site/d/manifest.json",
+   "baseUrl": "https://fayatv.stravo.site/d",
+   "name": "FayaTV",
+   "types": [
+    "sports",
+    "tv"
+   ],
+   "idPrefixes": [
+    "faya"
+   ],
+   "stars": 11,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://romanian-tv-stremio.up.railway.app/manifest.json",
+   "baseUrl": "https://romanian-tv-stremio.up.railway.app",
+   "name": "Romanian TV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "rotv-"
+   ],
+   "stars": 10,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://ghostvod.online/manifest.json",
+   "baseUrl": "https://ghostvod.online",
+   "name": "GhostVOD Engine",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 10,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://torrenthan.stremioluca.dpdns.org/manifest.json",
+   "baseUrl": "https://torrenthan.stremioluca.dpdns.org",
+   "name": "Torrenthan \ud83c\uddee\ud83c\uddf9",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "kitsu"
+   ],
+   "stars": 10,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://b89262c192b0-stremio-consumet-addon.baby-beamup.club/manifest.json",
+   "baseUrl": "https://b89262c192b0-stremio-consumet-addon.baby-beamup.club",
+   "name": "Consumet",
+   "types": [
+    "series",
+    "movie"
+   ],
+   "idPrefixes": [
+    "consumet"
+   ],
+   "stars": 10,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-shared-debrid.vercel.app/:authToken/:gistId/:username/:sessionMinutes/manifest.json",
+   "baseUrl": "https://stremio-shared-debrid.vercel.app/:authToken/:gistId/:username/:sessionMinutes",
+   "name": "Shared Debrid Notifier",
+   "types": [
+    "movie",
+    "series",
+    "channel",
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 10,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://animesfhd.net/stremio/manifest.json",
+   "baseUrl": "https://animesfhd.net/stremio",
+   "name": "AnimesFHD",
+   "types": [
+    "series",
+    "movie"
+   ],
+   "idPrefixes": [
+    "afhd:"
+   ],
+   "stars": 10,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://superadlen-dz-movie.hf.space/manifest.json",
+   "baseUrl": "https://superadlen-dz-movie.hf.space",
+   "name": "DZ-Movie\ud83d\udd17",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 10,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://premiumize.almosteffective.com/manifest.json",
+   "baseUrl": "https://premiumize.almosteffective.com",
+   "name": "Premiumize Library",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [
+    "premiumize:"
+   ],
+   "stars": 10,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://till-8b4w.onrender.com/manifest.json",
+   "baseUrl": "https://till-8b4w.onrender.com",
+   "name": "TILL",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 10,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://ult-addon-for-stremio.onrender.com/manifest.json",
+   "baseUrl": "https://ult-addon-for-stremio.onrender.com",
+   "name": "ULT AddOn",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 10,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://zoreu.github.io/ricosstremio/manifest.json",
+   "baseUrl": "https://zoreu.github.io/ricosstremio",
+   "name": "Canal Ricos Addon",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "ricos_"
+   ],
+   "stars": 10,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremioaddon.vercel.app/manifest.json",
+   "baseUrl": "https://stremioaddon.vercel.app",
+   "name": "israel tv for stremio",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "israeltv-"
+   ],
+   "stars": 10,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://subass.site/manifest.json",
+   "baseUrl": "https://subass.site",
+   "name": "DCBI Addon",
+   "types": [
+    "movie",
+    "series",
+    "anime"
+   ],
+   "idPrefixes": [],
+   "stars": 10,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://7e2a912be9c9-nada-tv-hls.baby-beamup.club/manifest.json",
+   "baseUrl": "https://7e2a912be9c9-nada-tv-hls.baby-beamup.club",
+   "name": "NADA TV HLS",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "nada-"
+   ],
+   "stars": 10,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://anime-vortext.onrender.com/manifest.json",
+   "baseUrl": "https://anime-vortext.onrender.com",
+   "name": "Anime Vortex",
+   "types": [
+    "series",
+    "movie"
+   ],
+   "idPrefixes": [
+    "anilist-"
+   ],
+   "stars": 10,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://kkphim-stremio-addon-ymoc.onrender.com/manifest.json",
+   "baseUrl": "https://kkphim-stremio-addon-ymoc.onrender.com",
+   "name": "KKPhim",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "kkphim:",
+    "tt",
+    "tmdb:"
+   ],
+   "stars": 9,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio.docci.pl/manifest.json",
+   "baseUrl": "https://stremio.docci.pl",
+   "name": "Docchi.pl Addon",
+   "types": [
+    "anime",
+    "series",
+    "movie"
+   ],
+   "idPrefixes": [
+    "mal",
+    "kitsu",
+    "tt",
+    "tvdb"
+   ],
+   "stars": 9,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio.flickwhisper.app/manifest.json",
+   "baseUrl": "https://stremio.flickwhisper.app",
+   "name": "Flick Whisper",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 9,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://addex.duckdns.org/manifest.json",
+   "baseUrl": "https://addex.duckdns.org",
+   "name": "Addex",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 9,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://indtorrents.kodecrafts.workers.dev/manifest.json",
+   "baseUrl": "https://indtorrents.kodecrafts.workers.dev",
+   "name": "IndTorrents",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "tmv"
+   ],
+   "stars": 9,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://mylumio.tv/lol/manifest.json",
+   "baseUrl": "https://mylumio.tv/lol",
+   "name": "Lumio Stream",
+   "types": [
+    "movie",
+    "series",
+    "anime"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb",
+    "tvdb",
+    "kitsu"
+   ],
+   "stars": 9,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://getspecter.duckdns.org/manifest.json",
+   "baseUrl": "https://getspecter.duckdns.org",
+   "name": "SPECTER",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 9,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://rtve-stremio-addon.vercel.app/manifest.json",
+   "baseUrl": "https://rtve-stremio-addon.vercel.app",
+   "name": "RTVE",
+   "types": [
+    "tv",
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tve:",
+    "rne:",
+    "rtvep:"
+   ],
+   "stars": 9,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://ro-sport-addon-production.up.railway.app/manifest.json",
+   "baseUrl": "https://ro-sport-addon-production.up.railway.app",
+   "name": "RO Sport Live",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 9,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://addons.zrk.app/marquee/manifest.json",
+   "baseUrl": "https://addons.zrk.app/marquee",
+   "name": "Marquee",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "marquee:"
+   ],
+   "stars": 9,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://cauldron.forthewizards.uk/manifest.json",
+   "baseUrl": "https://cauldron.forthewizards.uk",
+   "name": "Cauldron",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 9,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://350ca7a1c885-zelka2stremio.baby-beamup.club/manifest.json",
+   "baseUrl": "https://350ca7a1c885-zelka2stremio.baby-beamup.club",
+   "name": "Zelka & Zamunda Addon",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "kitsu:"
+   ],
+   "stars": 9,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://torfuse.onrender.com/manifest.json",
+   "baseUrl": "https://torfuse.onrender.com",
+   "name": "TorFuse",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 8,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://addon-ultrapelis.onrender.com/manifest.json",
+   "baseUrl": "https://addon-ultrapelis.onrender.com",
+   "name": "Ultrapelis",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "ultrapelis:",
+    "ultrapelis:series:"
+   ],
+   "stars": 8,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://sitcom-surprise.vercel.app/manifest.json",
+   "baseUrl": "https://sitcom-surprise.vercel.app",
+   "name": "Sitcom Surprise",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [
+    "shuffle:"
+   ],
+   "stars": 8,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://api.top-posters.com/stremio/garmar_ar53/manifest.json",
+   "baseUrl": "https://api.top-posters.com/stremio/garmar_ar53",
+   "name": "TOP Posters Addon Wrapper",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb:",
+    "tvdb:"
+   ],
+   "stars": 8,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://iptv-stremio.onrender.com/manifest.json",
+   "baseUrl": "https://iptv-stremio.onrender.com",
+   "name": "SID VOD Playlist",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "vod-"
+   ],
+   "stars": 8,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://combo.day-one-gear.com/manifest.json",
+   "baseUrl": "https://combo.day-one-gear.com",
+   "name": "Easynews + TorrentClaw Combo",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 8,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://onepace4k.duckdns.org/manifest.json",
+   "baseUrl": "https://onepace4k.duckdns.org",
+   "name": "One Pace 4K",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [
+    "op4k5_"
+   ],
+   "stars": 8,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://099757617587-watch-order.baby-beamup.club/manifest.json",
+   "baseUrl": "https://099757617587-watch-order.baby-beamup.club",
+   "name": "Watch Order",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "wo:"
+   ],
+   "stars": 8,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://redecanaistv-addon-stremio.onrender.com/manifest.json",
+   "baseUrl": "https://redecanaistv-addon-stremio.onrender.com",
+   "name": "Rede Canais TV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "rc:"
+   ],
+   "stars": 8,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://lsoares.github.io/fireplace/manifest.json",
+   "baseUrl": "https://lsoares.github.io/fireplace",
+   "name": "\ud83d\udd25 Fireplace",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "fp-"
+   ],
+   "stars": 8,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://streamvault.fly.dev/manifest.json",
+   "baseUrl": "https://streamvault.fly.dev",
+   "name": "StreamVault IPTV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "iptv_"
+   ],
+   "stars": 8,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://72059fbbd1e5-stremio-addon-age-ratings.baby-beamup.club/manifest.json",
+   "baseUrl": "https://72059fbbd1e5-stremio-addon-age-ratings.baby-beamup.club",
+   "name": "Age Ratings",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 8,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://daebak.muvibox.my.id/manifest.json",
+   "baseUrl": "https://daebak.muvibox.my.id",
+   "name": "Daebak Korean Drama",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "mb:",
+    "tt"
+   ],
+   "stars": 8,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremthru.13377001.xyz/stremio/newz/manifest.json",
+   "baseUrl": "https://stremthru.13377001.xyz/stremio/newz",
+   "name": "StremThru Newz",
+   "types": [],
+   "idPrefixes": [],
+   "stars": 8,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://onair-gmcm.onrender.com/manifest.json",
+   "baseUrl": "https://onair-gmcm.onrender.com",
+   "name": "Onair",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 8,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio.alirostami.com/streams/manifest.json",
+   "baseUrl": "https://stremio.alirostami.com/streams",
+   "name": "Persian Streams",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 7,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://nagare.nexioapp.org/manifest.json",
+   "baseUrl": "https://nagare.nexioapp.org",
+   "name": "Nexio Nagare",
+   "types": [
+    "anime",
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 7,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://263f84288ddb-iptv-stremio-addon.baby-beamup.club/manifest.json",
+   "baseUrl": "https://263f84288ddb-iptv-stremio-addon.baby-beamup.club",
+   "name": "IPTV Addon by Savi",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "iptv_",
+    "iptvorg_"
+   ],
+   "stars": 7,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://anixio.barigadogram.ru/manifest.json",
+   "baseUrl": "https://anixio.barigadogram.ru",
+   "name": "Anixio",
+   "types": [
+    "series",
+    "movie"
+   ],
+   "idPrefixes": [
+    "anixart",
+    "tt"
+   ],
+   "stars": 7,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://lucky-term-218b.az51blog.workers.dev/manifest.json",
+   "baseUrl": "https://lucky-term-218b.az51blog.workers.dev",
+   "name": "StreamPlay (ARVIO Edition)",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 7,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://iptv.scary.network/manifest.json",
+   "baseUrl": "https://iptv.scary.network",
+   "name": "SCARY.NETWORK Horror Live TV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "scaryiptv:"
+   ],
+   "stars": 7,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://cvnstream.onrcvndev.com.tr/manifest.json",
+   "baseUrl": "https://cvnstream.onrcvndev.com.tr",
+   "name": "CvnStream",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 7,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://astral-mu-two.vercel.app/manifest.json",
+   "baseUrl": "https://astral-mu-two.vercel.app",
+   "name": "Astral Flow",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 7,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://baqala.stremiolabar.com/manifest.json",
+   "baseUrl": "https://baqala.stremiolabar.com",
+   "name": "StremioLabAR \u0628\u0642\u0627\u0644\u0629 \u062c\u064a\u0647\u064a\u0648",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [
+    "yadisk-"
+   ],
+   "stars": 7,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://123456.vegettoson83.workers.dev/manifest.json",
+   "baseUrl": "https://123456.vegettoson83.workers.dev",
+   "name": "Latanime",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [
+    "latanime:",
+    "af:",
+    "aon:",
+    "av1:",
+    "dorama:",
+    "dsub:",
+    "kdrama:",
+    "tt"
+   ],
+   "stars": 7,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://2ecbbd610840-stremio-ar.baby-beamup.club/manifest.json",
+   "baseUrl": "https://2ecbbd610840-stremio-ar.baby-beamup.club",
+   "name": "StreamAR by dexter21767",
+   "types": [
+    "movie",
+    "series",
+    "anime"
+   ],
+   "idPrefixes": [
+    "wecima_id",
+    "akwam_id"
+   ],
+   "stars": 7,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://nova-streamz.vercel.app/manifest.json",
+   "baseUrl": "https://nova-streamz.vercel.app",
+   "name": "Nova Streams",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 7,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://falsisdev.github.io/anthology/stremio/manifest.json",
+   "baseUrl": "https://falsisdev.github.io/anthology/stremio",
+   "name": "Anthology \u2014 Canl\u0131 TV",
+   "types": [
+    "tv",
+    "channel"
+   ],
+   "idPrefixes": [
+    "tv:",
+    "tv_",
+    "iptv_"
+   ],
+   "stars": 7,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://addon.esafetv.com/manifest.json",
+   "baseUrl": "https://addon.esafetv.com",
+   "name": "eSafeTV",
+   "types": [
+    "tv",
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "iptv_"
+   ],
+   "stars": 7,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://banglaplex-94zf.onrender.com/manifest.json",
+   "baseUrl": "https://banglaplex-94zf.onrender.com",
+   "name": "BanglaPlex",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "bpx-"
+   ],
+   "stars": 7,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://bttr.stream/manifest.json",
+   "baseUrl": "https://bttr.stream",
+   "name": "Better Stream",
+   "types": [
+    "movie",
+    "series",
+    "tv",
+    "anime",
+    "channel",
+    "other"
+   ],
+   "idPrefixes": [
+    "xt_",
+    "tt",
+    "imdb:",
+    "tmdb:",
+    "kitsu:",
+    "mal:",
+    "anilist:",
+    "anidb:"
+   ],
+   "stars": 7,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://hh3dkp.k-20.xyz/manifest.json",
+   "baseUrl": "https://hh3dkp.k-20.xyz",
+   "name": "Ho\u1ea1t H\u00ecnh 3D Trung Qu\u1ed1c",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "hh3d:",
+    "yan:"
+   ],
+   "stars": 7,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio.rapideo.tv/manifest.json",
+   "baseUrl": "https://stremio.rapideo.tv",
+   "name": "Rapideo",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 7,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://iptv.arielinnovations.com/manifest.json",
+   "baseUrl": "https://iptv.arielinnovations.com",
+   "name": "IPTV Catchup (M3U/EPG)",
+   "types": [
+    "tv",
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "iptv_"
+   ],
+   "stars": 7,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://addon.openexplorer.xyz/manifest.json",
+   "baseUrl": "https://addon.openexplorer.xyz",
+   "name": "Grab",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 7,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://anilibria-stremio.online/manifest.json",
+   "baseUrl": "https://anilibria-stremio.online",
+   "name": "AniLibria",
+   "types": [
+    "series",
+    "movie"
+   ],
+   "idPrefixes": [
+    "tt",
+    "anilibria:"
+   ],
+   "stars": 7,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://torii.nexioapp.org/manifest.json",
+   "baseUrl": "https://torii.nexioapp.org",
+   "name": "Nexio Torii",
+   "types": [
+    "anime",
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 7,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://ramonmedeiros.github.io/org.stremio.NoReservationDailyMotion/manifest.json",
+   "baseUrl": "https://ramonmedeiros.github.io/org.stremio.NoReservationDailyMotion",
+   "name": "Anthony Bourdain Fans",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 0,
+   "from": "Server pool \u00b7 stremio-collection",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://kingvod.wasmer.app/index.php/manifest.json",
+   "baseUrl": "https://kingvod.wasmer.app/index.php",
+   "name": "King VOD",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 60,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://veyra.shardweb.app/auto-canais~iUDsthOe6ieibNnF6wI5FTL7Z3Td-AMudLJ-GAOg/manifest.json",
+   "baseUrl": "https://veyra.shardweb.app/auto-canais~iUDsthOe6ieibNnF6wI5FTL7Z3Td-AMudLJ-GAOg",
+   "name": "Veyra",
+   "types": [
+    "movie",
+    "series",
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 59,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://latinobrid.stremx.net/manifest.json",
+   "baseUrl": "https://latinobrid.stremx.net",
+   "name": "Latinobrid | TB",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 57,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://moviebox-cfa7.onrender.com/manifest.json",
+   "baseUrl": "https://moviebox-cfa7.onrender.com",
+   "name": "MovieBox",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 56,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://intell-debridsearch.nepiraw.com/manifest.json",
+   "baseUrl": "https://intell-debridsearch.nepiraw.com",
+   "name": "Intelligent Debrid Search",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 54,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://bcf125302240-unioflix.baby-beamup.club/manifest.json",
+   "baseUrl": "https://bcf125302240-unioflix.baby-beamup.club",
+   "name": "UnioFlix",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb"
+   ],
+   "stars": 54,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://ryann-devv.github.io/Stremio-IPTV/manifest.json",
+   "baseUrl": "https://ryann-devv.github.io/Stremio-IPTV",
+   "name": "Stremio IPTV by dexter21767",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 53,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://streamx.electron.al/manifest.json",
+   "baseUrl": "https://streamx.electron.al",
+   "name": "StreamX",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 53,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://848b3516657c-argentinatv.baby-beamup.club/manifest.json",
+   "baseUrl": "https://848b3516657c-argentinatv.baby-beamup.club",
+   "name": "Argentina TV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "atv"
+   ],
+   "stars": 52,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://free.flixnest.app/manifest.json",
+   "baseUrl": "https://free.flixnest.app",
+   "name": "Flix-Streams Free",
+   "types": [
+    "movie",
+    "series",
+    "tv"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb",
+    "essential",
+    "dlstreams"
+   ],
+   "stars": 52,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://zeus-br.shardweb.app/manifest.json",
+   "baseUrl": "https://zeus-br.shardweb.app",
+   "name": "Zeus",
+   "types": [
+    "series",
+    "movie"
+   ],
+   "idPrefixes": [],
+   "stars": 51,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremverse1.alwaysdata.net/manifest.json",
+   "baseUrl": "https://stremverse1.alwaysdata.net",
+   "name": "StremVerse",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "stremevent_",
+    "stremevent_sktech_",
+    "stremevent_playfy_",
+    "stremevent_playztv_",
+    "stremevent_merged_",
+    "replay_",
+    "highlight_",
+    "stremevent_xtra3_"
+   ],
+   "stars": 50,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://vidfast-stremio-addon.zmoualhi.workers.dev/manifest.json",
+   "baseUrl": "https://vidfast-stremio-addon.zmoualhi.workers.dev",
+   "name": "VidFast Pro",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb"
+   ],
+   "stars": 50,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://showbox.codiv.dpdns.org/manifest.json",
+   "baseUrl": "https://showbox.codiv.dpdns.org",
+   "name": "Showbox",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 48,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://pezzhub.dpdns.org/manifest.json",
+   "baseUrl": "https://pezzhub.dpdns.org",
+   "name": "PEZZHUB AIO",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "profile"
+   ],
+   "idPrefixes": [
+    "tt",
+    "kitsu",
+    "mal",
+    "anilist",
+    "anidb",
+    "tmdb",
+    "themoviedb",
+    "tvdb"
+   ],
+   "stars": 48,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremiptv.com/addon/manifest.json",
+   "baseUrl": "https://stremiptv.com/addon",
+   "name": "Romania IPTV",
+   "types": [
+    "movie",
+    "series",
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 48,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://www.primerlatino.com/plus/SIN-PREMIUM/manifest.json",
+   "baseUrl": "https://www.primerlatino.com/plus/SIN-PREMIUM",
+   "name": "Primer Latino",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb",
+    "live"
+   ],
+   "stars": 48,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://pigamer37.alwaysdata.net/manifest.json",
+   "baseUrl": "https://pigamer37.alwaysdata.net",
+   "name": "AnimES",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [
+    "tt",
+    "animeav1:",
+    "henaojara:",
+    "tioanime:",
+    "latanime:",
+    "tmdb:",
+    "anilist:",
+    "kitsu:"
+   ],
+   "stars": 46,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://animesdigital-vercel.vercel.app/manifest.json",
+   "baseUrl": "https://animesdigital-vercel.vercel.app",
+   "name": "AnimesDigital",
+   "types": [
+    "series",
+    "movie"
+   ],
+   "idPrefixes": [
+    "animesdigital:",
+    "animesdigital_video:"
+   ],
+   "stars": 46,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://cometnet.elfhosted.com/manifest.json",
+   "baseUrl": "https://cometnet.elfhosted.com",
+   "name": "CometNet | ElfHosted",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [],
+   "stars": 45,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio.yukistreams.xyz/manifest.json",
+   "baseUrl": "https://stremio.yukistreams.xyz",
+   "name": "Yukistreams",
+   "types": [
+    "movie",
+    "series",
+    "anime"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb:",
+    "tvdb:",
+    "anilist:",
+    "kitsu:",
+    "mal:",
+    "nyaa:",
+    "yukistreams_raw:"
+   ],
+   "stars": 45,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://magneto-jnv5.onrender.com/v1/manifest.json",
+   "baseUrl": "https://magneto-jnv5.onrender.com/v1",
+   "name": "Magneto",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 45,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://plexio.stream/manifest.json",
+   "baseUrl": "https://plexio.stream",
+   "name": "Plexio",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "plexio"
+   ],
+   "stars": 44,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://v2.stravo.site/local/manifest.json",
+   "baseUrl": "https://v2.stravo.site/local",
+   "name": "Stravo II",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb:",
+    "tvdb:",
+    "mx"
+   ],
+   "stars": 44,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://fedew04.github.io/OnePaceStremio/manifest.json",
+   "baseUrl": "https://fedew04.github.io/OnePaceStremio",
+   "name": "One Pace Addon",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 44,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://kangaroostreams.hayd.uk/Brisbane/radio/ausports/nz/nzradio/nzsports/uktv/uksports/ustv/ussports/catv/casports/eusports/worldsports/epl/extras/exgrp-ca-dazn/exgrp-int-netflix-events/exgrp-int-dirtvision/exgrp-uk-epl/exgrp-uk-dazn/exgrp-au-kayo-sports/exgrp-uk-tnt-sports/exgrp-uk-sky-sports/exgrp-nz-sky-sport/exgrp-int-f1-tv/exgrp-uk-spfl/exgrp-int-rugby-events/exgrp-au-stan-sports-events/exgrp-ppv-events/manifest.json",
+   "baseUrl": "https://kangaroostreams.hayd.uk/Brisbane/radio/ausports/nz/nzradio/nzsports/uktv/uksports/ustv/ussports/catv/casports/eusports/worldsports/epl/extras/exgrp-ca-dazn/exgrp-int-netflix-events/exgrp-int-dirtvision/exgrp-uk-epl/exgrp-uk-dazn/exgrp-au-kayo-sports/exgrp-uk-tnt-sports/exgrp-uk-sky-sports/exgrp-nz-sky-sport/exgrp-int-f1-tv/exgrp-uk-spfl/exgrp-int-rugby-events/exgrp-au-stan-sports-events/exgrp-ppv-events",
+   "name": "AU IPTV (Brisbane)",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 43,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://brazuca-play-stremio-ebon.vercel.app/manifest.json",
+   "baseUrl": "https://brazuca-play-stremio-ebon.vercel.app",
+   "name": "Brazuca Play (N\u00e3o Oficial)",
+   "types": [
+    "tv",
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "bp_",
+    "tt"
+   ],
+   "stars": 43,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://hd.plavio.site/manifest.json",
+   "baseUrl": "https://hd.plavio.site",
+   "name": "PlavioHD",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tmdb:",
+    "tt"
+   ],
+   "stars": 42,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://ce8c71dcef3b-filtorrent.baby-beamup.club/manifest.json",
+   "baseUrl": "https://ce8c71dcef3b-filtorrent.baby-beamup.club",
+   "name": "Filtorrent",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 42,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://imdbratings.kgenovz.com/manifest.json",
+   "baseUrl": "https://imdbratings.kgenovz.com",
+   "name": "IMDb Ratings",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "kitsu",
+    "tmdb"
+   ],
+   "stars": 42,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://seedsphere.fly.dev/manifest.json",
+   "baseUrl": "https://seedsphere.fly.dev",
+   "name": "SeedSphere (Private)",
+   "types": [
+    "movie",
+    "series",
+    "anime"
+   ],
+   "idPrefixes": [
+    "tt",
+    "kitsu"
+   ],
+   "stars": 42,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-betor.onrender.com/manifest.json",
+   "baseUrl": "https://stremio-betor.onrender.com",
+   "name": "BeTor v3 Oficial",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 41,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://guindex-stremio.vercel.app/manifest.json",
+   "baseUrl": "https://guindex-stremio.vercel.app",
+   "name": "GuIndex",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 40,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-trailer-addon.vercel.app/manifest.json",
+   "baseUrl": "https://stremio-trailer-addon.vercel.app",
+   "name": "YouTube Trailers",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 39,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://addon.stremio-status.com/manifest.json",
+   "baseUrl": "https://addon.stremio-status.com",
+   "name": "Stremio Status",
+   "types": [
+    "tv",
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 39,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stravo.site/local/manifest.json",
+   "baseUrl": "https://stravo.site/local",
+   "name": "Stravo",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "mx"
+   ],
+   "stars": 39,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://bludv-railway-production.up.railway.app/manifest.json",
+   "baseUrl": "https://bludv-railway-production.up.railway.app",
+   "name": "BluDV (stream)",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "bludv:"
+   ],
+   "stars": 38,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://dev.nebulawp.org/stremio/pluto-tv-addon/manifest.json",
+   "baseUrl": "https://dev.nebulawp.org/stremio/pluto-tv-addon",
+   "name": "Pluto TV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 38,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://mg.homelabx.qzz.io/manifest.json",
+   "baseUrl": "https://mg.homelabx.qzz.io",
+   "name": "DeepFlix",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 37,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://comet.stremiofr.com/manifest.json",
+   "baseUrl": "https://comet.stremiofr.com",
+   "name": "CometFR | TORRENT",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [],
+   "stars": 36,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://xtremio.qzz.io/manifest.json",
+   "baseUrl": "https://xtremio.qzz.io",
+   "name": "Xtremio",
+   "types": [
+    "movie",
+    "series",
+    "tv"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 36,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://muvibox.znzcloud.my.id/manifest.json",
+   "baseUrl": "https://muvibox.znzcloud.my.id",
+   "name": "Muvibox - Hopefully best http streams ever - NoTorrent",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "mb:",
+    "tt"
+   ],
+   "stars": 35,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://tugatv.fenixhub.online/manifest.json",
+   "baseUrl": "https://tugatv.fenixhub.online",
+   "name": "Tuga TV",
+   "types": [
+    "tv",
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tv",
+    "tt",
+    "tmdb"
+   ],
+   "stars": 35,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://str.zmb.lat/lite/manifest.json",
+   "baseUrl": "https://str.zmb.lat/lite",
+   "name": "ZMB",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 34,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-ccloud.liara.run/manifest.json",
+   "baseUrl": "https://stremio-ccloud.liara.run",
+   "name": "CCloud",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 34,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stream-fusion.stremiofr.com/manifest.json",
+   "baseUrl": "https://stream-fusion.stremiofr.com",
+   "name": "StreamFusion",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 34,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://streamfusion.stremio-epsilon.ca/manifest.json",
+   "baseUrl": "https://streamfusion.stremio-epsilon.ca",
+   "name": "StreamFusionReborn",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 34,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://rx.postclub.me/manifest.json",
+   "baseUrl": "https://rx.postclub.me",
+   "name": "Reflux",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "reflux"
+   ],
+   "stars": 33,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://easynews-cloudflare-worker.jqrw92fchz.workers.dev/manifest.json",
+   "baseUrl": "https://easynews-cloudflare-worker.jqrw92fchz.workers.dev",
+   "name": "Easynews++",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 33,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://easynewsppfortheweebs.midnightignite.me/manifest.json",
+   "baseUrl": "https://easynewsppfortheweebs.midnightignite.me",
+   "name": "Easynews++",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 6,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://ea627ddf0ee7-easynews.baby-beamup.club/manifest.json",
+   "baseUrl": "https://ea627ddf0ee7-easynews.baby-beamup.club",
+   "name": "Easynews",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 31,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://20317bf4c6c6-webshare-stremio-addon.baby-beamup.club/manifest.json",
+   "baseUrl": "https://20317bf4c6c6-webshare-stremio-addon.baby-beamup.club",
+   "name": "Webshare.cz",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "coffei.webshare:"
+   ],
+   "stars": 31,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://p01--status--sdfgdgfsgdfs--s2qq-tktv.code.run/manifest.json",
+   "baseUrl": "https://p01--status--sdfgdgfsgdfs--s2qq-tktv.code.run",
+   "name": "AIOStatus",
+   "types": [
+    "movie",
+    "series",
+    "other"
+   ],
+   "idPrefixes": [],
+   "stars": 30,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://watchhub.strem.io/manifest.json",
+   "baseUrl": "https://watchhub.strem.io",
+   "name": "WatchHub",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 30,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://magnetio.peterdsp.dev/manifest.json",
+   "baseUrl": "https://magnetio.peterdsp.dev",
+   "name": "Magnetio",
+   "types": [
+    "movie",
+    "series",
+    "anime"
+   ],
+   "idPrefixes": [],
+   "stars": 29,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://zamunda-addon-stremio.onrender.com/manifest.json",
+   "baseUrl": "https://zamunda-addon-stremio.onrender.com",
+   "name": "BGTorrents",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 29,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://83e20802dcf1-indian-streams.baby-beamup.club/manifest.json",
+   "baseUrl": "https://83e20802dcf1-indian-streams.baby-beamup.club",
+   "name": "Indian Regional Catalog",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 28,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://indian-regional-catalog.vercel.app/manifest.json",
+   "baseUrl": "https://indian-regional-catalog.vercel.app",
+   "name": "Indian Regional Catalog",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://dev.nebulawp.org/stremio/archive.org-addon/manifest.json",
+   "baseUrl": "https://dev.nebulawp.org/stremio/archive.org-addon",
+   "name": "\ud83c\udfa5 Archive.org",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 28,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://c69e439124f3-tvplay.baby-beamup.club/manifest.json",
+   "baseUrl": "https://c69e439124f3-tvplay.baby-beamup.club",
+   "name": "TVPlay",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "mc:"
+   ],
+   "stars": 28,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://acuanime.pages.dev/manifest.json",
+   "baseUrl": "https://acuanime.pages.dev",
+   "name": "AcuAnime",
+   "types": [
+    "series",
+    "movie",
+    "anime"
+   ],
+   "idPrefixes": [
+    "tt",
+    "kitsu:"
+   ],
+   "stars": 28,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://x20.q-1208.fun/manifest.json",
+   "baseUrl": "https://x20.q-1208.fun",
+   "name": "Q08",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "xem20:"
+   ],
+   "stars": 3,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://tvs-de-portugal.fly.dev/tv/manifest.json",
+   "baseUrl": "https://tvs-de-portugal.fly.dev/tv",
+   "name": "TVs de Portugal",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "tvpt:"
+   ],
+   "stars": 3,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://api.cinesenseai.com/stremio/manifest.json",
+   "baseUrl": "https://api.cinesenseai.com/stremio",
+   "name": "CineSenseAI",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 3,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-node-runner--architgurjar.replit.app/manifest.json",
+   "baseUrl": "https://stremio-node-runner--architgurjar.replit.app",
+   "name": "Advanced Hindi Streams Pro",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "kitsu"
+   ],
+   "stars": 3,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://anas2015-mp4.github.io/still-series/manifest.json",
+   "baseUrl": "https://anas2015-mp4.github.io/still-series",
+   "name": "Still: A Minecraft Series",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [
+    "tt38813105"
+   ],
+   "stars": 3,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-digimoviez-addon.liara.run/manifest.json",
+   "baseUrl": "https://stremio-digimoviez-addon.liara.run",
+   "name": "DigiMoviez",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 3,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://dragons-rising-stremio-addon.onrender.com/manifest.json",
+   "baseUrl": "https://dragons-rising-stremio-addon.onrender.com",
+   "name": "Dragons Rising Hebrew + English",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 3,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://addons.zrk.app/tbc/manifest.json",
+   "baseUrl": "https://addons.zrk.app/tbc",
+   "name": "To Be Continued...?",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 3,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://audioibook-addon.up.railway.app/%7B%22cat_free_public_domain%22%3Afalse%2C%22cat_short_stories%22%3Afalse%2C%22cat_drama%22%3Afalse%2C%22cat_full_cast%22%3Afalse%2C%22cat_series%22%3Afalse%2C%22hide_explicit%22%3Atrue%7D/manifest.json",
+   "baseUrl": "https://audioibook-addon.up.railway.app/%7B%22cat_free_public_domain%22%3Afalse%2C%22cat_short_stories%22%3Afalse%2C%22cat_drama%22%3Afalse%2C%22cat_full_cast%22%3Afalse%2C%22cat_series%22%3Afalse%2C%22hide_explicit%22%3Atrue%7D",
+   "name": "Cinemeta of Audiobooks",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "isbn:",
+    "asin:",
+    "olid:",
+    "slug:",
+    "librivox:",
+    "ia:",
+    "gb:",
+    "itunes:"
+   ],
+   "stars": 3,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://d3dbabc01c47-rihla-stremio-addon-docker.baby-beamup.club/manifest.json",
+   "baseUrl": "https://d3dbabc01c47-rihla-stremio-addon-docker.baby-beamup.club",
+   "name": "\u0631\u062d\u0644\u0629 \u0641\u064a \u0627\u0644\u0630\u0627\u0643\u0631\u0629",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [
+    "rtrihla"
+   ],
+   "stars": 3,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://tvs-de-portugal.fly.dev/docs/manifest.json",
+   "baseUrl": "https://tvs-de-portugal.fly.dev/docs",
+   "name": "Docs PT",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "opto:",
+    "rtp:",
+    "tvi:",
+    "ffms:",
+    "yt:"
+   ],
+   "stars": 3,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-greek-tv-latest.onrender.com/manifest.json",
+   "baseUrl": "https://stremio-greek-tv-latest.onrender.com",
+   "name": "Greek TV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "grtv"
+   ],
+   "stars": 3,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-actor-search.onrender.com/manifest.json",
+   "baseUrl": "https://stremio-actor-search.onrender.com",
+   "name": "Actor Search (Full Filmography)",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "tmdb",
+    "tt"
+   ],
+   "stars": 3,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://anine-latam.vercel.app/manifest.json",
+   "baseUrl": "https://anine-latam.vercel.app",
+   "name": "AnimeLatam",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [
+    "tt",
+    "animeav1:",
+    "henaojara:",
+    "latanime:",
+    "tmdb:",
+    "anilist:",
+    "kitsu:",
+    "mal:"
+   ],
+   "stars": 3,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://cmplugin.ir/manifest.json",
+   "baseUrl": "https://cmplugin.ir",
+   "name": "\u0633\u06cc\u0646\u0645\u0627\u06af\u0631\u0627\u0641\u06cc",
+   "types": [
+    "movie",
+    "series",
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://mediathekviewpro-myromiles.onrender.com/manifest.json",
+   "baseUrl": "https://mediathekviewpro-myromiles.onrender.com",
+   "name": "MediathekView DE (Erweitert)",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://tv.reddate.xyz/yt/manifest.json",
+   "baseUrl": "https://tv.reddate.xyz/yt",
+   "name": "Reddate YT",
+   "types": [
+    "movie",
+    "series",
+    "channel",
+    "tv"
+   ],
+   "idPrefixes": [
+    "yt:",
+    "ytc:",
+    "ytp:"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://0a5433015240-stremio-kinopub.baby-beamup.club/manifest.json",
+   "baseUrl": "https://0a5433015240-stremio-kinopub.baby-beamup.club",
+   "name": "KinoPub",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://h-gate.site/gundam/manifest.json",
+   "baseUrl": "https://h-gate.site/gundam",
+   "name": "Gundam",
+   "types": [
+    "Gundam",
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "hub:"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://anime47.q-1208.fun/manifest.json",
+   "baseUrl": "https://anime47.q-1208.fun",
+   "name": "Anime47 & AnimeVui",
+   "types": [
+    "anime",
+    "series",
+    "movie"
+   ],
+   "idPrefixes": [
+    "anime47:",
+    "tt",
+    "kitsu:",
+    "tmdb:"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://next.cmplugin.ir/manifest.json",
+   "baseUrl": "https://next.cmplugin.ir",
+   "name": "\u0633\u06cc\u0646\u0645\u0627\u06af\u0631\u0627\u0641\u06cc",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "cg:",
+    "tt"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://site--stremio-binge-control--vt7r4jwgwklq.code.run/kwR3ALrn1rZap6az/manifest.json",
+   "baseUrl": "https://site--stremio-binge-control--vt7r4jwgwklq.code.run/kwR3ALrn1rZap6az",
+   "name": "\ud83d\udcc5 Binge Brakes",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://bg-tv-addon-qhpq.onrender.com/manifest.json",
+   "baseUrl": "https://bg-tv-addon-qhpq.onrender.com",
+   "name": "BG Music Channels",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://zerphyx.com/hub/addon/88451c43272887a57145539caa7714fa0ddd7df7002b990abdc2df0d070360b1/manifest.json",
+   "baseUrl": "https://zerphyx.com/hub/addon/88451c43272887a57145539caa7714fa0ddd7df7002b990abdc2df0d070360b1",
+   "name": "StreamUnion \u00b7 Noam sasson",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://injection-faq-fun-lonely.trycloudflare.com/manifest.json",
+   "baseUrl": "https://injection-faq-fun-lonely.trycloudflare.com",
+   "name": "JKAnime TV Nativo",
+   "types": [
+    "series",
+    "movie",
+    "anime"
+   ],
+   "idPrefixes": [
+    "kitsu:",
+    "tt"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://youtuberecaps.vercel.app/manifest.json",
+   "baseUrl": "https://youtuberecaps.vercel.app",
+   "name": "YouTube Recaps",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://www.matchletter.com/stremio/manifest.json",
+   "baseUrl": "https://www.matchletter.com/stremio",
+   "name": "MatchLetter \u00b7 Watch Together",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://khmerhub.onrender.com/khmerdub/manifest.json",
+   "baseUrl": "https://khmerhub.onrender.com/khmerdub",
+   "name": "KhmerDub",
+   "types": [
+    "series",
+    "movie",
+    "channel"
+   ],
+   "idPrefixes": [],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://georgian-stremio-addon.onrender.com/manifest.json",
+   "baseUrl": "https://georgian-stremio-addon.onrender.com",
+   "name": "Georgia TV: Live Channels",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://bamabin.zarg.ir/tokenanddettings/manifest.json",
+   "baseUrl": "https://bamabin.zarg.ir/tokenanddettings",
+   "name": "Bamabin",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "bamabin"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://bollywood-streams.onrender.com/manifest.json",
+   "baseUrl": "https://bollywood-streams.onrender.com",
+   "name": "Bollywood Streams",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://addons.zrk.app/popcorn-noise/manifest.json",
+   "baseUrl": "https://addons.zrk.app/popcorn-noise",
+   "name": "Popcorn Noise",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://cricketstreaming.vercel.app/manifest.json",
+   "baseUrl": "https://cricketstreaming.vercel.app",
+   "name": "Cricket Streams",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "cricket"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://animo-hym4.onrender.com/manifest.json",
+   "baseUrl": "https://animo-hym4.onrender.com",
+   "name": "Animo",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "kitsu:"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://tvlegal.beluchon.top/manifest.json",
+   "baseUrl": "https://tvlegal.beluchon.top",
+   "name": "TV Legal France",
+   "types": [
+    "tv",
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tvlegal:",
+    "tt"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://tutientv.q-1208.fun/manifest.json",
+   "baseUrl": "https://tutientv.q-1208.fun",
+   "name": "Tu Ti\u00ean TV",
+   "types": [
+    "series",
+    "movie",
+    "anime"
+   ],
+   "idPrefixes": [
+    "tutientv:",
+    "tutientv_",
+    "tt",
+    "tmdb:",
+    "kitsu:"
+   ],
+   "stars": 1,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://fun.rfnx.workers.dev/manifest.json",
+   "baseUrl": "https://fun.rfnx.workers.dev",
+   "name": "Best Torrents",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [],
+   "stars": 1,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://mudales.github.io/stremio-tv-il/manifest.json",
+   "baseUrl": "https://mudales.github.io/stremio-tv-il",
+   "name": "Israeli TV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "iltv_"
+   ],
+   "stars": 1,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://tvs-de-portugal.fly.dev/beachcams/manifest.json",
+   "baseUrl": "https://tvs-de-portugal.fly.dev/beachcams",
+   "name": "Praias tugas",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "beachcam:"
+   ],
+   "stars": 1,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://fastwater.app/stremio/public/manifest.json",
+   "baseUrl": "https://fastwater.app/stremio/public",
+   "name": "Fastwater",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "fw:"
+   ],
+   "stars": 1,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://formulio.hayd.uk/manifest.json",
+   "baseUrl": "https://formulio.hayd.uk",
+   "name": "Formulio",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 1,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://idantv.fusiontv.co/manifest.json",
+   "baseUrl": "https://idantv.fusiontv.co",
+   "name": "Israel TV",
+   "types": [
+    "tv",
+    "series"
+   ],
+   "idPrefixes": [
+    "israeltv",
+    "israelvod"
+   ],
+   "stars": 1,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://hoahinh.q-1208.fun/manifest.json",
+   "baseUrl": "https://hoahinh.q-1208.fun",
+   "name": "Ho\u1ea1t H\u00ecnh 3D (Mot3D & YanHH3D)",
+   "types": [
+    "series",
+    "movie"
+   ],
+   "idPrefixes": [
+    "mot3d:",
+    "yanhh3d:",
+    "tt",
+    "tmdb:",
+    "kitsu:"
+   ],
+   "stars": 1,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://7d19e241349c-olemiss.baby-beamup.club/manifest.json",
+   "baseUrl": "https://7d19e241349c-olemiss.baby-beamup.club",
+   "name": "Ole Miss",
+   "types": [
+    "movie",
+    "series",
+    "channel"
+   ],
+   "idPrefixes": [
+    "om:"
+   ],
+   "stars": 1,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://animehay.q-1208.fun/manifest.json",
+   "baseUrl": "https://animehay.q-1208.fun",
+   "name": "AnimeHay - Anime Vietsub HD",
+   "types": [
+    "series",
+    "movie"
+   ],
+   "idPrefixes": [
+    "animehay:",
+    "tt",
+    "kitsu:",
+    "tmdb:"
+   ],
+   "stars": 1,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://flick-stream-unofficial-addon.onrender.com/manifest.json",
+   "baseUrl": "https://flick-stream-unofficial-addon.onrender.com",
+   "name": "Open Movies",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "openmovie:"
+   ],
+   "stars": 1,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://xpartacus.stream/manifest.json",
+   "baseUrl": "https://xpartacus.stream",
+   "name": "Xpartacus",
+   "types": [
+    "movie",
+    "series",
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 1,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://kast-addon-pi.tail47625d.ts.net/manifest.json",
+   "baseUrl": "https://kast-addon-pi.tail47625d.ts.net",
+   "name": "Kast Alldebrid",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "kast:",
+    "tt"
+   ],
+   "stars": 1,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://hhtq.q-1208.fun/manifest.json",
+   "baseUrl": "https://hhtq.q-1208.fun",
+   "name": "HHTQ - Ho\u1ea1t H\u00ecnh Trung Qu\u1ed1c (Team & 4K)",
+   "types": [
+    "series",
+    "movie"
+   ],
+   "idPrefixes": [
+    "hhtq:",
+    "tt",
+    "kitsu:",
+    "tmdb:"
+   ],
+   "stars": 1,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://radiobr-nuvio.onrender.com/manifest.json",
+   "baseUrl": "https://radiobr-nuvio.onrender.com",
+   "name": "Esta\u00e7\u00f5es de r\u00e1dios - Brasil",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 1,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://mhub-addon.onrender.com/manifest.json",
+   "baseUrl": "https://mhub-addon.onrender.com",
+   "name": "MediathekView DE (Erweitert)",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [],
+   "stars": 0,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://israel-tv.israeltv2.workers.dev/manifest.json",
+   "baseUrl": "https://israel-tv.israeltv2.workers.dev",
+   "name": "Israel TV",
+   "types": [
+    "series",
+    "tv"
+   ],
+   "idPrefixes": [
+    "iltv_",
+    "tt",
+    "tmdb:"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://vf-trailer-off.vercel.app/manifest.json",
+   "baseUrl": "https://vf-trailer-off.vercel.app",
+   "name": "W Bandes-Annonces VF",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-ruido.vercel.app/manifest.json",
+   "baseUrl": "https://stremio-ruido.vercel.app",
+   "name": "Ru\u00eddo \u00b7 PT",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 0,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-animation-addon-ultimo3.setosnet.workers.dev/manifest.json",
+   "baseUrl": "https://stremio-animation-addon-ultimo3.setosnet.workers.dev",
+   "name": "Animation VS Streams (EN/ES)",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [
+    "tt9597412",
+    "tt13339668",
+    "tt28058460",
+    "28058460"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://webshare-stremio-addon.savolaska.workers.dev/manifest.json",
+   "baseUrl": "https://webshare-stremio-addon.savolaska.workers.dev",
+   "name": "TV Browser",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://ftv-stremio.surge.sh/manifest.json",
+   "baseUrl": "https://ftv-stremio.surge.sh",
+   "name": "FTV Channels",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "ftv_"
+   ],
+   "stars": 6,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://norsk-stream-hub.vercel.app/manifest.json",
+   "baseUrl": "https://norsk-stream-hub.vercel.app",
+   "name": "NORGE-HUB",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 6,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://dexter.q-1208.fun/manifest.json",
+   "baseUrl": "https://dexter.q-1208.fun",
+   "name": "Q08 - Dexter",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb:"
+   ],
+   "stars": 6,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://streamingaddons.xyz/manifest.json",
+   "baseUrl": "https://streamingaddons.xyz",
+   "name": "DonTorrent",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "dt:",
+    "tt"
+   ],
+   "stars": 6,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://extend.seedr.cc/1FC9yOTGZiTMjj53XIJsf9eknf8HrOWhiM7XpqLTdY98Q4a5GxjCXtjWIzEUBQVfSV7mI7k_FUgfKDVLwxdhz0qcIFx92_4hhR5VulW6_R0qJKFnuo-F96iq6wjFlG5FhHS5oRJKhz_3Gbp19vTnCa4GPOP7F3-actaV7QQGbdA2dRxdJQUOSmFD24gbyoBhkTThE1tc2tZgtXy26S4mANd6aYOiYxQGLupZ5IZTlIvvVB4LOp-RTcz15Y0P30qH77_gLy1FGOk/manifest.json",
+   "baseUrl": "https://extend.seedr.cc/1FC9yOTGZiTMjj53XIJsf9eknf8HrOWhiM7XpqLTdY98Q4a5GxjCXtjWIzEUBQVfSV7mI7k_FUgfKDVLwxdhz0qcIFx92_4hhR5VulW6_R0qJKFnuo-F96iq6wjFlG5FhHS5oRJKhz_3Gbp19vTnCa4GPOP7F3-actaV7QQGbdA2dRxdJQUOSmFD24gbyoBhkTThE1tc2tZgtXy26S4mANd6aYOiYxQGLupZ5IZTlIvvVB4LOp-RTcz15Y0P30qH77_gLy1FGOk",
+   "name": "Seedr Cloud Storage",
+   "types": [
+    "movie",
+    "series",
+    "music"
+   ],
+   "idPrefixes": [
+    "seedr_",
+    "tt"
+   ],
+   "stars": 6,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://anime.k-20.xyz/manifest.json",
+   "baseUrl": "https://anime.k-20.xyz",
+   "name": "K20 - Anime",
+   "types": [
+    "anime",
+    "series",
+    "movie"
+   ],
+   "idPrefixes": [
+    "animevietsub:",
+    "kitsu:"
+   ],
+   "stars": 6,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio.twojlimit.tv/manifest.json",
+   "baseUrl": "https://stremio.twojlimit.tv",
+   "name": "TwojLimit",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 6,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://aioratings.elfhosted.com/manifest.json",
+   "baseUrl": "https://aioratings.elfhosted.com",
+   "name": "AIORatings | ElfHosted",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 6,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://tvs-de-portugal.fly.dev/skyline/manifest.json",
+   "baseUrl": "https://tvs-de-portugal.fly.dev/skyline",
+   "name": "SkylineWebcams",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "skyline:"
+   ],
+   "stars": 6,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://1fe84bc728af-maxsport.baby-beamup.club/manifest.json",
+   "baseUrl": "https://1fe84bc728af-maxsport.baby-beamup.club",
+   "name": "Maximum Sports",
+   "types": [
+    "sports",
+    "tv"
+   ],
+   "idPrefixes": [
+    "sportstors_"
+   ],
+   "stars": 6,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremiptv.com/magyar/manifest.json",
+   "baseUrl": "https://stremiptv.com/magyar",
+   "name": "Magyar TV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-youtube.lsoares.workers.dev/manifest.json",
+   "baseUrl": "https://stremio-youtube.lsoares.workers.dev",
+   "name": "Watchlane: your YouTube channels",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "ytvideo:"
+   ],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://sip.m17i.xyz/manifest.json",
+   "baseUrl": "https://sip.m17i.xyz",
+   "name": "Iran Provider",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://streamgram.duckdns.org/manifest.json",
+   "baseUrl": "https://streamgram.duckdns.org",
+   "name": "StreamGram",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tg_folder_",
+    "tg_channel_",
+    "tmdb",
+    "tt"
+   ],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://whoniverse.nubblyn.com/manifest.json",
+   "baseUrl": "https://whoniverse.nubblyn.com",
+   "name": "Whoniverse",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://scyllapick.onrender.com/manifest.json",
+   "baseUrl": "https://scyllapick.onrender.com",
+   "name": "ScyllaPick",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://ava.kmevps.ir/manifest.json",
+   "baseUrl": "https://ava.kmevps.ir",
+   "name": "AvaMovie",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://vidsrc-api-stremio.vercel.app/manifest.json",
+   "baseUrl": "https://vidsrc-api-stremio.vercel.app",
+   "name": "Autoembed Strem",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb"
+   ],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://tmssts23-addon-stremio-wrestling-ufc-main.tmssts23.workers.dev/manifest.json",
+   "baseUrl": "https://tmssts23-addon-stremio-wrestling-ufc-main.tmssts23.workers.dev",
+   "name": "Wrestling & UFC \u2014 Eventos (WWE, AEW, TNA, UFC)",
+   "types": [
+    "series",
+    "movie",
+    "Fight"
+   ],
+   "idPrefixes": [
+    "wwrs-",
+    "tt",
+    "tmdb:"
+   ],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://tvmio.ooguy.com/eyJjb3VudHJpZXMiOlsiRlIiLCJNQSIsIkFSIiwiRVMiXSwiY2F0ZWdvcmllcyI6eyJGUiI6WyJHZW5lcmFsIPCfk7oiLCJTcG9ydHMg4pq9IiwiRG9jdW1lbnRhaXJlcyDwn4yNIiwiRmlsbXMg8J+OrCIsIkluZm9ybWF0aW9ucyDwn5OwIiwiRW5mYW50cyDwn5G2IiwiTXVzaWMg8J+OtSJdLCJNQSI6WyJHZW5lcmFsIPCfk7oiXSwiQVIiOlsiR2VuZXJhbCDwn5O6IiwiUmVsaWdpb24g8J+ZjyIsIlNwb3J0cyDimr0iXSwiRVMiOlsiR2VuZXJhbCDwn5O6IiwiRGVwb3J0ZXMg4pq9IiwiRW50cmV0ZW5pbWllbnRvIPCfjq0iLCJSZWdpb25hbGVzIPCfk40iXX0sImVuYWJsZVNlYXJjaCI6ZmFsc2V9/manifest.json",
+   "baseUrl": "https://tvmio.ooguy.com/eyJjb3VudHJpZXMiOlsiRlIiLCJNQSIsIkFSIiwiRVMiXSwiY2F0ZWdvcmllcyI6eyJGUiI6WyJHZW5lcmFsIPCfk7oiLCJTcG9ydHMg4pq9IiwiRG9jdW1lbnRhaXJlcyDwn4yNIiwiRmlsbXMg8J+OrCIsIkluZm9ybWF0aW9ucyDwn5OwIiwiRW5mYW50cyDwn5G2IiwiTXVzaWMg8J+OtSJdLCJNQSI6WyJHZW5lcmFsIPCfk7oiXSwiQVIiOlsiR2VuZXJhbCDwn5O6IiwiUmVsaWdpb24g8J+ZjyIsIlNwb3J0cyDimr0iXSwiRVMiOlsiR2VuZXJhbCDwn5O6IiwiRGVwb3J0ZXMg4pq9IiwiRW50cmV0ZW5pbWllbnRvIPCfjq0iLCJSZWdpb25hbGVzIPCfk40iXX0sImVuYWJsZVNlYXJjaCI6ZmFsc2V9",
+   "name": "TVMio",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "tvmio-"
+   ],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://freedom-media.link/stremio/manifest.json",
+   "baseUrl": "https://freedom-media.link/stremio",
+   "name": "Freedom Media | Live TV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "stv:live:"
+   ],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio.nopremium.tv/manifest.json",
+   "baseUrl": "https://stremio.nopremium.tv",
+   "name": "NoPremium",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://vela-flow.vercel.app/manifest.json",
+   "baseUrl": "https://vela-flow.vercel.app",
+   "name": "Vela Flow",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://wlatino-fusion.nuvio1.workers.dev/eyJhY2Nlc3NfZW1haWwiOiJtcDNlZHdAZ21haWwuY29tIn0/manifest.json",
+   "baseUrl": "https://wlatino-fusion.nuvio1.workers.dev/eyJhY2Nlc3NfZW1haWwiOiJtcDNlZHdAZ21haWwuY29tIn0",
+   "name": "WLATINO Fusi\u00f3n",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-addon-rk4p.vercel.app/manifest.json",
+   "baseUrl": "https://stremio-addon-rk4p.vercel.app",
+   "name": "TorBox Librarian \ud83d\udcda",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://9662a158fccb-sensitivity-addon.baby-beamup.club/manifest.json",
+   "baseUrl": "https://9662a158fccb-sensitivity-addon.baby-beamup.club",
+   "name": "Sensitivity Notes",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://muvindo.inulpc.web.id/manifest.json",
+   "baseUrl": "https://muvindo.inulpc.web.id",
+   "name": "\ud83c\uddee\ud83c\udde9 MuvIndo: Pemersatu Bangsa +62",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "mb:",
+    "tt"
+   ],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://motchillv.q-1208.fun/manifest.json",
+   "baseUrl": "https://motchillv.q-1208.fun",
+   "name": "Motchill Direct Stream",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio.uploadedpremiumlink.net/manifest.json",
+   "baseUrl": "https://stremio.uploadedpremiumlink.net",
+   "name": "UploadedPremiumLink",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "upl"
+   ],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://animecixnet-stremio-addon.mycodelab.com.tr/manifest.json",
+   "baseUrl": "https://animecixnet-stremio-addon.mycodelab.com.tr",
+   "name": "AnimeciX",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "0-"
+   ],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://flix-music.vercel.app/manifest.json",
+   "baseUrl": "https://flix-music.vercel.app",
+   "name": "Flix-Music",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "lfm:"
+   ],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://ltstream.online/manifest.json",
+   "baseUrl": "https://ltstream.online",
+   "name": "LTstream",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb"
+   ],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://61ab9c85a149-skcz-torrents.baby-beamup.club/manifest.json",
+   "baseUrl": "https://61ab9c85a149-skcz-torrents.baby-beamup.club",
+   "name": "SK/CZ Torrents",
+   "types": [
+    "movie",
+    "series",
+    "tv"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 5,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://rating-kinopoisk.onrender.com/manifest.json",
+   "baseUrl": "https://rating-kinopoisk.onrender.com",
+   "name": "Kinopoisk \u0440\u0435\u0439\u0442\u0438\u043d\u0433",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 4,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://kurd-dub-stream--chyaluqman1.replit.app/api/addon/manifest.json",
+   "baseUrl": "https://kurd-dub-stream--chyaluqman1.replit.app/api/addon",
+   "name": "Chya TV",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 4,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio.bubelar.com/manifest.json",
+   "baseUrl": "https://stremio.bubelar.com",
+   "name": "Webshare",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 4,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-overseerr-addon.vercel.app/manifest.json",
+   "baseUrl": "https://stremio-overseerr-addon.vercel.app",
+   "name": "Overseerr Requests",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 4,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://freedom-media.link/stremio/vod/manifest.json",
+   "baseUrl": "https://freedom-media.link/stremio/vod",
+   "name": "Freedom Media | VOD (Setup Required)",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb"
+   ],
+   "stars": 4,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://iranian-sattelite-stremio-addon.vercel.app/manifest.json",
+   "baseUrl": "https://iranian-sattelite-stremio-addon.vercel.app",
+   "name": "Persian Satellite & IPTV [SUSPENDED]",
+   "types": [
+    "channel",
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "iptv:",
+    "bbc-",
+    "iran-",
+    "irib-",
+    "pmc",
+    "gem-",
+    "tt",
+    "mbc-"
+   ],
+   "stars": 4,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://aad212dff663-oceny-filmweb.baby-beamup.club/manifest.json",
+   "baseUrl": "https://aad212dff663-oceny-filmweb.baby-beamup.club",
+   "name": "Oceny Filmweb",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 4,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://f7094476a780-dubbindo.baby-beamup.club/manifest.json",
+   "baseUrl": "https://f7094476a780-dubbindo.baby-beamup.club",
+   "name": "Dubbing Indonesia",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "dubbindo_"
+   ],
+   "stars": 4,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://hh.k-20.xyz/manifest.json",
+   "baseUrl": "https://hh.k-20.xyz",
+   "name": "K20 \u2022 TM & LT",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "k20tm:",
+    "tvhay:"
+   ],
+   "stars": 4,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://ce4fd5bb6e0c-ororo-tv.baby-beamup.club/manifest.json",
+   "baseUrl": "https://ce4fd5bb6e0c-ororo-tv.baby-beamup.club",
+   "name": "ororo.tv",
+   "types": [
+    "movie",
+    "series",
+    "channel"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 4,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-movierulz-taupe.vercel.app/manifest.json",
+   "baseUrl": "https://stremio-movierulz-taupe.vercel.app",
+   "name": "M_Rulz Scraper (Telugu)",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb"
+   ],
+   "stars": 4,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://rakuten-tv-stremio.fly.dev/manifest.json",
+   "baseUrl": "https://rakuten-tv-stremio.fly.dev",
+   "name": "Rakuten TV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "rakuten:"
+   ],
+   "stars": 4,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://tv.masoko.net/manifest.json",
+   "baseUrl": "https://tv.masoko.net",
+   "name": "BG Live TV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "bgtv_"
+   ],
+   "stars": 4,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio.sosac.tv/cs/manifest.json",
+   "baseUrl": "https://stremio.sosac.tv/cs",
+   "name": "SosacTV2",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 3,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://a.abyssus.dpdns.org/manifest.json",
+   "baseUrl": "https://a.abyssus.dpdns.org",
+   "name": "Abyssus",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 3,
+   "from": "Server pool \u00b7 stremio-addons.net",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://a00f518e60ff-doesthedogdie.baby-beamup.club/manifest.json",
+   "baseUrl": "https://a00f518e60ff-doesthedogdie.baby-beamup.club",
+   "name": "DoesTheDogDie (Jump Scares)",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 stremio-collection",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://discussio.elfhosted.com/manifest.json",
+   "baseUrl": "https://discussio.elfhosted.com",
+   "name": "Discussio | ElfHosted",
+   "types": [
+    "series",
+    "movie"
+   ],
+   "idPrefixes": [],
+   "stars": 0,
+   "from": "Server pool \u00b7 stremio-collection",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://caching.stremio.net/publicdomainmovies.now.sh/manifest.json",
+   "baseUrl": "https://caching.stremio.net/publicdomainmovies.now.sh",
+   "name": "Public Domain Movies",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 cinemeta-official",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://dearbulut.github.io/iptv/stremio/manifest.json",
+   "baseUrl": "https://dearbulut.github.io/iptv/stremio",
+   "name": "IPTV Nexus",
+   "types": [
+    "tv",
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "nexus-",
+    "nexusvod-"
+   ],
+   "stars": 47,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://dor2500.github.io/israel-tv-plus/stremio/manifest.json",
+   "baseUrl": "https://dor2500.github.io/israel-tv-plus/stremio",
+   "name": "\u05d9\u05e9\u05e8\u05d0\u05dc TV+ Live",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "itv_"
+   ],
+   "stars": 8,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://pimpbunny-addon.onrender.com/manifest.json",
+   "baseUrl": "https://pimpbunny-addon.onrender.com",
+   "name": "PimpBunny",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "pb_"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio.tomz.dev/aisearch/configure/manifest.json",
+   "baseUrl": "https://stremio.tomz.dev/aisearch/configure",
+   "name": "AI Search",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 113,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio.chill.institute/manifest.json",
+   "baseUrl": "https://stremio.chill.institute",
+   "name": "chill.institute",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "chill:file:",
+    "chill:movie:",
+    "chill:series:",
+    "chill:episode:",
+    "chill:release:",
+    "chill:reconnect"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://cinetucumano-stremio.onrender.com/manifest.json",
+   "baseUrl": "https://cinetucumano-stremio.onrender.com",
+   "name": "Cine Tucumano",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "ct_"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 github",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://raw.githubusercontent.com/stanpx/rt-addon/main/stremio/manifest.json",
+   "baseUrl": "https://raw.githubusercontent.com/stanpx/rt-addon/main/stremio",
+   "name": "RT Addon",
+   "types": [
+    "movie",
+    "series",
+    "tv"
+   ],
+   "idPrefixes": [
+    "rt:"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://xveq22iokni2creoql6q5k2upa0jkdnq.lambda-url.us-east-1.on.aws/manifest.json",
+   "baseUrl": "https://xveq22iokni2creoql6q5k2upa0jkdnq.lambda-url.us-east-1.on.aws",
+   "name": "Italian HTTPS",
+   "types": [
+    "movie",
+    "series",
+    "anime"
+   ],
+   "idPrefixes": [],
+   "stars": 1,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://xveq22iokni2creoql6q5k2upa0jkdnq.lambda-url.us-east-1.on.aws/aio/manifest.json",
+   "baseUrl": "https://xveq22iokni2creoql6q5k2upa0jkdnq.lambda-url.us-east-1.on.aws/aio",
+   "name": "Italian HTTPS (AIO)",
+   "types": [
+    "movie",
+    "series",
+    "anime"
+   ],
+   "idPrefixes": [],
+   "stars": 1,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://scrut.greekai.gr/woke/eyJ2IjoyfQ/manifest.json",
+   "baseUrl": "https://scrut.greekai.gr/woke/eyJ2IjoyfQ",
+   "name": "Woke Score",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "woke"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://bbab4a35b833-more-like-this.baby-beamup.club/configure/manifest.json",
+   "baseUrl": "https://bbab4a35b833-more-like-this.baby-beamup.club/configure",
+   "name": "More Like This",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    ""
+   ],
+   "stars": 52,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://4sdum7qwfzt5amsvkjd3wesm3m0mlyku.lambda-url.us-east-1.on.aws/manifest.json",
+   "baseUrl": "https://4sdum7qwfzt5amsvkjd3wesm3m0mlyku.lambda-url.us-east-1.on.aws",
+   "name": "IPTV VOD",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 3,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://vidsrc-addon-ten.vercel.app/manifest.json",
+   "baseUrl": "https://vidsrc-addon-ten.vercel.app",
+   "name": "VidSrc",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 1,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://mytorbox.hackerslash.dev/manifest.json",
+   "baseUrl": "https://mytorbox.hackerslash.dev",
+   "name": "MyTorbox",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tb:"
+   ],
+   "stars": 6,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://c-cloud-stremio-addon.vercel.app/manifest.json",
+   "baseUrl": "https://c-cloud-stremio-addon.vercel.app",
+   "name": "CCloud",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "ccloud:",
+    "tt"
+   ],
+   "stars": 27,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-addon-zamunda.vercel.app/manifest.json",
+   "baseUrl": "https://stremio-addon-zamunda.vercel.app",
+   "name": "Zamunda",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 5,
+   "from": "Server pool \u00b7 github",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://family-shield.saurabhshakya078.workers.dev/manifest.json",
+   "baseUrl": "https://family-shield.saurabhshakya078.workers.dev",
+   "name": "Family Shield Ratings",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 9,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://vietstream-addon.onrender.com/manifest.json",
+   "baseUrl": "https://vietstream-addon.onrender.com",
+   "name": "VietStream \u00b7 Phim Vi\u1ec7t",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "kk_",
+    "op_",
+    "nc_",
+    "vn_",
+    "p4k_",
+    "tp_",
+    "k20_"
+   ],
+   "stars": 9,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://moisa.fun/manifest.json",
+   "baseUrl": "https://moisa.fun",
+   "name": "Moisa",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 9,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://kraken.backwoodsdevelopment.com/manifest.json",
+   "baseUrl": "https://kraken.backwoodsdevelopment.com",
+   "name": "\ud83e\udd91 Kraken",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "kitsu:"
+   ],
+   "stars": 4,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://bharat-streams-httpbasant2-9067s-projects.vercel.app/manifest.json",
+   "baseUrl": "https://bharat-streams-httpbasant2-9067s-projects.vercel.app",
+   "name": "Binge Addon",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 0,
+   "from": "Server pool \u00b7 github",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://raw.githubusercontent.com/koerakutsa/pengu-catalogs/main/manifest.json",
+   "baseUrl": "https://raw.githubusercontent.com/koerakutsa/pengu-catalogs/main",
+   "name": "Pengu Eesti Kataloogid",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "duoplay:",
+    "err:",
+    "err-archive:",
+    "lasteekraan:"
+   ],
+   "stars": 1,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://sounddepo.github.io/stremio-demo-addon/manifest.json",
+   "baseUrl": "https://sounddepo.github.io/stremio-demo-addon",
+   "name": "Randy Demo",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "randydemo-"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://binge-addon-httpbasant2-9067s-projects.vercel.app/manifest.json",
+   "baseUrl": "https://binge-addon-httpbasant2-9067s-projects.vercel.app",
+   "name": "Binge Addon",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 0,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://moisa-addon.vercel.app/manifest.json",
+   "baseUrl": "https://moisa-addon.vercel.app",
+   "name": "Moisa",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 9,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://pstream.ir/manifest.json",
+   "baseUrl": "https://pstream.ir",
+   "name": "Persian Stremio",
+   "types": [
+    "movie",
+    "series",
+    "tv",
+    "sport"
+   ],
+   "idPrefixes": [],
+   "stars": 11,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://gokef.github.io/turkish-audio-finder/manifest.json",
+   "baseUrl": "https://gokef.github.io/turkish-audio-finder",
+   "name": "Turkish Audio Finder",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 2,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://krtoonzaman.albranmaze7.workers.dev/manifest.json",
+   "baseUrl": "https://krtoonzaman.albranmaze7.workers.dev",
+   "name": "\u0643\u0631\u062a\u0648\u0646 \u0632\u0645\u0627\u0646",
+   "types": [
+    "series",
+    "movie"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb:",
+    "stardima:",
+    "jcseries-",
+    "jcartoon-",
+    "jcartoon:"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://06a6d06388d0-stremio-randomizer.baby-beamup.club/manifest.json",
+   "baseUrl": "https://06a6d06388d0-stremio-randomizer.baby-beamup.club",
+   "name": "Randomizer",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://pigamer37.alwaysdata.net/configure/manifest.json",
+   "baseUrl": "https://pigamer37.alwaysdata.net/configure",
+   "name": "AnimES",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other"
+   ],
+   "idPrefixes": [
+    "tt",
+    "animeav1:",
+    "henaojara:",
+    "tioanime:",
+    "latanime:",
+    "tmdb:",
+    "anilist:",
+    "kitsu:"
+   ],
+   "stars": 60,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://5a0d1888fa64-orion.baby-beamup.club/configure/manifest.json",
+   "baseUrl": "https://5a0d1888fa64-orion.baby-beamup.club/configure",
+   "name": "Orion",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "kitsu"
+   ],
+   "stars": 99,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://hyperstream-addon.dhrubomohiuddinabdulkadir.workers.dev/manifest.json",
+   "baseUrl": "https://hyperstream-addon.dhrubomohiuddinabdulkadir.workers.dev",
+   "name": "\ud83c\udfac HyperStream Ultimate",
+   "types": [
+    "movie",
+    "series",
+    "other"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://tugaflix.vercel.app/manifest.json",
+   "baseUrl": "https://tugaflix.vercel.app",
+   "name": "TugaFlix",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 3,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://einthusan-stremio-addon.vercel.app/manifest.json",
+   "baseUrl": "https://einthusan-stremio-addon.vercel.app",
+   "name": "Einthusan",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://goplaysu-stremio-addon.vercel.app/manifest.json",
+   "baseUrl": "https://goplaysu-stremio-addon.vercel.app",
+   "name": "KissKH",
+   "types": [
+    "series",
+    "movie"
+   ],
+   "idPrefixes": [
+    "kisskh:"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://gdrive-addon-for-stremio.vercel.app/manifest.json",
+   "baseUrl": "https://gdrive-addon-for-stremio.vercel.app",
+   "name": "GDrive",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 0,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-tennis-channel-addon.vercel.app/manifest.json",
+   "baseUrl": "https://stremio-tennis-channel-addon.vercel.app",
+   "name": "Tennis Channel",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "tennis_tv"
+   ],
+   "stars": 2,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://malluflix-forzayt-stremio.onrender.com/manifest.json",
+   "baseUrl": "https://malluflix-forzayt-stremio.onrender.com",
+   "name": "MalluFlix",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "malluflix_"
+   ],
+   "stars": 12,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://nicoaran77.github.io/one-pace-espanol/manifest.json",
+   "baseUrl": "https://nicoaran77.github.io/one-pace-espanol",
+   "name": "One Pace en espa\u00f1ol",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [
+    "opes_"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 github",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://raw.githubusercontent.com/jotaunospa/usa-free-tv/main/manifest.json",
+   "baseUrl": "https://raw.githubusercontent.com/jotaunospa/usa-free-tv/main",
+   "name": "USA Free TV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "usfree-"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://sizlackin.github.io/iptv-clean/manifest.json",
+   "baseUrl": "https://sizlackin.github.io/iptv-clean",
+   "name": "Cesar Live TV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "iptv_"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio.github.io/stremio-static-addon-example/manifest.json",
+   "baseUrl": "https://stremio.github.io/stremio-static-addon-example",
+   "name": "Now.sh Example",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [],
+   "stars": 0,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://usa-free-tv-service.vercel.app/manifest.json",
+   "baseUrl": "https://usa-free-tv-service.vercel.app",
+   "name": "USA Free TV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "usfree-"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://gdrive-stremio-eta.vercel.app/manifest.json",
+   "baseUrl": "https://gdrive-stremio-eta.vercel.app",
+   "name": "GDrive",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 0,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://raw.githubusercontent.com/borepig/javstreamio/main/addon/manifest.json",
+   "baseUrl": "https://raw.githubusercontent.com/borepig/javstreamio/main/addon",
+   "name": "Stremio JAV Database Addon",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "jav:",
+    "hnt:",
+    "hk:"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://kellogs12.github.io/marvel-dc-stremio/tv/manifest.json",
+   "baseUrl": "https://kellogs12.github.io/marvel-dc-stremio/tv",
+   "name": "AU Live TV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "autv-"
+   ],
+   "stars": 1,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://vf-wallace.duckdns.org/configure/manifest.json",
+   "baseUrl": "https://vf-wallace.duckdns.org/configure",
+   "name": "W Bandes-Annonces VF",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://animelatam-animeonline-test.vercel.app/manifest.json",
+   "baseUrl": "https://animelatam-animeonline-test.vercel.app",
+   "name": "AnimeLatam",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [
+    "kitsu:"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://cdn.jsdelivr.net/gh/eipastel/pastel-provider@addon/manifest.json",
+   "baseUrl": "https://cdn.jsdelivr.net/gh/eipastel/pastel-provider@addon",
+   "name": "Pastel Provider",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [
+    "pastel"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://aiostreams.viren070.me/stremio/5af8f0c4-4273-48c5-ada3-b81eea5312f9/eyJpIjoiM2pvY1dtSlVIM21NVjVieWM2OTFNZz09IiwiZSI6IlhFVzF1c095L0VyajJsTXYyMXhRS0ZHaVlmVkFwdms2YUNCMHVGMENlOWs9IiwidCI6ImEifQ/manifest.json",
+   "baseUrl": "https://aiostreams.viren070.me/stremio/5af8f0c4-4273-48c5-ada3-b81eea5312f9/eyJpIjoiM2pvY1dtSlVIM21NVjVieWM2OTFNZz09IiwiZSI6IlhFVzF1c095L0VyajJsTXYyMXhRS0ZHaVlmVkFwdms2YUNCMHVGMENlOWs9IiwidCI6ImEifQ",
+   "name": "AIOStreams",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "other",
+    "tv",
+    "events"
+   ],
+   "idPrefixes": [],
+   "stars": 0,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://onepace-stremio-extended-cuts.vercel.app/manifest.json",
+   "baseUrl": "https://onepace-stremio-extended-cuts.vercel.app",
+   "name": "One Pace Extended Cuts",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [],
+   "stars": 0,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://aiostreamsfortheweebs.midnightignite.me/stremio/545d0d2c-b992-4f6d-9c71-f8b2f69f4da8/eyJpIjoiNzM2V1ZRTGZqZmw1OUNkSXNqUXJPZz09IiwiZSI6InptZ3dmMDF1emNQQ3RXTUVGeWVYKzMyQ05hZ09NSGIvOWU4MDM1QWM5dlU9IiwidCI6ImEifQ/manifest.json",
+   "baseUrl": "https://aiostreamsfortheweebs.midnightignite.me/stremio/545d0d2c-b992-4f6d-9c71-f8b2f69f4da8/eyJpIjoiNzM2V1ZRTGZqZmw1OUNkSXNqUXJPZz09IiwiZSI6InptZ3dmMDF1emNQQ3RXTUVGeWVYKzMyQ05hZ09NSGIvOWU4MDM1QWM5dlU9IiwidCI6ImEifQ",
+   "name": "AIOStreams Nightly",
+   "types": [
+    "other",
+    "anime",
+    "movie",
+    "series",
+    "tv",
+    "events"
+   ],
+   "idPrefixes": [],
+   "stars": 0,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-bg-movies.vercel.app/manifest.json",
+   "baseUrl": "https://stremio-bg-movies.vercel.app",
+   "name": "\u0411\u044a\u043b\u0433\u0430\u0440\u0441\u043a\u0438 \u0444\u0438\u043b\u043c\u0438",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 7,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://live-catalog-addon.open-live-catalog.workers.dev/manifest.json",
+   "baseUrl": "https://live-catalog-addon.open-live-catalog.workers.dev",
+   "name": "Live Catalog",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [],
+   "stars": 0,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://eipastel.github.io/pastel-provider/manifest.json",
+   "baseUrl": "https://eipastel.github.io/pastel-provider",
+   "name": "Pastel Provider",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [
+    "pastel"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio.wis237.online/manifest.json",
+   "baseUrl": "https://stremio.wis237.online",
+   "name": "WiSFilm",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "kitsu"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://knowaddon.vercel.app/manifest.json",
+   "baseUrl": "https://knowaddon.vercel.app",
+   "name": "OmakisAddon",
+   "types": [
+    "series",
+    "tv",
+    "movie"
+   ],
+   "idPrefixes": [],
+   "stars": 0,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-magnet-link-stream-addon.vercel.app/manifest.json",
+   "baseUrl": "https://stremio-magnet-link-stream-addon.vercel.app",
+   "name": "Remote Magnet Links Streams",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 1,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://jopotv.vercel.app/manifest.json",
+   "baseUrl": "https://jopotv.vercel.app",
+   "name": "JopoTv",
+   "types": [
+    "tv",
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "jopotv:"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-addon-tpb-filter-vercel.vercel.app/manifest.json",
+   "baseUrl": "https://stremio-addon-tpb-filter-vercel.vercel.app",
+   "name": "TPB Custom Filter Addon",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tpb:"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://crtanko-stremio.vercel.app/manifest.json",
+   "baseUrl": "https://crtanko-stremio.vercel.app",
+   "name": "Crtanko - Sinkronizirani Crti\u0107i",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://krx18-addon.onrender.com/manifest.json",
+   "baseUrl": "https://krx18-addon.onrender.com",
+   "name": "KRX18",
+   "types": [
+    "movie"
+   ],
+   "idPrefixes": [
+    "krx18:",
+    "javeng:"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  }
+ ],
  "history": [],
  "retired": [],
  "cursor": 0
