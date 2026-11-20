@@ -32,7 +32,11 @@ on:
       - '.github/workflows/nova-patch-build.yml'
 
 permissions:
-  contents: read
+  # Write, for one reason only: to commit the compiler errors when the build
+  # fails. GitHub's log and artifact blobs are unreachable from an agent sandbox
+  # (different host, not on the allowlist), but a file committed to the branch
+  # always is. The nova-tv workflow already does this for the same reason.
+  contents: write
 
 concurrency:
   group: nova-patch-build-${{ github.ref }}
@@ -156,6 +160,53 @@ jobs:
             work/nova-tv/android/tests.log
           if-no-files-found: warn
           retention-days: 14
+
+      - name: Publish the compiler errors into the repository
+        # Runs before the failing step, so the errors survive the job failing.
+        if: steps.patched.outputs.status != '0'
+        run: |
+          set -uo pipefail
+          OUT="nova-patch/BUILD-DIAGNOSTICS.md"
+          {
+            echo "# Nova patch build diagnostics"
+            echo
+            echo "Written automatically by the \"Nova patch build\" workflow."
+            echo
+            echo "- run: $GITHUB_RUN_ID"
+            echo "- sources: \`$NOVA_SOURCES\` @ \`$NOVA_SHA\`"
+            echo "- patched compile: FAILED"
+            echo
+            echo '## compiler errors'
+            echo '```'
+            grep -E "^e: " work/nova-tv/android/compile.log | head -80 || echo "no 'e:' lines captured"
+            echo '```'
+            echo
+            echo '## applied patch'
+            echo '```'
+            grep -E "^\s+[~+] " apply.log | head -40 || true
+            echo '```'
+            echo
+            echo '## baseline (unpatched) compile'
+            echo '```'
+            if [ -f work/nova-tv/android/baseline.log ]; then
+              tail -20 work/nova-tv/android/baseline.log
+            else
+              echo "not run -- the patched build did not reach the comparison step"
+            fi
+            echo '```'
+          } > "$OUT"
+          head -40 "$OUT"
+
+      - name: Commit the diagnostics
+        if: steps.patched.outputs.status != '0'
+        run: |
+          set -uo pipefail
+          git config user.name "nova-ci"
+          git config user.email "nova-ci@users.noreply.github.com"
+          git add nova-patch/BUILD-DIAGNOSTICS.md
+          if git diff --cached --quiet; then echo "no diagnostics to commit"; exit 0; fi
+          git commit -m "ci(nova): patch build diagnostics for run $GITHUB_RUN_ID"
+          git push || echo "push failed; the artifact still has the logs"
 
       - name: Fail if the patched build did not compile
         if: steps.patched.outputs.status != '0'
