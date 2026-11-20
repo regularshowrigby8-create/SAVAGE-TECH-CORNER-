@@ -208,7 +208,13 @@ jobs:
       - name: Commit the pools
         # A crawl result is data, so it is committed only when it changed, and
         # never on a scheduled run against someone else's fork.
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        #
+        # This used to be restricted to the default branch, which meant the pool
+        # data was never actually committed anywhere: the crawl runs on this
+        # feature branch. It now commits to whatever branch it was started on,
+        # except a pull request's synthetic merge ref (the token cannot push
+        # there anyway, and pushing to someone else's branch would be wrong).
+        if: github.event_name != 'pull_request' && !startsWith(github.ref, 'refs/pull/')
         run: |
           set -euo pipefail
           git config user.name "nova-crawler"
