@@ -135,11 +135,11 @@ private fun SpotlightShelves(
                     .padding(start = ContentStart, top = NovaSpace.safeVertical + 40.dp, end = NovaSpace.safeHorizontal)
                     .height(SPOTLIGHT_HEIGHT)
             ) {
-                if (loading && spotlight == null) ShimmerHero() else Spotlight(spotlight)
+                if (loading && spotlight == null && !stalled) ShimmerHero() else Spotlight(spotlight)
             }
 
             when {
-                loading && shelves.isEmpty() -> Column(
+                loading && shelves.isEmpty() && !stalled -> Column(
                     Modifier.padding(start = ContentStart, top = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(36.dp)
                 ) {
@@ -292,6 +292,9 @@ internal fun TitleArt(meta: MetaPreview, maxHeight: androidx.compose.ui.unit.Dp 
     }
     Spacer(Modifier.height(2.dp))
 }
+
+/** How long a loader may spin with nothing on screen before it becomes an error. */
+private const val LOADING_TIMEOUT_MS = 25_000L
 
 private val SPOTLIGHT_HEIGHT = 250.dp
 private const val SPOTLIGHT_SETTLE_MS = 220L

@@ -278,23 +278,48 @@ class NovaViewModel : ViewModel() {
     fun refresh() {
         _state.update { it.copy(homeLoading = true, homeError = null) }
         viewModelScope.launch {
-            runCatching { repository.installDefaults() }
-            engine.warmUp(_state.value.finders)
-            engine.syncPoolFill(_state.value.finders)
-            shelfPlan = planShelves()
-            val first = shelfPlan.take(INITIAL_SHELVES)
-            val loaded = first.map { shelf -> async { shelf.copy(items = repository.loadPage(shelf.type, shelf.catalog, shelf.genre)) } }
-                .awaitAll().filter { it.items.isNotEmpty() }
-            val hero = loaded.firstOrNull()?.items.orEmpty().filter { !it.background.isNullOrBlank() }.take(HERO_COUNT)
-            _state.update {
-                it.copy(
-                    homeLoading = false,
-                    shelves = libraryShelves() + loaded,
-                    hero = hero,
-                    homeError = if (loaded.isEmpty()) "Couldn't reach the catalogue." else null,
-                    addons = repository.addons.value,
-                    genres = mapOf("movie" to repository.genres("movie"), "series" to repository.genres("series"))
-                )
+            // The whole body is guarded, and homeLoading is cleared in
+            // `finally`. Before this, anything that threw between the two
+            // (a finder warm-up, a shelf plan, a cancelled page) left
+            // homeLoading true for the life of the process: the home screen
+            // showed its shimmer and then nothing at all -- a blank catalogue
+            // with no error and no way back.
+            var shelves: List<Shelf> = emptyList()
+            var failure: String? = null
+            try {
+                runCatching { repository.installDefaults() }
+                runCatching { engine.warmUp(_state.value.finders) }
+                runCatching { engine.syncPoolFill(_state.value.finders) }
+                shelfPlan = planShelves()
+                val first = shelfPlan.take(INITIAL_SHELVES)
+                val loaded = first.map { shelf ->
+                    async { shelf.copy(items = repository.loadPage(shelf.type, shelf.catalog, shelf.genre)) }
+                }.awaitAll().filter { it.items.isNotEmpty() }
+                shelves = libraryShelves() + loaded
+                if (loaded.isEmpty()) failure = "Couldn't reach the catalogue."
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                failure = error.message ?: "Couldn't reach the catalogue."
+            } finally {
+                val hero = shelves.firstOrNull { it.items.isNotEmpty() }
+                    ?.items.orEmpty()
+                    .filter { !it.background.isNullOrBlank() }
+                    .take(HERO_COUNT)
+                val result = shelves
+                val reason = failure
+                _state.update {
+                    it.copy(
+                        homeLoading = false,
+                        // Keep whatever is already on screen rather than
+                        // replacing a good catalogue with an empty one.
+                        shelves = result.ifEmpty { it.shelves },
+                        hero = hero.ifEmpty { it.hero },
+                        homeError = if (result.isEmpty()) reason ?: "Couldn't reach the catalogue." else null,
+                        addons = repository.addons.value,
+                        genres = mapOf("movie" to repository.genres("movie"), "series" to repository.genres("series"))
+                    )
+                }
             }
         }
     }

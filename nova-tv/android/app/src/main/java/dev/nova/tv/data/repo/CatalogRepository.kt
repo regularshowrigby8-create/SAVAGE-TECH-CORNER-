@@ -1,7 +1,10 @@
 package dev.nova.tv.data.repo
 
+import dev.nova.tv.data.model.CatalogDef
+import dev.nova.tv.data.model.Manifest
 import dev.nova.tv.data.model.MetaPreview
 import dev.nova.tv.data.model.NovaAddon
+import dev.nova.tv.data.model.ResourceDef
 import dev.nova.tv.data.model.Stream
 import dev.nova.tv.data.model.SubtitleRef
 import dev.nova.tv.data.remote.AddonClient
@@ -9,6 +12,7 @@ import dev.nova.tv.finder.FinderRules
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,15 +50,61 @@ class CatalogRepository(
         val builtIns = FinderRules.DEFAULT_SOURCES
         val saved = store?.savedAddonUrls().orEmpty().filter { url -> builtIns.none { same(it, url) } }
         val loaded = (builtIns.map { it to true } + saved.map { it to false }).map { (url, builtIn) ->
-            async {
-                // One saved server that no longer answers must not hold the
-                // shelf hostage: each manifest gets its own deadline.
-                withTimeoutOrNull(INSTALL_TIMEOUT_MS) {
-                    runCatching { client.loadAddon(url).copy(isBuiltIn = builtIn) }.getOrNull()
-                }
-            }
+            async { install(url, builtIn) }
         }.awaitAll().filterNotNull()
         _addons.value = loaded.distinctBy { it.baseUrl.lowercase() }
+    }
+
+    /**
+     * Install one addon, with a retry and a guaranteed fallback for the
+     * built-ins.
+     *
+     * A single failed manifest used to drop the addon outright, and because
+     * Cinemeta is the only catalogue source, one slow or refused manifest
+     * meant *zero* catalogues: the home screen rendered its shimmer and then
+     * nothing at all. A TV box with a cold DNS cache hits that on the first
+     * launch. So: two attempts, then the catalogue set the host is known to
+     * serve, so the shelves always have somewhere to load from.
+     */
+    private suspend fun install(url: String, builtIn: Boolean): NovaAddon? {
+        repeat(INSTALL_ATTEMPTS) { attempt ->
+            val addon = withTimeoutOrNull(INSTALL_TIMEOUT_MS) {
+                runCatching { client.loadAddon(url).copy(isBuiltIn = builtIn) }.getOrNull()
+            }
+            if (addon != null) return addon
+            if (attempt < INSTALL_ATTEMPTS - 1) delay(INSTALL_RETRY_MS)
+        }
+        return if (builtIn) fallbackAddon(url) else null
+    }
+
+    /** The catalogues Cinemeta is known to serve, when its manifest will not load. */
+    private fun fallbackAddon(url: String): NovaAddon? {
+        val base = url.trim().trimEnd('/')
+        val host = runCatching { java.net.URI(base).host }.getOrNull()?.lowercase() ?: return null
+        if (host != CINEMETA_HOST) return null
+        return NovaAddon(
+            baseUrl = base,
+            isBuiltIn = true,
+            manifest = Manifest(
+                id = "com.linvo.cinemeta",
+                name = "Cinemeta",
+                version = "3",
+                resources = listOf(
+                    ResourceDef(name = "catalog", types = listOf("movie", "series")),
+                    ResourceDef(name = "meta", types = listOf("movie", "series"))
+                ),
+                types = listOf("movie", "series"),
+                idPrefixes = listOf("tt"),
+                catalogs = listOf(
+                    CatalogDef(type = "movie", id = "top", name = "Popular"),
+                    CatalogDef(type = "series", id = "top", name = "Popular"),
+                    CatalogDef(type = "movie", id = "imdbRating", name = "Featured"),
+                    CatalogDef(type = "series", id = "imdbRating", name = "Featured"),
+                    CatalogDef(type = "movie", id = "year", name = "New"),
+                    CatalogDef(type = "series", id = "year", name = "New")
+                )
+            )
+        )
     }
 
     suspend fun add(baseUrl: String): Result<NovaAddon> = runCatching {
@@ -180,5 +230,9 @@ class CatalogRepository(
         const val SEARCH_TIMEOUT_MS = 8_000L
         const val PAGE_TIMEOUT_MS = 10_000L
         const val INSTALL_TIMEOUT_MS = 12_000L
+        /** Two tries at a manifest before falling back. */
+        const val INSTALL_ATTEMPTS = 2
+        const val INSTALL_RETRY_MS = 700L
+        const val CINEMETA_HOST = "v3-cinemeta.strem.io"
     }
 }
