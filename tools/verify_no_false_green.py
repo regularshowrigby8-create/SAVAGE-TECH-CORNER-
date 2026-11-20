@@ -391,6 +391,16 @@ def check_invalid_inputs_rejected() -> List[Check]:
             "an explicitly requested unreadable APK must fail rather than look clean",
             f"exit={result.returncode}; stderr={result.stderr.strip()}",
         ))
+        empty_root = Path(tmp) / "empty-root"
+        empty_root.mkdir()
+        result = subprocess.run([sys.executable, str(HERE / "debug_nova.py"), "--root", str(empty_root),
+                                 "--out", str(Path(tmp) / "empty-report")],
+                                capture_output=True, text=True, timeout=30)
+        checks.append(Check(
+            "detect:nothing-scanned:debugger", result.returncode == 2,
+            "the debugger must fail when it found neither sources nor an APK to scan",
+            f"exit={result.returncode}; stderr={result.stderr.strip()}",
+        ))
     return checks
 
 

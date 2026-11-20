@@ -185,6 +185,9 @@ def run(args: argparse.Namespace) -> int:
     if unreadable_requested_apk:
         print("error: at least one explicitly requested APK could not be inspected", file=sys.stderr)
         return 2
+    if project is None and not facts:
+        print("error: neither Nova sources nor an inspectable APK were found", file=sys.stderr)
+        return 2
     return 1 if report.errors else 0
 
 
