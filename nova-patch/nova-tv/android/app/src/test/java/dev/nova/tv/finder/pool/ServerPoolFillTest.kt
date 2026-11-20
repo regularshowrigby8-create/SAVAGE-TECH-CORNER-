@@ -50,7 +50,8 @@ class ServerPoolFillTest {
             if (index >= batches.size) return emptyList()
             return batches[index++]
         }
-        override fun exhausted(): Boolean = index >= batches.size
+        override fun isDone(): Boolean = index >= batches.size
+        override fun backoffUntil(): Long = 0L
         override fun coolingDown(now: Long): Boolean = false
     }
 

@@ -134,14 +134,42 @@ jobs:
           fi
 
       - name: Run the patched unit tests
+        id: tests
         if: steps.patched.outputs.status == '0'
         working-directory: work/nova-tv/android
         run: |
           set +e
           ./gradlew :app:testTvDebugUnitTest :app:testMobileDebugUnitTest \
             --no-daemon --console=plain > tests.log 2>&1
-          echo "test status: $?"
-          grep -nE "tests? (completed|failed)|FAILED|BUILD" tests.log | tail -20
+          STATUS=$?
+          echo "test status: $STATUS"
+          grep -nE "^e: |tests? (completed|failed)|FAILED|BUILD" tests.log | tail -40 || true
+          exit "$STATUS"
+
+      - name: Assemble both debug APKs
+        id: package
+        working-directory: work/nova-tv/android
+        run: |
+          set +e
+          ./gradlew :app:assembleTvDebug :app:assembleMobileDebug \
+            --no-daemon --console=plain > package.log 2>&1
+          STATUS=$?
+          grep -nE "^e: |FAILED|FAILURE:|BUILD" package.log | tail -40 || true
+          if [ "$STATUS" -ne 0 ]; then exit "$STATUS"; fi
+          # One APK is not evidence that both flavours packaged successfully.
+          compgen -G 'app/build/outputs/apk/tv/debug/*.apk' >/dev/null || exit 1
+          compgen -G 'app/build/outputs/apk/mobile/debug/*.apk' >/dev/null || exit 1
+
+      - name: Upload debug APKs
+        if: steps.package.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nova-debug-apks
+          path: |
+            work/nova-tv/android/app/build/outputs/apk/tv/debug/*.apk
+            work/nova-tv/android/app/build/outputs/apk/mobile/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Report
         if: always()
@@ -152,6 +180,8 @@ jobs:
             echo "- sources: \`$NOVA_SOURCES\` @ \`$NOVA_SHA\`"
             echo "- patch files applied: $(grep -cE '^\s+[~+] ' apply.log || echo 0)"
             echo "- compile (patched): **$([ '${{ steps.patched.outputs.status }}' = '0' ] && echo PASS || echo FAIL)**"
+            echo "- unit tests: **${{ steps.tests.outcome }}**"
+            echo "- debug APK assembly: **${{ steps.package.outcome }}**"
             echo
             if [ '${{ steps.patched.outputs.status }}' != '0' ]; then
               echo "- baseline (unpatched): **${BASELINE:-not-run}**"
@@ -176,14 +206,16 @@ jobs:
           path: |
             apply.log
             work/nova-tv/android/compile.log
-            work/nova-tv/android/baseline.log
+            baseline/nova-tv/android/baseline.log
             work/nova-tv/android/tests.log
+            work/nova-tv/android/package.log
           if-no-files-found: warn
           retention-days: 14
 
-      - name: Publish the compiler errors into the repository
-        # Runs before the failing step, so the errors survive the job failing.
-        if: steps.patched.outputs.status != '0'
+      - name: Publish build or test errors into the repository
+        # Also run after a failed test or packaging step, whose exit codes are
+        # now propagated instead of being masked by the subsequent grep.
+        if: always() && (steps.patched.outputs.status != '0' || steps.tests.outcome == 'failure' || steps.package.outcome == 'failure')
         run: |
           set -uo pipefail
           OUT="nova-patch/BUILD-DIAGNOSTICS.md"
@@ -194,11 +226,25 @@ jobs:
             echo
             echo "- run: $GITHUB_RUN_ID"
             echo "- sources: \`$NOVA_SOURCES\` @ \`$NOVA_SHA\`"
-            echo "- patched compile: FAILED"
+            echo "- patched compile status: ${{ steps.patched.outputs.status }}"
+            echo "- unit tests: ${{ steps.tests.outcome }}"
+            echo "- APK assembly: ${{ steps.package.outcome }}"
             echo
             echo '## compiler errors'
             echo '```'
-            grep -E "^e: " work/nova-tv/android/compile.log | head -80 || echo "no 'e:' lines captured"
+            grep -E "^e: |FAILURE:|FAILED" work/nova-tv/android/compile.log | head -80 || echo "no compiler errors captured"
+            echo '```'
+            echo
+            echo '## test errors'
+            echo '```'
+            grep -E '^e: |FAILURE:|FAILED|[0-9]+ tests? completed|What went wrong:' work/nova-tv/android/tests.log | head -100 || echo 'no test errors captured'
+            tail -35 work/nova-tv/android/tests.log 2>/dev/null || true
+            echo '```'
+            echo
+            echo '## APK packaging errors'
+            echo '```'
+            grep -E '^e: |FAILURE:|FAILED|What went wrong:' work/nova-tv/android/package.log | head -60 || echo 'no packaging errors captured'
+            tail -25 work/nova-tv/android/package.log 2>/dev/null || true
             echo '```'
             echo
             echo '## applied patch'
@@ -208,8 +254,8 @@ jobs:
             echo
             echo '## baseline (unpatched) compile'
             echo '```'
-            if [ -f work/nova-tv/android/baseline.log ]; then
-              tail -20 work/nova-tv/android/baseline.log
+            if [ -f baseline/nova-tv/android/baseline.log ]; then
+              tail -20 baseline/nova-tv/android/baseline.log
             else
               echo "not run -- the patched build did not reach the comparison step"
             fi
@@ -218,15 +264,16 @@ jobs:
           head -40 "$OUT"
 
       - name: Commit the diagnostics
-        if: steps.patched.outputs.status != '0'
+        if: always() && (steps.patched.outputs.status != '0' || steps.tests.outcome == 'failure' || steps.package.outcome == 'failure') && !startsWith(github.ref, 'refs/pull/')
         run: |
-          set -uo pipefail
+          set -euo pipefail
           git config user.name "nova-ci"
           git config user.email "nova-ci@users.noreply.github.com"
           git add nova-patch/BUILD-DIAGNOSTICS.md
           if git diff --cached --quiet; then echo "no diagnostics to commit"; exit 0; fi
           git commit -m "ci(nova): patch build diagnostics for run $GITHUB_RUN_ID"
-          git push || echo "push failed; the artifact still has the logs"
+          git pull --rebase -q origin "${GITHUB_REF_NAME}"
+          git push -q origin "HEAD:${GITHUB_REF_NAME}"
 
       - name: Fail if the patched build did not compile
         if: steps.patched.outputs.status != '0'

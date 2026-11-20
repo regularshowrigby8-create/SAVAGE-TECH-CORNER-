@@ -209,14 +209,15 @@ class SitePoolTest {
               "by_source": {"github": 40, "list": 43},
               "rejected": {"no homepage": 1290},
               "entries": [
-                {"host": "example.org", "name": "Example", "search": "https://example.org/s?q={q}",
+                {"url": "https://example.org", "name": "Example",
+                 "templates": ["https://example.org/s?q={q}"],
                  "score": 7, "resolved": 2, "misses": 0}
               ]
             }
         """.trimIndent()
         val store = MemoryStore(text)
         val pool = pool(store)
-        assertEquals(1, pool.state.value.size, "the entry should load despite the extra key")
+        assertEquals("the entry should load despite the extra key", 1, pool.state.value.size)
         assertEquals("no homepage" to 1290, pool.state.value.rejected.entries.first().toPair())
     }
 
