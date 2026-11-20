@@ -102,6 +102,17 @@ class SourceEngine(
 
     private val discoveryLock = Mutex()
     private val discovered = java.util.concurrent.ConcurrentHashMap<FinderKind, Pair<Long, FinderReport>>()
+
+    /**
+     * Finders the viewer currently has switched on.
+     *
+     * Discovery results are kept per finder even after a finder is switched
+     * off (so flipping it back on is instant), but only the active ones may
+     * contribute candidates to the shared pool. Without this filter a finder
+     * that had been turned off kept feeding its hosts into the 3000 slots.
+     */
+    @Volatile
+    private var activeKinds: Set<FinderKind> = FinderKind.entries.toSet()
     private val inflight = HashMap<FinderKind, Deferred<FinderReport>>()
 
     /** Start directory reads in the background at launch, so the first title is quick. */
