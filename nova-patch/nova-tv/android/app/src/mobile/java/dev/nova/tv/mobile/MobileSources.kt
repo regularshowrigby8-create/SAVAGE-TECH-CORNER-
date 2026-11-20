@@ -134,6 +134,15 @@ fun MobileSources(state: NovaState, viewModel: NovaViewModel, onBack: () -> Unit
                     )
                 }
             }
+            item {
+                SettingRow("Discovered sites", onClick = null) {
+                    Text(
+                        "${state.sites.size} / ${state.sites.capacity}"
+                            + if (state.sites.rejectedTotal > 0) " · ${state.sites.rejectedTotal} dropped" else "",
+                        style = MType.meta
+                    )
+                }
+            }
             state.harvest?.let { harvest ->
                 item {
                     Text(

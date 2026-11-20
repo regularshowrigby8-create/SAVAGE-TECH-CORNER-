@@ -17,6 +17,7 @@ import dev.nova.tv.finder.FinderKind
 import dev.nova.tv.finder.pool.PoolState
 import dev.nova.tv.finder.pool.ServerHarvester
 import dev.nova.tv.finder.pool.ServerPool
+import dev.nova.tv.finder.website.SitePoolState
 import dev.nova.tv.player.preload.PreloadMode
 import dev.nova.tv.finder.FinderReport
 import dev.nova.tv.finder.FinderRules
@@ -171,7 +172,12 @@ data class NovaState(
     /** False when the fill loop has stopped (full, exhausted, or stopped by the viewer). */
     val poolFilling: Boolean = false,
     /** Measured harvester counters; null when no harvester is configured. */
-    val harvest: ServerHarvester.HarvestState? = null
+    val harvest: ServerHarvester.HarvestState? = null,
+    /**
+     * The second pool: streaming sites the crawler verified. Counted separately
+     * from [pool] because a site and an addon manifest are not the same thing.
+     */
+    val sites: SitePoolState = SitePoolState()
 ) {
     val opened: MetaPreview? get() = detail?.meta
 }
@@ -230,6 +236,9 @@ class NovaViewModel : ViewModel() {
                     }
                 }
             }
+        }
+        viewModelScope.launch {
+            app.sitePool.state.collect { s -> _state.update { it.copy(sites = s) } }
         }
         // The harvester's own counters: how many sources are done, how many
         // requests were made, whether anything is still being looked at. The

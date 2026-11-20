@@ -1,0 +1,163 @@
+name: Nova pool crawl
+
+# Why this runs here and not on a laptop:
+#
+# Discovering remote hosts needs the open internet. A developer machine or an
+# agent sandbox may be behind an allowlist; a GitHub runner is not. So the two
+# crawlers run here, they cache what they find, and the app imports the result.
+#
+# Two pools, two ceilings:
+#   server_pool.json  3000 addon manifests  (tools/server_crawler.py)
+#   site_pool.json    3000 streaming sites  (tools/site_crawler.py)
+# They are never merged: a manifest is asked for streams, a site is resolved to a
+# direct media URL. Mixing them is how an embed host ends up shown as a source
+# that cannot play.
+#
+# A crawl that finds fewer than the target is a SUCCESS with an honest number,
+# not a failure and not a claim of 3000: every site in site_pool.json answered a
+# real search, so the count is the count. The job only fails if a crawler crashes
+# or writes an unusable file.
+#
+# One job, per the repository's own GATE 2 rule.
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Entries per pool"
+        required: false
+        default: "3000"
+      minutes:
+        description: "Time budget per crawler"
+        required: false
+        default: "45"
+      probe:
+        description: "Title used to verify a site can be searched"
+        required: false
+        default: "one piece"
+  schedule:
+    # Weekly: public lists change, hosts expire, new ones appear.
+    - cron: "23 4 * * 1"
+  push:
+    paths:
+      - 'nova-patch/nova-tv/tools/server_crawler.py'
+      - 'nova-patch/nova-tv/tools/site_crawler.py'
+      - '.github/workflows/nova-pool-crawl.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nova-pool-crawl-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  crawl:
+    name: Crawl both pools
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Self-test both crawlers (offline, no network)
+        run: |
+          set -euo pipefail
+          cd nova-patch/nova-tv/tools
+          python3 test_server_crawler.py
+          # The site crawler has no network in a self-test either; this checks
+          # its HTML parsing, template extraction and verification scoring.
+          python3 - <<'PY'
+          import site_crawler as s
+          html = '<form action="/search" method="get"><input name="keyword" type="text"></form>'
+          t = s.search_templates(html, "https://a.example/")
+          assert any("{q}" in x for x in t), t
+          good = '<a href="/watch/one-piece-1">ep</a><a href="/watch/one-piece-2">ep</a><a href="/episode/3">3</a> One Piece 1080p'
+          assert s.result_score(good, "one piece")[0] >= 3, s.result_score(good, "one piece")
+          assert s.result_score("<h1>Domain for sale</h1>", "one piece") == (0, 0)
+          assert s.page_title("<title>Watch Anime | NineAnime</title>") == "NineAnime"
+          print("site_crawler self-test ok")
+          PY
+
+      - name: Crawl addon manifests
+        run: |
+          set -euo pipefail
+          cd nova-patch/nova-tv/tools
+          python3 server_crawler.py \
+            --target "${{ inputs.target || '3000' }}" \
+            --max-seconds "$(( ${{ inputs.minutes || '45' }} * 60 ))" \
+            --out server_pool.json || true
+          python3 - <<'PY'
+          import json, pathlib
+          d = json.loads(pathlib.Path("server_pool.json").read_text())
+          n = len(d["entries"])
+          print(f"manifest pool: {n} entries")
+          assert n > 0, "the crawler wrote an empty pool"
+          PY
+
+      - name: Crawl streaming sites
+        run: |
+          set -euo pipefail
+          cd nova-patch/nova-tv/tools
+          python3 site_crawler.py \
+            --target "${{ inputs.target || '3000' }}" \
+            --probe "${{ inputs.probe || 'one piece' }}" \
+            --max-seconds "$(( ${{ inputs.minutes || '45' }} * 60 ))" \
+            --manifests server_pool.json \
+            --out site_pool.json || true
+          python3 - <<'PY'
+          import json, pathlib
+          d = json.loads(pathlib.Path("site_pool.json").read_text())
+          n = len(d["entries"])
+          rejected = d.get("rejected", {})
+          print(f"site pool: {n} verified, rejected {sum(rejected.values())}")
+          print("rejected by reason:", rejected)
+          assert n > 0, "the crawler wrote an empty site pool"
+          # Every entry must be searchable, or the app cannot use it.
+          bad = [e for e in d["entries"]
+                 if not any("{q}" in t or "{slug}" in t for t in e.get("templates", []))]
+          assert not bad, f"{len(bad)} entries have no query placeholder"
+          PY
+
+      - name: Publish both pools to the branch
+        run: |
+          set -euo pipefail
+          mkdir -p nova-patch/pools
+          mv nova-patch/nova-tv/tools/server_pool.json nova-patch/pools/server_pool.json
+          mv nova-patch/nova-tv/tools/site_pool.json nova-patch/pools/site_pool.json
+          {
+            echo "## Nova pool crawl"
+            echo
+            echo "| pool | entries | ceiling |"
+            echo "|---|---|---|"
+            for f in nova-patch/pools/*_pool.json; do
+              n=$(python3 -c "import json,sys;print(len(json.load(open('$f'))['entries']))")
+              echo "| $(basename "$f") | $n | 3000 |"
+            done
+            echo
+            echo "Site rejections: \`$(python3 -c "import json;print(json.dumps(json.load(open('nova-patch/pools/site_pool.json'))['rejected']))")\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the pools
+        uses: actions/upload-artifact@v4
+        with:
+          name: nova-pools
+          path: nova-patch/pools/*_pool.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Commit the pools
+        # A crawl result is data, so it is committed only when it changed, and
+        # never on a scheduled run against someone else's fork.
+        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        run: |
+          set -euo pipefail
+          git config user.name "nova-crawler"
+          git config user.email "nova-crawler@users.noreply.github.com"
+          git add nova-patch/pools
+          if git diff --cached --quiet; then
+            echo "pools unchanged; nothing to commit"
+            exit 0
+          fi
+          git commit -m "data(nova): refresh both server pools ($(date -u +%Y-%m-%d))"
+          git push

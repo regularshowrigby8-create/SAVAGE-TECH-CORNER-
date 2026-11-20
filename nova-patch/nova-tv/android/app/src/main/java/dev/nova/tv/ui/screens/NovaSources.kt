@@ -41,6 +41,7 @@ import dev.nova.tv.BuildConfig
 import dev.nova.tv.finder.FinderKind
 import dev.nova.tv.finder.pool.PoolState
 import dev.nova.tv.finder.pool.ServerHarvester
+import dev.nova.tv.finder.website.SitePoolState
 import dev.nova.tv.ui.components.FocusableRow
 import dev.nova.tv.ui.components.PrimaryButton
 import dev.nova.tv.ui.components.RegisterContentEntry
@@ -163,6 +164,28 @@ fun SourcesScreen(state: NovaState, viewModel: NovaViewModel) {
             }
 
             item { SectionLabel("Websites") }
+            item {
+                // The second pool. Kept visually separate from "Servers" because
+                // they are not interchangeable: a server is an addon that answers
+                // with streams, a website is resolved by following its pages to a
+                // direct media URL.
+                Column {
+                    Text(
+                        "${state.sites.size} / ${state.sites.capacity} discovered sites"
+                            + if (state.sites.full) " · full" else "",
+                        style = NovaType.meta
+                    )
+                    if (state.sites.rejectedTotal > 0) {
+                        Text(
+                            "${state.sites.rejectedTotal} dropped: they did not answer a search",
+                            style = NovaType.meta
+                        )
+                    }
+                    if (state.sites.lastError.isNotBlank()) {
+                        Text(state.sites.lastError, style = NovaType.meta, color = NovaPalette.accent)
+                    }
+                }
+            }
             item { PrimaryButton("Add website", icon = Icons.Filled.Add, modifier = Modifier.focusRequester(addSite), onClick = viewModel::startAddWebsite) }
             items(state.websites, key = { it.url }) { site ->
                 FocusableRow(onClick = { viewModel.removeWebsite(site.url) }, trailing = { Text("Remove", style = NovaType.meta) }) {

@@ -301,7 +301,12 @@ class SourceEngine(
                     }
                     publish(state)
                 }
-                for (site in library.websites.value) {
+                // The site list can hold thousands of entries now that the
+                // crawler imports verified ones, so this loop must be bounded:
+                // running every site for every title would open thousands of
+                // connections and never finish. [SITES_PER_TITLE] best sites are
+                // tried, proven-first, which is also what the manifest pool does.
+                for (site in library.websites.value.take(SITES_PER_TITLE)) {
                     launch {
                         state.track(site.name) {
                             val query = WebsiteRules.Query(
@@ -442,6 +447,13 @@ class SourceEngine(
         const val PARALLELISM = 12
         private const val VERIFY_CONCURRENCY = 16
         const val POOL_BATCH = 150
+
+        /**
+         * How many websites one title is resolved against. Each costs a search
+         * plus up to two frame loads, so this is the budget that keeps a title
+         * responsive when the imported site pool is full.
+         */
+        const val SITES_PER_TITLE = 24
         const val SCRAMBLE_LABEL = "New servers"
         private const val MAX_VERIFY = 60
         /** The source sheet lists at most this many entries; the rest add noise. */

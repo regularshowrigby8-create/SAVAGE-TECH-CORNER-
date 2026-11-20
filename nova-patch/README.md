@@ -23,8 +23,13 @@ Backups go to `<target>/.nova-patch-backup/`, never beside the file: a copy unde
 | `ui/screens/NovaViewModel.kt` | Exposes `poolFilling` / `harvest`; errors and empty results are worded differently. |
 | `mobile/.../MobileSources.kt` | Same status line and Stop control on the phone layout. |
 | `test/.../ServerPoolFillTest.kt` | **New.** 15 JVM tests: fill stops at capacity, stops when exhausted, dedupes across sources, counts requests. |
-| `tools/server_crawler.py` | **New.** Standalone threaded crawler, continuous until `--target` (default 3000) or exhaustion, Ctrl-C writes what it has. Emits the exact JSON `ServerPool` reads. |
-| `tools/test_server_crawler.py` | **New.** 19 offline tests (fake fetcher, no network). |
+| `tools/server_crawler.py` | **New.** Standalone threaded crawler for addon manifests, continuous until `--target` (default 3000) or exhaustion, Ctrl-C writes what it has. Emits the exact JSON `ServerPool` reads. |
+| `tools/site_crawler.py` | **New.** The second crawler: finds streaming *sites* and writes `site_pool.json`. A site enters the pool only after a real search on it returns title links, so a parked domain cannot get in. |
+| `finder/website/SitePool.kt` | **New.** The second pool, 3000 sites, imported by host, offered to `WebsiteFinder` proven-first. Separate from `ServerPool` because a site and a manifest are not the same thing. |
+| `data/store/AtomicFileStore.kt` | **New.** Both pools save through one atomic writer. The old fallback rewrote the real file when rename failed -- the branch that runs when the filesystem is already unhappy. |
+| `NovaApplication.kt` | Constructs the site pool and imports the pool bundled in assets on first launch, off the main thread. |
+| `test/.../SitePoolTest.kt` | **New.** 12 JVM tests: dedupe by host, refusal of unsearchable entries, malformed documents reported, the separate 3000 ceiling, proven-first ordering. |
+| `test/.../ServerPoolFillTest.kt` | **New.** 15 JVM tests: fill stops at capacity, stops when exhausted, dedupes across sources, counts requests. |
 
 ## The crawl, concretely
 
@@ -55,6 +60,12 @@ Verified here (static only — no JDK, no SDK, no device in this environment):
   broad "correct code" corpus, which is exempt by name.
 - The 19 crawler tests pass offline.
 - The patch applies cleanly to `3347198` and is byte-identical afterwards.
+
+**Two pools, two ceilings.** `server_pool.json` holds up to 3000 addon manifests;
+`site_pool.json` holds up to 3000 verified streaming sites. They are never merged,
+and each has its own count on the Sources screen. A site is resolved by
+`WebsiteFinder` (page -> up to two player frames -> direct `.m3u8`/`.mp4`/`.mpd`);
+an embed URL is never shown or played as a source.
 
 **Not verified, and cannot be from here:** it has never been compiled. The CI
 workflow at `3347198` was green for the *unpatched* tree, so the first real test
