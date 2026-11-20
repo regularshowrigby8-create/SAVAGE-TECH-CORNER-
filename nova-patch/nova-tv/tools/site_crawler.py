@@ -289,7 +289,7 @@ class SitePool:
                 added += 1
         return added
 
-    def as_document(self, rejected: Counter) -> Dict[str, object]:
+    def as_document(self, rejected: Counter, by_source: Optional[Dict[str, int]] = None) -> Dict[str, object]:
         """The shape ``SitePool.Persisted`` decodes on the device."""
         return {
             "version": 1,
@@ -297,6 +297,7 @@ class SitePool:
             "generated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "entries": [e.as_json() for e in self.entries.values()],
             "rejected": dict(rejected),
+            "by_source": by_source or {},
         }
 
 
@@ -643,7 +644,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     finally:
         crawler.shutdown()
         out = Path(args.out)
-        out.write_text(json.dumps(pool.as_document(pool.rejected), indent=1) + "\n", encoding="utf-8")
+        out.write_text(json.dumps(pool.as_document(pool.rejected, stats.snapshot()["by_source"]), indent=1) + "\n", encoding="utf-8")
         print()
         print(f"sites     {pool.size}/{args.target}")
         print(f"file      {out}  ({out.stat().st_size} bytes)")

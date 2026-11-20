@@ -346,9 +346,15 @@ class Pool:
         self.retired = set(data.get("retired", []) or [])
         return added
 
-    def as_document(self) -> Dict[str, object]:
-        """The exact shape ``ServerPool.Persisted`` decodes."""
+    def as_document(self, by_source: Optional[Dict[str, int]] = None) -> Dict[str, object]:
+        """The exact shape ``ServerPool.Persisted`` decodes, plus the yield counts.
+
+        Extra keys are ignored by the app's decoder, so carrying the per-source
+        numbers here costs nothing and answers "where did the total come from"
+        without a second file.
+        """
         return {
+            "by_source": by_source or {},
             "generation": 0,
             "entries": [e.as_json() for e in self.entries.values()],
             "history": [],
@@ -787,7 +793,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     finally:
         fetcher.shutdown()
         out = Path(args.out)
-        out.write_text(json.dumps(pool.as_document(), indent=1) + "\n", encoding="utf-8")
+        out.write_text(json.dumps(pool.as_document(stats.snapshot()["by_source"]), indent=1) + "\n", encoding="utf-8")
         snap = stats.snapshot()
         print()
         print(f"pool      {pool.size}/{args.target}")
