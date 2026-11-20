@@ -119,11 +119,49 @@ class ServerPool(private val store: PoolStore, private val random: Random = Rand
 
     fun noteResult(baseUrl: String, hit: Boolean) = synchronized(lock) {
         val k = key(baseUrl)
-        data = data.copy(entries = data.entries.map {
+        val updated = data.entries.map {
             if (key(it.baseUrl) != k) it else if (hit) it.copy(hits = it.hits + 1) else it.copy(misses = it.misses + 1)
-        })
+        }
+        // A server that has failed [RETIRE_AFTER_MISSES] times and never once
+        // answered is dead: drop it now, and remember it so it is never
+        // re-added. Waiting for the next scramble kept dead hosts in the pool
+        // and wasted a request on every title.
+        val dead = updated.filter { it.hits == 0 && it.misses >= RETIRE_AFTER_MISSES }
+        val retired = if (dead.isEmpty()) data.retired
+        else (data.retired + dead.map { key(it.baseUrl) }).distinct().takeLast(MAX_RETIRED)
+        data = data.copy(
+            entries = if (dead.isEmpty()) updated else updated.filterNot { it.hits == 0 && it.misses >= RETIRE_AFTER_MISSES },
+            retired = retired
+        )
         // Saved on the next add / scramble; stats are cheap to lose, writes are not.
         publish()
+    }
+
+    /**
+     * Drop every server that has proven itself dead (never answered, failed
+     * [RETIRE_AFTER_MISSES] times) and return how many slots that freed.
+     *
+     * Called by the fill loop, so the pool is continuously self-cleaning while
+     * it grows toward [CAPACITY]: a host that goes down mid-run is evicted and
+     * its slot goes to the next discovery instead of being retried forever.
+     */
+    fun pruneDead(): Int = synchronized(lock) {
+        val dead = data.entries.filter { it.hits == 0 && it.misses >= RETIRE_AFTER_MISSES }
+        if (dead.isEmpty()) return@synchronized 0
+        data = data.copy(
+            entries = data.entries - dead.toSet(),
+            retired = (data.retired + dead.map { key(it.baseUrl) }).distinct().takeLast(MAX_RETIRED)
+        )
+        save()
+        dead.size
+    }
+
+    /** Forget the retirement list, so a host that came back can be found again. */
+    fun clearRetired(): Int = synchronized(lock) {
+        val n = data.retired.size
+        data = data.copy(retired = emptyList())
+        save()
+        n
     }
 
     /** Write hit / miss counts; the engine calls this when a title finishes. */

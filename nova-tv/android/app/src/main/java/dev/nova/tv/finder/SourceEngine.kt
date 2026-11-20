@@ -130,8 +130,8 @@ class SourceEngine(
      * leaves a hole: the finders still on carry on harvesting until
      * [ServerPool.CAPACITY] is reached. [syncPoolFill] is called on launch and
      * again on every toggle, so a finder switched back on resumes the fill from
-     * where it stopped. The loop ends when the pool is full, or when the
-     * directories stop returning anything new for [POOL_EMPTY_ROUNDS] rounds.
+     * where it stopped. The loop ends only when the pool is full: an empty
+     * round backs off and rotates the crawler's queries instead of giving up.
      */
     fun syncPoolFill(kinds: Set<FinderKind>) {
         activeKinds = kinds
@@ -144,13 +144,26 @@ class SourceEngine(
         if (harvester == null || kinds.isEmpty()) return
         poolFillJob = background.launch {
             var emptyRounds = 0
+            var pruned = 0
+            // Keeps going until the 3000 slots are full. "The directories
+            // returned nothing" is not the end of the search -- there are
+            // millions of servers -- so an empty round backs off and tries
+            // different queries, and after a long dry spell the retirement
+            // list is cleared so hosts that came back are reachable again.
             while (isActive && pool.state.value.size < ServerPool.CAPACITY) {
                 val before = pool.state.value.size
                 runCatching { fillPool() }
+                pruned += runCatching { pool.pruneDead() }.getOrDefault(0)
                 val after = pool.state.value.size
-                if (after > before) emptyRounds = 0 else emptyRounds++
-                if (emptyRounds >= POOL_EMPTY_ROUNDS) break
-                delay(if (after > before) POOL_FILL_PAUSE_MS else POOL_RETRY_PAUSE_MS)
+                if (after > before) {
+                    emptyRounds = 0
+                } else {
+                    emptyRounds++
+                    if (emptyRounds % POOL_STALE_ROUNDS == 0) runCatching { pool.clearRetired() }
+                }
+                val pause = if (after > before) POOL_FILL_PAUSE_MS
+                else (POOL_RETRY_PAUSE_MS shl (emptyRounds.coerceAtMost(5) - 1).coerceAtLeast(0))
+                delay(pause.coerceAtMost(POOL_MAX_PAUSE_MS))
             }
         }
     }
@@ -351,6 +364,16 @@ class SourceEngine(
             for (s in found) {
                 val url = s.url?.trim() ?: continue
                 if (!s.isPlayable) continue
+                // A source that answers with a different film is worse than no
+                // source: it looks like a hit and plays the wrong thing.
+                if (!FinderRules.streamMatchesTitle(
+                        s,
+                        request.meta.name,
+                        request.meta.year,
+                        request.season,
+                        request.episode
+                    )
+                ) continue
                 streams.putIfAbsent(url + "|" + s.requestHeaders.hashCode(), s)
             }
         }
@@ -401,11 +424,12 @@ class SourceEngine(
     }
 
     companion object {
-        const val PARALLELISM = 12
-        /** A fill round that adds nothing is not the end; four in a row is. */
-        private const val POOL_EMPTY_ROUNDS = 4
-        private const val POOL_FILL_PAUSE_MS = 750L
-        private const val POOL_RETRY_PAUSE_MS = 4_000L
+        const val PARALLELISM = 24
+        /** Empty rounds before the retirement list is cleared and retried. */
+        private const val POOL_STALE_ROUNDS = 8
+        private const val POOL_FILL_PAUSE_MS = 400L
+        private const val POOL_RETRY_PAUSE_MS = 3_000L
+        private const val POOL_MAX_PAUSE_MS = 60_000L
         private const val VERIFY_CONCURRENCY = 16
         const val POOL_BATCH = 150
         const val SCRAMBLE_LABEL = "New servers"

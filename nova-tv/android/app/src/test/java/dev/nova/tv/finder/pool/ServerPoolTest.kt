@@ -77,7 +77,10 @@ class ServerPoolTest {
         val pool = ServerPool(MemoryStore(), Random(2))
         pool.add(many(8, "a"))
         val before = pool.entries().map { it.baseUrl }
-        repeat(ServerPool.RETIRE_AFTER_MISSES) { before.forEach { pool.noteResult(it, hit = false) } }
+        // One miss short of the retirement threshold: noteResult no longer
+        // drops them, so scramble is what retires them and the history entry
+        // that revert needs is created.
+        repeat(ServerPool.RETIRE_AFTER_MISSES - 1) { before.forEach { pool.noteResult(it, hit = false) } }
         pool.scramble(many(8, "b"))
         assertTrue(pool.state.value.canRevert)
         assertTrue(pool.entries().none { it.baseUrl in before })
@@ -116,5 +119,26 @@ class ServerPoolTest {
     fun `keys ignore scheme, case, manifest and trailing slash`() {
         assertEquals("a.example/x", ServerPool.key("HTTPS://A.example/x/manifest.json?y=1"))
         assertEquals("a.example/x", ServerPool.key("https://a.example/x/"))
+    }
+
+    @Test
+    fun `a server that never answers is dropped immediately and never re-added`() {
+        val pool = ServerPool(MemoryStore())
+        pool.add(many(5, "dead"))
+        repeat(ServerPool.RETIRE_AFTER_MISSES) { pool.noteResult("https://dead0.example", hit = false) }
+        assertEquals(4, pool.state.value.size)
+        assertTrue(pool.entries().none { it.baseUrl.contains("dead0") })
+        // Retired, not merely missing: discovery cannot bring it back.
+        assertEquals(0, pool.add(listOf(c("dead0.example"))))
+    }
+
+    @Test
+    fun `pruneDead frees slots and keeps servers that have answered`() {
+        val pool = ServerPool(MemoryStore())
+        pool.add(many(6, "mix"))
+        pool.noteResult("https://mix0.example", hit = true)
+        (1 until 6).forEach { i -> repeat(ServerPool.RETIRE_AFTER_MISSES) { pool.noteResult("https://mix$i.example", hit = false) } }
+        assertEquals(1, pool.state.value.size)
+        assertTrue(pool.entries().single().baseUrl.contains("mix0"))
     }
 }

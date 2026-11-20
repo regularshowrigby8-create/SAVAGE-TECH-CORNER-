@@ -35,18 +35,59 @@ object FinderRules {
      */
     const val MAX_FILE_BYTES = 5L * 1024 * 1024 * 1024
 
-    /** core.js SOURCE_IDS. */
-    val SOURCE_IDS = listOf("stremio-addons", "catalog-graph", "github")
+    /**
+     * The ZeroPlay finder's directories.
+     *
+     * `stremio-addons` and `catalog-graph` were removed: they are Stremio
+     * directories and [StremioFinder] already reads them, so every host they
+     * yielded arrived twice. `web` is the open-web crawler ([WebCrawler]) that
+     * replaced the fixed script sequence, and `github` stays as its
+     * highest-yield seed.
+     */
+    val SOURCE_IDS = listOf("web", "github")
 
     /**
-     * sources.js DEFAULT_ADDON_SOURCES minus the `skip` entries: Torrentio is
-     * stream-only torrents, which the guard refuses anyway, so it is not
-     * registered at all.
+     * The catalogues Nova ships with.
+     *
+     * Cinemeta is the backbone (it is the only addon that can answer for any
+     * `tt` id), but relying on it alone meant one slow manifest produced an
+     * empty home screen and no search results. These are twelve further
+     * catalogue addons, each checked live: every URL below returned a manifest
+     * with a `catalog` resource and at least one non-empty catalogue row.
+     * OpenSubtitles stays for subtitles.
+     *
+     * Order matters only for the fallback row: the first addon that declares a
+     * catalogue wins, so Cinemeta is first.
      */
     val DEFAULT_SOURCES = listOf(
+        // Backbone: meta for every tt id, plus Popular / Featured / New.
         "https://v3-cinemeta.strem.io",
+        // The Movie Database: the "tmdb" catalogue that had gone missing.
+        "https://94c8cb9f702d-tmdb-addon.baby-beamup.club",
+        // Streaming Catalogs: per-service rows (Netflix, Prime, Disney+, ...).
+        "https://7a82163c306e-stremio-netflix-catalog-addon.baby-beamup.club",
+        // Streaming Catalogs Plus: 46 curated rows.
+        "https://scplus.duckdns.org",
+        // Anime.
+        "https://anime-kitsu.strem.fun",
+        // Film / TV libraries.
+        "https://cinema.debrid.in",
+        "https://horror.debrid.in",
+        "https://addon-marvel.gonp.deno.net",
+        // Live TV.
+        "https://tvvoo.stremio-italia.eu/cfg-it-uk-fr",
+        "https://sports.highfly.dev",
+        // YouTube channels.
+        "https://v3-channels.strem.io",
+        // Broad series / film rows.
+        "https://addon.notorrent2.workers.dev",
+        "https://27a5b2bfe3c0-stremio-brazilian-addon.baby-beamup.club",
+        // Subtitles.
         "https://opensubtitles-v3.strem.io"
     )
+
+    /** Addons that only carry subtitles; they must never be asked for streams. */
+    val SUBTITLE_ONLY_SOURCES = setOf("https://opensubtitles-v3.strem.io")
 
     /**
      * core.js publicHttpsUrl: https only, no credentials in the URL, no IP
@@ -180,6 +221,12 @@ object FinderRules {
         // Torrent indexes.
         "torrentio", "torrent", "thepiratebay", "pirate bay", "1337x", "rarbg",
         "yts", "nyaa", "eztv", "kickass", "limetorrents", "magnetdl", "bitsearch",
+        // Internet Archive: removed from the finder by request. Its catalogue
+        // is public-domain material, so it answered for every id with a film
+        // that was not the one asked for -- the exact "it plays something
+        // completely different" failure. Matched on name and host.
+        "internet archive", "internetarchive", "archive.org", "archive org",
+        "archive-org", "ia-archive", "archiveorg",
         // Setup-required VOD / server front-ends.
         "penguplay", "pengu play", "pengu-play", "pengu",
         "jacketio", "jackett", "jackettio",
@@ -292,6 +339,123 @@ object FinderRules {
 
     /** Ranking weight for a quality label, highest first. */
     fun qualityRank(quality: String): Int = quality.removeSuffix("p").toIntOrNull() ?: 0
+
+    // -- identity: does this stream really belong to this title? -----------
+
+    /**
+     * Words that appear in stream labels without saying anything about *which*
+     * title they carry: quality, codecs, release groups, sizes, languages.
+     * A label made only of these is "unknown", not "wrong".
+     */
+    private val GENERIC_TOKENS = setOf(
+        "4k", "2160p", "1440p", "1080p", "720p", "576p", "480p", "360p", "hd", "fhd", "uhd", "sd",
+        "hdr", "hdr10", "dv", "dolby", "vision", "atmos", "sdr", "10bit", "8bit",
+        "web", "webdl", "webrip", "web-dl", "bluray", "blu-ray", "brrip", "bdrip", "dvdrip", "hdtv",
+        "hdrip", "remux", "x264", "x265", "h264", "h265", "hevc", "avc", "av1", "aac", "ac3", "dts",
+        "ddp", "dd", "5", "1", "7", "2", "0", "truehd", "flac", "mp3", "opus",
+        "multi", "dual", "audio", "sub", "subs", "subtitle", "subtitles", "dubbed", "dub", "esub",
+        "eng", "english", "spa", "spanish", "fre", "french", "ger", "german", "ita", "italian",
+        "por", "portuguese", "hin", "hindi", "jpn", "japanese", "kor", "korean", "rus", "arabic",
+        "gb", "mb", "tb", "gib", "mib", "size", "file", "stream", "source", "server", "direct",
+        "download", "play", "online", "free", "full", "movie", "film", "series", "season", "episode",
+        "complete", "uncut", "extended", "remastered", "proper", "repack", "internal", "limited",
+        "amzn", "nf", "dsnp", "hmax", "atvp", "pcok", "itunes", "ma", "hulu", "criterion",
+        "s", "e", "x", "the", "a", "an", "and", "of", "in", "on", "to", "part"
+    )
+
+    /** Lower-case word tokens, punctuation and release dots removed. */
+    fun titleTokens(text: String?): List<String> =
+        text.orEmpty().lowercase()
+            .replace(Regex("""[^a-z0-9]+"""), " ")
+            .trim()
+            .split(' ')
+            .filter { it.isNotBlank() }
+
+    /** Tokens that actually identify a title (generic noise removed). */
+    private fun identityTokens(text: String?): List<String> =
+        titleTokens(text).filter { it !in GENERIC_TOKENS && it.length > 1 }
+
+    private val EPISODE_PATTERN = Regex("""\bs(\d{1,2})\s*[._-]?\s*e(\d{1,3})\b""", RegexOption.IGNORE_CASE)
+    private val SEASON_PATTERN = Regex("""\bseason\s*(\d{1,2})\b""", RegexOption.IGNORE_CASE)
+    private val YEAR_PATTERN = Regex("""\b(19\d{2}|20\d{2})\b""")
+
+    /** "S02E05" / "Season 2" markers found in a label, if any. */
+    fun episodeMarkers(text: String?): Pair<Int, Int>? {
+        val raw = text.orEmpty()
+        EPISODE_PATTERN.find(raw)?.let { m ->
+            return (m.groupValues[1].toIntOrNull() ?: 0) to (m.groupValues[2].toIntOrNull() ?: 0)
+        }
+        SEASON_PATTERN.find(raw)?.let { m ->
+            return (m.groupValues[1].toIntOrNull() ?: 0) to 0
+        }
+        return null
+    }
+
+    /**
+     * The guard against a source that answers with the wrong film.
+     *
+     * Addons are asked for one id and are trusted to answer for that id, but
+     * several (archive-style catalogues, scrapers that fall back to a default
+     * title, mis-keyed debrid caches) answer with *something* instead. The
+     * symptom the viewer sees is "I picked Dune and it played a 1950s western".
+     *
+     * The rule is deliberately asymmetric: only reject on positive evidence of
+     * a different title, never on absence of evidence. A label that says
+     * nothing but "1080p WEB-DL 2.1 GB" is kept, because most real addon
+     * streams look exactly like that.
+     *
+     * Reject when:
+     *  - the label names an episode/season and it is not the one requested;
+     *  - the label prints a year that is more than a year away from the title's;
+     *  - the label carries two or more identity words and none of them is in
+     *    the title (i.e. it names a different title).
+     */
+    fun streamMatchesTitle(
+        stream: Stream,
+        title: String,
+        year: String? = null,
+        season: Int = 0,
+        episode: Int = 0
+    ): Boolean {
+        val label = listOfNotNull(stream.name, stream.title, stream.description, stream.behaviorHints?.filename)
+            .joinToString(" ")
+            .ifBlank { stream.url.orEmpty().substringAfterLast('/').substringBefore('?') }
+        if (label.isBlank()) return true
+
+        // 1. Wrong episode of the right series is still the wrong thing to play.
+        if (season > 0) {
+            val marker = episodeMarkers(label)
+            if (marker != null) {
+                val (s, e) = marker
+                if (s > 0 && s != season) return false
+                if (e > 0 && episode > 0 && e != episode) return false
+            }
+        }
+
+        // 2. A year that cannot be this title's.
+        val wantedYear = year.orEmpty().take(4).toIntOrNull()
+        if (wantedYear != null) {
+            val printed = YEAR_PATTERN.findAll(label).mapNotNull { it.value.toIntOrNull() }.toList()
+            if (printed.isNotEmpty() && printed.none { kotlin.math.abs(it - wantedYear) <= 1 }) return false
+        }
+
+        // 3. A label that clearly names another title.
+        val wanted = identityTokens(title)
+        if (wanted.isEmpty()) return true
+        val printed = identityTokens(label)
+        if (printed.isEmpty()) return true
+        val overlap = printed.count { it in wanted }
+        if (overlap > 0) return true
+        // Two or more identifying words, none of them ours: a different title.
+        return printed.size < 2
+    }
+
+    /** True when a candidate's name/host is the Internet Archive. */
+    fun isInternetArchive(name: String?, baseUrl: String? = null): Boolean {
+        val haystack = (name.orEmpty() + " " + baseUrl.orEmpty()).lowercase()
+        return "archive.org" in haystack || "internet archive" in haystack ||
+            "internetarchive" in haystack || "archive-org" in haystack
+    }
 
     // -- helpers -----------------------------------------------------------
 

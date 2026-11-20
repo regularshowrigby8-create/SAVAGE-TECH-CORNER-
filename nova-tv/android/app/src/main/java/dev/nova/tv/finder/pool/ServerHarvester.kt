@@ -3,145 +3,98 @@ package dev.nova.tv.finder.pool
 import dev.nova.tv.data.remote.HttpClient
 import dev.nova.tv.finder.FinderCandidate
 import dev.nova.tv.finder.FinderRules
-import dev.nova.tv.finder.SourceFinder
+import dev.nova.tv.finder.WebCrawler
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
-import java.net.URLEncoder
 
 /**
- * Feeds [ServerPool]. Each [harvest] call reads the next slice of every
- * keyless directory, so repeated calls (one per scramble) keep reaching
- * servers the pool has not seen:
+ * Feeds [ServerPool] until its 3000 slots are full.
  *
- *  - stremio-addons.net: every page (700+ addons plus their hosted instances,
- *    manifests inline);
- *  - Stremio's official collection and Cinemeta's community / official
- *    addon catalogues (manifests inline);
- *  - GitHub repository search for two queries, one 100-result page per query
- *    per round (unauthenticated search allows 10 calls a minute), with
- *    manifest links read from the description, homepage and README.
+ * The old harvester read stremio-addons.net page by page and a couple of
+ * GitHub queries, which is why the pool stalled a few hundred entries in --
+ * and it duplicated [dev.nova.tv.finder.StremioFinder], so the same hosts
+ * arrived twice.
+ *
+ * Now each [harvest] round runs the open-web crawler ([WebCrawler]) at a new
+ * rotation plus a GitHub sweep, both in parallel. Rounds are cheap to repeat:
+ * the crawler rotates its search queries, GitHub pages and followed links, so
+ * round N+1 reaches ground round N did not. [SourceEngine] keeps calling this
+ * until [ServerPool.CAPACITY] is reached.
  */
-class ServerHarvester(private val http: HttpClient) {
-
-    private val json = Json { ignoreUnknownKeys = true; isLenient = true }
+class ServerHarvester(
+    private val http: HttpClient,
+    private val web: WebCrawler = WebCrawler(http)
+) {
 
     suspend fun harvest(round: Int): List<FinderCandidate> = coroutineScope {
-        val inline = async { withTimeoutOrNull(BUDGET_MS) { inlineDirectories(round) }.orEmpty() }
-        val github = async { withTimeoutOrNull(BUDGET_MS) { github(round) }.orEmpty() }
-        (inline.await() + github.await()).distinctBy { ServerPool.key(it.baseUrl) }
+        val crawled = async { withTimeoutOrNull(BUDGET_MS) { web.crawl(round, BUDGET_MS) }.orEmpty() }
+        val extra = async { withTimeoutOrNull(BUDGET_MS) { githubExtras(round) }.orEmpty() }
+        (crawled.await() + extra.await())
+            .filterNot { FinderRules.isInternetArchive(it.name, it.baseUrl) }
+            .distinctBy { ServerPool.key(it.baseUrl) }
     }
 
-    /** Directories that ship the manifest with the entry: no extra request per server. */
-    private suspend fun inlineDirectories(round: Int): List<FinderCandidate> = coroutineScope {
-        // All stremio-addons.net pages on the first round, then two per round in rotation.
-        val pages = if (round == 0) (1..STREMIO_PAGES).toList() else listOf((round * 2) % STREMIO_PAGES + 1, (round * 2 + 1) % STREMIO_PAGES + 1)
-        val directory = pages.map { page ->
-            async {
-                runCatching {
-                    val data = fetch("https://stremio-addons.net/api/v0/addons?limit=100&nsfw=exclude&sort_by=stars&order=desc&page=$page") as? JsonObject
-                    (data?.get("addons") as? JsonArray).orEmpty().filterIsInstance<JsonObject>().flatMap { addon ->
-                        listOf(addon) + (addon["instances"] as? JsonArray).orEmpty().filterIsInstance<JsonObject>()
-                    }
-                }.getOrDefault(emptyList())
-            }
-        }
-        val catalogues = listOf(
-            "https://api.strem.io/addonscollection.json",
-            "https://v3-cinemeta.strem.io/addon_catalog/all/community.json",
-            "https://v3-cinemeta.strem.io/addon_catalog/all/official.json"
-        ).map { url ->
-            async {
-                runCatching {
-                    when (val body = fetch(url)) {
-                        is JsonArray -> body.filterIsInstance<JsonObject>()
-                        is JsonObject -> (body["addons"] as? JsonArray).orEmpty().filterIsInstance<JsonObject>()
-                        else -> emptyList()
-                    }
-                }.getOrDefault(emptyList())
-            }
-        }
-        (directory + catalogues).awaitAll().flatten().mapNotNull { entry ->
-            val url = FinderRules.entryUrl(entry)
-            val manifest = entry["manifest"] as? JsonObject ?: return@mapNotNull null
-            if (url.isEmpty()) null else SourceFinder.candidateFor(url, manifest, "pool", entry)?.copy(from = "Server pool")
-        }
-    }
-
-    private suspend fun github(round: Int): List<FinderCandidate> = coroutineScope {
+    /**
+     * A second GitHub pass with different sort orders. The crawler already
+     * searches GitHub; this reaches the "newest" and "most starred" ends of the
+     * same queries, which the relevance sort buries.
+     */
+    private suspend fun githubExtras(round: Int): List<FinderCandidate> = coroutineScope {
+        val sort = if (round % 2 == 0) "stars" else "updated"
         val page = round % GITHUB_PAGES + 1
         val repos = GITHUB_QUERIES.map { q ->
             async {
                 runCatching {
-                    val query = URLEncoder.encode(q, "UTF-8")
-                    val data = fetch("https://api.github.com/search/repositories?q=$query&sort=updated&order=desc&per_page=100&page=$page") as? JsonObject
-                    (data?.get("items") as? JsonArray).orEmpty().filterIsInstance<JsonObject>()
+                    val query = java.net.URLEncoder.encode(q, "UTF-8")
+                    val data = web.json(
+                        "https://api.github.com/search/repositories?q=$query&sort=$sort&order=desc&per_page=100&page=$page"
+                    ) as? kotlinx.serialization.json.JsonObject
+                    (data?.get("items") as? kotlinx.serialization.json.JsonArray)
+                        .orEmpty().filterIsInstance<kotlinx.serialization.json.JsonObject>()
                 }.getOrDefault(emptyList())
             }
         }.awaitAll().flatten().distinctBy { it.str("full_name") }
 
-        val gate = Semaphore(CONCURRENCY)
-        var readmes = 0
-        val readmeLock = Any()
-        val manifestUrls = repos.map { repo ->
-            async {
-                gate.withPermit {
-                    val text = "${repo.str("description")} ${repo.str("homepage")}"
-                    val inline = FinderRules.extractManifestUrls(text)
-                    if (inline.isNotEmpty()) return@withPermit inline.map { it to repo }
-                    val take = synchronized(readmeLock) { if (readmes < MAX_READMES) { readmes++; true } else false }
-                    val full = repo.str("full_name")
-                    if (!take || !Regex("^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$").matches(full)) return@withPermit emptyList()
-                    val branch = repo.str("default_branch").ifBlank { "main" }.replace(Regex("[^A-Za-z0-9_.-]"), "")
-                    runCatching {
-                        val readme = http.get("https://raw.githubusercontent.com/$full/$branch/README.md", attempts = 1, limitBytes = FinderRules.MAX_JSON_BYTES)
-                        FinderRules.extractManifestUrls(readme).map { it to repo }
-                    }.getOrDefault(emptyList())
-                }
-            }
-        }.awaitAll().flatten().distinctBy { it.first }.take(MAX_GITHUB_MANIFESTS)
+        val urls = repos.mapNotNull { repo ->
+            val inline = FinderRules.extractManifestUrls("${repo.str("description")} ${repo.str("homepage")}")
+            inline.firstOrNull()?.let { it to repo }
+        }.take(MAX_MANIFESTS)
 
-        manifestUrls.map { (url, repo) ->
+        urls.map { (url, repo) ->
             async {
-                gate.withPermit {
-                    withTimeoutOrNull(MANIFEST_TIMEOUT_MS) {
-                        runCatching {
-                            val manifest = fetch(url, FinderRules.MAX_MANIFEST_BYTES)
-                            val meta = JsonObject(mapOf("stars" to (repo["stargazers_count"] ?: JsonPrimitive(0))))
-                            SourceFinder.candidateFor(url, manifest, "github", meta)?.copy(from = "Server pool · GitHub")
-                        }.getOrNull()
-                    }
+                withTimeoutOrNull(MANIFEST_TIMEOUT_MS) {
+                    runCatching {
+                        val manifest = web.json(url, FinderRules.MAX_MANIFEST_BYTES)
+                        val meta = kotlinx.serialization.json.JsonObject(
+                            mapOf("stars" to (repo["stargazers_count"] ?: kotlinx.serialization.json.JsonPrimitive(0)))
+                        )
+                        dev.nova.tv.finder.SourceFinder.candidateFor(url, manifest, "github", meta)
+                            ?.copy(from = "Server pool \u00b7 GitHub")
+                    }.getOrNull()
                 }
             }
         }.awaitAll().filterNotNull()
     }
 
-    private suspend fun fetch(url: String, maxBytes: Long = FinderRules.MAX_JSON_BYTES): JsonElement {
-        val safe = FinderRules.publicHttpsUrl(url)
-        require(safe.isNotEmpty()) { "Blocked URL" }
-        return json.parseToJsonElement(http.get(safe, headers = ACCEPT_JSON, attempts = 1, limitBytes = maxBytes))
-    }
-
-    private fun JsonObject.str(key: String): String = (this[key] as? JsonPrimitive)?.contentOrNull.orEmpty()
+    private fun kotlinx.serialization.json.JsonObject.str(key: String): String =
+        (this[key] as? kotlinx.serialization.json.JsonPrimitive)?.contentOrNull.orEmpty()
 
     companion object {
-        const val STREMIO_PAGES = 8
         const val GITHUB_PAGES = 10
-        private val GITHUB_QUERIES = listOf("topic:stremio-addon", "stremio addon")
-        private const val CONCURRENCY = 8
-        private const val MAX_READMES = 60
-        private const val MAX_GITHUB_MANIFESTS = 120
-        private const val BUDGET_MS = 45_000L
-        private const val MANIFEST_TIMEOUT_MS = 6_000L
-        private val ACCEPT_JSON = mapOf("Accept" to "application/json", "User-Agent" to "NovaTV-Server-Pool/1.0")
+        private const val BUDGET_MS = 75_000L
+        private const val MANIFEST_TIMEOUT_MS = 7_000L
+        private const val MAX_MANIFESTS = 200
+        private val GITHUB_QUERIES = listOf(
+            "topic:stremio-addon",
+            "stremio addon",
+            "stremio-addon in:name",
+            "manifest.json stremio",
+            "addon manifest stream",
+            "media catalog addon",
+            "streaming addon server"
+        )
     }
 }

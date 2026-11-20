@@ -45,14 +45,27 @@ class CatalogRepository(
     private val _lastErrors = MutableStateFlow<List<String>>(emptyList())
     val lastErrors: StateFlow<List<String>> = _lastErrors.asStateFlow()
 
+    /**
+     * Install the built-in catalogues, then the viewer's own.
+     *
+     * This used to return early when anything was already installed, so a
+     * device that had been set up before the built-in list grew kept only the
+     * addons it had: that is why Cinemeta ended up as the only connected
+     * catalogue. Built-ins are now merged in on every launch, so a new release
+     * that adds catalogues reaches existing installs too.
+     */
     suspend fun installDefaults() = coroutineScope {
-        if (_addons.value.isNotEmpty()) return@coroutineScope
         val builtIns = FinderRules.DEFAULT_SOURCES
+        val existing = _addons.value
+        val present = existing.map { it.baseUrl.lowercase() }.toSet()
         val saved = store?.savedAddonUrls().orEmpty().filter { url -> builtIns.none { same(it, url) } }
-        val loaded = (builtIns.map { it to true } + saved.map { it to false }).map { (url, builtIn) ->
+        val missingBuiltIns = builtIns.filterNot { url -> present.contains(url.trimEnd('/').lowercase()) }
+        val missingSaved = saved.filterNot { url -> present.contains(url.trimEnd('/').lowercase()) }
+        if (missingBuiltIns.isEmpty() && missingSaved.isEmpty()) return@coroutineScope
+        val loaded = (missingBuiltIns.map { it to true } + missingSaved.map { it to false }).map { (url, builtIn) ->
             async { install(url, builtIn) }
         }.awaitAll().filterNotNull()
-        _addons.value = loaded.distinctBy { it.baseUrl.lowercase() }
+        _addons.value = (existing + loaded).distinctBy { it.baseUrl.lowercase() }
     }
 
     /**

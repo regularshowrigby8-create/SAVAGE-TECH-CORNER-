@@ -6,6 +6,7 @@ import dev.nova.tv.data.model.StreamHints
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -130,5 +131,62 @@ class FinderRulesTest {
         assertEquals("720p", FinderRules.guessQuality("720P"))
         assertEquals("", FinderRules.guessQuality("CAM"))
         assertTrue(FinderRules.qualityRank("2160p") > FinderRules.qualityRank("1080p"))
+    }
+
+    // -- identity: a source must answer for the title that was asked --------
+
+    @Test
+    fun `a stream naming a different film is rejected`() {
+        val wrong = Stream(url = "https://cdn.example/a.mkv", title = "The Searchers 1956 1080p BluRay")
+        assertFalse(FinderRules.streamMatchesTitle(wrong, "Dune", "2021", 0, 0))
+    }
+
+    @Test
+    fun `a stream naming the requested film is kept`() {
+        val right = Stream(url = "https://cdn.example/a.mkv", title = "Dune Part Two 2024 2160p WEB-DL")
+        assertTrue(FinderRules.streamMatchesTitle(right, "Dune: Part Two", "2024", 0, 0))
+    }
+
+    @Test
+    fun `a label with no title words is kept, because most addons print none`() {
+        val plain = Stream(url = "https://cdn.example/a.m3u8", title = "1080p WEB-DL 2.1 GB")
+        assertTrue(FinderRules.streamMatchesTitle(plain, "Severance", "2022", 1, 2))
+    }
+
+    @Test
+    fun `the wrong episode of the right series is rejected`() {
+        val other = Stream(url = "https://cdn.example/a.mkv", title = "Severance S01E05 1080p")
+        assertFalse(FinderRules.streamMatchesTitle(other, "Severance", "2022", 1, 2))
+        val same = Stream(url = "https://cdn.example/b.mkv", title = "Severance S01E02 1080p")
+        assertTrue(FinderRules.streamMatchesTitle(same, "Severance", "2022", 1, 2))
+    }
+
+    @Test
+    fun `the wrong season is rejected`() {
+        val other = Stream(url = "https://cdn.example/a.mkv", title = "Severance Season 2 Complete")
+        assertFalse(FinderRules.streamMatchesTitle(other, "Severance", "2022", 1, 2))
+    }
+
+    @Test
+    fun `internet archive is blocked by name and by host`() {
+        assertTrue(FinderRules.isRedundantSource("Internet Archive"))
+        assertTrue(FinderRules.isRedundantSource("Public Domain", "https://archive.org/download/x"))
+        assertTrue(FinderRules.isInternetArchive("Archive Org", "https://ia.archive.org"))
+        assertFalse(FinderRules.isRedundantSource("Cinemeta"))
+    }
+
+    @Test
+    fun `the built-in catalogue list has at least ten catalogues besides cinemeta`() {
+        val catalogues = FinderRules.DEFAULT_SOURCES - FinderRules.SUBTITLE_ONLY_SOURCES
+        assertTrue("expected >= 11 catalogue addons, got ${catalogues.size}", catalogues.size >= 11)
+        assertTrue(FinderRules.DEFAULT_SOURCES.first() == "https://v3-cinemeta.strem.io")
+        assertTrue(FinderRules.DEFAULT_SOURCES.any { "tmdb" in it })
+    }
+
+    @Test
+    fun `the zeroplay finder no longer reads the stremio directories`() {
+        assertFalse("stremio-addons" in FinderRules.SOURCE_IDS)
+        assertFalse("catalog-graph" in FinderRules.SOURCE_IDS)
+        assertTrue("web" in FinderRules.SOURCE_IDS)
     }
 }

@@ -78,7 +78,9 @@ data class VerifiedSource(val candidate: FinderCandidate, val streams: List<Stre
  */
 class SourceFinder(
     private val http: HttpClient,
-    private val addons: AddonClient
+    private val addons: AddonClient,
+    /** The open-web crawler; `null` in tests that only exercise the rules. */
+    private val web: WebCrawler? = WebCrawler(http)
 ) {
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 
@@ -129,10 +131,23 @@ class SourceFinder(
     private suspend fun runSource(id: String, maxPerSource: Int): Pair<FinderSourceReport, List<FinderCandidate>> {
         val started = System.currentTimeMillis()
         return try {
+            // The web crawler resolves manifests itself, so it is not passed
+            // through identifyEntries; it returns finished candidates.
+            if (id == "web") {
+                val crawler = web ?: error("Web crawler unavailable")
+                val candidates = withTimeoutOrNull(WEB_TIMEOUT_MS) { crawler.crawl(round = 0) }
+                    ?: error("Web crawl timed out")
+                return FinderSourceReport(
+                    id = id,
+                    status = FinderSourceReport.Status.COMPLETE,
+                    seen = candidates.size,
+                    checked = candidates.size,
+                    candidates = candidates.size,
+                    elapsedMs = System.currentTimeMillis() - started
+                ) to candidates
+            }
             val discovered = withTimeoutOrNull(SOURCE_TIMEOUT_MS) {
                 when (id) {
-                    "stremio-addons" -> crawlStremioAddons()
-                    "catalog-graph" -> crawlCatalogGraph()
                     "github" -> crawlGitHub()
                     else -> error("Unknown crawler source")
                 }
@@ -173,37 +188,6 @@ class SourceFinder(
         val safe = FinderRules.publicHttpsUrl(url)
         require(safe.isNotEmpty()) { "Blocked URL" }
         return http.get(safe, headers = ACCEPT_JSON, attempts = 1, limitBytes = FinderRules.MAX_JSON_BYTES)
-    }
-
-    private suspend fun crawlStremioAddons(): Discovered {
-        val data = fetchJson(
-            "https://stremio-addons.net/api/v0/addons?limit=100&nsfw=exclude&sort_by=stars&order=desc&page=1"
-        ) as? JsonObject ?: JsonObject(emptyMap())
-        val entries = mutableListOf<JsonObject>()
-        for (addon in (data["addons"] as? JsonArray).orEmpty().filterIsInstance<JsonObject>()) {
-            entries += addon
-            entries += (addon["instances"] as? JsonArray).orEmpty().filterIsInstance<JsonObject>()
-        }
-        return Discovered(entries.take(100), entries.size)
-    }
-
-    private suspend fun crawlCatalogGraph(): Discovered = coroutineScope {
-        val endpoints = listOf(
-            "https://v3-cinemeta.strem.io/addon_catalog/all/community.json",
-            "https://v3-cinemeta.strem.io/addon_catalog/all/official.json"
-        )
-        val results = endpoints.map { endpoint ->
-            async {
-                runCatching {
-                    ((fetchJson(endpoint) as? JsonObject)?.get("addons") as? JsonArray)
-                        .orEmpty().filterIsInstance<JsonObject>()
-                }
-            }
-        }.awaitAll()
-        val errors = results.mapNotNull { it.exceptionOrNull()?.message?.let { m -> FinderRules.clean(m, 120) } }
-        if (errors.size == endpoints.size) error(errors.firstOrNull() ?: "Catalogues unavailable")
-        val entries = results.flatMap { it.getOrDefault(emptyList()) }
-        Discovered(entries.take(100), entries.size, errors)
     }
 
     private suspend fun crawlGitHub(): Discovered = coroutineScope {
@@ -291,6 +275,7 @@ class SourceFinder(
 
     companion object {
         private const val SOURCE_TIMEOUT_MS = 20_000L
+        private const val WEB_TIMEOUT_MS = 75_000L
         private const val VERIFY_TIMEOUT_MS = 8_000L
         private const val MANIFEST_CONCURRENCY = 6
         private val ACCEPT_JSON = mapOf(

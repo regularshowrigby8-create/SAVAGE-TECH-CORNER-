@@ -40,7 +40,9 @@ class NovaApplication : Application(), ImageLoaderFactory {
     val settings: SettingsStore by lazy { SettingsStore(getSharedPreferences("nova_settings", MODE_PRIVATE)) }
     val library: LibraryStore by lazy { LibraryStore(getSharedPreferences("nova_library", MODE_PRIVATE)) }
     val repository: CatalogRepository by lazy { CatalogRepository(addonClient, settings) }
-    val zeroPlayFinder: SourceFinder by lazy { SourceFinder(http, addonClient) }
+    /** One crawler shared by the ZeroPlay finder and the pool harvester. */
+    val webCrawler: dev.nova.tv.finder.WebCrawler by lazy { dev.nova.tv.finder.WebCrawler(http) }
+    val zeroPlayFinder: SourceFinder by lazy { SourceFinder(http, addonClient, webCrawler) }
     val stremioFinder: StremioFinder by lazy { StremioFinder(http) }
     val websiteFinder: WebsiteFinder by lazy { WebsiteFinder(http) }
     val probe: StreamProbe by lazy { StreamProbe(http.okHttp) }
@@ -75,7 +77,7 @@ class NovaApplication : Application(), ImageLoaderFactory {
     val engine: SourceEngine by lazy {
         SourceEngine(
             repository, zeroPlayFinder, stremioFinder, websiteFinder, zeroPlayFinder, library, probe,
-            pool = serverPool, harvester = ServerHarvester(http)
+            pool = serverPool, harvester = ServerHarvester(http, webCrawler)
         )
     }
 
