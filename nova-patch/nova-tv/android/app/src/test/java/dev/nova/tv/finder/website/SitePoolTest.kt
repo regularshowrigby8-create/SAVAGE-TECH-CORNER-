@@ -179,6 +179,22 @@ class SitePoolTest {
     }
 
     @Test
+    fun `an unreadable bundled pool is reported instead of showing an empty pool`() {
+        // NovaApplication reads assets/site_pool.json at startup. The asset is
+        // committed so the read should always work -- but if it does not, a zero
+        // on the Sources screen is indistinguishable from "the crawl found
+        // nothing", which is the false green this app is not allowed to show.
+        val pool = pool()
+        pool.noteBundledPoolMissing("FileNotFoundException")
+        val state = pool.state.value
+        assertEquals(0, state.size)
+        assertTrue(
+            "the reason should be visible, was: \"${state.lastError}\"",
+            state.lastError.contains("FileNotFoundException")
+        )
+    }
+
+    @Test
     fun `a pool file with extra crawler fields still loads`() {
         // The crawler writes by_source into the pool file so a total can be
         // explained. If the app's Json were not configured with

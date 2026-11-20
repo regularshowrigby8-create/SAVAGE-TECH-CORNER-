@@ -142,6 +142,13 @@ jobs:
               echo "::warning::$src was not written, keeping the published version"
             fi
           done
+          # The app reads assets/site_pool.json on first launch, so the crawl has
+          # to reach that path or the bundled pool stays empty forever.
+          ASSET="nova-patch/nova-tv/android/app/src/main/assets/site_pool.json"
+          if [ -f nova-patch/pools/site_pool.json ]; then
+            cp nova-patch/pools/site_pool.json "$ASSET"
+            echo "shipped $(python3 -c "import json;print(len(json.load(open('$ASSET'))['entries']))") sites as the bundled asset"
+          fi
 
       - name: Publish the crawl numbers into the repository
         # The step summary and the artifacts both live on hosts that are not

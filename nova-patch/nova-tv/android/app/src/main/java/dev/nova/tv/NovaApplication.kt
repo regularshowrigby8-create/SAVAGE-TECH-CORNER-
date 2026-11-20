@@ -101,9 +101,17 @@ class NovaApplication : Application(), ImageLoaderFactory {
      */
     fun importBundledSitePool() {
         appScope.launch {
+            // The asset is committed, empty, so this cannot normally fail. If it
+            // does, the pool the user sees on Sources will be empty with no
+            // explanation -- exactly the "false green" this app should not have,
+            // so the miss is recorded and shown rather than silently skipped.
             val text = runCatching {
                 assets.open("site_pool.json").bufferedReader().use { it.readText() }
-            }.getOrNull() ?: return@launch
+            }.getOrElse { error ->
+                android.util.Log.w("NovaSitePool", "no bundled pool in assets: ${error.message}")
+                sitePool.noteBundledPoolMissing(error.message ?: "missing")
+                return@launch
+            }
             // Logged either way: 0 is a normal result on a later launch (already
             // imported) but it is also what a failure looks like, so the reason is
             // recorded rather than both cases printing nothing.

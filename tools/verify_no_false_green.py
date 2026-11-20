@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -322,6 +323,67 @@ def check_report_honesty(nova_root: Optional[Path]) -> List[Check]:
     return checks
 
 
+def assert_assets_exist(nova_root: Path) -> list[str]:
+    """Every `assets.open("x")` must have a matching file in the patch.
+
+    This was a real defect: NovaApplication read assets/site_pool.json at startup
+    and nothing ever created it, so the bundled pool was permanently empty while
+    the code and the README both said it was imported. A missing asset throws at
+    runtime and is invisible to a compile, so it needs its own check.
+    """
+    problems = []
+    assets_dir = nova_root / "android/app/src/main/assets"
+    for path in nova_root.rglob("*.kt"):
+        text = path.read_text(encoding="utf-8", errors="strict")
+        for name in re.findall(r'assets\.open\("([^"]+)"\)', text):
+            if not (assets_dir / name).is_file():
+                problems.append(
+                    f"{path.relative_to(nova_root)} reads assets/{name}, "
+                    f"but {assets_dir.relative_to(nova_root)}/{name} does not exist"
+                )
+    return problems
+
+
+def check_assets_detection() -> Check:
+    """Plant the defect the asset rule exists for, and confirm it fires.
+
+    Without this it would be a rule with no failing fixture, which this file
+    classifies as theatre.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        (root / "android/app/src/main/java").mkdir(parents=True)
+        (root / "android/app/src/main/java/Reads.kt").write_text(
+            'val t = assets.open("site_pool.json").bufferedReader().use { it.readText() }\n'
+        )
+        fired = assert_assets_exist(root)
+        (root / "android/app/src/main/assets").mkdir(parents=True)
+        (root / "android/app/src/main/assets/site_pool.json").write_text("{}\n")
+        quiet = assert_assets_exist(root)
+    return Check(
+        "detect:asset-missing:provable",
+        bool(fired) and not quiet,
+        "the asset rule fires when the file is absent and is quiet when it is present",
+        f"absent -> {fired}, present -> {quiet}",
+    )
+
+
+def check_assets(nova_root: Optional[Path]) -> List[Check]:
+    if nova_root is None:
+        return [Check("asset:assets-exist", None, "no nova tree given; nothing to check")]
+    problems = assert_assets_exist(nova_root)
+    return [
+        Check(
+            "asset:assets-exist",
+            not problems,
+            "every asset the code opens exists in the patch"
+            if not problems
+            else "the code opens an asset that is not in the patch",
+            "\n".join(problems),
+        )
+    ]
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     ap = argparse.ArgumentParser(description="Verify the Nova debugger does not produce false greens")
     ap.add_argument("--nova", help="path to a nova-tv checkout for the corpus checks")
@@ -341,6 +403,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     checks += check_corpus(nova_root)
     checks += check_totality()
     checks += check_report_honesty(nova_root)
+    checks += [check_assets_detection()]
+    checks += check_assets(nova_root)
 
     failed = [c for c in checks if c.passed is False]
     skipped = [c for c in checks if c.passed is None]
@@ -370,6 +434,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             print("  every rule fires on a planted defect and stays quiet on correct code")
 
     return 1 if failed else 0
+
 
 
 if __name__ == "__main__":

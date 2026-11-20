@@ -1,0 +1,8 @@
+{
+ "version": 1,
+ "target": 3000,
+ "generated": "",
+ "comment": "Replaced by nova-pool-crawl.yml after a crawl. Committed empty so the asset exists and the app never reads a missing file.",
+ "entries": [],
+ "rejected": {}
+}

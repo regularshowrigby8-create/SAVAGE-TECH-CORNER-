@@ -188,6 +188,16 @@ class SitePool(
         added
     }
 
+    /**
+     * Record that the bundled pool could not be read. Surfaced through
+     * [state] so Sources can say why it is empty instead of showing a zero that
+     * looks identical to a crawl that found nothing.
+     */
+    fun noteBundledPoolMissing(reason: String) = synchronized(lock) {
+        lastError = "bundled site pool missing: $reason"
+        publish()
+    }
+
     /** Whether the crawler's pool is on this device at all. */
     val hasPool: Boolean get() = synchronized(lock) { document.entries.isNotEmpty() }
 
