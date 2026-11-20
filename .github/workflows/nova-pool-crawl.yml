@@ -83,9 +83,15 @@ jobs:
         run: |
           set -euo pipefail
           cd nova-patch/nova-tv/tools
+          # Seed from the pool already published in the repository, so repeated
+          # runs accumulate instead of each one starting from nothing and
+          # replacing the last. --merge is the crawler's own facility for this.
+          SEED=""
+          [ -f ../../pools/server_pool.json ] && SEED="--merge ../../pools/server_pool.json"
           python3 server_crawler.py \
             --target "${{ inputs.target || '3000' }}" \
             --max-seconds "$(( ${{ inputs.minutes || '45' }} * 60 ))" \
+            $SEED \
             --out server_pool.json || true
           python3 - <<'PY'
           import json, pathlib
@@ -99,10 +105,13 @@ jobs:
         run: |
           set -euo pipefail
           cd nova-patch/nova-tv/tools
+          SEED=""
+          [ -f ../../pools/site_pool.json ] && SEED="--merge ../../pools/site_pool.json"
           python3 site_crawler.py \
             --target "${{ inputs.target || '3000' }}" \
             --probe "${{ inputs.probe || 'one piece' }}" \
             --max-seconds "$(( ${{ inputs.minutes || '45' }} * 60 ))" \
+            $SEED \
             --manifests server_pool.json \
             --out site_pool.json || true
           python3 - <<'PY'
@@ -120,23 +129,19 @@ jobs:
           PY
 
       - name: Publish both pools to the branch
+        if: always()
         run: |
-          set -euo pipefail
+          set -uo pipefail
           mkdir -p nova-patch/pools
-          mv nova-patch/nova-tv/tools/server_pool.json nova-patch/pools/server_pool.json
-          mv nova-patch/nova-tv/tools/site_pool.json nova-patch/pools/site_pool.json
-          {
-            echo "## Nova pool crawl"
-            echo
-            echo "| pool | entries | ceiling |"
-            echo "|---|---|---|"
-            for f in nova-patch/pools/*_pool.json; do
-              n=$(python3 -c "import json,sys;print(len(json.load(open('$f'))['entries']))")
-              echo "| $(basename "$f") | $n | 3000 |"
-            done
-            echo
-            echo "Site rejections: \`$(python3 -c "import json;print(json.dumps(json.load(open('nova-patch/pools/site_pool.json'))['rejected']))")\`"
-          } >> "$GITHUB_STEP_SUMMARY"
+          for name in server_pool site_pool; do
+            src="nova-patch/nova-tv/tools/$name.json"
+            if [ -f "$src" ]; then
+              cp "$src" "nova-patch/pools/$name.json"
+              echo "published $name.json ($(wc -c < "nova-patch/pools/$name.json") bytes)"
+            else
+              echo "::warning::$src was not written, keeping the published version"
+            fi
+          done
 
       - name: Publish the crawl numbers into the repository
         # The step summary and the artifacts both live on hosts that are not
@@ -186,43 +191,28 @@ jobs:
           print("\n".join(lines[:8]))
           PY
 
-      - name: Commit the counts
-        if: always()
+      # One commit for both the data and the numbers. Two commit steps raced
+      # each other for the same index, and a push that loses a race throws away
+      # the whole crawl, so the push rebases and retries.
+      - name: Commit the pools and the counts
+        if: always() && github.event_name != 'pull_request' && !startsWith(github.ref, 'refs/pull/')
         run: |
           set -uo pipefail
           git config user.name "nova-crawler"
           git config user.email "nova-crawler@users.noreply.github.com"
-          git add nova-patch/POOL-COUNTS.md nova-patch/pools/counts.json 2>/dev/null || true
-          if git diff --cached --quiet; then echo "no counts to commit"; exit 0; fi
-          git commit -m "data(nova): pool crawl counts for run $GITHUB_RUN_ID"
-          git push || echo "push failed"
-
-      - name: Upload the pools
-        uses: actions/upload-artifact@v4
-        with:
-          name: nova-pools
-          path: nova-patch/pools/*_pool.json
-          if-no-files-found: error
-          retention-days: 30
-
-      - name: Commit the pools
-        # A crawl result is data, so it is committed only when it changed, and
-        # never on a scheduled run against someone else's fork.
-        #
-        # This used to be restricted to the default branch, which meant the pool
-        # data was never actually committed anywhere: the crawl runs on this
-        # feature branch. It now commits to whatever branch it was started on,
-        # except a pull request's synthetic merge ref (the token cannot push
-        # there anyway, and pushing to someone else's branch would be wrong).
-        if: github.event_name != 'pull_request' && !startsWith(github.ref, 'refs/pull/')
-        run: |
-          set -euo pipefail
-          git config user.name "nova-crawler"
-          git config user.email "nova-crawler@users.noreply.github.com"
-          git add nova-patch/pools
+          git add nova-patch/pools nova-patch/POOL-COUNTS.md 2>/dev/null || true
           if git diff --cached --quiet; then
-            echo "pools unchanged; nothing to commit"
+            echo "pool data unchanged; nothing to commit"
             exit 0
           fi
-          git commit -m "data(nova): refresh both server pools ($(date -u +%Y-%m-%d))"
-          git push
+          git commit -m "data(nova): refresh both pools, $(date -u +%Y-%m-%d)"
+          for attempt in 1 2 3; do
+            if git pull --rebase --autostash -q origin "${GITHUB_REF_NAME}" && git push -q origin "HEAD:${GITHUB_REF_NAME}"; then
+              echo "pushed on attempt $attempt"
+              exit 0
+            fi
+            echo "push attempt $attempt failed, retrying"
+            sleep 5
+          done
+          echo "::warning::could not push the pool data; the artifact has it"
+          exit 0
