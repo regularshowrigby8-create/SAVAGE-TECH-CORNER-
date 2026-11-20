@@ -47,7 +47,11 @@ class CatalogRepository(
         val saved = store?.savedAddonUrls().orEmpty().filter { url -> builtIns.none { same(it, url) } }
         val loaded = (builtIns.map { it to true } + saved.map { it to false }).map { (url, builtIn) ->
             async {
-                runCatching { client.loadAddon(url).copy(isBuiltIn = builtIn) }.getOrNull()
+                // One saved server that no longer answers must not hold the
+                // shelf hostage: each manifest gets its own deadline.
+                withTimeoutOrNull(INSTALL_TIMEOUT_MS) {
+                    runCatching { client.loadAddon(url).copy(isBuiltIn = builtIn) }.getOrNull()
+                }
             }
         }.awaitAll().filterNotNull()
         _addons.value = loaded.distinctBy { it.baseUrl.lowercase() }
@@ -175,5 +179,6 @@ class CatalogRepository(
     private companion object {
         const val SEARCH_TIMEOUT_MS = 8_000L
         const val PAGE_TIMEOUT_MS = 10_000L
+        const val INSTALL_TIMEOUT_MS = 12_000L
     }
 }

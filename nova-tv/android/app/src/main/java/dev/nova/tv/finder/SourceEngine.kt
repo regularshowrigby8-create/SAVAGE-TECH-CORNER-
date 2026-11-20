@@ -15,6 +15,9 @@ import dev.nova.tv.player.StreamRanker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
@@ -104,7 +107,37 @@ class SourceEngine(
     /** Start directory reads in the background at launch, so the first title is quick. */
     fun warmUp(kinds: Set<FinderKind>) {
         background.launch { kinds.filter { it != FinderKind.TITLE }.forEach { kind -> launch { discover(kind) } } }
-        if (FinderKind.TITLE in kinds) background.launch { fillPool() }
+        syncPoolFill(kinds)
+    }
+
+    private var poolFillJob: Job? = null
+
+    /**
+     * Keep filling the pool from whichever finders are switched on.
+     *
+     * The 3000 slots are one shared pool, so switching a finder off never
+     * leaves a hole: the finders still on carry on harvesting until
+     * [ServerPool.CAPACITY] is reached. [syncPoolFill] is called on launch and
+     * again on every toggle, so a finder switched back on resumes the fill from
+     * where it stopped. The loop ends when the pool is full, or when the
+     * directories stop returning anything new for [POOL_EMPTY_ROUNDS] rounds.
+     */
+    fun syncPoolFill(kinds: Set<FinderKind>) {
+        poolFillJob?.cancel()
+        poolFillJob = null
+        val pool = pool ?: return
+        if (harvester == null || kinds.isEmpty()) return
+        poolFillJob = background.launch {
+            var emptyRounds = 0
+            while (isActive && pool.state.value.size < ServerPool.CAPACITY) {
+                val before = pool.state.value.size
+                runCatching { fillPool() }
+                val after = pool.state.value.size
+                if (after > before) emptyRounds = 0 else emptyRounds++
+                if (emptyRounds >= POOL_EMPTY_ROUNDS) break
+                delay(if (after > before) POOL_FILL_PAUSE_MS else POOL_RETRY_PAUSE_MS)
+            }
+        }
     }
 
     private val harvestLock = Mutex()
@@ -350,6 +383,10 @@ class SourceEngine(
 
     companion object {
         const val PARALLELISM = 12
+        /** A fill round that adds nothing is not the end; four in a row is. */
+        private const val POOL_EMPTY_ROUNDS = 4
+        private const val POOL_FILL_PAUSE_MS = 750L
+        private const val POOL_RETRY_PAUSE_MS = 4_000L
         private const val VERIFY_CONCURRENCY = 16
         const val POOL_BATCH = 150
         const val SCRAMBLE_LABEL = "New servers"

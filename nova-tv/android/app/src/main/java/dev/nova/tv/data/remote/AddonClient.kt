@@ -56,11 +56,24 @@ class AddonClient(private val http: HttpClient) {
             "/" + extra.entries.joinToString("&") { "${it.key}=${encodeExtra(it.value)}" }
         }
         val url = normalise(addon.baseUrl) + "/catalog/${catalog.type}/${catalog.id}$suffix.json"
-        val raw = http.get(url)
-        return runCatching {
-            json.decodeFromString(CatalogResponse.serializer(), raw).metas
-        }.getOrElse { emptyList() }
+        readCatalog(url)?.let { return it }
+        // Cinemeta moved its shelves to cinemeta-catalogs and now answers 307
+        // from v3-cinemeta. OkHttp follows that, but a network that blocks the
+        // new host (or the hop itself) would leave every shelf empty, so the
+        // new path is also asked for directly.
+        if (!isCinemeta(addon.baseUrl)) return emptyList()
+        val direct = "$CINEMETA_CATALOGS/${catalog.id}/catalog/${catalog.type}/${catalog.id}$suffix.json"
+        return readCatalog(direct) ?: emptyList()
     }
+
+    /** The metas of one catalogue URL, or null when the request or parse failed. */
+    private suspend fun readCatalog(url: String): List<MetaPreview>? = runCatching {
+        json.decodeFromString(CatalogResponse.serializer(), http.get(url)).metas
+    }.getOrNull()
+
+    private fun isCinemeta(base: String): Boolean =
+        runCatching { java.net.URI(normalise(base)).host }.getOrNull()
+            ?.equals(CINEMETA_HOST, ignoreCase = true) == true
 
     /** `/meta/{type}/{id}.json`: full details, including the episode list. */
     suspend fun fetchMeta(addon: NovaAddon, type: String, id: String): MetaPreview? {
@@ -109,6 +122,9 @@ class AddonClient(private val http: HttpClient) {
         base.trim().trimEnd('/').replace(Regex("""/manifest\.json$""", RegexOption.IGNORE_CASE), "")
 
     companion object {
+        private const val CINEMETA_HOST = "v3-cinemeta.strem.io"
+        private const val CINEMETA_CATALOGS = "https://cinemeta-catalogs.strem.io"
+
         /**
          * Rank streams: playable only, best quality first, and one entry per
          * request (same URL + headers) so two addons mirroring a file do not

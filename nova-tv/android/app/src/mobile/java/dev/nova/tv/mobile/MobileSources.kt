@@ -121,6 +121,13 @@ fun MobileSources(state: NovaState, viewModel: NovaViewModel, onBack: () -> Unit
                     else Text("${state.workingServers.size}", style = MType.meta)
                 }
             }
+            item {
+                // The finders share this pool; whatever is switched on keeps
+                // filling it until every slot is used.
+                SettingRow("Server slots", onClick = null) {
+                    Text("${state.pool.size} / ${state.pool.capacity}", style = MType.meta)
+                }
+            }
             items(state.workingServers.take(8), key = { "srv:" + it }) { name ->
                 SettingRow(name, onClick = null) { Text("Working", style = MType.meta.copy(color = NovaPalette.accent)) }
             }

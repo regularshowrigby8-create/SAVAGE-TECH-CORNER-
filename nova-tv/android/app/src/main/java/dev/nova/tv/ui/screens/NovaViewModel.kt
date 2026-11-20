@@ -280,6 +280,7 @@ class NovaViewModel : ViewModel() {
         viewModelScope.launch {
             runCatching { repository.installDefaults() }
             engine.warmUp(_state.value.finders)
+            engine.syncPoolFill(_state.value.finders)
             shelfPlan = planShelves()
             val first = shelfPlan.take(INITIAL_SHELVES)
             val loaded = first.map { shelf -> async { shelf.copy(items = repository.loadPage(shelf.type, shelf.catalog, shelf.genre)) } }
@@ -751,6 +752,9 @@ class NovaViewModel : ViewModel() {
         val next = if (kind in set) set - kind else set + kind
         settings.setFinders(next)
         _state.update { it.copy(finders = next) }
+        // The finders share one 3000-slot pool: whichever are on keep filling
+        // it, so switching one off leaves the others to close the gap.
+        engine.syncPoolFill(next)
     }
 
     /** Run one finder now and install whatever plays the top title. */

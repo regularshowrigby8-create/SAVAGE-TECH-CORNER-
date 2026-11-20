@@ -125,7 +125,17 @@ fun SourcesScreen(state: NovaState, viewModel: NovaViewModel) {
                             color = if (state.poolBusy) NovaPalette.accent else NovaPalette.textMuted
                         )
                     }
-                ) { Text("Working servers", style = NovaType.body) }
+                ) {
+                    Column {
+                        Text("Working servers", style = NovaType.body)
+                        // The finders share this pool; whatever is switched on
+                        // keeps filling it until every slot is used.
+                        Text(
+                            "${state.pool.size} / ${state.pool.capacity} slots · filled by the finders that are on",
+                            style = NovaType.meta
+                        )
+                    }
+                }
             }
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.padding(top = 6.dp)) {
