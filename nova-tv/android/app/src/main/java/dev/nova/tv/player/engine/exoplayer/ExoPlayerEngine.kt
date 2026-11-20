@@ -104,7 +104,10 @@ class ExoPlayerEngine(
 
     override fun seekTo(positionMs: Long) {
         val duration = exoPlayer.duration
-        val target = if (duration > 0L) positionMs.coerceIn(0L, duration) else positionMs.coerceAtLeast(0L)
+        // Never clamp onto the exact end: that is STATE_ENDED, which the app
+        // treats as "episode over" and either restarts or rolls to the next.
+        val ceiling = if (duration > 0L) (duration - dev.nova.tv.player.SEEK_END_GUARD_MS).coerceAtLeast(0L) else Long.MAX_VALUE
+        val target = positionMs.coerceIn(0L, ceiling)
         exoPlayer.seekTo(target)
         _state.update { it.copy(currentPositionMs = target) }
     }

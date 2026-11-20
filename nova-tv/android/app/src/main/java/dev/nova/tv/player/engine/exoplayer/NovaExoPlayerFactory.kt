@@ -160,10 +160,12 @@ object NovaExoPlayerFactory {
             .build()
             .apply {
                 volume = 1.0f
-                // Exact seeks decode from the previous keyframe, which is a
-                // visible pause on a remote; snapping to the nearest keyframe
-                // is what makes skipping feel instant.
-                setSeekParameters(SeekParameters.CLOSEST_SYNC)
+                // CLOSEST_SYNC snapped a 10 s skip to the nearest keyframe,
+                // which on a long-GOP source can be 20-40 s away -- backwards
+                // as often as forwards. That reads as "the episode restarted".
+                // EXACT decodes from the preceding keyframe to the requested
+                // position, so ±10 s lands within a frame or two of the target.
+                setSeekParameters(SeekParameters.EXACT)
             }
 
         return NovaExoPlayerBundle(player, renderers, http, bandwidthMeter, mediaSourceFactory)

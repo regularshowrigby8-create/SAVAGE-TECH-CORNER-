@@ -193,6 +193,7 @@ private fun SideRail(current: Route, onSelect: (Route) -> Unit, modifier: Modifi
     var expanded by remember { mutableStateOf(false) }
     val reduced = LocalReduceMotion.current
     val contentEntry = LocalContentEntry.current
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
     val width by animateDpAsState(
         targetValue = if (expanded) RailExpanded else RailCollapsed,
         animationSpec = if (reduced) snap() else tween(200),
@@ -215,15 +216,25 @@ private fun SideRail(current: Route, onSelect: (Route) -> Unit, modifier: Modifi
             // Right hands focus to the screen's first control instead of whatever
             // row happens to line up with the icon.
             .onPreviewKeyEvent { event ->
-                event.type == KeyEventType.KeyDown &&
-                    event.key == Key.DirectionRight &&
-                    contentEntry.focusFirst()
+                if (event.type != KeyEventType.KeyDown || event.key != Key.DirectionRight) {
+                    return@onPreviewKeyEvent false
+                }
+                // Preferred: the screen hands us its first control. Fallback:
+                // geometric move, so a screen that has not registered an entry
+                // point (e.g. Settings sub-pages) still gets focus out of the
+                // rail instead of swallowing the key press.
+                if (contentEntry.focusFirst()) true
+                else {
+                    focusManager.moveFocus(FocusDirection.Right)
+                    true
+                }
             }
             // Compose's own focus history: re-entering lands on the last item.
             .arvioDpadFocusGroup()
-            .padding(vertical = NovaSpace.safeVertical, horizontal = 16.dp),
-        // 8 destinations × 48 dp + gaps fit under the NOVA mark on a 540 dp-high TV screen.
-        verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically)
+            .padding(vertical = 20.dp, horizontal = 16.dp),
+        // 8 destinations x 48 dp + 10 dp gaps fits under the NOVA mark on a
+        // 540 dp-high TV screen without clipping the last item.
+        verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
     ) {
         Route.entries.forEach { entry ->
             RailItem(

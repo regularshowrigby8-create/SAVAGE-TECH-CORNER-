@@ -77,6 +77,17 @@ class StreamRankerTest {
     }
 
     @Test
+    fun `4K is never offered even when 1080p is requested`() {
+        val uhd = s("https://a.example/4k.mp4", "2160p")
+        val hd = s("https://b.example/1080.mp4", "1080p")
+        val ranked = StreamRanker.rank(
+            listOf(uhd, hd),
+            StreamRanker.Context(preferredQuality = "1080p")
+        )
+        assertEquals(listOf(hd.url), ranked.map { it.url })
+    }
+
+    @Test
     fun `content range gives the full size`() {
         assertEquals(123_456_789L, StreamProbe.totalFrom("bytes 0-262143/123456789", 262_144))
         assertEquals(500L, StreamProbe.totalFrom(null, 500))

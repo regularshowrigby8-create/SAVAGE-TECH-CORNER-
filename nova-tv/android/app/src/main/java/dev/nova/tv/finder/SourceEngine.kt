@@ -123,9 +123,13 @@ class SourceEngine(
      * directories stop returning anything new for [POOL_EMPTY_ROUNDS] rounds.
      */
     fun syncPoolFill(kinds: Set<FinderKind>) {
+        activeKinds = kinds
         poolFillJob?.cancel()
         poolFillJob = null
         val pool = pool ?: return
+        // No finder on means no harvesting at all. With even one finder on, the
+        // shared pool is filled to capacity by the directories plus whatever
+        // that finder discovered -- the remaining finders close the gap.
         if (harvester == null || kinds.isEmpty()) return
         poolFillJob = background.launch {
             var emptyRounds = 0
@@ -195,7 +199,11 @@ class SourceEngine(
     }
 
     fun cachedCandidates(): List<FinderCandidate> =
-        discovered.values.flatMap { it.second.candidates }.distinctBy { it.baseUrl.lowercase() }
+        discovered
+            .filterKeys { it in activeKinds }
+            .values
+            .flatMap { it.second.candidates }
+            .distinctBy { it.baseUrl.lowercase() }
 
     fun report(kind: FinderKind): FinderReport? = discovered[kind]?.second
 

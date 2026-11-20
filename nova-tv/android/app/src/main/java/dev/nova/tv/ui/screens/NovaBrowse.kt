@@ -181,6 +181,10 @@ internal fun PosterGrid(
 ) {
     val first = remember { FocusRequester() }
     if (focusFirst) {
+        // My List is reached straight from the rail; without this registration
+        // Right on the rail had nothing to hand focus to and the viewer was
+        // stuck on the rail.
+        RegisterContentEntry(first)
         LaunchedEffect(items.isNotEmpty()) {
             if (items.isEmpty()) return@LaunchedEffect
             withFrameNanos { }

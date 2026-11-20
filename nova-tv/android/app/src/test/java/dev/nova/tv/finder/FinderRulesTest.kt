@@ -23,6 +23,9 @@ class FinderRulesTest {
     fun `torrent indexes and duplicate vod addons are refused`() {
         org.junit.Assert.assertTrue(FinderRules.isRedundantSource("PenguPlay"))
         org.junit.Assert.assertTrue(FinderRules.isRedundantSource("Torrentio"))
+        org.junit.Assert.assertTrue(FinderRules.isRedundantSource("Jackettio"))
+        org.junit.Assert.assertTrue(FinderRules.isRedundantSource("IPTV Xtream"))
+        org.junit.Assert.assertTrue(FinderRules.isRedundantSource(null, "https://jackett.example/x"))
         org.junit.Assert.assertTrue(FinderRules.isRedundantSource(null, "https://torrentio.strem.fun/x"))
         org.junit.Assert.assertFalse(FinderRules.isRedundantSource("Cinemeta"))
         val manifest = json("""{"id":"p","name":"PenguPlay","resources":["stream"],"types":["movie"]}""")

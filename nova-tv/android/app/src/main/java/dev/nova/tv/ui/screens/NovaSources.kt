@@ -220,7 +220,7 @@ private fun AddWebsiteSheet(state: NovaState, viewModel: NovaViewModel) {
 /** Settings: only what a viewer would actually change. */
 @Composable
 fun SettingsScreen(state: NovaState, viewModel: NovaViewModel) {
-    // Seven rows, wired in order: Up/Down always move exactly one row and the
+    // Eight rows, wired in order: Up/Down always move exactly one row and the
     // rail's Right lands on Autoplay rather than the row level with its icon.
     val rows = rememberFocusColumn(SETTINGS_ROWS)
     RegisterContentEntry(rows.first())
@@ -253,28 +253,33 @@ fun SettingsScreen(state: NovaState, viewModel: NovaViewModel) {
             trailing = { Text(state.preload.label, style = NovaType.meta) }
         ) { Text("Anti-buffering", style = NovaType.body) }
         FocusableRow(
-            onClick = viewModel::cycleDns,
+            onClick = viewModel::cycleQuality,
             modifier = Modifier.focusColumnRow(3, rows),
+            trailing = { Text("${state.preferredQuality}  ·  1080p max", style = NovaType.meta) }
+        ) { Text("Playback quality", style = NovaType.body) }
+        FocusableRow(
+            onClick = viewModel::cycleDns,
+            modifier = Modifier.focusColumnRow(4, rows),
             trailing = { Text(state.dns.label, style = NovaType.meta) }
         ) { Text("DNS", style = NovaType.body) }
         FocusableRow(
             onClick = viewModel::togglePreferEnglishAudio,
-            modifier = Modifier.focusColumnRow(4, rows),
+            modifier = Modifier.focusColumnRow(5, rows),
             trailing = { Toggle(state.preferEnglishAudio) }
         ) { Text("Prefer English audio", style = NovaType.body) }
         FocusableRow(
             onClick = viewModel::clearHistory,
-            modifier = Modifier.focusColumnRow(5, rows)
+            modifier = Modifier.focusColumnRow(6, rows)
         ) { Text("Clear watch history", style = NovaType.body) }
         FocusableRow(
             onClick = viewModel::refresh,
-            modifier = Modifier.focusColumnRow(6, rows),
+            modifier = Modifier.focusColumnRow(7, rows),
             trailing = { Text("Nova ${BuildConfig.VERSION_NAME}", style = NovaType.meta) }
         ) { Text("Reload catalogue", style = NovaType.body) }
     }
 }
 
-private const val SETTINGS_ROWS = 7
+private const val SETTINGS_ROWS = 8
 
 @Composable
 private fun SectionLabel(text: String) {

@@ -72,12 +72,34 @@ object SkipSeconds {
     const val HOLD = ImportedSkipSeconds.HOLD
 }
 
+/**
+ * How far short of the end a seek is allowed to land.
+ *
+ * Landing exactly on `duration` puts ExoPlayer into STATE_ENDED, which the
+ * player reads as "the episode finished": it either rolls into the next
+ * episode or restarts the current one. That is exactly the "skip forward a few
+ * seconds and the whole episode restarts" symptom. Stopping 1.5 s short keeps
+ * the seek a seek.
+ */
+const val SEEK_END_GUARD_MS = 1_500L
+
 fun seekBy(positionMs: Long, deltaMs: Long, durationMs: Long): SeekResult {
-    if (durationMs <= 0L) return SeekResult.Ignored("duration unknown")
-    val target = positionMs + deltaMs
+    val from = positionMs.coerceAtLeast(0L)
+    val target = (from + deltaMs).coerceAtLeast(0L)
+
+    // Duration is C.TIME_UNSET (negative) for the first moments after prepare,
+    // and stays unset for some live/HLS sources. A relative seek does not need
+    // it: "ten seconds forward from here" is always a valid request. Returning
+    // Ignored here is why the ±10 s buttons did nothing on slow sources.
+    if (durationMs <= 0L) {
+        return if (target == 0L && deltaMs < 0L) SeekResult.Clamped(0L, "start")
+        else SeekResult.SeekedTo(target)
+    }
+
+    val lastSeekable = (durationMs - SEEK_END_GUARD_MS).coerceAtLeast(0L)
     return when {
-        target < 0L -> SeekResult.Clamped(0L, "start")
-        target > durationMs -> SeekResult.Clamped(durationMs, "end")
+        target <= 0L -> SeekResult.Clamped(0L, "start")
+        target >= durationMs -> SeekResult.Clamped(lastSeekable, "end")
         else -> SeekResult.SeekedTo(target)
     }
 }

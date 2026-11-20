@@ -73,14 +73,24 @@ class PlayerStateTest {
     }
 
     @Test
-    fun `seek past the end clamps to the duration`() {
+    fun `seek past the end stops short of the end, not on it`() {
+        // Landing on duration is STATE_ENDED: the app would roll to the next
+        // episode or restart this one. The guard keeps it a seek.
         val result = seekBy(positionMs = 58_000, deltaMs = 10_000, durationMs = 60_000)
-        assertEquals(SeekResult.Clamped(60_000, "end"), result)
+        assertEquals(SeekResult.Clamped(58_500, "end"), result)
     }
 
     @Test
-    fun `seek with unknown duration is ignored rather than guessed`() {
+    fun `seek with unknown duration still moves relative to the current position`() {
+        // Duration is unset for the first moments after prepare, and for some
+        // HLS sources. Ignoring the seek there is why ±10 s did nothing.
         val result = seekBy(positionMs = 1_000, deltaMs = 10_000, durationMs = 0)
-        assertTrue(result is SeekResult.Ignored)
+        assertEquals(SeekResult.SeekedTo(11_000), result)
+    }
+
+    @Test
+    fun `seek back with unknown duration never goes negative`() {
+        val result = seekBy(positionMs = 1_000, deltaMs = -10_000, durationMs = -1)
+        assertEquals(SeekResult.Clamped(0, "start"), result)
     }
 }

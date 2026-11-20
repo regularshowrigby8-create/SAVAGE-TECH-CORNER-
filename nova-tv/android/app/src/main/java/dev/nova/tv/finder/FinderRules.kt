@@ -165,10 +165,28 @@ object FinderRules {
      * name (penguplay). Matched against the addon name and its host, never its
      * description, so a legitimate provider cannot be dropped by prose.
      */
+    /**
+     * Sources that must never appear, even if their manifest looks valid.
+     *
+     * Three groups:
+     *  - torrent indexes (Nova plays direct HTTP only, by design);
+     *  - VOD/server front-ends that need credentials, an account, a self-hosted
+     *    instance or a setup wizard before they return a single playable link
+     *    (penguplay, jacketio/jackett, IPTV/xtream panels). They show up as
+     *    "sources" but every stream is a dead end, which is worse than nothing;
+     *  - the duplicate VOD aggregators that simply re-list the same hosts.
+     */
     private val REDUNDANT_NAMES = listOf(
-        "penguplay", "pengu play", "pengu-play", "torrentio", "torrent",
-        "thepiratebay", "pirate bay", "1337x", "rarbg", "yts", "nyaa",
-        "eztv", "kickass", "limetorrents", "magnetdl", "bitsearch"
+        // Torrent indexes.
+        "torrentio", "torrent", "thepiratebay", "pirate bay", "1337x", "rarbg",
+        "yts", "nyaa", "eztv", "kickass", "limetorrents", "magnetdl", "bitsearch",
+        // Setup-required VOD / server front-ends.
+        "penguplay", "pengu play", "pengu-play", "pengu",
+        "jacketio", "jackett", "jackettio",
+        "iptv", "xtream", "xstream", "ssiptv", "stbemu", "stb emu", "vavoo",
+        "ott navigator", "tivimate", "smart iptv", "m3u list", "playlist loader",
+        "requires setup", "setup required", "configure first", "self-hosted",
+        "self hosted", "login required", "account required"
     )
 
     fun isRedundantSource(name: String?, baseUrl: String? = null): Boolean {

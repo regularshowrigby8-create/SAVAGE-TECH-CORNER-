@@ -174,9 +174,9 @@ fun RestoreFocusFor(id: String, requester: FocusRequester) {
 // ---------------------------------------------------------------------------
 
 /** Poster size used by every row, so rows and placeholders line up exactly. */
-val PosterWidth = 172.dp
-val LandscapeWidth = 336.dp
-val CardGap = 24.dp
+val PosterWidth = 184.dp
+val LandscapeWidth = 360.dp
+val CardGap = 28.dp
 
 /**
  * Poster only, no caption: the artwork carries the title. A caption under

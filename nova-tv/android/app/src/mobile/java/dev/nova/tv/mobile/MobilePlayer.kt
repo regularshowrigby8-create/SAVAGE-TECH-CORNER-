@@ -128,12 +128,21 @@ fun MobilePlayerSurface(player: NovaPlayer, title: String, viewModel: NovaViewMo
     val pip = LocalPip.current
     val panel = ui.playerPanel
     val failure = session.failure
+    val activity = LocalContext.current as? Activity
 
-    FullscreenLandscape()
-    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { player.pause() }
+    FullscreenLandscape(inPip = pip.active)
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        // Entering PiP also stops the activity, but it must not stop the film.
+        // Only a genuine background stop (no PiP window) pauses playback.
+        if (activity?.isInPictureInPictureMode != true) player.pause()
+    }
     DisposableEffect(Unit) {
-        MobilePlayback.active = true
         onDispose { MobilePlayback.active = false }
+    }
+    // Only a playing film should auto-enter PiP. Setting this unconditionally
+    // meant pressing Home on a paused film floated a frozen window.
+    LaunchedEffect(engine.isPlaying) {
+        MobilePlayback.active = engine.isPlaying
     }
 
     LaunchedEffect(engine.isPlaying, engine.isBuffering, session.ended, failure) {
@@ -275,21 +284,35 @@ fun MobilePlayerSurface(player: NovaPlayer, title: String, viewModel: NovaViewMo
     }
 }
 
-/** Landscape, edge to edge, bars hidden; everything handed back on exit. */
+/**
+ * Landscape, edge to edge, bars hidden; everything handed back on exit.
+ *
+ * Keyed on [inPip]: a PiP window owns its own orientation and chrome, so
+ * forcing SENSOR_LANDSCAPE while floating made the window flip and flicker on
+ * every transition. In PiP the activity is left alone; on the way back the
+ * full-screen treatment is reapplied. [original] is captured once, so the
+ * phone returns to the orientation it had before playback, not to the
+ * landscape the PiP branch happened to leave behind.
+ */
 @Composable
-private fun FullscreenLandscape() {
+private fun FullscreenLandscape(inPip: Boolean) {
     val activity = LocalContext.current as? Activity ?: return
     val view = LocalView.current
-    DisposableEffect(Unit) {
+    val original = remember(activity) { activity.requestedOrientation }
+    DisposableEffect(inPip) {
         val window = activity.window
-        val before = activity.requestedOrientation
-        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         val controller = WindowCompat.getInsetsController(window, view)
-        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        controller.hide(WindowInsetsCompat.Type.systemBars())
+        if (inPip) {
+            controller.show(WindowInsetsCompat.Type.systemBars())
+            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        } else {
+            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.hide(WindowInsetsCompat.Type.systemBars())
+        }
         onDispose {
             controller.show(WindowInsetsCompat.Type.systemBars())
-            activity.requestedOrientation = before
+            activity.requestedOrientation = original
             // Brightness set by the swipe gesture belongs to playback only.
             window.attributes = window.attributes.apply { screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE }
         }

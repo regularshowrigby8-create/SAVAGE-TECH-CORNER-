@@ -17,9 +17,9 @@ import dev.nova.tv.finder.FinderRules
  *     (size x 8 / runtime). Under 1.3x will stall; it goes to the bottom.
  *  3. The source family that worked last time (bingeGroup, then addon) --
  *     WuPlay and ARVIO both continue a series on the same source.
- *  4. Quality, with 720p as the standard: it buffers less than 1080p or 4K on
- *     a phone or a TV stick. 1080p and 2160p are still offered, ranked below
- *     the preferred quality, and the preference is user-settable.
+ *  4. Quality, with 720p as the standard: it buffers less than 1080p on a
+ *     phone or a TV stick. 1080p is the ceiling and is still offered, ranked
+ *     below the preferred quality; 2160p/4K is filtered out entirely.
  *  5. Adaptive streams (HLS/DASH) get a small bonus: they step down instead
  *     of stalling when the network dips.
  */
@@ -42,6 +42,11 @@ object StreamRanker {
         if (!stream.isPlayable) return false
         if (probe != null && !probe.ok) return false
         if (probe != null && probe.totalBytes > FinderRules.MAX_FILE_BYTES) return false
+        // 1080p is the ceiling, not a preference. A 4K rendition costs four
+        // times the bandwidth for no visible gain on a phone or a TV stick,
+        // and on a metered link it is the difference between a film and a
+        // buffering ring. Unknown quality (rank 0) is still allowed through.
+        if (FinderRules.qualityRank(stream.quality) > MAX_QUALITY_RANK) return false
         return true
     }
 
@@ -126,5 +131,8 @@ object StreamRanker {
     }
 
     const val DEFAULT_QUALITY = "720p"
+    /** Absolute ceiling. 2160p/4K is never offered, whatever the setting says. */
+    const val MAX_QUALITY = "1080p"
+    const val MAX_QUALITY_RANK = 1080
     const val MIN_HEADROOM = 1.3
 }

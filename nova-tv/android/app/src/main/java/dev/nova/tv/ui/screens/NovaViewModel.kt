@@ -859,13 +859,17 @@ class NovaViewModel : ViewModel() {
 
     fun removeDownload(id: String) = app.downloads.remove(id)
 
-    /** 720p is the standard; this cycles the target for anyone who wants more. */
+    /**
+     * 720p is the standard; 1080p is the absolute limit. 4K is deliberately
+     * not an option: it is four times the bandwidth for no visible gain on a
+     * phone or a TV stick, and it is the first thing to stall on a weak link.
+     */
     fun cycleQuality() {
-        val options = listOf("720p", "1080p", "2160p", "auto")
+        val options = listOf("720p", "1080p")
         val next = options[(options.indexOf(_state.value.preferredQuality).coerceAtLeast(0) + 1) % options.size]
         settings.setPreferredQuality(next)
         _state.update { it.copy(preferredQuality = next) }
-        toast(if (next == "auto") "Best available" else next)
+        toast(next)
     }
 
     fun toggleAutoplay() {

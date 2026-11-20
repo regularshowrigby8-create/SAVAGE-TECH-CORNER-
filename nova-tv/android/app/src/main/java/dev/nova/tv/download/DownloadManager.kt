@@ -5,8 +5,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import dev.nova.tv.finder.FinderRules
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -139,6 +141,11 @@ class DownloadManager(
             if (!response.isSuccessful) throw IOException("HTTP ${response.code}")
             val fromRange = totalFrom(response.header("Content-Range"))
             val total = fromRange ?: response.body?.contentLength() ?: -1L
+            // The same 5 GB ceiling the finders enforce: an offline copy of a
+            // file Nova would refuse to stream is just wasted storage.
+            if (total > FinderRules.MAX_FILE_BYTES) {
+                throw IOException("File is larger than 5 GB")
+            }
             // 206 means the range was honoured; a 200 means it was not.
             return (if (total > 0) total else 0L) to (response.code == 206 && total > 0)
         }
@@ -155,24 +162,41 @@ class DownloadManager(
                     val start = i * chunk
                     val end = minOf(total - 1, start + chunk - 1)
                     if (start > end) return@async
-                    val request = request(job).header("Range", "bytes=$start-$end").build()
-                    client.newCall(request).execute().use { response ->
-                        if (!response.isSuccessful) throw IOException("HTTP ${response.code}")
-                        val body = response.body ?: throw IOException("Empty body")
-                        body.byteStream().use { input ->
-                            val buffer = ByteArray(BUFFER_BYTES)
-                            var offset = start
-                            while (true) {
-                                val read = input.read(buffer)
-                                if (read < 0) break
-                                synchronized(file) {
-                                    file.seek(offset)
-                                    file.write(buffer, 0, read)
+                    var attempt = 0
+                    while (true) {
+                        try {
+                            // Reset this slice's counter: a retry rewrites from
+                            // the same offset and must not double-count bytes.
+                            written.set(i, 0L)
+                            val request = request(job).header("Range", "bytes=$start-$end").build()
+                            client.newCall(request).execute().use { response ->
+                                if (!response.isSuccessful) throw IOException("HTTP ${response.code}")
+                                val body = response.body ?: throw IOException("Empty body")
+                                body.byteStream().use { input ->
+                                    val buffer = ByteArray(BUFFER_BYTES)
+                                    var offset = start
+                                    while (true) {
+                                        val read = input.read(buffer)
+                                        if (read < 0) break
+                                        synchronized(file) {
+                                            file.seek(offset)
+                                            file.write(buffer, 0, read)
+                                        }
+                                        offset += read
+                                        written.set(i, offset - start)
+                                        publishProgress(job, written, lastPublish)
+                                    }
                                 }
-                                offset += read
-                                written.addAndGet(i, read.toLong())
-                                publishProgress(job, written, lastPublish)
                             }
+                            return@async
+                        } catch (cancelled: CancellationException) {
+                            throw cancelled
+                        } catch (e: IOException) {
+                            // A single flaky connection must not fail the whole
+                            // file while five other slices are still running.
+                            attempt++
+                            if (attempt >= MAX_ATTEMPTS) throw e
+                            delay(RETRY_MS * attempt)
                         }
                     }
                 }
@@ -244,10 +268,14 @@ class DownloadManager(
     }
 
     companion object {
-        /** Parallel range requests per file. Four saturates a typical phone link. */
-        const val CONNECTIONS = 4
+        /** Parallel range requests per file. Six saturates a typical phone link. */
+        const val CONNECTIONS = 6
         private const val BUFFER_BYTES = 256 * 1024
         private const val PROGRESS_MS = 250L
+        /** A slice is retried this many times before the file is failed. */
+        private const val MAX_ATTEMPTS = 3
+        /** Linear backoff between slice retries. */
+        private const val RETRY_MS = 600L
         private const val USER_AGENT = "Nova/1.0 (Android)"
         private val EXTENSIONS = setOf("mp4", "mkv", "webm", "m4v", "mov", "avi", "ts")
 

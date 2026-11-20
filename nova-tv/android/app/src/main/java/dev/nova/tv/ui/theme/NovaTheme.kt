@@ -135,16 +135,16 @@ object NovaShape {
 
 object NovaSpace {
     /** Overscan safe margin. Some panels still crop 5%; at 1920x1080 that is 96px. */
-    val safeHorizontal = 48.dp
-    val safeVertical = 36.dp
+    val safeHorizontal = 64.dp
+    val safeVertical = 44.dp
 
-    val gutter = 20.dp
+    val gutter = 24.dp
 
     /** Between two shelves, and between the screen title and its content. */
-    val rowGap = 44.dp
+    val rowGap = 56.dp
 
     /** Between two rows in a settings-style list. */
-    val listGap = 14.dp
+    val listGap = 18.dp
 }
 
 @Composable
