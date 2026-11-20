@@ -165,6 +165,11 @@ class ServerHarvester(
     private val _state = MutableStateFlow(HarvestState())
     val state: StateFlow<HarvestState> = _state.asStateFlow()
 
+    /** A loop-level error is not an exhausted source or an ordinary stop. */
+    fun noteFatal(reason: String) {
+        _state.update { it.copy(running = false, failures = it.failures + 1, stopped = "error: $reason") }
+    }
+
     /**
      * Read one slice of every source, in parallel. Kept for callers that want a
      * single round (the scramble path); [continuousFill] is the loop.

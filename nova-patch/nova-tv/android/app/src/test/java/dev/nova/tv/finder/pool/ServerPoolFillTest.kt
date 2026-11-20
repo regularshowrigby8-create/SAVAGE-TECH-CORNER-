@@ -175,6 +175,16 @@ class ServerPoolFillTest {
     }
 
     @Test
+    fun `a loop-level failure is visible instead of looking exhausted`() {
+        val harvester = ServerHarvester(fakeHttp(), emptyList())
+        harvester.noteFatal("disk failure")
+        assertEquals(1, harvester.state.value.failures)
+        assertTrue(harvester.state.value.stopped.contains("disk failure"))
+        assertFalse(harvester.state.value.exhausted)
+        assertFalse(harvester.state.value.running)
+    }
+
+    @Test
     fun `harvest state counts requests and rounds rather than asserting success`() = runTest {
         val pool = ServerPool(MemoryStore())
         val harvester = ServerHarvester(

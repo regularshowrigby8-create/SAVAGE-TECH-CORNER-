@@ -155,12 +155,18 @@ class SourceEngine(
         // that finder discovered -- the remaining finders close the gap.
         if (harvester == null || kinds.isEmpty()) return
         poolFillJob = background.launch {
-            runCatching {
+            android.util.Log.i("NovaHarvester", "server pool fill started")
+            try {
                 harvester.continuousFill(
                     poolSize = { pool.state.value.size },
                     target = ServerPool.CAPACITY,
                     onBatch = { fresh -> pool.addAndCount(fresh + cachedCandidates()) }
                 )
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                android.util.Log.e("NovaHarvester", "server pool fill failed", error)
+                harvester.noteFatal(error.message ?: error.javaClass.simpleName)
             }
         }
     }
