@@ -1,0 +1,18 @@
+{
+ "generated": "2026-11-20T18:41:53Z",
+ "server_pool": {
+  "entries": 502,
+  "ceiling": 3000,
+  "rejected": {},
+  "by_source": {}
+ },
+ "site_pool": {
+  "entries": 83,
+  "ceiling": 3000,
+  "rejected": {
+   "no homepage": 1290,
+   "search returned nothing usable": 1266
+  },
+  "by_source": {}
+ }
+}
