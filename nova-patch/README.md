@@ -1,84 +1,75 @@
 # Nova server finder — drop-in patch
 
-This directory is a **drop-in patch**, not a copy of the app. Nothing here is part
-of the current branch's build; `tools/apply_nova_patch.py` copies these files over
-a checkout of `arena/nova-final-debug` (tip `3347198`).
+This directory is a **patch**, not a full app checkout. It targets the Nova
+sources at `arena/nova-final-debug` commit `3347198`. The patch and the two
+pools stay on this branch under `nova-patch/`; no partial top-level `nova-tv/`
+tree is added here.
 
 ```bash
-python3 tools/apply_nova_patch.py --target /path/to/nova --check   # read-only
-python3 tools/apply_nova_patch.py --target /path/to/nova --write   # apply + back up
+python3 tools/apply_nova_patch.py --target /path/to/nova --check  # read-only
+python3 tools/apply_nova_patch.py --target /path/to/nova --write  # apply
 ```
 
-Backups go to `<target>/.nova-patch-backup/`, never beside the file: a copy under
-`android/app/src/` gets compiled and audited as real code.
+The applier copies only `nova-patch/nova-tv/`, verifies every destination against
+`BASELINE.json`, and refuses the entire plan if any file has drifted. It never
+copies this README, diagnostics, counts, or `pools/` over the target checkout's
+root. Replaced files are backed up in `<target>/.nova-patch-backup/`. An I/O
+failure during copying can still leave a partially applied patch; retain the
+backups. To apply a newer patch to a previously patched tree, use a clean checkout
+of the recorded baseline or resolve the conflicts deliberately.
 
-## What changed, and why
+## Finder and pools
 
-| File | Change |
-|---|---|
-| `finder/pool/ServerHarvester.kt` | Rewritten. 6 sources run concurrently over a shared gate (24 requests in flight, 3 per host). Each source reports `isDone()`; the loop stops only when **all** are done *and* none is waiting out a throttle. Source failures are counted (`HarvestState.failures`), never reported as "nothing found". |
-| `finder/pool/ServerPool.kt` | `addAndCount()` returns (added, size) so a full loop can tell "already known" from "no room"; `PoolState.free/filling/progress`; `working()` lists only servers that have actually answered. |
-| `finder/SourceEngine.kt` | The `POOL_EMPTY_ROUNDS = 4` give-up loop is gone. `syncPoolFill` drives `continuousFill` until 3000; `stopPoolFill()` exists; `scramblePool` pauses the fill before taking the lock instead of deadlocking on it. |
-| `ui/screens/NovaSources.kt` | Shows the real pool count, a measured progress bar, and the harvester's own counters. Fill becomes **Stop** while filling. |
-| `ui/screens/NovaViewModel.kt` | Exposes `poolFilling` / `harvest`; errors and empty results are worded differently. |
-| `mobile/.../MobileSources.kt` | Same status line and Stop control on the phone layout. |
-| `test/.../ServerPoolFillTest.kt` | **New.** 15 JVM tests: fill stops at capacity, stops when exhausted, dedupes across sources, counts requests. |
-| `tools/server_crawler.py` | **New.** Standalone threaded crawler for addon manifests, continuous until `--target` (default 3000) or exhaustion, Ctrl-C writes what it has. Emits the exact JSON `ServerPool` reads. |
-| `tools/site_crawler.py` | **New.** The second crawler: finds streaming *sites* and writes `site_pool.json`. A site enters the pool only after a real search on it returns title links, so a parked domain cannot get in. |
-| `finder/website/SitePool.kt` | **New.** The second pool, 3000 sites, imported by host, offered to `WebsiteFinder` proven-first. Separate from `ServerPool` because a site and a manifest are not the same thing. |
-| `data/store/AtomicFileStore.kt` | **New.** Both pools save through one atomic writer. The old fallback rewrote the real file when rename failed -- the branch that runs when the filesystem is already unhappy. |
-| `NovaApplication.kt` | Constructs the site pool and imports the pool bundled in assets on first launch, off the main thread. |
-| `test/.../SitePoolTest.kt` | **New.** 12 JVM tests: dedupe by host, refusal of unsearchable entries, malformed documents reported, the separate 3000 ceiling, proven-first ordering. |
-| `test/.../ServerPoolFillTest.kt` | **New.** 15 JVM tests: fill stops at capacity, stops when exhausted, dedupes across sources, counts requests. |
+- `ServerHarvester` runs several discovery sources concurrently and reports
+  actual progress and failures. Stop, fill and scramble are exposed on both UIs.
+- `server_pool.json` holds up to **3000** addon manifests; `site_pool.json`
+  holds up to **3000** sites. They have separate capacities and are imported
+  from separate assets on an IO thread. Bundled imports preserve on-device data.
+- Site imports are deduplicated by host and batched into the saved-site list;
+  manually saved sites are not replaced. The resolver tries a bounded batch,
+  prioritizing sites that have produced streams; removed sites are not tried.
+- Newly crawled sites must return a title search with at least three distinct
+  same-host content links, in addition to the score threshold. This is a **search
+  check**, not proof that playback works, that a site remains online, or that its
+  content is licensed. The resolver only emits direct media, not embed pages.
+- Pool files are persisted through an atomic replacement attempt. A failed write
+  keeps the previous file and reports an error rather than overwriting it.
 
-## The crawl, concretely
+## GitHub Actions
 
-Sources, in the order they are tried: `stremio-addons.net` (60 pages, manifests
-inline — 1 request per 100 addons), `api.strem.io/addonscollection.json`,
-Cinemeta's community/official catalogues plus the catalogue graph they name,
-GitHub search (8 queries × 4 pages), GitHub Pages hosts and homepages, and the
-community README lists.
+`nova-patch-build.yml` applies the patch to a fresh Nova checkout, compiles both
+debug flavors, propagates unit-test failures, assembles both APKs, and uploads
+`nova-debug-apks`. Run
+[44805110661](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/44805110661)
+compiled, ran the tests, assembled and uploaded the TV and mobile debug APKs.
+That run used commit `916946a` and **empty initial bundled pool assets**. Later
+runs must be checked separately for their status and pool contents.
 
-Raised from the old values: `CONCURRENCY 8 → 24`, `BUDGET_MS 45 000` removed
-(per-request 15 s timeout instead), `STREMIO_PAGES 8 → 60`, `GITHUB_PAGES 10 → 4
-per query × 8 queries`, README budget 25/round, 60 manifests/round.
+`nova-pool-crawl.yml` runs the threaded manifest and site crawlers on GitHub
+Actions. It validates and publishes both JSON files, copies them to the two app
+assets, and reports the real counts and per-source evidence in
+`POOL-COUNTS.md` and `pools/counts.json`. It accepts a below-target crawl as a
+bounded result, but a crawler crash, invalid output, or failed push is a failure.
+A later workflow revision also builds and checks APKs against the exact assets
+from that crawl; check the particular run before relying on that artifact.
 
-**The honest limit:** GitHub's unauthenticated search allows 10 requests/minute.
-The public directories list far fewer than 3000 *unique* servers, so 3000 depends
-on GitHub, GitHub Pages, homepages and the catalogue graph. If the crawl cannot
-reach 3000 it says so with per-source yield (`--verbose` names every server as it
-is found) rather than reporting success. `--merge existing.json` adds to a pool
-you already have. `GITHUB_TOKEN=...` raises the quota.
+The schedule is hourly **only after the workflow exists on the repository's
+default branch**: GitHub Actions does not run scheduled workflows from this
+feature branch. On the current branch, pushes that change the crawler or its
+workflow start runs; a continuous scheduled crawl here is not established. Each
+run has a finite time budget and may finish below 3000. Repeated runs seed the
+previous committed pools, but the target is not a guarantee.
 
-## What is verified, and what is not
+## Verification and limitations
 
-Verified here (static only — no JDK, no SDK, no device in this environment):
+`tools/verify_no_false_green.py` exercises the debugger's rules with planted
+defects, checks the supplied source corpus is not empty, and checks assets and
+invalid input handling. These are useful regression checks, not a proof that all
+bugs, dead controls or hallucinations are detected. `tools/debug_nova.py` reports
+static findings and can inspect supplied APKs or a logcat trace.
 
-- 87 Kotlin files scanned, **0 errors**; **0 findings inside any patched file**.
-- `tools/verify_no_false_green.py`: **62 pass, 0 FAIL, 1 skipped** — every rule
-  fires on a planted defect and stays quiet on correct code. The 1 skip is the
-  broad "correct code" corpus, which is exempt by name.
-- The 19 crawler tests pass offline.
-- The patch applies cleanly to `3347198` and is byte-identical afterwards.
-
-**Two pools, two ceilings.** `server_pool.json` holds up to 3000 addon manifests;
-`site_pool.json` holds up to 3000 verified streaming sites. They are never merged,
-and each has its own count on the Sources screen. A site is resolved by
-`WebsiteFinder` (page -> up to two player frames -> direct `.m3u8`/`.mp4`/`.mpd`);
-an embed URL is never shown or played as a source.
-
-**Not verified, and cannot be from here:** it has never been compiled. The CI
-workflow at `3347198` was green for the *unpatched* tree, so the first real test
-of this patch is a CI run. Expect possible compile fixes; the logic is tested,
-the Kotlin is not.
-
-## A correction to an earlier claim
-
-An earlier note said the TV build failed on `NovaHome.kt:138 Unresolved
-reference 'stalled'`. That is real, but it is from commit `e19a206` — the tip
-`3347198` already declares `stalled` and its `nova-tv Android` run is green. No
-source change was made for it, because the current code has no such defect.
-
-Separately, the repo's own `docs/BUILD-STATUS.md` states the APK "has never been
-installed on a device or an emulator". A crash after the server finder therefore
-cannot be reproduced or confirmed from this environment; it needs a logcat trace.
+The observed post-finder crash has **not** been reproduced on a device or
+emulator. Compilation, unit tests and static checks do not establish its root
+cause. A logcat from the affected TV or mobile device is still needed to diagnose
+that runtime failure. Neither pool has been demonstrated to reach 3000; see the
+latest recorded run rather than treating the target as a measured count.

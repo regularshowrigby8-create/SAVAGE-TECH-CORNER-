@@ -368,6 +368,32 @@ def check_assets_detection() -> Check:
     )
 
 
+def check_invalid_inputs_rejected() -> List[Check]:
+    """Explicitly requested sources/APKs must not pass when they cannot be read."""
+    checks: List[Check] = []
+    with tempfile.TemporaryDirectory() as tmp:
+        absent = Path(tmp) / "missing-nova"
+        for name, script in (("gate", Path(__file__)), ("debugger", HERE / "debug_nova.py")):
+            result = subprocess.run([sys.executable, str(script), "--nova", str(absent)],
+                                    capture_output=True, text=True, timeout=30)
+            checks.append(Check(
+                f"detect:missing-corpus:{name}", result.returncode == 2,
+                "an explicitly invalid --nova path must fail, not silently skip the corpus",
+                f"exit={result.returncode}; stderr={result.stderr.strip()}",
+            ))
+        bad_apk = Path(tmp) / "bad.apk"
+        bad_apk.write_text("not a zip archive")
+        result = subprocess.run([sys.executable, str(HERE / "debug_nova.py"), "--apk", str(bad_apk),
+                                 "--out", str(Path(tmp) / "report")],
+                                capture_output=True, text=True, timeout=30)
+        checks.append(Check(
+            "detect:unreadable-apk:debugger", result.returncode == 2,
+            "an explicitly requested unreadable APK must fail rather than look clean",
+            f"exit={result.returncode}; stderr={result.stderr.strip()}",
+        ))
+    return checks
+
+
 def check_assets(nova_root: Optional[Path]) -> List[Check]:
     if nova_root is None:
         return [Check("asset:assets-exist", None, "no nova tree given; nothing to check")]
@@ -392,6 +418,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     args = ap.parse_args(argv)
 
     nova_root = Path(args.nova).resolve() if args.nova else None
+    if nova_root is not None and not (nova_root / "android" / "app" / "src").is_dir():
+        print(f"error: --nova {nova_root} has no android/app/src directory", file=sys.stderr)
+        return 2
     if nova_root is None:
         for candidate in (HERE.parents[1] / "nova-tv", HERE.parents[1].parent / "nova-tv"):
             if (candidate / "android" / "app" / "src").is_dir():
@@ -404,6 +433,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     checks += check_totality()
     checks += check_report_honesty(nova_root)
     checks += [check_assets_detection()]
+    checks += check_invalid_inputs_rejected()
     checks += check_assets(nova_root)
 
     failed = [c for c in checks if c.passed is False]

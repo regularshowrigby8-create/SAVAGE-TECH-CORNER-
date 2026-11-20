@@ -894,6 +894,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     try:
         crawl(crawler, args)
     finally:
+        # No new requests should begin after the main loop exits, especially
+        # when a worker raised or the pool filled before the time budget.
+        crawler.stop.set()
+        fetcher.deadline = time.time()
         fetcher.shutdown()
         out = Path(args.out)
         snap = stats.snapshot()

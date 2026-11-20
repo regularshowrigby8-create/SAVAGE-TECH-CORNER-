@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
 """Apply the nova drop-in patch to a nova checkout, or check that it would apply.
 
-Two modes, because the two failure modes are different:
+Two modes:
 
-  --check   read-only. For every patched file, report whether the target is
-            still the version the patch was written against (context matches) or
-            has moved on (drifted). Exit 1 if any file would conflict.
-  --write   back up, then write. Never leaves a half-applied tree: every file is
-            verified in memory first, and if any of them would conflict nothing
-            is written at all.
+  --check   read-only. Compare every destination with the SHA-256 recorded in
+            nova-patch/BASELINE.json. Exit 1 if any destination has drifted.
+  --write   verify the entire plan first, back up replaced files, then copy.
+            A filesystem failure during copying can still leave a partial write;
+            the backups are kept so it can be recovered.
 
-Why not `git apply` / `patch(1)`? Those fail on the *first* hunk and leave you
-with a partly patched tree to untangle. This compares the whole file, so a
-drifted file is named and skipped, not half-merged -- and the check mode can be
-run against the branch before touching it.
+Only files under nova-patch/nova-tv/ are applied: documentation, diagnostics,
+counts and crawler data beside it must never overwrite the checkout's root.
 
 The patch tree mirrors the repository:
 
@@ -32,6 +29,7 @@ import argparse
 import difflib
 import filecmp
 import hashlib
+import json
 import shutil
 import sys
 from dataclasses import dataclass
@@ -49,31 +47,48 @@ class Plan:
     relative: str
     source: Path
     target: Path
-    status: str          # identical | new | applies | drifted | missing
+    status: str          # identical | new | replaces | drifted
     detail: str = ""
 
 
 def relative_files(patch_root: Path) -> list[str]:
+    """Only the mirrored app tree belongs in the destination checkout."""
     return sorted(
-        str(p.relative_to(patch_root))
-        for p in patch_root.rglob("*")
+        p.relative_to(patch_root).as_posix()
+        for p in (patch_root / "nova-tv").rglob("*")
         if p.is_file() and "__pycache__" not in p.parts and not p.name.endswith(".pyc")
     )
 
 
-def plan_one(relative: str, target_root: Path) -> Plan:
+def plan_one(relative: str, target_root: Path, baseline: dict[str, str | None]) -> Plan:
     source = PATCH_ROOT / relative
     target = target_root / relative
+    if relative not in baseline:
+        return Plan(relative, source, target, "drifted", "patch file has no recorded baseline")
+    expected = baseline[relative]
+    if not target.exists():
+        if expected is None:
+            return Plan(relative, source, target, "new", "target file does not exist")
+        return Plan(relative, source, target, "drifted", "baseline file is missing")
     if not target.is_file():
-        return Plan(relative, source, target, "new", "target file does not exist")
+        return Plan(relative, source, target, "drifted", "destination is not a file")
     if filecmp.cmp(source, target, shallow=False):
         return Plan(relative, source, target, "identical", "already patched")
-    return Plan(relative, source, target, "replaces", "target will be replaced by the patched file")
+    actual = hashlib.sha256(target.read_bytes()).hexdigest()
+    if expected is None:
+        return Plan(relative, source, target, "drifted", "new patch path already exists with different contents")
+    if actual != expected:
+        return Plan(relative, source, target, "drifted", "target differs from the recorded baseline")
+    return Plan(relative, source, target, "replaces", "target matches the recorded baseline")
 
 
 def render(plan: Plan) -> str:
     if plan.status == "new":
         return f"  + {plan.relative}  (new file, {plan.source.stat().st_size} B)"
+    if plan.status == "drifted":
+        return f"  ! {plan.relative}  ({plan.detail})"
+    if plan.status == "identical":
+        return f"  = {plan.relative}  (already patched)"
     diff = list(difflib.unified_diff(
         plan.target.read_text(encoding="utf-8", errors="replace").splitlines(),
         plan.source.read_text(encoding="utf-8", errors="replace").splitlines(),
@@ -136,27 +151,39 @@ def main(argv: list[str] | None = None) -> int:
 
     files = relative_files(PATCH_ROOT)
     if not files:
-        print("error: the patch tree is empty", file=sys.stderr)
+        print("error: the nova-tv patch tree is empty", file=sys.stderr)
+        return 2
+    try:
+        baseline_doc = json.loads((PATCH_ROOT / "BASELINE.json").read_text(encoding="utf-8"))
+        baseline = baseline_doc["files"]
+        if not isinstance(baseline, dict):
+            raise ValueError("files must be an object")
+    except (OSError, ValueError, KeyError) as error:
+        print(f"error: cannot read patch baseline: {error}", file=sys.stderr)
         return 2
 
-    plans = [plan_one(rel, target_root) for rel in files]
+    plans = [plan_one(rel, target_root, baseline) for rel in files]
     changed = [p for p in plans if p.status in ("new", "replaces")]
     identical = [p for p in plans if p.status == "identical"]
+    conflicts = [p for p in plans if p.status == "drifted"]
 
-    print(f"patch tree : {PATCH_ROOT}")
+    print(f"patch tree : {PATCH_ROOT / 'nova-tv'}")
+    print(f"base commit: {baseline_doc.get('base_commit', 'unknown')}")
     print(f"target     : {target_root}")
-    print(f"files      : {len(plans)}  to change {len(changed)}  already applied {len(identical)}")
+    print(f"files      : {len(plans)}  to change {len(changed)}  already applied {len(identical)}  conflicts {len(conflicts)}")
     print()
     for plan in plans:
         if plan.status == "identical" and not args.all:
             continue
         print(render(plan))
 
+    if conflicts:
+        print("\nconflicts: nothing was written; use the recorded baseline or resolve the drift first", file=sys.stderr)
+        return 1
     if not changed:
         print("\nnothing to do: the target already matches the patch")
         return 0
 
-    modified = sorted({str(p.target.relative_to(target_root)) for p in changed})
     print(f"\nsha256 of the files to write (first 12): {digest([p.source for p in changed])}")
 
     if args.check or not args.write:
@@ -165,7 +192,7 @@ def main(argv: list[str] | None = None) -> int:
 
     apply(plans, write=True)
     print(f"\nwrote {len(changed)} file(s); previous versions are under {target_root / BACKUP_DIR}/")
-    print("next: build to confirm it compiles -- this patch has never been compiled in this environment")
+    print("next: build and test the patched checkout before distributing it")
     return 0
 
 

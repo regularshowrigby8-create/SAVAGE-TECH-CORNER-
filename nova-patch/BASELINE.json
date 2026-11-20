@@ -1,0 +1,25 @@
+{
+  "base_commit": "334719831cffc93f1d8b635cf8235d01ed7adacf",
+  "files": {
+    "nova-tv/android/app/src/main/assets/server_pool.json": null,
+    "nova-tv/android/app/src/main/assets/site_pool.json": null,
+    "nova-tv/android/app/src/main/java/dev/nova/tv/NovaApplication.kt": "2542b77ab32b0d9fcab2990b4618b858f00c082ce6b5aba7fc7b25ca0147a906",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/data/repo/LibraryStore.kt": "38075fd6895241aa67b25d6ba88b0c80429110f3bf07fce25ee3ad9eeab9393d",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/data/store/AtomicFileStore.kt": null,
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/SourceEngine.kt": "5981259f753149cbf01baff1ef8dd9a4cc562fb68dac8e655432fcdc67001d59",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pool/ServerHarvester.kt": "c51b3a94825cef618c14f3b3c259177ef76494c91a0c3b61e568e7ace4567675",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pool/ServerPool.kt": "4a07880a9c08bb0d216d4cbaf3fb01aee0de27fcb148f318c10dd59c8e00d3fe",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/website/SitePool.kt": null,
+    "nova-tv/android/app/src/main/java/dev/nova/tv/ui/screens/NovaSources.kt": "b0ea8c2eb34a7a3a819b6162a8f9eab130afc15047920538f73943034aa80c54",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/ui/screens/NovaViewModel.kt": "6d3023f56996b55b83df57089dbfd41d1856b0e38a72508d7dfa8a1a9d430795",
+    "nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobileSources.kt": "8db7c41e009d1c37b97c42f1fca50c254df0dec4df26e6e76b02b53b246a81e0",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/data/store/AtomicFileStoreTest.kt": null,
+    "nova-tv/android/app/src/test/java/dev/nova/tv/finder/pool/ServerPoolBundledTest.kt": null,
+    "nova-tv/android/app/src/test/java/dev/nova/tv/finder/pool/ServerPoolFillTest.kt": null,
+    "nova-tv/android/app/src/test/java/dev/nova/tv/finder/website/SitePoolTest.kt": null,
+    "nova-tv/tools/server_crawler.py": null,
+    "nova-tv/tools/site_crawler.py": null,
+    "nova-tv/tools/test_server_crawler.py": null,
+    "nova-tv/tools/test_site_crawler.py": null
+  }
+}

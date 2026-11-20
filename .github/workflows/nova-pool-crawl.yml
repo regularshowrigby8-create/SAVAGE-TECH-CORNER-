@@ -58,7 +58,7 @@ jobs:
   crawl:
     name: Crawl both pools
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 150
     env:
       CRAWL_TARGET: ${{ inputs.target || '3000' }}
       # A short first push verifies the complete publish path in Actions;
@@ -80,8 +80,8 @@ jobs:
         run: |
           set -euo pipefail
           cd nova-patch/nova-tv/tools
-          python3 test_server_crawler.py
-          python3 test_site_crawler.py
+          python3 test_server_crawler.py 2>&1 | tee server-selftest.log
+          python3 test_site_crawler.py 2>&1 | tee site-selftest.log
           # The site crawler has no network in a self-test either; this checks
           # its HTML parsing, template extraction and verification scoring.
           python3 - <<'PY'
@@ -111,13 +111,16 @@ jobs:
           # statuses are actual errors and must make the job fail.
           seed=()
           [ ! -f ../../pools/server_pool.json ] || seed=(--merge ../../pools/server_pool.json)
-          status=0
+          set +e
           python3 server_crawler.py \
             --target "$CRAWL_TARGET" \
             --max-seconds "$(( 10#$CRAWL_MINUTES * 60 ))" \
             "${seed[@]}" \
-            --out server_pool.json || status=$?
-          if [[ "$status" != 0 && "$status" != 3 ]]; then exit "$status"; fi
+            --out server_pool.json 2>&1 | tee server-crawl.log
+          statuses=("${PIPESTATUS[@]}")
+          set -e
+          if [[ "${statuses[1]}" != 0 ]]; then exit "${statuses[1]}"; fi
+          if [[ "${statuses[0]}" != 0 && "${statuses[0]}" != 3 ]]; then exit "${statuses[0]}"; fi
           python3 - <<'PY'
           import json, pathlib
           d = json.loads(pathlib.Path("server_pool.json").read_text())
@@ -132,15 +135,18 @@ jobs:
           cd nova-patch/nova-tv/tools
           seed=()
           [ ! -f ../../pools/site_pool.json ] || seed=(--merge ../../pools/site_pool.json)
-          status=0
+          set +e
           python3 site_crawler.py \
             --target "$CRAWL_TARGET" \
             --probe "$CRAWL_PROBE" \
             --max-seconds "$(( 10#$CRAWL_MINUTES * 60 ))" \
             "${seed[@]}" \
             --manifests server_pool.json \
-            --out site_pool.json || status=$?
-          if [[ "$status" != 0 && "$status" != 3 ]]; then exit "$status"; fi
+            --out site_pool.json 2>&1 | tee site-crawl.log
+          statuses=("${PIPESTATUS[@]}")
+          set -e
+          if [[ "${statuses[1]}" != 0 ]]; then exit "${statuses[1]}"; fi
+          if [[ "${statuses[0]}" != 0 && "${statuses[0]}" != 3 ]]; then exit "${statuses[0]}"; fi
           python3 - <<'PY'
           import json, pathlib
           d = json.loads(pathlib.Path("site_pool.json").read_text())
@@ -280,7 +286,100 @@ jobs:
           echo "::error::could not push the pool data after three attempts"
           exit 1
 
-      - name: Upload crawl outputs
+      # A push made with GITHUB_TOKEN does not trigger another push workflow.
+      # Build here, after publishing, so the produced APKs actually contain this
+      # run's pools instead of the empty assets from its checkout.
+      - name: Fetch the Nova source checkout
+        run: |
+          set -euo pipefail
+          git fetch --depth=1 origin arena/nova-final-debug:refs/remotes/origin/nova-src
+          mkdir -p work
+          git archive origin/nova-src nova-tv | tar -x -C work
+          python3 tools/test_apply_nova_patch.py
+          python3 tools/apply_nova_patch.py --target work --write
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.13'
+
+      - name: Test and assemble both APKs with the crawled pools
+        working-directory: work/nova-tv/android
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew :app:testTvDebugUnitTest :app:testMobileDebugUnitTest \
+            :app:assembleTvDebug :app:assembleMobileDebug --no-daemon --console=plain 2>&1 | tee crawl-build.log
+
+      - name: Verify both APKs contain both current pools
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, pathlib, zipfile
+          assets = pathlib.Path('nova-patch/nova-tv/android/app/src/main/assets')
+          out = pathlib.Path('work/nova-tv/android/app/build/outputs/apk')
+          for flavor in ('tv', 'mobile'):
+              apks = list((out / flavor / 'debug').glob('*.apk'))
+              assert len(apks) == 1, f'{flavor}: expected one APK, got {apks}'
+              with zipfile.ZipFile(apks[0]) as apk:
+                  for name in ('server_pool.json', 'site_pool.json'):
+                      expected = (assets / name).read_bytes()
+                      actual = apk.read('assets/' + name)
+                      assert actual == expected, f'{flavor}: {name} is missing or stale'
+                      count = len(json.loads(actual)['entries'])
+                      assert count > 0, f'{flavor}: {name} is empty'
+                      print(f'{flavor}: {name} contains {count} entries')
+          PY
+
+      - name: Upload APKs with both crawled pools
+        uses: actions/upload-artifact@v4
+        with:
+          name: nova-crawled-debug-apks
+          path: |
+            work/nova-tv/android/app/build/outputs/apk/tv/debug/*.apk
+            work/nova-tv/android/app/build/outputs/apk/mobile/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Publish crawl failure diagnostics
+        if: failure() && !startsWith(github.ref, 'refs/pull/')
+        run: |
+          set -euo pipefail
+          OUT=nova-patch/CRAWL-DIAGNOSTICS.md
+          {
+            echo '# Nova crawl failure diagnostics'
+            echo
+            echo "Run: $GITHUB_RUN_ID"
+            echo
+            for f in nova-patch/nova-tv/tools/server-selftest.log \
+                     nova-patch/nova-tv/tools/site-selftest.log \
+                     nova-patch/nova-tv/tools/server-crawl.log \
+                     nova-patch/nova-tv/tools/site-crawl.log \
+                     work/nova-tv/android/crawl-build.log; do
+              [ -f "$f" ] || continue
+              echo "## $f"
+              echo '```'
+              tail -80 "$f"
+              echo '```'
+              echo
+            done
+          } > "$OUT"
+          git config user.name "nova-ci"
+          git config user.email "nova-ci@users.noreply.github.com"
+          git add "$OUT"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "ci(nova): crawl diagnostics for run $GITHUB_RUN_ID"
+          git fetch -q origin "$GITHUB_REF_NAME"
+          git rebase FETCH_HEAD
+          git push -q origin "HEAD:$GITHUB_REF_NAME"
+
+      - name: Upload crawl outputs and build log
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -288,6 +387,12 @@ jobs:
           path: |
             nova-patch/nova-tv/tools/server_pool.json
             nova-patch/nova-tv/tools/site_pool.json
+            nova-patch/nova-tv/tools/server-crawl.log
+            nova-patch/nova-tv/tools/site-crawl.log
+            nova-patch/nova-tv/tools/server-selftest.log
+            nova-patch/nova-tv/tools/site-selftest.log
             nova-patch/POOL-COUNTS.md
+            nova-patch/CRAWL-DIAGNOSTICS.md
+            work/nova-tv/android/crawl-build.log
           if-no-files-found: warn
           retention-days: 14

@@ -86,6 +86,13 @@ def project_class_list(nova_root: Path) -> List[tuple]:
 def run(args: argparse.Namespace) -> int:
     root = Path(args.root).resolve()
     nova_root = Path(args.nova).resolve() if args.nova else find_nova_root(root)
+    if args.nova and not (nova_root / "android" / "app" / "src").is_dir():
+        print(f"error: --nova {nova_root} has no android/app/src directory", file=sys.stderr)
+        return 2
+    missing_apks = [Path(a) for a in (args.apk or []) if not Path(a).is_file()]
+    if missing_apks:
+        print("error: requested APK not found: " + ", ".join(map(str, missing_apks)), file=sys.stderr)
+        return 2
     env = environment(root, nova_root)
     report = Report("Nova debug report")
     report.meta.update(env.as_meta())
@@ -97,6 +104,9 @@ def run(args: argparse.Namespace) -> int:
         src_root = nova_root / "android" / "app" / "src"
         proguard = nova_root / "android" / "app" / "proguard-rules.pro"
         project = source_audit.load_project(src_root, proguard)
+        if not project.files:
+            print(f"error: no Kotlin files found in {src_root}", file=sys.stderr)
+            return 2
         apks_for_symbols = [root / p for p in DEFAULT_APKS if (root / p).is_file()]
         apks_for_symbols += [Path(a).resolve() for a in (args.apk or [])]
         symbols = set()
@@ -129,11 +139,14 @@ def run(args: argparse.Namespace) -> int:
     if not apk_paths:
         apk_paths = [root / p for p in DEFAULT_APKS if (root / p).is_file()]
     facts = []
+    unreadable_requested_apk = False
     for path in apk_paths:
         try:
             facts.append(apk_audit.PackageFacts(path=path, apk=dex.read_apk(path)))
         except Exception as error:
             report.skip("APK_UNREADABLE", f"{path}: {error}")
+            if args.apk:
+                unreadable_requested_apk = True
     if facts:
         report.extend(apk_audit.audit(facts, class_list))
         for f in facts:
@@ -169,6 +182,9 @@ def run(args: argparse.Namespace) -> int:
         for f in report.sorted():
             if f.severity != INFO:
                 print(f"  {f.severity.upper():7s} {f}")
+    if unreadable_requested_apk:
+        print("error: at least one explicitly requested APK could not be inspected", file=sys.stderr)
+        return 2
     return 1 if report.errors else 0
 
 

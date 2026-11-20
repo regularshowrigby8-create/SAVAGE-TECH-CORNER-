@@ -754,6 +754,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             print(f"seeded {seeded} site(s) from {args.manifests}")
         crawl(crawler, pool, args)
     finally:
+        # On a full pool, timeout, or source exception, stop other discovery
+        # tasks before serializing instead of continuing to contact sites.
+        crawler.stop = True
         crawler.shutdown()
         out = Path(args.out)
         snap = stats.snapshot()
