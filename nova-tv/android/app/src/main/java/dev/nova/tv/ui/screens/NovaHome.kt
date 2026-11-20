@@ -106,7 +106,20 @@ private fun SpotlightShelves(
     var focused by remember { mutableStateOf<MetaPreview?>(null) }
     var spotlight by remember { mutableStateOf<MetaPreview?>(null) }
     var rotation by remember { mutableIntStateOf(0) }
+    var stalled by remember { mutableStateOf(false) }
     val reduced = LocalReduceMotion.current
+
+    // A loader that never finishes must not be indistinguishable from a blank
+    // screen. If nothing has arrived after LOADING_TIMEOUT_MS, stop pretending
+    // to load and offer the retry instead.
+    LaunchedEffect(loading, shelves.isEmpty()) {
+        if (!loading || shelves.isNotEmpty()) {
+            stalled = false
+            return@LaunchedEffect
+        }
+        delay(LOADING_TIMEOUT_MS)
+        stalled = true
+    }
 
     // Settle before swapping artwork, so a fast scroll does not flash images.
     LaunchedEffect(focused) {

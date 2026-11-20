@@ -39,8 +39,19 @@ class WebsiteFinder(private val http: HttpClient) {
     suspend fun fetchDocument(url: String): Document = withContext(Dispatchers.IO) {
         val safe = WebsiteRules.guardUrl(url) ?: throw IllegalArgumentException("Blocked URL")
         val request = Request.Builder().url(safe.toString())
+            // A bare User-Agent is enough for a static site and not enough for
+            // a real one. Most streaming sites sit behind a bot filter that
+            // wants the rest of the browser's headers before it answers, and a
+            // 403 there used to look exactly like "this website is broken".
             .header("User-Agent", WebsiteRules.BROWSER_UA)
-            .header("Accept", "text/html,application/xhtml+xml,*/*")
+            .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+            .header("Accept-Language", WebsiteRules.ACCEPT_LANGUAGE)
+            .header("Upgrade-Insecure-Requests", "1")
+            .header("Sec-Fetch-Dest", "document")
+            .header("Sec-Fetch-Mode", "navigate")
+            .header("Sec-Fetch-Site", "none")
+            .header("Sec-Fetch-User", "?1")
+            .header("Cache-Control", "no-cache")
             .build()
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw HttpClient.HttpFailure("HTTP ${response.code}", response.code)
@@ -53,21 +64,51 @@ class WebsiteFinder(private val http: HttpClient) {
         }
     }
 
-    /** extract.js profileSite: where this site's search lives. */
+    /**
+     * extract.js profileSite: where this site's search lives.
+     *
+     * This is the "add a website" step, so it must not be able to fail on a
+     * site that merely refuses to talk to a bot. It used to do a single GET and
+     * throw on anything that was not 2xx, which meant a Cloudflare front page
+     * (403), a redirect loop or a slow host all surfaced as "Couldn't open that
+     * website" and the site was never saved. Now: try the address the viewer
+     * typed, then the site root, then plain http, and if none of them answer,
+     * still save the host with the standard search paths. The resolver retries
+     * the pages itself when a title is opened, so a saved site is never wasted.
+     *
+     * Only a syntactically impossible address throws.
+     */
     suspend fun profile(rawUrl: String): SavedWebsite {
-        val safe = WebsiteRules.guardUrl(normaliseInput(rawUrl)) ?: throw IllegalArgumentException("That address is not allowed.")
-        val first = fetchDocument(safe.toString())
-        var templates = WebsiteRules.searchTemplatesFromHtml(first.text, first.finalUrl)
-        if (templates.isEmpty() && safe.path.length > 1) {
+        val safe = WebsiteRules.guardUrl(normaliseInput(rawUrl))
+            ?: throw IllegalArgumentException("That address is not allowed.")
+        val origin = "${safe.protocol}://${safe.authority}"
+        val attempts = buildList {
+            add(safe.toString())
+            if (safe.path.length > 1 || safe.query != null) add("$origin/")
+            if (safe.protocol == "https") add("http://${safe.authority}${safe.path.orEmpty()}")
+        }.distinct()
+
+        var doc: Document? = null
+        for (candidate in attempts) {
+            doc = runCatching { fetchDocument(candidate) }.getOrNull()
+            if (doc != null) break
+        }
+
+        val base = doc?.finalUrl ?: "$origin/"
+        var templates = doc?.let { WebsiteRules.searchTemplatesFromHtml(it.text, it.finalUrl) }.orEmpty()
+        if (templates.isEmpty() && doc != null && safe.path.length > 1) {
             runCatching {
-                val root = fetchDocument("${safe.protocol}://${safe.authority}/")
+                val root = fetchDocument(origin + "/")
                 templates = WebsiteRules.searchTemplatesFromHtml(root.text, root.finalUrl)
             }
         }
-        if (templates.isEmpty()) templates = WebsiteRules.commonSearchTemplates(first.finalUrl).take(4)
-        val name = WebsiteRules.pageTitle(first.text).replace(Regex("""\s+[-|–—].*$"""), "").take(40)
+        if (templates.isEmpty()) templates = WebsiteRules.commonSearchTemplates(base).take(4)
+        val name = doc?.let { WebsiteRules.pageTitle(it.text) }
+            .orEmpty()
+            .replace(Regex("""\s+[-|–—].*$"""), "")
+            .take(40)
             .ifBlank { safe.host.removePrefix("www.") }
-        return SavedWebsite(url = first.finalUrl, name = name, templates = templates.take(5))
+        return SavedWebsite(url = base, name = name, templates = templates.take(5))
     }
 
     /**

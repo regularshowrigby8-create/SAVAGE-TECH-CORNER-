@@ -107,14 +107,37 @@ class CatalogRepository(
         )
     }
 
-    suspend fun add(baseUrl: String): Result<NovaAddon> = runCatching {
-        val addon = client.loadAddon(baseUrl)
-        require(addon.supportsStreams() || addon.catalogDefs.isNotEmpty() || addon.supportsSubtitles()) {
-            "${addon.name} offers no catalogue, streams or subtitles."
+    /**
+     * Install an addon the viewer typed in.
+     *
+     * The address is accepted the way people write it ("example.com"), and the
+     * manifest gets the same two attempts the built-ins get, so a single slow
+     * response is not reported as a broken server.
+     */
+    suspend fun add(rawUrl: String): Result<NovaAddon> = runCatching {
+        val typed = rawUrl.trim()
+        val url = if (typed.startsWith("http://", true) || typed.startsWith("https://", true)) {
+            typed
+        } else {
+            "https://$typed"
         }
-        _addons.value = (_addons.value.filterNot { same(it.baseUrl, addon.baseUrl) } + addon)
-        persist()
-        addon
+        var last: Throwable? = null
+        repeat(INSTALL_ATTEMPTS) { attempt ->
+            val addon = runCatching { client.loadAddon(url) }.getOrElse { error ->
+                last = error
+                null
+            }
+            if (addon != null) {
+                require(addon.supportsStreams() || addon.catalogDefs.isNotEmpty() || addon.supportsSubtitles()) {
+                    "${addon.name} offers no catalogue, streams or subtitles."
+                }
+                _addons.value = (_addons.value.filterNot { same(it.baseUrl, addon.baseUrl) } + addon)
+                persist()
+                return@runCatching addon
+            }
+            if (attempt < INSTALL_ATTEMPTS - 1) delay(INSTALL_RETRY_MS)
+        }
+        throw last ?: IllegalStateException("Couldn't reach that server")
     }
 
     fun remove(baseUrl: String) {

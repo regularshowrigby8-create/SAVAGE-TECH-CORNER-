@@ -146,6 +146,9 @@ data class NovaState(
     val toast: String? = null,
     val addingWebsite: Boolean = false,
     val websiteDraft: String = "",
+    /** The same URL sheet, in addon mode: a Stremio-style server address. */
+    val addingAddon: Boolean = false,
+    val addonDraft: String = "",
     val reduceMotion: Boolean = false,
     val autoplayNext: Boolean = true,
     val preload: PreloadMode = PreloadMode.ON,
@@ -229,7 +232,7 @@ class NovaViewModel : ViewModel() {
         val s = _state.value
         if (s.route == route && s.detail == null) return
         closeTitle()
-        _state.update { it.copy(route = route, addingWebsite = false) }
+        _state.update { it.copy(route = route, addingWebsite = false, addingAddon = false) }
         when (route) {
             Route.MOVIES, Route.SERIES -> if (_state.value.browse[route]?.items.isNullOrEmpty()) loadBrowse(route, reset = true)
             Route.DUAL_AUDIO -> if (_state.value.dualShelves.isEmpty()) loadDualAudio()
@@ -248,7 +251,7 @@ class NovaViewModel : ViewModel() {
             panelOpen = s.playerPanel != null,
             chromeVisible = chrome.state.value.chromeVisible,
             queryNotEmpty = s.route == Route.SEARCH && s.query.isNotEmpty(),
-            sheetOpen = s.detail?.showSources == true || s.addingWebsite
+            sheetOpen = s.detail?.showSources == true || s.addingWebsite || s.addingAddon
         )
     }
 
@@ -269,7 +272,7 @@ class NovaViewModel : ViewModel() {
 
     private fun closeSheet() {
         _state.update { s ->
-            s.copy(detail = s.detail?.copy(showSources = false), addingWebsite = false)
+            s.copy(detail = s.detail?.copy(showSources = false), addingWebsite = false, addingAddon = false)
         }
     }
 
@@ -836,17 +839,27 @@ class NovaViewModel : ViewModel() {
 
     fun saveWebsite() {
         val draft = _state.value.websiteDraft.trim()
-        if (draft.length < 4) return
+        // Saving used to return silently for a short draft, so a mistyped
+        // address looked like a dead button.
+        if (draft.length < 4 || !draft.contains('.')) {
+            toast("Type a website address, like example.com")
+            return
+        }
         _state.update { it.copy(addingWebsite = false) }
         viewModelScope.launch {
-            val site = runCatching { app.websiteFinder.profile(draft) }.getOrNull()
-            if (site == null) {
-                toast("Couldn't open that website")
-            } else {
-                library.addWebsite(site)
-                _state.update { it.copy(websites = library.websites.value) }
-                toast("Added ${site.name}")
+            // Bounded: the sheet is already closed, so an unbounded profile
+            // meant the button did nothing visible for as long as the host
+            // took to time out.
+            val site = withTimeoutOrNull(WEBSITE_ADD_TIMEOUT_MS) {
+                runCatching { app.websiteFinder.profile(draft) }.getOrNull()
             }
+            if (site == null) {
+                toast("Couldn't add ${draft.take(40)}")
+                return@launch
+            }
+            library.addWebsite(site)
+            _state.update { it.copy(websites = library.websites.value) }
+            toast("Added ${site.name}")
         }
     }
 
@@ -854,6 +867,41 @@ class NovaViewModel : ViewModel() {
         library.removeWebsite(url)
         _state.update { it.copy(websites = library.websites.value) }
     }
+
+    // -- addons ---------------------------------------------------------------
+    //
+    // CatalogRepository.add() existed but nothing in the UI ever called it, so
+    // the Installed list could only ever show the built-ins and there was no
+    // way to point Nova at another Stremio-compatible server.
+
+    fun startAddAddon() = _state.update { it.copy(addingAddon = true, addonDraft = "") }
+    fun cancelAddAddon() = _state.update { it.copy(addingAddon = false) }
+    fun typeAddon(c: Char) = _state.update { it.copy(addonDraft = (it.addonDraft + c).take(160)) }
+    fun backspaceAddon() = _state.update { it.copy(addonDraft = it.addonDraft.dropLast(1)) }
+    fun setAddonDraft(text: String) = _state.update { it.copy(addonDraft = text.trim().take(160)) }
+
+    fun saveAddon() {
+        val draft = _state.value.addonDraft.trim()
+        if (draft.length < 4 || !draft.contains('.')) {
+            toast("Type a server address, like example.com")
+            return
+        }
+        _state.update { it.copy(addingAddon = false) }
+        viewModelScope.launch {
+            val result = withTimeoutOrNull(ADDON_ADD_TIMEOUT_MS) { repository.add(draft) }
+            val addon = result?.getOrNull()
+            if (addon == null) {
+                toast(result?.exceptionOrNull()?.message ?: "Couldn't add that server")
+                return@launch
+            }
+            _state.update { it.copy(addons = repository.addons.value) }
+            toast("Added ${addon.name}")
+            // The new server may carry catalogues, so rebuild the shelves.
+            refresh()
+        }
+    }
+
+
 
     // -- settings ---------------------------------------------------------------------
 
@@ -986,6 +1034,10 @@ class NovaViewModel : ViewModel() {
         const val MORE_SHELVES = 4
         const val HERO_COUNT = 6
         const val NEXT_WAIT_MS = 20_000L
+        /** Adding a website must resolve in this long, or it reports failure. */
+        const val WEBSITE_ADD_TIMEOUT_MS = 14_000L
+        /** A manifest fetch plus its retry must fit inside this. */
+        const val ADDON_ADD_TIMEOUT_MS = 16_000L
         const val KEY_CONTINUE = "continue"
         const val KEY_MY_LIST = "mylist"
         const val KEY_MORE = "more-shelves"

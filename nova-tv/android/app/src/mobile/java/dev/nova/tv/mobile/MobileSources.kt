@@ -163,6 +163,13 @@ fun MobileSources(state: NovaState, viewModel: NovaViewModel, onBack: () -> Unit
             }
 
             item { Section("Installed") }
+            item {
+                Button(onClick = viewModel::startAddAddon) {
+                    Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Add addon", style = MType.label)
+                }
+            }
             items(state.addons, key = { "a:" + it.baseUrl }) { addon ->
                 if (addon.isBuiltIn) {
                     SettingRow(addon.name, onClick = null) { Text("Built in", style = MType.meta) }
@@ -192,6 +199,28 @@ fun MobileSources(state: NovaState, viewModel: NovaViewModel, onBack: () -> Unit
                 TextButton(onClick = viewModel::saveWebsite, enabled = state.websiteDraft.isNotBlank()) { Text("Save") }
             },
             dismissButton = { TextButton(onClick = viewModel::cancelAddWebsite) { Text("Cancel") } },
+            containerColor = NovaPalette.surface
+        )
+    }
+
+    if (state.addingAddon) {
+        AlertDialog(
+            onDismissRequest = viewModel::cancelAddAddon,
+            title = { Text("Add addon", style = MType.title) },
+            text = {
+                OutlinedTextField(
+                    value = state.addonDraft,
+                    onValueChange = viewModel::setAddonDraft,
+                    singleLine = true,
+                    placeholder = { Text("addon.example.com") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = viewModel::saveAddon, enabled = state.addonDraft.isNotBlank()) { Text("Save") }
+            },
+            dismissButton = { TextButton(onClick = viewModel::cancelAddAddon) { Text("Cancel") } },
             containerColor = NovaPalette.surface
         )
     }

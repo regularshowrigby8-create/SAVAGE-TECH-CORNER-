@@ -156,6 +156,9 @@ fun SourcesScreen(state: NovaState, viewModel: NovaViewModel) {
             }
 
             item { SectionLabel("Installed") }
+            item {
+                PrimaryButton("Add addon", icon = Icons.Filled.Add, onClick = viewModel::startAddAddon)
+            }
             items(state.addons, key = { it.baseUrl }) { addon ->
                 if (addon.isBuiltIn) {
                     // Built-ins cannot be removed, so they are not a focus stop.
@@ -178,17 +181,56 @@ fun SourcesScreen(state: NovaState, viewModel: NovaViewModel) {
         }
 
         AnimatedVisibility(visible = state.addingWebsite, enter = fadeIn(), exit = fadeOut()) {
-            AddWebsiteSheet(state, viewModel)
+            UrlSheet(
+                title = "Add website",
+                draft = state.websiteDraft,
+                placeholder = "example.com",
+                onKey = viewModel::typeWebsite,
+                onBackspace = viewModel::backspaceWebsite,
+                onClear = { repeat(state.websiteDraft.length) { viewModel.backspaceWebsite() } },
+                onSave = viewModel::saveWebsite,
+                onCancel = viewModel::cancelAddWebsite,
+                extra = listOf(".com" to { ".com".forEach(viewModel::typeWebsite) })
+            )
+        }
+        AnimatedVisibility(visible = state.addingAddon, enter = fadeIn(), exit = fadeOut()) {
+            UrlSheet(
+                title = "Add addon",
+                draft = state.addonDraft,
+                placeholder = "addon.example.com",
+                onKey = viewModel::typeAddon,
+                onBackspace = viewModel::backspaceAddon,
+                onClear = { repeat(state.addonDraft.length) { viewModel.backspaceAddon() } },
+                onSave = viewModel::saveAddon,
+                onCancel = viewModel::cancelAddAddon,
+                extra = listOf("/manifest.json" to { "/manifest.json".forEach(viewModel::typeAddon) })
+            )
         }
     }
 }
 
 @Composable
-private fun AddWebsiteSheet(state: NovaState, viewModel: NovaViewModel) {
+private fun UrlSheet(
+    title: String,
+    draft: String,
+    placeholder: String,
+    onKey: (Char) -> Unit,
+    onBackspace: () -> Unit,
+    onClear: () -> Unit,
+    onSave: () -> Unit,
+    onCancel: () -> Unit,
+    extra: List<Pair<String, () -> Unit>>
+) {
     val firstKey = remember { FocusRequester() }
+    // The sheet fades in, so the keyboard's first key may not be attached on
+    // the very next frame. A single attempt used to leave focus on the button
+    // *behind* the overlay, and because the overlay traps the D-pad
+    // (onExit = cancelFocusChange) the sheet then looked completely dead.
     LaunchedEffect(Unit) {
-        withFrameNanos { }
-        runCatching { firstKey.requestFocus() }
+        repeat(12) {
+            withFrameNanos { }
+            if (runCatching { firstKey.requestFocus() }.isSuccess) return@LaunchedEffect
+        }
     }
     Box(
         Modifier
@@ -199,19 +241,19 @@ private fun AddWebsiteSheet(state: NovaState, viewModel: NovaViewModel) {
         contentAlignment = Alignment.Center
     ) {
         Column(Modifier.width(600.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-            Text("Add website", style = NovaType.display)
-            QueryField(state.websiteDraft.ifEmpty { "example.com" }, placeholder = state.websiteDraft.isEmpty())
+            Text(title, style = NovaType.display)
+            QueryField(draft.ifEmpty { placeholder }, placeholder = draft.isEmpty())
             OnScreenKeyboard(
                 layout = KeyboardLayout.URL,
-                onKey = viewModel::typeWebsite,
-                onBackspace = viewModel::backspaceWebsite,
-                onClear = { repeat(state.websiteDraft.length) { viewModel.backspaceWebsite() } },
+                onKey = onKey,
+                onBackspace = onBackspace,
+                onClear = onClear,
                 firstKey = firstKey,
-                extra = listOf(".com" to { ".com".forEach(viewModel::typeWebsite) })
+                extra = extra
             )
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                PrimaryButton("Save", onClick = viewModel::saveWebsite)
-                SecondaryButton("Cancel", onClick = viewModel::cancelAddWebsite)
+                PrimaryButton("Save", onClick = onSave)
+                SecondaryButton("Cancel", onClick = onCancel)
             }
         }
     }
