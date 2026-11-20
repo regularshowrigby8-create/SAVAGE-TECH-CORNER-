@@ -12,6 +12,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -130,26 +132,34 @@ fun DetailScreen(state: NovaState, viewModel: NovaViewModel) {
             )
         )
 
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(start = NovaSpace.safeHorizontal + 24.dp, top = NovaSpace.safeVertical + 36.dp)
-        ) {
-            Column(Modifier.fillMaxWidth(0.55f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                TitleArt(title, maxHeight = 120.dp)
-                InfoLine(detail)
-                val overview = detail.currentVideo?.overview?.takeIf { it.isNotBlank() } ?: title.description
-                if (overview.isNotBlank()) {
-                    Text(overview, style = NovaType.body.copy(color = NovaPalette.textPrimary.copy(alpha = 0.85f)), maxLines = 3, overflow = TextOverflow.Ellipsis)
+        // One vertical scroll axis for the whole page. It used to be a fixed
+        // Column with a weight() spacer, so on a short viewport the season
+        // chips and the episode row were squeezed into the same band and the
+        // bottom of the cards fell off screen with no way to reach it.
+        val pageScroll = rememberScrollState()
+        PivotScroll(parentFraction = 0.18f) {
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(pageScroll)
+                    .padding(start = NovaSpace.safeHorizontal + 24.dp, top = NovaSpace.safeVertical + 36.dp)
+                    .padding(bottom = NovaSpace.safeVertical + 24.dp)
+            ) {
+                Column(Modifier.fillMaxWidth(0.55f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    TitleArt(title, maxHeight = 120.dp)
+                    InfoLine(detail)
+                    val overview = detail.currentVideo?.overview?.takeIf { it.isNotBlank() } ?: title.description
+                    if (overview.isNotBlank()) {
+                        Text(overview, style = NovaType.body.copy(color = NovaPalette.textPrimary.copy(alpha = 0.85f)), maxLines = 3, overflow = TextOverflow.Ellipsis)
+                    }
                 }
-            }
-            Spacer(Modifier.height(26.dp))
-            Actions(detail, viewModel, primary)
+                Spacer(Modifier.height(26.dp))
+                Actions(detail, viewModel, primary)
 
-            if (detail.isSeries && title.videos.isNotEmpty()) {
-                Spacer(Modifier.weight(1f))
-                Episodes(detail, viewModel)
-                Spacer(Modifier.height(NovaSpace.safeVertical))
+                if (detail.isSeries && title.videos.isNotEmpty()) {
+                    Spacer(Modifier.height(28.dp))
+                    Episodes(detail, viewModel)
+                }
             }
         }
 
@@ -159,7 +169,16 @@ fun DetailScreen(state: NovaState, viewModel: NovaViewModel) {
             exit = if (reduced) fadeOut(tween(0)) else slideOutHorizontally(tween(200)) { it } + fadeOut(),
             modifier = Modifier.align(Alignment.CenterEnd)
         ) {
-            SourceSheet(detail.sources.streams, viewModel)
+            SourceSheet(detail.sources.streams, viewModel, dualMode = state.route == Route.DUAL_AUDIO)
+        }
+
+        AnimatedVisibility(
+            visible = detail.showDownload,
+            enter = if (reduced) fadeIn(tween(0)) else slideInHorizontally(tween(260)) { it } + fadeIn(),
+            exit = if (reduced) fadeOut(tween(0)) else slideOutHorizontally(tween(200)) { it } + fadeOut(),
+            modifier = Modifier.align(Alignment.CenterEnd)
+        ) {
+            DownloadSheet(detail, viewModel)
         }
     }
 }
@@ -215,6 +234,7 @@ private fun Actions(detail: DetailState, viewModel: NovaViewModel, primary: Focu
             onClick = viewModel::toggleMyList
         )
         if (streams.size > 1) SecondaryButton("Sources  ${streams.size}", onClick = viewModel::toggleSourcesSheet)
+        if (ready) SecondaryButton("Download", onClick = viewModel::downloadBest)
     }
     if (resume != null && ready) {
         Box(Modifier.padding(top = 12.dp).width(160.dp).height(3.dp).background(Color.White.copy(alpha = 0.2f))) {
@@ -271,7 +291,7 @@ private fun Episodes(detail: DetailState, viewModel: NovaViewModel) {
 
 /** Every ranked source, best first. Hidden until asked for. */
 @Composable
-private fun SourceSheet(streams: List<Stream>, viewModel: NovaViewModel) {
+private fun SourceSheet(streams: List<Stream>, viewModel: NovaViewModel, dualMode: Boolean) {
     val first = remember { FocusRequester() }
     LaunchedEffect(Unit) {
         withFrameNanos { }
@@ -296,7 +316,7 @@ private fun SourceSheet(streams: List<Stream>, viewModel: NovaViewModel) {
                     modifier = if (i == 0) Modifier.focusRequester(first) else Modifier,
                     trailing = {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            if (dev.nova.tv.finder.DualAudio.hasEnglishPlusOther(stream)) Badge("Dual")
+                            if (dualMode && dev.nova.tv.finder.DualAudio.hasEnglishPlusOther(stream)) Badge("Dual")
                             stream.quality.takeIf { it.isNotBlank() }?.let { Badge(it) }
                         }
                     }
@@ -305,6 +325,67 @@ private fun SourceSheet(streams: List<Stream>, viewModel: NovaViewModel) {
                         Text(stream.sourceName.ifBlank { stream.name ?: "Source ${i + 1}" }, style = NovaType.body, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         val size = stream.sizeBytes.takeIf { it > 0 }?.let { dev.nova.tv.finder.FinderRules.formatSize(it) }
                         if (size != null) Text(size, style = NovaType.meta)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Download options for TV. The old path queued the top-ranked source the moment
+ * the button was pressed, with no say over which source or what quality. This
+ * shows every downloadable source with its real quality and byte size.
+ */
+@Composable
+private fun DownloadSheet(detail: DetailState, viewModel: NovaViewModel) {
+    val first = remember { FocusRequester() }
+    LaunchedEffect(Unit) {
+        withFrameNanos { }
+        runCatching { first.requestFocus() }
+    }
+    val streams = detail.sources.streams.filter { !it.url.isNullOrBlank() }
+    Column(
+        Modifier
+            .width(560.dp)
+            .fillMaxHeight()
+            .background(NovaPalette.surface.copy(alpha = 0.98f))
+            .padding(horizontal = 24.dp, vertical = NovaSpace.safeVertical)
+            .focusGroup()
+            .focusProperties { onExit = { cancelFocusChange() } }
+    ) {
+        Text("Download", style = NovaType.sectionTitle)
+        Spacer(Modifier.height(4.dp))
+        Text(
+            if (detail.isSeries) "${detail.title.name}  ·  S${detail.season} E${detail.episode}" else detail.title.name,
+            style = NovaType.meta,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+        Spacer(Modifier.height(14.dp))
+        if (streams.isEmpty()) {
+            Text("No downloadable source", style = NovaType.body, color = NovaPalette.textMuted)
+        } else {
+            LazyColumn(modifier = Modifier.arvioDpadFocusGroup(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                itemsIndexed(streams, key = { i, s -> s.url ?: "$i" }) { i, stream ->
+                    val size = stream.sizeBytes.takeIf { it > 0 }?.let { dev.nova.tv.finder.FinderRules.formatSize(it) }
+                    FocusableRow(
+                        onClick = { viewModel.downloadStream(i) },
+                        modifier = if (i == 0) Modifier.focusRequester(first) else Modifier,
+                        trailing = { if (i == 0) Badge("Best") }
+                    ) {
+                        Column {
+                            Text(
+                                stream.sourceName.ifBlank { stream.name ?: "Source ${i + 1}" },
+                                style = NovaType.body,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                listOfNotNull(stream.quality.takeIf { it.isNotBlank() }, size).joinToString("  ·  ").ifBlank { "Size unknown" },
+                                style = NovaType.meta
+                            )
+                        }
                     }
                 }
             }

@@ -9,6 +9,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -139,14 +140,19 @@ private fun SpotlightShelves(
         }
     }
 
-    Box(Modifier.fillMaxSize()) {
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        // The spotlight used to be a flat 250dp, which on a 1080p TV left less
+        // than one poster row of space underneath, so the first row of cards
+        // was sliced in half. Scale it to the viewport instead and let the
+        // shelves take whatever is left.
+        val spotlightHeight = (maxHeight * 0.30f).coerceIn(150.dp, SPOTLIGHT_HEIGHT)
         Backdrop(spotlight)
 
         Column(Modifier.fillMaxSize()) {
             Box(
                 Modifier
-                    .padding(start = ContentStart, top = NovaSpace.safeVertical + 40.dp, end = NovaSpace.safeHorizontal)
-                    .height(SPOTLIGHT_HEIGHT)
+                    .padding(start = ContentStart, top = NovaSpace.safeVertical + 20.dp, end = NovaSpace.safeHorizontal)
+                    .height(spotlightHeight)
             ) {
                 if (loading && spotlight == null && !stalled) ShimmerHero() else Spotlight(spotlight)
             }
@@ -163,14 +169,20 @@ private fun SpotlightShelves(
                     detail = error ?: "Check the connection and try again.",
                     onRetry = onRetry
                 )
-                else -> Shelves(shelves, viewModel, onMoreShelves, onFocused = { focused = it })
+                else -> Shelves(shelves, viewModel, onMoreShelves, onFocused = { focused = it }, modifier = Modifier.weight(1f))
             }
         }
     }
 }
 
 @Composable
-private fun Shelves(shelves: List<Shelf>, viewModel: NovaViewModel, onMoreShelves: () -> Unit, onFocused: (MetaPreview) -> Unit) {
+private fun Shelves(
+    shelves: List<Shelf>,
+    viewModel: NovaViewModel,
+    onMoreShelves: () -> Unit,
+    onFocused: (MetaPreview) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val first = remember { FocusRequester() }
     RegisterContentEntry(first)
     LaunchedEffect(Unit) {
@@ -179,8 +191,8 @@ private fun Shelves(shelves: List<Shelf>, viewModel: NovaViewModel, onMoreShelve
     }
     PivotScroll(parentFraction = 0f) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(top = 16.dp, bottom = 180.dp),
+            modifier = modifier.fillMaxSize(),
+            contentPadding = PaddingValues(top = 8.dp, bottom = 120.dp),
             verticalArrangement = Arrangement.spacedBy(NovaSpace.rowGap)
         ) {
             itemsIndexed(shelves, key = { _, s -> s.key }) { index, shelf ->

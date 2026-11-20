@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -82,7 +83,7 @@ private fun GenreChip(label: String, selected: Boolean, onClick: () -> Unit) {
     FilterChip(
         selected = selected,
         onClick = onClick,
-        label = { Text(label, style = MType.label) },
+        label = { Text(label, style = MType.label.copy(color = Color.Unspecified)) },
         shape = RoundedCornerShape(50),
         colors = FilterChipDefaults.filterChipColors(
             selectedContainerColor = NovaPalette.textPrimary,
@@ -141,7 +142,9 @@ fun MobileSearch(state: NovaState, viewModel: NovaViewModel) {
         Spacer(Modifier.height(8.dp))
         val idle = state.query.trim().length < 2
         val items = if (idle) state.shelves.firstOrNull { it.items.isNotEmpty() && it.style == dev.nova.tv.ui.screens.ShelfStyle.POSTER }?.items.orEmpty() else state.results
-        if (!idle && !state.searching && items.isEmpty()) {
+        if (!idle && !state.searching && state.searchError != null) {
+            EmptyNote("Search failed: ${state.searchError}")
+        } else if (!idle && !state.searching && items.isEmpty()) {
             EmptyNote("No matches")
         } else {
             PosterGrid(

@@ -92,7 +92,9 @@ data class DetailState(
     val resolving: Boolean = true,
     val inList: Boolean = false,
     val resume: WatchProgress? = null,
-    val showSources: Boolean = false
+    val showSources: Boolean = false,
+    /** Download tap opens a picker instead of silently grabbing the top source. */
+    val showDownload: Boolean = false
 ) {
     val title: MetaPreview get() = full ?: meta
     val isSeries: Boolean get() = meta.isSeries
@@ -101,7 +103,13 @@ data class DetailState(
 }
 
 /** Which panel is open over the player. */
-enum class PlayerPanel(val label: String) { SOURCES("Sources"), AUDIO("Audio"), SUBTITLES("Subtitles") }
+enum class PlayerPanel(val label: String) {
+    SOURCES("Sources"),
+    AUDIO("Audio"),
+    SUBTITLES("Subtitles"),
+    QUALITY("Quality"),
+    SPEED("Playback speed")
+}
 
 /** Everything one playback needs: the whole ranked list, not one stream. */
 data class PlaybackRequest(
@@ -132,6 +140,8 @@ data class NovaState(
     val query: String = "",
     val results: List<MetaPreview> = emptyList(),
     val searching: Boolean = false,
+    /** Set when search itself failed, so the screen can say why instead of "no results". */
+    val searchError: String? = null,
     val myList: List<MetaPreview> = emptyList(),
     val detail: DetailState? = null,
     val playback: PlaybackRequest? = null,
@@ -154,6 +164,8 @@ data class NovaState(
     val preload: PreloadMode = PreloadMode.ON,
     val dns: DnsProvider = DnsProvider.AUTO,
     val preferEnglishAudio: Boolean = true,
+    /** Remembered playback speed, re-applied to every new player. */
+    val playbackRate: Float = 1f,
     /** Caption size, box and tone; applied live by both player surfaces. */
     val subtitleStyle: SubtitleStyle = SubtitleStyle(),
     /** Standard play target; 720p unless changed in Settings. */
@@ -204,6 +216,7 @@ class NovaViewModel : ViewModel() {
             preload = saved.preload,
             dns = saved.dns,
             preferEnglishAudio = saved.preferEnglishAudio,
+            playbackRate = saved.playbackRate,
             subtitleStyle = saved.subtitleStyle,
             preferredQuality = saved.preferredQuality,
             pool = engine.pool?.state?.value ?: PoolState(),
@@ -272,7 +285,11 @@ class NovaViewModel : ViewModel() {
 
     private fun closeSheet() {
         _state.update { s ->
-            s.copy(detail = s.detail?.copy(showSources = false), addingWebsite = false, addingAddon = false)
+            s.copy(
+                detail = s.detail?.copy(showSources = false, showDownload = false),
+                addingWebsite = false,
+                addingAddon = false
+            )
         }
     }
 
@@ -600,7 +617,10 @@ class NovaViewModel : ViewModel() {
         val d = _state.value.detail ?: return
         resolveJob?.cancel()
         val st = _state.value
-        val dual = st.preferEnglishAudio && (st.route == Route.DUAL_AUDIO || DualAudio.isInternational(d.title))
+        // Dual sources exist only inside the Dual Language mode from the side
+        // menu. They used to leak into every international title, which is how
+        // "dual audio" streams showed up in the normal catalogue.
+        val dual = st.preferEnglishAudio && st.route == Route.DUAL_AUDIO
         val request = TitleRequest(
             d.title, d.season, d.episode, st.finders,
             preferDualAudio = dual, preferredQuality = st.preferredQuality
@@ -621,6 +641,14 @@ class NovaViewModel : ViewModel() {
 
     fun toggleSourcesSheet() {
         _state.update { s -> s.copy(detail = s.detail?.let { it.copy(showSources = !it.showSources) }) }
+    }
+
+    fun toggleDownloadSheet() {
+        _state.update { s -> s.copy(detail = s.detail?.let { it.copy(showDownload = !it.showDownload) }) }
+    }
+
+    fun closeDownloadSheet() {
+        _state.update { s -> s.copy(detail = s.detail?.copy(showDownload = false)) }
     }
 
     fun toggleMyList() {
@@ -703,6 +731,23 @@ class NovaViewModel : ViewModel() {
         return UpNext(next.season, next.episode, "S${next.season} E${next.episode}  ·  ${next.label}", next.thumbnail)
     }
 
+    /** The episode before the one playing, or null at the start of the series. */
+    fun previousEpisode(): UpNext? {
+        val pb = _state.value.playback ?: return null
+        if (!pb.meta.isSeries) return null
+        val ordered = pb.meta.videos.filter { it.season > 0 }.sortedWith(compareBy({ it.season }, { it.episode }))
+        val i = ordered.indexOfFirst { it.season == pb.season && it.episode == pb.episode }
+        if (i <= 0) return null
+        val prev = ordered[i - 1]
+        return UpNext(prev.season, prev.episode, "S${prev.season} E${prev.episode}  ·  ${prev.label}", prev.thumbnail)
+    }
+
+    /** Skip backwards one episode without leaving the player. */
+    fun playPrevious() {
+        val target = previousEpisode() ?: return
+        jumpTo(target)
+    }
+
     fun onPlaybackEnded() {
         if (!_state.value.autoplayNext) return
         _state.update { it.copy(upNext = nextEpisode()) }
@@ -717,6 +762,11 @@ class NovaViewModel : ViewModel() {
      */
     fun playNext() {
         val next = _state.value.upNext ?: nextEpisode() ?: return
+        jumpTo(next)
+    }
+
+    /** Shared by playNext/playPrevious: swap the episode and start it. */
+    private fun jumpTo(next: UpNext) {
         val pb = _state.value.playback ?: return
         _state.update { it.copy(upNext = null, playback = null, playerPanel = null) }
         if (_state.value.detail?.meta?.id != pb.meta.id) {
@@ -754,19 +804,50 @@ class NovaViewModel : ViewModel() {
     // -- search ---------------------------------------------------------------------
 
     fun setQuery(query: String) {
-        _state.update { it.copy(query = query, results = if (query.isBlank()) emptyList() else it.results) }
+        _state.update {
+            it.copy(query = query, results = if (query.isBlank()) emptyList() else it.results, searchError = null)
+        }
         searchJob?.cancel()
         if (query.trim().length < 2) {
-            _state.update { it.copy(searching = false) }
+            _state.update { it.copy(searching = false, searchError = null) }
             return
         }
         searchJob = viewModelScope.launch {
             delay(SEARCH_DEBOUNCE_MS)
-            _state.update { it.copy(searching = true) }
-            val found = runCatching { repository.search(query) }.getOrDefault(emptyList())
+            _state.update { it.copy(searching = true, searchError = null) }
+            val trimmed = query.trim()
+            val outcome = runCatching { repository.search(query) }
+            var found = outcome.getOrDefault(emptyList())
+            var failure = outcome.exceptionOrNull()?.message
+            // Server search only covers addons that declare a `search` extra.
+            // With none configured (or all of them down) that used to look like
+            // "no results" forever, so fall back to matching what is already in
+            // memory: every shelf page the app has loaded.
+            if (found.isEmpty()) {
+                val local = _state.value.shelves.asSequence()
+                    .flatMap { it.items.asSequence() }
+                    .filter { it.name.contains(trimmed, ignoreCase = true) }
+                    .toList()
+                if (local.isNotEmpty()) {
+                    found = local
+                    failure = null
+                }
+            }
+            val cleaned = found
                 .filter { it.name.isNotBlank() }
-                .sortedByDescending { if (it.name.equals(query.trim(), true)) 100.0 else it.rating }
-            if (_state.value.query == query) _state.update { it.copy(results = found, searching = false) }
+                // Blank ids from sloppy addons used to collide as LazyGrid keys
+                // and take the whole screen down with "Key was already used".
+                .distinctBy { it.id.ifBlank { "${it.name}|${it.type}" } }
+                .sortedByDescending { if (it.name.equals(trimmed, true)) 100.0 else it.rating }
+            if (_state.value.query == query) {
+                _state.update {
+                    it.copy(
+                        results = cleaned,
+                        searching = false,
+                        searchError = if (cleaned.isEmpty()) failure else null
+                    )
+                }
+            }
         }
     }
 
@@ -905,6 +986,12 @@ class NovaViewModel : ViewModel() {
 
     // -- settings ---------------------------------------------------------------------
 
+    /** Speed chosen in the player panel; persisted so the next title keeps it. */
+    fun setPlaybackRate(rate: Float) {
+        settings.setPlaybackRate(rate)
+        _state.update { it.copy(playbackRate = rate.coerceIn(0.25f, 3f)) }
+    }
+
     fun setReduceMotion(enabled: Boolean) {
         settings.setReduceMotion(enabled)
         _state.update { it.copy(reduceMotion = enabled) }
@@ -912,17 +999,37 @@ class NovaViewModel : ViewModel() {
 
     // -- downloads ------------------------------------------------------------
 
-    /** Queue the best-ranked source for the open title. */
+    /**
+     * Download tap. It used to start the top-ranked source immediately, with no
+     * say over which one or what quality. Now it opens the picker; if there is
+     * only one usable source there is nothing to choose, so it starts it.
+     */
     fun downloadBest() {
         val detail = _state.value.detail ?: return
-        val stream = detail.sources.streams.firstOrNull()
+        val usable = detail.sources.streams.filter { !it.url.isNullOrBlank() }
+        if (usable.isEmpty()) {
+            toast(if (detail.resolving) "Still finding sources" else "No source to download")
+            return
+        }
+        if (usable.size == 1) {
+            downloadStream(0)
+            return
+        }
+        _state.update { s -> s.copy(detail = s.detail?.copy(showDownload = true)) }
+    }
+
+    /** Start a download for the chosen source index in the open title's list. */
+    fun downloadStream(index: Int) {
+        val detail = _state.value.detail ?: return
+        val stream = detail.sources.streams.getOrNull(index)
         val url = stream?.url
         if (stream == null || url.isNullOrBlank()) {
-            toast(if (detail.resolving) "Still finding sources" else "No source to download")
+            toast("That source has no file to download")
             return
         }
         val label = if (detail.isSeries) "${detail.title.name}  S${detail.season} E${detail.episode}" else detail.title.name
         val id = app.downloads.start(detail.title.name, label, url, stream.requestHeaders)
+        _state.update { s -> s.copy(detail = s.detail?.copy(showDownload = false)) }
         toast(if (id == null) "Already downloading" else "Download started")
     }
 
@@ -1017,6 +1124,9 @@ class NovaViewModel : ViewModel() {
     }
 
     fun consumeFocusRestore() = _state.update { it.copy(restoreFocusId = null) }
+
+    /** Public so the player surface can confirm an action (e.g. subtitle added). */
+    fun notify(message: String) = toast(message)
 
     private fun toast(message: String) {
         toastJob?.cancel()

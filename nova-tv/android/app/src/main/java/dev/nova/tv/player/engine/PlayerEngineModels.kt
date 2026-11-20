@@ -82,6 +82,5 @@ data class PlayerEngineState(
     val selectedSubtitleTrack: SubtitleTrackItem? = null,
     val volume: Float = 1.0f,
     val isMuted: Boolean = false,
-    val audioDelayMs: Long = 0L,
     val errorMessage: String? = null
 )

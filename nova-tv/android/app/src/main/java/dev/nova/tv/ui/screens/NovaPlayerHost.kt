@@ -46,6 +46,9 @@ fun NovaPlayerHost(
 
     LaunchedEffect(request.token) {
         player.load(request.streams, request.startIndex, request.startPositionMs, request.subtitles)
+        // Speed is a preference, not a per-title choice: a new player starts at
+        // whatever was last picked instead of snapping back to 1x.
+        if (state.playbackRate != 1f) player.setRate(state.playbackRate)
     }
 
     // Subtitles arrive after playback starts (a separate addon call).

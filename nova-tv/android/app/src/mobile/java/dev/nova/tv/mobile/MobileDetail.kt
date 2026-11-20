@@ -77,6 +77,7 @@ import dev.nova.tv.finder.FinderRules
 import dev.nova.tv.ui.screens.DetailState
 import dev.nova.tv.ui.screens.NovaState
 import dev.nova.tv.ui.screens.NovaViewModel
+import dev.nova.tv.ui.screens.Route
 import dev.nova.tv.ui.theme.LocalReduceMotion
 import dev.nova.tv.ui.theme.NovaPalette
 
@@ -150,7 +151,10 @@ fun MobileDetail(state: NovaState, viewModel: NovaViewModel) {
         }
 
         if (detail.showSources) {
-            SourcesSheet(detail.sources.streams, detail.resolving, viewModel)
+            SourcesSheet(detail.sources.streams, detail.resolving, viewModel, dualMode = state.route == Route.DUAL_AUDIO)
+        }
+        if (detail.showDownload) {
+            DownloadSheet(detail, viewModel)
         }
     }
 }
@@ -280,7 +284,7 @@ private fun Seasons(detail: DetailState, viewModel: NovaViewModel) {
             FilterChip(
                 selected = s == detail.season,
                 onClick = { viewModel.selectSeason(s) },
-                label = { Text(if (s == 0) "Specials" else "Season $s", style = MType.label) },
+                label = { Text(if (s == 0) "Specials" else "Season $s", style = MType.label.copy(color = Color.Unspecified)) },
                 shape = RoundedCornerShape(50),
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = NovaPalette.textPrimary,
@@ -347,7 +351,7 @@ private fun EpisodeRow(v: Video, detail: DetailState, viewModel: NovaViewModel) 
 /** Every ranked source, best first. Tap one to play it; the rest stay as failover. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SourcesSheet(streams: List<Stream>, resolving: Boolean, viewModel: NovaViewModel) {
+private fun SourcesSheet(streams: List<Stream>, resolving: Boolean, viewModel: NovaViewModel, dualMode: Boolean) {
     val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     ModalBottomSheet(
         onDismissRequest = viewModel::toggleSourcesSheet,
@@ -381,8 +385,72 @@ private fun SourcesSheet(streams: List<Stream>, resolving: Boolean, viewModel: N
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             if (i == 0) Badge("Best", accent = true)
-                            if (DualAudio.hasEnglishPlusOther(stream)) Badge("Dual")
+                            if (dualMode && DualAudio.hasEnglishPlusOther(stream)) Badge("Dual")
                             stream.quality.takeIf { it.isNotBlank() }?.let { Badge(it) }
+                        }
+                    }
+                    if (i < streams.lastIndex) HorizontalDivider(Modifier.padding(horizontal = 20.dp), color = Color.White.copy(alpha = 0.06f))
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Download options. Tapping Download used to silently queue the top-ranked
+ * source; now the viewer picks the source and sees its quality and size first.
+ * Sizes are the real reported byte counts, and anything already downloaded is
+ * marked so a second tap is not a surprise.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DownloadSheet(detail: DetailState, viewModel: NovaViewModel) {
+    val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    val streams = detail.sources.streams.filter { !it.url.isNullOrBlank() }
+    ModalBottomSheet(
+        onDismissRequest = viewModel::closeDownloadSheet,
+        sheetState = sheet,
+        containerColor = NovaPalette.surface
+    ) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
+            Text("Download", style = MType.title)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                if (detail.isSeries) "${detail.title.name}  ·  S${detail.season} E${detail.episode}" else detail.title.name,
+                style = MType.meta,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(Modifier.height(12.dp))
+        }
+        if (streams.isEmpty()) {
+            EmptyNote("No downloadable source")
+        } else {
+            LazyColumn(Modifier.fillMaxWidth().navigationBarsPadding(), contentPadding = PaddingValues(bottom = 20.dp)) {
+                itemsIndexed(streams, key = { i, s -> s.url ?: "$i" }) { i, stream ->
+                    val size = stream.sizeBytes.takeIf { it > 0 }?.let { FinderRules.formatSize(it) }
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { viewModel.downloadStream(i) }
+                            .padding(horizontal = 20.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                stream.sourceName.ifBlank { stream.name?.lineSequence()?.firstOrNull() ?: "Source ${i + 1}" },
+                                style = MType.body,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                listOfNotNull(stream.quality.takeIf { it.isNotBlank() }, size).joinToString("  ·  ").ifBlank { "Size unknown" },
+                                style = MType.meta
+                            )
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                            if (i == 0) Badge("Best", accent = true)
+                            Text("Download", style = MType.label.copy(color = NovaPalette.accent))
                         }
                     }
                     if (i < streams.lastIndex) HorizontalDivider(Modifier.padding(horizontal = 20.dp), color = Color.White.copy(alpha = 0.06f))

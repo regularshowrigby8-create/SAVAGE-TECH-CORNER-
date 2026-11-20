@@ -176,9 +176,6 @@ class ExoPlayerEngine(
         }
     }
 
-    override fun setAudioDelayMs(delayMs: Long) {
-        _state.update { it.copy(audioDelayMs = delayMs) }
-    }
 
     override fun setVolume(volume: Float) {
         exoPlayer.volume = volume.coerceIn(0f, 1f)

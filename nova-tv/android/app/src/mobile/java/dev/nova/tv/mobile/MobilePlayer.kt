@@ -4,9 +4,12 @@ package dev.nova.tv.mobile
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.media.AudioManager
 import android.view.WindowManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -60,6 +63,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -90,12 +95,21 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
+import dev.nova.tv.data.model.SubtitleRef
 import dev.nova.tv.player.NovaPlayer
 import dev.nova.tv.player.SkipSeconds
 import dev.nova.tv.player.SubtitleStyle
 import dev.nova.tv.player.applySubtitleStyle
+import dev.nova.tv.player.engine.ResizeMode
+import dev.nova.tv.player.imported.AspectSteps
+import dev.nova.tv.player.imported.QualityLadder
+import dev.nova.tv.player.imported.SpeedStep
+import dev.nova.tv.player.imported.SubtitleFiles
+import dev.nova.tv.player.imported.SubtitleOffsetController
+import dev.nova.tv.player.imported.attachSubtitleOffset
 import dev.nova.tv.player.preload.PreloadMode
 import dev.nova.tv.ui.player.BufferingOverlay
 import dev.nova.tv.ui.screens.NovaViewModel
@@ -105,7 +119,6 @@ import dev.nova.tv.ui.theme.LocalReduceMotion
 import dev.nova.tv.ui.theme.NovaPalette
 import kotlinx.coroutines.delay
 
-private val Speeds = listOf(1f, 1.25f, 1.5f, 2f, 0.75f)
 private const val DOUBLE_TAP_MS = 10_000L
 
 /**
@@ -151,6 +164,32 @@ fun MobilePlayerSurface(player: NovaPlayer, title: String, viewModel: NovaViewMo
         }
     }
 
+    // Subtitle delay controller (JustPlayer's cue-interval model).
+    val subtitleOffset = remember(player) { SubtitleOffsetController(player.player) }
+    var offsetMs by remember(player) { mutableLongStateOf(0L) }
+    DisposableEffect(player) {
+        val listener = player.player.attachSubtitleOffset(subtitleOffset)
+        onDispose { player.player.removeListener(listener) }
+    }
+    SideEffect { subtitleOffset.listener = { offsetMs = it } }
+
+    val context = LocalContext.current
+    val pickSubtitle = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        runCatching {
+            context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        val name = runCatching { SubtitleFiles.displayName(context, uri) }.getOrNull()
+            ?: uri.lastPathSegment ?: "Subtitle"
+        player.addSubtitle(
+            SubtitleRef(id = "ext:${uri}", url = uri.toString(), lang = SubtitleFiles.languageOf(name).orEmpty())
+        )
+        subtitleOffset.reset()
+        offsetMs = 0L
+        viewModel.closePlayerPanel()
+        viewModel.notify("Subtitle added: $name")
+    }
+
     val showChrome = chrome.chromeVisible && failure == null && panel == null && ui.upNext == null && !pip.active
     val chromeShown by rememberUpdatedState(showChrome)
 
@@ -173,6 +212,24 @@ fun MobilePlayerSurface(player: NovaPlayer, title: String, viewModel: NovaViewMo
         )
         LaunchedEffect(playerView, ui.subtitleStyle) {
             playerView?.applySubtitleStyle(ui.subtitleStyle)
+        }
+        // The engine records the resize mode; only the view can honour it.
+        LaunchedEffect(playerView, engine.resizeMode) {
+            playerView?.resizeMode = when (engine.resizeMode) {
+                ResizeMode.STRETCH -> AspectRatioFrameLayout.RESIZE_MODE_FILL
+                ResizeMode.CROP -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                ResizeMode.FIT, ResizeMode.AUTO -> AspectRatioFrameLayout.RESIZE_MODE_FIT
+            }
+        }
+        // Subtitle delay is applied by re-timing cues against a shifted clock,
+        // so the picture never re-prepares when the offset changes.
+        LaunchedEffect(playerView, offsetMs) {
+            val view = playerView?.subtitleView ?: return@LaunchedEffect
+            if (offsetMs == 0L) return@LaunchedEffect
+            while (true) {
+                view.setCues(subtitleOffset.cuesAt(exo.currentPosition))
+                delay(100)
+            }
         }
 
         if (!pip.active) {
@@ -231,7 +288,7 @@ fun MobilePlayerSurface(player: NovaPlayer, title: String, viewModel: NovaViewMo
         }
 
         AnimatedVisibility(visible = showChrome, enter = fadeIn(), exit = fadeOut(), modifier = Modifier.fillMaxSize()) {
-            Controls(player, title, viewModel, onPip = { pip.enter() })
+            Controls(player, title, viewModel, offsetMs = offsetMs, onPip = { pip.enter() })
         }
 
         failure?.let { problem ->
@@ -279,7 +336,16 @@ fun MobilePlayerSurface(player: NovaPlayer, title: String, viewModel: NovaViewMo
         ) {
             var last by remember { mutableStateOf(PlayerPanel.SOURCES) }
             if (panel != null) last = panel
-            Panel(last, player, viewModel, ui.subtitleStyle)
+            Panel(
+                panel = last,
+                player = player,
+                viewModel = viewModel,
+                subtitleStyle = ui.subtitleStyle,
+                subtitleOffset = subtitleOffset,
+                offsetMs = offsetMs,
+                onOffsetChange = { offsetMs = it },
+                onAddSubtitleFile = { runCatching { pickSubtitle.launch(SubtitleFiles.MIME_TYPES.toTypedArray()) } }
+            )
         }
     }
 }
@@ -395,13 +461,19 @@ private fun LevelPill(level: Level, modifier: Modifier) {
 }
 
 @Composable
-private fun Controls(player: NovaPlayer, title: String, viewModel: NovaViewModel, onPip: () -> Unit) {
+private fun Controls(
+    player: NovaPlayer,
+    title: String,
+    viewModel: NovaViewModel,
+    offsetMs: Long,
+    onPip: () -> Unit
+) {
     val engine by player.engineState.collectAsStateWithLifecycle()
     val session by player.session.collectAsStateWithLifecycle()
     val preload by player.preloadStatus.collectAsStateWithLifecycle()
     val buffering by player.buffering.collectAsStateWithLifecycle()
-    var speed by remember { mutableIntStateOf(0) }
     val upNext = remember(title) { viewModel.nextEpisode() }
+    val previous = remember(title) { viewModel.previousEpisode() }
 
     Box(Modifier.fillMaxSize()) {
         // Scrims top and bottom so white text reads over any frame.
@@ -478,13 +550,20 @@ private fun Controls(player: NovaPlayer, title: String, viewModel: NovaViewModel
                     viewModel.chrome.onUserActive()
                 }
                 if (session.sources.size > 1) TextButtonPill("Sources  ${session.sources.size}") { viewModel.openPlayerPanel(PlayerPanel.SOURCES) }
+                TextButtonPill("Quality") { viewModel.openPlayerPanel(PlayerPanel.QUALITY) }
                 TextButtonPill("Audio") { viewModel.openPlayerPanel(PlayerPanel.AUDIO) }
-                TextButtonPill("Subtitles") { viewModel.openPlayerPanel(PlayerPanel.SUBTITLES) }
-                TextButtonPill(if (speed == 0) "Speed" else "${Speeds[speed]}x", active = speed != 0) {
-                    speed = (speed + 1) % Speeds.size
-                    player.setRate(Speeds[speed])
+                TextButtonPill(
+                    if (offsetMs == 0L) "Subtitles" else "Subtitles  ${subtitleOffsetLabel(offsetMs)}",
+                    active = offsetMs != 0L
+                ) { viewModel.openPlayerPanel(PlayerPanel.SUBTITLES) }
+                TextButtonPill(SpeedStep.nearest(engine.playbackSpeed).label, active = engine.playbackSpeed != 1f) {
+                    viewModel.openPlayerPanel(PlayerPanel.SPEED)
+                }
+                TextButtonPill(AspectSteps.label(engine.resizeMode)) {
+                    player.engine.setResizeMode(AspectSteps.next(engine.resizeMode))
                     viewModel.chrome.onUserActive()
                 }
+                if (previous != null) TextButtonPill("Prev episode", onClick = viewModel::playPrevious)
                 if (upNext != null) TextButtonPill("Next episode", onClick = viewModel::playNext)
             }
         }
@@ -495,7 +574,7 @@ private fun Controls(player: NovaPlayer, title: String, viewModel: NovaViewModel
 private fun TextButtonPill(label: String, active: Boolean = false, onClick: () -> Unit) {
     Text(
         label,
-        style = MType.label.copy(color = if (active) Color.White else NovaPalette.textPrimary),
+        style = MType.label.copy(color = if (active) NovaPalette.background else NovaPalette.textPrimary),
         maxLines = 1,
         modifier = Modifier
             .clip(RoundedCornerShape(50))
@@ -592,6 +671,12 @@ private fun SeekBar(
     }
 }
 
+private fun subtitleOffsetLabel(ms: Long): String = when {
+    ms == 0L -> "Off"
+    ms > 0 -> "+${"%.1f".format(ms / 1000f)}s"
+    else -> "${"%.1f".format(ms / 1000f)}s"
+}
+
 private data class PanelOption(val label: String, val detail: String?, val selected: Boolean, val onPick: () -> Unit)
 
 @Composable
@@ -599,7 +684,11 @@ private fun Panel(
     panel: PlayerPanel,
     player: NovaPlayer,
     viewModel: NovaViewModel,
-    subtitleStyle: SubtitleStyle
+    subtitleStyle: SubtitleStyle,
+    subtitleOffset: SubtitleOffsetController,
+    offsetMs: Long,
+    onOffsetChange: (Long) -> Unit,
+    onAddSubtitleFile: () -> Unit
 ) {
     val engine by player.engineState.collectAsStateWithLifecycle()
     val session by player.session.collectAsStateWithLifecycle()
@@ -621,12 +710,53 @@ private fun Panel(
                 viewModel.closePlayerPanel()
             }
         }
+        PlayerPanel.QUALITY -> buildList {
+            add(
+                PanelOption("Auto", if (player.qualityCapHeight() == 0) "Adaptive" else "Cap off", player.qualityCapHeight() == 0) {
+                    player.setQualityCap(0)
+                    viewModel.closePlayerPanel()
+                }
+            )
+            QualityLadder.rungs(session.sources, session.index).forEach { rung ->
+                val height = rung.label.removeSuffix("p").toIntOrNull() ?: 0
+                add(
+                    PanelOption(rung.label, rung.detail, rung.streamIndex == session.index && height == player.qualityCapHeight()) {
+                        if (rung.streamIndex != session.index) player.selectSource(rung.streamIndex)
+                        player.setQualityCap(height)
+                        viewModel.closePlayerPanel()
+                    }
+                )
+            }
+        }
+        PlayerPanel.SPEED -> SpeedStep.entries.map { step ->
+            val on = kotlin.math.abs(engine.playbackSpeed - step.value) < 0.01f
+            PanelOption(step.label, if (on) "Playing" else null, on) {
+                player.setRate(step.value)
+                viewModel.setPlaybackRate(step.value)
+                viewModel.closePlayerPanel()
+            }
+        }
         PlayerPanel.SUBTITLES -> listOf(
             PanelOption("Off", null, engine.selectedSubtitleTrack == null) {
                 player.engine.selectSubtitleTrack(null)
                 viewModel.closePlayerPanel()
+            },
+            PanelOption("Add subtitle file…", "From this device", false, onAddSubtitleFile),
+            PanelOption("Delay later", subtitleOffsetLabel(offsetMs), false) {
+                subtitleOffset.step(SubtitleOffsetController.STEP_MS)
+                onOffsetChange(subtitleOffset.offsetMs)
+            },
+            PanelOption("Delay earlier", subtitleOffsetLabel(offsetMs), false) {
+                subtitleOffset.step(-SubtitleOffsetController.STEP_MS)
+                onOffsetChange(subtitleOffset.offsetMs)
             }
-        ) + listOf(
+        ) + (if (offsetMs != 0L) listOf(
+            PanelOption("Reset delay", subtitleOffsetLabel(offsetMs), false) {
+                subtitleOffset.offsetMs = 0L
+                subtitleOffset.reset()
+                onOffsetChange(0L)
+            }
+        ) else emptyList()) + listOf(
             // Style rows stay open so the change is visible over the picture.
             PanelOption("Caption style", subtitleStyle.tone.label, false) {
                 viewModel.setSubtitleStyle(subtitleStyle.nextTone())
@@ -641,8 +771,17 @@ private fun Panel(
                 viewModel.setSubtitleStyle(subtitleStyle.nextBottom())
             }
         ) + engine.subtitleTracks.map { track ->
-            PanelOption(track.displayLabel(), null, track.id == engine.selectedSubtitleTrack?.id) {
+            PanelOption(
+                track.displayLabel(),
+                if (track.isExternal) "Sidecar" else null,
+                track.id == engine.selectedSubtitleTrack?.id
+            ) {
                 player.engine.selectSubtitleTrack(track)
+                viewModel.closePlayerPanel()
+            }
+        } + session.subtitles.map { ref ->
+            PanelOption("Remove ${ref.label}", ref.url.substringAfterLast('/'), false) {
+                player.removeSubtitle(ref.url)
                 viewModel.closePlayerPanel()
             }
         }
@@ -657,7 +796,12 @@ private fun Panel(
     ) {
         Text(panel.label, style = MType.title, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
         if (options.isEmpty()) {
-            Text(if (panel == PlayerPanel.AUDIO) "One audio track" else "None available", style = MType.meta, modifier = Modifier.padding(20.dp))
+            Text(
+                when (panel) {
+                    PlayerPanel.AUDIO -> "One audio track"
+                    PlayerPanel.QUALITY -> "This source has one quality"
+                    else -> "None available"
+                }, style = MType.meta, modifier = Modifier.padding(20.dp))
         } else {
             LazyColumn(contentPadding = PaddingValues(bottom = 12.dp)) {
                 itemsIndexed(options) { _, option ->

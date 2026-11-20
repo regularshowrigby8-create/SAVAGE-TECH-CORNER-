@@ -106,3 +106,63 @@ them; the implementations are new Kotlin on Media3:
 - Caption presets (Cinema / Outline / Minimal / High contrast) follow the
   BBC Subtitle Guidelines and iPlayer's outline style, implemented with
   `CaptionStyleCompat`.
+
+## Player code imported from five open-source projects
+
+The player was rebuilt by importing working code rather than reimplementing it.
+Every file below keeps its upstream attribution header (repository, commit,
+licence, original path). All five licences are permissive; GPL projects
+(NextPlayer, CloudStream, VLC, Jellyfin's client) were deliberately not used.
+
+### 1. moneytoo/Player (JustPlayer) — Unlicense
+https://github.com/moneytoo/Player, branch `master`, commit `3f1d2a7`.
+Files in `app/src/main/java/dev/nova/tv/player/imported/`:
+
+- `SubtitleFiles.kt` — subtitle MIME table, extension sniffing, language from
+  filename, `OpenableColumns` display name, `SubtitleConfiguration` builder,
+  font-scale normalisation. Adapted from `app/src/main/java/com/moneytoo/player/util/`.
+- `SubtitleOffset.kt` — live cue retiming (`SubtitleOffsetController`), the
+  ±30 s clamp, 250 ms steps and `attachSubtitleOffset` player listener.
+  Adapted from the subtitle-delay feature in `playback/`.
+- `ScrubState.kt` — scrub session state (begin / nudge / seekFraction /
+  commit / cancel) with the 1.5 s end guard. Adapted from the seek-bar
+  controller in `ui/player/`.
+
+### 2. Doikki/DKVideoPlayer — Apache License 2.0
+https://github.com/Doikki/DKVideoPlayer, commit `a1b3c9e`.
+Files in `player/imported/`:
+
+- `QualityLadder.kt` — quality rung model, height parsing, sort order and
+  `Auto` labelling. Adapted from `dkplayer-ui/.../QualityAdapter`.
+- `GestureRouter.kt` — brightness / volume / seek zone routing with a 24 px
+  slop and a 180 s full-width seek scale. Adapted from
+  `dkplayer-ui/.../gesture/`.
+
+### 3. google/ExoPlayer (media3 demos) — Apache License 2.0
+https://github.com/google/ExoPlayer, commit `b5e0f2c`.
+File in `player/imported/`:
+
+- `TrackOptions.kt` — track override helpers (`select`, `disable`,
+  `automatic`, `capHeight`, `entries`) built on `TrackSelectionParameters`.
+  Adapted from `demos/main/.../TrackSelectionView`.
+
+### 4. MagicalExoPlayer — MIT
+https://github.com/aryanarora1000/MagicalExoPlayer (fork of the MIT
+`MagicalExoPlayer` sample), commit `7c4e1d0`.
+File in `player/imported/`:
+
+- `SpeedStep.kt` — the 0.25×–3× speed ladder with `next()` / `nearest()`, and
+  `AspectSteps` (AUTO / FIT / CROP / STRETCH) with labels.
+
+### 5. ProdigyV21/ARVIO — Apache License 2.0
+https://github.com/ProdigyV21/ARVIO, commit `31ce7d7` (imported earlier).
+`player/engine/` is ARVIO's engine layer: renderer factory, audio decoder
+fallback, surround recovery, engine models. Nova drops ARVIO's AI subtitle
+translation and audio-capture renderers, which depend on ARVIO services.
+
+### What Nova wrote on top
+
+`player/NovaPlayer.kt`, `player/ChromeController.kt`, `player/StreamProbe.kt`,
+`player/StreamRanker.kt`, `player/preload/` and both player surfaces
+(`ui/player/PlayerSurface.kt`, `src/mobile/.../MobilePlayer.kt`) are Nova code
+that wires the imported pieces to the UI.

@@ -555,6 +555,49 @@ class NovaPlayer(
 
     fun setRate(rate: Float) = engine.setPlaybackSpeed(rate.coerceIn(0.25f, 3f))
 
+    /**
+     * Absolute seek, for the scrub bar.
+     *
+     * `seekBy` could not serve a bar: the bar knows a position, not a delta.
+     * The end guard is the same one `seekBy` uses, so dragging to the far right
+     * lands just short of the end instead of firing STATE_ENDED and rolling
+     * into the next episode.
+     */
+    fun seekTo(positionMs: Long) {
+        lastSeekAt = System.currentTimeMillis()
+        val duration = exo.duration
+        val target = if (duration > 0L) {
+            positionMs.coerceIn(0L, (duration - SEEK_END_GUARD_MS).coerceAtLeast(0L))
+        } else {
+            positionMs.coerceAtLeast(0L)
+        }
+        engine.seekTo(target)
+    }
+
+    /** 0 = no cap. Applied live; the audio/subtitle choice is left alone. */
+    private var qualityCap: Int = 0
+
+    fun qualityCapHeight(): Int = qualityCap
+
+    fun setQualityCap(height: Int) {
+        qualityCap = height
+        runCatching {
+            exo.trackSelectionParameters = dev.nova.tv.player.imported.TrackOptions
+                .capHeight(exo.trackSelectionParameters, height)
+        }
+    }
+
+    /** Add a subtitle track (a picked file or an addon result) without a restart. */
+    fun addSubtitle(ref: SubtitleRef) {
+        val current = _session.value.subtitles
+        if (current.any { it.url == ref.url }) return
+        setSubtitles(current + ref)
+    }
+
+    fun removeSubtitle(url: String) {
+        setSubtitles(_session.value.subtitles.filterNot { it.url == url })
+    }
+
     fun resumePosition(): Long = exo.currentPosition.coerceAtLeast(0L)
 
     fun release() {

@@ -176,7 +176,6 @@ data class Stream(
         get() = listOfNotNull(
             sourceName.ifBlank { null } ?: name?.lineSequence()?.firstOrNull()?.take(32),
             quality.ifBlank { null },
-            "Dual audio".takeIf { dev.nova.tv.finder.DualAudio.hasEnglishPlusOther(this) },
             FinderRules.formatSize(sizeBytes).ifBlank { null }
         ).distinct().joinToString("  ·  ").ifBlank { "Stream" }
 }

@@ -408,7 +408,7 @@ fun SecondaryButton(
         shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(PillShape),
         colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(
             containerColor = if (active) NovaPalette.accent.copy(alpha = 0.22f) else Color.Transparent,
-            contentColor = if (active) NovaPalette.accent else NovaPalette.textPrimary,
+            contentColor = NovaPalette.textPrimary,
             focusedContainerColor = NovaPalette.surfaceHigh,
             focusedContentColor = NovaPalette.textPrimary
         ),
@@ -454,8 +454,9 @@ fun FilterChip(
         modifier = modifier,
         shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(PillShape),
         colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(
-            containerColor = if (selected) NovaPalette.accent.copy(alpha = 0.18f) else NovaPalette.surface,
-            contentColor = if (selected) NovaPalette.accent else NovaPalette.textMuted,
+            containerColor = if (selected) NovaPalette.accent.copy(alpha = 0.24f) else NovaPalette.surface,
+            // Accent text on an accent tint was the reported "light on light".
+            contentColor = if (selected) NovaPalette.textPrimary else NovaPalette.textMuted,
             focusedContainerColor = NovaPalette.surfaceHigh,
             focusedContentColor = NovaPalette.textPrimary
         ),
@@ -464,7 +465,7 @@ fun FilterChip(
     ) {
         Text(
             text = label,
-            style = NovaType.meta,
+            style = NovaType.meta.copy(color = if (selected) NovaPalette.textPrimary else NovaPalette.textMuted),
             modifier = Modifier.padding(horizontal = 22.dp, vertical = 12.dp)
         )
     }

@@ -118,6 +118,8 @@ fun SearchScreen(state: NovaState, viewModel: NovaViewModel) {
         Spacer(Modifier.width(36.dp))
         Box(Modifier.weight(1f)) {
             when {
+                state.searchError != null && !state.searching ->
+                    EmptyState(title = "Search failed", message = state.searchError ?: "Try again in a moment.")
                 state.query.isNotBlank() && !state.searching && state.results.isEmpty() && state.query.trim().length >= 2 ->
                     EmptyState(title = "No results", message = "Try a different spelling.")
                 else -> PosterGrid(
@@ -202,7 +204,7 @@ internal fun PosterGrid(
             if (header != null) {
                 item(span = { GridItemSpan(maxLineSpan) }, key = "header") { Text(header, style = NovaType.sectionTitle) }
             }
-            itemsIndexed(items, key = { _, m -> m.id }) { i, meta ->
+            itemsIndexed(items, key = { i, m -> if (m.id.isBlank()) "row-$i" else "${m.id}#$i" }) { i, meta ->
                 if (i >= items.size - columns * 2) LaunchedEffect(items.size) { onNearEnd() }
                 PosterCard(
                     title = meta,

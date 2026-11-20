@@ -2,72 +2,96 @@
 
 package dev.nova.tv.ui.player
 
+import android.content.Intent
 import android.view.KeyEvent as AndroidKeyEvent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.border
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.foundation.focusGroup
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import dev.nova.tv.ui.screens.UpNext
-import coil.compose.AsyncImage
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.ui.draw.clip
-import kotlinx.coroutines.delay
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.tv.material3.Text
+import coil.compose.AsyncImage
+import dev.nova.tv.data.model.SubtitleRef
 import dev.nova.tv.player.NovaPlayer
 import dev.nova.tv.player.SkipSeconds
 import dev.nova.tv.player.SubtitleStyle
 import dev.nova.tv.player.applySubtitleStyle
+import dev.nova.tv.player.engine.ResizeMode
+import dev.nova.tv.player.imported.AspectSteps
+import dev.nova.tv.player.imported.QualityLadder
+import dev.nova.tv.player.imported.ScrubState
+import dev.nova.tv.player.imported.SpeedStep
+import dev.nova.tv.player.imported.SubtitleFiles
+import dev.nova.tv.player.imported.SubtitleOffsetController
+import dev.nova.tv.player.imported.attachSubtitleOffset
 import dev.nova.tv.ui.components.FocusableRow
 import dev.nova.tv.ui.components.PrimaryButton
 import dev.nova.tv.ui.components.SecondaryButton
 import dev.nova.tv.ui.screens.NovaViewModel
 import dev.nova.tv.ui.screens.PlayerPanel
+import dev.nova.tv.ui.screens.UpNext
 import dev.nova.tv.ui.theme.NovaPalette
 import dev.nova.tv.ui.theme.NovaSpace
 import dev.nova.tv.ui.theme.NovaType
+import kotlinx.coroutines.delay
 
 /**
  * The single player every source plays through.
@@ -84,8 +108,13 @@ import dev.nova.tv.ui.theme.NovaType
  *  - With chrome hidden, LEFT/RIGHT seek and OK/UP/DOWN reveal the controls;
  *    with chrome showing, the D-pad moves between real buttons. Previously OK
  *    always toggled play, so the on-screen buttons could never be pressed.
- *  - Sources, Audio and Subtitles panels: every stream the detail screen
- *    found is in one queue, and the viewer can switch without leaving.
+ *  - The progress bar is now an input, not a drawing: focus it and LEFT/RIGHT
+ *    scrub, OK commits. It used to be a `Box` with a width, which is why
+ *    seeking "did not work" on a remote.
+ *  - Subtitles are a real menu: Off, embedded and sidecar tracks, add a file
+ *    from the device (SAF), delay in 250 ms steps, and caption styling.
+ *  - Quality, playback speed, aspect ratio and episode skipping are all in
+ *    the chrome rather than being declared-but-unreachable engine calls.
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -112,6 +141,42 @@ fun PlayerSurface(
                 error = failure?.message
             )
         }
+    }
+
+    // Subtitle delay: the controller keeps every cue interval the renderer
+    // emitted, so the offset can be changed in both directions without a
+    // re-prepare (no picture blink). Imported from JustPlayer.
+    val subtitleOffset = remember(player) { SubtitleOffsetController(player.player) }
+    var offsetMs by remember(player) { mutableLongStateOf(0L) }
+    DisposableEffect(player) {
+        val listener = player.player.attachSubtitleOffset(subtitleOffset)
+        onDispose { player.player.removeListener(listener) }
+    }
+    SideEffect {
+        subtitleOffset.listener = { offsetMs = it }
+    }
+
+    val context = LocalContext.current
+    // SAF picker: .srt/.vtt/.ass/.ssa/.ttml all reach ExoPlayer as sidecar
+    // tracks through the same DefaultDataSource that carries addon headers.
+    val pickSubtitle = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        runCatching {
+            context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        val name = runCatching { SubtitleFiles.displayName(context, uri) }.getOrNull()
+            ?: uri.lastPathSegment ?: "Subtitle"
+        player.addSubtitle(
+            SubtitleRef(
+                id = "ext:${uri}",
+                url = uri.toString(),
+                lang = SubtitleFiles.languageOf(name).orEmpty()
+            )
+        )
+        subtitleOffset.reset()
+        offsetMs = 0L
+        viewModel.closePlayerPanel()
+        viewModel.notify("Subtitle added: $name")
     }
 
     val rootFocus = remember { FocusRequester() }
@@ -166,8 +231,9 @@ fun PlayerSurface(
             }
     ) {
         val exo = player.player
-        // Held so caption styling can be applied to the same view after it is
-        // created; PlayerView owns the Surface and the subtitle view.
+        // Held so caption styling, the resize mode and the delayed-cue ticker
+        // can reach the same view after it is created; PlayerView owns the
+        // Surface and the subtitle view.
         var playerView by remember { mutableStateOf<PlayerView?>(null) }
         AndroidView(
             factory = { ctx ->
@@ -183,6 +249,25 @@ fun PlayerSurface(
         )
         LaunchedEffect(playerView, ui.subtitleStyle) {
             playerView?.applySubtitleStyle(ui.subtitleStyle)
+        }
+        // ExoPlayerEngine records the resize mode; the view is the only thing
+        // that can honour it. Without this the Aspect menu did nothing.
+        LaunchedEffect(playerView, engine.resizeMode) {
+            playerView?.resizeMode = when (engine.resizeMode) {
+                ResizeMode.STRETCH -> AspectRatioFrameLayout.RESIZE_MODE_FILL
+                ResizeMode.CROP -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                ResizeMode.FIT, ResizeMode.AUTO -> AspectRatioFrameLayout.RESIZE_MODE_FIT
+            }
+        }
+        // A non-zero delay needs cues re-timed against a shifted clock, so the
+        // view is redrawn from the controller instead of the renderer.
+        LaunchedEffect(playerView, offsetMs) {
+            val view = playerView?.subtitleView ?: return@LaunchedEffect
+            if (offsetMs == 0L) return@LaunchedEffect
+            while (true) {
+                view.setCues(subtitleOffset.cuesAt(exo.currentPosition))
+                delay(100)
+            }
         }
 
         // Counted, not just spinning: the ring shows how far the buffer is.
@@ -217,15 +302,8 @@ fun PlayerSurface(
             Controls(
                 player = player,
                 title = title,
-                position = engine.currentPositionMs,
-                duration = engine.durationMs,
-                playing = engine.isPlaying,
-                buffering = engine.isBuffering,
-                sourceLabel = session.current?.label,
-                sourceIndex = session.index,
-                sourceCount = session.sources.size,
-                playFocus = playFocus,
-                viewModel = viewModel
+                viewModel = viewModel,
+                playFocus = playFocus
             )
         }
 
@@ -265,6 +343,10 @@ fun PlayerSurface(
                 player = player,
                 viewModel = viewModel,
                 subtitleStyle = ui.subtitleStyle,
+                subtitleOffset = subtitleOffset,
+                offsetMs = offsetMs,
+                onOffsetChange = { offsetMs = it },
+                onAddSubtitleFile = { runCatching { pickSubtitle.launch(SubtitleFiles.MIME_TYPES.toTypedArray()) } },
                 modifier = Modifier.align(Alignment.CenterEnd)
             )
         }
@@ -275,72 +357,77 @@ fun PlayerSurface(
 private fun Controls(
     player: NovaPlayer,
     title: String,
-    position: Long,
-    duration: Long,
-    playing: Boolean,
-    buffering: Boolean,
-    sourceLabel: String?,
-    sourceIndex: Int,
-    sourceCount: Int,
-    playFocus: FocusRequester,
-    viewModel: NovaViewModel
+    viewModel: NovaViewModel,
+    playFocus: FocusRequester
 ) {
+    val engine by player.engineState.collectAsStateWithLifecycle()
+    val session by player.session.collectAsStateWithLifecycle()
     val preload by player.preloadStatus.collectAsStateWithLifecycle()
+
+    val previous = remember(session.index, engine.durationMs) { viewModel.previousEpisode() }
+    val next = remember(session.index, engine.durationMs) { viewModel.nextEpisode() }
+
     Column(
         Modifier
             .fillMaxWidth()
             .background(
                 androidx.compose.ui.graphics.Brush.verticalGradient(
-                    listOf(androidx.compose.ui.graphics.Color.Transparent, NovaPalette.background.copy(alpha = 0.92f))
+                    listOf(Color.Transparent, NovaPalette.background.copy(alpha = 0.92f))
                 )
             )
             .padding(horizontal = NovaSpace.safeHorizontal, vertical = NovaSpace.safeVertical)
             .focusGroup()
     ) {
         Text(title, style = NovaType.sectionTitle, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        if (sourceLabel != null) {
+        session.current?.label?.let { label ->
             Text(
-                text = sourceLabel,
+                text = label,
                 style = NovaType.meta,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
         }
-        Spacer(Modifier.height(14.dp))
-        ProgressBar(position, duration, preloadedMs = if (preload.active) preload.aheadMs else 0L)
-        Row(Modifier.fillMaxWidth().padding(top = 6.dp)) {
-            Text(
-                text = formatTime(position),
-                style = NovaType.meta,
-                color = NovaPalette.textPrimary
-            )
-            Spacer(Modifier.weight(1f))
-            Text(if (duration > 0) formatTime(duration) else "--:--", style = NovaType.meta)
-        }
-        Spacer(Modifier.height(14.dp))
-        // Scrolls with focus: eight pills do not fit 960 dp, and none may be cut off.
+        Spacer(Modifier.height(10.dp))
+        ScrubBar(
+            player = player,
+            position = engine.currentPositionMs,
+            duration = engine.durationMs,
+            preloadedMs = if (preload.active) preload.aheadMs else 0L
+        )
+        Spacer(Modifier.height(10.dp))
+        // Scrolls with focus: thirteen pills do not fit 960 dp, and none may be
+        // cut off.
         Row(
             Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             PrimaryButton(
-                if (playing) "Pause" else "Play",
+                if (engine.isPlaying) "Pause" else "Play",
                 modifier = Modifier.focusRequester(playFocus)
             ) { player.togglePlay() }
             SecondaryButton("−${SkipSeconds.TAP / 1000}s") { player.seekBy(-SkipSeconds.TAP) }
             SecondaryButton("+${SkipSeconds.TAP / 1000}s") { player.seekBy(SkipSeconds.TAP) }
+            if (previous != null) SecondaryButton("Prev") { viewModel.playPrevious() }
+            if (next != null) SecondaryButton("Next") { viewModel.playNext() }
+            SecondaryButton("Quality") { viewModel.openPlayerPanel(PlayerPanel.QUALITY) }
+            SecondaryButton(SpeedStep.nearest(engine.playbackSpeed).label) {
+                viewModel.openPlayerPanel(PlayerPanel.SPEED)
+            }
+            SecondaryButton(AspectSteps.label(engine.resizeMode)) {
+                player.engine.setResizeMode(AspectSteps.next(engine.resizeMode))
+            }
             // FastStream-style anti-buffering: Off → Preload → Multi-thread.
             SecondaryButton(
                 label = if (preload.unavailable) "No preload" else preload.mode.label,
                 icon = Icons.Filled.Refresh,
                 active = preload.mode != dev.nova.tv.player.preload.PreloadMode.OFF && !preload.unavailable
             ) {
-                val next = player.preloadMode().next()
-                player.setPreload(next)
-                viewModel.setPreload(next)
+                val mode = player.preloadMode().next()
+                player.setPreload(mode)
+                viewModel.setPreload(mode)
             }
-            if (sourceCount > 1) SecondaryButton("Sources") { viewModel.openPlayerPanel(PlayerPanel.SOURCES) }
+            if (session.sources.size > 1) SecondaryButton("Sources") { viewModel.openPlayerPanel(PlayerPanel.SOURCES) }
             SecondaryButton("Audio") { viewModel.openPlayerPanel(PlayerPanel.AUDIO) }
             SecondaryButton("Subtitles") { viewModel.openPlayerPanel(PlayerPanel.SUBTITLES) }
             SecondaryButton("Close", onClick = viewModel::stopPlayback)
@@ -348,36 +435,144 @@ private fun Controls(
     }
 }
 
+/**
+ * A progress bar that is also an input.
+ *
+ * Focus it and the D-pad scrubs: LEFT/RIGHT move the cursor (coarse on a tap),
+ * OK jumps to it, and leaving the bar commits whatever the cursor reached.
+ * This is the piece that was missing — the old bar was a `Box` with a width
+ * and no key handling at all, so on a remote "seeking did not work".
+ *
+ * The scrub cursor is local state; the player is only touched on commit, so a
+ * held key does not queue forty seeks.
+ */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun ProgressBar(position: Long, duration: Long, preloadedMs: Long = 0L) {
-    val fraction = if (duration <= 0) 0f else (position.toFloat() / duration).coerceIn(0f, 1f)
-    val preloaded = if (duration <= 0) 0f else ((position + preloadedMs).toFloat() / duration).coerceIn(0f, 1f)
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .height(6.dp)
-            .background(NovaPalette.surfaceHigh, RoundedCornerShape(3.dp))
-    ) {
-        // What is already on disk ahead of the playhead.
-        if (preloaded > fraction) {
+private fun ScrubBar(
+    player: NovaPlayer,
+    position: Long,
+    duration: Long,
+    preloadedMs: Long,
+    modifier: Modifier = Modifier
+) {
+    val scrub = remember(player) {
+        ScrubState(
+            durationMs = { player.engineState.value.durationMs },
+            positionMs = { player.engineState.value.currentPositionMs }
+        )
+    }
+    var preview by remember(player) { mutableStateOf<Long?>(null) }
+    var focused by remember { mutableStateOf(false) }
+
+    val shown = preview ?: position
+    val fraction = if (duration <= 0) 0f else (shown.toFloat() / duration).coerceIn(0f, 1f)
+    val preloaded = if (duration <= 0) 0f else ((shown + preloadedMs).toFloat() / duration).coerceIn(0f, 1f)
+
+    val commit: () -> Unit = {
+        scrub.commit()?.let { player.seekTo(it) }
+        preview = null
+    }
+
+    Column(modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = formatTime(shown),
+                style = NovaType.meta,
+                color = if (preview != null) NovaPalette.accent else NovaPalette.textPrimary
+            )
+            Spacer(Modifier.width(10.dp))
+            if (focused || preview != null) {
+                Text(
+                    text = "◀ ▶ scrub  ·  OK jump",
+                    style = NovaType.meta,
+                    color = NovaPalette.textMuted
+                )
+            }
+            Spacer(Modifier.weight(1f))
+            Text(if (duration > 0) formatTime(duration) else "--:--", style = NovaType.meta)
+        }
+        Spacer(Modifier.height(6.dp))
+        BoxWithConstraints(
+            Modifier
+                .fillMaxWidth()
+                .height(34.dp)
+                .onFocusChanged { state ->
+                    focused = state.isFocused
+                    if (state.isFocused) {
+                        scrub.begin()
+                        preview = scrub.cursorMs
+                    } else {
+                        // Leaving the bar applies the cursor: the TV convention.
+                        commit()
+                        scrub.cancel()
+                    }
+                }
+                .onPreviewKeyEvent { event ->
+                    if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                    when (event.nativeKeyEvent.keyCode) {
+                        AndroidKeyEvent.KEYCODE_DPAD_LEFT -> {
+                            preview = scrub.nudge(-SCRUB_STEP_MS)
+                            true
+                        }
+                        AndroidKeyEvent.KEYCODE_DPAD_RIGHT -> {
+                            preview = scrub.nudge(SCRUB_STEP_MS)
+                            true
+                        }
+                        AndroidKeyEvent.KEYCODE_DPAD_CENTER,
+                        AndroidKeyEvent.KEYCODE_ENTER -> {
+                            commit()
+                            true
+                        }
+                        else -> false
+                    }
+                }
+                .focusable()
+        ) {
+            val trackHeight = if (focused) 10.dp else 6.dp
             Box(
                 Modifier
-                    .fillMaxWidth(preloaded)
-                    .fillMaxHeight()
-                    .background(NovaPalette.textPrimary.copy(alpha = 0.35f), RoundedCornerShape(3.dp))
+                    .fillMaxWidth()
+                    .height(trackHeight)
+                    .align(Alignment.Center)
+                    .background(NovaPalette.surfaceHigh, RoundedCornerShape(trackHeight / 2))
+            ) {
+                // What is already on disk ahead of the playhead.
+                if (preloaded > fraction) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth(preloaded)
+                            .fillMaxHeight()
+                            .background(NovaPalette.textPrimary.copy(alpha = 0.35f), RoundedCornerShape(trackHeight / 2))
+                    )
+                }
+                Box(
+                    Modifier
+                        .fillMaxWidth(fraction)
+                        .fillMaxHeight()
+                        .background(NovaPalette.accent, RoundedCornerShape(trackHeight / 2))
+                )
+            }
+            // The thumb: a dot the viewer can see move from the sofa.
+            Box(
+                Modifier
+                    .align(Alignment.CenterStart)
+                    .offset(x = (maxWidth * fraction) - 8.dp)
+                    .size(if (focused) 18.dp else 14.dp)
+                    .clip(CircleShape)
+                    .background(if (focused) NovaPalette.textPrimary else NovaPalette.accent)
+                    .then(if (focused) Modifier.border(3.dp, NovaPalette.accent, CircleShape) else Modifier)
             )
         }
-        Box(
-            Modifier
-                .fillMaxWidth(fraction)
-                .fillMaxHeight()
-                .background(NovaPalette.accent, RoundedCornerShape(3.dp))
-        )
     }
 }
 
 /** One option in a panel. */
-private data class PanelOption(val label: String, val detail: String?, val selected: Boolean, val onPick: () -> Unit)
+private data class PanelOption(
+    val label: String,
+    val detail: String?,
+    val selected: Boolean,
+    val onPick: () -> Unit
+)
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -386,6 +581,10 @@ private fun Panel(
     player: NovaPlayer,
     viewModel: NovaViewModel,
     subtitleStyle: SubtitleStyle,
+    subtitleOffset: SubtitleOffsetController,
+    offsetMs: Long,
+    onOffsetChange: (Long) -> Unit,
+    onAddSubtitleFile: () -> Unit,
     modifier: Modifier
 ) {
     val engine by player.engineState.collectAsStateWithLifecycle()
@@ -407,6 +606,46 @@ private fun Panel(
                 viewModel.closePlayerPanel()
             }
         }
+
+        PlayerPanel.QUALITY -> buildList {
+            add(
+                PanelOption(
+                    label = "Auto",
+                    detail = if (player.qualityCapHeight() == 0) "Adaptive" else "Cap off",
+                    selected = player.qualityCapHeight() == 0
+                ) {
+                    player.setQualityCap(0)
+                    viewModel.closePlayerPanel()
+                }
+            )
+            QualityLadder.rungs(session.sources, session.index).forEach { rung ->
+                val height = rung.label.removeSuffix("p").toIntOrNull() ?: 0
+                add(
+                    PanelOption(
+                        label = rung.label,
+                        detail = rung.detail,
+                        selected = rung.streamIndex == session.index && height == player.qualityCapHeight()
+                    ) {
+                        if (rung.streamIndex != session.index) player.selectSource(rung.streamIndex)
+                        player.setQualityCap(height)
+                        viewModel.closePlayerPanel()
+                    }
+                )
+            }
+        }
+
+        PlayerPanel.SPEED -> SpeedStep.entries.map { step ->
+            PanelOption(
+                label = step.label,
+                detail = if (kotlin.math.abs(engine.playbackSpeed - step.value) < 0.01f) "Playing" else null,
+                selected = kotlin.math.abs(engine.playbackSpeed - step.value) < 0.01f
+            ) {
+                player.setRate(step.value)
+                viewModel.setPlaybackRate(step.value)
+                viewModel.closePlayerPanel()
+            }
+        }
+
         PlayerPanel.AUDIO -> engine.audioTracks.map { track ->
             val detail = listOfNotNull(
                 track.language?.uppercase(),
@@ -418,33 +657,87 @@ private fun Panel(
                 viewModel.closePlayerPanel()
             }
         }
-        PlayerPanel.SUBTITLES -> listOf(
-            PanelOption("Off", null, engine.selectedSubtitleTrack == null) {
-                player.engine.selectSubtitleTrack(null)
-                viewModel.closePlayerPanel()
+
+        PlayerPanel.SUBTITLES -> buildList {
+            add(
+                PanelOption("Off", null, engine.selectedSubtitleTrack == null) {
+                    player.engine.selectSubtitleTrack(null)
+                    viewModel.closePlayerPanel()
+                }
+            )
+            add(PanelOption("Add subtitle file…", "From this device", false, onAddSubtitleFile))
+            // Delay: positive shows captions later. Two rows keep it one click
+            // per direction instead of a hidden submenu.
+            add(
+                PanelOption(
+                    label = "Delay later",
+                    detail = subtitleOffset.label(),
+                    selected = false
+                ) {
+                    subtitleOffset.step(SubtitleOffsetController.STEP_MS)
+                    onOffsetChange(subtitleOffset.offsetMs)
+                }
+            )
+            add(
+                PanelOption(
+                    label = "Delay earlier",
+                    detail = subtitleOffset.label(),
+                    selected = false
+                ) {
+                    subtitleOffset.step(-SubtitleOffsetController.STEP_MS)
+                    onOffsetChange(subtitleOffset.offsetMs)
+                }
+            )
+            if (offsetMs != 0L) {
+                add(
+                    PanelOption("Reset delay", subtitleOffset.label(), false) {
+                        subtitleOffset.offsetMs = 0L
+                        subtitleOffset.reset()
+                        onOffsetChange(0L)
+                    }
+                )
             }
-        ) + listOf(
             // Style stays on screen while it is adjusted, unlike a track pick.
-            PanelOption("Caption style", subtitleStyle.tone.label, false) {
-                viewModel.setSubtitleStyle(subtitleStyle.nextTone())
-            },
-            PanelOption("Caption size", subtitleStyle.sizeLabel, false) {
-                viewModel.setSubtitleStyle(subtitleStyle.nextSize())
-            },
-            PanelOption("Caption box", subtitleStyle.backgroundLabel, false) {
-                viewModel.setSubtitleStyle(subtitleStyle.nextBackground())
-            },
-            PanelOption("Caption height", subtitleStyle.bottomLabel, false) {
-                viewModel.setSubtitleStyle(subtitleStyle.nextBottom())
+            add(
+                PanelOption("Caption style", subtitleStyle.tone.label, false) {
+                    viewModel.setSubtitleStyle(subtitleStyle.nextTone())
+                }
+            )
+            add(
+                PanelOption("Caption size", subtitleStyle.sizeLabel, false) {
+                    viewModel.setSubtitleStyle(subtitleStyle.nextSize())
+                }
+            )
+            add(
+                PanelOption("Caption box", subtitleStyle.backgroundLabel, false) {
+                    viewModel.setSubtitleStyle(subtitleStyle.nextBackground())
+                }
+            )
+            add(
+                PanelOption("Caption height", subtitleStyle.bottomLabel, false) {
+                    viewModel.setSubtitleStyle(subtitleStyle.nextBottom())
+                }
+            )
+            engine.subtitleTracks.forEach { track ->
+                add(
+                    PanelOption(
+                        track.displayLabel(),
+                        if (track.isExternal) "Sidecar" else null,
+                        track.id == engine.selectedSubtitleTrack?.id
+                    ) {
+                        player.engine.selectSubtitleTrack(track)
+                        viewModel.closePlayerPanel()
+                    }
+                )
             }
-        ) + engine.subtitleTracks.map { track ->
-            PanelOption(
-                track.displayLabel(),
-                null,
-                track.id == engine.selectedSubtitleTrack?.id
-            ) {
-                player.engine.selectSubtitleTrack(track)
-                viewModel.closePlayerPanel()
+            // Sidecar tracks can be taken back out; embedded ones cannot.
+            session.subtitles.forEach { ref ->
+                add(
+                    PanelOption("Remove ${ref.label}", ref.url.substringAfterLast('/'), false) {
+                        player.removeSubtitle(ref.url)
+                        viewModel.closePlayerPanel()
+                    }
+                )
             }
         }
     }
@@ -471,6 +764,7 @@ private fun Panel(
             Text(
                 text = when (panel) {
                     PlayerPanel.AUDIO -> "One audio track"
+                    PlayerPanel.QUALITY -> "This source has one quality"
                     else -> "None available"
                 },
                 style = NovaType.meta
@@ -521,7 +815,7 @@ internal fun formatTime(ms: Long): String {
  */
 @Composable
 private fun UpNextCard(next: UpNext, viewModel: NovaViewModel, modifier: Modifier) {
-    var left by androidx.compose.runtime.remember(next) { mutableIntStateOf(UP_NEXT_SECONDS) }
+    var left by remember(next) { mutableIntStateOf(UP_NEXT_SECONDS) }
     val focus = remember(next) { FocusRequester() }
     LaunchedEffect(next) {
         withFrameNanos { }
@@ -556,5 +850,8 @@ private fun UpNextCard(next: UpNext, viewModel: NovaViewModel, modifier: Modifie
         }
     }
 }
+
+/** Coarse tap step for the scrub bar; a held key repeats it. */
+private const val SCRUB_STEP_MS = 10_000L
 
 private const val UP_NEXT_SECONDS = 8

@@ -27,7 +27,8 @@ object MType {
 
 private val Scheme = darkColorScheme(
     primary = NovaPalette.accent,
-    onPrimary = Color.White,
+    // White on #4C8DFF is ~2.6:1. Dark ink on the accent is ~7:1.
+    onPrimary = NovaPalette.background,
     primaryContainer = NovaPalette.accent.copy(alpha = 0.24f),
     onPrimaryContainer = NovaPalette.textPrimary,
     secondaryContainer = NovaPalette.accent.copy(alpha = 0.22f),

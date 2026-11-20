@@ -37,7 +37,6 @@ interface PlayerEngine {
     }
     fun selectAudioTrack(index: Int)
     fun selectSubtitleTrack(track: SubtitleTrackItem?)
-    fun setAudioDelayMs(delayMs: Long)
     fun setVolume(volume: Float)
     fun release()
 }

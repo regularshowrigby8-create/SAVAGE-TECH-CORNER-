@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
@@ -214,7 +215,9 @@ internal fun PosterGrid(
         if (header != null) {
             item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) { header() }
         }
-        items(items, key = { it.id }) { meta ->
+        // Index in the key: blank or repeated ids from sloppy addons used to
+        // throw "Key was already used" and blank the whole grid.
+        itemsIndexed(items, key = { i, m -> if (m.id.isBlank()) "row-$i" else "${m.id}#$i" }) { _, meta ->
             PosterCard(meta, onClick = { onOpen(meta) }, modifier = Modifier.fillMaxWidth())
         }
         if (loading) {
