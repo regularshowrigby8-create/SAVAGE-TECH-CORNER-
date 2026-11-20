@@ -119,3 +119,5 @@ why Cinemeta had ended up as the only connected catalogue.
 - `ServerPoolTest`: immediate eviction of a server that never answers, and
   `pruneDead` keeping servers that have answered.
 - `:app:testTvDebugUnitTest` green; `nova-tv/python` 103 tests green.
+
+<!-- retrigger -->
