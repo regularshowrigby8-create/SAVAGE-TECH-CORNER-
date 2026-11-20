@@ -146,7 +146,9 @@ class FragmentPreloader(
             }
             // A fresh governor each run so a source switch starts from one connection.
             val governor = WorkerGovernor(mode.workers)
-            _status.value = _status.value.copy(active = true, workers = 1)
+            // Report the connections actually opened: multi mode starts two at
+            // once, and the overlay said "1 connection" while two were running.
+            _status.value = _status.value.copy(active = true, workers = governor.workers)
 
             val running = ArrayList<Job>()
             var roundBytes = 0L

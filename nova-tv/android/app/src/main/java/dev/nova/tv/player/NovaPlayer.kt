@@ -191,10 +191,18 @@ class NovaPlayer(
      */
     fun appendSources(more: List<Stream>) {
         val current = _session.value
-        if (current.sources.isEmpty()) return
         val known = current.sources.mapNotNull { it.url }.toHashSet()
         val fresh = more.filter { it.isPlayable && it.url !in known }
         if (fresh.isEmpty()) return
+        // Sources can arrive before there is a session to append to (Play was
+        // pressed with nothing playable yet). Dropping them left the viewer on
+        // the "no source" screen until another Play press.
+        if (current.sources.isEmpty()) {
+            _failure.value = null
+            _session.value = Session(sources = fresh, index = 0, tried = setOf(0), subtitles = current.subtitles)
+            prepareCurrent(0L)
+            return
+        }
         _session.value = current.copy(sources = current.sources + fresh)
         // Every source had failed; the first new one gets its turn.
         if (current.failure != null) {
@@ -212,6 +220,7 @@ class NovaPlayer(
         val resumeAt = if (current.started) exo.currentPosition.coerceAtLeast(0L) else 0L
         _session.value = current.copy(index = index, tried = current.tried + index, failure = null, notice = null, ended = false)
         stalls.reset()
+        resetQualityForSourceChange()
         prepareCurrent(resumeAt)
     }
 
@@ -335,6 +344,7 @@ class NovaPlayer(
             notice = "Switching to a faster source"
         )
         showNoticeBriefly()
+        resetQualityForSourceChange()
         prepareCurrent(resumeAt)
     }
 
@@ -363,6 +373,15 @@ class NovaPlayer(
     private fun videoTrackCount(): Int {
         val tracks = exo.currentTracks
         return tracks.groups.filter { it.type == androidx.media3.common.C.TRACK_TYPE_VIDEO }.sumOf { it.length }
+    }
+
+    /**
+     * A source switch starts uncapped: a bitrate ceiling chosen for the host
+     * that kept stalling must not follow the viewer onto a faster one.
+     */
+    private fun resetQualityForSourceChange() {
+        downshifted.clear()
+        clearQualityCeiling()
     }
 
     private fun clearQualityCeiling() {
@@ -471,6 +490,7 @@ class NovaPlayer(
                 notice = "Trying another source"
             )
             showNoticeBriefly()
+            resetQualityForSourceChange()
             // Keep the viewer's place: a source that dies mid-film resumes there.
             prepareCurrent(resumeAt)
         } else {

@@ -512,6 +512,7 @@ class NovaViewModel : ViewModel() {
                 restoreFocusId = title.id
             )
         }
+        var movedToRealEpisode = false
         viewModelScope.launch {
             val full = repository.loadMeta(title.type, title.id) ?: return@launch
             _state.update { s ->
@@ -520,9 +521,14 @@ class NovaViewModel : ViewModel() {
                 // A series with a known list starts on its first real episode.
                 val firstSeason = full.seasons.firstOrNull { it > 0 } ?: d.season
                 val keep = full.videos.any { it.season == d.season && it.episode == d.episode }
-                s.copy(detail = d.copy(full = full, season = if (keep) d.season else firstSeason, episode = if (keep) d.episode else (full.episodes(firstSeason).firstOrNull()?.episode ?: 1)))
+                val season = if (keep) d.season else firstSeason
+                val episode = if (keep) d.episode else (full.episodes(firstSeason).firstOrNull()?.episode ?: 1)
+                // Only this case needs a second resolve; re-running it for the
+                // common path fetched every finder's sources twice per title.
+                movedToRealEpisode = season != d.season || episode != d.episode
+                s.copy(detail = d.copy(full = full, season = season, episode = episode))
             }
-            if (title.isSeries) resolve()
+            if (movedToRealEpisode) resolve()
         }
         resolve()
     }
@@ -671,6 +677,9 @@ class NovaViewModel : ViewModel() {
         if (!pb.meta.isSeries) return null
         val ordered = pb.meta.videos.filter { it.season > 0 }.sortedWith(compareBy({ it.season }, { it.episode }))
         val i = ordered.indexOfFirst { it.season == pb.season && it.episode == pb.episode }
+        // Not in the list (partial metadata): there is no known next episode.
+        // getOrNull(i + 1) on -1 used to offer the first episode as "next".
+        if (i < 0) return null
         val next = ordered.getOrNull(i + 1) ?: return null
         return UpNext(next.season, next.episode, "S${next.season} E${next.episode}  ·  ${next.label}", next.thumbnail)
     }

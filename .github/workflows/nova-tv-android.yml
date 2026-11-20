@@ -14,6 +14,7 @@ on:
   push:
     branches:
       - main
+      - nova-tv-v2
       - arena/*
     paths:
       - 'nova-tv/android/**'

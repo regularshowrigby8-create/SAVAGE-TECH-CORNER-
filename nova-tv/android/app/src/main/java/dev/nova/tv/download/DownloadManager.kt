@@ -60,7 +60,8 @@ class DownloadManager(
     private val _jobs = MutableStateFlow<List<DownloadJob>>(emptyList())
     val jobs: StateFlow<List<DownloadJob>> = _jobs.asStateFlow()
 
-    private val tasks = HashMap<String, Job>()
+    /** Touched from the main thread and from IO; completed entries remove themselves. */
+    private val tasks = java.util.concurrent.ConcurrentHashMap<String, Job>()
 
     /** Returns the new job id, or null for a duplicate or non-HTTP url. */
     fun start(title: String, subtitle: String, url: String, headers: Map<String, String>): String? {
@@ -81,6 +82,8 @@ class DownloadManager(
     }
 
     fun pause(id: String) {
+        val job = _jobs.value.firstOrNull { it.id == id } ?: return
+        if (job.status == DownloadStatus.DONE) return
         tasks[id]?.cancel()
         update(id) { it.copy(status = DownloadStatus.PAUSED) }
     }
@@ -103,7 +106,12 @@ class DownloadManager(
 
     private fun launch(job: DownloadJob) {
         tasks[job.id]?.cancel()
-        tasks[job.id] = scope.launch(Dispatchers.IO) { download(job) }
+        val task = scope.launch(Dispatchers.IO) { download(job) }
+        tasks[job.id] = task
+        // Only drop the entry if it is still this attempt: pause + resume can
+        // start the next attempt before the cancelled one finishes unwinding,
+        // and its exit used to disconnect the live job from [pause].
+        task.invokeOnCompletion { if (tasks[job.id] === task) tasks.remove(job.id) }
     }
 
     private suspend fun download(job: DownloadJob) {
@@ -127,8 +135,6 @@ class DownloadManager(
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             update(job.id) { it.copy(status = DownloadStatus.FAILED, error = e.message?.take(140) ?: "Download failed") }
-        } finally {
-            tasks.remove(job.id)
         }
     }
 
@@ -158,12 +164,20 @@ class DownloadManager(
                     val request = request(job).header("Range", "bytes=$start-$end").build()
                     client.newCall(request).execute().use { response ->
                         if (!response.isSuccessful) throw IOException("HTTP ${response.code}")
+                        // The probe saw 206 for bytes=0-0, but a host may answer a
+                        // later range with the whole file. Writing that body here
+                        // would corrupt the download and still mark it DONE.
+                        if (response.code != 206) throw IOException("Range ignored (HTTP ${response.code})")
                         val body = response.body ?: throw IOException("Empty body")
+                        val expected = end - start + 1
                         body.byteStream().use { input ->
                             val buffer = ByteArray(BUFFER_BYTES)
                             var offset = start
-                            while (true) {
-                                val read = input.read(buffer)
+                            while (offset <= end) {
+                                // Never write past this slice, however much the
+                                // server sends.
+                                val room = (end - offset + 1).coerceAtMost(buffer.size.toLong()).toInt()
+                                val read = input.read(buffer, 0, room)
                                 if (read < 0) break
                                 synchronized(file) {
                                     file.seek(offset)
@@ -172,6 +186,11 @@ class DownloadManager(
                                 offset += read
                                 written.addAndGet(i, read.toLong())
                                 publishProgress(job, written, lastPublish)
+                            }
+                            // A body that ends early leaves a zero-filled tail. Fail
+                            // so the job is retried instead of renamed into place.
+                            if (offset != start + expected) {
+                                throw IOException("Short range response (${offset - start}/$expected bytes)")
                             }
                         }
                     }
