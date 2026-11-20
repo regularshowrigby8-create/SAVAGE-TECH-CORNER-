@@ -13,6 +13,7 @@ import androidx.media3.common.C
 import androidx.media3.common.text.Cue
 import androidx.media3.common.Player
 import androidx.media3.common.text.CueGroup
+import androidx.media3.common.util.UnstableApi
 
 /**
  * Subtitle delay, in milliseconds. Positive = captions appear later.
@@ -22,6 +23,7 @@ import androidx.media3.common.text.CueGroup
  * long a caption was on screen. Storing those intervals lets the delay be
  * changed while playing, in both directions, without touching the media item.
  */
+@androidx.annotation.OptIn(UnstableApi::class)
 class SubtitleOffsetController(private val player: Player) {
 
     private data class Span(val fromMs: Long, val toMs: Long, val cues: List<Cue>)
