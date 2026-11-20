@@ -1,0 +1,123 @@
+const fs = require('fs');
+const vm = require('vm');
+const assert = require('assert');
+const path = require('path');
+const root = path.resolve(__dirname, '..');
+const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const script = html.slice(html.indexOf('<script>') + 8, html.lastIndexOf('</script>'));
+function between(start, end) {
+  const a = script.indexOf(start); assert(a >= 0, 'missing ' + start);
+  const b = script.indexOf(end, a + start.length); assert(b > a, 'missing ' + end);
+  return script.slice(a, b);
+}
+const ctx = {
+  console, URL, URLSearchParams, Set, Map, Date, Math, Number, String, Array, Object, RegExp,
+  settings: { stream: { maxFileSizeGb: 5, quality: 'auto', dataSaver: 'off' }, health: {}, disabledSources: [] },
+  navigator: {},
+  saveSettings() {},
+};
+ctx.globalThis = ctx; vm.createContext(ctx);
+vm.runInContext([
+  between('const LEGACY_EMBED_HOSTS', 'function allSources'),
+  between('const FEED_MANIFEST_TIMEOUT', 'async function fetchFeedManifest'),
+  between('async function collectFeedStreams', 'async function customTemplateStreams'),
+  between('function feedSources()', 'function hasInstalledFeeds'),
+  between('function feedStatusLine(agg)', 'async function resolveAddonURL'),
+  between('function feedCatalogueId(identity)', 'function directLinkFeed'),
+  between('function feedEntryToVariant(stream,feed)', 'async function fetchFeedManifest'),
+  'function parseStreamMeta(s){ const text=[s.name||"",s.title||"",s.description||""].join("\\n"); const sizeM=text.match(/(\\d+(?:[.,]\\d+)?)\\s*(TB|GB|GiB|MB|MiB)/i); let bytes=null; if(sizeM){ const v=parseFloat(sizeM[1].replace(",",".")); const u=sizeM[2].toLowerCase(); bytes=Math.round(v*(u.startsWith("t")?1e12:u.startsWith("g")?1e9:1e6)); } return {bytes,label:(s.name||s.title||"Stream").split("\\n")[0].slice(0,90),sub:(s.title||s.description||"").split("\\n").slice(0,2).join(" · ").slice(0,140)}; }',
+  'function normalizeVariant(v,fallback){ if(!v) return null; const url=typeof v==="string"?v:(v.url||v.playUrl||""); if(!/^https?:\\/\\//i.test(url)) return null; const base=typeof v==="object"?Object.assign({},v):{}; base.url=url; base.label=base.label||base.name||fallback||"Direct stream"; base.addonName=base.addonName||base.serverName||fallback||"Direct server"; return base; }',
+  'function subtitlesFromStream(){ return []; }',
+  'function sortVariantsForQuality(v){ return (v||[]).slice(); }',
+  between('const CAP_GB_HARD', 'async function probeFileSize'),
+  between('function applyTemplate', 'const imdbCache'),
+  between('function prettyHostName', 'function validateTemplate'),
+  'function validateTemplate(t){ if(!t) return true; try{ const u=new URL(t.replace(/\\{[^}]+\\}/g,"1")); return u.protocol==="https:"||u.protocol==="http:"; }catch{ return false; } }',
+  between('function cleanHttpUrl(raw)', 'function providerStableKey'),
+  between('function classifySeedUrl(raw)', 'function providerCandidateFromSeed'),
+  between('function parseFeedData(data)', 'function sourceSignature'),
+  between('function installedFeedOrigins()', 'window.addEventListener("message"'),
+].join('\n'), ctx);
+
+let n = 0;
+const ok = (c, label) => { assert(c, label); n++; console.log('PASS', label); };
+const eq = (a, b, label) => { assert.deepStrictEqual(a, b, label); n++; console.log('PASS', label); };
+
+ok(!html.includes('vidstuck.cc/embed/') && !html.includes('zxcstream.cc/player/'), 'no built-in embed player URL is constructed anywhere');
+ok(ctx.isLegacyEmbedHost('https://vidstuck.cc/embed/movie/1') && ctx.isLegacyEmbedHost('embedwave.cc'), 'legacy embed hosts are recognised so they can be refused');
+ok(!ctx.isLegacyEmbedHost('https://feed.example/manifest.json'), 'a real feed host is not mistaken for a legacy embed host');
+eq(ctx.normalizeFeedBase('stremio://addon.example/config'), 'https://addon.example', 'a stremio:// install link normalises to a feed base');
+eq(ctx.normalizeFeedBase('https://addon.example/manifest.json'), 'https://addon.example', 'a manifest URL normalises to the feed base');
+eq(ctx.feedManifestUrl('https://addon.example/'), 'https://addon.example/manifest.json', 'a feed always resolves to its manifest.json');
+const movieCat = ctx.feedCatalogueId({type:'movie',imdbId:'tt1375666'});
+ok(movieCat.type==='movie' && movieCat.id==='tt1375666', 'a movie is queried by its real IMDb id');
+const epCat = ctx.feedCatalogueId({type:'tv',imdbId:'tt0944947',season:2,episode:3});
+ok(epCat.type==='series' && epCat.id==='tt0944947:2:3', 'an episode is queried by the Stremio series id');
+eq(ctx.feedCatalogueId({type:'tv',season:1,episode:1}).id, '', 'without an id nothing is invented');
+/* The stream endpoint is a path, and real addons index by a literal colon id.
+   Encoding it as %3A makes every mainstream addon 404. */
+ok(html.includes('replace(/%3A/gi,":")'), 'series ids keep their literal colons in the stream URL');
+const feed={id:'addon:https://addon.example',name:'Test feed',base:'https://addon.example',enabled:true};
+eq(ctx.feedEntryToVariant({url:'https://cdn.test/a.m3u8',behaviorHints:{notWebReady:true}},feed).unsupported, 'notWebReady', 'a stream the provider marks not-web-ready is dropped, not framed');
+eq(ctx.feedEntryToVariant({infoHash:'abc123'},feed).unsupported, 'torrent', 'a torrent-only stream is counted, never played');
+eq(ctx.feedEntryToVariant({externalUrl:'https://elsewhere.test/watch'},feed).unsupported, 'external', 'an external page stream is counted, never framed');
+eq(ctx.feedEntryToVariant({url:'https://cdn.test/a.mp4'},feed).variant.direct, true, 'a real file URL becomes a direct variant for our own engine');
+eq(ctx.capGb(), 5, '5 GB hard cap retained');
+ok(!ctx.decideSizeCap(5_000_000_001, ctx.capBytes()).allowed, 'file above cap rejected');
+ok(ctx.decideSizeCap(4_999_999_999, ctx.capBytes()).allowed, 'file below cap allowed');
+eq(ctx.applyTemplate('https://x.test/{type}/{tmdb}/{season}/{episode}?imdb={imdb}', {type:'tv',id:1399,season:2,episode:3,imdb:'tt0944947'}), 'https://x.test/tv/1399/2/3?imdb=tt0944947', 'URL templates still resolve canonical IDs');
+let parsed = ctx.parsePastedLink('https://example.test/watch/tt1375666/1/2');
+ok(parsed && parsed.tvTpl.includes('{imdb}/{season}/{episode}'), 'pasted IMDb episode link becomes template');
+parsed = ctx.parsePastedLink('https://example.test/home');
+ok(parsed && parsed.site && !parsed.movieTpl, 'ordinary homepage remains lookup-only website');
+eq(ctx.parseFeedData([{ name:'Template', movie:'https://x.test/movie/{tmdb}' }]).length, 1, 'legacy feed template still accepted');
+eq(ctx.parseFeedData([{ url:'https://github.com/example/project' }]).length, 0, 'GitHub feed entry is not misclassified as template');
+eq(ctx.parseFeedData([{ url:'https://addon.example/manifest.json' }]).length, 0, 'manifest feed entry is not misclassified as template');
+ok(!html.includes('PLAYER_EVENT') && !html.includes('SOURCE_HOSTS'), 'no telemetry bridge into another player remains');
+eq([...ctx.installedFeedOrigins()], [], 'with no feed installed no cross-origin message is trusted');
+ctx.settings.addons=[{id:'a1',name:'Feed',base:'https://addon.example/x'}];
+ok(ctx.installedFeedOrigins().has('https://addon.example'), 'only an installed feed origin is trusted');
+
+const srv = require(path.join(root, 'api/extract.js'))._parse;
+const results = srv.parseResultLinks('<a href="/anime/one-piece/ep-1" title="One Piece">One Piece</a><a href="/anime/naruto">Naruto</a>', 'https://site.test/search?keyword=One+Piece');
+ok(results.some(r => r.url.endsWith('/ep-1') && r.title === 'One Piece'), 'dynamic result parser retains title links');
+ok(srv.searchTemplatesFromHtml('<form action="/search"><input name="keyword"></form>', 'https://site.test/').length >= 1, 'website search form discovery retained');
+eq(srv.buildSearchUrl('https://site.test/search/{slug}', 'One Piece'), 'https://site.test/search/one-piece', 'slug search URL retained');
+ok(srv.adjustEpisodeInUrl('https://site.test/anime/one-piece/ep-1180',1,2).endsWith('/ep-2'), 'episode URL adjustment retained');
+ok(srv.findEpisodeUrl('<a href="/anime/one-piece/ep-2">2</a>', 'https://site.test/anime/one-piece/ep-1', 1, 2).endsWith('/ep-2'), 'child episode discovery retained');
+const watch = srv.parseWatch('<title>One Piece Episode 1</title><iframe src="https://player.test/embed/1"></iframe><source src="https://cdn.test/video.mp4">', 'https://site.test/watch');
+ok(watch.embed.includes('player.test') && watch.direct.includes('https://cdn.test/video.mp4'), 'watch parser retains iframe and direct media');
+
+const statics = [
+  [html.includes('"/api/extract?mode=json&url="+encodeURIComponent(url)'), 'Cinemeta/deployment JSON relay path retained'],
+  [html.includes('function feedStreamsForTitle('), 'installed feeds are queried for a title through one contract'],
+  [html.includes('function zpEngineMount(') && html.includes('vendor/hls.min.js'), 'ZeroPlay owns playback through its own HLS/DASH engine'],
+  [!html.includes('faststream.online'), 'the hosted player was removed, not merely disabled'],
+  [html.includes('delete settings.siteCatalogues'), 'legacy imported website catalogues still purged'],
+  [html.includes('no titles or covers imported'), 'lookup-only website rule visible'],
+  [html.includes('identifyAndRegisterEndpoint'), 'crawler server identification present'],
+  [html.includes('searchAddonCatalog'), 'searchable addon catalogues present'],
+];
+for (const [cond,label] of statics) ok(cond,label);
+console.log(`\n${n} regression checks passed`);
+
+/* ---- resolve mode: a provider page becomes a stream, not an iframe ---- */
+const extract = require(path.join(root, 'api', 'extract.js'));
+(async () => {
+  /* The resolver must find a direct file behind a page and, when the page only
+     exposes a player frame, follow that one hop instead of returning the page. */
+  const watch = extract._parse.parseWatch(
+    '<html><body><iframe src="https://player.host/embed/77"></iframe>' +
+    '<video><source src="https://cdn.host/movie/master.m3u8"></video></body></html>',
+    'https://site.host/watch/1');
+  ok(watch.direct.includes('https://cdn.host/movie/master.m3u8'), 'a page that exposes a direct stream is extracted as a stream');
+  ok(watch.embeds.includes('https://player.host/embed/77'), 'a player frame is recognised as an embed, not as playback');
+  const onlyFrame = extract._parse.parseWatch(
+    '<html><body><iframe src="https://player.host/embed/88"></iframe></body></html>',
+    'https://site.host/watch/2');
+  eq(onlyFrame.direct.length, 0, 'a page with no direct file yields no stream to play');
+  ok(onlyFrame.embeds.length > 0, 'so the caller can still follow one hop to the player frame');
+  ok(extract._parse.parseWatch('<html><iframe src="https://www.facebook.com/plugins/like.php"></iframe></html>', 'https://s.h/1').embeds.length === 0,
+    'social and tracker frames are never treated as a player');
+  console.log('\nresolve-mode checks passed');
+})().catch(e => { console.error(e); process.exit(1); });

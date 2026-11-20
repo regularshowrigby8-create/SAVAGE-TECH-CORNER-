@@ -1,0 +1,26 @@
+{
+  "timings": {
+    "IDLE_MS": 2000,
+    "IDLE_TOUCH_MS": 3000,
+    "TAP_THRESHOLD_MS": 250,
+    "TOUCH_SETTLE_MS": 500,
+    "CAPTURE_RELEASE_MS": 100,
+    "DOUBLE_TAP_MS": 280,
+    "LONG_PRESS_MS": 1500,
+    "SEEK_SETTLE_MS": 400
+  },
+  "skips": {
+    "tap": 10,
+    "key": 10,
+    "hold": 30
+  },
+  "reasons": [
+    "lock",
+    "paused",
+    "interacting",
+    "menu",
+    "error",
+    "ended",
+    "casting"
+  ]
+}

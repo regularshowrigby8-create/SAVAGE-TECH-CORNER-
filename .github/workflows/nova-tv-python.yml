@@ -1,0 +1,74 @@
+# Moved from nova-tv/.github/workflows/ci.yml, where it never ran.
+#
+# GitHub Actions only reads .github/workflows at the repository ROOT. A workflow
+# nested under a subproject is not registered at all -- this file was absent from
+# the repo's /actions/workflows list, so the unit tests, the 6-hourly collection
+# pass and the secrets scan it defines had never executed once.
+#
+# Only the working directories change on the way here: the Python project lives
+# at nova-tv/python, not at the root.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Continuous collection: the self-updating part, running on GitHub's clock.
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Unit tests
+        working-directory: nova-tv/python
+        run: python -m unittest discover -s tests -t . -v
+      - name: Every script executes
+        working-directory: nova-tv/python
+        run: |
+          ok=0; bad=0
+          for f in scripts/*.py; do
+            case "$f" in
+              *github_watch*) continue ;;   # loops by design
+            esac
+            if timeout 120 python "$f" --json 2>&1 | grep -q '"ok": true'; then
+              ok=$((ok+1))
+            else
+              bad=$((bad+1)); echo "::warning file=$f::script did not produce a result"
+            fi
+          done
+          echo "scripts ok=$ok failed=$bad"
+      - name: No committed secrets
+        working-directory: nova-tv/python
+        run: python scripts/qa_secrets.py --json
+
+  collect:
+    name: Collect
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: One collection pass
+        working-directory: nova-tv/python
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python scripts/github_collect.py --json --budget 3 || true
+          python scripts/kb_stats.py
+      - uses: actions/upload-artifact@v7
+        with:
+          name: knowledge
+          path: nova-tv/knowledge.json
+          if-no-files-found: warn

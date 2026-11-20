@@ -14,3 +14,7 @@ build/
 .env.*.local
 node_modules/
 dist/
+nova-tv/knowledge.json
+
+# Signing material is never committed.
+nova-tv/android/keystore/

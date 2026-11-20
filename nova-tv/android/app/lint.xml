@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Lint configuration.
+
+    This file is not a place to silence findings. It previously disabled
+    NullSafeMutableLiveData, RememberInComposition and FrequentlyChangingValue
+    because their detectors (shipped in lifecycle / compose-runtime 1.10 lint
+    jars) crashed with IncompatibleClassChangeError on AGP 8.7.3's older Kotlin
+    Analysis API. AGP is now 8.13.0, whose lint matches those jars, so every
+    detector runs again. Add an entry here only for a proven detector crash,
+    with the rationale.
+-->
+<lint>
+</lint>
