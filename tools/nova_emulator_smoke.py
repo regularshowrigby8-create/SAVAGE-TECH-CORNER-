@@ -67,15 +67,28 @@ def run_case(flavor: str, package: str, activity: str, apk: Path, seconds: int, 
         adb("logcat", "-b", "crash", "-c")
         launch = adb("shell", "am", "start", "-W", "-n", f"{package}/{activity}").stdout
         (out / f"{flavor}-launch.txt").write_text(launch)
-        time.sleep(seconds)
-        record["observed_seconds"] = seconds
+        # Wait for real evidence that the finder started, then observe for the
+        # full requested interval *after* that marker, not merely after launch.
+        start_log = ""
+        for _ in range(30):
+            start_log = adb("logcat", "-d", "-v", "threadtime").stdout
+            if MARKER in start_log:
+                break
+            time.sleep(3)
+        started = MARKER in start_log
+        (out / f"{flavor}-start-logcat.txt").write_text(start_log)
+        if started:
+            time.sleep(seconds)
+            record["observed_seconds"] = seconds
         pid = adb("shell", "pidof", package, required=False).stdout.strip()
         log = adb("logcat", "-d", "-v", "threadtime").stdout
         crashes = adb("logcat", "-b", "crash", "-d", "-v", "threadtime").stdout
         (out / f"{flavor}-logcat.txt").write_text(log)
         (out / f"{flavor}-crashes.txt").write_text(crashes)
-        errors = assess_observation(package, launch, pid, log, crashes)
-        record.update({"pid": pid, "finder_marker": MARKER in log, "errors": errors,
+        errors = assess_observation(package, launch, pid, start_log + "\n" + log, crashes)
+        if not started:
+            errors.append("finder marker did not arrive in time to observe it for the required interval")
+        record.update({"pid": pid, "finder_marker": started, "errors": errors,
                        "status": "passed" if not errors else "failed"})
     except (OSError, RuntimeError, subprocess.TimeoutExpired) as error:
         record["errors"] = [str(error)]

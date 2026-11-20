@@ -57,6 +57,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 # crawler rather than keeping a second copy of them.
 from server_crawler import (  # noqa: E402
     GitHubSearchLimiter,
+    PublicRedirectHandler,
     MAX_BYTES,
     Stats,
     USER_AGENT,
@@ -365,6 +366,10 @@ class SiteCrawler:
         self.deadline: Optional[float] = None
         self.github_token = os.environ.get("GITHUB_TOKEN", "")
         self.github_search = GitHubSearchLimiter(bool(self.github_token))
+        import ssl
+        import urllib.request
+        self._opener = urllib.request.build_opener(
+            PublicRedirectHandler(), urllib.request.HTTPSHandler(context=ssl.create_default_context()))
         # Discovery jobs submit profile jobs and wait for them. Separate pools
         # prevent every worker becoming a waiting parent (deadlock at low counts).
         self.source_exec = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="site-source")
@@ -388,7 +393,6 @@ class SiteCrawler:
         if self.stop or self.pool.full or self.time_is_up():
             return None
         import http.client
-        import ssl
         import urllib.error
         import urllib.request
         parsed = urlparse(url)
@@ -410,8 +414,7 @@ class SiteCrawler:
             if host == "api.github.com" and self.github_token:
                 request.add_unredirected_header("Authorization", f"Bearer {self.github_token}")
             try:
-                context = ssl.create_default_context()
-                with urllib.request.urlopen(request, timeout=TIMEOUT, context=context) as response:
+                with self._opener.open(request, timeout=TIMEOUT) as response:
                     body = response.read(self.max_bytes + 1)
                     if len(body) > self.max_bytes:
                         self.stats.bump("refused")
@@ -419,7 +422,9 @@ class SiteCrawler:
                     charset = response.headers.get_content_charset() or "utf-8"
                     return body.decode(charset, "replace")
             except urllib.error.HTTPError as error:
-                if error.code in (403, 429):
+                if error.reason == "unsafe redirect":
+                    self.stats.bump("refused")
+                elif error.code in (403, 429):
                     self.stats.bump("rate_limited")
                 else:
                     self.stats.bump("failures")
@@ -771,8 +776,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print("target reached")
         return 0
     print(f"stopped below target: {pool.size} of {args.target} verified sites.")
-    print("Every entry here answered a real search. A number below the target is the honest count of")
-    print("sites the public lists name that still work, not a failure of the crawl.")
+    print("The count covers this crawl's configured sources and search checks; it does not establish")
+    print("internet-wide exhaustion or guarantee that a site will produce playable media.")
     return 3
 
 

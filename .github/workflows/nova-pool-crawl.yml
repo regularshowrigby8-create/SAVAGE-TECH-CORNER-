@@ -14,9 +14,9 @@ name: Nova pool crawl
 # that cannot play.
 #
 # A crawl that finds fewer than the target is a SUCCESS with an honest number,
-# not a failure and not a claim of 3000: every site in site_pool.json answered a
-# real search, so the count is the count. The job only fails if a crawler crashes
-# or writes an unusable file.
+# not a failure and not a claim of 3000: the number counts stored entries that
+# passed the crawler's search heuristic, not verified playable or licensed media.
+# A crawler crash, invalid output, or failed publication fails the job.
 #
 # One job, per the repository's own GATE 2 rule.
 

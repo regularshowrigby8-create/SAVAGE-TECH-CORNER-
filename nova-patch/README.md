@@ -32,6 +32,8 @@ of the recorded baseline or resolve the conflicts deliberately.
   same-host content links, in addition to the score threshold. This is a **search
   check**, not proof that playback works, that a site remains online, or that its
   content is licensed. The resolver only emits direct media, not embed pages.
+  URL checks reject obvious private literal addresses, including redirects, but
+  do not independently validate every hostname's DNS resolution.
 - Pool files are persisted through an atomic replacement attempt. A failed write
   keeps the previous file and reports an error rather than overwriting it.
 

@@ -241,6 +241,17 @@ class ThreadingAndSecurity(unittest.TestCase):
         limiter.next_at = time.monotonic() + 10
         self.assertFalse(limiter.wait(time.time() + 0.01))
 
+    def test_redirect_to_private_or_http_address_is_blocked(self):
+        import urllib.error
+        import urllib.request
+        handler = sc.PublicRedirectHandler()
+        request = urllib.request.Request("https://public.example/")
+        for target in ("https://127.0.0.1/admin", "http://public.example/", "https://localhost/"):
+            with self.assertRaises(urllib.error.HTTPError):
+                handler.redirect_request(request, None, 302, "Found", {}, target)
+        redirected = handler.redirect_request(request, None, 302, "Found", {}, "https://other.example/")
+        self.assertEqual("https://other.example/", redirected.full_url)
+
     def test_token_only_sent_to_github_api_and_not_forwarded(self):
         from urllib.request import HTTPRedirectHandler
         calls = []
@@ -258,7 +269,7 @@ class ThreadingAndSecurity(unittest.TestCase):
                 response = Response()
                 response.headers = Message()
                 return response
-            with patch("urllib.request.urlopen", side_effect=fake_open):
+            with patch.object(fetcher._opener, "open", side_effect=fake_open):
                 self.assertEqual("{}", fetcher.get("https://api.github.com/repos/example"))
                 self.assertEqual("{}", fetcher.get("https://evil.example/path?api.github.com"))
             self.assertEqual("Bearer example-secret", calls[0].get_header("Authorization"))

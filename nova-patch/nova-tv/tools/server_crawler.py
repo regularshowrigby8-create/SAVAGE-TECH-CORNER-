@@ -4,30 +4,28 @@
 This is the standalone crawler. It does the job the on-device harvester does,
 but with threads instead of coroutines and without a phone's battery budget, and
 it is meant for pre-seeding: the file it writes is the exact JSON the app's
-``ServerPool`` reads (``server_pool.json`` in the app's files directory), so a
-device can start with a full pool instead of filling it while the viewer waits.
+``ServerPool`` reads, so a device can start with the entries actually collected
+rather than filling an entirely empty pool while the viewer waits.
 
 Design, in the order it matters:
 
-* **Continuous, like ZeroPlay's searcher.** It keeps crawling until the pool
-  holds ``--target`` servers (3000 by default) or every source reports it has no
-  unseen work. It never stops because one round found nothing: only exhaustion or
-  the target ends it. Ctrl-C stops it at any time and still writes what it has.
+* **Frontier-based.** It keeps crawling until the pool reaches ``--target``
+  (3000 by default), the configured work queue drains, the time budget expires,
+  or the user stops it. A drained queue can include failed requests; it is not
+  an assertion that the internet has no more servers. Ctrl-C writes what it has.
 * **Multithreaded.** ``--workers`` requests in flight, at most ``--per-host``
   against any one host, so one slow directory cannot serialise the crawl.
 * **Many sources, each counted.** Directories, collection APIs, the catalogue
   graph, GitHub search across many queries and pages, GitHub Pages, homepages and
   community README lists. Every source reports what it found and what it asked
   for, so "0 new servers" is always attributable.
-* **Identical safety rules to the app.** https only, no loopback/private/CGNAT
-  addresses, no credentials in URLs, no torrent indexes, response size caps, and
-  a manifest must actually declare a ``stream`` resource. Anything that fails
-  these is counted as a refusal, not added.
-* **Honest limits.** GitHub's unauthenticated search allows 10 requests a minute;
-  ``--github-token`` raises that. The public directories list far fewer than 3000
-  unique servers, so reaching 3000 depends on GitHub Pages, homepages and the
-  catalogue graph -- and if the crawler cannot reach 3000 it says so, with the
-  exact per-source yield, instead of reporting success.
+* **Input checks.** Candidate URLs must use https, omit credentials and avoid
+  obvious loopback/private literal addresses at each redirect; responses have a
+  size cap and a manifest must declare a ``stream`` resource. These syntax
+  checks do not prove where a hostname resolves.
+* **Honest limits.** GitHub's search API is rate-limited; an optional
+  ``GITHUB_TOKEN`` increases its quota. Results and per-source evidence describe
+  only the configured sources and budget, not all servers on the internet.
 
 Usage::
 
@@ -37,8 +35,8 @@ Usage::
     python3 tools/server_crawler.py --max-seconds 600      # time-boxed crawl
     GITHUB_TOKEN=... python3 tools/server_crawler.py       # higher GitHub quota
 
-Exit codes: 0 when the target was reached, 3 when the crawl finished exhausted
-below target, 2 on a usage error.
+Exit codes: 0 when the target was reached, 3 when the crawl stopped below
+target, 2 on a usage error; an unhandled error is nonzero.
 """
 from __future__ import annotations
 
@@ -220,6 +218,15 @@ class Stats:
             }
 
 
+class PublicRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Reapply URL syntax checks on every redirect, not just the first URL."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if not is_public_https(newurl):
+            raise urllib.error.HTTPError(newurl, 403, "unsafe redirect", headers, fp)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
 class GitHubSearchLimiter:
     """Space search requests under GitHub's per-minute API allowance."""
 
@@ -253,6 +260,7 @@ class Fetcher:
         self._sources = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="crawl-source")
         self._pool = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="crawl-http")
         self._ctx = ssl.create_default_context()
+        self._opener = urllib.request.build_opener(PublicRedirectHandler(), urllib.request.HTTPSHandler(context=self._ctx))
         self.github_search = GitHubSearchLimiter(bool(github_token))
         self.deadline: Optional[float] = None
 
@@ -286,7 +294,7 @@ class Fetcher:
                     # Never attach a token to a spoofed hostname, a URL merely
                     # containing api.github.com, or a redirect to another host.
                     request.add_unredirected_header("Authorization", f"Bearer {self.github_token}")
-                with urllib.request.urlopen(request, timeout=TIMEOUT, context=self._ctx) as response:
+                with self._opener.open(request, timeout=TIMEOUT) as response:
                     length = response.headers.get("Content-Length")
                     if length and int(length) > MAX_BYTES:
                         self.stats.bump("refused")
@@ -298,7 +306,9 @@ class Fetcher:
                     charset = response.headers.get_content_charset() or "utf-8"
                     return body.decode(charset, "replace")
             except urllib.error.HTTPError as error:
-                if error.code in (403, 429):
+                if error.reason == "unsafe redirect":
+                    self.stats.bump("refused")
+                elif error.code in (403, 429):
                     self.stats.bump("rate_limited")
                     time.sleep(2 + random.random() * 3)
                 else:
@@ -796,7 +806,7 @@ def crawl(crawler: Crawler, args: argparse.Namespace) -> None:
             print("time limit reached")
             break
         if not pending and not running:
-            print("frontier empty: every source has been read")
+            print("configured work queue drained; failed requests may remain (see per-source evidence)")
             break
 
         rounds += 1
