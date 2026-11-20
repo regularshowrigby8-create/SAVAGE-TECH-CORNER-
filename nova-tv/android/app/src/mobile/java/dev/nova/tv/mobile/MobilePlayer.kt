@@ -94,7 +94,10 @@ import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
 import dev.nova.tv.player.NovaPlayer
 import dev.nova.tv.player.SkipSeconds
+import dev.nova.tv.player.SubtitleStyle
+import dev.nova.tv.player.applySubtitleStyle
 import dev.nova.tv.player.preload.PreloadMode
+import dev.nova.tv.ui.player.BufferingOverlay
 import dev.nova.tv.ui.screens.NovaViewModel
 import dev.nova.tv.ui.screens.PlayerPanel
 import dev.nova.tv.ui.screens.UpNext
@@ -121,6 +124,7 @@ fun MobilePlayerSurface(player: NovaPlayer, title: String, viewModel: NovaViewMo
     val session by player.session.collectAsStateWithLifecycle()
     val chrome by viewModel.chromeState.collectAsStateWithLifecycle()
     val ui by viewModel.state.collectAsStateWithLifecycle()
+    val buffering by player.buffering.collectAsStateWithLifecycle()
     val pip = LocalPip.current
     val panel = ui.playerPanel
     val failure = session.failure
@@ -146,6 +150,7 @@ fun MobilePlayerSurface(player: NovaPlayer, title: String, viewModel: NovaViewMo
 
     Box(Modifier.fillMaxSize().background(Color.Black)) {
         val exo = player.player
+        var playerView by remember { mutableStateOf<PlayerView?>(null) }
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
@@ -153,10 +158,13 @@ fun MobilePlayerSurface(player: NovaPlayer, title: String, viewModel: NovaViewMo
                     keepScreenOn = true
                     setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
                     this.player = exo
-                }
+                }.also { playerView = it }
             },
             modifier = Modifier.fillMaxSize()
         )
+        LaunchedEffect(playerView, ui.subtitleStyle) {
+            playerView?.applySubtitleStyle(ui.subtitleStyle)
+        }
 
         if (!pip.active) {
             GestureLayer(
@@ -172,9 +180,11 @@ fun MobilePlayerSurface(player: NovaPlayer, title: String, viewModel: NovaViewMo
             )
         }
 
-        // Buffering is shown once, in the middle, never on top of the play button.
-        if (engine.isBuffering && !showChrome && failure == null) {
-            CircularProgressIndicator(Modifier.align(Alignment.Center).size(44.dp), color = NovaPalette.textPrimary, strokeWidth = 3.dp)
+        // Buffering is shown once, in the middle, with its percentage.
+        if (!showChrome && failure == null && !pip.active) {
+            buffering?.let { status ->
+                BufferingOverlay(status, Modifier.align(Alignment.Center), ringSize = 88.dp)
+            }
         }
 
         seekFlash?.let { flash ->
@@ -259,7 +269,7 @@ fun MobilePlayerSurface(player: NovaPlayer, title: String, viewModel: NovaViewMo
         ) {
             var last by remember { mutableStateOf(PlayerPanel.SOURCES) }
             if (panel != null) last = panel
-            Panel(last, player, viewModel)
+            Panel(last, player, viewModel, ui.subtitleStyle)
         }
     }
 }
@@ -365,6 +375,7 @@ private fun Controls(player: NovaPlayer, title: String, viewModel: NovaViewModel
     val engine by player.engineState.collectAsStateWithLifecycle()
     val session by player.session.collectAsStateWithLifecycle()
     val preload by player.preloadStatus.collectAsStateWithLifecycle()
+    val buffering by player.buffering.collectAsStateWithLifecycle()
     var speed by remember { mutableIntStateOf(0) }
     val upNext = remember(title) { viewModel.nextEpisode() }
 
@@ -403,7 +414,7 @@ private fun Controls(player: NovaPlayer, title: String, viewModel: NovaViewModel
                 contentAlignment = Alignment.Center
             ) {
                 when {
-                    engine.isBuffering -> CircularProgressIndicator(Modifier.size(38.dp), color = NovaPalette.textPrimary, strokeWidth = 3.dp)
+                    engine.isBuffering -> Text("${buffering?.percent ?: 0}%", style = MType.section)
                     engine.isPlaying -> Icon(PauseIcon, contentDescription = "Pause", modifier = Modifier.size(40.dp))
                     else -> Icon(Icons.Filled.PlayArrow, contentDescription = "Play", modifier = Modifier.size(44.dp))
                 }
@@ -560,7 +571,12 @@ private fun SeekBar(
 private data class PanelOption(val label: String, val detail: String?, val selected: Boolean, val onPick: () -> Unit)
 
 @Composable
-private fun Panel(panel: PlayerPanel, player: NovaPlayer, viewModel: NovaViewModel) {
+private fun Panel(
+    panel: PlayerPanel,
+    player: NovaPlayer,
+    viewModel: NovaViewModel,
+    subtitleStyle: SubtitleStyle
+) {
     val engine by player.engineState.collectAsStateWithLifecycle()
     val session by player.session.collectAsStateWithLifecycle()
     val options: List<PanelOption> = when (panel) {
@@ -585,6 +601,20 @@ private fun Panel(panel: PlayerPanel, player: NovaPlayer, viewModel: NovaViewMod
             PanelOption("Off", null, engine.selectedSubtitleTrack == null) {
                 player.engine.selectSubtitleTrack(null)
                 viewModel.closePlayerPanel()
+            }
+        ) + listOf(
+            // Style rows stay open so the change is visible over the picture.
+            PanelOption("Caption style", subtitleStyle.tone.label, false) {
+                viewModel.setSubtitleStyle(subtitleStyle.nextTone())
+            },
+            PanelOption("Caption size", subtitleStyle.sizeLabel, false) {
+                viewModel.setSubtitleStyle(subtitleStyle.nextSize())
+            },
+            PanelOption("Caption box", subtitleStyle.backgroundLabel, false) {
+                viewModel.setSubtitleStyle(subtitleStyle.nextBackground())
+            },
+            PanelOption("Caption height", subtitleStyle.bottomLabel, false) {
+                viewModel.setSubtitleStyle(subtitleStyle.nextBottom())
             }
         ) + engine.subtitleTracks.map { track ->
             PanelOption(track.displayLabel(), null, track.id == engine.selectedSubtitleTrack?.id) {

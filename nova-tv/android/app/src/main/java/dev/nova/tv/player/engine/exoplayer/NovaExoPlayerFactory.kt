@@ -19,8 +19,10 @@ import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.SeekParameters
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
+import androidx.media3.exoplayer.upstream.BandwidthMeter
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
@@ -30,6 +32,8 @@ class NovaExoPlayerBundle internal constructor(
     val player: ExoPlayer,
     val renderers: NovaRenderersFactory,
     val dataSource: OkHttpDataSource.Factory,
+    /** Measured throughput, used by NovaPlayer's quality-downshift fallback. */
+    val bandwidthMeter: BandwidthMeter,
     private val mediaSources: DefaultMediaSourceFactory
 ) {
     /**
@@ -53,6 +57,13 @@ class NovaExoPlayerBundle internal constructor(
 object NovaExoPlayerFactory {
 
     private const val NOVA_START_BUFFER_MS = 1_200
+
+    /**
+     * ARVIO waits up to 8 s of media after a rebuffer before resuming; that is
+     * a long spinner for a viewer who just wanted to keep watching. With the
+     * preloader feeding the same cache, 2.5 s is enough to resume safely.
+     */
+    private const val NOVA_REBUFFER_BUFFER_MS = 2_500
 
     fun create(
         context: Context,
@@ -96,7 +107,7 @@ object NovaExoPlayerFactory {
                 profile.minBufferMs,
                 profile.maxBufferMs,
                 maxOf(profile.bufferForPlaybackMs, NOVA_START_BUFFER_MS),
-                profile.bufferForPlaybackAfterRebufferMs
+                minOf(profile.bufferForPlaybackAfterRebufferMs, NOVA_REBUFFER_BUFFER_MS)
             )
             .setTargetBufferBytes(profile.targetBufferBytes)
             .setPrioritizeTimeOverSizeThresholds(profile.prioritizeTimeOverSizeThresholds)
@@ -147,8 +158,14 @@ object NovaExoPlayerFactory {
             )
             .setHandleAudioBecomingNoisy(true)
             .build()
-            .apply { volume = 1.0f }
+            .apply {
+                volume = 1.0f
+                // Exact seeks decode from the previous keyframe, which is a
+                // visible pause on a remote; snapping to the nearest keyframe
+                // is what makes skipping feel instant.
+                setSeekParameters(SeekParameters.CLOSEST_SYNC)
+            }
 
-        return NovaExoPlayerBundle(player, renderers, http, mediaSourceFactory)
+        return NovaExoPlayerBundle(player, renderers, http, bandwidthMeter, mediaSourceFactory)
     }
 }

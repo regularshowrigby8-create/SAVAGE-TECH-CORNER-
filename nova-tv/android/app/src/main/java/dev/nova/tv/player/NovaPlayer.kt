@@ -92,6 +92,11 @@ class NovaPlayer(
 
     val engineState: StateFlow<PlayerEngineState> get() = engine.state
 
+    /** The percentage ring both players draw while waiting; null when playing. */
+    private val _buffering = MutableStateFlow<BufferingStatus?>(null)
+    val buffering: StateFlow<BufferingStatus?> = _buffering.asStateFlow()
+    private var bufferJob: Job? = null
+
     /** The source queue and what happened to it. */
     data class Session(
         val sources: List<Stream> = emptyList(),
@@ -118,6 +123,8 @@ class NovaPlayer(
     private var noticeJob: Job? = null
     private var stallJob: Job? = null
     private val recoveredOnce = mutableSetOf<String>()
+    /** Sources whose bitrate was already capped after a stall. */
+    private val downshifted = mutableSetOf<String>()
     private val stalls = StallTracker()
     private var lastSeekAt = 0L
 
@@ -128,17 +135,21 @@ class NovaPlayer(
                     Player.STATE_READY -> {
                         startupJob?.cancel()
                         stallJob?.cancel()
+                        endBuffering()
                         val firstStart = !_session.value.started
                         _session.update { it.copy(started = true) }
                         if (firstStart) {
                             HostHealth.noteSuccess(_session.value.current?.url)
                             prewarmNext()
-                            restartPreload()
                         }
                     }
-                    Player.STATE_BUFFERING -> if (_session.value.started) onRebuffer()
+                    Player.STATE_BUFFERING -> {
+                        beginBuffering()
+                        if (_session.value.started) onRebuffer()
+                    }
                     Player.STATE_ENDED -> {
                         stallJob?.cancel()
+                        endBuffering()
                         _session.update { it.copy(ended = true) }
                     }
                     else -> Unit
@@ -168,6 +179,8 @@ class NovaPlayer(
         }
         val start = index.coerceIn(0, playable.lastIndex)
         stalls.reset()
+        downshifted.clear()
+        clearQualityCeiling()
         _session.value = Session(sources = playable, index = start, tried = setOf(start), subtitles = subtitles)
         prepareCurrent(startPositionMs)
     }
@@ -212,17 +225,25 @@ class NovaPlayer(
 
     fun preloadMode(): PreloadMode = preloadMode
 
-    private fun restartPreload() {
+    /**
+     * Start preloading as soon as a source is prepared, not at READY: the
+     * opening fragments land on disk while ExoPlayer is still opening the
+     * container, which is the difference between an instant start and a
+     * spinner. The head window needs no duration, so nothing waits here.
+     */
+    private fun restartPreload(startPositionMs: Long = 0L) {
         preloadTicker?.cancel()
         preloader.stop()
+        preloader.playheadMs = startPositionMs
+        preloader.durationMs = 0
         val stream = _session.value.current ?: return
         val url = stream.url ?: return
         val kind = (FinderRules.classifyStream(stream) as? FinderRules.Verdict.Playable)?.kind
         when {
-            preloadMode == PreloadMode.OFF -> { preloader.start(PreloadMode.OFF, url, emptyMap(), 0); return }
-            // HLS / DASH fetch their own segments ahead; preloading is for single files.
+            preloadMode == PreloadMode.OFF -> { preloader.waiting(PreloadMode.OFF); return }
+            // HLS / DASH fetch their own segments ahead, and the cache data
+            // source still serves them; byte-range preloading is for files.
             kind != FinderRules.StreamKind.DIRECT -> { preloader.unavailable(preloadMode); return }
-            !_session.value.started -> { preloader.waiting(preloadMode); return }
         }
         preloader.start(preloadMode, url, stream.requestHeaders.safePlaybackHeaders(), 0)
         // The workers run off the main thread; ExoPlayer may only be read on it.
@@ -233,6 +254,40 @@ class NovaPlayer(
                 delay(PRELOAD_TICK_MS)
             }
         }
+    }
+
+    // -- buffering meter ------------------------------------------------------
+
+    private fun beginBuffering() {
+        if (bufferJob?.isActive == true) return
+        val startedAt = System.currentTimeMillis()
+        _buffering.value = BufferingStatus(percent = 1, label = "Starting playback")
+        bufferJob = scope.launch {
+            while (true) {
+                val ahead = (exo.bufferedPosition - exo.currentPosition).coerceAtLeast(0L)
+                val raw = BufferingMeter.percent(ahead, elapsedMs = System.currentTimeMillis() - startedAt)
+                val shown = BufferingMeter.monotonic(_buffering.value?.percent, raw)
+                val session = _session.value
+                val pre = preloader.status.value
+                _buffering.value = BufferingStatus(
+                    percent = shown,
+                    label = when {
+                        session.notice != null -> session.notice!!
+                        !session.started -> "Starting playback"
+                        pre.sequential -> "Buffering · caching file"
+                        pre.active -> "Buffering · ${pre.workers} ${if (pre.workers == 1) "connection" else "connections"}"
+                        else -> "Buffering"
+                    }
+                )
+                delay(BUFFER_TICK_MS)
+            }
+        }
+    }
+
+    private fun endBuffering() {
+        bufferJob?.cancel()
+        bufferJob = null
+        _buffering.value = null
     }
 
     /**
@@ -260,6 +315,15 @@ class NovaPlayer(
         stallJob?.cancel()
         val current = _session.value
         HostHealth.noteStall(current.current?.url)
+        // Fallback ladder, cheapest fix first: ask the same source for a lower
+        // bitrate (ExoPlayer re-selects without re-preparing), and only move to
+        // another host when even that keeps stalling.
+        if (downshiftQuality(current.current?.url)) {
+            stalls.reset()
+            _session.update { it.copy(notice = "Lowering quality to keep playing") }
+            showNoticeBriefly()
+            return
+        }
         val next = nextFailoverIndex(current.sources, current.index, current.tried)
         if (next < 0) return // nothing better to go to; keep buffering
         val resumeAt = exo.currentPosition.coerceAtLeast(0L)
@@ -275,6 +339,32 @@ class NovaPlayer(
     }
 
     /** Open connections to the next two failover sources while this one plays. */
+    /**
+     * Second anti-buffering fallback: cap the video bitrate the measured link
+     * can actually sustain. Adaptive streams switch down by themselves, but a
+     * progressive file has no switch — the track selector has to be told.
+     */
+    private fun downshiftQuality(url: String?): Boolean {
+        if (url == null || url in downshifted) return false
+        val estimate = bundle.bandwidthMeter.bitrateEstimate.takeIf { it > 0 } ?: return false
+        val cap = (estimate * BITRATE_MARGIN).toInt().coerceAtLeast(MIN_BITRATE_CAP)
+        val currentCap = exo.trackSelectionParameters.maxVideoBitrate
+        downshifted += url
+        if (currentCap <= cap) return false
+        exo.trackSelectionParameters = exo.trackSelectionParameters.buildUpon()
+            .setMaxVideoBitrate(cap)
+            .build()
+        return true
+    }
+
+    private fun clearQualityCeiling() {
+        runCatching {
+            exo.trackSelectionParameters = exo.trackSelectionParameters.buildUpon()
+                .setMaxVideoBitrate(Integer.MAX_VALUE)
+                .build()
+        }
+    }
+
     private fun prewarmNext() {
         val s = _session.value
         val upcoming = generateSequence(s.index) { i ->
@@ -332,6 +422,8 @@ class NovaPlayer(
         exo.setMediaSource(bundle.mediaSource(item, progressive = kind == FinderRules.StreamKind.DIRECT), startPositionMs)
         exo.prepare()
         exo.playWhenReady = keepPlaying
+        beginBuffering()
+        restartPreload(startPositionMs)
         armStartupTimeout()
     }
 
@@ -353,6 +445,7 @@ class NovaPlayer(
     private fun fail(problem: PlaybackFailure) {
         startupJob?.cancel()
         stallJob?.cancel()
+        endBuffering()
         val current = _session.value
         HostHealth.noteFailure(current.current?.url)
         val resumeAt = if (current.started) exo.currentPosition.coerceAtLeast(0L) else 0L
@@ -457,6 +550,7 @@ class NovaPlayer(
         startupJob?.cancel()
         stallJob?.cancel()
         noticeJob?.cancel()
+        endBuffering()
         engine.release()
         exo.release()
         scope.cancel()
@@ -472,6 +566,9 @@ class NovaPlayer(
         private const val SEEK_GRACE_MS = 4_000L
         private const val NOTICE_MS = 4_000L
         private const val PRELOAD_TICK_MS = 500L
+        private const val BUFFER_TICK_MS = 150L
+        private const val BITRATE_MARGIN = 0.7
+        private const val MIN_BITRATE_CAP = 600_000
 
         internal fun classifyError(code: Int, message: String?): PlaybackFailure = when (code) {
             PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS ->

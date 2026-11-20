@@ -24,6 +24,7 @@ import dev.nova.tv.finder.website.SavedWebsite
 import dev.nova.tv.player.ChromeController
 import dev.nova.tv.player.HoldReason
 import dev.nova.tv.player.PlayerUiState
+import dev.nova.tv.player.SubtitleStyle
 import dev.nova.tv.ui.nav.BackAction
 import dev.nova.tv.ui.nav.NavSnapshot
 import dev.nova.tv.ui.nav.resolveBack
@@ -147,9 +148,11 @@ data class NovaState(
     val websiteDraft: String = "",
     val reduceMotion: Boolean = false,
     val autoplayNext: Boolean = true,
-    val preload: PreloadMode = PreloadMode.OFF,
+    val preload: PreloadMode = PreloadMode.ON,
     val dns: DnsProvider = DnsProvider.AUTO,
     val preferEnglishAudio: Boolean = true,
+    /** Caption size, box and tone; applied live by both player surfaces. */
+    val subtitleStyle: SubtitleStyle = SubtitleStyle(),
     /** Standard play target; 720p unless changed in Settings. */
     val preferredQuality: String = "720p",
     /** Offline downloads, newest last. */
@@ -198,6 +201,7 @@ class NovaViewModel : ViewModel() {
             preload = saved.preload,
             dns = saved.dns,
             preferEnglishAudio = saved.preferEnglishAudio,
+            subtitleStyle = saved.subtitleStyle,
             preferredQuality = saved.preferredQuality,
             pool = engine.pool?.state?.value ?: PoolState(),
             workingServers = engine.pool?.working()?.map { it.name.ifBlank { it.baseUrl } }.orEmpty(),
@@ -876,6 +880,12 @@ class NovaViewModel : ViewModel() {
         val next = _state.value.preload.next()
         setPreload(next)
         toast(next.label)
+    }
+
+    /** The Subtitles panel's style rows land here, from either surface. */
+    fun setSubtitleStyle(style: SubtitleStyle) {
+        settings.setSubtitleStyle(style)
+        _state.update { it.copy(subtitleStyle = style) }
     }
 
     fun cycleDns() {

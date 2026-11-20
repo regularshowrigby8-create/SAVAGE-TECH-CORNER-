@@ -3,6 +3,8 @@ package dev.nova.tv.data.repo
 import android.content.SharedPreferences
 import dev.nova.tv.data.remote.DnsProvider
 import dev.nova.tv.finder.FinderKind
+import dev.nova.tv.player.CaptionTone
+import dev.nova.tv.player.SubtitleStyle
 import dev.nova.tv.player.preload.PreloadMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,16 +19,23 @@ class SettingsStore(private val prefs: SharedPreferences) : CatalogRepository.Ad
         /** Standard play starts at 720p: less buffering than 1080p or 4K. */
         val preferredQuality: String = "720p",
         val subtitleSize: Int = 100,
+        /** Caption box opacity and lift off the bottom edge, see [SubtitleStyle]. */
+        val subtitleBackground: Int = 55,
+        val subtitleBottom: Int = 8,
+        val subtitleTone: String = CaptionTone.CINEMA.name,
         val reduceMotion: Boolean = false,
         val volume: Float = 1f,
         val playbackRate: Float = 1f,
         val finders: Set<FinderKind> = FinderKind.entries.toSet(),
-        /** FastStream-style pre-download; switched from the player. */
-        val preload: PreloadMode = PreloadMode.OFF,
+        /** FastStream-style pre-download; on by default, switched from the player. */
+        val preload: PreloadMode = PreloadMode.ON,
         val dns: DnsProvider = DnsProvider.AUTO,
         /** Dual Audio picks: prefer English audio and dual/multi audio files. */
         val preferEnglishAudio: Boolean = true
-    )
+    ) {
+        val subtitleStyle: SubtitleStyle
+            get() = SubtitleStyle.from(subtitleSize, subtitleBackground, subtitleBottom, subtitleTone)
+    }
 
     private val _settings = MutableStateFlow(load())
     val settings: StateFlow<Settings> = _settings.asStateFlow()
@@ -39,11 +48,14 @@ class SettingsStore(private val prefs: SharedPreferences) : CatalogRepository.Ad
         autoplayNext = prefs.getBoolean(KEY_AUTOPLAY, true),
         preferredQuality = prefs.getString(KEY_QUALITY, "720p") ?: "720p",
         subtitleSize = prefs.getInt(KEY_SUBTITLE, 100),
+        subtitleBackground = prefs.getInt(KEY_SUBTITLE_BG, 55),
+        subtitleBottom = prefs.getInt(KEY_SUBTITLE_BOTTOM, 8),
+        subtitleTone = prefs.getString(KEY_SUBTITLE_TONE, CaptionTone.CINEMA.name) ?: CaptionTone.CINEMA.name,
         reduceMotion = prefs.getBoolean(KEY_MOTION, false),
         volume = prefs.getFloat(KEY_VOLUME, 1f),
         playbackRate = prefs.getFloat(KEY_RATE, 1f),
         finders = FinderKind.entries.filter { prefs.getBoolean(KEY_FINDER + it.name, true) }.toSet(),
-        preload = PreloadMode.entries.firstOrNull { it.name == prefs.getString(KEY_PRELOAD, null) } ?: PreloadMode.OFF,
+        preload = PreloadMode.entries.firstOrNull { it.name == prefs.getString(KEY_PRELOAD, null) } ?: PreloadMode.ON,
         dns = DnsProvider.entries.firstOrNull { it.name == prefs.getString(KEY_DNS, null) } ?: DnsProvider.AUTO,
         preferEnglishAudio = prefs.getBoolean(KEY_ENGLISH, true)
     )
@@ -97,6 +109,21 @@ class SettingsStore(private val prefs: SharedPreferences) : CatalogRepository.Ad
         _settings.value = _settings.value.copy(preload = mode)
     }
 
+    fun setSubtitleStyle(style: SubtitleStyle) {
+        prefs.edit()
+            .putInt(KEY_SUBTITLE, style.sizePercent)
+            .putInt(KEY_SUBTITLE_BG, style.backgroundPercent)
+            .putInt(KEY_SUBTITLE_BOTTOM, style.bottomPercent)
+            .putString(KEY_SUBTITLE_TONE, style.tone.name)
+            .apply()
+        _settings.value = _settings.value.copy(
+            subtitleSize = style.sizePercent,
+            subtitleBackground = style.backgroundPercent,
+            subtitleBottom = style.bottomPercent,
+            subtitleTone = style.tone.name
+        )
+    }
+
     fun setDns(provider: DnsProvider) {
         prefs.edit().putString(KEY_DNS, provider.name).apply()
         _settings.value = _settings.value.copy(dns = provider)
@@ -117,6 +144,9 @@ class SettingsStore(private val prefs: SharedPreferences) : CatalogRepository.Ad
         private const val KEY_AUTOPLAY = "autoplay_next"
         private const val KEY_QUALITY = "preferred_quality"
         private const val KEY_SUBTITLE = "subtitle_size"
+        private const val KEY_SUBTITLE_BG = "subtitle_background"
+        private const val KEY_SUBTITLE_BOTTOM = "subtitle_bottom"
+        private const val KEY_SUBTITLE_TONE = "subtitle_tone"
         private const val KEY_MOTION = "reduce_motion"
         private const val KEY_VOLUME = "volume"
         private const val KEY_RATE = "playback_rate"

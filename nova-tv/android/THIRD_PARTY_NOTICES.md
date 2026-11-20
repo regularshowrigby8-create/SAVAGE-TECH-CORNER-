@@ -86,3 +86,23 @@ reimplemented from scratch in `player/preload/`: fixed-size byte-range
 fragments, a window kept a few minutes ahead of the playhead, up to six
 parallel downloaders, and an adaptive speed test that adds a downloader only
 while throughput keeps rising.
+
+## Player buffering work (mechanics, no code copied)
+
+The additions to `player/` and `player/preload/` follow published behaviour
+from players that solved the same problems. No source was copied from any of
+them; the implementations are new Kotlin on Media3:
+
+- **mpv** `--cache-secs` / **VLC** network caching: a lookahead depth that
+  grows with the measured link headroom (`FragmentPlan.depthMs`), and a
+  sequential whole-file cache for hosts without byte ranges
+  (`FragmentPreloader.startSequential`).
+- **FastStream**: fragment sizing and the connection governor (see above);
+  fragment shrinking after repeated range failures is Nova's addition.
+- **AndroidX Media3** `DefaultLoadControl`, `CacheWriter`, `CacheDataSource`,
+  `CaptionStyleCompat` are used as published, Apache License 2.0.
+- **ExoPlayer seek behaviour**: `SeekParameters.CLOSEST_SYNC` for VOD seeks,
+  which is the setting Android's own media samples use for instant skipping.
+- Caption presets (Cinema / Outline / Minimal / High contrast) follow the
+  BBC Subtitle Guidelines and iPlayer's outline style, implemented with
+  `CaptionStyleCompat`.

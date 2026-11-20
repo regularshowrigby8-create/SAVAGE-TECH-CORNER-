@@ -53,10 +53,13 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.ui.draw.clip
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.tv.material3.Text
 import dev.nova.tv.player.NovaPlayer
 import dev.nova.tv.player.SkipSeconds
+import dev.nova.tv.player.SubtitleStyle
+import dev.nova.tv.player.applySubtitleStyle
 import dev.nova.tv.ui.components.FocusableRow
 import dev.nova.tv.ui.components.PrimaryButton
 import dev.nova.tv.ui.components.SecondaryButton
@@ -96,6 +99,7 @@ fun PlayerSurface(
     val session by player.session.collectAsStateWithLifecycle()
     val chrome by viewModel.chromeState.collectAsStateWithLifecycle()
     val ui by viewModel.state.collectAsStateWithLifecycle()
+    val buffering by player.buffering.collectAsStateWithLifecycle()
     val panel = ui.playerPanel
     val failure = session.failure
 
@@ -162,17 +166,31 @@ fun PlayerSurface(
             }
     ) {
         val exo = player.player
+        // Held so caption styling can be applied to the same view after it is
+        // created; PlayerView owns the Surface and the subtitle view.
+        var playerView by remember { mutableStateOf<PlayerView?>(null) }
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
                     useController = false
                     keepScreenOn = true
-                    setShowBuffering(PlayerView.SHOW_BUFFERING_WHEN_PLAYING)
+                    // The percentage ring below replaces PlayerView's spinner.
+                    setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
                     this.player = exo
-                }
+                }.also { playerView = it }
             },
             modifier = Modifier.fillMaxSize()
         )
+        LaunchedEffect(playerView, ui.subtitleStyle) {
+            playerView?.applySubtitleStyle(ui.subtitleStyle)
+        }
+
+        // Counted, not just spinning: the ring shows how far the buffer is.
+        if (failure == null && panel == null) {
+            buffering?.let { status ->
+                BufferingOverlay(status, Modifier.align(Alignment.Center))
+            }
+        }
 
         // Failover is never silent: say which source died and what is next.
         session.notice?.let { notice ->
@@ -244,6 +262,7 @@ fun PlayerSurface(
                 panel = panel,
                 player = player,
                 viewModel = viewModel,
+                subtitleStyle = ui.subtitleStyle,
                 modifier = Modifier.align(Alignment.CenterEnd)
             )
         }
@@ -360,7 +379,13 @@ private data class PanelOption(val label: String, val detail: String?, val selec
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun Panel(panel: PlayerPanel, player: NovaPlayer, viewModel: NovaViewModel, modifier: Modifier) {
+private fun Panel(
+    panel: PlayerPanel,
+    player: NovaPlayer,
+    viewModel: NovaViewModel,
+    subtitleStyle: SubtitleStyle,
+    modifier: Modifier
+) {
     val engine by player.engineState.collectAsStateWithLifecycle()
     val session by player.session.collectAsStateWithLifecycle()
 
@@ -395,6 +420,20 @@ private fun Panel(panel: PlayerPanel, player: NovaPlayer, viewModel: NovaViewMod
             PanelOption("Off", null, engine.selectedSubtitleTrack == null) {
                 player.engine.selectSubtitleTrack(null)
                 viewModel.closePlayerPanel()
+            }
+        ) + listOf(
+            // Style stays on screen while it is adjusted, unlike a track pick.
+            PanelOption("Caption style", subtitleStyle.tone.label, false) {
+                viewModel.setSubtitleStyle(subtitleStyle.nextTone())
+            },
+            PanelOption("Caption size", subtitleStyle.sizeLabel, false) {
+                viewModel.setSubtitleStyle(subtitleStyle.nextSize())
+            },
+            PanelOption("Caption box", subtitleStyle.backgroundLabel, false) {
+                viewModel.setSubtitleStyle(subtitleStyle.nextBackground())
+            },
+            PanelOption("Caption height", subtitleStyle.bottomLabel, false) {
+                viewModel.setSubtitleStyle(subtitleStyle.nextBottom())
             }
         ) + engine.subtitleTracks.map { track ->
             PanelOption(

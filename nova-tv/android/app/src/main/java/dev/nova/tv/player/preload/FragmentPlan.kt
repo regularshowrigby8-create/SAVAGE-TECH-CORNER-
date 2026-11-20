@@ -14,6 +14,15 @@ package dev.nova.tv.player.preload
  *  - in parallel mode, start with few connections and add one at a time while
  *    the measured aggregate speed keeps rising, up to a cap (FastStream: 6),
  *    and stop adding as soon as a new connection does not help.
+ *
+ * Nova adds three things on top, all borrowed from desktop players:
+ *  - mpv's `--cache-secs` idea of a *depth* that grows with spare bandwidth:
+ *    [depthMs] keeps 300 s ahead on a link that only just keeps up, 30 min when
+ *    it has 2x the bitrate, and the whole remaining film when it has 3x;
+ *  - a "head" window ([headStarts]) so the opening fragments download before
+ *    the container has told us the duration;
+ *  - fragment shrinking ([fragmentBytesFor]) for CDNs that choke on 2 MiB
+ *    ranges: the same fragment is retried in smaller pieces instead of failing.
  */
 enum class PreloadMode(val label: String) {
     OFF("Preload off"),
@@ -33,8 +42,25 @@ enum class PreloadMode(val label: String) {
 
 object FragmentPlan {
     const val FRAGMENT_BYTES = 2L * 1024 * 1024
-    const val AHEAD_MS = 300_000L
+
+    /** Base lookahead: ten minutes, from mpv's default network cache. */
+    const val AHEAD_MS = 600_000L
+
     const val MAX_WORKERS = 6
+
+    /** Fragments fetched before the duration is known (~8 MiB). */
+    const val HEAD_FRAGMENTS = 4
+
+    /** Below this much free lookahead the depth is not worth extending. */
+    private const val FILL_RATIO = 3.0
+
+    /** Fragment sizes to fall back on when a host keeps dropping ranges. */
+    private val FRAGMENT_SIZES = longArrayOf(
+        2L * 1024 * 1024,
+        1024L * 1024,
+        512L * 1024,
+        256L * 1024
+    )
 
     /** Bytes per millisecond of video, from the file size and duration. */
     fun bytesPerMs(totalBytes: Long, durationMs: Long): Double =
@@ -44,17 +70,72 @@ object FragmentPlan {
     fun byteAt(positionMs: Long, totalBytes: Long, durationMs: Long): Long =
         (positionMs.coerceAtLeast(0) * bytesPerMs(totalBytes, durationMs)).toLong().coerceIn(0, maxOf(0, totalBytes - 1))
 
+    /** The fragment boundary at or before [byte]. */
+    fun fragmentStart(byte: Long, fragmentBytes: Long = FRAGMENT_BYTES): Long =
+        if (fragmentBytes <= 0) 0 else byte.coerceAtLeast(0) / fragmentBytes * fragmentBytes
+
+    /**
+     * How far ahead to keep downloaded, given what the link is actually doing.
+     * A 1x link only gets the base window; spare bandwidth buys a deeper one
+     * (mpv's cache-secs, scaled by headroom), and a link that is three times
+     * faster than the film simply stores everything that is left.
+     */
+    fun depthMs(
+        positionMs: Long,
+        durationMs: Long,
+        totalBytes: Long,
+        bytesPerSecond: Long,
+        baseMs: Long = AHEAD_MS
+    ): Long {
+        val remaining = (durationMs - positionMs).coerceAtLeast(0)
+        if (remaining <= 0) return 0
+        val rate = bytesPerMs(totalBytes, durationMs)
+        if (bytesPerSecond <= 0 || rate <= 0) return minOf(baseMs, remaining)
+        val ratio = bytesPerSecond / (rate * 1000.0)
+        val scaled = when {
+            ratio >= FILL_RATIO -> remaining
+            ratio >= 2.0 -> baseMs * 3
+            ratio >= 1.5 -> baseMs * 2
+            else -> baseMs
+        }
+        return scaled.coerceIn(0, remaining)
+    }
+
     /**
      * Fragment start offsets from the playhead to [aheadMs] ahead, in play
      * order. The fragment containing the playhead comes first: that is the one
      * a stall would be waiting on.
      */
-    fun window(positionMs: Long, durationMs: Long, totalBytes: Long, aheadMs: Long = AHEAD_MS, fragmentBytes: Long = FRAGMENT_BYTES): List<Long> {
+    fun window(
+        positionMs: Long,
+        durationMs: Long,
+        totalBytes: Long,
+        aheadMs: Long = AHEAD_MS,
+        fragmentBytes: Long = FRAGMENT_BYTES
+    ): List<Long> {
         if (totalBytes <= 0 || durationMs <= 0 || fragmentBytes <= 0) return emptyList()
-        val from = byteAt(positionMs, totalBytes, durationMs) / fragmentBytes * fragmentBytes
+        val from = fragmentStart(byteAt(positionMs, totalBytes, durationMs), fragmentBytes)
         val until = minOf(totalBytes, byteAt(positionMs + aheadMs, totalBytes, durationMs) + 1)
         if (from >= until) return emptyList()
         return generateSequence(from) { it + fragmentBytes }.takeWhile { it < until }.toList()
+    }
+
+    /**
+     * The opening fragments, for the window before the duration is known.
+     * Playback always starts at the beginning, so byte order is play order.
+     */
+    fun headStarts(
+        fromByte: Long,
+        totalBytes: Long,
+        count: Int = HEAD_FRAGMENTS,
+        fragmentBytes: Long = FRAGMENT_BYTES
+    ): List<Long> {
+        if (totalBytes <= 0 || count <= 0 || fragmentBytes <= 0) return emptyList()
+        val from = fragmentStart(fromByte, fragmentBytes).coerceAtMost(maxOf(0, totalBytes - 1))
+        return generateSequence(from) { it + fragmentBytes }
+            .take(count)
+            .takeWhile { it < totalBytes }
+            .toList()
     }
 
     fun fragmentLength(start: Long, totalBytes: Long, fragmentBytes: Long = FRAGMENT_BYTES): Long =
@@ -65,6 +146,14 @@ object FragmentPlan {
         val rate = bytesPerMs(totalBytes, durationMs)
         return if (rate <= 0) 0 else (bytesAhead / rate).toLong()
     }
+
+    /** How much of the target depth is already on disk, 0..100. */
+    fun percentAhead(aheadMs: Long, depthMs: Long): Int =
+        if (depthMs <= 0) 0 else ((aheadMs.toDouble() / depthMs) * 100).toInt().coerceIn(0, 100)
+
+    /** Fragment size to use after [failures] consecutive range failures. */
+    fun fragmentBytesFor(failures: Int): Long =
+        FRAGMENT_SIZES[failures.coerceIn(0, FRAGMENT_SIZES.lastIndex)]
 }
 
 /**
