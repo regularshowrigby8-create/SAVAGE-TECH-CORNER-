@@ -11,10 +11,9 @@ import java.io.File
  * one save. A pool that is one save out of date is a bad evening; a pool that is
  * half a JSON document is a crash on next launch, because nothing can decode it.
  *
- * So: write the temporary file, try to swap it in, and if the swap fails, delete
- * the destination and swap once more (the same result a POSIX rename gives). If
- * that also fails, the write is abandoned and reported through [onError]. The old
- * file stays intact and valid.
+ * Write a temporary file and rename it over the destination. If either step
+ * fails, leave the previous file in place and report the error. Never delete the
+ * destination as a fallback: a second failed rename would lose the old pool.
  */
 class AtomicFileStore(
     private val file: File,
@@ -25,15 +24,17 @@ class AtomicFileStore(
 
     fun write(text: String) {
         val temporary = File(file.parentFile, file.name + ".tmp")
-        val written = runCatching { temporary.writeText(text) }.isSuccess
-        if (!written) {
-            onError("could not write ${temporary.name}")
-            return
+        try {
+            temporary.writeText(text)
+        } catch (error: Exception) {
+            val reason = "could not write ${temporary.name}"
+            onError(reason)
+            throw java.io.IOException(reason, error)
         }
         if (temporary.renameTo(file)) return
-        // Java's renameTo refuses to replace an existing file on some
-        // filesystems, so remove it and try the same swap again.
-        if (file.delete() && temporary.renameTo(file)) return
-        onError("could not replace ${file.name}; the previous version is still in place")
+        val reason = "could not replace ${file.name}; the previous version is still in place"
+        onError(reason)
+        temporary.delete()
+        throw java.io.IOException(reason)
     }
 }

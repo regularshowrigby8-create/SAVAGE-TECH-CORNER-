@@ -5,16 +5,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
 
 /**
  * Where an imported site is handed on to the viewer's saved site list.
  *
- * A one-method interface rather than the whole `LibraryStore`: the pool only ever
- * needs to *add* a site, and depending on `SharedPreferences` would make this
- * class impossible to unit-test.
+ * A one-method interface rather than the whole `LibraryStore`. Sites are handed
+ * over in one batch so importing thousands does not rewrite SharedPreferences
+ * thousands of times. Existing manually saved sites must be kept by the sink.
  */
 fun interface SiteSink {
-    fun add(site: SavedWebsite)
+    fun add(sites: List<SavedWebsite>)
 }
 
 /** Where the site pool is saved; a file on device, a string in tests. */
@@ -52,7 +54,13 @@ data class SiteRecord(
 ) {
     fun toSite(): SavedWebsite = SavedWebsite(url = url, name = name, templates = templates)
 
-    val host: String get() = url.substringAfter("://").substringBefore('/').removePrefix("www.")
+    val host: String get() = hostOf(url)
+
+    companion object {
+        fun hostOf(url: String): String = runCatching {
+            java.net.URI(url).host?.lowercase()?.removePrefix("www.").orEmpty()
+        }.getOrDefault("")
+    }
 }
 
 @Serializable
@@ -137,6 +145,21 @@ class SitePool(
             .map { it.toSite() }
     }
 
+    /**
+     * Keep manually saved sites first, then use the pool's proven-first order.
+     * Only use sites still present in the saved list, so Remove remains effective.
+     */
+    fun batchAvailable(saved: List<SavedWebsite>, size: Int): List<SavedWebsite> = synchronized(lock) {
+        val known = document.entries.map { it.host }.toHashSet()
+        val savedByHost = saved.associateBy { SiteRecord.hostOf(it.url) }
+        val manual = saved.filter { SiteRecord.hostOf(it.url) !in known }
+        val ranked = document.entries
+            .sortedWith(compareByDescending<SiteRecord> { it.resolved }
+                .thenBy { it.misses }.thenByDescending { it.score })
+            .mapNotNull { savedByHost[it.host] }
+        (manual + ranked).distinctBy { SiteRecord.hostOf(it.url) }.take(size)
+    }
+
     fun noteResult(host: String, resolved: Int, miss: Boolean) = synchronized(lock) {
         document = document.copy(entries = document.entries.map {
             if (it.host.lowercase() != host.lowercase()) it
@@ -161,22 +184,29 @@ class SitePool(
         // A malformed document is reported, not treated as "nothing to import":
         // a silent 0 here is indistinguishable from an empty crawl, and the
         // viewer would be left wondering why the pool never filled.
-        val incoming = runCatching { json.decodeFromString<SiteDocument>(text) }.getOrElse { error ->
+        val incoming = runCatching {
+            val root = json.parseToJsonElement(text) as? JsonObject
+                ?: error("expected a JSON object")
+            require(root["entries"] is JsonArray) { "missing entries array" }
+            json.decodeFromString<SiteDocument>(text)
+        }.getOrElse { error ->
             lastError = "site pool could not be read: ${error.message}"
             lastImported = 0
             publish()
             return 0
         }
-        val byHost = document.entries.associateBy { it.host.lowercase() }.toMutableMap()
+        val byHost = document.entries.associateBy { it.host }.toMutableMap()
+        val newlySaved = mutableListOf<SavedWebsite>()
         var added = 0
         for (record in incoming.entries) {
-            val host = record.host.lowercase()
-            if (host.isEmpty() || host in byHost || host !in byHost && byHost.size >= CAPACITY) continue
+            val host = record.host
+            if (host.isEmpty() || host in byHost || byHost.size >= CAPACITY) continue
             if (record.templates.none { it.contains("{q}") || it.contains("{slug}") }) continue
             byHost[host] = record
             added += 1
-            if (addToLibrary) sites.add(record.toSite())
+            if (addToLibrary) newlySaved += record.toSite()
         }
+        if (newlySaved.isNotEmpty()) sites.add(newlySaved)
         document = document.copy(
             entries = byHost.values.take(CAPACITY),
             rejected = incoming.rejected,
@@ -193,8 +223,8 @@ class SitePool(
      * [state] so Sources can say why it is empty instead of showing a zero that
      * looks identical to a crawl that found nothing.
      */
-    fun noteBundledPoolMissing(reason: String) = synchronized(lock) {
-        lastError = "bundled site pool missing: $reason"
+    fun noteBundledPoolError(reason: String) = synchronized(lock) {
+        lastError = "bundled site pool: $reason"
         publish()
     }
 
@@ -215,6 +245,7 @@ class SitePool(
 
     private fun persist() {
         runCatching { store.write(json.encodeToString(SiteDocument.serializer(), document)) }
+            .onFailure { lastError = "site pool could not be saved: ${it.message}" }
         publish()
     }
 

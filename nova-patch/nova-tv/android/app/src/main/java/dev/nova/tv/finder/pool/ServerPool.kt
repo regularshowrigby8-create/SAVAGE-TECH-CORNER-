@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
 import kotlin.random.Random
 
 /** One server option. Stats are global (across titles), so good servers stay. */
@@ -52,7 +54,9 @@ data class PoolState(
     /** Slots still free. The fill loop stops at 0, not at "a round found nothing". */
     val free: Int = ServerPool.CAPACITY,
     /** False only when the pool has every slot filled. */
-    val filling: Boolean = false
+    val filling: Boolean = false,
+    /** A failed bundled import must not look like a legitimately empty pool. */
+    val lastError: String = ""
 ) {
     val full: Boolean get() = size >= capacity
     /** 0f..1f, for a progress indicator that reflects the real pool. */
@@ -93,6 +97,7 @@ class ServerPool(private val store: PoolStore, private val random: Random = Rand
         store.read()?.let { json.decodeFromString<Persisted>(it) }
     }.getOrNull() ?: Persisted()
     private var lastAdded = 0
+    private var lastError = ""
 
     /**
      * The state snapshot is built only from fields declared *above* this line and
@@ -112,6 +117,36 @@ class ServerPool(private val store: PoolStore, private val random: Random = Rand
         set(value) = synchronized(lock) { data = data.copy(cursor = value); save() }
 
     fun entries(): List<PoolEntry> = synchronized(lock) { data.entries }
+
+    /**
+     * Merge the crawler's bundled file without replacing on-device history,
+     * hit counts, or retired hosts. Existing entries win, and the normal per-host
+     * and total ceilings still apply. Unknown crawler metadata is ignored.
+     */
+    fun importBundled(text: String): Int = synchronized(lock) {
+        val incoming = runCatching {
+            val root = json.parseToJsonElement(text) as? JsonObject
+                ?: error("expected a JSON object")
+            require(root["entries"] is JsonArray) { "missing entries array" }
+            json.decodeFromString<Persisted>(text)
+        }.getOrElse { error ->
+            lastError = "bundled server pool could not be read: ${error.message}"
+            publish()
+            return@synchronized 0
+        }
+        val (merged, added) = merge(data.entries, incoming.entries, data.retired.toHashSet())
+        data = data.copy(entries = merged)
+        lastAdded = added
+        lastError = ""
+        save()
+        added
+    }
+
+    /** Surface a missing asset instead of silently showing an empty pool. */
+    fun noteBundledPoolMissing(reason: String) = synchronized(lock) {
+        lastError = "bundled server pool missing: $reason"
+        publish()
+    }
 
     /**
      * Only servers that have actually answered for a title. The pool may hold
@@ -245,13 +280,15 @@ class ServerPool(private val store: PoolStore, private val random: Random = Rand
         retired = data.retired.size,
         lastAdded = lastAdded,
         free = (CAPACITY - data.entries.size).coerceAtLeast(0),
-        filling = data.entries.size < CAPACITY
+        filling = data.entries.size < CAPACITY,
+        lastError = lastError
     )
 
     private fun publish() { _state.value = stateOf() }
 
     private fun save() {
         runCatching { store.write(json.encodeToString(Persisted.serializer(), data)) }
+            .onFailure { lastError = "server pool could not be saved: ${it.message}" }
         publish()
     }
 

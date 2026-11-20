@@ -143,6 +143,12 @@ fun MobileSources(state: NovaState, viewModel: NovaViewModel, onBack: () -> Unit
                     )
                 }
             }
+            if (state.pool.lastError.isNotBlank()) {
+                item { Text(state.pool.lastError, style = MType.meta.copy(color = NovaPalette.accent)) }
+            }
+            if (state.sites.lastError.isNotBlank()) {
+                item { Text(state.sites.lastError, style = MType.meta.copy(color = NovaPalette.accent)) }
+            }
             state.harvest?.let { harvest ->
                 item {
                     Text(

@@ -6,6 +6,8 @@ import dev.nova.tv.data.repo.CatalogRepository
 import dev.nova.tv.data.repo.LibraryStore
 import dev.nova.tv.finder.website.WebsiteFinder
 import dev.nova.tv.finder.website.WebsiteRules
+import dev.nova.tv.finder.website.SitePool
+import dev.nova.tv.finder.website.SiteRecord
 import dev.nova.tv.finder.pool.ServerHarvester
 import dev.nova.tv.finder.pool.ServerPool
 import dev.nova.tv.player.HostHealth
@@ -92,7 +94,8 @@ class SourceEngine(
     private val probe: StreamProbe,
     /** The 3000-slot server pool; null in tests that do not need it. */
     val pool: ServerPool? = null,
-    private val harvester: ServerHarvester? = null
+    private val harvester: ServerHarvester? = null,
+    private val sitePool: SitePool? = null
 ) {
     /** At most [PARALLELISM] network calls at once, across every finder. */
     private val io = Dispatchers.IO.limitedParallelism(PARALLELISM)
@@ -306,7 +309,11 @@ class SourceEngine(
                 // running every site for every title would open thousands of
                 // connections and never finish. [SITES_PER_TITLE] best sites are
                 // tried, proven-first, which is also what the manifest pool does.
-                for (site in library.websites.value.take(SITES_PER_TITLE)) {
+                val savedSites = library.websites.value
+                val poolHosts = sitePool?.sites()?.map { it.host }?.toHashSet().orEmpty()
+                val siteBatch = sitePool?.batchAvailable(savedSites, SITES_PER_TITLE)
+                    ?: savedSites.take(SITES_PER_TITLE)
+                for (site in siteBatch) {
                     launch {
                         state.track(site.name) {
                             val query = WebsiteRules.Query(
@@ -317,7 +324,10 @@ class SourceEngine(
                                 episode = request.episode.coerceAtLeast(1),
                                 imdb = request.meta.id.substringBefore(':')
                             )
-                            state.add(websites.findStreams(site, query).filter { it.url != null })
+                            val found = websites.findStreams(site, query).filter { it.isPlayable }
+                            state.add(found)
+                            val host = SiteRecord.hostOf(site.url)
+                            if (host in poolHosts) sitePool?.noteResult(host, found.size, found.isEmpty())
                         }
                         publish(state)
                     }

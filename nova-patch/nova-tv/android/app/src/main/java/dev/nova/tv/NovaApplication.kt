@@ -88,8 +88,25 @@ class NovaApplication : Application(), ImageLoaderFactory {
                 override fun read(): String? = file.read()
                 override fun write(text: String) = file.write(text)
             },
-            sites = dev.nova.tv.finder.website.SiteSink { site -> library.addWebsite(site) }
+            sites = dev.nova.tv.finder.website.SiteSink { sites -> library.addWebsitesIfAbsent(sites) }
         )
+    }
+
+    /** Merge the crawler's manifest pool into the saved pool on an IO thread. */
+    fun importBundledServerPool() {
+        appScope.launch(Dispatchers.IO) {
+            val text = runCatching {
+                assets.open("server_pool.json").bufferedReader().use { it.readText() }
+            }.getOrElse { error ->
+                serverPool.noteBundledPoolMissing(error.message ?: "missing")
+                android.util.Log.w("NovaServerPool", "no bundled pool", error)
+                return@launch
+            }
+            val added = serverPool.importBundled(text)
+            val error = serverPool.state.value.lastError
+            if (error.isNotBlank()) android.util.Log.w("NovaServerPool", error)
+            else android.util.Log.i("NovaServerPool", "imported $added bundled servers")
+        }
     }
 
     /**
@@ -100,27 +117,22 @@ class NovaApplication : Application(), ImageLoaderFactory {
      * phone. Off the main thread, and safe twice: [SitePool.import] dedupes by host.
      */
     fun importBundledSitePool() {
-        appScope.launch {
-            // The asset is committed, empty, so this cannot normally fail. If it
-            // does, the pool the user sees on Sources will be empty with no
-            // explanation -- exactly the "false green" this app should not have,
-            // so the miss is recorded and shown rather than silently skipped.
+        appScope.launch(Dispatchers.IO) {
             val text = runCatching {
                 assets.open("site_pool.json").bufferedReader().use { it.readText() }
             }.getOrElse { error ->
-                android.util.Log.w("NovaSitePool", "no bundled pool in assets: ${error.message}")
-                sitePool.noteBundledPoolMissing(error.message ?: "missing")
+                android.util.Log.w("NovaSitePool", "no bundled pool in assets", error)
+                sitePool.noteBundledPoolError(error.message ?: "missing asset")
                 return@launch
             }
-            // Logged either way: 0 is a normal result on a later launch (already
-            // imported) but it is also what a failure looks like, so the reason is
-            // recorded rather than both cases printing nothing.
             val added = runCatching { sitePool.import(text) }.getOrElse { error ->
-                android.util.Log.w("NovaSitePool", "bundled pool not imported: ${error.message}")
-                0
+                android.util.Log.w("NovaSitePool", "bundled pool not imported", error)
+                sitePool.noteBundledPoolError(error.message ?: "import failed")
+                return@launch
             }
-            if (added > 0) android.util.Log.i("NovaSitePool", "imported $added sites from assets")
-            else android.util.Log.i("NovaSitePool", "bundled pool had no new sites")
+            val error = sitePool.state.value.lastError
+            if (error.isNotBlank()) android.util.Log.w("NovaSitePool", error)
+            else android.util.Log.i("NovaSitePool", "imported $added bundled sites")
         }
     }
 
@@ -128,7 +140,7 @@ class NovaApplication : Application(), ImageLoaderFactory {
     val engine: SourceEngine by lazy {
         SourceEngine(
             repository, zeroPlayFinder, stremioFinder, websiteFinder, zeroPlayFinder, library, probe,
-            pool = serverPool, harvester = ServerHarvester(http)
+            pool = serverPool, harvester = ServerHarvester(http), sitePool = sitePool
         )
     }
 
@@ -146,8 +158,9 @@ class NovaApplication : Application(), ImageLoaderFactory {
         super.onCreate()
         instance = this
         NovaDns.provider = settings.settings.value.dns
-        // Off the main thread: parsing a 3000-entry JSON at startup must not
-        // delay the first frame.
+        // Each import uses Dispatchers.IO so neither 3000-entry JSON file
+        // blocks the first frame. They remain independent pools and capacities.
+        importBundledServerPool()
         importBundledSitePool()
     }
 

@@ -144,6 +144,9 @@ fun SourcesScreen(state: NovaState, viewModel: NovaViewModel) {
                             style = NovaType.meta
                         )
                         PoolProgress(state.pool)
+                        if (state.pool.lastError.isNotBlank()) {
+                            Text(state.pool.lastError, style = NovaType.meta, color = NovaPalette.accent)
+                        }
                     }
                 }
             }

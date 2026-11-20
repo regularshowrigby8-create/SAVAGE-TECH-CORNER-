@@ -8,6 +8,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
+import kotlinx.serialization.json.putJsonObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -30,7 +31,8 @@ class SitePoolTest {
 
     private class Recorder : SiteSink {
         val added = mutableListOf<SavedWebsite>()
-        override fun add(site: SavedWebsite) { added += site }
+        var calls = 0
+        override fun add(sites: List<SavedWebsite>) { calls++; added += sites }
     }
 
     private fun pool(store: MemoryStore = MemoryStore(), sink: SiteSink = Recorder()) =
@@ -44,7 +46,7 @@ class SitePoolTest {
             put("generated", "2026-01-01T00:00:00Z")
             putJsonArray("entries") {
                 entries.forEach { entry ->
-                    addJsonObject(
+                    add(
                         buildJsonObject {
                             put("url", entry["url"] as String)
                             put("name", entry["name"] as String? ?: "")
@@ -86,6 +88,25 @@ class SitePoolTest {
         assertEquals(1, sink.added.size)
         assertEquals("Site A", sink.added.first().name)
         assertTrue(sink.added.first().templates.first().contains("{q}"))
+    }
+
+    @Test
+    fun `the entire import is sent to the library in one batch`() {
+        val sink = Recorder()
+        val pool = pool(sink = sink)
+        val entries = (0 until 100).map { site("https://s$it.example") }
+        assertEquals(100, pool.import(document(*entries.toTypedArray())))
+        assertEquals(1, sink.calls)
+        assertEquals(100, sink.added.size)
+        pool.import(document(*entries.toTypedArray()))
+        assertEquals("a duplicate import causes no extra library write", 1, sink.calls)
+    }
+
+    @Test
+    fun `a document with no entries field is reported as malformed`() {
+        val pool = pool()
+        assertEquals(0, pool.import("{\"error\":\"unexpected response\"}"))
+        assertTrue(pool.state.value.lastError.contains("entries"))
     }
 
     @Test
@@ -170,6 +191,20 @@ class SitePoolTest {
     }
 
     @Test
+    fun `available batch preserves user sites, ranks hits and respects removals`() {
+        val sink = Recorder()
+        val pool = pool(sink = sink)
+        pool.import(document(site("https://a.example"), site("https://b.example")))
+        pool.noteResult("b.example", resolved = 1, miss = false)
+        val manual = SavedWebsite("https://manual.example", "Manual")
+        val customB = SavedWebsite("https://b.example", "User's name")
+        val ranked = pool.batchAvailable(listOf(sink.added[0], customB, manual), 3)
+        assertEquals(listOf("Manual", "User's name", ""), ranked.map { it.name })
+        val withoutB = pool.batchAvailable(listOf(sink.added[0], manual), 3)
+        assertEquals(listOf("manual.example", "a.example"), withoutB.map { SiteRecord.hostOf(it.url) })
+    }
+
+    @Test
     fun `state is published so the Sources screen sees the pool grow`() = runTest {
         val pool = pool()
         pool.import(document(site("https://a.example")))
@@ -185,7 +220,7 @@ class SitePoolTest {
         // on the Sources screen is indistinguishable from "the crawl found
         // nothing", which is the false green this app is not allowed to show.
         val pool = pool()
-        pool.noteBundledPoolMissing("FileNotFoundException")
+        pool.noteBundledPoolError("FileNotFoundException")
         val state = pool.state.value
         assertEquals(0, state.size)
         assertTrue(

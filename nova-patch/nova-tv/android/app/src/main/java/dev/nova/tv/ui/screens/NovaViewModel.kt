@@ -240,6 +240,10 @@ class NovaViewModel : ViewModel() {
         viewModelScope.launch {
             app.sitePool.state.collect { s -> _state.update { it.copy(sites = s) } }
         }
+        // A bundled import may finish after the Sources screen is opened.
+        viewModelScope.launch {
+            library.websites.collect { sites -> _state.update { it.copy(websites = sites) } }
+        }
         // The harvester's own counters: how many sources are done, how many
         // requests were made, whether anything is still being looked at. The
         // Sources screen prints these, so the progress it shows is measured.
