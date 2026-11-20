@@ -27,8 +27,8 @@ object MType {
 
 private val Scheme = darkColorScheme(
     primary = NovaPalette.accent,
-    // White on #4C8DFF is ~2.6:1. Dark ink on the accent is ~7:1.
-    onPrimary = NovaPalette.background,
+    // Dark ink on the accent, never white: white on the old #4C8DFF was ~2.6:1.
+    onPrimary = NovaPalette.onAccent,
     primaryContainer = NovaPalette.accent.copy(alpha = 0.24f),
     onPrimaryContainer = NovaPalette.textPrimary,
     secondaryContainer = NovaPalette.accent.copy(alpha = 0.22f),
@@ -45,7 +45,9 @@ private val Scheme = darkColorScheme(
     surfaceContainerHigh = NovaPalette.surfaceHigh,
     surfaceContainerHighest = NovaPalette.surfaceHigh,
     outline = NovaPalette.textMuted.copy(alpha = 0.4f),
-    outlineVariant = Color.White.copy(alpha = 0.08f),
+    // A hairline drawn from the muted ink, not from white: white at 8% over a
+    // near-black surface reads as a smudge, while the tinted line stays crisp.
+    outlineVariant = NovaPalette.textMuted.copy(alpha = 0.18f),
     error = NovaPalette.danger
 )
 

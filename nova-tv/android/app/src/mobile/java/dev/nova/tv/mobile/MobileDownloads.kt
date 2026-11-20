@@ -65,7 +65,7 @@ private fun DownloadRow(job: DownloadJob, viewModel: NovaViewModel) {
             progress = { job.progress },
             modifier = Modifier.fillMaxWidth().height(4.dp),
             color = NovaPalette.accent,
-            trackColor = Color.White.copy(alpha = 0.14f)
+            trackColor = NovaPalette.track
         )
         Spacer(Modifier.height(8.dp))
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {

@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -132,7 +133,7 @@ fun MobileDetail(state: NovaState, viewModel: NovaViewModel) {
                 }
             }
             item(key = "info") { InfoLine(detail) }
-            item(key = "actions") { Actions(detail, viewModel) }
+            item(key = "actions") { Actions(detail, viewModel, state.titleSearching) }
             item(key = "overview") { Overview(detail) }
             if (detail.isSeries && title.videos.isNotEmpty()) {
                 item(key = "seasons") { Seasons(detail, viewModel) }
@@ -181,7 +182,7 @@ private fun InfoLine(detail: DetailState) {
 }
 
 @Composable
-private fun Actions(detail: DetailState, viewModel: NovaViewModel) {
+private fun Actions(detail: DetailState, viewModel: NovaViewModel, searchingTitle: Boolean) {
     val streams = detail.sources.streams
     val ready = streams.isNotEmpty()
     val resume = detail.resume
@@ -215,7 +216,7 @@ private fun Actions(detail: DetailState, viewModel: NovaViewModel) {
         }
         if (resume != null && ready) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Box(Modifier.weight(1f).height(3.dp).background(Color.White.copy(alpha = 0.18f), RoundedCornerShape(2.dp))) {
+                Box(Modifier.weight(1f).height(3.dp).background(NovaPalette.track, RoundedCornerShape(2.dp))) {
                     Box(Modifier.fillMaxWidth(resume.fraction.coerceIn(0.02f, 1f)).fillMaxHeight().background(NovaPalette.accent, RoundedCornerShape(2.dp)))
                 }
                 TextButton(onClick = { viewModel.play(0, fromStart = true) }) { Text("From start", style = MType.label) }
@@ -233,6 +234,12 @@ private fun Actions(detail: DetailState, viewModel: NovaViewModel) {
                 onClick = viewModel::toggleSourcesSheet
             )
             ActionIcon(label = "Download", icon = Icons.Filled.KeyboardArrowDown, onClick = viewModel::downloadBest)
+            // Title-specific finder: searches the web for this one title only.
+            ActionIcon(
+                label = if (searchingTitle) "Searching" else "Find title",
+                icon = Icons.Filled.Search,
+                onClick = viewModel::findForTitle
+            )
             ActionIcon(label = "Search again", icon = Icons.Filled.Refresh, onClick = viewModel::retrySources)
         }
     }
@@ -327,7 +334,7 @@ private fun EpisodeRow(v: Video, detail: DetailState, viewModel: NovaViewModel) 
             }
             val progress = if (selected) detail.resume?.fraction ?: 0f else 0f
             if (progress > 0f) {
-                Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().height(3.dp).background(Color.White.copy(alpha = 0.2f))) {
+                Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().height(3.dp).background(NovaPalette.track)) {
                     Box(Modifier.fillMaxWidth(progress.coerceIn(0.03f, 1f)).fillMaxHeight().background(NovaPalette.accent))
                 }
             }
@@ -389,7 +396,7 @@ private fun SourcesSheet(streams: List<Stream>, resolving: Boolean, viewModel: N
                             stream.quality.takeIf { it.isNotBlank() }?.let { Badge(it) }
                         }
                     }
-                    if (i < streams.lastIndex) HorizontalDivider(Modifier.padding(horizontal = 20.dp), color = Color.White.copy(alpha = 0.06f))
+                    if (i < streams.lastIndex) HorizontalDivider(Modifier.padding(horizontal = 20.dp), color = NovaPalette.hairline.copy(alpha = 0.55f))
                 }
             }
         }
@@ -453,7 +460,7 @@ private fun DownloadSheet(detail: DetailState, viewModel: NovaViewModel) {
                             Text("Download", style = MType.label.copy(color = NovaPalette.accent))
                         }
                     }
-                    if (i < streams.lastIndex) HorizontalDivider(Modifier.padding(horizontal = 20.dp), color = Color.White.copy(alpha = 0.06f))
+                    if (i < streams.lastIndex) HorizontalDivider(Modifier.padding(horizontal = 20.dp), color = NovaPalette.hairline.copy(alpha = 0.55f))
                 }
             }
         }

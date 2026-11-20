@@ -54,6 +54,7 @@ import dev.nova.tv.ui.focus.PivotScroll
 import dev.nova.tv.ui.focus.arvioDpadFocusGroup
 import dev.nova.tv.ui.focus.holdRowEnd
 import dev.nova.tv.ui.theme.LocalReduceMotion
+import dev.nova.tv.ui.theme.NovaCards
 import dev.nova.tv.ui.theme.NovaPalette
 import dev.nova.tv.ui.theme.NovaSpace
 import dev.nova.tv.ui.theme.NovaType

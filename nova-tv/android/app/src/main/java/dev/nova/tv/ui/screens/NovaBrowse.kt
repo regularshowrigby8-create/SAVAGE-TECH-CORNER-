@@ -41,11 +41,17 @@ import dev.nova.tv.ui.components.RegisterContentEntry
 import dev.nova.tv.ui.components.ShimmerBox
 import dev.nova.tv.ui.focus.PivotScroll
 import dev.nova.tv.ui.focus.arvioDpadFocusGroup
+import dev.nova.tv.ui.theme.NovaCards
 import dev.nova.tv.ui.theme.NovaPalette
 import dev.nova.tv.ui.theme.NovaSpace
 import dev.nova.tv.ui.theme.NovaType
 
-private const val GRID_COLUMNS = 6
+// Columns are derived from the window in NovaSizing, so the grid card is the
+// same size as a home-row card instead of a second, larger design.
+private val GRID_COLUMNS: Int
+    @androidx.compose.runtime.Composable
+    @androidx.compose.runtime.ReadOnlyComposable
+    get() = NovaCards.gridColumns
 
 /** Movies / Series: a genre strip over an endless poster grid. */
 @Composable
@@ -126,7 +132,9 @@ fun SearchScreen(state: NovaState, viewModel: NovaViewModel) {
                     items = showing,
                     loading = state.searching && state.results.isEmpty(),
                     onOpen = viewModel::openTitle,
-                    columns = 5,
+                    // No column override: search results use the same derived
+                    // column count as every other grid, so a card is one size
+                    // across the whole app.
                     startPadding = 0.dp,
                     header = if (state.query.isBlank() && popular.isNotEmpty()) "Popular" else null
                 )
@@ -176,7 +184,7 @@ internal fun PosterGrid(
     loading: Boolean,
     onOpen: (MetaPreview) -> Unit,
     onNearEnd: () -> Unit = {},
-    columns: Int = GRID_COLUMNS,
+    columns: Int = 0,
     startPadding: androidx.compose.ui.unit.Dp = ContentStart,
     focusFirst: Boolean = false,
     header: String? = null
@@ -194,8 +202,9 @@ internal fun PosterGrid(
         }
     }
     PivotScroll(parentFraction = 0.12f) {
+        val resolvedColumns = if (columns > 0) columns else GRID_COLUMNS
         LazyVerticalGrid(
-            columns = GridCells.Fixed(columns),
+            columns = GridCells.Fixed(resolvedColumns),
             modifier = Modifier.fillMaxSize().arvioDpadFocusGroup(),
             contentPadding = PaddingValues(start = startPadding, end = NovaSpace.safeHorizontal, top = 16.dp, bottom = 140.dp),
             horizontalArrangement = Arrangement.spacedBy(CardGap),
@@ -205,7 +214,7 @@ internal fun PosterGrid(
                 item(span = { GridItemSpan(maxLineSpan) }, key = "header") { Text(header, style = NovaType.sectionTitle) }
             }
             itemsIndexed(items, key = { i, m -> if (m.id.isBlank()) "row-$i" else "${m.id}#$i" }) { i, meta ->
-                if (i >= items.size - columns * 2) LaunchedEffect(items.size) { onNearEnd() }
+                if (i >= items.size - resolvedColumns * 2) LaunchedEffect(items.size) { onNearEnd() }
                 PosterCard(
                     title = meta,
                     onClick = { onOpen(meta) },
@@ -213,7 +222,7 @@ internal fun PosterGrid(
                     modifier = if (i == 0) Modifier.focusRequester(first) else Modifier
                 )
             }
-            if (loading) placeholders(columns * 2)
+            if (loading) placeholders(resolvedColumns * 2)
         }
     }
 }

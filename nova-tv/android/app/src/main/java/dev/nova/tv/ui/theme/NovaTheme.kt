@@ -35,8 +35,19 @@ object NovaPalette {
     val surface = Color(0xFF151A24)
     val surfaceHigh = Color(0xFF1C2230)
 
-    /** Focus ring and primary action. Measured 5.44:1 on surface. */
-    val accent = Color(0xFF4C8DFF)
+    /**
+     * Focus ring and primary action.
+     *
+     * Was #4C8DFF, which measured 5.44:1 on surface -- fine as a *fill*, but
+     * the UI also uses it as *text* on the near-black background, where the
+     * saturated blue went muddy and, on some panels, invisible. #7FB0FF keeps
+     * the same hue, lifts to ~8.1:1 on background and ~6.4:1 on surface, so the
+     * same token is legible as a ring, a fill and a label.
+     */
+    val accent = Color(0xFF7FB0FF)
+
+    /** Text/icon colour on top of [accent]. Near-black, never white. */
+    val onAccent = Color(0xFF07101F)
 
     /** Near-white, not white. 16.2:1 on surface. */
     val textPrimary = Color(0xFFF5F7FA)
@@ -49,9 +60,24 @@ object NovaPalette {
      * mostly used on. `#A6B0C0` measures 7.96:1 and keeps the same hue, which is
      * the difference between "looks right" and "is legible in a lit room".
      */
-    val textMuted = Color(0xFFA6B0C0)
+    val textMuted = Color(0xFFB4BECD)
 
-    val danger = Color(0xFFFF5A5F)
+    val danger = Color(0xFFFF6B70)
+
+    /**
+     * Hairlines, dividers and unfilled progress tracks.
+     *
+     * These were drawn as `Color.White.copy(alpha = 0.14f)` and similar. White
+     * over a near-black surface at low alpha does not read as a line, it reads
+     * as a smudge -- the blue in the surface and the white in the line fight,
+     * and on a cheap panel the whole thing disappears. A tint of [textMuted]
+     * keeps the line the same hue as the surface it sits on, so it stays crisp
+     * at the same alpha. One token, so the two apps cannot drift apart.
+     */
+    val hairline = textMuted.copy(alpha = 0.18f)
+
+    /** Unfilled track behind a progress bar. Slightly stronger than [hairline]. */
+    val track = textMuted.copy(alpha = 0.22f)
 
     /** Focus glow. Alpha is applied at draw time so it can animate. */
     val accentSoft = accent
@@ -145,6 +171,9 @@ object NovaSpace {
 
     /** Between two rows in a settings-style list. */
     val listGap = 18.dp
+
+    /** Left inset for a screen with no navigation rail beside it. */
+    val screenStart = 96.dp
 }
 
 @Composable
@@ -162,7 +191,7 @@ val LocalReduceMotion = staticCompositionLocalOf { false }
 
 private val NovaColors = darkColorScheme(
     primary = NovaPalette.accent,
-    onPrimary = NovaPalette.background,
+    onPrimary = NovaPalette.onAccent,
     background = NovaPalette.background,
     onBackground = NovaPalette.textPrimary,
     surface = NovaPalette.surface,
@@ -177,9 +206,15 @@ fun NovaTheme(
     reduceMotion: Boolean = false,
     content: @Composable () -> Unit
 ) {
+    // Card geometry is derived from the window, so a 720p set and a 4K set both
+    // show six posters across rather than six on one and three on the other.
+    val metrics = NovaSizing.metrics(screenWidthDp())
     // TV is always dark in practice; honouring light mode would look broken on a
     // living-room screen, so the dark scheme is fixed.
-    androidx.compose.runtime.CompositionLocalProvider(LocalReduceMotion provides reduceMotion) {
+    androidx.compose.runtime.CompositionLocalProvider(
+        LocalReduceMotion provides reduceMotion,
+        LocalCardMetrics provides metrics
+    ) {
         MaterialTheme(colorScheme = NovaColors, content = content)
     }
 }

@@ -454,7 +454,7 @@ private fun LevelPill(level: Level, modifier: Modifier) {
             progress = { level.value },
             modifier = Modifier.width(120.dp).height(4.dp),
             color = NovaPalette.textPrimary,
-            trackColor = Color.White.copy(alpha = 0.25f),
+            trackColor = NovaPalette.track,
             drawStopIndicator = {}
         )
     }
@@ -578,7 +578,7 @@ private fun TextButtonPill(label: String, active: Boolean = false, onClick: () -
         maxLines = 1,
         modifier = Modifier
             .clip(RoundedCornerShape(50))
-            .background(if (active) NovaPalette.accent else Color.White.copy(alpha = 0.14f))
+            .background(if (active) NovaPalette.accent else NovaPalette.track)
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 9.dp)
     )
@@ -650,7 +650,7 @@ private fun SeekBar(
             val h = if (dragging) 6.dp.toPx() else 4.dp.toPx()
             val y = size.height / 2f - h / 2f
             val r = CornerRadius(h / 2f)
-            drawRoundRect(Color.White.copy(alpha = 0.22f), Offset(0f, y), Size(size.width, h), r)
+            drawRoundRect(NovaPalette.track, Offset(0f, y), Size(size.width, h), r)
             val ahead = frac(maxOf(buffered, position + preloadedAhead))
             if (ahead > 0f) drawRoundRect(Color.White.copy(alpha = 0.42f), Offset(0f, y), Size(size.width * ahead, h), r)
             drawRoundRect(NovaPalette.accent, Offset(0f, y), Size(size.width * played, h), r)

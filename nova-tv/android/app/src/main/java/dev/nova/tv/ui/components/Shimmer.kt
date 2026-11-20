@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.nova.tv.ui.theme.LocalReduceMotion
+import dev.nova.tv.ui.theme.NovaCards
 import dev.nova.tv.ui.theme.NovaPalette
 import dev.nova.tv.ui.theme.NovaShape
 
@@ -58,14 +59,23 @@ fun ShimmerBox(modifier: Modifier, radius: Dp = NovaShape.card) {
     Box(modifier.clip(RoundedCornerShape(radius)).background(shimmerBrush()))
 }
 
-/** A row of poster placeholders in the exact size of the real cards. */
+/**
+ * A row of poster placeholders in the exact size of the real cards.
+ *
+ * The width comes from [NovaCards] rather than a constant so the skeleton
+ * matches the row it is standing in for. A placeholder that is a different size
+ * from the card makes the page jump when data lands, which is the one thing a
+ * skeleton exists to prevent.
+ */
 @Composable
-fun ShimmerPosterRow(count: Int = 7, cardWidth: Dp = PosterWidth, modifier: Modifier = Modifier) {
+fun ShimmerPosterRow(count: Int = 0, cardWidth: Dp = 0.dp, modifier: Modifier = Modifier) {
+    val width = if (cardWidth > 0.dp) cardWidth else NovaCards.posterWidth
+    val cards = if (count > 0) count else NovaCards.visiblePosters
     Column(modifier) {
         ShimmerBox(Modifier.width(180.dp).height(22.dp))
         Spacer(Modifier.height(14.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(CardGap)) {
-            repeat(count) { ShimmerBox(Modifier.width(cardWidth).aspectRatio(2f / 3f)) }
+        Row(horizontalArrangement = Arrangement.spacedBy(NovaCards.gap)) {
+            repeat(cards) { ShimmerBox(Modifier.width(width).aspectRatio(2f / 3f)) }
         }
     }
 }

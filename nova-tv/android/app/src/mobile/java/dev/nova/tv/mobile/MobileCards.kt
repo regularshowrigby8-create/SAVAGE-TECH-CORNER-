@@ -48,6 +48,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import dev.nova.tv.data.model.MetaPreview
@@ -58,10 +60,49 @@ import dev.nova.tv.ui.theme.LocalReduceMotion
 import dev.nova.tv.ui.theme.NovaPalette
 import kotlinx.coroutines.flow.distinctUntilChanged
 
-internal val PosterWidth = 112.dp
-internal val LandscapeWidth = 228.dp
 internal val ScreenPadding = 16.dp
 private val CardShape = RoundedCornerShape(10.dp)
+
+/**
+ * Phone card geometry, derived from the window the same way the TV build does.
+ *
+ * These were fixed at 112 dp / 228 dp, which is right on a 360 dp phone and
+ * wrong on everything else: a 320 dp handset showed two and a half posters and
+ * a foldable or tablet showed a row of tiny ones. Dividing the width by the
+ * number of cards that should be visible makes the card a function of the
+ * screen, so the layout is the same *shape* everywhere.
+ */
+private object MobileSizing {
+    /** Posters across a phone row. 3.2 is deliberate: the half card signals scroll. */
+    private const val VISIBLE_POSTERS = 3.2f
+
+    /** 16:9 stills across a Continue Watching row. */
+    private const val VISIBLE_LANDSCAPE = 1.6f
+
+    fun posterWidth(screenWidth: Dp): Dp {
+        val available = screenWidth - ScreenPadding * 2
+        return ((available - 10.dp * (VISIBLE_POSTERS - 1)) / VISIBLE_POSTERS)
+            .coerceIn(96.dp, 132.dp)
+    }
+
+    fun landscapeWidth(screenWidth: Dp): Dp {
+        val available = screenWidth - ScreenPadding * 2
+        return ((available - 10.dp * (VISIBLE_LANDSCAPE - 1)) / VISIBLE_LANDSCAPE)
+            .coerceIn(196.dp, 300.dp)
+    }
+}
+
+/** Poster width for the current phone window. */
+internal val PosterWidth: Dp
+    @Composable
+    @androidx.compose.runtime.ReadOnlyComposable
+    get() = MobileSizing.posterWidth(LocalConfiguration.current.screenWidthDp.dp)
+
+/** 16:9 still width for the current phone window. */
+internal val LandscapeWidth: Dp
+    @Composable
+    @androidx.compose.runtime.ReadOnlyComposable
+    get() = MobileSizing.landscapeWidth(LocalConfiguration.current.screenWidthDp.dp)
 
 /** Touch feedback: cards sink a little under the finger. */
 @Composable
@@ -76,9 +117,10 @@ internal fun Modifier.pressable(onClick: () -> Unit): Modifier {
 }
 
 @Composable
-internal fun PosterCard(meta: MetaPreview, onClick: () -> Unit, modifier: Modifier = Modifier.width(PosterWidth)) {
+internal fun PosterCard(meta: MetaPreview, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
         modifier
+            .width(PosterWidth)
             .aspectRatio(2f / 3f)
             .clip(CardShape)
             .background(NovaPalette.surface)
@@ -125,7 +167,7 @@ internal fun LandscapeCard(meta: MetaPreview, progress: Float, onClick: () -> Un
                         .align(Alignment.BottomStart)
                         .fillMaxWidth()
                         .height(3.dp)
-                        .background(Color.White.copy(alpha = 0.22f))
+                        .background(NovaPalette.track)
                 ) {
                     Box(Modifier.fillMaxWidth(progress.coerceIn(0.03f, 1f)).fillMaxHeight().background(NovaPalette.accent))
                 }
@@ -206,7 +248,9 @@ internal fun PosterGrid(
     }
     LazyVerticalGrid(
         state = state,
-        columns = GridCells.Adaptive(minSize = 104.dp),
+        // Adaptive, but seeded from the same derived poster width as the rows,
+        // so a grid card and a row card are the same size on every handset.
+        columns = GridCells.Adaptive(minSize = PosterWidth),
         contentPadding = PaddingValues(start = ScreenPadding, end = ScreenPadding, bottom = 24.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -252,7 +296,7 @@ internal fun Badge(text: String, accent: Boolean = false) {
         text,
         style = MType.label,
         modifier = Modifier
-            .background(if (accent) NovaPalette.accent.copy(alpha = 0.3f) else Color.White.copy(alpha = 0.14f), RoundedCornerShape(6.dp))
+            .background(if (accent) NovaPalette.accent.copy(alpha = 0.3f) else NovaPalette.track, RoundedCornerShape(6.dp))
             .padding(horizontal = 7.dp, vertical = 2.dp)
     )
 }

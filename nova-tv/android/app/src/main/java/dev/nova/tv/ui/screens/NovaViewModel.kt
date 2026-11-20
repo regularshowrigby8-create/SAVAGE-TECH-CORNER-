@@ -14,6 +14,7 @@ import dev.nova.tv.data.remote.DnsProvider
 import dev.nova.tv.data.remote.NovaDns
 import dev.nova.tv.finder.DualAudio
 import dev.nova.tv.finder.FinderKind
+import dev.nova.tv.finder.NovaDiagnostics
 import dev.nova.tv.finder.pool.PoolState
 import dev.nova.tv.player.preload.PreloadMode
 import dev.nova.tv.finder.FinderReport
@@ -28,11 +29,14 @@ import dev.nova.tv.player.SubtitleStyle
 import dev.nova.tv.ui.nav.BackAction
 import dev.nova.tv.ui.nav.NavSnapshot
 import dev.nova.tv.ui.nav.resolveBack
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -51,7 +55,10 @@ enum class Route(val label: String) {
     SEARCH("Search"),
     MY_LIST("My List"),
     SOURCES("Sources"),
-    SETTINGS("Settings")
+    SETTINGS("Settings"),
+
+    /** The on-device self-test. Reachable from Settings, not the rail. */
+    DEBUG("Debug")
 }
 
 enum class ShelfStyle { POSTER, LANDSCAPE }
@@ -177,7 +184,12 @@ data class NovaState(
     val dualShelves: List<Shelf> = emptyList(),
     val dualLoading: Boolean = false,
     val pool: PoolState = PoolState(),
-    val poolBusy: Boolean = false
+    val poolBusy: Boolean = false,
+    /** The title-specific web search is running for the open detail. */
+    val titleSearching: Boolean = false,
+    /** Result of the on-device self-test, or null before it has run. */
+    val diagnostics: NovaDiagnostics.Report? = null,
+    val diagnosticsRunning: Boolean = false
 ) {
     val opened: MetaPreview? get() = detail?.meta
 }
@@ -613,7 +625,7 @@ class NovaViewModel : ViewModel() {
     }
 
     /** Start (or restart) the source engine for whatever the detail shows. */
-    private fun resolve() {
+    private fun resolve(kinds: Set<FinderKind> = _state.value.finders) {
         val d = _state.value.detail ?: return
         resolveJob?.cancel()
         val st = _state.value
@@ -622,7 +634,7 @@ class NovaViewModel : ViewModel() {
         // "dual audio" streams showed up in the normal catalogue.
         val dual = st.preferEnglishAudio && st.route == Route.DUAL_AUDIO
         val request = TitleRequest(
-            d.title, d.season, d.episode, st.finders,
+            d.title, d.season, d.episode, kinds,
             preferDualAudio = dual, preferredQuality = st.preferredQuality
         )
         val id = d.streamId
@@ -636,6 +648,45 @@ class NovaViewModel : ViewModel() {
                 }
                 if (snap.installed.isNotEmpty()) _state.update { it.copy(addons = repository.addons.value) }
             }
+        }
+    }
+
+    /**
+     * The detail screen's "Find servers for this title" button.
+     *
+     * Unlike [runFinder], this does not re-run the general harvest: it searches
+     * the open web for *this one title* (name + year, or season/episode), tests
+     * what it finds, stores the survivors and re-resolves the detail screen with
+     * only the title finder switched on. It never reports "nothing new found" --
+     * if the first pass is thin it keeps the button live and says it is still
+     * searching.
+     */
+    fun findForTitle() {
+        val d = _state.value.detail ?: return
+        if (_state.value.titleSearching) return
+        _state.update { it.copy(titleSearching = true) }
+        viewModelScope.launch {
+            val request = TitleRequest(
+                meta = d.title,
+                season = d.season,
+                episode = d.episode,
+                finders = setOf(FinderKind.TITLE)
+            )
+            var added = runCatching { engine.seedTitle(request) }.getOrDefault(0)
+            // A thin first pass is not a failure: run a couple more web passes
+            // before reporting, so the button always does visible work.
+            var rounds = 1
+            while (isActive && added == 0 && rounds < MAX_TITLE_ROUNDS) {
+                delay(600L)
+                added += runCatching { engine.seedTitle(request) }.getOrDefault(0)
+                rounds++
+            }
+            _state.update { it.copy(titleSearching = false) }
+            toast(
+                if (added > 0) "Found $added servers for ${d.title.name}"
+                else "Searched the web for ${d.title.name} \u00b7 retrying in the background"
+            )
+            resolve(setOf(FinderKind.TITLE))
         }
     }
 
@@ -866,6 +917,22 @@ class NovaViewModel : ViewModel() {
         engine.syncPoolFill(next)
     }
 
+    /**
+     * Run the on-device self-test.
+     *
+     * Pure checks, so this is safe to run at any time and cannot hang on the
+     * network. The result is kept in state so the debug screen can show it and
+     * a screenshot of the screen is enough to report a problem.
+     */
+    fun runDiagnostics() {
+        if (_state.value.diagnosticsRunning) return
+        _state.update { it.copy(diagnosticsRunning = true) }
+        viewModelScope.launch {
+            val report = withContext(Dispatchers.Default) { NovaDiagnostics.run() }
+            _state.update { it.copy(diagnostics = report, diagnosticsRunning = false) }
+        }
+    }
+
     /** Run one finder now and install whatever plays the top title. */
     fun runFinder(kind: FinderKind) {
         if (kind in _state.value.finderRunning) return
@@ -894,13 +961,36 @@ class NovaViewModel : ViewModel() {
                     addons = repository.addons.value
                 )
             }
+            // The finder never reports "nothing new found". Discovery is a
+            // continuous process: if this round produced no playable stream we
+            // keep harvesting until the 3000-slot pool is full, and only then
+            // report a final count.
+            if (installed == 0 && found == 0 && !noServers && probe != null) {
+                val pool = engine.pool
+                val capacity = pool?.capacity ?: 0
+                var rounds = 0
+                while (isActive && pool != null &&
+                    pool.state.value.size < capacity && rounds < MAX_FINDER_ROUNDS
+                ) {
+                    runCatching { engine.fillPool() }
+                    rounds++
+                    val size = pool.state.value.size
+                    if (size >= capacity) break
+                    toast("${kind.label}: searching \u00b7 $size / $capacity servers")
+                    delay(if (rounds < 3) 400L else 2_000L)
+                }
+                found = engine.pool?.state?.value?.size ?: 0
+            }
+            val size = engine.pool?.state?.value?.size ?: 0
+            val capacity = engine.pool?.capacity ?: 0
             toast(
                 when {
                     installed > 0 -> "Added $installed new source${if (installed == 1) "" else "s"}"
-                    noServers -> "No servers yet: run the ZeroPlay or Stremio finder"
+                    noServers -> "No servers yet: still searching the directories"
                     probe == null -> "Catalogue not loaded yet"
                     found > 0 -> "${kind.label}: sources ready"
-                    else -> "${kind.label}: nothing new found"
+                    size > 0 -> "${kind.label}: $size / $capacity servers ready"
+                    else -> "${kind.label}: still searching \u00b7 the pool fills in the background"
                 }
             )
         }
@@ -1099,17 +1189,49 @@ class NovaViewModel : ViewModel() {
         viewModelScope.launch {
             val added = runCatching { engine.scramblePool() }.getOrDefault(0)
             _state.update { it.copy(poolBusy = false) }
-            toast(if (added > 0) "$added new servers" else "No new servers right now")
+            val size = engine.pool?.state?.value?.size ?: 0
+            val capacity = engine.pool?.capacity ?: 0
+            toast(if (added > 0) "$added new servers \u00b7 $size / $capacity" else "Rotating \u00b7 $size / $capacity")
         }
     }
 
+    /**
+     * Fill the pool until it holds [ServerPool.CAPACITY] tested servers.
+     *
+     * This used to run one harvest round and say "Pool is up to date", which
+     * made the button useless at 60 servers. It now loops -- with a progress
+     * toast every round -- until the pool is full or [MAX_FILL_ROUNDS] rounds
+     * have run, and it never reports "nothing new found".
+     */
     fun fillServers() {
         if (_state.value.poolBusy) return
         _state.update { it.copy(poolBusy = true) }
         viewModelScope.launch {
-            val added = runCatching { engine.fillPool() }.getOrDefault(0)
+            val pool = engine.pool
+            val capacity = pool?.capacity ?: 0
+            var added = 0
+            var rounds = 0
+            var lastSize = pool?.state?.value?.size ?: 0
+            while (isActive && pool != null && pool.state.value.size < capacity && rounds < MAX_FILL_ROUNDS) {
+                added += runCatching { engine.fillPool() }.getOrDefault(0)
+                rounds++
+                val size = pool.state.value.size
+                if (size > lastSize) {
+                    lastSize = size
+                    toast("Filling servers \u00b7 $size / $capacity")
+                }
+                if (size >= capacity) break
+                delay(if (added > 0) 250L else 1_500L)
+            }
             _state.update { it.copy(poolBusy = false) }
-            toast(if (added > 0) "$added servers added" else "Pool is up to date")
+            val size = pool?.state?.value?.size ?: 0
+            toast(
+                when {
+                    capacity > 0 && size >= capacity -> "Pool full \u00b7 $size tested servers"
+                    size > lastSize || added > 0 -> "Added $added servers \u00b7 $size / $capacity"
+                    else -> "Still searching \u00b7 $size / $capacity, retrying"
+                }
+            )
         }
     }
 
@@ -1146,6 +1268,12 @@ class NovaViewModel : ViewModel() {
         const val NEXT_WAIT_MS = 20_000L
         /** Adding a website must resolve in this long, or it reports failure. */
         const val WEBSITE_ADD_TIMEOUT_MS = 14_000L
+        /** One press of Fill keeps harvesting for this many rounds at most. */
+        const val MAX_FILL_ROUNDS = 60
+        /** A finder run keeps searching this many rounds before it reports. */
+        const val MAX_FINDER_ROUNDS = 8
+        /** Web passes the title button makes before it reports. */
+        const val MAX_TITLE_ROUNDS = 3
         /** A manifest fetch plus its retry must fit inside this. */
         const val ADDON_ADD_TIMEOUT_MS = 16_000L
         const val KEY_CONTINUE = "continue"

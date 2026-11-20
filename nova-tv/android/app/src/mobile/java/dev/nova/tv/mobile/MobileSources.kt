@@ -243,6 +243,9 @@ fun MobileSettings(state: NovaState, viewModel: NovaViewModel, onBack: () -> Uni
             }
             SettingRow("Clear watch history", onClick = viewModel::clearHistory) {}
             SettingRow("Reload catalogue", onClick = viewModel::refresh) { Text("Nova ${BuildConfig.VERSION_NAME}", style = MType.meta) }
+            SettingRow("Diagnostics", onClick = { viewModel.navigate(Route.DEBUG) }) {
+                Text(state.diagnostics?.summary ?: "Run", style = MType.meta)
+            }
         }
     }
 }

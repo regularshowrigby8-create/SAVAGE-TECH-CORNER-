@@ -50,6 +50,7 @@ import androidx.tv.material3.Text
 import coil.compose.AsyncImage
 import dev.nova.tv.data.model.MetaPreview
 import dev.nova.tv.ui.theme.LocalReduceMotion
+import dev.nova.tv.ui.theme.NovaCards
 import dev.nova.tv.ui.theme.NovaPalette
 import dev.nova.tv.ui.theme.NovaShape
 import dev.nova.tv.ui.theme.NovaType
@@ -173,10 +174,24 @@ fun RestoreFocusFor(id: String, requester: FocusRequester) {
 // Cards
 // ---------------------------------------------------------------------------
 
-/** Poster size used by every row, so rows and placeholders line up exactly. */
-val PosterWidth = 184.dp
-val LandscapeWidth = 360.dp
-val CardGap = 28.dp
+/**
+ * Card sizes are no longer constants.
+ *
+ * These used to be `val PosterWidth = 140.dp` / `LandscapeWidth = 280.dp`,
+ * which is why the TV grid looked oversized: one number was being asked to fit
+ * every panel. The real values now come from [NovaSizing], which divides the
+ * available width by the number of cards a row should show. These aliases are
+ * kept so existing call sites and the shimmer placeholders stay in step with
+ * the real cards instead of drifting to a different size.
+ */
+val PosterWidth: Dp
+    @Composable @ReadOnlyComposable get() = NovaCards.posterWidth
+
+val LandscapeWidth: Dp
+    @Composable @ReadOnlyComposable get() = NovaCards.landscapeWidth
+
+val CardGap: Dp
+    @Composable @ReadOnlyComposable get() = NovaCards.gap
 
 /**
  * Poster only, no caption: the artwork carries the title. A caption under
@@ -190,7 +205,7 @@ fun PosterCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     /** 0 fills the parent (grid cells). */
-    width: Dp = PosterWidth,
+    width: Dp = 0.dp,
     onFocused: () -> Unit = {}
 ) {
     val requester = remember { FocusRequester() }
@@ -214,15 +229,16 @@ fun LandscapeCard(
     progress: Float,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    width: Dp = LandscapeWidth,
+    width: Dp = 0.dp,
     onFocused: () -> Unit = {}
 ) {
     val requester = remember { FocusRequester() }
     RestoreFocusFor(title.id, requester)
+    val resolved = if (width > 0.dp) width else NovaCards.landscapeWidth
     NovaCard(
         onClick = onClick,
         modifier = modifier
-            .width(width)
+            .width(resolved)
             .aspectRatio(16f / 9f)
             .focusRequester(requester)
             .onFocusChanged { if (it.isFocused) onFocused() }
@@ -258,7 +274,7 @@ fun EpisodeCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier.width(260.dp)) {
+    Column(modifier.width(NovaCards.episodeWidth)) {
         NovaCard(onClick = onClick, modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f)) {
             Box(Modifier.fillMaxSize()) {
                 Artwork(url = thumbnail, fallback = "$number")
@@ -270,7 +286,7 @@ fun EpisodeCard(
                             .clip(PillShape)
                             .background(NovaPalette.accent)
                             .padding(horizontal = 10.dp, vertical = 3.dp)
-                    ) { Text("Up next", style = NovaType.meta, color = NovaPalette.background) }
+                    ) { Text("Up next", style = NovaType.meta, color = NovaPalette.onAccent) }
                 }
                 if (progress > 0f) ProgressLine(progress, Modifier.align(Alignment.BottomCenter))
             }
@@ -288,7 +304,7 @@ fun EpisodeCard(
 
 @Composable
 private fun ProgressLine(progress: Float, modifier: Modifier = Modifier) {
-    Box(modifier.fillMaxWidth().height(4.dp).background(Color.White.copy(alpha = 0.18f))) {
+    Box(modifier.fillMaxWidth().height(4.dp).background(NovaPalette.track)) {
         Box(Modifier.fillMaxWidth(progress.coerceIn(0.02f, 1f)).fillMaxHeight().background(NovaPalette.accent))
     }
 }
@@ -380,9 +396,9 @@ fun PrimaryButton(
         shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(PillShape),
         colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(
             containerColor = NovaPalette.accent,
-            contentColor = NovaPalette.background,
+            contentColor = NovaPalette.onAccent,
             focusedContainerColor = NovaPalette.textPrimary,
-            focusedContentColor = NovaPalette.background
+            focusedContentColor = NovaPalette.onAccent
         ),
         scale = focusScale(),
         border = focusBorder(PillShape)

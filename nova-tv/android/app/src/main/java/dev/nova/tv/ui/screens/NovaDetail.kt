@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -154,7 +155,7 @@ fun DetailScreen(state: NovaState, viewModel: NovaViewModel) {
                     }
                 }
                 Spacer(Modifier.height(26.dp))
-                Actions(detail, viewModel, primary)
+                Actions(detail, viewModel, primary, state.titleSearching)
 
                 if (detail.isSeries && title.videos.isNotEmpty()) {
                     Spacer(Modifier.height(28.dp))
@@ -202,13 +203,18 @@ private fun Badge(text: String) {
         text,
         style = NovaType.meta.copy(color = NovaPalette.textPrimary),
         modifier = Modifier
-            .background(Color.White.copy(alpha = 0.14f), RoundedCornerShape(6.dp))
+            .background(NovaPalette.track, RoundedCornerShape(6.dp))
             .padding(horizontal = 8.dp, vertical = 2.dp)
     )
 }
 
 @Composable
-private fun Actions(detail: DetailState, viewModel: NovaViewModel, primary: FocusRequester) {
+private fun Actions(
+    detail: DetailState,
+    viewModel: NovaViewModel,
+    primary: FocusRequester,
+    searchingTitle: Boolean
+) {
     val streams = detail.sources.streams
     val ready = streams.isNotEmpty()
     val resume = detail.resume
@@ -233,11 +239,17 @@ private fun Actions(detail: DetailState, viewModel: NovaViewModel, primary: Focu
             icon = if (detail.inList) Icons.Filled.Check else Icons.Filled.Add,
             onClick = viewModel::toggleMyList
         )
+        // Title-specific finder: searches the web for this one title only.
+        SecondaryButton(
+            if (searchingTitle) "Searching\u2026" else "Find for this title",
+            icon = Icons.Filled.Search,
+            onClick = viewModel::findForTitle
+        )
         if (streams.size > 1) SecondaryButton("Sources  ${streams.size}", onClick = viewModel::toggleSourcesSheet)
         if (ready) SecondaryButton("Download", onClick = viewModel::downloadBest)
     }
     if (resume != null && ready) {
-        Box(Modifier.padding(top = 12.dp).width(160.dp).height(3.dp).background(Color.White.copy(alpha = 0.2f))) {
+        Box(Modifier.padding(top = 12.dp).width(160.dp).height(3.dp).background(NovaPalette.track)) {
             Box(Modifier.fillMaxWidth(resume.fraction.coerceIn(0.02f, 1f)).fillMaxHeight().background(NovaPalette.accent))
         }
     }

@@ -8,6 +8,8 @@ import dev.nova.tv.finder.website.WebsiteFinder
 import dev.nova.tv.finder.website.WebsiteRules
 import dev.nova.tv.finder.pool.ServerHarvester
 import dev.nova.tv.finder.pool.ServerPool
+import dev.nova.tv.finder.pool.ServerTester
+import dev.nova.tv.finder.pool.TestReport
 import dev.nova.tv.player.HostHealth
 import dev.nova.tv.player.ProbeResult
 import dev.nova.tv.player.StreamProbe
@@ -94,8 +96,31 @@ class SourceEngine(
     private val probe: StreamProbe,
     /** The 3000-slot server pool; null in tests that do not need it. */
     val pool: ServerPool? = null,
-    private val harvester: ServerHarvester? = null
+    private val harvester: ServerHarvester? = null,
+    /**
+     * The gate every discovered server must pass before it may take one of the
+     * 3000 slots. Null only in tests that do not exercise the pool.
+     */
+    private val tester: ServerTester? = null,
+    /** Searches the open web for one title only; used by the detail button. */
+    private val titleSearch: TitleWebSearch? = null
 ) {
+    /** Outcome of the most recent testing round, for the Sources screen. */
+    @Volatile
+    var lastTest: TestReport = TestReport()
+        private set
+
+    /**
+     * Test, then store. Returns how many servers were added. When no tester is
+     * configured (unit tests) the old untested path is used.
+     */
+    private suspend fun gate(candidates: List<FinderCandidate>): List<dev.nova.tv.finder.pool.TestedServer> {
+        val tester = tester ?: return emptyList()
+        if (candidates.isEmpty()) return emptyList()
+        val (tested, report) = tester.testWithReport(candidates)
+        lastTest = report
+        return tested
+    }
     /** At most [PARALLELISM] network calls at once, across every finder. */
     private val io = Dispatchers.IO.limitedParallelism(PARALLELISM)
     private val background = CoroutineScope(SupervisorJob() + io)
@@ -179,7 +204,10 @@ class SourceEngine(
             val round = pool.cursor
             val found = runCatching { harvester.harvest(round) }.getOrDefault(emptyList())
             pool.cursor = round + 1
-            pool.add(found + cachedCandidates())
+            val candidates = found + cachedCandidates()
+            if (tester == null) return@withLock pool.add(candidates)
+            // Only servers that answered a real request may take a slot.
+            pool.addVerified(gate(candidates))
         }
     }
 
@@ -195,7 +223,9 @@ class SourceEngine(
             val round = pool.cursor
             val fresh = runCatching { harvester.harvest(round) }.getOrDefault(emptyList())
             pool.cursor = round + 1
-            pool.scramble(fresh + cachedCandidates())
+            val candidates = fresh + cachedCandidates()
+            if (tester == null) return@withLock pool.scramble(candidates)
+            pool.scrambleVerified(gate(candidates))
         }
     }
 
@@ -218,7 +248,11 @@ class SourceEngine(
         }
         val report = job.await()
         discoveryLock.withLock { discovered[kind] = System.currentTimeMillis() to report; inflight.remove(kind) }
-        pool?.add(report.candidates)
+        val pool = pool
+        if (pool != null) {
+            if (tester == null) pool.add(report.candidates)
+            else pool.addVerified(gate(report.candidates))
+        }
         return report
     }
 
@@ -230,6 +264,37 @@ class SourceEngine(
             .distinctBy { it.baseUrl.lowercase() }
 
     fun report(kind: FinderKind): FinderReport? = discovered[kind]?.second
+
+    /**
+     * The title-specific finder's entry point.
+     *
+     * Searches the web for this one title, gates what it finds through
+     * [ServerTester], stores the survivors and caches them as title candidates
+     * so [resolve] picks them up. Returns how many servers were added.
+     */
+    suspend fun seedTitle(request: TitleRequest): Int {
+        val search = titleSearch ?: return 0
+
+        // Embed players are HTML, not addons: register them as websites so the
+        // website resolver drives them into direct media. They are never pool
+        // candidates, because the tester (rightly) rejects anything without a
+        // manifest and the pool would only ever query them as addons.
+        runCatching {
+            for (host in search.embedHosts()) {
+                library.addWebsite(dev.nova.tv.finder.website.SavedWebsite(url = "$host/", name = host.substringAfter("://")))
+            }
+        }
+
+        val found = runCatching { search.search(request) }.getOrDefault(emptyList())
+        if (found.isEmpty()) return 0
+        discoveryLock.withLock {
+            val existing = discovered[FinderKind.TITLE]?.second?.candidates.orEmpty()
+            val merged = (existing + found).distinctBy { it.baseUrl.lowercase() }
+            discovered[FinderKind.TITLE] = System.currentTimeMillis() to FinderReport(merged, emptyList())
+        }
+        val pool = pool ?: return found.size
+        return if (tester == null) pool.add(found) else pool.addVerified(gate(found))
+    }
 
     fun resolve(request: TitleRequest): Flow<SourceSnapshot> = channelFlow {
         val state = EngineState(request)

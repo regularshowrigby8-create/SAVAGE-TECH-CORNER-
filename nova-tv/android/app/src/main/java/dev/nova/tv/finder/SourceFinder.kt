@@ -33,7 +33,17 @@ data class FinderCandidate(
     val searchable: Boolean,
     val stars: Int,
     /** "Server Finder · github", as in core.js providerRecord. */
-    val from: String
+    val from: String,
+    /**
+     * Provenance, from core.js `providerRecord` (`homepage`, `tags`).
+     *
+     * A pool of 3000 servers is only useful if you can tell where one came
+     * from. These are carried through to the Sources screen so a host can be
+     * judged -- and blocked -- on its origin rather than on its name alone.
+     * Defaulted, so every existing construction site stays valid.
+     */
+    val homepage: String = "",
+    val tags: List<String> = emptyList()
 ) {
     /** Only imdb-keyed addons can answer for Cinemeta titles. */
     val acceptsImdbIds: Boolean get() = idPrefixes.isEmpty() || idPrefixes.any { it == "tt" }

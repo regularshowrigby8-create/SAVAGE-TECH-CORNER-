@@ -24,10 +24,22 @@ import java.net.URI
  */
 object FinderRules {
 
-    const val MAX_PER_SOURCE = 8
-    const val MAX_CANDIDATES = 1000
+    /**
+     * How many manifests one directory may yield in a single round.
+     *
+     * This used to be 8, which is why the 3000-slot pool stalled a few hundred
+     * entries in: the directories were read eight manifests deep and then
+     * declared exhausted. A community catalogue has hundreds of addons, so the
+     * cap is now high enough for one round to fill a large slice of the pool.
+     */
+    const val MAX_PER_SOURCE = 96
+    const val MAX_CANDIDATES = 20_000
     const val MAX_MANIFEST_BYTES = 160_000L
     const val MAX_JSON_BYTES = 1_200_000L
+
+    /** core.js kept 30 rows per provider; the same ceiling applies here. */
+    const val MAX_CATALOG_DEFS = 30
+    const val MAX_ADDON_CATALOGS = 30
 
     /**
      * The file-size cap: nothing larger than 5 GB is played or even offered.
@@ -82,6 +94,26 @@ object FinderRules {
         // Broad series / film rows.
         "https://addon.notorrent2.workers.dev",
         "https://27a5b2bfe3c0-stremio-brazilian-addon.baby-beamup.club",
+        // -- broader catalogue: twelve more rows ---------------------------
+        // Cinemeta's own secondary catalogue host (different rows from v3).
+        "https://cinemeta-catalogs.strem.io",
+        // Official WatchHub: which legal service carries a title, per country.
+        "https://watchhub.strem.io",
+        // Public-domain film library; a real catalogue, not a search stub.
+        "https://v3-publicdomainmovies.strem.io",
+        // YouTube catalogue: documentaries, music, full-length uploads.
+        "https://v3-youtube.strem.io",
+        // Anime, second key (Kitsu and AniList are separate id spaces).
+        "https://anime-kitsu.strem.io",
+        "https://kitsu.strem.fun",
+        // Genre / franchise rows that Cinemeta does not carry.
+        "https://v3-marvel.strem.io",
+        "https://v3-dc.strem.io",
+        "https://v3-starwars.strem.io",
+        // Per-service rows (Netflix / Prime / Disney+ catalogues).
+        "https://v3-netflix.strem.io",
+        "https://v3-prime.strem.io",
+        "https://v3-disney.strem.io",
         // Subtitles.
         "https://opensubtitles-v3.strem.io"
     )
@@ -111,6 +143,48 @@ object FinderRules {
     internal fun isIpLiteral(host: String): Boolean =
         Regex("""^\d{1,3}(\.\d{1,3}){3}$""").matches(host) || host.contains(':')
 
+    /**
+     * What an addon can actually answer, derived once at parse time.
+     *
+     * Imported from core.js `providerRecord().identification.supports`. ZeroPlay
+     * recorded this per provider so the UI could grey out a source that cannot
+     * serve the current request instead of firing a doomed network call at it.
+     * Nova previously only kept `searchable`, so every candidate was asked for
+     * everything.
+     */
+    data class Capabilities(
+        val movie: Boolean,
+        val series: Boolean,
+        val streams: Boolean,
+        val catalog: Boolean,
+        val meta: Boolean,
+        val subtitles: Boolean,
+        val addonCatalog: Boolean,
+        val search: Boolean,
+        val episodeLookup: Boolean,
+        /** core.js identifierModes: "tt" becomes "imdb-id". */
+        val identifierModes: List<String>,
+        /** core.js confidence: 88 for a manifest-verified provider. */
+        val confidence: Int = CONFIDENCE,
+        val checks: List<String> = DEFAULT_CHECKS
+    ) {
+        /** Can this addon answer a stream request for [type] at all? */
+        fun serves(type: String): Boolean = streams && when (type) {
+            "series" -> series
+            "movie" -> movie
+            else -> true
+        }
+
+        companion object {
+            const val CONFIDENCE = 88
+            val DEFAULT_CHECKS = listOf(
+                "public HTTPS manifest",
+                "stream resource and movie/series types confirmed",
+                "candidate requires title-scoped identity-verified playback match"
+            )
+        }
+    }
+
     /** What a manifest says about itself, after the finder's checks. */
     data class ManifestInfo(
         val id: String,
@@ -120,7 +194,16 @@ object FinderRules {
         val resources: List<String>,
         val types: List<String>,
         val idPrefixes: List<String>,
-        val searchable: Boolean
+        val searchable: Boolean,
+        /** core.js catalogDefs: rows this addon can list. */
+        val catalogDefs: List<String> = emptyList(),
+        /** core.js addonCatalogs: addons this one can recommend. */
+        val addonCatalogs: List<String> = emptyList(),
+        val capabilities: Capabilities = Capabilities(
+            movie = false, series = false, streams = false, catalog = false,
+            meta = false, subtitles = false, addonCatalog = false,
+            search = false, episodeLookup = false, identifierModes = emptyList()
+        )
     )
 
     /**
@@ -155,6 +238,33 @@ object FinderRules {
             (catalog["extra"] as? JsonArray)?.filterIsInstance<JsonObject>()
                 ?.any { (it["name"] as? JsonPrimitive)?.contentOrNull == "search" } == true
         }
+        // core.js catalogDefs / addonCatalogs: keep the row identities, not just
+        // a boolean, so the catalogue screen can name a source's own rows.
+        val catalogDefs = catalogs.mapNotNull { catalog ->
+            val type = catalog.string("type").orEmpty()
+            val id = catalog.string("id").orEmpty()
+            if (type.isBlank() || id.isBlank()) null else "$type/$id"
+        }.distinct().take(MAX_CATALOG_DEFS)
+        val addonCatalogs = (obj["addonCatalogs"] as? JsonArray)?.filterIsInstance<JsonObject>()
+            .orEmpty()
+            .mapNotNull { it.string("url").ifBlank { null } }
+            .map { publicHttpsUrl(it) }
+            .filter { it.isNotEmpty() }
+            .distinct()
+            .take(MAX_ADDON_CATALOGS)
+        val normalisedTypes = types.map { if (it == "tv") "series" else it }.distinct()
+        val capabilities = Capabilities(
+            movie = "movie" in normalisedTypes,
+            series = "series" in normalisedTypes,
+            streams = "stream" in resources,
+            catalog = "catalog" in resources,
+            meta = "meta" in resources,
+            subtitles = "subtitles" in resources,
+            addonCatalog = "addon_catalog" in resources,
+            search = searchable,
+            episodeLookup = "series" in normalisedTypes,
+            identifierModes = prefixes.map { if (it == "tt") "imdb-id" else it }
+        )
         val id = obj.string("id")
         return ManifestInfo(
             id = clean(id, 120),
@@ -162,9 +272,12 @@ object FinderRules {
             version = clean(obj.string("version"), 40),
             description = clean(obj.string("description"), 240),
             resources = resources,
-            types = types.map { if (it == "tv") "series" else it }.distinct(),
+            types = normalisedTypes,
             idPrefixes = prefixes,
-            searchable = searchable
+            searchable = searchable,
+            catalogDefs = catalogDefs,
+            addonCatalogs = addonCatalogs,
+            capabilities = capabilities
         )
     }
 
@@ -176,8 +289,15 @@ object FinderRules {
             .trimEnd('/')
     }
 
-    /** core.js extractManifestUrls: at most 12 public manifest links from free text. */
-    fun extractManifestUrls(text: String?): List<String> {
+    /**
+     * core.js extractManifestUrls: every public manifest link in free text.
+     *
+     * The JS stopped at 12 because a README never holds more. The directory
+     * graph (addon_catalog / stremio-addons.net) does, and stopping at 12 was
+     * one of the reasons the 3000-slot pool never filled, so the cap is now a
+     * parameter and the default is large.
+     */
+    fun extractManifestUrls(text: String?, limit: Int = 600): List<String> {
         val urls = LinkedHashSet<String>()
         val pattern = Regex("""https?://[^\s"'<>()\[\]{}]+""", RegexOption.IGNORE_CASE)
         for (match in pattern.findAll(text.orEmpty())) {
@@ -185,7 +305,7 @@ object FinderRules {
             if (!Regex("""manifest\.json(?:[?#].*)?$""", RegexOption.IGNORE_CASE).containsMatchIn(raw)) continue
             val url = publicHttpsUrl(raw)
             if (url.isNotEmpty()) urls += url
-            if (urls.size >= 12) break
+            if (urls.size >= limit) break
         }
         return urls.toList()
     }
@@ -240,6 +360,59 @@ object FinderRules {
         val haystack = (name.orEmpty() + " " + baseUrl.orEmpty()).lowercase()
         if (haystack.isBlank()) return false
         return REDUNDANT_NAMES.any { it in haystack }
+    }
+
+    /**
+     * Hosts and names that only work after the viewer creates an account,
+     * buys a subscription, or configures a panel. They advertise a `stream`
+     * resource, so every manifest check passes, and then every single request
+     * is a dead end -- exactly the "redundant VOD servers that require signing
+     * up" the pool must not store.
+     *
+     * Matched against the addon name and its host only. Descriptions are never
+     * consulted: a legitimate provider that mentions "no account required"
+     * must not be dropped by its own prose.
+     */
+    private val SIGNUP_NAMES = listOf(
+        "real-debrid", "realdebrid", "alldebrid", "premiumize", "debrid-link", "debridlink",
+        "put.io", "putio", "easynews", "usenet", "newshosting", "torbox",
+        "trakt", "simkl", "letterboxd", "myanimelist", "anilist account",
+        "netflix login", "prime login", "disney login", "hulu login", "hbo login",
+        "sign in", "signin", "sign-in", "log in", "login", "subscribe", "subscription",
+        "create account", "register", "membership", "premium only", "patreon",
+        "plex", "emby", "jellyfin", "tautulli", "overseerr", "sonarr", "radarr",
+        "nzbget", "sabnzbd", "transmission", "qbittorrent", "deluge"
+    )
+
+    /** Host fragments that are account walls, not stream servers. */
+    private val SIGNUP_HOSTS = listOf(
+        "real-debrid.com", "alldebrid.com", "premiumize.me", "debrid-link.com",
+        "put.io", "easynews.com", "torbox.app", "trakt.tv", "simkl.com",
+        "patreon.com", "plex.tv", "emby.media", "jellyfin.org",
+        "netflix.com", "primevideo.com", "disneyplus.com", "hulu.com", "max.com",
+        "hbomax.com", "paramountplus.com", "peacocktv.com", "crunchyroll.com"
+    )
+
+    /** True when a source is an account wall / setup wizard rather than a server. */
+    fun requiresSignup(name: String?, baseUrl: String? = null): Boolean {
+        val label = name.orEmpty().lowercase()
+        val host = baseUrl.orEmpty().lowercase()
+        if (label.isBlank() && host.isBlank()) return false
+        if (SIGNUP_HOSTS.any { it in host }) return true
+        return SIGNUP_NAMES.any { it in label }
+    }
+
+    /**
+     * The single gate every discovered server passes before it may be stored:
+     * no torrents, no Internet Archive, no duplicate VOD front-end, no account
+     * wall. [ServerTester] adds the liveness check on top of this.
+     */
+    fun isStorable(name: String?, baseUrl: String? = null): Boolean {
+        if (baseUrl.isNullOrBlank()) return false
+        if (isInternetArchive(name, baseUrl)) return false
+        if (isRedundantSource(name, baseUrl)) return false
+        if (requiresSignup(name, baseUrl)) return false
+        return true
     }
 
     /**
@@ -455,6 +628,102 @@ object FinderRules {
         val haystack = (name.orEmpty() + " " + baseUrl.orEmpty()).lowercase()
         return "archive.org" in haystack || "internet archive" in haystack ||
             "internetarchive" in haystack || "archive-org" in haystack
+    }
+
+    /**
+     * A validated title identity, the Kotlin form of core.js `normalizeIdentity`.
+     *
+     * ZeroPlay refused to search with a title shorter than two characters, and
+     * clamped season/episode into sane ranges, so a malformed request could not
+     * turn into a hundred junk queries. [TitleWebSearch] builds every query from
+     * this object instead of from raw UI strings.
+     */
+    data class TitleIdentity(
+        val title: String,
+        /** Alternative titles, at most [MAX_TITLES], used for fallback queries. */
+        val titles: List<String>,
+        val type: String,
+        val year: Int?,
+        val imdbId: String,
+        val tmdbId: Int?,
+        val season: Int,
+        val episode: Int
+    ) {
+        val isSeries: Boolean get() = type == "series"
+
+        /** "tt0903747:1:1" for a series, the bare id for a film. */
+        fun streamId(): String = if (isSeries) "$imdbId:$season:$episode" else imdbId
+
+        /** The primary query: title, year, and SxxExx when episodic. */
+        fun query(): String = buildString {
+            append(title)
+            year?.let { append(' ').append(it) }
+            if (isSeries) append(' ').append("S%02dE%02d".format(season, episode))
+        }
+
+        companion object {
+            const val MAX_TITLES = 5
+        }
+    }
+
+    /**
+     * core.js normalizeIdentity: reject what cannot be searched, clamp what can.
+     * Returns null when there is no usable title, which callers treat as "do not
+     * spend a single request".
+     */
+    fun normalizeIdentity(
+        title: String?,
+        year: Int? = null,
+        imdbId: String? = null,
+        tmdbId: Int? = null,
+        type: String? = null,
+        season: Int? = null,
+        episode: Int? = null,
+        titles: List<String> = emptyList()
+    ): TitleIdentity? {
+        val primary = clean(title, 160)
+        if (primary.length < 2) return null
+        val allTitles = (listOf(primary) + titles)
+            .map { clean(it, 160) }
+            .filter { it.length >= 2 }
+            .distinct()
+            .take(TitleIdentity.MAX_TITLES)
+        val resolvedType = if (type == "tv" || type == "series") "series" else "movie"
+        val cleanYear = year?.takeIf { it in 1870..2200 }
+        val cleanImdb = imdbId.orEmpty().trim().lowercase()
+            .takeIf { Regex("""^tt\d{5,12}$""").matches(it) }.orEmpty()
+        val cleanTmdb = tmdbId?.takeIf { it in 1..999_999_999 }
+        val cleanSeason = season?.takeIf { it in 1..999 } ?: 1
+        val cleanEpisode = episode?.takeIf { it in 1..9999 } ?: 1
+        return TitleIdentity(
+            title = primary,
+            titles = allTitles,
+            type = resolvedType,
+            year = cleanYear,
+            imdbId = cleanImdb,
+            tmdbId = cleanTmdb,
+            season = cleanSeason,
+            episode = cleanEpisode
+        )
+    }
+
+    /**
+     * core.js stableFingerprint: a short, deterministic hash of an identity.
+     *
+     * Used as a cache key so a repeated title request reuses the previous crawl
+     * instead of hitting the directories again, and so two addons that differ
+     * only by trailing slash or case collapse to one pool entry.
+     */
+    fun stableFingerprint(vararg parts: String?): String {
+        val material = parts.joinToString("\u0000") { it.orEmpty().trim().lowercase() }
+        // FNV-1a, 64 bit: stable across JVM versions, unlike String.hashCode
+        // which is specified but 32 bit and collides too readily for a cache key.
+        var hash = -0x340d631b7bdddcdbL
+        for (byte in material.toByteArray(Charsets.UTF_8)) {
+            hash = hash xor (byte.toLong() and 0xff)
+            hash *= 0x100000001b3L
+        }
+        return java.lang.Long.toHexString(hash)
     }
 
     // -- helpers -----------------------------------------------------------

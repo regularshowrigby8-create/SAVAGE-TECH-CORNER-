@@ -19,7 +19,11 @@ data class PoolEntry(
     val stars: Int = 0,
     val from: String = "",
     val hits: Int = 0,
-    val misses: Int = 0
+    val misses: Int = 0,
+    /** Passed [ServerTester]: manifest live and `/stream` answered. */
+    val verified: Boolean = false,
+    /** Playable streams the tester got for its probe title. */
+    val sample: Int = 0
 ) {
     fun toCandidate() = FinderCandidate(
         manifestUrl = manifestUrl, baseUrl = baseUrl, name = name, description = "", version = "",
@@ -93,13 +97,43 @@ class ServerPool(private val store: PoolStore, private val random: Random = Rand
      * the Sources screen lists exactly what has worked.
      */
     fun working(): List<PoolEntry> = synchronized(lock) {
-        data.entries.filter { it.hits > 0 }
-            .sortedWith(compareByDescending<PoolEntry> { it.hits }.thenBy { it.misses }.thenByDescending { it.stars })
+        // "Working" now means *tested*, not "has happened to play something".
+        // The tester proves a server answers before it is stored, so the count
+        // the UI shows is the real size of the usable pool.
+        data.entries.filter { it.verified || it.hits > 0 }
+            .sortedWith(
+                compareByDescending<PoolEntry> { it.hits }
+                    .thenByDescending { it.sample }
+                    .thenBy { it.misses }
+                    .thenByDescending { it.stars }
+            )
     }
 
     /** Merge discovered servers; returns how many were new. */
     fun add(candidates: List<FinderCandidate>): Int = synchronized(lock) {
         val (merged, added) = merge(data.entries, candidates.map { it.toEntry() }, data.retired.toHashSet())
+        data = data.copy(entries = merged)
+        save()
+        added
+    }
+
+    /**
+     * Store only servers that [ServerTester] proved alive.
+     *
+     * This is the pool's front door for discovery: nothing untested may take a
+     * slot, so the 3000 entries are 3000 servers that answered a real request.
+     * A server that returns playable streams for the probe title is seeded with
+     * a hit, so it is offered first.
+     */
+    fun addVerified(tested: List<TestedServer>): Int = synchronized(lock) {
+        val incoming = tested.map { result ->
+            result.candidate.toEntry().copy(
+                verified = true,
+                sample = result.sampleStreams,
+                hits = if (result.sampleStreams > 0) 1 else 0
+            )
+        }
+        val (merged, added) = merge(data.entries, incoming, data.retired.toHashSet())
         data = data.copy(entries = merged)
         save()
         added
@@ -126,11 +160,11 @@ class ServerPool(private val store: PoolStore, private val random: Random = Rand
         // answered is dead: drop it now, and remember it so it is never
         // re-added. Waiting for the next scramble kept dead hosts in the pool
         // and wasted a request on every title.
-        val dead = updated.filter { it.hits == 0 && it.misses >= RETIRE_AFTER_MISSES }
+        val dead = updated.filter { !it.verified && it.hits == 0 && it.misses >= RETIRE_AFTER_MISSES }
         val retired = if (dead.isEmpty()) data.retired
         else (data.retired + dead.map { key(it.baseUrl) }).distinct().takeLast(MAX_RETIRED)
         data = data.copy(
-            entries = if (dead.isEmpty()) updated else updated.filterNot { it.hits == 0 && it.misses >= RETIRE_AFTER_MISSES },
+            entries = if (dead.isEmpty()) updated else updated.filterNot { !it.verified && it.hits == 0 && it.misses >= RETIRE_AFTER_MISSES },
             retired = retired
         )
         // Saved on the next add / scramble; stats are cheap to lose, writes are not.
@@ -146,7 +180,7 @@ class ServerPool(private val store: PoolStore, private val random: Random = Rand
      * its slot goes to the next discovery instead of being retried forever.
      */
     fun pruneDead(): Int = synchronized(lock) {
-        val dead = data.entries.filter { it.hits == 0 && it.misses >= RETIRE_AFTER_MISSES }
+        val dead = data.entries.filter { !it.verified && it.hits == 0 && it.misses >= RETIRE_AFTER_MISSES }
         if (dead.isEmpty()) return@synchronized 0
         data = data.copy(
             entries = data.entries - dead.toSet(),
@@ -168,22 +202,39 @@ class ServerPool(private val store: PoolStore, private val random: Random = Rand
     fun flush() = synchronized(lock) { save() }
 
     /** A title was not found: rotate in new servers. Returns how many are new. */
-    fun scramble(fresh: List<FinderCandidate>): Int = synchronized(lock) {
+    fun scramble(fresh: List<FinderCandidate>): Int = scrambleEntries(fresh.map { it.toEntry() })
+
+    /**
+     * Rotate in only servers [ServerTester] proved alive. Same rotation rules as
+     * [scramble], but every incoming entry keeps its `verified` flag so a
+     * tested host is never retired as if it had never answered.
+     */
+    fun scrambleVerified(tested: List<TestedServer>): Int = scrambleEntries(
+        tested.map { result ->
+            result.candidate.toEntry().copy(
+                verified = true,
+                sample = result.sampleStreams,
+                hits = if (result.sampleStreams > 0) 1 else 0
+            )
+        }
+    )
+
+    private fun scrambleEntries(incoming: List<PoolEntry>): Int = synchronized(lock) {
         val previous = data.entries
         // Nothing to go back to: just fill, no history entry.
         if (previous.isEmpty()) {
-            val (merged, added) = merge(emptyList(), fresh.map { it.toEntry() }.shuffled(random), data.retired.toHashSet())
+            val (merged, added) = merge(emptyList(), incoming.shuffled(random), data.retired.toHashSet())
             lastAdded = added
             data = data.copy(entries = merged)
             save()
             return@synchronized added
         }
-        val dead = previous.filter { it.hits == 0 && it.misses >= RETIRE_AFTER_MISSES }.map { key(it.baseUrl) }
+        val dead = previous.filter { !it.verified && it.hits == 0 && it.misses >= RETIRE_AFTER_MISSES }.map { key(it.baseUrl) }
         val retired = (data.retired + dead).distinct().takeLast(MAX_RETIRED)
-        val keep = previous.filter { it.hits > 0 }
-        val untried = previous.filter { it.hits == 0 && it.misses == 0 }
+        val keep = previous.filter { it.verified || it.hits > 0 }
+        val untried = previous.filter { !it.verified && it.hits == 0 && it.misses == 0 }
         val known = previous.map { key(it.baseUrl) }.toHashSet()
-        val newOnes = fresh.map { it.toEntry() }.filter { key(it.baseUrl) !in known }.shuffled(random)
+        val newOnes = incoming.filter { key(it.baseUrl) !in known }.shuffled(random)
         // Proven servers stay; never-seen options come next; untried old ones fill the rest.
         val (merged, _) = merge(keep, newOnes + untried.shuffled(random), retired.toHashSet())
         lastAdded = merged.count { key(it.baseUrl) !in known }
@@ -233,7 +284,7 @@ class ServerPool(private val store: PoolStore, private val random: Random = Rand
 
     private fun stateOf() = PoolState(
         size = data.entries.size,
-        working = data.entries.count { it.hits > 0 },
+        working = data.entries.count { it.verified || it.hits > 0 },
         generation = data.generation,
         canRevert = data.history.isNotEmpty(),
         retired = data.retired.size,

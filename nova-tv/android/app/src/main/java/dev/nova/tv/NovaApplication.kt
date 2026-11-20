@@ -9,12 +9,14 @@ import dev.nova.tv.data.remote.NovaDns
 import dev.nova.tv.finder.pool.PoolStore
 import dev.nova.tv.finder.pool.ServerHarvester
 import dev.nova.tv.finder.pool.ServerPool
+import dev.nova.tv.finder.pool.ServerTester
 import dev.nova.tv.data.repo.CatalogRepository
 import dev.nova.tv.download.DownloadManager
 import dev.nova.tv.data.repo.LibraryStore
 import dev.nova.tv.data.repo.SettingsStore
 import dev.nova.tv.finder.SourceEngine
 import dev.nova.tv.finder.SourceFinder
+import dev.nova.tv.finder.TitleWebSearch
 import dev.nova.tv.finder.StremioFinder
 import dev.nova.tv.finder.website.WebsiteFinder
 import dev.nova.tv.player.StreamProbe
@@ -46,6 +48,10 @@ class NovaApplication : Application(), ImageLoaderFactory {
     val stremioFinder: StremioFinder by lazy { StremioFinder(http) }
     val websiteFinder: WebsiteFinder by lazy { WebsiteFinder(http) }
     val probe: StreamProbe by lazy { StreamProbe(http.okHttp) }
+    /** Proves a discovered server answers before the pool may store it. */
+    val serverTester: ServerTester by lazy { ServerTester(http) }
+    /** Searches the open web for one title only (detail screen button). */
+    val titleSearch: TitleWebSearch by lazy { TitleWebSearch(http, webCrawler) }
 
     /** Up to 3000 server options, saved between launches. */
     val serverPool: ServerPool by lazy {
@@ -77,7 +83,10 @@ class NovaApplication : Application(), ImageLoaderFactory {
     val engine: SourceEngine by lazy {
         SourceEngine(
             repository, zeroPlayFinder, stremioFinder, websiteFinder, zeroPlayFinder, library, probe,
-            pool = serverPool, harvester = ServerHarvester(http, webCrawler)
+            pool = serverPool,
+            harvester = ServerHarvester(http, webCrawler),
+            tester = serverTester,
+            titleSearch = titleSearch
         )
     }
 
