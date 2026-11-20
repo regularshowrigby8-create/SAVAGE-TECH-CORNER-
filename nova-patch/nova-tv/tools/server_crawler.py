@@ -43,6 +43,7 @@ below target, 2 on a usage error.
 from __future__ import annotations
 
 import argparse
+import http.client
 import json
 import os
 import random
@@ -57,7 +58,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from collections import Counter
-from concurrent.futures import Future, ThreadPoolExecutor, as_completed
+from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, as_completed, wait
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple
@@ -148,13 +149,26 @@ def manifest_ok(manifest: dict) -> bool:
     if not isinstance(manifest, dict):
         return False
     resources = manifest.get("resources") or []
-    names = [r if isinstance(r, str) else (r or {}).get("name") for r in resources]
+    if not isinstance(resources, list):
+        return False
+    names = [r if isinstance(r, str) else r.get("name") if isinstance(r, dict) else None for r in resources]
     if "stream" not in [str(n) for n in names if n]:
         return False
     types = manifest.get("types") or ["movie", "series"]
-    if not isinstance(types, list) or not set(map(str.lower, types)) & {"movie", "series", "tv"}:
+    if not isinstance(types, list) or not {t.lower() for t in types if isinstance(t, str)} & {"movie", "series", "tv"}:
         return False
     return True
+
+
+def safe_int(value: object, default: int = 0) -> int:
+    try:
+        return int(value)  # public APIs sometimes return strings or null
+    except (TypeError, ValueError, OverflowError):
+        return default
+
+
+def strings(value: object, limit: int = 8) -> List[str]:
+    return [v for v in value if isinstance(v, str)][:limit] if isinstance(value, list) else []
 
 
 def redundant(manifest: dict, base: str) -> bool:
@@ -176,6 +190,7 @@ class Stats:
         self.rate_limited = 0
         self.manifests_ok = 0
         self.by_source: Counter = Counter()
+        self.source_evidence: Dict[str, Counter] = {}
         self.started = time.time()
 
     def bump(self, name: str, amount: int = 1) -> None:
@@ -185,6 +200,11 @@ class Stats:
     def add_source(self, source: str, amount: int) -> None:
         with self.lock:
             self.by_source[source] += amount
+            self.source_evidence.setdefault(source, Counter())["added"] += amount
+
+    def source_event(self, source: str, event: str, amount: int = 1) -> None:
+        with self.lock:
+            self.source_evidence.setdefault(source, Counter())[event] += amount
 
     def snapshot(self) -> Dict[str, object]:
         with self.lock:
@@ -195,8 +215,28 @@ class Stats:
                 "rate_limited": self.rate_limited,
                 "manifests_ok": self.manifests_ok,
                 "by_source": dict(self.by_source),
+                "source_evidence": {source: dict(events) for source, events in self.source_evidence.items()},
                 "seconds": round(time.time() - self.started, 1),
             }
+
+
+class GitHubSearchLimiter:
+    """Space search requests under GitHub's per-minute API allowance."""
+
+    def __init__(self, authenticated: bool) -> None:
+        self.interval = 2.2 if authenticated else 6.2
+        self.next_at = 0.0
+        self.lock = threading.Lock()
+
+    def wait(self, deadline: Optional[float] = None) -> bool:
+        with self.lock:
+            delay = max(0.0, self.next_at - time.monotonic())
+            if deadline is not None and time.time() + delay >= deadline:
+                return False
+            if delay:
+                time.sleep(delay)
+            self.next_at = time.monotonic() + self.interval
+            return True
 
 
 class Fetcher:
@@ -208,8 +248,13 @@ class Fetcher:
         self._per_host = per_host
         self._hosts: Dict[str, threading.Semaphore] = {}
         self._hosts_lock = threading.Lock()
-        self._pool = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="crawl")
+        # Source tasks may submit HTTP tasks and wait for them. Dedicated pools
+        # prevent all workers becoming waiting parents when concurrency is low.
+        self._sources = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="crawl-source")
+        self._pool = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="crawl-http")
         self._ctx = ssl.create_default_context()
+        self.github_search = GitHubSearchLimiter(bool(github_token))
+        self.deadline: Optional[float] = None
 
     def _host_gate(self, host: str) -> threading.Semaphore:
         with self._hosts_lock:
@@ -221,16 +266,26 @@ class Fetcher:
         if not is_public_https(url):
             self.stats.bump("refused")
             return None
-        host = urlparse(url).hostname or ""
+        parsed = urlparse(url)
+        host = (parsed.hostname or "").lower()
+        if self.deadline is not None and time.time() >= self.deadline:
+            return None
+        if host == "api.github.com" and parsed.path.startswith("/search/"):
+            if not self.github_search.wait(self.deadline):
+                return None
         gate = self._host_gate(host)
         req_headers = {"User-Agent": USER_AGENT, "Accept": "application/json, text/html;q=0.9"}
-        if "api.github.com" in url and self.github_token:
-            req_headers["Authorization"] = f"Bearer {self.github_token}"
         req_headers.update(headers or {})
         with gate:
+            if self.deadline is not None and time.time() >= self.deadline:
+                return None
             self.stats.bump("requests")
             try:
                 request = urllib.request.Request(url, headers=req_headers)
+                if host == "api.github.com" and self.github_token:
+                    # Never attach a token to a spoofed hostname, a URL merely
+                    # containing api.github.com, or a redirect to another host.
+                    request.add_unredirected_header("Authorization", f"Bearer {self.github_token}")
                 with urllib.request.urlopen(request, timeout=TIMEOUT, context=self._ctx) as response:
                     length = response.headers.get("Content-Length")
                     if length and int(length) > MAX_BYTES:
@@ -249,15 +304,21 @@ class Fetcher:
                 else:
                     self.stats.bump("failures")
                 return None
-            except (urllib.error.URLError, TimeoutError, socket.timeout, ssl.SSLError, ValueError):
+            except (urllib.error.URLError, OSError, http.client.HTTPException, ValueError, LookupError):
                 self.stats.bump("failures")
                 return None
 
     def submit(self, fn: Callable[..., object], *args: object) -> Future:
         return self._pool.submit(fn, *args)
 
+    def submit_source(self, fn: Callable[..., object], *args: object) -> Future:
+        return self._sources.submit(fn, *args)
+
     def shutdown(self) -> None:
-        self._pool.shutdown(wait=False, cancel_futures=True)
+        # A source may be waiting on HTTP futures, so stop sources first and
+        # drain workers before the caller serializes their shared pool.
+        self._sources.shutdown(wait=True, cancel_futures=True)
+        self._pool.shutdown(wait=True, cancel_futures=True)
 
 
 # ---------------------------------------------------------------------------
@@ -328,8 +389,13 @@ class Pool:
     def merge_file(self, path: Path) -> int:
         """Load a previous pool so a crawl adds to it instead of starting over."""
         data = json.loads(path.read_text(encoding="utf-8"))
+        entries = data.get("entries")
+        if not isinstance(entries, list):
+            raise ValueError(f"{path}: missing entries array")
+        if len(entries) > self.target:
+            raise ValueError(f"{path}: target {self.target} would discard existing entries")
         added = 0
-        for item in data.get("entries", []):
+        for item in entries:
             entry = Entry(
                 manifestUrl=item.get("manifestUrl", ""),
                 baseUrl=item.get("baseUrl", ""),
@@ -346,7 +412,8 @@ class Pool:
         self.retired = set(data.get("retired", []) or [])
         return added
 
-    def as_document(self, by_source: Optional[Dict[str, int]] = None) -> Dict[str, object]:
+    def as_document(self, by_source: Optional[Dict[str, int]] = None,
+                    source_evidence: Optional[Dict[str, object]] = None) -> Dict[str, object]:
         """The exact shape ``ServerPool.Persisted`` decodes, plus the yield counts.
 
         Extra keys are ignored by the app's decoder, so carrying the per-source
@@ -355,6 +422,7 @@ class Pool:
         """
         return {
             "by_source": by_source or {},
+            "source_evidence": source_evidence or {},
             "generation": 0,
             "entries": [e.as_json() for e in self.entries.values()],
             "history": [],
@@ -398,6 +466,7 @@ class Crawler:
         self.verbose = verbose
         self.stop = threading.Event()
         self.seen_pages: Set[str] = set()
+        self.seen_lock = threading.Lock()
         self.max_pages = 8
         self.gh_pages = 4
 
@@ -405,10 +474,14 @@ class Crawler:
 
     def consider_manifest(self, manifest_url: str, source: str, stars: int = 0) -> bool:
         """Fetch a manifest, validate it, and offer it to the pool."""
+        if self.stop.is_set() or self.pool.full:
+            return False
         if self.pool.has(base_from_manifest(manifest_url)):
             return False
+        self.stats.source_event(source, "candidates")
         body = self.http.get(manifest_url)
         if body is None:
+            self.stats.source_event(source, "candidate_fetch_failed")
             return False
         try:
             manifest = json.loads(body)
@@ -426,8 +499,8 @@ class Crawler:
             manifestUrl=manifest_url,
             baseUrl=base,
             name=str(manifest.get("name", ""))[:120],
-            types=[str(t) for t in (manifest.get("types") or [])][:8],
-            idPrefixes=[str(p) for p in (manifest.get("idPrefixes") or [])][:8],
+            types=strings(manifest.get("types")),
+            idPrefixes=strings(manifest.get("idPrefixes")),
             stars=stars,
             from_=f"Server pool · {source}",
         )
@@ -440,12 +513,18 @@ class Crawler:
 
     def harvest_page(self, page_url: str, source: str) -> Yield:
         """Read one page and try every manifest link on it, in parallel."""
-        already = page_url in self.seen_pages
-        self.seen_pages.add(page_url)
-        if already:
-            return Yield(source, 0)
+        with self.seen_lock:
+            if page_url in self.seen_pages:
+                return Yield(source, 0)
+            self.seen_pages.add(page_url)
+        self.stats.source_event(source, "pages_requested")
         body = self.http.get(page_url)
         if body is None:
+            self.stats.source_event(source, "pages_failed")
+            # A failed attempt must not poison the dedupe set: the queued retry
+            # must actually fetch this page again.
+            with self.seen_lock:
+                self.seen_pages.discard(page_url)
             return Yield(source, 0, retry=True)
         urls = extract_manifest_urls(body)
         if not urls and page_url.endswith(".json"):
@@ -460,8 +539,9 @@ class Crawler:
         for future in as_completed(futures):
             try:
                 added += 1 if future.result() else 0
-            except Exception:
+            except Exception as error:
                 self.stats.bump("failures")
+                raise RuntimeError("manifest worker crashed") from error
         return Yield(source, added)
 
     @staticmethod
@@ -493,24 +573,32 @@ class Crawler:
     def stremio_addons_page(self, page: int) -> Yield:
         url = ("https://stremio-addons.net/api/v0/addons"
                f"?limit=100&nsfw=exclude&sort_by=stars&order=desc&page={page}")
+        self.stats.source_event("stremio-addons.net", "pages_requested")
         body = self.http.get(url)
         if body is None:
+            self.stats.source_event("stremio-addons.net", "pages_failed")
             return Yield("stremio-addons.net", 0, retry=True)
         try:
             data = json.loads(body)
         except json.JSONDecodeError:
             return Yield("stremio-addons.net", 0)
-        addons = data.get("addons") or []
-        if not addons:
+        addons = data.get("addons") if isinstance(data, dict) else None
+        if not isinstance(addons, list) or not addons:
             return Yield("stremio-addons.net", 0)
         # The manifest is inline, so no extra request per addon.
-        add_task_urls: List[Tuple[str, int]] = []
         for addon in addons:
-            for item in [addon] + list(addon.get("instances") or []):
-                manifest = item.get("manifest")
-                url = item.get("manifestUrl") or item.get("transportUrl") or (item.get("transport") or {}).get("url")
-                if not isinstance(manifest, dict) or not url:
+            if not isinstance(addon, dict):
+                continue
+            instances = addon.get("instances")
+            for item in [addon] + (instances if isinstance(instances, list) else []):
+                if not isinstance(item, dict):
                     continue
+                manifest = item.get("manifest")
+                transport = item.get("transport")
+                url = item.get("manifestUrl") or item.get("transportUrl") or (transport.get("url") if isinstance(transport, dict) else None)
+                if not isinstance(manifest, dict) or not isinstance(url, str):
+                    continue
+                self.stats.source_event("stremio-addons.net", "candidates")
                 if not is_public_https(url) or not manifest_ok(manifest):
                     self.stats.bump("refused")
                     continue
@@ -521,9 +609,9 @@ class Crawler:
                 entry = Entry(
                     manifestUrl=url, baseUrl=base,
                     name=str(manifest.get("name", ""))[:120],
-                    types=[str(t) for t in (manifest.get("types") or [])][:8],
-                    idPrefixes=[str(p) for p in (manifest.get("idPrefixes") or [])][:8],
-                    stars=int(item.get("stars") or addon.get("stars") or 0),
+                    types=strings(manifest.get("types")),
+                    idPrefixes=strings(manifest.get("idPrefixes")),
+                    stars=safe_int(item.get("stars") or addon.get("stars")),
                     from_="Server pool · stremio-addons.net",
                 )
                 if self.pool.offer(entry):
@@ -535,8 +623,10 @@ class Crawler:
                      follow=(lambda: self.stremio_addons_page(page + 1)) if more else None)
 
     def collection(self, url: str, source: str) -> Yield:
+        self.stats.source_event(source, "pages_requested")
         body = self.http.get(url)
         if body is None:
+            self.stats.source_event(source, "pages_failed")
             return Yield(source, 0, retry=True)
         try:
             data = json.loads(body)
@@ -549,56 +639,64 @@ class Crawler:
         for future in as_completed(futures):
             try:
                 added += 1 if future.result() else 0
-            except Exception:
+            except Exception as error:
                 self.stats.bump("failures")
+                raise RuntimeError("manifest worker crashed") from error
         return Yield(source, added)
 
     def github_page(self, query: str, page: int, stars_first: bool = False) -> Yield:
         sort = "stars" if stars_first else "updated"
         url = ("https://api.github.com/search/repositories"
                f"?q={urllib.parse.quote(query)}&sort={sort}&order=desc&per_page=100&page={page}")
+        self.stats.source_event("github", "pages_requested")
         body = self.http.get(url)
         if body is None:
+            self.stats.source_event("github", "pages_failed")
             # A rate-limited or failed search must be retried, not called empty.
             return Yield("github", 0, retry=True)
         try:
-            items = json.loads(body).get("items") or []
+            document = json.loads(body)
+            items = document.get("items") if isinstance(document, dict) else None
         except json.JSONDecodeError:
             return Yield("github", 0)
-        if not items:
+        if not isinstance(items, list) or not items:
             return Yield("github", 0)
+        items = [repo for repo in items if isinstance(repo, dict)]
 
         added = 0
         for repo in items:
             text = f"{repo.get('description') or ''} {repo.get('homepage') or ''}"
             for manifest_url in extract_manifest_urls(text, limit=3):
-                if self.consider_manifest(manifest_url, "github", int(repo.get("stargazers_count") or 0)):
+                if self.consider_manifest(manifest_url, "github", safe_int(repo.get("stargazers_count"))):
                     added += 1
         # READMEs are where most addons document themselves; read a bounded slice.
         readme_futures = []
         for repo in items[:30]:
             full = repo.get("full_name") or ""
-            if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", full):
+            if not isinstance(full, str) or not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", full):
                 continue
-            branch = re.sub(r"[^A-Za-z0-9_.-]", "", repo.get("default_branch") or "main")
+            raw_branch = repo.get("default_branch")
+            branch = re.sub(r"[^A-Za-z0-9_.-]", "", raw_branch if isinstance(raw_branch, str) else "main")
             readme_futures.append(self.http.submit(
                 self._readme_scan, f"https://raw.githubusercontent.com/{full}/{branch}/README.md",
-                int(repo.get("stargazers_count") or 0)))
+                safe_int(repo.get("stargazers_count"))))
         for future in as_completed(readme_futures):
             try:
                 added += future.result()
-            except Exception:
+            except Exception as error:
                 self.stats.bump("failures")
+                raise RuntimeError("manifest worker crashed") from error
         # Homepages and GitHub Pages, one candidate manifest each.
         page_futures = []
         for repo in items[:30]:
             full = repo.get("full_name") or ""
-            homepage = (repo.get("homepage") or "").strip().rstrip("/")
-            stars = int(repo.get("stargazers_count") or 0)
+            homepage = repo.get("homepage") if isinstance(repo.get("homepage"), str) else ""
+            homepage = homepage.strip().rstrip("/")
+            stars = safe_int(repo.get("stargazers_count"))
             if homepage.startswith("https://"):
                 page_futures.append(self.http.submit(
                     self.consider_manifest, homepage + "/manifest.json", "homepage", stars))
-            if re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", full):
+            if isinstance(full, str) and re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", full):
                 owner, name = full.split("/")
                 for candidate in (f"https://{owner.lower()}.github.io/{name.lower()}/manifest.json",
                                   f"https://{owner.lower()}.github.io/manifest.json"):
@@ -607,8 +705,9 @@ class Crawler:
         for future in as_completed(page_futures):
             try:
                 added += 1 if future.result() else 0
-            except Exception:
+            except Exception as error:
                 self.stats.bump("failures")
+                raise RuntimeError("manifest worker crashed") from error
         more = len(items) >= 100 and page < self.gh_pages
         return Yield("github", added, more=more,
                      follow=(lambda: self.github_page(query, page + 1, stars_first)) if more else None)
@@ -686,6 +785,7 @@ def crawl(crawler: Crawler, args: argparse.Namespace) -> None:
     """
     pool = crawler.pool
     deadline = time.time() + args.max_seconds if args.max_seconds else None
+    crawler.http.deadline = deadline
     pending: List[Unit] = seed_units(crawler, args)
     running: Dict[Future, Unit] = {}
     empty_rounds = 0
@@ -706,21 +806,21 @@ def crawl(crawler: Crawler, args: argparse.Namespace) -> None:
         while pending and len(running) < args.workers:
             unit = pending.pop(0)
             unit.attempts += 1
-            running[crawler.http.submit(unit.run)] = unit
+            running[crawler.http.submit_source(unit.run)] = unit
 
-        done = 0
-        for future in as_completed(list(running), timeout=None):
+        wait_seconds = max(0.0, min(1.0, deadline - time.time())) if deadline else None
+        completed, _ = wait(list(running), timeout=wait_seconds, return_when=FIRST_COMPLETED)
+        if not completed:
+            continue
+        for future in completed:
             unit = running.pop(future, None)
             if unit is None:
                 continue
-            done += 1
             try:
                 result = future.result()
-            except Exception as error:            # a source bug must not end the crawl
+            except Exception as error:
                 crawler.stats.bump("failures")
-                if args.verbose:
-                    print(f"  ! {unit.name}: {error!r}")
-                continue
+                raise RuntimeError(f"crawler source {unit.name} crashed") from error
             if result.retry and unit.attempts <= args.retries:
                 # Re-queue with a delay, so a throttled host is not hammered.
                 pending.append(unit)
@@ -740,10 +840,9 @@ def crawl(crawler: Crawler, args: argparse.Namespace) -> None:
 
         if gained == 0:
             empty_rounds += 1
-            if empty_rounds >= args.empty_rounds and not pending:
+            if empty_rounds >= args.empty_rounds and not pending and not running:
                 print(f"{empty_rounds} rounds with nothing new and nothing queued; stopping")
                 break
-            time.sleep(min(5.0, 0.5 * empty_rounds))
         else:
             empty_rounds = 0
 
@@ -765,7 +864,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--out", default="server_pool.json", help="where to write the pool")
     ap.add_argument("--verbose", action="store_true", help="print every server as it is found")
     args = ap.parse_args(argv)
-    args.max_seconds = args.max_seconds or 0
+    if not 1 <= args.target <= CAPACITY:
+        ap.error(f"--target must be between 1 and {CAPACITY}")
+    if (args.workers < 1 or args.per_host < 1 or args.pages < 1 or args.gh_pages < 1
+            or args.empty_rounds < 1 or args.retries < 0 or args.max_seconds < 0):
+        ap.error("workers and page counts must be positive; retries and max-seconds cannot be negative")
 
     pool = Pool(target=args.target)
     if args.merge:
@@ -793,8 +896,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     finally:
         fetcher.shutdown()
         out = Path(args.out)
-        out.write_text(json.dumps(pool.as_document(stats.snapshot()["by_source"]), indent=1) + "\n", encoding="utf-8")
         snap = stats.snapshot()
+        out.write_text(json.dumps(pool.as_document(snap["by_source"], snap["source_evidence"]), indent=1) + "\n", encoding="utf-8")
         print()
         print(f"pool      {pool.size}/{args.target}")
         print(f"file      {out}  ({out.stat().st_size} bytes)")

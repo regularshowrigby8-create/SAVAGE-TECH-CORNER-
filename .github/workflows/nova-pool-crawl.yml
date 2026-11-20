@@ -36,8 +36,9 @@ on:
         required: false
         default: "one piece"
   schedule:
-    # Weekly: public lists change, hosts expire, new ones appear.
-    - cron: "23 4 * * 1"
+    # GitHub runs schedules from the default branch. Hourly runs are serialized
+    # per branch; if a crawl is still running, the latest pending run waits.
+    - cron: "23 * * * *"
   push:
     paths:
       - 'nova-patch/nova-tv/tools/server_crawler.py'
@@ -48,7 +49,9 @@ permissions:
   contents: write
 
 concurrency:
-  group: nova-pool-crawl-${{ github.ref }}
+  # A legacy crawl can still be running the old, broken publisher. The v2
+  # publisher is serialized with other v2 runs, but need not wait for that job.
+  group: nova-pool-crawl-v2-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -56,15 +59,29 @@ jobs:
     name: Crawl both pools
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    env:
+      CRAWL_TARGET: ${{ inputs.target || '3000' }}
+      # A short first push verifies the complete publish path in Actions;
+      # scheduled/normal runs can be raised once that has succeeded.
+      CRAWL_MINUTES: ${{ inputs.minutes || '12' }}
+      CRAWL_PROBE: ${{ inputs.probe || 'one piece' }}
+      # Provided by Actions; sent only to api.github.com, never to crawled hosts.
+      GITHUB_TOKEN: ${{ github.token }}
     steps:
-      - name: Checkout
+      - name: Checkout the latest pool data for this branch
         uses: actions/checkout@v4
+        with:
+          # A queued run's triggering SHA may predate the previous crawl's
+          # commit; using the branch tip is what makes --merge cumulative.
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
 
       - name: Self-test both crawlers (offline, no network)
         run: |
           set -euo pipefail
           cd nova-patch/nova-tv/tools
           python3 test_server_crawler.py
+          python3 test_site_crawler.py
           # The site crawler has no network in a self-test either; this checks
           # its HTML parsing, template extraction and verification scoring.
           python3 - <<'PY'
@@ -79,88 +96,120 @@ jobs:
           print("site_crawler self-test ok")
           PY
 
+      - name: Validate crawl inputs
+        run: |
+          set -euo pipefail
+          [[ "$CRAWL_TARGET" =~ ^[0-9]{1,4}$ ]] && (( 10#$CRAWL_TARGET >= 1 && 10#$CRAWL_TARGET <= 3000 ))
+          [[ "$CRAWL_MINUTES" =~ ^[0-9]{1,2}$ ]] && (( 10#$CRAWL_MINUTES >= 1 && 10#$CRAWL_MINUTES <= 50 ))
+          [[ -n "$CRAWL_PROBE" ]]
+
       - name: Crawl addon manifests
         run: |
           set -euo pipefail
           cd nova-patch/nova-tv/tools
-          # Seed from the pool already published in the repository, so repeated
-          # runs accumulate instead of each one starting from nothing and
-          # replacing the last. --merge is the crawler's own facility for this.
-          SEED=""
-          [ -f ../../pools/server_pool.json ] && SEED="--merge ../../pools/server_pool.json"
+          # A 3 means the budget/frontier ended below target; other nonzero
+          # statuses are actual errors and must make the job fail.
+          seed=()
+          [ ! -f ../../pools/server_pool.json ] || seed=(--merge ../../pools/server_pool.json)
+          status=0
           python3 server_crawler.py \
-            --target "${{ inputs.target || '3000' }}" \
-            --max-seconds "$(( ${{ inputs.minutes || '45' }} * 60 ))" \
-            $SEED \
-            --out server_pool.json || true
+            --target "$CRAWL_TARGET" \
+            --max-seconds "$(( 10#$CRAWL_MINUTES * 60 ))" \
+            "${seed[@]}" \
+            --out server_pool.json || status=$?
+          if [[ "$status" != 0 && "$status" != 3 ]]; then exit "$status"; fi
           python3 - <<'PY'
           import json, pathlib
           d = json.loads(pathlib.Path("server_pool.json").read_text())
           n = len(d["entries"])
           print(f"manifest pool: {n} entries")
-          assert n > 0, "the crawler wrote an empty pool"
+          assert 0 < n <= 3000, "the crawler wrote an empty or oversized pool"
           PY
 
       - name: Crawl streaming sites
         run: |
           set -euo pipefail
           cd nova-patch/nova-tv/tools
-          SEED=""
-          [ -f ../../pools/site_pool.json ] && SEED="--merge ../../pools/site_pool.json"
+          seed=()
+          [ ! -f ../../pools/site_pool.json ] || seed=(--merge ../../pools/site_pool.json)
+          status=0
           python3 site_crawler.py \
-            --target "${{ inputs.target || '3000' }}" \
-            --probe "${{ inputs.probe || 'one piece' }}" \
-            --max-seconds "$(( ${{ inputs.minutes || '45' }} * 60 ))" \
-            $SEED \
+            --target "$CRAWL_TARGET" \
+            --probe "$CRAWL_PROBE" \
+            --max-seconds "$(( 10#$CRAWL_MINUTES * 60 ))" \
+            "${seed[@]}" \
             --manifests server_pool.json \
-            --out site_pool.json || true
+            --out site_pool.json || status=$?
+          if [[ "$status" != 0 && "$status" != 3 ]]; then exit "$status"; fi
           python3 - <<'PY'
           import json, pathlib
           d = json.loads(pathlib.Path("site_pool.json").read_text())
           n = len(d["entries"])
           rejected = d.get("rejected", {})
-          print(f"site pool: {n} verified, rejected {sum(rejected.values())}")
+          print(f"site pool: {n} search-verified, rejected {sum(rejected.values())}")
           print("rejected by reason:", rejected)
-          assert n > 0, "the crawler wrote an empty site pool"
+          assert 0 < n <= 3000, "the crawler wrote an empty or oversized site pool"
           # Every entry must be searchable, or the app cannot use it.
           bad = [e for e in d["entries"]
                  if not any("{q}" in t or "{slug}" in t for t in e.get("templates", []))]
           assert not bad, f"{len(bad)} entries have no query placeholder"
           PY
 
-      - name: Publish both pools to the branch
-        if: always()
+      - name: Merge any pools published while this run was crawling
         run: |
-          set -uo pipefail
-          mkdir -p nova-patch/pools
+          set -euo pipefail
+          # Another (older) run may finish while this one crawls. Rebase before
+          # copying the untracked output files, then union both distinct pools.
+          git fetch -q origin "${GITHUB_REF_NAME}"
+          git rebase FETCH_HEAD
+          python3 - <<'PY'
+          import json, pathlib, sys
+          from collections import Counter
+          tools = pathlib.Path('nova-patch/nova-tv/tools')
+          sys.path.insert(0, str(tools))
+          import server_crawler as server
+          import site_crawler as site
+          for name, cls in (('server_pool', server.Pool), ('site_pool', site.SitePool)):
+              previous = pathlib.Path('nova-patch/pools') / (name + '.json')
+              fresh = tools / (name + '.json')
+              if not previous.is_file():
+                  continue
+              fresh_doc = json.loads(fresh.read_text())
+              pool = cls(target=3000)
+              pool.merge_file(previous)
+              pool.merge_file(fresh)
+              if name == 'site_pool':
+                  merged = pool.as_document(Counter(fresh_doc.get('rejected', {})), fresh_doc.get('by_source', {}),
+                                            fresh_doc.get('source_evidence', {}))
+              else:
+                  merged = pool.as_document(fresh_doc.get('by_source', {}), fresh_doc.get('source_evidence', {}))
+              fresh.write_text(json.dumps(merged, indent=1) + '\n')
+              print(f'{name}: preserved {pool.size} entries from both runs')
+          PY
+
+      - name: Publish both validated pools and their APK assets
+        run: |
+          set -euo pipefail
+          mkdir -p nova-patch/pools nova-patch/nova-tv/android/app/src/main/assets
           for name in server_pool site_pool; do
             src="nova-patch/nova-tv/tools/$name.json"
-            if [ -f "$src" ]; then
-              cp "$src" "nova-patch/pools/$name.json"
-              echo "published $name.json ($(wc -c < "nova-patch/pools/$name.json") bytes)"
-            else
-              echo "::warning::$src was not written, keeping the published version"
-            fi
+            test -s "$src"
+            cp "$src" "nova-patch/pools/$name.json"
+            cp "$src" "nova-patch/nova-tv/android/app/src/main/assets/$name.json"
+            cmp "$src" "nova-patch/nova-tv/android/app/src/main/assets/$name.json"
+            echo "published and bundled $name.json ($(wc -c < "$src") bytes)"
           done
-          # The app reads assets/site_pool.json on first launch, so the crawl has
-          # to reach that path or the bundled pool stays empty forever.
-          ASSET="nova-patch/nova-tv/android/app/src/main/assets/site_pool.json"
-          if [ -f nova-patch/pools/site_pool.json ]; then
-            cp nova-patch/pools/site_pool.json "$ASSET"
-            echo "shipped $(python3 -c "import json;print(len(json.load(open('$ASSET'))['entries']))") sites as the bundled asset"
-          fi
 
       - name: Publish the crawl numbers into the repository
         # The step summary and the artifacts both live on hosts that are not
         # reachable from an agent sandbox, so the numbers that matter are also
         # written into the repo. This is the only way to answer "how many did it
         # actually find" without downloading anything.
-        if: always()
         run: |
-          set -uo pipefail
+          set -euo pipefail
           mkdir -p nova-patch/pools
           python3 - <<'PY'
-          import json, pathlib, time
+          import json, os, pathlib, time
           out = {"generated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
           for name in ("server_pool", "site_pool"):
               f = pathlib.Path(f"nova-patch/pools/{name}.json")
@@ -176,6 +225,7 @@ jobs:
                   "ceiling": 3000,
                   "rejected": d.get("rejected", {}),
                   "by_source": d.get("by_source", {}),
+                  "source_evidence": d.get("source_evidence", {}),
               }
           lines = ["# Nova pool crawl", "", "| pool | entries | ceiling |", "|---|---|---|"]
           for name in ("server_pool", "site_pool"):
@@ -187,39 +237,57 @@ jobs:
               for reason, count in sorted(site["rejected"].items(), key=lambda kv: -kv[1]):
                   lines.append(f"- {count:5d}  {reason}")
           for name in ("server_pool", "site_pool"):
-              info = out.get(name, {})
-              if info.get("by_source"):
-                  lines += ["", f"## {name} yield, by source", ""]
-                  for src, count in sorted(info["by_source"].items(), key=lambda kv: -kv[1])[:15]:
-                      lines.append(f"- {count:4d}  {src}")
-          lines += ["", f"_generated {out['generated']} by run $GITHUB_RUN_ID_", ""]
+              evidence = out[name].get("source_evidence", {})
+              if evidence:
+                  lines += ["", f"## {name} source evidence (this run)", "",
+                            "| source | page attempts | page failures | candidates | new entries |", "|---|---:|---:|---:|---:|"]
+                  for src, counts in sorted(evidence.items()):
+                      label = str(src).replace('|', r'\|')
+                      lines.append(f"| {label} | {counts.get('pages_requested', 0)} | {counts.get('pages_failed', 0)} | {counts.get('candidates', 0)} | {counts.get('added', 0)} |")
+          lines += ["", "Counts reflect the configured sources and time budget, not internet-wide exhaustion.",
+                    "", f"_generated {out['generated']} by run {os.environ.get('GITHUB_RUN_ID', 'unknown')}_", ""]
           pathlib.Path("nova-patch/POOL-COUNTS.md").write_text("\n".join(lines))
           pathlib.Path("nova-patch/pools/counts.json").write_text(json.dumps(out, indent=1))
           print("\n".join(lines[:8]))
           PY
 
-      # One commit for both the data and the numbers. Two commit steps raced
-      # each other for the same index, and a push that loses a race throws away
-      # the whole crawl, so the push rebases and retries.
-      - name: Commit the pools and the counts
-        if: always() && github.event_name != 'pull_request' && !startsWith(github.ref, 'refs/pull/')
+      # The JSON, counts, and both APK assets must be one commit. A failed
+      # push is a failed job, not a green run that silently loses the crawl.
+      - name: Commit the pools, counts and assets
+        if: github.event_name != 'pull_request' && !startsWith(github.ref, 'refs/pull/')
         run: |
-          set -uo pipefail
+          set -euo pipefail
           git config user.name "nova-crawler"
           git config user.email "nova-crawler@users.noreply.github.com"
-          git add nova-patch/pools nova-patch/POOL-COUNTS.md 2>/dev/null || true
+          git add nova-patch/pools nova-patch/POOL-COUNTS.md \
+            nova-patch/nova-tv/android/app/src/main/assets/server_pool.json \
+            nova-patch/nova-tv/android/app/src/main/assets/site_pool.json
           if git diff --cached --quiet; then
             echo "pool data unchanged; nothing to commit"
             exit 0
           fi
           git commit -m "data(nova): refresh both pools, $(date -u +%Y-%m-%d)"
           for attempt in 1 2 3; do
-            if git pull --rebase --autostash -q origin "${GITHUB_REF_NAME}" && git push -q origin "HEAD:${GITHUB_REF_NAME}"; then
+            git fetch -q origin "${GITHUB_REF_NAME}"
+            git rebase FETCH_HEAD
+            if git push -q origin "HEAD:${GITHUB_REF_NAME}"; then
               echo "pushed on attempt $attempt"
               exit 0
             fi
             echo "push attempt $attempt failed, retrying"
             sleep 5
           done
-          echo "::warning::could not push the pool data; the artifact has it"
-          exit 0
+          echo "::error::could not push the pool data after three attempts"
+          exit 1
+
+      - name: Upload crawl outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nova-pools
+          path: |
+            nova-patch/nova-tv/tools/server_pool.json
+            nova-patch/nova-tv/tools/site_pool.json
+            nova-patch/POOL-COUNTS.md
+          if-no-files-found: warn
+          retention-days: 14

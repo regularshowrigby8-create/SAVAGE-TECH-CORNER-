@@ -31,7 +31,6 @@ Usage::
     python3 tools/site_crawler.py --target 500 --workers 48
     python3 tools/site_crawler.py --merge site_pool.json
     python3 tools/site_crawler.py --probe "one piece"    # verify with a different title
-    python3 tools/site_crawler.py --categories anime,movies
 
 Exit codes: 0 target reached, 3 finished below target, 2 usage error.
 """
@@ -43,6 +42,7 @@ import os
 import re
 import signal
 import sys
+import threading
 import time
 import urllib.parse
 from collections import Counter
@@ -56,6 +56,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 # Reuse the tested HTTP layer, safety rules and counters from the manifest
 # crawler rather than keeping a second copy of them.
 from server_crawler import (  # noqa: E402
+    GitHubSearchLimiter,
     MAX_BYTES,
     Stats,
     USER_AGENT,
@@ -101,7 +102,10 @@ def attrs(tag: str) -> Dict[str, str]:
 
 
 def origin_of(url: str) -> str:
-    parsed = urlparse(url)
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        return ""
     if not parsed.scheme or not parsed.netloc:
         return ""
     return f"{parsed.scheme}://{parsed.netloc}"
@@ -148,24 +152,28 @@ def search_templates(html: str, base: str) -> List[str]:
         action = absolute(attrs(open_tag).get("action", "") or base, base)
         if not action:
             continue
-        hidden = "".join(
-            f"&{urllib.parse.quote(k)}={urllib.parse.quote(v)}"
-            for k, v in attrs(tag).items()
-            if k and False
-        )
         separator = "&" if "?" in action else "?"
-        out.append(f"{action}{separator}{urllib.parse.quote(name)}={{q}}{hidden}")
+        out.append(f"{action}{separator}{urllib.parse.quote(name)}={{q}}")
     if not out:
         origin = origin_of(base) or base.rstrip("/")
         out = [origin + suffix for suffix in SEARCH_SUFFIXES]
     return list(dict.fromkeys(out))[:5]
 
 
-def result_score(html: str, query: str) -> Tuple[int, int]:
-    """(content links, episode hints) on a page -- the evidence a search worked."""
+def result_score(html: str, query: str, origin: str = "") -> Tuple[int, int]:
+    """(distinct content links, episode hints), optionally restricted to one host."""
     links = set()
+    expected = (urlparse(origin).hostname or "").lower().removeprefix("www.") if origin else ""
     for match in CONTENT_LINK.finditer(html or ""):
-        links.add(match.group(1).split("?")[0].split("#")[0].lower())
+        href = match.group(1)
+        if expected:
+            try:
+                host = (urlparse(absolute(href, origin)).hostname or "").lower().removeprefix("www.")
+            except ValueError:
+                continue
+            if host != expected:
+                continue
+        links.add(href.split("?")[0].split("#")[0].lower())
     hints = len(EPISODE_WORD.findall(html or ""))
     # A result page that does not mention the query anywhere is a search box that
     # returned the homepage, which is the common way a dead site fakes a hit.
@@ -245,15 +253,19 @@ class SitePool:
         self.target = target
         self.entries: Dict[str, SiteEntry] = {}
         self.rejected: Counter = Counter()
-        self.seen_domains: Set[str] = set()
+        # Failed hosts are retried after a day, not on every hourly crawl.
+        self.attempted: Dict[str, float] = {}
+        self.lock = threading.RLock()
 
     @property
     def size(self) -> int:
-        return len(self.entries)
+        with self.lock:
+            return len(self.entries)
 
     @property
     def full(self) -> bool:
-        return len(self.entries) >= self.target
+        with self.lock:
+            return len(self.entries) >= self.target
 
     @staticmethod
     def key(url: str) -> str:
@@ -262,18 +274,49 @@ class SitePool:
 
     def offer(self, entry: SiteEntry) -> bool:
         key = self.key(entry.url)
-        if not key or key in self.entries or self.size >= self.target:
+        if not key or not is_public_https(entry.url):
             return False
-        self.entries[key] = entry
-        return True
+        if not any("{q}" in t or "{slug}" in t for t in entry.templates):
+            return False
+        with self.lock:
+            if key in self.entries or len(self.entries) >= self.target:
+                return False
+            self.entries[key] = entry
+            return True
+
+    def start_host(self, host: str) -> bool:
+        """Claim a host once, including across concurrent workers and recent runs."""
+        with self.lock:
+            if host in self.entries or host in self.attempted:
+                return False
+            self.attempted[host] = time.time()
+            return True
+
+    def release_host(self, host: str) -> None:
+        """A budget-cancelled probe is not a failed host; retry it next run."""
+        with self.lock:
+            self.attempted.pop(host, None)
 
     def note(self, reason: str) -> None:
-        self.rejected[reason] += 1
+        with self.lock:
+            self.rejected[reason] += 1
 
     def merge_file(self, path: Path) -> int:
         data = json.loads(path.read_text(encoding="utf-8"))
+        entries = data.get("entries")
+        if not isinstance(entries, list):
+            raise ValueError(f"{path}: missing entries array")
+        if len(entries) > self.target:
+            raise ValueError(f"{path}: target {self.target} would discard existing entries")
+        cutoff = time.time() - 24 * 60 * 60
+        attempted = data.get("attempted", {})
+        if isinstance(attempted, dict):
+            recent = [(host, stamp) for host, stamp in attempted.items()
+                      if isinstance(host, str) and isinstance(stamp, (int, float)) and cutoff <= stamp <= time.time()]
+            with self.lock:
+                self.attempted.update(sorted(recent, key=lambda pair: pair[1])[-20_000:])
         added = 0
-        for item in data.get("entries", []):
+        for item in entries:
             entry = SiteEntry(
                 url=item.get("url", ""),
                 name=item.get("name", ""),
@@ -289,16 +332,21 @@ class SitePool:
                 added += 1
         return added
 
-    def as_document(self, rejected: Counter, by_source: Optional[Dict[str, int]] = None) -> Dict[str, object]:
-        """The shape ``SitePool.Persisted`` decodes on the device."""
-        return {
-            "version": 1,
-            "target": self.target,
-            "generated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-            "entries": [e.as_json() for e in self.entries.values()],
-            "rejected": dict(rejected),
-            "by_source": by_source or {},
-        }
+    def as_document(self, rejected: Counter, by_source: Optional[Dict[str, int]] = None,
+                    source_evidence: Optional[Dict[str, object]] = None) -> Dict[str, object]:
+        """Snapshot both entries and retry metadata under the worker lock."""
+        with self.lock:
+            recent = sorted(self.attempted.items(), key=lambda pair: pair[1])[-20_000:]
+            return {
+                "version": 1,
+                "target": self.target,
+                "generated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "entries": [e.as_json() for e in self.entries.values()],
+                "rejected": dict(rejected),
+                "by_source": by_source or {},
+                "source_evidence": source_evidence or {},
+                "attempted": dict(recent),
+            }
 
 
 # ---------------------------------------------------------------------------
@@ -315,9 +363,12 @@ class SiteCrawler:
         self.max_bytes = max_bytes
         self.stop = False
         self.deadline: Optional[float] = None
-        self.pool_exec = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="site")
-        self._host_gates: Dict[str, "Future"] = {}
-        import threading
+        self.github_token = os.environ.get("GITHUB_TOKEN", "")
+        self.github_search = GitHubSearchLimiter(bool(self.github_token))
+        # Discovery jobs submit profile jobs and wait for them. Separate pools
+        # prevent every worker becoming a waiting parent (deadlock at low counts).
+        self.source_exec = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="site-source")
+        self.pool_exec = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="site-profile")
         self._sems: Dict[str, threading.Semaphore] = {}
         self._sems_lock = threading.Lock()
         self._per_host = per_host
@@ -325,7 +376,6 @@ class SiteCrawler:
     # -- http ---------------------------------------------------------------
 
     def _gate(self, host: str):
-        import threading
         with self._sems_lock:
             if host not in self._sems:
                 self._sems[host] = threading.Semaphore(self._per_host)
@@ -335,12 +385,20 @@ class SiteCrawler:
         if not is_public_https(url):
             self.stats.bump("refused")
             return None
-        import socket
+        if self.stop or self.pool.full or self.time_is_up():
+            return None
+        import http.client
         import ssl
         import urllib.error
         import urllib.request
-        host = (urlparse(url).hostname or "")
+        parsed = urlparse(url)
+        host = (parsed.hostname or "").lower()
+        if host == "api.github.com" and parsed.path.startswith("/search/"):
+            if not self.github_search.wait(self.deadline):
+                return None
         with self._gate(host):
+            if self.stop or self.pool.full or self.time_is_up():
+                return None
             self.stats.bump("requests")
             request = urllib.request.Request(url, headers={
                 "User-Agent": BROWSER_UA,
@@ -349,6 +407,8 @@ class SiteCrawler:
                 "Upgrade-Insecure-Requests": "1",
                 "Cache-Control": "no-cache",
             })
+            if host == "api.github.com" and self.github_token:
+                request.add_unredirected_header("Authorization", f"Bearer {self.github_token}")
             try:
                 context = ssl.create_default_context()
                 with urllib.request.urlopen(request, timeout=TIMEOUT, context=context) as response:
@@ -364,39 +424,43 @@ class SiteCrawler:
                 else:
                     self.stats.bump("failures")
                 return None
-            except (urllib.error.URLError, TimeoutError, socket.timeout, ssl.SSLError, ValueError):
+            except (urllib.error.URLError, OSError, http.client.HTTPException, ValueError, LookupError):
                 self.stats.bump("failures")
                 return None
 
     def submit(self, fn, *args) -> Future:
         return self.pool_exec.submit(fn, *args)
 
+    def submit_source(self, fn, *args) -> Future:
+        return self.source_exec.submit(fn, *args)
+
     def shutdown(self) -> None:
-        self.pool_exec.shutdown(wait=False, cancel_futures=True)
+        # Source tasks wait for profile tasks; drain them in that order before
+        # serializing, otherwise workers can mutate the output while it is saved.
+        self.source_exec.shutdown(wait=True, cancel_futures=True)
+        self.pool_exec.shutdown(wait=True, cancel_futures=True)
 
     # -- verification -------------------------------------------------------
 
     def profile_and_verify(self, origin: str, source: str) -> Optional[SiteEntry]:
         """A site enters the pool only if a real search on it returns title links."""
+        if self.stop or self.pool.full or self.time_is_up() or not is_public_https(origin):
+            return None
         parsed = urlparse(origin)
         host = (parsed.hostname or "").lower().removeprefix("www.")
-        if not host:
+        if not host or not self.pool.start_host(host):
             return None
-        with_www_lock = self.pool.seen_domains
-        if host in with_www_lock:
-            return None
-        with_www_lock.add(host)
+        self.stats.source_event(source, "candidates")
 
         home_url = origin.rstrip("/") + "/"
         html = self.get(home_url)
         if html is None:
-            # Some hosts only answer on http, or only on a path.
-            alternative = f"http://{host}/" if home_url.startswith("https://") else ""
-            if alternative and is_public_https(alternative) is False:
-                html = self.get(alternative)
-            if html is None:
-                self.pool.note("no homepage")
+            if self.stop or self.pool.full or self.time_is_up():
+                self.pool.release_host(host)
                 return None
+            self.stats.source_event(source, "no_homepage")
+            self.pool.note("no homepage")
+            return None
 
         final_base = origin_of(home_url) or home_url
         templates = search_templates(html, final_base)
@@ -405,26 +469,35 @@ class SiteCrawler:
         # The search is the verification: no template that answers, no entry.
         best_score = 0
         best_template = ""
+        best_links = 0
+        minimum = int(os.environ.get("NOVA_SITE_MIN_SCORE", "8"))
         encoded = urllib.parse.quote(self.probe)
         slug = re.sub(r"[^a-z0-9]+", "-", self.probe.lower()).strip("-")
         for template in templates[:4]:
+            if self.stop or self.pool.full or self.time_is_up():
+                self.pool.release_host(host)
+                return None
             candidate = template.replace("{q}", encoded).replace("{slug}", slug)
-            if not is_public_https(candidate):
+            # WebsiteFinder only uses templates on the site's own host.
+            if not is_public_https(candidate) or SitePool.key(candidate) != host:
                 continue
             page = self.get(candidate)
             if page is None:
                 continue
-            links, hints = result_score(page, self.probe)
+            links, hints = result_score(page, self.probe, final_base)
             score = links + min(hints, 40)
-            if score > best_score:
-                best_score, best_template = score, template
-            if links >= 3:
+            if links >= 3 and score > best_score:
+                best_score, best_template, best_links = score, template, links
+            if links >= 3 and score >= minimum:
                 break
 
-        # Three title links that mention the query is the bar. Below that it is a
-        # parked page, a Cloudflare wall, or a search that silently redirected home.
-        minimum = int(os.environ.get("NOVA_SITE_MIN_SCORE", "8"))
-        if best_score < minimum:
+        # Hints alone cannot pass this check: there must be three distinct
+        # content links as well as a mention of the searched title.
+        if self.stop or self.pool.full or self.time_is_up():
+            self.pool.release_host(host)
+            return None
+        if best_links < 3 or best_score < minimum:
+            self.stats.source_event(source, "search_unusable")
             self.pool.note("search returned nothing usable")
             return None
 
@@ -447,41 +520,65 @@ class SiteCrawler:
 
     def from_list_page(self, url: str, source: str) -> int:
         """A public list of sites: profile every host it names."""
+        if self.stop or self.pool.full or self.time_is_up():
+            return 0
+        self.stats.source_event(source, "pages_requested")
         html = self.get(url)
         if html is None:
+            self.stats.source_event(source, "pages_failed")
             return 0
         origins = domains_from_text(html)
         return self._profile_all(origins, source)
 
     def from_readme(self, raw_url: str, source: str) -> int:
+        if self.stop or self.pool.full or self.time_is_up():
+            return 0
+        self.stats.source_event(source, "pages_requested")
         text = self.get(raw_url, accept="text/plain,text/markdown,*/*")
         if text is None:
+            self.stats.source_event(source, "pages_failed")
             return 0
         return self._profile_all(domains_from_text(text), source)
 
     def from_github_search(self, query: str, page: int, source: str = "github-lists") -> int:
+        if self.stop or self.pool.full or self.time_is_up():
+            return 0
         api = ("https://api.github.com/search/repositories"
                f"?q={urllib.parse.quote(query)}&sort=stars&order=desc&per_page=50&page={page}")
+        self.stats.source_event(source, "pages_requested")
         body = self.get(api, accept="application/json")
         if body is None:
+            self.stats.source_event(source, "pages_failed")
             return 0
         try:
-            items = json.loads(body).get("items") or []
+            document = json.loads(body)
+            items = document.get("items") if isinstance(document, dict) else None
         except json.JSONDecodeError:
+            return 0
+        if not isinstance(items, list):
             return 0
         added = 0
         for repo in items:
-            full = repo.get("full_name") or ""
-            if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", full):
+            if self.stop or self.pool.full or self.time_is_up():
+                break
+            if not isinstance(repo, dict):
                 continue
-            branch = re.sub(r"[^A-Za-z0-9_.-]", "", repo.get("default_branch") or "main")
+            full = repo.get("full_name") or ""
+            if not isinstance(full, str) or not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", full):
+                continue
+            raw_branch = repo.get("default_branch")
+            branch = re.sub(r"[^A-Za-z0-9_.-]", "", raw_branch if isinstance(raw_branch, str) else "main")
             for name in ("README.md", "readme.md", "LIST.md", "sites.md"):
+                if self.stop or self.pool.full or self.time_is_up():
+                    break
                 added += self.from_readme(
                     f"https://raw.githubusercontent.com/{full}/{branch}/{name}",
                     f"{source}:{full.split('/')[-1][:24]}")
             # Repo metadata often names one site directly.
             for field in ("description", "homepage"):
                 text = repo.get(field) or ""
+                if not isinstance(text, str):
+                    continue
                 for match in re.finditer(r"""https?://[^\s"'<>]+""", text):
                     origin = origin_of(match.group(0))
                     if origin:
@@ -489,25 +586,24 @@ class SiteCrawler:
         return added
 
     def from_manifest_pool(self, path: Path) -> int:
-        """The addon pool names sites in its own descriptions; use it as a seed."""
-        if not path.is_file():
+        """Profile addon homepages concurrently, within the same crawl deadline."""
+        if not path.is_file() or self.time_is_up() or self.pool.full:
             return 0
         data = json.loads(path.read_text(encoding="utf-8"))
-        added = 0
+        origins: List[str] = []
         for item in data.get("entries", [])[:800]:
-            base = item.get("baseUrl") or ""
-            origin = origin_of(base)
-            if origin and self.profile_and_verify(origin, "addon-manifest"):
-                added += 1
+            origin = origin_of(item.get("baseUrl") or "")
+            if origin:
+                origins.append(origin)
             for field in ("name", "description"):
                 for match in re.finditer(r"""https?://[^\s"'<>]+""", str(item.get(field) or "")):
                     other = origin_of(match.group(0))
-                    if other and self.profile_and_verify(other, "addon-manifest"):
-                        added += 1
-        return added
+                    if other:
+                        origins.append(other)
+        return self._profile_all(dict.fromkeys(origins), "addon-manifest", limit=800)
 
-    def _profile_all(self, origins: Iterable[str], source: str) -> int:
-        origins = list(origins)[:60]
+    def _profile_all(self, origins: Iterable[str], source: str, limit: int = 60) -> int:
+        origins = list(origins)[:limit]
         added = 0
         futures = []
         for origin in origins:
@@ -517,8 +613,10 @@ class SiteCrawler:
         for future in as_completed(futures):
             try:
                 added += 1 if future.result() else 0
-            except Exception:
+            except Exception as error:
                 self.stats.bump("failures")
+                self.stats.source_event(source, "worker_errors")
+                raise RuntimeError(f"site profiling failed for source {source}") from error
             if self.pool.full or self.stop or self.time_is_up():
                 break
         return added
@@ -565,8 +663,10 @@ GITHUB_QUERIES = [
 
 
 def crawl(crawler: SiteCrawler, pool: SitePool, args: argparse.Namespace) -> None:
-    deadline = time.time() + args.max_seconds if args.max_seconds else None
-    crawler.deadline = deadline
+    # The deadline starts before manifest seeding, not after it.
+    if crawler.deadline is None and args.max_seconds:
+        crawler.deadline = time.time() + args.max_seconds
+    deadline = crawler.deadline
     round_no = 0
     empty = 0
     while not pool.full and not crawler.stop:
@@ -578,17 +678,18 @@ def crawl(crawler: SiteCrawler, pool: SitePool, args: argparse.Namespace) -> Non
         jobs: List[Future] = []
 
         for url, source in LIST_SOURCES:
-            jobs.append(crawler.submit(crawler.from_list_page, url, source))
+            jobs.append(crawler.submit_source(crawler.from_list_page, url, source))
         for index, query in enumerate(GITHUB_QUERIES):
-            page = ((round_no - 1) * len(GITHUB_QUERIES) + index) % args.pages + 1
-            jobs.append(crawler.submit(crawler.from_github_search, query, page))
+            page = (args.page_offset + round_no - 1 + index) % args.pages + 1
+            jobs.append(crawler.submit_source(crawler.from_github_search, query, page))
 
         for future in as_completed(jobs):
             try:
                 future.result()
-            except Exception:
+            except Exception as error:
                 crawler.stats.bump("failures")
-            if pool.full or crawler.stop:
+                raise RuntimeError("site discovery worker crashed") from error
+            if pool.full or crawler.stop or crawler.time_is_up():
                 break
 
         gained = pool.size - before
@@ -612,6 +713,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--target", type=int, default=CAPACITY)
     ap.add_argument("--workers", type=int, default=48)
     ap.add_argument("--pages", type=int, default=3, help="GitHub search pages per query")
+    ap.add_argument("--page-offset", type=int, default=int(os.environ.get("GITHUB_RUN_NUMBER", "0")),
+                    help="rotate the first GitHub page between scheduled runs")
     ap.add_argument("--empty-rounds", type=int, default=5)
     ap.add_argument("--max-seconds", type=int, default=0)
     ap.add_argument("--probe", default="one piece", help="title used to verify that search works")
@@ -620,14 +723,23 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--out", default="site_pool.json")
     ap.add_argument("--verbose", action="store_true")
     args = ap.parse_args(argv)
-    args.max_seconds = args.max_seconds or 0
+    if not 1 <= args.target <= CAPACITY:
+        ap.error(f"--target must be between 1 and {CAPACITY}")
+    if args.workers < 1 or args.pages < 1 or args.empty_rounds < 1 or args.max_seconds < 0:
+        ap.error("workers, pages and empty-rounds must be positive; max-seconds cannot be negative")
+    if not args.probe.strip():
+        ap.error("--probe must not be empty")
 
     pool = SitePool(target=args.target)
-    if args.merge and Path(args.merge).is_file():
-        print(f"merged {pool.merge_file(Path(args.merge))} sites from {args.merge}")
+    if args.merge:
+        path = Path(args.merge)
+        if not path.is_file():
+            ap.error(f"--merge {path} does not exist")
+        print(f"merged {pool.merge_file(path)} sites from {args.merge}")
 
     stats = Stats()
     crawler = SiteCrawler(pool, stats, args.workers, probe=args.probe, verbose=args.verbose)
+    crawler.deadline = time.time() + args.max_seconds if args.max_seconds else None
 
     def _stop(signum, _frame):
         print("\nstopping: writing what has been verified so far")
@@ -644,7 +756,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     finally:
         crawler.shutdown()
         out = Path(args.out)
-        out.write_text(json.dumps(pool.as_document(pool.rejected, stats.snapshot()["by_source"]), indent=1) + "\n", encoding="utf-8")
+        snap = stats.snapshot()
+        out.write_text(json.dumps(pool.as_document(pool.rejected, snap["by_source"], snap["source_evidence"]), indent=1) + "\n", encoding="utf-8")
         print()
         print(f"sites     {pool.size}/{args.target}")
         print(f"file      {out}  ({out.stat().st_size} bytes)")

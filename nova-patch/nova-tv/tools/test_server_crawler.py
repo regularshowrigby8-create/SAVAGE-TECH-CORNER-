@@ -13,8 +13,10 @@ from __future__ import annotations
 
 import json
 import sys
+import time
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import server_crawler as sc  # noqa: E402
@@ -57,6 +59,9 @@ class FakeFetcher:
             future.set_exception(error)
         return future
 
+    def submit_source(self, fn, *args):
+        return self.submit(fn, *args)
+
     def shutdown(self) -> None:
         """Nothing to tear down: there is no thread pool in the fake."""
         self.shut_down = True
@@ -94,6 +99,12 @@ class ManifestRules(unittest.TestCase):
         self.assertFalse(sc.manifest_ok(CATALOG_ONLY_MANIFEST))
         self.assertFalse(sc.manifest_ok({}))
         self.assertFalse(sc.manifest_ok({"resources": ["stream"], "types": ["channel"]}))
+
+    def test_malformed_public_manifest_is_refused_not_a_crash(self):
+        for manifest in ({"resources": [3], "types": [None]},
+                         {"resources": "stream", "types": ["movie"]},
+                         {"resources": ["stream"], "types": [3, None]}):
+            self.assertFalse(sc.manifest_ok(manifest), manifest)
 
     def test_keys_match_the_app(self):
         self.assertEqual(sc.pool_key("https://Torrentio.strem.fun/abc/manifest.json"), "torrentio.strem.fun/abc")
@@ -153,6 +164,33 @@ class CrawlerBehaviour(unittest.TestCase):
         self.assertFalse(result.more)
         self.assertTrue(result.retry)
 
+    def test_failed_community_page_is_actually_fetched_again(self):
+        url = "https://list.example/readme"
+        crawler, _, _ = crawler_with({})
+        self.assertTrue(crawler.harvest_page(url, "community").retry)
+        crawler.http.pages[url] = "a valid list with no links"
+        self.assertFalse(crawler.harvest_page(url, "community").retry)
+        self.assertEqual(crawler.http.asked.count(url), 2)
+
+    def test_malformed_directory_items_do_not_abort_page(self):
+        url = "https://stremio-addons.net/api/v0/addons?limit=100&nsfw=exclude&sort_by=stars&order=desc&page=1"
+        body = json.dumps({"addons": [None, "bad", {"instances": "bad"},
+                           {"manifest": STREAM_MANIFEST, "manifestUrl": "https://ok.example/manifest.json", "stars": "unknown"}]})
+        crawler, pool, _ = crawler_with({url: body})
+        crawler.stremio_addons_page(1)
+        self.assertEqual(1, pool.size)
+        self.assertEqual(0, next(iter(pool.entries.values())).stars)
+
+    def test_manifest_worker_bug_is_not_reported_as_an_empty_source(self):
+        url = "https://list.example/readme"
+        manifest = "https://broken.example/manifest.json"
+        crawler, _, _ = crawler_with({url: manifest})
+        def broken(*args):
+            raise RuntimeError("planted worker failure")
+        crawler.consider_manifest = broken
+        with self.assertRaisesRegex(RuntimeError, "manifest worker crashed"):
+            crawler.harvest_page(url, "community")
+
     def test_a_short_page_has_no_follow_up(self):
         body = json.dumps({"addons": []})
         crawler, pool, _ = crawler_with({"https://stremio-addons.net/api/v0/addons?limit=100&nsfw=exclude&sort_by=stars&order=desc&page=1": body})
@@ -187,6 +225,48 @@ class CrawlerBehaviour(unittest.TestCase):
         self.assertTrue(any("home.example/manifest.json" in u for u in crawler.http.asked))
         self.assertTrue(any("ow.github.io" in u for u in crawler.http.asked))
         self.assertEqual(pool.size, 1)
+
+
+class ThreadingAndSecurity(unittest.TestCase):
+    def test_single_source_worker_can_wait_for_an_http_worker(self):
+        fetcher = sc.Fetcher(1, 1, sc.Stats())
+        try:
+            parent = fetcher.submit_source(lambda: fetcher.submit(lambda: 42).result(timeout=2))
+            self.assertEqual(42, parent.result(timeout=3))
+        finally:
+            fetcher.shutdown()
+
+    def test_github_limiter_wont_wait_past_deadline(self):
+        limiter = sc.GitHubSearchLimiter(authenticated=True)
+        limiter.next_at = time.monotonic() + 10
+        self.assertFalse(limiter.wait(time.time() + 0.01))
+
+    def test_token_only_sent_to_github_api_and_not_forwarded(self):
+        from urllib.request import HTTPRedirectHandler
+        calls = []
+        class Response:
+            headers = {"Content-Length": "2"}
+            def __enter__(self): return self
+            def __exit__(self, *args): pass
+            def read(self, count): return b"{}"
+        fetcher = sc.Fetcher(1, 1, sc.Stats(), "example-secret")
+        try:
+            def fake_open(request, **kwargs):
+                calls.append(request)
+                # The real API exposes get_content_charset; use an email Message.
+                from email.message import Message
+                response = Response()
+                response.headers = Message()
+                return response
+            with patch("urllib.request.urlopen", side_effect=fake_open):
+                self.assertEqual("{}", fetcher.get("https://api.github.com/repos/example"))
+                self.assertEqual("{}", fetcher.get("https://evil.example/path?api.github.com"))
+            self.assertEqual("Bearer example-secret", calls[0].get_header("Authorization"))
+            self.assertIsNone(calls[1].get_header("Authorization"))
+            redirected = HTTPRedirectHandler().redirect_request(calls[0], None, 302, "Found", {}, "https://evil.example/")
+            self.assertIsNone(redirected.get_header("Authorization"))
+        finally:
+            fetcher.shutdown()
 
 
 class LoopSignals(unittest.TestCase):
