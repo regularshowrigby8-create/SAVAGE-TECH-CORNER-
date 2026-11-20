@@ -138,6 +138,59 @@ jobs:
             echo "Site rejections: \`$(python3 -c "import json;print(json.dumps(json.load(open('nova-patch/pools/site_pool.json'))['rejected']))")\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Publish the crawl numbers into the repository
+        # The step summary and the artifacts both live on hosts that are not
+        # reachable from an agent sandbox, so the numbers that matter are also
+        # written into the repo. This is the only way to answer "how many did it
+        # actually find" without downloading anything.
+        if: always()
+        run: |
+          set -uo pipefail
+          mkdir -p nova-patch/pools
+          python3 - <<'PY'
+          import json, pathlib, time
+          out = {"generated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+          for name in ("server_pool", "site_pool"):
+              f = pathlib.Path(f"nova-patch/pools/{name}.json")
+              alt = pathlib.Path(f"nova-patch/nova-tv/tools/{name}.json")
+              f = f if f.is_file() else alt
+              if not f.is_file():
+                  out[name] = {"entries": None, "note": "crawler wrote no file"}
+                  continue
+              d = json.loads(f.read_text())
+              entries = d.get("entries", [])
+              out[name] = {
+                  "entries": len(entries),
+                  "ceiling": 3000,
+                  "rejected": d.get("rejected", {}),
+                  "by_source": {},
+              }
+          lines = ["# Nova pool crawl", "", "| pool | entries | ceiling |", "|---|---|---|"]
+          for name in ("server_pool", "site_pool"):
+              info = out[name]
+              lines.append(f"| {name}.json | {info.get('entries')} | 3000 |")
+          site = out.get("site_pool", {})
+          if site.get("rejected"):
+              lines += ["", "## Sites dropped, by reason", ""]
+              for reason, count in sorted(site["rejected"].items(), key=lambda kv: -kv[1]):
+                  lines.append(f"- {count:5d}  {reason}")
+          lines += ["", f"_generated {out['generated']} by run $GITHUB_RUN_ID_", ""]
+          pathlib.Path("nova-patch/POOL-COUNTS.md").write_text("\n".join(lines))
+          pathlib.Path("nova-patch/pools/counts.json").write_text(json.dumps(out, indent=1))
+          print("\n".join(lines[:8]))
+          PY
+
+      - name: Commit the counts
+        if: always()
+        run: |
+          set -uo pipefail
+          git config user.name "nova-crawler"
+          git config user.email "nova-crawler@users.noreply.github.com"
+          git add nova-patch/POOL-COUNTS.md nova-patch/pools/counts.json 2>/dev/null || true
+          if git diff --cached --quiet; then echo "no counts to commit"; exit 0; fi
+          git commit -m "data(nova): pool crawl counts for run $GITHUB_RUN_ID"
+          git push || echo "push failed"
+
       - name: Upload the pools
         uses: actions/upload-artifact@v4
         with:

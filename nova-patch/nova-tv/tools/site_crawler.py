@@ -313,6 +313,7 @@ class SiteCrawler:
         self.probe = probe
         self.max_bytes = max_bytes
         self.stop = False
+        self.deadline: Optional[float] = None
         self.pool_exec = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="site")
         self._host_gates: Dict[str, "Future"] = {}
         import threading
@@ -505,16 +506,31 @@ class SiteCrawler:
         return added
 
     def _profile_all(self, origins: Iterable[str], source: str) -> int:
-        futures = [self.submit(self.profile_and_verify, origin, source) for origin in list(origins)[:60]]
+        origins = list(origins)[:60]
         added = 0
+        futures = []
+        for origin in origins:
+            if self.time_is_up() or self.pool.full or self.stop:
+                break
+            futures.append(self.submit(self.profile_and_verify, origin, source))
         for future in as_completed(futures):
             try:
                 added += 1 if future.result() else 0
             except Exception:
                 self.stats.bump("failures")
-            if self.pool.full or self.stop:
+            if self.pool.full or self.stop or self.time_is_up():
                 break
         return added
+
+    def time_is_up(self) -> bool:
+        """True once the caller's budget is spent.
+
+        This used to be checked only between rounds, and a round is hundreds of
+        sequential requests -- the first real run went 42 minutes on a 45-minute
+        budget and only stopped because the work ran out. Every unit of work
+        checks the clock now, so --max-seconds is a ceiling and not a wish.
+        """
+        return self.deadline is not None and time.time() > self.deadline
 
 
 # Public list sources. Each is a page or README that keeps a curated list of
@@ -549,6 +565,7 @@ GITHUB_QUERIES = [
 
 def crawl(crawler: SiteCrawler, pool: SitePool, args: argparse.Namespace) -> None:
     deadline = time.time() + args.max_seconds if args.max_seconds else None
+    crawler.deadline = deadline
     round_no = 0
     empty = 0
     while not pool.full and not crawler.stop:
