@@ -179,6 +179,32 @@ class SitePoolTest {
     }
 
     @Test
+    fun `a pool file with extra crawler fields still loads`() {
+        // The crawler writes by_source into the pool file so a total can be
+        // explained. If the app's Json were not configured with
+        // ignoreUnknownKeys, that one extra key would make the whole pool
+        // unreadable on device -- a silent empty pool that looks like a failed
+        // crawl. This test exists so that cannot regress unnoticed.
+        val text = """
+            {
+              "version": 1,
+              "target": 3000,
+              "generated": "2026-11-20T18:41:53Z",
+              "by_source": {"github": 40, "list": 43},
+              "rejected": {"no homepage": 1290},
+              "entries": [
+                {"host": "example.org", "name": "Example", "search": "https://example.org/s?q={q}",
+                 "score": 7, "resolved": 2, "misses": 0}
+              ]
+            }
+        """.trimIndent()
+        val store = MemoryStore(text)
+        val pool = pool(store)
+        assertEquals(1, pool.state.value.size, "the entry should load despite the extra key")
+        assertEquals("no homepage" to 1290, pool.state.value.rejected.entries.first().toPair())
+    }
+
+    @Test
     fun `an imported pool survives a restart`() {
         val store = MemoryStore()
         pool(store).import(document(site("https://a.example"), site("https://b.example")))
