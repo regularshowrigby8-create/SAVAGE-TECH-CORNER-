@@ -1,7 +1,7 @@
 {
  "version": 1,
  "target": 3000,
- "generated": "2026-11-20T20:22:54Z",
+ "generated": "2026-11-20T20:39:32Z",
  "entries": [
   {
    "url": "https://www.moviedb.wiki",
@@ -332,2828 +332,3576 @@
    "misses": 0,
    "resolved": 0,
    "from": "github-lists:kinshow"
+  },
+  {
+   "url": "https://animeworld.ac",
+   "name": "AnimeWorld - Download e Streaming Anime Sub ITA e ITA",
+   "templates": [
+    "https://www.animeworld.ac/search?keyword={q}"
+   ],
+   "categories": [
+    "anime",
+    "series",
+    "embed"
+   ],
+   "score": 92,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:HACHI-API"
+  },
+  {
+   "url": "https://w1.123animes.ru",
+   "name": "123animehub - Watch Anime Online free Dub and Sub",
+   "templates": [
+    "https://w1.123animes.ru/search?keyword={q}"
+   ],
+   "categories": [
+    "anime",
+    "movies",
+    "embed"
+   ],
+   "score": 100,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:HACHI-API"
+  },
+  {
+   "url": "https://gogoanime.com.by",
+   "name": "Catalog \u00b7 AnimeHub",
+   "templates": [
+    "https://gogoanime.com.by/search.php?keyword={q}"
+   ],
+   "categories": [
+    "anime",
+    "series",
+    "embed"
+   ],
+   "score": 70,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:HACHI-API"
+  },
+  {
+   "url": "https://laracasts.com",
+   "name": "Laracasts",
+   "templates": [
+    "https://laracasts.com/search?keyword={q}",
+    "https://laracasts.com/search?q={q}",
+    "https://laracasts.com/search?query={q}",
+    "https://laracasts.com/?s={q}",
+    "https://laracasts.com/filter?keyword={q}"
+   ],
+   "categories": [
+    "embed"
+   ],
+   "score": 40,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:OtakuPoi"
+  },
+  {
+   "url": "https://sakuga-pink.vercel.app",
+   "name": "Anime discovery &amp; library",
+   "templates": [
+    "https://sakuga-pink.vercel.app/search?q={q}"
+   ],
+   "categories": [
+    "anime"
+   ],
+   "score": 78,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists"
+  },
+  {
+   "url": "https://www.wetv.vip",
+   "name": "WeTV",
+   "templates": [
+    "https://www.wetv.vip/search?keyword={q}",
+    "https://www.wetv.vip/search?q={q}",
+    "https://www.wetv.vip/search?query={q}",
+    "https://www.wetv.vip/?s={q}",
+    "https://www.wetv.vip/filter?keyword={q}"
+   ],
+   "categories": [
+    "series"
+   ],
+   "score": 60,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:Neko-s-Index-Backup-Fall"
+  },
+  {
+   "url": "https://www.pluto.tv",
+   "name": "Pluto TV",
+   "templates": [
+    "https://www.pluto.tv/search?keyword={q}",
+    "https://www.pluto.tv/search?q={q}",
+    "https://www.pluto.tv/search?query={q}",
+    "https://www.pluto.tv/?s={q}",
+    "https://www.pluto.tv/filter?keyword={q}"
+   ],
+   "categories": [
+    "movies",
+    "series",
+    "embed"
+   ],
+   "score": 46,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:Neko-s-Index-Backup-Fall"
+  },
+  {
+   "url": "https://www.bilibili.com",
+   "name": "\u54d4\u54e9\u54d4\u54e9 (\u309c-\u309c)\u3064\u30ed \u5e72\u676f~-bilibili",
+   "templates": [
+    "https://www.bilibili.com/?s={q}",
+    "https://www.bilibili.com/search?keyword={q}",
+    "https://www.bilibili.com/search?q={q}",
+    "https://www.bilibili.com/search?query={q}",
+    "https://www.bilibili.com/filter?keyword={q}"
+   ],
+   "categories": [
+    "anime",
+    "movies",
+    "series"
+   ],
+   "score": 33,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:TMDB-Import"
+  },
+  {
+   "url": "https://moviewave-streaming.netlify.app",
+   "name": "Movie Wave",
+   "templates": [
+    "https://moviewave-streaming.netlify.app/?s={q}",
+    "https://moviewave-streaming.netlify.app/search?keyword={q}",
+    "https://moviewave-streaming.netlify.app/search?q={q}",
+    "https://moviewave-streaming.netlify.app/search?query={q}",
+    "https://moviewave-streaming.netlify.app/filter?keyword={q}"
+   ],
+   "categories": [
+    "movies",
+    "embed"
+   ],
+   "score": 241,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:projeto-movie-wave-strea"
+  },
+  {
+   "url": "https://streamifyxyz.vercel.app",
+   "name": "Streamify",
+   "templates": [
+    "https://streamifyxyz.vercel.app/?s={q}",
+    "https://streamifyxyz.vercel.app/search?keyword={q}",
+    "https://streamifyxyz.vercel.app/search?q={q}",
+    "https://streamifyxyz.vercel.app/search?query={q}",
+    "https://streamifyxyz.vercel.app/filter?keyword={q}"
+   ],
+   "categories": [
+    "series",
+    "embed"
+   ],
+   "score": 20,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists"
+  },
+  {
+   "url": "https://www.zee5.com",
+   "name": "Zee 5",
+   "templates": [
+    "https://www.zee5.com/?s={q}",
+    "https://www.zee5.com/search?keyword={q}",
+    "https://www.zee5.com/search?q={q}",
+    "https://www.zee5.com/search?query={q}",
+    "https://www.zee5.com/filter?keyword={q}"
+   ],
+   "categories": [
+    "anime",
+    "embed"
+   ],
+   "score": 519,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:Zee5-Stream-Scrapper"
+  },
+  {
+   "url": "https://aniworld.to",
+   "name": "AniWorld.to - Animes gratis legal online ansehen",
+   "templates": [
+    "https://aniworld.to/?s={q}",
+    "https://aniworld.to/search?keyword={q}",
+    "https://aniworld.to/search?q={q}",
+    "https://aniworld.to/search?query={q}",
+    "https://aniworld.to/filter?keyword={q}"
+   ],
+   "categories": [
+    "anime",
+    "series",
+    "embed"
+   ],
+   "score": 150,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:sdl"
+  },
+  {
+   "url": "https://lakika.vercel.app",
+   "name": "La kika est le premier site de streaming en ligne sans pub e",
+   "templates": [
+    "https://lakika.vercel.app/?s={q}",
+    "https://lakika.vercel.app/search?keyword={q}",
+    "https://lakika.vercel.app/search?q={q}",
+    "https://lakika.vercel.app/search?query={q}",
+    "https://lakika.vercel.app/filter?keyword={q}"
+   ],
+   "categories": [
+    "movies",
+    "embed"
+   ],
+   "score": 34,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:La-kika-Streaming-video"
   }
  ],
  "rejected": {
-  "no homepage": 733,
-  "search returned nothing usable": 1045
+  "search returned nothing usable": 282,
+  "no homepage": 209
  },
  "by_source": {
-  "github-lists:awesome-entertainment": 3,
-  "github-lists:PinguSync": 1,
-  "github-lists:AnimeLegacy": 1,
-  "github-lists:awesome-piracy": 2,
-  "github-lists:free-streaming-resources": 5,
-  "github-lists:tioanime": 1,
-  "github-lists:YourAnimeList": 1,
-  "github-lists:AniLibDown": 1,
+  "github-lists:HACHI-API": 3,
+  "github-lists:OtakuPoi": 1,
   "github-lists": 2,
-  "github-lists:kinshow": 1
+  "github-lists:Neko-s-Index-Backup-Fall": 2,
+  "github-lists:TMDB-Import": 1,
+  "github-lists:projeto-movie-wave-strea": 1,
+  "github-lists:Zee5-Stream-Scrapper": 1,
+  "github-lists:sdl": 1,
+  "github-lists:La-kika-Streaming-video": 1
  },
  "source_evidence": {
   "addon-manifest": {
-   "candidates": 481,
-   "no_homepage": 174,
-   "search_unusable": 307
+   "candidates": 1,
+   "search_unusable": 1
   },
   "awesome-selfhosted": {
-   "pages_requested": 3,
-   "candidates": 60,
-   "no_homepage": 4,
-   "search_unusable": 56
+   "pages_requested": 8
   },
   "anime-api-lists": {
-   "pages_requested": 3,
-   "pages_failed": 3
-  },
-  "anime-websites": {
-   "pages_requested": 3,
-   "pages_failed": 3
-  },
-  "anime-sites-list": {
-   "pages_requested": 3,
-   "pages_failed": 3
-  },
-  "movie-sites-list": {
-   "pages_requested": 3,
-   "pages_failed": 3
-  },
-  "streaming-sites": {
-   "pages_requested": 3,
-   "pages_failed": 3
-  },
-  "movie-web": {
-   "pages_requested": 3,
-   "pages_failed": 3
-  },
-  "anime-list": {
-   "pages_requested": 3,
-   "pages_failed": 3
-  },
-  "ani-cli": {
-   "pages_requested": 3,
-   "candidates": 19,
-   "no_homepage": 5,
-   "search_unusable": 14
-  },
-  "animdl": {
-   "pages_requested": 3,
-   "pages_failed": 3
-  },
-  "github-lists": {
-   "pages_requested": 30,
-   "candidates": 311,
-   "no_homepage": 205,
-   "search_unusable": 104,
-   "added": 2,
-   "pages_failed": 9
-  },
-  "github-lists:awesome-entertainment": {
-   "pages_requested": 8,
-   "candidates": 100,
-   "no_homepage": 47,
-   "search_unusable": 50,
-   "added": 3,
-   "pages_failed": 6
-  },
-  "github-lists:reprint": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "no_homepage": 1,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:afreeca-downloader": {
-   "pages_requested": 4,
-   "candidates": 6,
-   "search_unusable": 6,
-   "pages_failed": 3
-  },
-  "github-lists:anipy-cli": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "search_unusable": 2,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:anime-website": {
-   "pages_requested": 4,
-   "candidates": 5,
-   "no_homepage": 3,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:Movie-Info-App": {
-   "pages_requested": 4,
-   "candidates": 5,
-   "no_homepage": 2,
-   "search_unusable": 3,
-   "pages_failed": 3
-  },
-  "github-lists:mal-stremio-addon": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "no_homepage": 2,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:next-anime": {
-   "pages_requested": 4,
-   "candidates": 5,
-   "no_homepage": 3,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:Anivexa-API": {
-   "pages_requested": 16,
-   "candidates": 3,
-   "search_unusable": 3,
-   "pages_failed": 12
-  },
-  "github-lists:Animasi": {
-   "pages_requested": 4,
-   "candidates": 4,
-   "search_unusable": 4,
-   "pages_failed": 3
-  },
-  "github-lists:animunet": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:AnimeTV": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "no_homepage": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:AN-streaming": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:VideoStreaming": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:streaming-de-filmes": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Void": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:kari": {
-   "pages_requested": 4,
-   "candidates": 5,
-   "search_unusable": 5,
-   "pages_failed": 3
-  },
-  "github-lists:MovieOne": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:nekonode-site": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:docflare-ai": {
-   "pages_requested": 4,
-   "candidates": 8,
-   "no_homepage": 4,
-   "search_unusable": 4,
-   "pages_failed": 3
-  },
-  "github-lists:stremio-aniskip": {
-   "pages_requested": 4,
-   "candidates": 5,
-   "search_unusable": 4,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:StreamRush": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:tela-seriesflix": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Projeto-streaming-carava": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:Meu-cinema": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:malted.dev": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:anime-stream-website": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:simple-movie-app": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Dejavu-API": {
-   "pages_requested": 4,
-   "pages_failed": 3,
-   "candidates": 15,
-   "no_homepage": 8,
-   "search_unusable": 7
-  },
-  "github-lists:SapphoLive": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:vicous": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:movie-ligel": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:Zenix-Streaming": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Sal019.github.io": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:djamelmov": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:vetra-providers": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Cinezap": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:castan": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:CondMais": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:StreamNest": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:LoukoFlix": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:animetsu-scraper": {
-   "pages_requested": 8,
-   "candidates": 4,
-   "no_homepage": 4,
-   "pages_failed": 6
-  },
-  "github-lists:Gab-stream-": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:trabalho-de-programa-o-s": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:rawoi": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:orionfilmes.io": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:SITE-TEST_streaming": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Kitty-cli": {
-   "pages_requested": 8,
-   "candidates": 8,
-   "no_homepage": 7,
-   "search_unusable": 1,
-   "pages_failed": 6
-  },
-  "github-lists:MyAnimeList": {
-   "pages_requested": 8,
-   "pages_failed": 6
-  },
-  "github-lists:polish-http-stremio-addo": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "no_homepage": 2,
-   "pages_failed": 3
-  },
-  "github-lists:node-vidstreaming": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "no_homepage": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Rename-videos-from-movie": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:natflix": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:zonetelechargement1": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:Locadora": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:nebulaflix": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:aluraplus": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:NetWatch": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:Clubedofilme": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:nagare": {
-   "pages_requested": 8,
-   "pages_failed": 6
-  },
-  "github-lists:superfilmes": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:anivault-scraper": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:projetofriends": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:JRMatchServer": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Streamify": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:movie_recommender": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:watcharoo": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:VidSrc-Alternative-for-2": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:anime-dl-core": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:emby-plugin-bangumi": {
-   "pages_requested": 4,
-   "candidates": 4,
-   "no_homepage": 2,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:Lysto": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:play-movies-series-api": {
-   "pages_requested": 4,
-   "candidates": 4,
-   "search_unusable": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Movie-Recommendation-Sys": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Movie_Explorer": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:Mega-Flix-Vfinal": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:Watch-free-movies-and-se": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:neural-collaborative-fil": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:hybrid-movie-recommender": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Plotwise-movie-recommend": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:movieCreator-Recommender": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:cine-sync-v2": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "search_unusable": 3,
-   "pages_failed": 3
-  },
-  "github-lists:mongodb-atlas-vector-sea": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "search_unusable": 3,
-   "pages_failed": 3
-  },
-  "github-lists:js-capstone-group": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "search_unusable": 3,
-   "pages_failed": 3
-  },
-  "github-lists:martv": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "no_homepage": 2,
-   "pages_failed": 3
-  },
-  "github-lists:fidalgo-tv": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:projetodio-interface-rob": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:ott": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Movieflex": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:streaming_availability_p": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Funanime": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:CClone": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:GenderDebiasing-Bollywoo": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Watched": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:-ReelFind-Movie-Search-A": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:CrunchyrollPlusXamarin": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:MovieMatch-Studio": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Shou": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:imdb-movie-app": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Better_anime_list": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Image-to-Movie-Recogniti": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:movielala": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:React_movie": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:MovieFeast": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:Miru": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:movie-filtering-ML-pipel": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:animu-desu": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:movie_rag": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:animepixels": {
-   "pages_requested": 4,
-   "pages_failed": 3,
-   "candidates": 1,
-   "no_homepage": 1
-  },
-  "github-lists:PinguSync": {
-   "pages_requested": 4,
-   "candidates": 6,
-   "search_unusable": 5,
-   "added": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Anime-Watchlist": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:chumon-server-js": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "search_unusable": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:RAG-movieQA-Chatbot": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:mongodb-vector-semantic-": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Anime-Manga-Recommender": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:AniTrace": {
-   "pages_requested": 4,
-   "candidates": 8,
-   "search_unusable": 8,
-   "pages_failed": 3
-  },
-  "github-lists:vidsuper": {
-   "pages_requested": 4,
-   "candidates": 6,
-   "no_homepage": 4,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:AnimeDataAPI": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "no_homepage": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Anifufu": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:videostream": {
-   "pages_requested": 4,
-   "pages_failed": 3,
-   "candidates": 9,
-   "search_unusable": 8,
-   "no_homepage": 1
-  },
-  "github-lists:anime-list": {
-   "pages_requested": 20,
-   "candidates": 3,
-   "no_homepage": 2,
-   "search_unusable": 1,
-   "pages_failed": 15
-  },
-  "github-lists:FlixTools-CLI": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:MyAnimeList-Classic-RDJ-": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:MyAnimeList-discord-bot": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Movie-app": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:WP-Movie-Showcase": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:Next.js-AnimeCatalog": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:MyCrunchyList": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "search_unusable": 3,
-   "pages_failed": 3
-  },
-  "github-lists:ecchi-fanservice-anime-l": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:animixplay.to-anime-stre": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:AnistreamIN": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:MyAnimeList-API-Viewer": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:MyAnimeList-Modern-RDJ-T": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "no_homepage": 2,
-   "pages_failed": 3
-  },
-  "github-lists:Sushi-Unofficial-MyAnime": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:Lister": {
-   "pages_requested": 4,
-   "candidates": 4,
-   "search_unusable": 3,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:ZenAnime": {
-   "pages_requested": 8,
-   "pages_failed": 6
-  },
-  "github-lists:Animeist": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:anime-cli": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:hareshi-my-list": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "search_unusable": 3,
-   "pages_failed": 3
-  },
-  "github-lists:fanime": {
-   "pages_requested": 4,
-   "candidates": 6,
-   "search_unusable": 6,
-   "pages_failed": 3
-  },
-  "github-lists:otakudesu-scraping": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:LibertyNow": {
-   "pages_requested": 4,
-   "candidates": 5,
-   "no_homepage": 2,
-   "search_unusable": 3,
-   "pages_failed": 3
-  },
-  "github-lists:Raegetys-Anime-List": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:aniTS": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:ani-watch": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Anime-Data-App": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:AnimeLegacy": {
-   "pages_requested": 4,
-   "candidates": 8,
-   "no_homepage": 2,
-   "search_unusable": 5,
-   "added": 1,
-   "pages_failed": 3
-  },
-  "github-lists:User-Animelist-Dataset": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:VPN-Proxy-Master-Pro-Fre": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:anime_indonesia": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:NekoView": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:RadioPlayer": {
-   "pages_requested": 4,
-   "candidates": 7,
-   "no_homepage": 2,
-   "search_unusable": 5,
-   "pages_failed": 3
-  },
-  "github-lists:animelist": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Lynn-AnimeList": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "no_homepage": 1,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:m3u8_StreamSniper": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:mal-ani-cli-sync": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:enime.moe": {
-   "pages_requested": 8,
-   "pages_failed": 6
-  },
-  "github-lists:AnimeTracker": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:notalone.py": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "no_homepage": 2,
-   "pages_failed": 3
-  },
-  "github-lists:anime-list-website": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Anime_-recommendation_-s": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:KokoroNoKiroku": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:anime-parser": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:wp-kal": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:tweetwatcher": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:FetchJAV_Public": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "no_homepage": 1,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:KurioNime": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:www-th3-z-xyz": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Stream-Enhancer-Site": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:ActivityStreamBundle": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:loopifi": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "no_homepage": 1,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:gstreamer-android-sample": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:acts_as_video_fu": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:mcp-unifi": {
-   "pages_requested": 4,
-   "candidates": 4,
-   "search_unusable": 4,
-   "pages_failed": 3
-  },
-  "github-lists:vidstream-api": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:anime-watch-list-API": {
-   "pages_requested": 4,
-   "candidates": 6,
-   "no_homepage": 3,
-   "search_unusable": 3,
-   "pages_failed": 3
-  },
-  "github-lists:Global-Cinema_OMDb-API": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:movielab": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "no_homepage": 2,
-   "pages_failed": 3
-  },
-  "github-lists:the-movie-pipeline": {
-   "pages_requested": 4,
-   "candidates": 10,
-   "no_homepage": 8,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:movieflix-clone": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:react-movie-app": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:nlp-movie-recommender-st": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Anisync": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "search_unusable": 3,
-   "pages_failed": 3
-  },
-  "github-lists:movie--mania": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:film-search-engine": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:filmantic": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:netphim": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "no_homepage": 1,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:WhoamiBangumi": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:AnimeList": {
-   "pages_requested": 32,
-   "pages_failed": 24,
-   "candidates": 1,
-   "search_unusable": 1
-  },
-  "github-lists:ZoharHQ": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Discord-Movie-Recommenda": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:personalized_entertainme": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:YourAnimeList": {
-   "pages_requested": 8,
-   "candidates": 2,
-   "search_unusable": 1,
-   "pages_failed": 6,
-   "added": 1
-  },
-  "github-lists:movito.ai": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:YAMR_MVP": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:aa.py": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:best": {
-   "pages_requested": 4,
-   "candidates": 4,
-   "no_homepage": 3,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:netflix-movie-clustering": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Multimodal-Movie-Recomme": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:CineRag": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Movie-Sentimental-Analys": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:awesome-piracy": {
-   "pages_requested": 4,
-   "candidates": 59,
-   "no_homepage": 17,
-   "added": 2,
-   "search_unusable": 40,
-   "pages_failed": 3
-  },
-  "github-lists:AnimeWatchlistManager": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Netflix-movie-recommende": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Test-Anime-Site": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "no_homepage": 1,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:CineClassics---AI-Movie-": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:scrimba-simple-app-ReelR": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:WatchAnimes": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:react-anime-watchlist": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Anime-Watch-Order-Api": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:anime-watchlist": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:MongoDB-and-Hugging-Face": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:comic-site": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "search_unusable": 3,
-   "pages_failed": 3
-  },
-  "github-lists:Movie-ai-app-PopChoice-": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:AnimeListBot-Website": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Fananime-List": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Flickr-Archiver-Ruby": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:Marketing-Platform-": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:streamflix": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:lhai36366": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:Django-Netflix-Clone": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:struct-tv": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:RadioPlayer-ZenoRadio": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "no_homepage": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Nginx-Lua-Secure-Link-An": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:konzole": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:cassette": {
-   "pages_requested": 4,
-   "candidates": 4,
-   "search_unusable": 4,
-   "pages_failed": 3
-  },
-  "github-lists:wv-backend-downloader": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:anime-filler-checker": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "no_homepage": 1,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:anime_scrapers": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:DevEvil-TV": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "no_homepage": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:sf2tweets": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:script": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:vegenta": {
-   "pages_requested": 4,
-   "candidates": 5,
-   "no_homepage": 2,
-   "search_unusable": 3,
-   "pages_failed": 3
-  },
-  "github-lists:azure-media-services-mvc": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:nebula-player": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:ArduinoStreaming": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Jr-Movies": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:hxavatars": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "no_homepage": 1,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:anime-tier-list": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:hounds": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "no_homepage": 1,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:hasdata-mcp": {
-   "pages_requested": 4,
-   "candidates": 7,
-   "no_homepage": 2,
-   "search_unusable": 5,
-   "pages_failed": 3
-  },
-  "github-lists:animelist.fe": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:IPTV": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Window": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:Movie-Streaming": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:aniways": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:videojs-skin-twitchy": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:kitsu-updater": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Anime-List": {
-   "pages_requested": 8,
-   "pages_failed": 6,
-   "candidates": 3,
-   "search_unusable": 3
-  },
-  "github-lists:My-anime-list": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:Anime-Liste": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:free-streaming-resources": {
-   "pages_requested": 4,
-   "candidates": 58,
-   "no_homepage": 22,
-   "added": 5,
-   "search_unusable": 31,
-   "pages_failed": 3
-  },
-  "github-lists:ngewibu-wesite": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:DzulAnimeList": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:animeWebsite-v2": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "search_unusable": 3,
-   "pages_failed": 3
-  },
-  "github-lists:Simple-Weather-Overlay": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Animevault": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Web--AnimeList-JS": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:XanAnimeList.github.io": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:MorAnimeList": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:api": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:KuroList": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:anime_lister": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:find-my-anime": {
-   "pages_requested": 4,
-   "candidates": 9,
-   "no_homepage": 1,
-   "search_unusable": 8,
-   "pages_failed": 3
-  },
-  "github-lists:MyAnimeList-tracker": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:MyAnimeIndex": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:MajutsuIndexBackend": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:anime-watchlist-telegram": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:website-portal-anime-Rea": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Anime-Watchlist-Website": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:anime777.js": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:CineMatch-AI": {
-   "pages_requested": 4,
-   "candidates": 5,
-   "search_unusable": 5,
-   "pages_failed": 3
-  },
-  "github-lists:GameVault": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Free-Movie-Series-DB-API": {
-   "pages_requested": 4,
-   "candidates": 4,
-   "search_unusable": 4,
-   "pages_failed": 3
-  },
-  "github-lists:hentai-api": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:anime-api": {
-   "pages_requested": 8,
-   "candidates": 2,
-   "no_homepage": 1,
-   "pages_failed": 6,
-   "search_unusable": 1
-  },
-  "github-lists:reactjs-netflix-clone": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:tioanime": {
-   "pages_requested": 4,
-   "candidates": 7,
-   "no_homepage": 2,
-   "added": 1,
-   "search_unusable": 4,
-   "pages_failed": 3
-  },
-  "github-lists:CineVerse": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Cinelink": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Cineverse": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:dcmp": {
-   "pages_requested": 4,
-   "candidates": 58,
-   "no_homepage": 42,
-   "search_unusable": 16,
-   "pages_failed": 3
-  },
-  "github-lists:BASEDFLIX_BACKEND_DJANGO": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:Netflix-Clone": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:KuyAnime": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:scrimba-pop-choice": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:CineMatch": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:YGFlix---Netflix-Style-S": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "search_unusable": 3,
-   "pages_failed": 3
-  },
-  "github-lists:rust-server": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:m3u8-grabber-downloader": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "no_homepage": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:AnimeArray": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:novelas": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:anonime": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:moviedatabase": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:otakustv": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:AnimVille": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:angularflix": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:HiAnime-API": {
-   "pages_requested": 4,
-   "candidates": 4,
-   "no_homepage": 4,
-   "pages_failed": 3
-  },
-  "github-lists:BlackEagleLK": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Anime-To-Watch-List": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:anime": {
-   "pages_requested": 8,
-   "candidates": 2,
-   "search_unusable": 2,
-   "pages_failed": 6
-  },
-  "github-lists:Netflix-clone---Landing-": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:AniWatcher": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Netflix-clone": {
-   "pages_requested": 8,
-   "pages_failed": 7
-  },
-  "github-lists:weeb.terebi": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:reactjs-netflixclone": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:.github": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:iWatchThis": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Mark1": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Site-de-Streaming": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:cinevia": {
-   "pages_requested": 4,
-   "candidates": 7,
-   "search_unusable": 5,
-   "no_homepage": 2,
-   "pages_failed": 3
-  },
-  "github-lists:V-Anime-App": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "no_homepage": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:MyAnimeList-Web-Scraper": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:alvesflix-streaming-html": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:MyAnimeList-Replica-usin": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:movbor": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:malrework": {
-   "pages_requested": 4,
-   "pages_failed": 3,
-   "candidates": 1,
-   "search_unusable": 1
-  },
-  "github-lists:Watchiru": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:hybride_recommendation_s": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:MegaFlix": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:animanage-api-webserver": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Animanga-List": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:serie-streaming-base-dem": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:Anime-Generator": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:anime_chill": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:3-tier-web-application": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "search_unusable": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:the-watcher": {
-   "pages_requested": 8,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 6
-  },
-  "github-lists:Tube-DL": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "search_unusable": 3,
-   "pages_failed": 3
-  },
-  "github-lists:Anime-Log-Website": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Top10List-React": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:RoninX-Anime-Client": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:mymanganimelist.com": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "no_homepage": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Ronajo": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "search_unusable": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:otakubec": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:myentertainmenthub": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:weever-streaming": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "no_homepage": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:RecoHub": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:ShowUp-web": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:JiuTube": {
-   "pages_requested": 4,
-   "candidates": 4,
-   "search_unusable": 3,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Anime": {
-   "pages_requested": 4,
-   "candidates": 10,
-   "no_homepage": 1,
-   "search_unusable": 9,
-   "pages_failed": 3
-  },
-  "github-lists:anistream": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:statamic-mux": {
-   "pages_requested": 4,
-   "candidates": 5,
-   "search_unusable": 5,
-   "pages_failed": 3
-  },
-  "github-lists:bestMoviesWithReact": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Site_Streaming": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Cineflix": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:streamelopers": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:Projeto-StreamTV-feito-c": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:webtech2-netflix-2": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:uzmovi": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:ayoko": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:kumostamp": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:media-control": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:uniheroes": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:my-sweet-revenge": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "no_homepage": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:universal-extension": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:lemontv-scrapers": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:animitchures": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:drupal-bootstrap-live-de": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:anirush": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:ZeroNime": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:plex-anime-metadata-prov": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:stream-locker": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Hotstar-clone-": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:tmdb": {
-   "pages_requested": 8,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 6
-  },
-  "github-lists:Chatbot": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Netlfix-Clone": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:udfread-ERROR-ECMA-167-V": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Stream": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:cinescope": {
-   "pages_requested": 8,
-   "pages_failed": 6
-  },
-  "github-lists:Ai-anime": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "no_homepage": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:recsys": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Streaming-Site": {
-   "pages_requested": 4,
-   "candidates": 59,
-   "no_homepage": 13,
-   "search_unusable": 46,
-   "pages_failed": 3
-  },
-  "github-lists:anivexa-api": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "no_homepage": 2,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:netflix-clone": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Shikicinena-Android": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:AniLibDown": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "search_unusable": 1,
-   "added": 1,
-   "pages_failed": 3
-  },
-  "github-lists:booru-nsfw-anime-bot": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Deploying_a_Sentiment_An": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:zero-mapper": {
-   "pages_requested": 4,
-   "candidates": 6,
-   "no_homepage": 3,
-   "search_unusable": 3,
-   "pages_failed": 3
-  },
-  "github-lists:Animeworld-list-export": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:animeDiscordBot-": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:AnimeEpisodes": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:AnimeCalendar": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:TrabalhoSemestralDAAW": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:escolhe-pra-mim": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:brandshop-client-10": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:CineStreamX": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:tubeo": {
-   "pages_requested": 8,
-   "candidates": 2,
-   "no_homepage": 1,
-   "search_unusable": 1,
-   "pages_failed": 6
-  },
-  "github-lists:animetosho-provider": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:phlix-plugin-myanimelist": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:phlix-plugin-anidb": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "no_homepage": 2,
-   "pages_failed": 3
-  },
-  "github-lists:watch-hub": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "no_homepage": 2,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:nekosia": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "no_homepage": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:airing-anime": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "no_homepage": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:AnimeZone": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:anime-streaming-platform": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Anime-Frog": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:watchers-heaven": {
-   "pages_requested": 8,
-   "candidates": 5,
-   "no_homepage": 1,
-   "search_unusable": 4,
-   "pages_failed": 6
-  },
-  "github-lists:random-watch": {
    "pages_requested": 8,
    "pages_failed": 8
   },
+  "anime-websites": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "anime-sites-list": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "movie-sites-list": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "streaming-sites": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "movie-web": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "anime-list": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "ani-cli": {
+   "pages_requested": 8
+  },
+  "animdl": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists": {
+   "pages_requested": 80,
+   "candidates": 142,
+   "search_unusable": 60,
+   "no_homepage": 80,
+   "added": 2
+  },
+  "github-lists:awesome-entertainment": {
+   "pages_requested": 24,
+   "pages_failed": 18
+  },
+  "github-lists:anime-stream-website": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:PinguSync": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:AnimeDataAPI": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anime-list": {
+   "pages_requested": 116,
+   "pages_failed": 89
+  },
+  "github-lists:reprint": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:FlixTools-CLI": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:afreeca-downloader": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:MyAnimeList-Classic-RDJ-": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:docflare-ai": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:MyAnimeList-discord-bot": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:malted.dev": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Next.js-AnimeCatalog": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:videostream": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:MyCrunchyList": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:VPN-Proxy-Master-Pro-Fre": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:anipy-cli": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:ecchi-fanservice-anime-l": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:RadioPlayer": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anime-website": {
+   "pages_requested": 20,
+   "pages_failed": 15
+  },
+  "github-lists:AnistreamIN": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:m3u8_StreamSniper": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:mal-stremio-addon": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:MyAnimeList-API-Viewer": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:tweetwatcher": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:next-anime": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:MyAnimeList-Modern-RDJ-T": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:FetchJAV_Public": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Animasi": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Sushi-Unofficial-MyAnime": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Stream-Enhancer-Site": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:animunet": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Lister": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:ActivityStreamBundle": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Movie-Info-App": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:AnimeTV": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:loopifi": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:movie_recommender": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:nekonode-site": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:Animeist": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:gstreamer-android-sample": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:VidSrc-Alternative-for-2": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:stremio-aniskip": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:hareshi-my-list": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:acts_as_video_fu": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:Movie-Recommendation-Sys": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Dejavu-API": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:otakudesu-scraping": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:mcp-unifi": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Movie_Explorer": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:rawoi": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:vidstream-api": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Raegetys-Anime-List": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:neural-collaborative-fil": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Anivexa-API": {
+   "pages_requested": 48,
+   "pages_failed": 36
+  },
+  "github-lists:MyAnimeList": {
+   "pages_requested": 24,
+   "pages_failed": 18
+  },
+  "github-lists:hybrid-movie-recommender": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:aniTS": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:aa.py": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:User-Animelist-Dataset": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:node-vidstreaming": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Plotwise-movie-recommend": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:best": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:js-capstone-group": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:movieCreator-Recommender": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:kari": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anime_indonesia": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:Funanime": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:awesome-piracy": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:cine-sync-v2": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Lynn-AnimeList": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:vetra-providers": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Watched": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Flickr-Archiver-Ruby": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:mongodb-atlas-vector-sea": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:animetsu-scraper": {
+   "pages_requested": 24,
+   "pages_failed": 18
+  },
+  "github-lists:Marketing-Platform-": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:AnimeTracker": {
+   "pages_requested": 20,
+   "pages_failed": 17
+  },
+  "github-lists:CrunchyrollPlusXamarin": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Kitty-cli": {
+   "pages_requested": 24,
+   "pages_failed": 18
+  },
+  "github-lists:AN-streaming": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:GenderDebiasing-Bollywoo": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anime-list-website": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Shou": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:VideoStreaming": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:KokoroNoKiroku": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:-ReelFind-Movie-Search-A": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:streamflix": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:streaming-de-filmes": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Better_anime_list": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:nagare": {
+   "pages_requested": 24,
+   "pages_failed": 18
+  },
+  "github-lists:lhai36366": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:MovieMatch-Studio": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anivault-scraper": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Void": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Django-Netflix-Clone": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:imdb-movie-app": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anime-parser": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Miru": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:MovieOne": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:Image-to-Movie-Recogniti": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:wp-kal": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:struct-tv": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:StreamRush": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:movielala": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:KurioNime": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:animu-desu": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:tela-seriesflix": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anime-dl-core": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:www-th3-z-xyz": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:RadioPlayer-ZenoRadio": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Projeto-streaming-carava": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:animepixels": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:React_movie": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:emby-plugin-bangumi": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Meu-cinema": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:MovieFeast": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:Nginx-Lua-Secure-Link-An": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Anisync": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:movie-filtering-ML-pipel": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:konzole": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:simple-movie-app": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Anime-Watchlist": {
+   "pages_requested": 20,
+   "pages_failed": 15,
+   "candidates": 1,
+   "search_unusable": 1
+  },
+  "github-lists:movie_rag": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:cassette": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:WhoamiBangumi": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:chumon-server-js": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:SapphoLive": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:RAG-movieQA-Chatbot": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:wv-backend-downloader": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:AnimeList": {
+   "pages_requested": 112,
+   "pages_failed": 84
+  },
+  "github-lists:vicous": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:mongodb-vector-semantic-": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Anime-Manga-Recommender": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anime-filler-checker": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:movie-ligel": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:vidsuper": {
+   "pages_requested": 20,
+   "pages_failed": 15
+  },
+  "github-lists:AniTrace": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Zenix-Streaming": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Movie-app": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:anime_scrapers": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Anifufu": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:WP-Movie-Showcase": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Sal019.github.io": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:DevEvil-TV": {
+   "pages_requested": 20,
+   "pages_failed": 15
+  },
+  "github-lists:YourAnimeList": {
+   "pages_requested": 24,
+   "pages_failed": 18
+  },
+  "github-lists:djamelmov": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:animixplay.to-anime-stre": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Global-Cinema_OMDb-API": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:sf2tweets": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Cinezap": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:ZenAnime": {
+   "pages_requested": 24,
+   "pages_failed": 18
+  },
+  "github-lists:script": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:castan": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:movielab": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anime-cli": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:vegenta": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:AnimeListBot-Website": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:CondMais": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:the-movie-pipeline": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:fanime": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:StreamNest": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:azure-media-services-mvc": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:movieflix-clone": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:LoukoFlix": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:nebula-player": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:LibertyNow": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:react-movie-app": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Gab-stream-": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Fananime-List": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:ArduinoStreaming": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:nlp-movie-recommender-st": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:trabalho-de-programa-o-s": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:ani-watch": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Jr-Movies": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:orionfilmes.io": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:anime-tier-list": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:movie--mania": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Anime-Data-App": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:SITE-TEST_streaming": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:film-search-engine": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:AnimeLegacy": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:hxavatars": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:polish-http-stremio-addo": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:filmantic": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:animelist.fe": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:NekoView": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:hounds": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Rename-videos-from-movie": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:netphim": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:animelist": {
+   "pages_requested": 44,
+   "pages_failed": 39
+  },
+  "github-lists:Anime-List": {
+   "pages_requested": 48,
+   "pages_failed": 38,
+   "candidates": 8,
+   "no_homepage": 2,
+   "search_unusable": 6
+  },
+  "github-lists:natflix": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:hasdata-mcp": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:ZoharHQ": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:enime.moe": {
+   "pages_requested": 24,
+   "pages_failed": 18
+  },
+  "github-lists:zonetelechargement1": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:My-anime-list": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:Discord-Movie-Recommenda": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:mal-ani-cli-sync": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Locadora": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Anime-Liste": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:personalized_entertainme": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:IPTV": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:nebulaflix": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:movito.ai": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Window": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:notalone.py": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:aluraplus": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:YAMR_MVP": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Anime_-recommendation_-s": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Movie-Streaming": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:netflix-movie-clustering": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:NetWatch": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:aniways": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Clubedofilme": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:Multimodal-Movie-Recomme": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:videojs-skin-twitchy": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anime-watch-list-API": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:superfilmes": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:CineRag": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:kitsu-updater": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:AnimeWatchlistManager": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:projetofriends": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Movie-Sentimental-Analys": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:Test-Anime-Site": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Netflix-movie-recommende": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:JRMatchServer": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:WatchAnimes": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:CineClassics---AI-Movie-": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:Streamify": {
+   "pages_requested": 20,
+   "pages_failed": 18
+  },
+  "github-lists:react-anime-watchlist": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:watcharoo": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:scrimba-simple-app-ReelR": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Anime-Watch-Order-Api": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:MongoDB-and-Hugging-Face": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:Lysto": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anime-watchlist": {
+   "pages_requested": 20,
+   "pages_failed": 15
+  },
+  "github-lists:Movie-ai-app-PopChoice-": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:play-movies-series-api": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:comic-site": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Mega-Flix-Vfinal": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:Watch-free-movies-and-se": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:martv": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:fidalgo-tv": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:projetodio-interface-rob": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:ott": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Movieflex": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:streaming_availability_p": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:CClone": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:free-streaming-resources": {
+   "pages_requested": 20,
+   "pages_failed": 15
+  },
+  "github-lists:api": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:find-my-anime": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:hentai-api": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:MyAnimeIndex": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:anime-api": {
+   "pages_requested": 24,
+   "pages_failed": 18
+  },
+  "github-lists:anime-watchlist-telegram": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:tioanime": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Anime-Watchlist-Website": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anime777.js": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:CineMatch-AI": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:otakustv": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:AniWatcher": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:reactjs-netflix-clone": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:HiAnime-API": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:weeb.terebi": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:CineVerse": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:iWatchThis": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:animitchures": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Cinelink": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:V-Anime-App": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anirush": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Cineverse": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Watchiru": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:ZeroNime": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Free-Movie-Series-DB-API": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:BASEDFLIX_BACKEND_DJANGO": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:plex-anime-metadata-prov": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:animanage-api-webserver": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:udfread-ERROR-ECMA-167-V": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Netflix-Clone": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:dcmp": {
+   "pages_requested": 28,
+   "pages_failed": 21
+  },
+  "github-lists:Anime-Generator": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:AnimeTrix": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Ai-anime": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anime_chill": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:scrimba-pop-choice": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:moviebox-internal-api": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anivexa-api": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:the-watcher": {
+   "pages_requested": 24,
+   "pages_failed": 18
+  },
+  "github-lists:CineMatch": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:wew": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:booru-nsfw-anime-bot": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:RoninX-Anime-Client": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:YGFlix---Netflix-Style-S": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:AniMovie": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:zero-mapper": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anime": {
+   "pages_requested": 24,
+   "pages_failed": 18
+  },
+  "github-lists:BlackEagleLK": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:kinshow": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Ronajo": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Netflix-clone": {
+   "pages_requested": 24,
+   "pages_failed": 21
+  },
+  "github-lists:animetosho-provider": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:tmdb": {
+   "pages_requested": 24,
+   "pages_failed": 18
+  },
+  "github-lists:Shikicinena-Android": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:reactjs-netflixclone": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:phlix-plugin-myanimelist": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:best-vidsrc-alternative": {
+   "pages_requested": 20,
+   "pages_failed": 15
+  },
+  "github-lists:m3u8-grabber-downloader": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:AniLibDown": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:cinevia": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:phlix-plugin-anidb": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Full-stack-Free-Movie-St": {
+   "pages_requested": 24,
+   "pages_failed": 18
+  },
+  "github-lists:Animeworld-list-export": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:nekosia": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Hotstar-clone-": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:novelas": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:Freeplix": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:animeDiscordBot-": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:Chatbot": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:moviedatabase": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:random-watch": {
+   "pages_requested": 24,
+   "pages_failed": 24
+  },
+  "github-lists:AnimeEpisodes": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Netlfix-Clone": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:supawatch": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:angularflix": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:ngewibu-wesite": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
   "github-lists:Cinemava": {
+   "pages_requested": 24,
+   "pages_failed": 18
+  },
+  "github-lists:AnimeCalendar": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:cinescope": {
+   "pages_requested": 20,
+   "pages_failed": 15
+  },
+  "github-lists:movie": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:watch-hub": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:API": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Netflix-clone---Landing-": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:Free-Movie-Streaming-Web": {
+   "pages_requested": 24,
+   "pages_failed": 18
+  },
+  "github-lists:.github": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:recsys": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:airing-anime": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:enimet-api": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Site-de-Streaming": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:DzulAnimeList": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:netflix-clone": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:AnimeZone": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Simple-Weather-Overlay": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:alvesflix-streaming-html": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anivexa": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anime-streaming-platform": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:movbor": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:video-api": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:animeWebsite-v2": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Anime-Frog": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:MegaFlix": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:whoapi": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:flixfree": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:serie-streaming-base-dem": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:watchers-heaven": {
+   "pages_requested": 24,
+   "pages_failed": 18
+  },
+  "github-lists:Tube-DL": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Animevault": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:3-tier-web-application": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:hiruki-api": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Deploying_a_Sentiment_An": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Web--AnimeList-JS": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:weever-streaming": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:bestMoviesWithReact": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:AnimeDex": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:MovieWebsite": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:XanAnimeList.github.io": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Site_Streaming": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:aniview": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:adezflixmovie": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:MorAnimeList": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:AI-Anime-Recomender": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:JiuTube": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Cineflix": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:KuroList": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:Ott-platform": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Projeto-StreamTV-feito-c": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anime_lister": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Nxt-watch-React-ott-App": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:webtech2-netflix-2": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anistream": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:uzmovi": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:weeb-e-fied": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:vidlux-streaming-api": {
+   "pages_requested": 20,
+   "pages_failed": 15
+  },
+  "github-lists:statamic-mux": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:kumostamp": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:SpringAPI_EspacoGeek": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:MyAnimeList-tracker": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:laravel-api": {
+   "pages_requested": 20,
+   "pages_failed": 20
+  },
+  "github-lists:uniheroes": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:streamelopers": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:Itadakimasu": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:CYNE-API": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:MajutsuIndexBackend": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:ayoko": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anisteam-api-animistad1": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:TrabalhoSemestralDAAW": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:hokago": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:media-control": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:downloader_api": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:escolhe-pra-mim": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Kairo": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:my-sweet-revenge": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:brandshop-client-10": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:THE-ULTIMATE": {
+   "pages_requested": 24,
+   "pages_failed": 18
+  },
+  "github-lists:butter-provider-anime-es": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anixo1": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:universal-extension": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:CineStreamX": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:modb-core": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:CinePulse": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:website-portal-anime-Rea": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:tubeo": {
+   "pages_requested": 20,
+   "pages_failed": 15
+  },
+  "github-lists:lmovies": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Filmanesia_v3": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:lemontv-scrapers": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:GameVault": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:DokiDoki-AnimeExplorer": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:241stream": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:drupal-bootstrap-live-de": {
+   "pages_requested": 20,
+   "pages_failed": 15
+  },
+  "github-lists:DungeonScrawlers": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:MyAnime_app": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:entertainment-recommende": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:bytebox": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:Eleven-Stream": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:KuyAnime": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:freereels-api": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:stream-locker": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:railgun": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:UniSphere": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:mal-streaming": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:rust-server": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Streamly": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:akidev": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:aniapi2.0": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:ohiyo": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:leflix": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:AnimeArray": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:vibe-coding": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Stream": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:roig_AniDb_api": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:watchAnime": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:anonime": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:broken-hentai": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Que-Ver-Online": {
    "pages_requested": 8,
    "pages_failed": 6
   },
-  "github-lists:API": {
-   "pages_requested": 4,
-   "pages_failed": 3,
-   "candidates": 2,
-   "no_homepage": 1,
-   "search_unusable": 1
+  "github-lists:AnimeWatchlist": {
+   "pages_requested": 18,
+   "pages_failed": 13
   },
-  "github-lists:enimet-api": {
-   "pages_requested": 4,
-   "pages_failed": 3
+  "github-lists:movie_streamer": {
+   "pages_requested": 11,
+   "pages_failed": 8
   },
-  "github-lists:anivexa": {
-   "pages_requested": 4,
-   "pages_failed": 3
+  "github-lists:AnimVille": {
+   "pages_requested": 12,
+   "pages_failed": 9
   },
-  "github-lists:aniview": {
-   "pages_requested": 4,
-   "pages_failed": 3
+  "github-lists:anime-info-provider-for-": {
+   "pages_requested": 12,
+   "pages_failed": 9
   },
-  "github-lists:whoapi": {
-   "pages_requested": 4,
-   "candidates": 4,
-   "no_homepage": 1,
-   "search_unusable": 3,
-   "pages_failed": 3
+  "github-lists:animeWatcherApi": {
+   "pages_requested": 8,
+   "pages_failed": 6
   },
-  "github-lists:hiruki-api": {
-   "pages_requested": 4,
+  "github-lists:Streaming-Site": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Vidlo-Free-Movies": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Anime-To-Watch-List": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:mtdb-angular-laravel": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:AnimeWatcher.API": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:MeatFlicks": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Suzune": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:AnimeAPI": {
+   "pages_requested": 16,
+   "pages_failed": 12,
+   "candidates": 1,
+   "no_homepage": 1
+  },
+  "github-lists:jellyfin-css": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:cinevoid": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Mark1": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:WebFree": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:plex-tmdb-proxy": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anime-tracker-api": {
+   "pages_requested": 16,
+   "pages_failed": 12
+  },
+  "github-lists:MyAnimeList-Web-Scraper": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Badger": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:java-mystream-using-spri": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:MyAnimeList-Replica-usin": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:cineva": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:rdm": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:GMTCloud-Video-Downloade": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Omni-Stream": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:emnexmovies-api": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:malrework": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:signup-website": {
+   "pages_requested": 9,
+   "pages_failed": 9
+  },
+  "github-lists:generator-stratic": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:darelchaabi-tv": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:MovieCorn": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:hybride_recommendation_s": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:MovieMind-AI": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:where-to-watch-app": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:stream": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:streamx-web": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Animanga-List": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:himym": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Flixora": {
+   "pages_requested": 20,
+   "pages_failed": 15
+  },
+  "github-lists:Anime-Log-Website": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Liberty": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Cinemay": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:Top10List-React": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Modules.PsoDownloader": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:jr.flix": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:Movie_explorer": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:mymanganimelist.com": {
+   "pages_requested": 20,
+   "pages_failed": 15
+  },
+  "github-lists:astro-chat-widget": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:sastaMovies_Frontend": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:ProjetWebH25": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:otakubec": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:limitr": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:sastaMovies_Backend": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:aguiaplay": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:myentertainmenthub": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:atmo": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:ReleaseRadar": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:StreamBDIXPlus": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:RecoHub": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:ronix-backend": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Movie-Finder-App": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:donde-lo-veo": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:ShowUp-web": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:AniPlay": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Movie-Discovery": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Strideo": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:Anime": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:popcorntimestreaming": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:OmniGate": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:KyoukaLive": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:streemi": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:plugin.video.anitube": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:mega-flix": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:Anime_List": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:MELOCAST-music-website": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:FINN-AnimeList": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Multi-Stream-Recorder": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:AnimeListWebsite": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:digital-marketing-": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:VAIXLNS": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Movie-Spider": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Anime-List_Website": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:snatchflix": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:ke1th.streams": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anized": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:anime-streaming-website": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Next-Mein-animelist": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Moviemeld": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:anime-management-fronten": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:StreamHub": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:Mini-MAL": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:twitch_discovery": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:sans-anime-list": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:vitepress-chat": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:jigsaw-photo-stream": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:multisite-streams-page": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:bottom_radioplayer": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:BingeFlix": {
+   "pages_requested": 12,
+   "pages_failed": 9
+  },
+  "github-lists:AnimeHaven": {
+   "pages_requested": 12,
+   "pages_failed": 12
+  },
+  "github-lists:HACHI-API": {
+   "pages_requested": 8,
+   "candidates": 36,
+   "no_homepage": 18,
+   "search_unusable": 15,
+   "added": 3,
+   "pages_failed": 6
+  },
+  "github-lists:AnimeWeb": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:OtakuPoi": {
+   "pages_requested": 8,
+   "candidates": 10,
+   "search_unusable": 9,
+   "added": 1,
+   "pages_failed": 6
+  },
+  "github-lists:yt-dlc": {
+   "pages_requested": 8,
+   "candidates": 5,
+   "no_homepage": 3,
+   "search_unusable": 2,
+   "pages_failed": 6
+  },
+  "github-lists:MyAniList": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Anime-calendar-api": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:animeKmoney": {
+   "pages_requested": 8,
    "candidates": 2,
    "no_homepage": 1,
    "search_unusable": 1,
-   "pages_failed": 3
+   "pages_failed": 6
   },
-  "github-lists:AI-Anime-Recomender": {
-   "pages_requested": 4,
-   "pages_failed": 3
+  "github-lists:listofanime": {
+   "pages_requested": 8,
+   "pages_failed": 6
   },
-  "github-lists:Anime_List": {
-   "pages_requested": 4,
-   "pages_failed": 4
+  "github-lists:gpt3-embeddings-movies-s": {
+   "pages_requested": 8,
+   "candidates": 5,
+   "no_homepage": 3,
+   "search_unusable": 2,
+   "pages_failed": 6
   },
-  "github-lists:FINN-AnimeList": {
-   "pages_requested": 4,
-   "pages_failed": 3
+  "github-lists:zounoku": {
+   "pages_requested": 8,
+   "pages_failed": 8
   },
-  "github-lists:Nxt-watch-React-ott-App": {
-   "pages_requested": 4,
+  "github-lists:AniFlix-AI": {
+   "pages_requested": 8,
+   "candidates": 2,
+   "search_unusable": 2,
+   "pages_failed": 6
+  },
+  "github-lists:animfo": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:kullanime": {
+   "pages_requested": 8,
+   "candidates": 9,
+   "no_homepage": 5,
+   "search_unusable": 4,
+   "pages_failed": 6
+  },
+  "github-lists:embed-movies": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "search_unusable": 1,
+   "pages_failed": 6
+  },
+  "github-lists:Anime-API": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:animeWatchList": {
+   "pages_requested": 16,
+   "pages_failed": 14
+  },
+  "github-lists:AnimeWatchlist-Anirec": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:sakuga": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:AniList-Watcher": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:hexo-tag-mtime": {
+   "pages_requested": 8,
    "candidates": 3,
    "no_homepage": 2,
    "search_unusable": 1,
-   "pages_failed": 3
+   "pages_failed": 6
   },
-  "github-lists:AnimeListWebsite": {
-   "pages_requested": 4,
-   "pages_failed": 4
+  "github-lists:Anime-Vault": {
+   "pages_requested": 8,
+   "candidates": 2,
+   "search_unusable": 2,
+   "pages_failed": 6
   },
-  "github-lists:Anime-List_Website": {
-   "pages_requested": 4,
+  "github-lists:IMDb-Scout-Mod": {
+   "pages_requested": 16,
+   "candidates": 3,
+   "no_homepage": 3,
+   "pages_failed": 12
+  },
+  "github-lists:popchoice-cinema-quest": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Major-project-list": {
+   "pages_requested": 16,
+   "pages_failed": 12
+  },
+  "github-lists:anime-watch-api": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:Anime-Blocklist": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:-L-": {
+   "pages_requested": 16,
+   "pages_failed": 12
+  },
+  "github-lists:watch-animes-api": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:AnimeList-auto-adder": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Movie_App": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:SunshineTr": {
+   "pages_requested": 16,
+   "pages_failed": 16
+  },
+  "github-lists:Social-Cataloging-Websit": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:AniTether": {
+   "pages_requested": 8,
    "candidates": 1,
    "no_homepage": 1,
-   "pages_failed": 3
+   "pages_failed": 6
   },
-  "github-lists:AnimeDex": {
-   "pages_requested": 4,
+  "github-lists:moviesflix": {
+   "pages_requested": 8,
+   "candidates": 5,
+   "no_homepage": 1,
+   "search_unusable": 4,
+   "pages_failed": 6
+  },
+  "github-lists:Scrap_Anime_MyAnimeList": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:dns-Blocklist-for-anime-": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:Anime-list": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:NightReel": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:watch_anime_api": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Neko-s-Index-Backup-Fall": {
+   "pages_requested": 8,
+   "candidates": 44,
+   "no_homepage": 8,
+   "search_unusable": 34,
+   "added": 2,
+   "pages_failed": 6
+  },
+  "github-lists:anime-watchlist-api": {
+   "pages_requested": 32,
+   "pages_failed": 26,
+   "candidates": 1,
+   "search_unusable": 1
+  },
+  "github-lists:HSAnimeList": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:anime-watchlist-API": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:movies": {
+   "pages_requested": 24,
+   "pages_failed": 18,
+   "candidates": 1,
+   "search_unusable": 1
+  },
+  "github-lists:Anime-Watcher": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:MovieDB": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:animeHub": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:Movie-Streaming-API-vide": {
+   "pages_requested": 8,
+   "candidates": 5,
+   "no_homepage": 2,
+   "search_unusable": 3,
+   "pages_failed": 6
+  },
+  "github-lists:Solo-API-poject-AnimeWat": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:AnimeDiary-My-Anime-Watc": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:WatchMeCook": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:API-Embed-TV-MOVIE": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "search_unusable": 1,
+   "pages_failed": 6
+  },
+  "github-lists:Anime_Watchlist": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:WatchNime": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:animes-to-watch-api": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "search_unusable": 1,
+   "pages_failed": 6
+  },
+  "github-lists:MoviesFan": {
+   "pages_requested": 8,
+   "candidates": 3,
+   "no_homepage": 1,
+   "search_unusable": 2,
+   "pages_failed": 6
+  },
+  "github-lists:Anime-RC": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Leo-Anime": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "no_homepage": 1,
+   "pages_failed": 6
+  },
+  "github-lists:anime-season-watcher": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:watchtimer.": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "search_unusable": 1,
+   "pages_failed": 6
+  },
+  "github-lists:semantic-movie-search-pi": {
+   "pages_requested": 16,
+   "pages_failed": 12
+  },
+  "github-lists:anivault": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "no_homepage": 1,
+   "pages_failed": 6
+  },
+  "github-lists:AnimeHouse": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "search_unusable": 1,
+   "pages_failed": 6
+  },
+  "github-lists:movie-recommender-system": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:movie-match": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "no_homepage": 1,
+   "pages_failed": 6
+  },
+  "github-lists:Movie-time": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:find-my-movie": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Movie-Recommender": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:anime-recommendation-api": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:WatchList": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:ai-movie-recommendation-": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "no_homepage": 1,
+   "pages_failed": 6
+  },
+  "github-lists:Anime_Watchlist_Api-Not-": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:watch-anime-v1-api": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:anime-next-watch-generat": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "no_homepage": 1,
+   "pages_failed": 6
+  },
+  "github-lists:django-activity-stream": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:NewPipeExtractor": {
+   "pages_requested": 8,
+   "candidates": 3,
+   "no_homepage": 1,
+   "search_unusable": 2,
+   "pages_failed": 6
+  },
+  "github-lists:Anime-List-Website": {
+   "pages_requested": 16,
+   "pages_failed": 14
+  },
+  "github-lists:anime-watch-order": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Nginx-Lua-Anti-DDoS": {
+   "pages_requested": 8,
+   "candidates": 4,
+   "no_homepage": 1,
+   "search_unusable": 3,
+   "pages_failed": 6
+  },
+  "github-lists:animeList-ReactJS": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:semantic-movie-recommend": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "no_homepage": 1,
+   "pages_failed": 6
+  },
+  "github-lists:Movie-Recommendation-usi": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "search_unusable": 1,
+   "pages_failed": 6
+  },
+  "github-lists:anime_list": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:AnimeRecommender": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:WebVideo2NAS": {
+   "pages_requested": 8,
+   "candidates": 4,
+   "no_homepage": 2,
+   "search_unusable": 2,
+   "pages_failed": 6
+  },
+  "github-lists:anime-watcher-framework": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:anime-watch-recommendati": {
+   "pages_requested": 8,
+   "candidates": 5,
+   "no_homepage": 2,
+   "search_unusable": 3,
+   "pages_failed": 6
+  },
+  "github-lists:AI-Based-Movie-Recommend": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:svtplay-dl": {
+   "pages_requested": 8,
+   "candidates": 7,
+   "no_homepage": 4,
+   "search_unusable": 3,
+   "pages_failed": 6
+  },
+  "github-lists:KyuAnimeList": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:rag-ai-recommendation-ag": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:cinestream": {
+   "pages_requested": 8,
+   "candidates": 4,
+   "no_homepage": 1,
+   "search_unusable": 3,
+   "pages_failed": 6
+  },
+  "github-lists:animeflix": {
+   "pages_requested": 8,
+   "candidates": 5,
+   "no_homepage": 2,
+   "search_unusable": 3,
+   "pages_failed": 6
+  },
+  "github-lists:animixplay.to-api": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:aniBASE": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:embed-sdk-js": {
+   "pages_requested": 8,
    "candidates": 4,
    "no_homepage": 3,
    "search_unusable": 1,
-   "pages_failed": 3
+   "pages_failed": 6
   },
-  "github-lists:weeb-e-fied": {
-   "pages_requested": 4,
-   "pages_failed": 4
+  "github-lists:FlickIQ": {
+   "pages_requested": 8,
+   "candidates": 2,
+   "no_homepage": 1,
+   "search_unusable": 1,
+   "pages_failed": 6
   },
-  "github-lists:SpringAPI_EspacoGeek": {
-   "pages_requested": 4,
-   "candidates": 4,
+  "github-lists:anime-api-practice": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:anime-watchlist-app": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:android": {
+   "pages_requested": 8,
+   "candidates": 2,
+   "no_homepage": 1,
+   "search_unusable": 1,
+   "pages_failed": 6
+  },
+  "github-lists:anime-discovery": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:LensAnime": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "search_unusable": 1,
+   "pages_failed": 6
+  },
+  "github-lists:API-anime": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:AniTox-watchlist": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:scraping-tutorial": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:torrentflix": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "no_homepage": 1,
+   "pages_failed": 6
+  },
+  "github-lists:video_decrypter": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "search_unusable": 1,
+   "pages_failed": 6
+  },
+  "github-lists:FetchIt": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "search_unusable": 1,
+   "pages_failed": 6
+  },
+  "github-lists:core": {
+   "pages_requested": 8,
+   "candidates": 2,
    "search_unusable": 2,
-   "no_homepage": 2,
-   "pages_failed": 3
+   "pages_failed": 6
   },
-  "github-lists:Itadakimasu": {
-   "pages_requested": 4,
-   "pages_failed": 3
+  "github-lists:ListYourAnime": {
+   "pages_requested": 8,
+   "pages_failed": 6
   },
-  "github-lists:hokago": {
-   "pages_requested": 4,
-   "pages_failed": 3
+  "github-lists:Symfony-anime-list": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "search_unusable": 1,
+   "pages_failed": 6
   },
-  "github-lists:Kairo": {
-   "pages_requested": 4,
-   "pages_failed": 3
+  "github-lists:openstream": {
+   "pages_requested": 8,
+   "candidates": 3,
+   "no_homepage": 1,
+   "search_unusable": 2,
+   "pages_failed": 6
   },
-  "github-lists:anixo1": {
-   "pages_requested": 4,
-   "pages_failed": 3
+  "github-lists:EngineY": {
+   "pages_requested": 8,
+   "pages_failed": 8
   },
-  "github-lists:CinePulse": {
-   "pages_requested": 4,
-   "pages_failed": 3
+  "github-lists:subatic": {
+   "pages_requested": 8,
+   "candidates": 2,
+   "search_unusable": 2,
+   "pages_failed": 6
   },
-  "github-lists:Filmanesia_v3": {
-   "pages_requested": 4,
+  "github-lists:react-native-movie-app": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:plugin.video.retrospect": {
+   "pages_requested": 8,
    "candidates": 5,
    "no_homepage": 2,
    "search_unusable": 3,
-   "pages_failed": 3
+   "pages_failed": 6
   },
-  "github-lists:anisteam-api-animistad1": {
-   "pages_requested": 4,
-   "pages_failed": 4
+  "github-lists:kazenime-anime-list": {
+   "pages_requested": 8,
+   "pages_failed": 6
   },
-  "github-lists:downloader_api": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "no_homepage": 2,
-   "search_unusable": 1,
-   "pages_failed": 3
+  "github-lists:Movie-APIs-_Embedded-Mod": {
+   "pages_requested": 8,
+   "pages_failed": 8
   },
-  "github-lists:entertainment-recommende": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "search_unusable": 2,
-   "pages_failed": 3
+  "github-lists:TMDB-Embed-API-PHP": {
+   "pages_requested": 8,
+   "pages_failed": 6
   },
-  "github-lists:UniSphere": {
-   "pages_requested": 4,
-   "pages_failed": 3
+  "github-lists:tmdb-embed-api-v2": {
+   "pages_requested": 8,
+   "pages_failed": 6
   },
-  "github-lists:ohiyo": {
-   "pages_requested": 4,
+  "github-lists:KupangAnime": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:react-anime-list": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:AXLIST-Anime-list": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:embedding_movies_project": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:anime-list-app": {
+   "pages_requested": 8,
    "candidates": 1,
    "search_unusable": 1,
-   "pages_failed": 3
+   "pages_failed": 6
   },
-  "github-lists:watchAnime": {
-   "pages_requested": 4,
-   "pages_failed": 4
+  "github-lists:Express-MongoDb-MovieApi": {
+   "pages_requested": 8,
+   "pages_failed": 6
   },
-  "github-lists:AnimeWatchlist": {
-   "pages_requested": 4,
-   "pages_failed": 3
+  "github-lists:movieAPI": {
+   "pages_requested": 8,
+   "pages_failed": 6
   },
-  "github-lists:animeWatcherApi": {
-   "pages_requested": 4,
+  "github-lists:zmov": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:movies-api-and-plugin": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Astri": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:database-movies-api": {
+   "pages_requested": 16,
+   "pages_failed": 12,
+   "candidates": 1,
+   "no_homepage": 1
+  },
+  "github-lists:Anime-List-": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:AnimeListUploader": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:AnimeWatchList": {
+   "pages_requested": 8,
    "candidates": 1,
    "search_unusable": 1,
-   "pages_failed": 3
+   "pages_failed": 6
   },
-  "github-lists:AnimeWatcher.API": {
-   "pages_requested": 4,
-   "pages_failed": 4
+  "github-lists:ttv_adEraser": {
+   "pages_requested": 8,
+   "pages_failed": 6
   },
-  "github-lists:AnimeAPI": {
-   "pages_requested": 4,
-   "pages_failed": 3
+  "github-lists:LLM-Based-Movie-Recommen": {
+   "pages_requested": 8,
+   "pages_failed": 6
   },
-  "github-lists:anime-tracker-api": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:jellyfin-css": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Badger": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:rdm": {
-   "pages_requested": 4,
+  "github-lists:DiskCord": {
+   "pages_requested": 8,
    "candidates": 1,
    "search_unusable": 1,
-   "pages_failed": 3
+   "pages_failed": 6
   },
-  "github-lists:butter-provider-anime-es": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:generator-stratic": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "no_homepage": 1,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:modb-core": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:DokiDoki-AnimeExplorer": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:MyAnime_app": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:anized": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:mal-streaming": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "no_homepage": 1,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:Next-Mein-animelist": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:241stream": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:anime-management-fronten": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:MovieCorn": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:DungeonScrawlers": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:stream": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:Eleven-Stream": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:Mini-MAL": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:railgun": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:sans-anime-list": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:akidev": {
-   "pages_requested": 4,
-   "candidates": 5,
-   "no_homepage": 5,
-   "pages_failed": 3
-  },
-  "github-lists:aniapi2.0": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Flixora": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:roig_AniDb_api": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Modules.PsoDownloader": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:broken-hentai": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:astro-chat-widget": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "no_homepage": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:anime-info-provider-for-": {
-   "pages_requested": 4,
-   "candidates": 5,
-   "search_unusable": 4,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:limitr": {
-   "pages_requested": 4,
+  "github-lists:MyAnimeLibrary": {
+   "pages_requested": 8,
    "candidates": 1,
    "search_unusable": 1,
-   "pages_failed": 3
+   "pages_failed": 6
   },
-  "github-lists:atmo": {
-   "pages_requested": 4,
-   "pages_failed": 3
+  "github-lists:movie-app": {
+   "pages_requested": 8,
+   "pages_failed": 6
   },
-  "github-lists:ronix-backend": {
-   "pages_requested": 4,
-   "candidates": 6,
-   "no_homepage": 4,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:AniPlay": {
-   "pages_requested": 4,
-   "pages_failed": 3,
-   "candidates": 1,
-   "search_unusable": 1
-  },
-  "github-lists:popcorntimestreaming": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:KyoukaLive": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:plugin.video.anitube": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "no_homepage": 2,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:MELOCAST-music-website": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Multi-Stream-Recorder": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:digital-marketing-": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:VAIXLNS": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Movie-Spider": {
-   "pages_requested": 4,
-   "candidates": 6,
-   "no_homepage": 2,
-   "search_unusable": 4,
-   "pages_failed": 3
-  },
-  "github-lists:snatchflix": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:ke1th.streams": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "no_homepage": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:anime-streaming-website": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Moviemeld": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:StreamHub": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:plex-tmdb-proxy": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:twitch_discovery": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Omni-Stream": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:signup-website": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:vitepress-chat": {
-   "pages_requested": 4,
+  "github-lists:node-urlresolver-api": {
+   "pages_requested": 8,
    "candidates": 7,
-   "no_homepage": 1,
-   "search_unusable": 6,
-   "pages_failed": 3
+   "no_homepage": 6,
+   "search_unusable": 1,
+   "pages_failed": 6
   },
-  "github-lists:jigsaw-photo-stream": {
-   "pages_requested": 4,
+  "github-lists:next-app": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Movie_Search_App": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "search_unusable": 1,
+   "pages_failed": 6
+  },
+  "github-lists:anim-list": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:Movie-Frenzy": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Movio-Movie-Recommender": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:LolAnime": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Cartracker_FreeRTOS": {
+   "pages_requested": 8,
    "candidates": 2,
+   "search_unusable": 1,
+   "no_homepage": 1,
+   "pages_failed": 6
+  },
+  "github-lists:Manga-Anime-List": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Anime-List-Project": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:py-videodownloader": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:xbmc-israel": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:trunk-player": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:c-basic-programs": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:streamIt": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:EPATADA": {
+   "pages_requested": 8,
+   "candidates": 9,
    "no_homepage": 2,
-   "pages_failed": 3
+   "search_unusable": 7,
+   "pages_failed": 6
   },
-  "github-lists:multisite-streams-page": {
-   "pages_requested": 4,
-   "pages_failed": 3
+  "github-lists:stream-v": {
+   "pages_requested": 8,
+   "pages_failed": 6
   },
-  "github-lists:bottom_radioplayer": {
-   "pages_requested": 4,
-   "pages_failed": 3
+  "github-lists:movies-api-springboot": {
+   "pages_requested": 8,
+   "pages_failed": 6
   },
-  "github-lists:BingeFlix": {
-   "pages_requested": 4,
-   "pages_failed": 3
+  "github-lists:movie-semantic-search-ra": {
+   "pages_requested": 8,
+   "pages_failed": 6
   },
-  "github-lists:AnimeHaven": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:AnimeTrix": {
-   "pages_requested": 4,
-   "candidates": 1,
+  "github-lists:Miyou": {
+   "pages_requested": 8,
+   "candidates": 3,
+   "no_homepage": 2,
    "search_unusable": 1,
-   "pages_failed": 3
+   "pages_failed": 6
   },
-  "github-lists:moviebox-internal-api": {
-   "pages_requested": 4,
-   "candidates": 1,
+  "github-lists:movies-app-react": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Discogs-Scout": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:PotPlayer-Extension_yt-d": {
+   "pages_requested": 8,
+   "candidates": 5,
+   "search_unusable": 5,
+   "pages_failed": 6
+  },
+  "github-lists:mrowser": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:SourceScraper": {
+   "pages_requested": 8,
+   "candidates": 17,
+   "no_homepage": 14,
+   "search_unusable": 3,
+   "pages_failed": 6
+  },
+  "github-lists:katcr": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:Netflex": {
+   "pages_requested": 8,
+   "candidates": 4,
    "no_homepage": 1,
-   "pages_failed": 3
+   "search_unusable": 3,
+   "pages_failed": 6
   },
-  "github-lists:wew": {
-   "pages_requested": 4,
-   "pages_failed": 4
+  "github-lists:TMDB-Import": {
+   "pages_requested": 8,
+   "candidates": 33,
+   "no_homepage": 4,
+   "search_unusable": 28,
+   "added": 1,
+   "pages_failed": 6
   },
-  "github-lists:vibe-coding": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Que-Ver-Online": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:mtdb-angular-laravel": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Suzune": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:WebFree": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:java-mystream-using-spri": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:GMTCloud-Video-Downloade": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:darelchaabi-tv": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:where-to-watch-app": {
-   "pages_requested": 4,
+  "github-lists:firevideoplayer": {
+   "pages_requested": 8,
    "candidates": 3,
    "search_unusable": 3,
-   "pages_failed": 3
+   "pages_failed": 6
   },
-  "github-lists:himym": {
-   "pages_requested": 4,
+  "github-lists:projeto-movie-wave-strea": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "added": 1,
+   "pages_failed": 6
+  },
+  "github-lists:Yarrlist-new": {
+   "pages_requested": 8,
    "candidates": 1,
    "search_unusable": 1,
-   "pages_failed": 3
+   "pages_failed": 6
   },
-  "github-lists:Cinemay": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:jr.flix": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:ProjetWebH25": {
-   "pages_requested": 4,
+  "github-lists:WCO_wrapper": {
+   "pages_requested": 8,
    "candidates": 2,
    "search_unusable": 2,
-   "pages_failed": 3
+   "pages_failed": 6
   },
-  "github-lists:aguiaplay": {
-   "pages_requested": 4,
-   "pages_failed": 4
+  "github-lists:backend": {
+   "pages_requested": 8,
+   "candidates": 2,
+   "search_unusable": 2,
+   "pages_failed": 6
   },
-  "github-lists:StreamBDIXPlus": {
-   "pages_requested": 4,
+  "github-lists:Movie-streaming-site": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:static-site-generator": {
+   "pages_requested": 8,
+   "candidates": 8,
+   "no_homepage": 1,
+   "search_unusable": 7,
+   "pages_failed": 6
+  },
+  "github-lists:Movies": {
+   "pages_requested": 8,
    "candidates": 1,
    "search_unusable": 1,
-   "pages_failed": 3
+   "pages_failed": 6
   },
-  "github-lists:donde-lo-veo": {
-   "pages_requested": 4,
-   "pages_failed": 4
+  "github-lists:hotstream.me": {
+   "pages_requested": 8,
+   "pages_failed": 8
   },
-  "github-lists:Strideo": {
-   "pages_requested": 4,
-   "pages_failed": 4
+  "github-lists:Javascript_Capstone": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "search_unusable": 1,
+   "pages_failed": 6
   },
-  "github-lists:OmniGate": {
-   "pages_requested": 4,
+  "github-lists:Surviv.io": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:Zee5-Stream-Scrapper": {
+   "pages_requested": 8,
+   "candidates": 2,
+   "no_homepage": 1,
+   "added": 1,
+   "pages_failed": 6
+  },
+  "github-lists:Torsizzle": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:ko-crypto": {
+   "pages_requested": 8,
+   "candidates": 2,
+   "search_unusable": 2,
+   "pages_failed": 6
+  },
+  "github-lists:VIDOE": {
+   "pages_requested": 8,
+   "candidates": 2,
+   "no_homepage": 1,
+   "search_unusable": 1,
+   "pages_failed": 6
+  },
+  "github-lists:Construction-PPE-Detecti": {
+   "pages_requested": 8,
    "candidates": 1,
    "no_homepage": 1,
-   "pages_failed": 3
+   "pages_failed": 6
   },
-  "github-lists:streemi": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:mega-flix": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:AniMovie": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:kinshow": {
-   "pages_requested": 4,
-   "candidates": 2,
+  "github-lists:sdl": {
+   "pages_requested": 8,
+   "candidates": 4,
+   "no_homepage": 2,
    "search_unusable": 1,
    "added": 1,
-   "pages_failed": 3
+   "pages_failed": 6
   },
-  "github-lists:best-vidsrc-alternative": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
+  "github-lists:DatMovie": {
+   "pages_requested": 8,
+   "pages_failed": 8
   },
-  "github-lists:Full-stack-Free-Movie-St": {
+  "github-lists:StreamerWebSeries": {
    "pages_requested": 8,
    "pages_failed": 6
   },
-  "github-lists:Freeplix": {
-   "pages_requested": 4,
-   "candidates": 3,
-   "no_homepage": 1,
-   "search_unusable": 2,
-   "pages_failed": 3
-  },
-  "github-lists:supawatch": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "no_homepage": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:movie": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:Free-Movie-Streaming-Web": {
+  "github-lists:Film--Factory": {
    "pages_requested": 8,
    "pages_failed": 6
   },
-  "github-lists:video-api": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
+  "github-lists:AnimeSentinel": {
+   "pages_requested": 8,
+   "pages_failed": 8
   },
-  "github-lists:flixfree": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:MovieWebsite": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:adezflixmovie": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Ott-platform": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:vidlux-streaming-api": {
-   "pages_requested": 4,
-   "pages_failed": 3,
-   "candidates": 1,
-   "search_unusable": 1
-  },
-  "github-lists:laravel-api": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:CYNE-API": {
-   "pages_requested": 4,
+  "github-lists:RaisiX": {
+   "pages_requested": 8,
    "candidates": 2,
    "search_unusable": 2,
-   "pages_failed": 3
+   "pages_failed": 6
   },
-  "github-lists:THE-ULTIMATE": {
+  "github-lists:streamMt": {
    "pages_requested": 8,
    "pages_failed": 6
   },
-  "github-lists:lmovies": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:bytebox": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:freereels-api": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Streamly": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:leflix": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "no_homepage": 1,
-   "pages_failed": 3
-  },
-  "github-lists:movie_streamer": {
-   "pages_requested": 4,
-   "candidates": 1,
-   "search_unusable": 1,
-   "pages_failed": 3
-  },
-  "github-lists:Vidlo-Free-Movies": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:MeatFlicks": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:cinevoid": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:cineva": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:emnexmovies-api": {
-   "pages_requested": 4,
+  "github-lists:La-kika-Streaming-video": {
+   "pages_requested": 8,
    "candidates": 3,
    "no_homepage": 2,
-   "search_unusable": 1,
-   "pages_failed": 3
+   "added": 1,
+   "pages_failed": 6
   },
-  "github-lists:MovieMind-AI": {
-   "pages_requested": 4,
-   "pages_failed": 3
+  "github-lists:Projeto_FilmesPirata": {
+   "pages_requested": 8,
+   "pages_failed": 6
   },
-  "github-lists:streamx-web": {
-   "pages_requested": 4,
-   "candidates": 2,
-   "no_homepage": 2,
-   "pages_failed": 3
+  "github-lists:UNLIMITED-STREAMING-": {
+   "pages_requested": 8,
+   "pages_failed": 8
   },
-  "github-lists:Liberty": {
-   "pages_requested": 4,
-   "pages_failed": 3
+  "github-lists:HTTPS-Video-Traffic-Auto": {
+   "pages_requested": 8,
+   "pages_failed": 6
   },
-  "github-lists:Movie_explorer": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:sastaMovies_Frontend": {
-   "pages_requested": 4,
-   "pages_failed": 3
-  },
-  "github-lists:sastaMovies_Backend": {
-   "pages_requested": 4,
-   "pages_failed": 4
-  },
-  "github-lists:ReleaseRadar": {
-   "pages_requested": 4,
+  "github-lists:ImersaoAlura---Streaming": {
+   "pages_requested": 8,
    "candidates": 1,
    "no_homepage": 1,
-   "pages_failed": 3
+   "pages_failed": 6
   },
-  "github-lists:Movie-Finder-App": {
-   "pages_requested": 4,
-   "pages_failed": 3
+  "github-lists:OpenFlix": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "search_unusable": 1,
+   "pages_failed": 6
   },
-  "github-lists:Movie-Discovery": {
-   "pages_requested": 4,
-   "pages_failed": 3
+  "github-lists:okruhlsplayer": {
+   "pages_requested": 8,
+   "pages_failed": 6
   },
-  "github-lists:HACHI-API": {
-   "pages_requested": 1
+  "github-lists:MyMovieList": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Anime-Streaming": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "search_unusable": 1,
+   "pages_failed": 6
+  },
+  "github-lists:movie-cli": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:disneyplus-clone": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "search_unusable": 1,
+   "pages_failed": 6
+  },
+  "github-lists:Disney": {
+   "pages_requested": 8,
+   "pages_failed": 8
+  },
+  "github-lists:Movie": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:streaming-sites": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:streaming": {
+   "pages_requested": 8,
+   "candidates": 1,
+   "no_homepage": 1,
+   "pages_failed": 6
+  },
+  "github-lists:download-series": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:site-de-series": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:seriesplay.live": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:allhqflix-web-app": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:WisitysStreaming": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Site_streaming": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Mobi-v": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:xtremio-app": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:Mobi-v3": {
+   "pages_requested": 8,
+   "pages_failed": 6
+  },
+  "github-lists:polish-movies-and-series": {
+   "pages_requested": 8,
+   "candidates": 19,
+   "no_homepage": 9,
+   "search_unusable": 10,
+   "pages_failed": 6
   }
  },
  "attempted": {
@@ -4952,6 +5700,510 @@
   "sastamovies.vercel.app": 1795206165.9950144,
   "sasta-movies-backend.vercel.app": 1795206166.5952191,
   "zac-knight.github.io": 1795206171.5122392,
-  "assignment2-45537.web.app": 1795206172.0808334
+  "assignment2-45537.web.app": 1795206172.0808334,
+  "stremio-kanboxaddon.onrender.com": 1795206451.445257,
+  "i0.wp.com": 1795206560.5687304,
+  "mangafreak.me": 1795206560.569036,
+  "mangaworld.in": 1795206560.5692472,
+  "animeworld.ac": 1795206560.5694742,
+  "images.mangafreak.me": 1795206560.5698097,
+  "meo.comick.pictures": 1795206560.5700808,
+  "novelbin.com": 1795206560.5703182,
+  "i.animepahe.ru": 1795206560.5705922,
+  "comick.io": 1795206560.5707936,
+  "m.webnovel.com": 1795206560.5710294,
+  "idk-tan-chi.vercel.app": 1795206560.571238,
+  "gogoanime.com.by": 1795206560.5714853,
+  "animeworld.site": 1795206560.5716763,
+  "img.animeworld.ac": 1795206560.5719094,
+  "mangafreak.net": 1795206560.5721536,
+  "hachi-api.onrender.com": 1795206560.5723608,
+  "hachi-api-kk19.onrender.com": 1795206560.5725863,
+  "www2.mangafreak.me": 1795206560.572801,
+  "mangaworld.nz": 1795206560.5730278,
+  "novelbin.me": 1795206560.5732467,
+  "zoroto.com.in": 1795206560.5734627,
+  "animeunity.so": 1795206560.5739212,
+  "wco.tv": 1795206560.5741365,
+  "anizone.to": 1795206560.5743825,
+  "animegg.org": 1795206560.5746841,
+  "animesaturn.cx": 1795206560.5749097,
+  "w1.123animes.ru": 1795206560.575171,
+  "animenewsnetwork.com": 1795206560.5755239,
+  "zorotv.com.lv": 1795206560.5761116,
+  "animeworld.achttps": 1795206560.5764427,
+  "comic.naver.com": 1795206560.5766623,
+  "webtoons.com": 1795206560.5771534,
+  "koyeb.com": 1795206560.5773504,
+  "app.koyeb.com": 1795206560.5775452,
+  "ww2.mangafreak.me": 1795206560.5778813,
+  "srv28-kokeshi.sweetpixel.org": 1795206560.5781186,
+  "anime-web-xi.vercel.app": 1795206567.6792672,
+  "laracasts.com": 1795206568.5062377,
+  "partners.laravel.com": 1795206568.5064125,
+  "vehikl.com": 1795206568.5066311,
+  "tighten.co": 1795206568.5068622,
+  "kirschbaumdevelopment.com": 1795206568.507076,
+  "64robots.com": 1795206568.5072918,
+  "curotec.com": 1795206568.5075119,
+  "devsquad.com": 1795206568.50773,
+  "redberry.international": 1795206568.5079486,
+  "activelogic.com": 1795206568.5081763,
+  "web.archive.org": 1795206568.7767837,
+  "some": 1795206568.7770176,
+  "docs.python.org": 1795206568.7771978,
+  "udemy.com": 1795206568.777389,
+  "videomore.ru": 1795206568.7775967,
+  "myanilist.vercel.app": 1795206572.3282664,
+  "monetag.com": 1795206573.5646687,
+  "adsterra.com": 1795206573.5648453,
+  "colab.research.google.com": 1795206575.3696263,
+  "blog.weblab.technology": 1795206575.3698115,
+  "beta.openai.com": 1795206575.370029,
+  "sciencedirect.com": 1795206575.370333,
+  "link.springer.com": 1795206575.370591,
+  "docs.expo.dev": 1795206575.627836,
+  "chat.expo.dev": 1795206575.6282427,
+  "munekyunkyun.github.io": 1795206576.1034155,
+  "cloudinary.com": 1795206577.0071535,
+  "your-project.supabase.co": 1795206577.0073175,
+  "graphql.anilist.co": 1795206577.007534,
+  "kullist.moe.page": 1795206577.0077374,
+  "zingky.github.io": 1795206577.0079427,
+  "jsdelivr.com": 1795206577.0083065,
+  "cdnjs.com": 1795206577.0084684,
+  "ban_ten.github.io": 1795206577.008715,
+  "graphql.anilist.co`": 1795206577.0090206,
+  "playerflix.ink": 1795206578.3302612,
+  "theanirec.vercel.app": 1795206581.1357272,
+  "sakuga-pink.vercel.app": 1795206581.3772352,
+  "cdn.mayuko.cn": 1795206581.3905323,
+  "hexo.io": 1795206581.390803,
+  "codepen.io": 1795206581.3910103,
+  "violentmonkey.github.io": 1795206581.8764338,
+  "greasyfork.org": 1795206581.8765893,
+  "apps.apple.com": 1795206582.1295733,
+  "greasespot.net": 1795206582.1298625,
+  "paypalobjects.com": 1795206582.1302645,
+  "animwatchlist.vercel.app": 1795206582.8566608,
+  "popchoice-cinema-quest.vercel.app": 1795206583.7072446,
+  "watch-animes-api.vercel.app": 1795206584.5552435,
+  "example.com`": 1795206585.137401,
+  "docs.nestjs.com": 1795206585.2289307,
+  "aws.amazon.com": 1795206585.2291121,
+  "mongodb.github.io": 1795206585.2292948,
+  "atlas.mongodb.com": 1795206585.2295222,
+  "platform.openai.com": 1795206585.2300138,
+  "img.kplus.vn": 1795206585.4000149,
+  "kplus.live.ott.irdeto.com": 1795206586.158718,
+  "ottlivevng.kplus.vn": 1795206586.25347,
+  "lichtruyenhinhtv.com": 1795206586.4485102,
+  "mutixx5hq1liv.akamaized.net": 1795206586.7304144,
+  "static.wikia.nocookie.net": 1795206586.7571125,
+  "tshift.fptplay.net": 1795206586.920705,
+  "mullvad.net": 1795206586.9672768,
+  "adguard.com": 1795206586.967637,
+  "kodi.tv": 1795206586.9679198,
+  "jellyfin.org": 1795206586.968196,
+  "plex.tv": 1795206586.968507,
+  "novelupdates.com": 1795206586.968933,
+  "7-zip.org": 1795206586.969155,
+  "peazip.github.io": 1795206586.9694164,
+  "proton.me": 1795206586.9696293,
+  "bitwarden.com": 1795206586.9698412,
+  "torproject.org": 1795206586.9700468,
+  "mozilla.org": 1795206586.970244,
+  "brave.com": 1795206586.970452,
+  "n3k0s-index.netlify.app": 1795206586.970678,
+  "ivpn.net": 1795206586.971017,
+  "nextdns.io": 1795206586.9712348,
+  "peacocktv.com": 1795206586.9715233,
+  "viki.com": 1795206586.9717305,
+  "handbrake.fr": 1795206586.9720185,
+  "everythingmoe.com": 1795206586.9722269,
+  "wetv.vip": 1795206586.972762,
+  "popcornflix.com": 1795206586.9729948,
+  "tubitv.com": 1795206586.9732735,
+  "hoopladigital.com": 1795206586.9734778,
+  "pluto.tv": 1795206586.9736853,
+  "kanopy.com": 1795206586.973902,
+  "qbittorrent.org": 1795206586.9741638,
+  "comick.app": 1795206586.9759276,
+  "keepassxc.org": 1795206586.9761286,
+  "signal.org": 1795206586.976404,
+  "mangaupdates.com": 1795206586.9765706,
+  "lightnovelworld.org": 1795206586.9768257,
+  "libreoffice.org": 1795206586.9771438,
+  "gimp.org": 1795206586.9773068,
+  "inkscape.org": 1795206586.9775236,
+  "blender.org": 1795206586.9777324,
+  "privacybadger.org": 1795206586.9779322,
+  "pi-hole.net": 1795206586.9781687,
+  "droid-ify.github.io": 1795206586.9786117,
+  "getsession.org": 1795206586.9788444,
+  "matrix.org": 1795206586.979079,
+  "krita.org": 1795206586.9795156,
+  "audacityteam.org": 1795206586.9798305,
+  "shotcut.org": 1795206586.9802794,
+  "anime-list-jet.vercel.app": 1795206587.3329024,
+  "vips-livecdn.fptplay.net": 1795206588.4132986,
+  "hs-anime-list.vercel.app": 1795206588.6516275,
+  "vtc130121.cdn.vnns.io": 1795206589.4820786,
+  "wrsgmfmbfm.us-east-1.awsapprunner.com": 1795206589.5170317,
+  "documenter.getpostman.com": 1795206589.6624813,
+  "movies0.netlify.app": 1795206590.9854372,
+  "anime-watcher-brown.vercel.app": 1795206592.1878846,
+  "superembed.stream": 1795206592.683079,
+  "yourwebsite.com": 1795206592.6833186,
+  "superembed.stream**": 1795206592.6836092,
+  "doothemes.com": 1795206592.6841342,
+  "imdb.com": 1795206592.6843216,
+  "thiago-anime-diary.netlify.app": 1795206594.2348394,
+  "jorgbot.com": 1795206595.804414,
+  "watch-nime-gilt.vercel.app": 1795206597.2239828,
+  "mail.google.com": 1795206597.5556698,
+  "kotlinlang.org": 1795206598.6300879,
+  "android.com": 1795206598.6303494,
+  "bumptech.github.io": 1795206598.6306486,
+  "anime-rc-yypx.vercel.app": 1795206600.9187143,
+  "link-to-project": 1795206601.4210124,
+  "cli.vuejs.org": 1795206602.6391811,
+  "anivault-yourname.vercel.app`": 1795206604.093108,
+  "kitsu.docs.apiary.io": 1795206604.1502137,
+  "anivault-brown.vercel.app": 1795206604.4974523,
+  "reigenabril.github.io": 1795206605.0733476,
+  "movie-recommender-7yjq9f4rt-mruhan17s-projects.vercel.app": 1795206607.4363225,
+  "ai-movie-recommendation-system-h3sby4fk5gb8es6tck4cz5.streamlit.app": 1795206608.3432174,
+  "watch-anime-v1-api.vercel.app": 1795206609.4130397,
+  "dipu01-code.github.io": 1795206609.8996572,
+  "jitpack.io": 1795206610.4195588,
+  "teamnewpipe.github.io": 1795206610.4200158,
+  "central.sonatype.com": 1795206610.4202483,
+  "anime-next-watch-generator-apiproje.vercel.app": 1795206610.4410312,
+  "openlitespeed.org": 1795206612.1612065,
+  "blog.cloudflare.com": 1795206612.1613774,
+  "openresty.org": 1795206612.1616838,
+  "community.cloudflare.com": 1795206612.1622057,
+  "anime-watch-order.vercel.app": 1795206612.4930577,
+  "anime-list-plum.vercel.app": 1795206612.749947,
+  "claude.ai": 1795206612.9921181,
+  "animeapiproject.glitch.me": 1795206613.4345713,
+  "streamlit.io": 1795206613.7703974,
+  "ahmadhazm-anime-list.netlify.app": 1795206614.2524238,
+  "keepachangelog.com": 1795206614.6559954,
+  "semver.org": 1795206614.6561837,
+  "lurl6.lurl.cc": 1795206614.65648,
+  "\u2026": 1795206614.656737,
+  "mlmovie.gitme.xyz": 1795206615.0910945,
+  "anime-watch-recommendation.onrender.com": 1795206615.379994,
+  "animesenpai.online": 1795206615.3801904,
+  "animesenpai.online`": 1795206615.3805513,
+  "api.qrserver.com`": 1795206615.380764,
+  "console.firebase.google.com": 1795206615.3809822,
+  "svtplay-dl.se": 1795206615.866783,
+  "apt.svtplay-dl.se": 1795206615.8671374,
+  "getsol.us.com": 1795206615.8673916,
+  "anthony-tuininga.github.io": 1795206615.8675997,
+  "2.python-requests.org": 1795206615.867944,
+  "cryptography.io": 1795206615.8683698,
+  "ffmpeg.zeranoe.com": 1795206615.8685858,
+  "kyu-anime-list.vercel.app": 1795206616.5308504,
+  "anime-list-lovat.vercel.app": 1795206617.3053844,
+  "fonts.google.com": 1795206617.5152683,
+  "ktor.io": 1795206617.5157683,
+  "mindrot.org": 1795206617.5159228,
+  "vidsrc.xyz": 1795206617.5161834,
+  "railway.app": 1795206619.805058,
+  "17.reactjs.org": 1795206619.8054905,
+  "repository-images.githubusercontent.com": 1795206619.8057315,
+  "graphql.com": 1795206619.8059497,
+  "aniflix.pro": 1795206619.8068624,
+  "unrivaled-empanada-76e48e.netlify.app": 1795206619.824303,
+  "ani-base.vercel.app": 1795206623.188474,
+  "webtor.example.com": 1795206623.271955,
+  "webtor.example.com`": 1795206623.2721589,
+  "via.placeholder.com": 1795206623.2723513,
+  "\u2026`": 1795206623.2727044,
+  "image.tmdb.org": 1795206623.5267892,
+  "placehold.co": 1795206623.5269325,
+  "anantplay.github.io": 1795206625.228422,
+  "paypal.me": 1795206625.2287068,
+  "vectorlogo.zone": 1795206626.2808022,
+  "livecdn.fptplay.net": 1795206630.012285,
+  "api.travis-ci.org": 1795206630.9631245,
+  "img.hplus.com.vn": 1795206631.0663443,
+  "cmake.org": 1795206631.8134954,
+  "fdroid.gitlab.io": 1795206633.420944,
+  "assets-vtvcab.gviet.vn": 1795206636.8960326,
+  "docs.cinepro.cc": 1795206636.9196758,
+  "repobeats.axiom.co": 1795206636.9204564,
+  "s1.vnecdn.net": 1795206638.6142478,
+  "e3.endpoint.cdn.sctvonline.vn": 1795206639.8345277,
+  "nabildzr.github.io": 1795206640.903502,
+  "anime-list-five.vercel.app": 1795206641.6015353,
+  "cinepro.cc": 1795206642.1529129,
+  "symfony.com": 1795206642.5357099,
+  "reflex.dev": 1795206643.1373532,
+  "moviesapi.club": 1795206643.1377623,
+  "hackclub.com": 1795206643.1380286,
+  "bootcamp.laravel.com": 1795206644.699594,
+  "cubettech.com": 1795206644.7002244,
+  "cyber-duck.co.uk": 1795206644.7004104,
+  "many.co.uk": 1795206644.7006207,
+  "webdock.io": 1795206644.700862,
+  "op.gg": 1795206644.7012875,
+  "webreinvent.com": 1795206644.7014704,
+  "lendio.com": 1795206644.7016926,
+  "openstream.thegrass.xyz": 1795206645.6202943,
+  "subatic.com": 1795206646.8020072,
+  "docs.aws.amazon.com": 1795206646.8022778,
+  "expo.fyi": 1795206647.4175482,
+  "kodi.weblate.cloud": 1795206649.1739323,
+  "forum.kodi.tv": 1795206649.1742358,
+  "npostart.nl": 1795206649.1745677,
+  "gathering.tweakers.net": 1795206649.1747677,
+  "kodi.wiki": 1795206649.175027,
+  "kazenime-anime-list.vercel.app": 1795206650.7211075,
+  "anime-list-mauve.vercel.app": 1795206651.4229176,
+  "tmdb-embed-api-v2.vercel.app": 1795206652.9058397,
+  "axlist-mal.vercel.app": 1795206654.282438,
+  "theanimedatabase.netlify.app": 1795206655.1488144,
+  "rieter.net": 1795206655.785408,
+  "theanimedatabase.vercel.app": 1795206656.7112274,
+  "ducky-database-movies-api.herokuapp.com": 1795206657.4107876,
+  "t.me": 1795206657.4596617,
+  "aclweb.org": 1795206658.680405,
+  "tooonflix.netlify.app": 1795206659.5925517,
+  "5ut.github.io": 1795206661.2433043,
+  "klouzyanimelist.netlify.app": 1795206661.3358915,
+  "static.vieon.vn": 1795206661.511919,
+  "movie-app-khaki-chi-53.vercel.app": 1795206662.194638,
+  "bitporno.com": 1795206662.3716881,
+  "supervideo.tv": 1795206662.3718839,
+  "uptostream.com": 1795206662.3722744,
+  "deepmerse.es": 1795206662.372483,
+  "clipwatching.com": 1795206662.3727067,
+  "cloudvideo.tv": 1795206662.3729177,
+  "upstream.to": 1795206662.3732529,
+  "uncoder.eu.org": 1795206663.10949,
+  "anime-list-gamma.vercel.app": 1795206665.1188807,
+  "884030f97a.vws.vegacdn.vn": 1795206666.4650266,
+  "movies-orpin-theta.vercel.app": 1795206666.9346743,
+  "animevoid.vercel.app": 1795206667.217564,
+  "terraelectronica.ru": 1795206668.9579294,
+  "u-blox.com": 1795206668.958175,
+  "streamanyfilm.herokuapp.com": 1795206686.098697,
+  "usepa.github.io": 1795206686.5084395,
+  "epa.gov": 1795206686.508603,
+  "rconnect-public.epa.gov": 1795206686.5087843,
+  "deepwiki.com": 1795206686.5090156,
+  "lifecycle.r-lib.org": 1795206686.5092974,
+  "waterqualitydata.us": 1795206686.5094564,
+  "cran.r-project.org": 1795206686.5096302,
+  "posit.co": 1795206686.5098038,
+  "obamawhitehouse.archives.gov": 1795206686.5100014,
+  "movie-stream-tau.vercel.app": 1795206690.7898972,
+  "miyou-api.cyclic.app": 1795206691.9976852,
+  "miyou.me": 1795206691.9978638,
+  "miyou-topaz.vercel.app": 1795206691.9982407,
+  "e1.endpoint.cdn.sctvonline.vn": 1795206697.60941,
+  "miyouanime.vercel.app": 1795206702.4267561,
+  "potplayer.tv": 1795206704.0412207,
+  "cafe.daum.net": 1795206704.0414186,
+  "learn.microsoft.com": 1795206704.0417695,
+  "systemexplorer.net": 1795206704.042011,
+  "systeminformer.io": 1795206704.0422504,
+  "m-salehi-v.github.io": 1795206709.9472365,
+  "david-dm.org": 1795206710.251413,
+  "lernajs.io": 1795206710.252051,
+  "mp4upload.com": 1795206710.2522366,
+  "mystream.to": 1795206710.2524843,
+  "openload.co": 1795206710.252726,
+  "rapidvideo.com": 1795206710.2529757,
+  "streamango.com": 1795206710.2531886,
+  "streamcloud.eu": 1795206710.25344,
+  "stream.moe": 1795206710.253675,
+  "tiwi.kiwi": 1795206710.2538874,
+  "vev.io": 1795206710.2541149,
+  "vidzi.tv": 1795206710.2544508,
+  "verystream.com": 1795206710.2546327,
+  "gogoanime.se": 1795206710.2548444,
+  "kissanime.ru": 1795206710.2551003,
+  "masterani.me": 1795206710.2553663,
+  "openbytedev.github.io": 1795206710.2555676,
+  "e2.endpoint.cdn.sctvonline.vn": 1795206716.717783,
+  "vthanh.xyz": 1795206732.3054714,
+  "mekongpassion.com": 1795206732.997179,
+  "live.hanoitv.vn": 1795206733.0523002,
+  "live.thhp.vn": 1795206733.6580546,
+  "yenbaitv.org.vn": 1795206734.3550773,
+  "static.megavie.live": 1795206734.5746658,
+  "static.fptplay.net": 1795206734.6037798,
+  "vippng.com": 1795206739.933404,
+  "live-vthcm.vieon.vn": 1795206742.4406247,
+  "dialog.lk": 1795206742.6551087,
+  "imaginary.endpoint.cdn.sctvonline.vn": 1795206754.0957289,
+  "e4.endpoint.cdn.sctvonline.vn": 1795206755.4906654,
+  "displaydaily.com": 1795206759.9432268,
+  "sbshdlu5-lh.akamaihd.net": 1795206760.0801592,
+  "feed.play.mv": 1795206760.2357612,
+  "kindpng.com": 1795206760.5683184,
+  "qlobbidev.s.llnwi.net": 1795206760.9998093,
+  "3dwarehouse.sketchup.com": 1795206761.071704,
+  "tv-trtcocuk.live.trt.com.tr": 1795206762.1393764,
+  "2-fss-2.streamhoster.com": 1795206762.5782135,
+  "previews.123rf.com": 1795206770.295373,
+  "stream-us-east-1.getpublica.com": 1795206770.5635242,
+  "dthorder.com": 1795206770.835853,
+  "moiptvhls-i.akamaihd.net": 1795206771.0131466,
+  "edge6a.v2h-cdn.com": 1795206771.220394,
+  "1.bp.blogspot.com": 1795206771.6759849,
+  "rapidtvnews.com": 1795206771.7977538,
+  "tvn-seezn.pip.cjenm.com": 1795206772.5286446,
+  "m3u-editor.com": 1795206773.2745297,
+  "tvonlineappitv.shortcm.li": 1795206782.7546446,
+  "mnet-seezn.pip.cjenm.com": 1795206784.2047477,
+  "stream.y5.hu": 1795206784.9408655,
+  "liveorigin01.hbogoasia.com": 1795206784.9419127,
+  "hanoicab.net": 1795206787.6423264,
+  "f8e7y4c6.ssl.hwcdn.net": 1795206792.4846094,
+  "wakuwakujapan.com": 1795206792.5472627,
+  "stirr.ott-channels.stingray.com": 1795206792.610917,
+  "ws.shoutcast.com": 1795206792.699738,
+  "srv1.zcast.com.br": 1795206793.0103796,
+  "hls.myvideocontent.ru": 1795206794.6749322,
+  "tv.dansk.live": 1795206794.9406667,
+  "nettvpro.live": 1795206795.2170055,
+  "d35j504z0x2vu2.cloudfront.net": 1795206805.121422,
+  "fash1043.cloudycdn.services": 1795206805.1616976,
+  "fash2043.cloudycdn.services": 1795206805.2295344,
+  "bloomberg-bloombergtv-1-gb.samsung.wurl.com": 1795206805.2792041,
+  "d18dyiwu97wm6q.cloudfront.net": 1795206805.3323905,
+  "cdn6.f-cdn.com": 1795206805.3587532,
+  "intheboxtv.eu": 1795206805.689923,
+  "yt3.ggpht.com": 1795206808.426886,
+  "telegramchannels.me": 1795206808.5266242,
+  "i.natgeofe.com": 1795206808.6488423,
+  "htv-drm-live-cdn.fptplay.net": 1795206808.9594061,
+  "bamus-eng-roku.amagi.tv": 1795206815.3078346,
+  "nasa.gov": 1795206815.4331925,
+  "live-k2301-kbp.1plus1.video": 1795206818.495629,
+  "live-k2302-kbp.1plus1.video": 1795206819.9909015,
+  "cinemaworld.asia": 1795206821.5668929,
+  "celestial.show": 1795206824.441734,
+  "netflex-api-uk1m.onrender.com": 1795206830.9842184,
+  "netflex-drab.vercel.app": 1795206830.9844255,
+  "bunny.net": 1795206830.9847035,
+  "netflex-drab.vercel.app,http": 1795206830.9850152,
+  "***.com": 1795206831.261766,
+  "tver.jp": 1795206831.2621634,
+  "tv.apple.com": 1795206831.262381,
+  "tv-asahi.co.jp": 1795206831.2625906,
+  "bilibili.com": 1795206831.2628093,
+  "bilibili.tv": 1795206831.263024,
+  "crunchyroll.com": 1795206831.2632263,
+  "tv.cctv.com": 1795206831.2634208,
+  "fod.fujitv.co.jp": 1795206831.2636206,
+  "hbomax.com": 1795206831.2638595,
+  "iqiyi.com": 1795206831.2641072,
+  "ixigua.com": 1795206831.2643151,
+  "kktv.me": 1795206831.2646017,
+  "kocowa.com": 1795206831.2648077,
+  "linetv.tw": 1795206831.265051,
+  "litv.tv": 1795206831.2657986,
+  "mgtv.com": 1795206831.266003,
+  "miguvideo.com": 1795206831.2662108,
+  "mytvsuper.com": 1795206831.266395,
+  "myvideo.net.tw": 1795206831.2666075,
+  "nhk.or.jp": 1795206831.2670581,
+  "v.qq.com": 1795206831.2672956,
+  "thetvdb.com": 1795206831.2675595,
+  "paravi.jp": 1795206831.2677417,
+  "ptsplus.tv": 1795206831.2679834,
+  "primevideo.com": 1795206831.2681932,
+  "tv.sohu.com": 1795206831.2683845,
+  "tving.com": 1795206831.2685912,
+  "tvbanywhere.com": 1795206831.268787,
+  "viu.com": 1795206831.2691207,
+  "tv.yahoo.co.jp": 1795206831.2693398,
+  "wavve.com": 1795206831.2695742,
+  "youku.com": 1795206831.2697911,
+  "demo.firevideoplayer.com": 1795206835.9406695,
+  "firevideoplayer.com": 1795206835.9408395,
+  "join.skype.com": 1795206835.9410512,
+  "moviewave-streaming.netlify.app": 1795206839.5344691,
+  "yarrlists.net": 1795206841.9380288,
+  "wcofun.com": 1795206845.6408,
+  "jsoup.org": 1795206845.6411152,
+  "editor.swagger.io": 1795206847.8475952,
+  "stoplight.io": 1795206847.847786,
+  "cinepro.mintlify.app": 1795206849.5094798,
+  "streamifyxyz.vercel.app": 1795206850.0219529,
+  "crates.io": 1795206852.4367716,
+  "docs.rs": 1795206852.4369965,
+  "cloudcdn.pro": 1795206852.437217,
+  "lib.rs": 1795206852.43756,
+  "scorecard.dev": 1795206852.437786,
+  "themes.static-site-generator.com": 1795206852.438019,
+  "bestpractices.dev": 1795206852.4382443,
+  "apache.org": 1795206852.43846,
+  "pipoco.vercel.app": 1795206853.1590798,
+  "docs.static-site-generator.com": 1795206854.2646067,
+  "hotstream.me).": 1795206854.7587876,
+  "stoic-albattani-63ea15.netlify.app": 1795206854.966381,
+  "surviv.io": 1795206855.4979382,
+  "googletagmanager.com": 1795206856.355424,
+  "api.adinplay.com": 1795206856.4358642,
+  "zee5.com": 1795206856.4752824,
+  "z5avi.herokuapp.com": 1795206856.475504,
+  "fonts.googleapis.com": 1795206856.8088944,
+  "twitter.com": 1795206856.917221,
+  "itunes.apple.com": 1795206858.2193046,
+  "cdn.staticfile.org": 1795206859.768498,
+  "cdn.bootcss.com": 1795206859.7687078,
+  "unsplash.com": 1795206867.137687,
+  "freepik.com": 1795206867.137951,
+  "padhiyar.me": 1795206869.7756748,
+  "hooks.example.com": 1795206870.1184678,
+  "aniworld.to": 1795206870.914428,
+  "streamtape.com": 1795206870.9146307,
+  "s.to": 1795206870.9148598,
+  "prefulfilloverdoor.com": 1795206870.915094,
+  "anime.wicloz.rocks": 1795206875.5089111,
+  "httpd.apache.org": 1795206875.6551595,
+  "authenticatorapi.com": 1795206875.6554387,
+  "pr": 1795206879.689405,
+  "nex": 1795206879.6897242,
+  "lakika.vercel.app": 1795206879.6899436,
+  "adriana-gomes2.github.io": 1795206892.182609,
+  "demo-openflix.vercel.app": 1795206892.9503195,
+  "github-readme-stats.vercel.app": 1795206896.0372906,
+  "logodownload.org": 1795206899.5477474,
+  "vinizanin.github.io": 1795206900.2471163,
+  "devbrandlee.github.io": 1795206901.0527217,
+  "gigiosmovie.vercel.app": 1795206901.8019094,
+  "rubensgabriel.github.io": 1795206903.5970514,
+  "allhqflix.vercel.app": 1795206906.6978526,
+  "meu-streaming.vercel.app": 1795206908.6139443,
+  "mobi-sooty.vercel.app": 1795206911.1138873,
+  "cda.pl": 1795206911.512204,
+  "35mm.online": 1795206911.5123978,
+  "filman.cc": 1795206911.5125961,
+  "ekino.ws": 1795206911.512801,
+  "zaluknij.cc": 1795206911.5130317,
+  "obejrzyj.to": 1795206911.5132542,
+  "cda-hd.cc": 1795206911.5134711,
+  "dokumentalne.net": 1795206911.5136847,
+  "bajeczki24.pl": 1795206911.5138996,
+  "seriale.vip": 1795206911.5141542,
+  "maxvod.tv": 1795206911.5143657,
+  "telekino.top": 1795206911.5145717,
+  "virpe.cc": 1795206911.5147965,
+  "iitv.info": 1795206911.5150313,
+  "freedisc.pl": 1795206911.5152502,
+  "premiumsmart.eu": 1795206911.5154514,
+  "filmyonline.cc": 1795206911.5156958,
+  "vider.info": 1795206911.515918,
+  "2captcha.com": 1795206911.5161946
  }
 }

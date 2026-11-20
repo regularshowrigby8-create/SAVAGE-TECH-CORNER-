@@ -1,23 +1,16 @@
 {
  "by_source": {
-  "stremio-collection": 7,
-  "stremio-addons.net": 435,
-  "cinemeta-official": 1,
-  "github-readme": 28,
-  "homepage": 30,
-  "github": 4
+  "github-readme": 1
  },
  "source_evidence": {
   "stremio-addons.net": {
    "pages_requested": 29,
-   "candidates": 2880,
-   "added": 435
+   "candidates": 2880
   },
   "stremio-collection": {
    "pages_requested": 1,
-   "candidates": 97,
-   "candidate_fetch_failed": 17,
-   "added": 7
+   "candidates": 83,
+   "candidate_fetch_failed": 19
   },
   "cinemeta-community": {
    "pages_requested": 1,
@@ -26,8 +19,7 @@
   },
   "cinemeta-official": {
    "pages_requested": 1,
-   "candidates": 5,
-   "added": 1
+   "candidates": 4
   },
   "community": {
    "pages_requested": 13,
@@ -35,23 +27,21 @@
   },
   "github": {
    "pages_requested": 101,
-   "candidates": 55,
-   "candidate_fetch_failed": 35,
-   "added": 4
+   "candidates": 51,
+   "candidate_fetch_failed": 35
   },
   "github-readme": {
-   "candidates": 588,
-   "candidate_fetch_failed": 328,
-   "added": 28
+   "candidates": 553,
+   "candidate_fetch_failed": 324,
+   "added": 1
   },
   "homepage": {
-   "candidates": 603,
-   "candidate_fetch_failed": 460,
-   "added": 30
+   "candidates": 577,
+   "candidate_fetch_failed": 465
   },
   "github-pages": {
-   "candidates": 3735,
-   "candidate_fetch_failed": 3661
+   "candidates": 3734,
+   "candidate_fetch_failed": 3678
   }
  },
  "generation": 0,
@@ -8273,6 +8263,25 @@
     "javeng:"
    ],
    "stars": 0,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://stremio-kanboxaddon.onrender.com/manifest.json",
+   "baseUrl": "https://stremio-kanboxaddon.onrender.com",
+   "name": "Israeli Channels",
+   "types": [
+    "series",
+    "tv",
+    "Podcasts"
+   ],
+   "idPrefixes": [
+    "il_",
+    "tmdb:",
+    "tt"
+   ],
+   "stars": 5,
    "from": "Server pool \u00b7 github-readme",
    "hits": 0,
    "misses": 0
