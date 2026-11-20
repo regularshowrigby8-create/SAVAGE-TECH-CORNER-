@@ -71,13 +71,13 @@ data class SitePoolState(
     val capacity: Int = SitePool.CAPACITY,
     /** How many were dropped for failing verification, by reason. */
     val rejected: Map<String, Int> = emptyMap(),
-    val lastImported: Int = 0
+    val lastImported: Int = 0,
+    /** Non-empty when the pool could not be read; the Sources screen shows it. */
+    val lastError: String = ""
 ) {
     val full: Boolean get() = size >= capacity
     val progress: Float get() = if (capacity <= 0) 0f else (size.toFloat() / capacity).coerceIn(0f, 1f)
     val rejectedTotal: Int get() = rejected.values.sum()
-    /** Non-empty when the pool could not be read; the Sources screen shows it. */
-    val lastError: String = ""
 }
 
 /**
@@ -103,7 +103,21 @@ class SitePool(
         store.read()?.let { json.decodeFromString<SiteDocument>(it) }
     }.getOrNull() ?: SiteDocument()
 
-    private val _state = MutableStateFlow(stateOf())
+    /**
+     * The last failure worth showing. Held here, not read back out of [_state]:
+     * `MutableStateFlow(stateOf())` used to call a function that read `_state`,
+     * which is the initialisation cycle the compiler reported as "type checking
+     * has run into a recursive problem".
+     */
+    private var lastError: String = ""
+
+    private val _state = MutableStateFlow(
+        SitePoolState(
+            size = document.entries.size,
+            working = document.entries.count { it.resolved > 0 },
+            rejected = document.rejected
+        )
+    )
     val state: StateFlow<SitePoolState> = _state.asStateFlow()
 
     fun sites(): List<SiteRecord> = synchronized(lock) { document.entries }
@@ -148,7 +162,9 @@ class SitePool(
         // a silent 0 here is indistinguishable from an empty crawl, and the
         // viewer would be left wondering why the pool never filled.
         val incoming = runCatching { json.decodeFromString<SiteDocument>(text) }.getOrElse { error ->
-            _state.value = _state.value.copy(lastError = "site pool could not be read: ${error.message}")
+            lastError = "site pool could not be read: ${error.message}"
+            lastImported = 0
+            publish()
             return 0
         }
         val byHost = document.entries.associateBy { it.host.lowercase() }.toMutableMap()
@@ -166,25 +182,30 @@ class SitePool(
             rejected = incoming.rejected,
             generated = incoming.generated
         )
+        lastImported = added
+        lastError = ""
         persist()
-        _state.value = stateOf().copy(lastImported = added)
         added
     }
 
     /** Whether the crawler's pool is on this device at all. */
     val hasPool: Boolean get() = synchronized(lock) { document.entries.isNotEmpty() }
 
-    private fun stateOf() = SitePoolState(
-        size = document.entries.size,
-        working = document.entries.count { it.resolved > 0 },
-        rejected = document.rejected,
-        lastImported = _state.value.lastImported,
-        lastError = _state.value.lastError
-    )
+    private var lastImported: Int = 0
+
+    private fun publish() {
+        _state.value = SitePoolState(
+            size = document.entries.size,
+            working = document.entries.count { it.resolved > 0 },
+            rejected = document.rejected,
+            lastImported = lastImported,
+            lastError = lastError
+        )
+    }
 
     private fun persist() {
         runCatching { store.write(json.encodeToString(SiteDocument.serializer(), document)) }
-        _state.value = stateOf()
+        publish()
     }
 
     companion object {

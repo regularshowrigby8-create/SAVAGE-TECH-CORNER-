@@ -94,6 +94,12 @@ class ServerPool(private val store: PoolStore, private val random: Random = Rand
     }.getOrNull() ?: Persisted()
     private var lastAdded = 0
 
+    /**
+     * The state snapshot is built only from fields declared *above* this line and
+     * never from `_state` itself. SitePool got that wrong and the Kotlin compiler
+     * reported it as "type checking has run into a recursive problem"; the same
+     * shape here would be just as fatal and just as invisible to a static scan.
+     */
     private val _state = MutableStateFlow(stateOf())
     val state: StateFlow<PoolState> = _state.asStateFlow()
 

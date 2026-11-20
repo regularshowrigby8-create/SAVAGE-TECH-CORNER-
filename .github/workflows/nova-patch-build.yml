@@ -105,21 +105,33 @@ jobs:
       - name: Compile both flavors WITHOUT the patch
         # Only meaningful if the patched build failed: it separates "this patch
         # broke the build" from "the branch was already broken".
+        #
+        # Two things this got wrong on its first run, both fixed here:
+        #   1. It reused Gradle's incremental output, so the unpatched compile
+        #      saw classes that only exist because the patch had just built them.
+        #      The baseline is now a separate checkout with its own build dir.
+        #   2. It did not say which flavor failed. It does now, because 'the
+        #      patched build failed' and 'the branch was already broken' are only
+        #      distinguishable if the same flavor is compared.
         if: steps.patched.outputs.status != '0'
-        working-directory: work
         run: |
-          set +e
-          # Restore every file the patch replaced, and delete the ones it added.
-          if [ -d .nova-patch-backup ]; then
-            (cd .nova-patch-backup && find . -type f -print0) | while IFS= read -r -d '' f; do
-              cp ".nova-patch-backup/$f" "$f"
-            done
-          fi
-          cd nova-tv/android
+          set -uo pipefail
+          rm -rf baseline && mkdir -p baseline
+          git archive origin/nova-src | tar -x -C baseline
+          cd baseline/nova-tv/android
+          chmod +x gradlew
           ./gradlew :app:compileTvDebugKotlin :app:compileMobileDebugKotlin \
             --no-daemon --console=plain > baseline.log 2>&1
-          echo "baseline status: $?"
-          grep -nE "^e: " baseline.log | head -20
+          BASELINE=$?
+          echo "unpatched baseline status: $BASELINE"
+          if [ "$BASELINE" -eq 0 ]; then
+            echo "BASELINE=clean" >> "$GITHUB_ENV"
+            echo "The unpatched branch compiles. The failure above is this patch's." 
+          else
+            echo "BASELINE=broken" >> "$GITHUB_ENV"
+            echo "The unpatched branch ALSO fails to compile, so it was already broken:"
+            grep -E "^e: " baseline.log | head -20
+          fi
 
       - name: Run the patched unit tests
         if: steps.patched.outputs.status == '0'
@@ -142,6 +154,14 @@ jobs:
             echo "- compile (patched): **$([ '${{ steps.patched.outputs.status }}' = '0' ] && echo PASS || echo FAIL)**"
             echo
             if [ '${{ steps.patched.outputs.status }}' != '0' ]; then
+              echo "- baseline (unpatched): **${BASELINE:-not-run}**"
+              echo
+              if [ "${BASELINE:-}" = "broken" ]; then
+                echo "> The unpatched branch does not compile either. This failure is **not** attributable to the patch."
+              elif [ "${BASELINE:-}" = "clean" ]; then
+                echo "> The unpatched branch compiles. The failure is attributable to the patch."
+              fi
+              echo
               echo '```'
               grep -E "^e: " work/nova-tv/android/compile.log | head -40 || echo "no compiler errors captured"
               echo '```'
