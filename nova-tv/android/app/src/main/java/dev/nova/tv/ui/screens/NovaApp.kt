@@ -133,7 +133,6 @@ fun NovaApp(viewModel: NovaViewModel = viewModel()) {
                         Route.MY_LIST -> MyListScreen(state, viewModel)
                         Route.SOURCES -> SourcesScreen(state, viewModel)
                         Route.SETTINGS -> SettingsScreen(state, viewModel)
-                        Route.DEBUG -> DebugScreen(state, viewModel)
                     }
                 }
 
@@ -302,5 +301,4 @@ internal fun icon(route: Route): ImageVector = when (route) {
     Route.MY_LIST -> Icons.Filled.Favorite
     Route.SOURCES -> Icons.Filled.Build
     Route.SETTINGS -> Icons.Filled.Settings
-    Route.DEBUG -> Icons.Filled.Build
 }

@@ -318,15 +318,10 @@ fun SettingsScreen(state: NovaState, viewModel: NovaViewModel) {
             modifier = Modifier.focusColumnRow(7, rows),
             trailing = { Text("Nova ${BuildConfig.VERSION_NAME}", style = NovaType.meta) }
         ) { Text("Reload catalogue", style = NovaType.body) }
-        FocusableRow(
-            onClick = { viewModel.navigate(Route.DEBUG) },
-            modifier = Modifier.focusColumnRow(8, rows),
-            trailing = { Text(if (state.diagnostics == null) "Run" else state.diagnostics.summary, style = NovaType.meta) }
-        ) { Text("Diagnostics", style = NovaType.body) }
     }
 }
 
-private const val SETTINGS_ROWS = 9
+private const val SETTINGS_ROWS = 8
 
 @Composable
 private fun SectionLabel(text: String) {

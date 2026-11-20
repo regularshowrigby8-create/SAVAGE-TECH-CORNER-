@@ -14,7 +14,6 @@ import dev.nova.tv.data.remote.DnsProvider
 import dev.nova.tv.data.remote.NovaDns
 import dev.nova.tv.finder.DualAudio
 import dev.nova.tv.finder.FinderKind
-import dev.nova.tv.finder.NovaDiagnostics
 import dev.nova.tv.finder.pool.PoolState
 import dev.nova.tv.player.preload.PreloadMode
 import dev.nova.tv.finder.FinderReport
@@ -29,14 +28,12 @@ import dev.nova.tv.player.SubtitleStyle
 import dev.nova.tv.ui.nav.BackAction
 import dev.nova.tv.ui.nav.NavSnapshot
 import dev.nova.tv.ui.nav.resolveBack
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -55,10 +52,7 @@ enum class Route(val label: String) {
     SEARCH("Search"),
     MY_LIST("My List"),
     SOURCES("Sources"),
-    SETTINGS("Settings"),
-
-    /** The on-device self-test. Reachable from Settings, not the rail. */
-    DEBUG("Debug")
+    SETTINGS("Settings")
 }
 
 enum class ShelfStyle { POSTER, LANDSCAPE }
@@ -186,10 +180,7 @@ data class NovaState(
     val pool: PoolState = PoolState(),
     val poolBusy: Boolean = false,
     /** The title-specific web search is running for the open detail. */
-    val titleSearching: Boolean = false,
-    /** Result of the on-device self-test, or null before it has run. */
-    val diagnostics: NovaDiagnostics.Report? = null,
-    val diagnosticsRunning: Boolean = false
+    val titleSearching: Boolean = false
 ) {
     val opened: MetaPreview? get() = detail?.meta
 }
@@ -915,22 +906,6 @@ class NovaViewModel : ViewModel() {
         // The finders share one 3000-slot pool: whichever are on keep filling
         // it, so switching one off leaves the others to close the gap.
         engine.syncPoolFill(next)
-    }
-
-    /**
-     * Run the on-device self-test.
-     *
-     * Pure checks, so this is safe to run at any time and cannot hang on the
-     * network. The result is kept in state so the debug screen can show it and
-     * a screenshot of the screen is enough to report a problem.
-     */
-    fun runDiagnostics() {
-        if (_state.value.diagnosticsRunning) return
-        _state.update { it.copy(diagnosticsRunning = true) }
-        viewModelScope.launch {
-            val report = withContext(Dispatchers.Default) { NovaDiagnostics.run() }
-            _state.update { it.copy(diagnostics = report, diagnosticsRunning = false) }
-        }
     }
 
     /** Run one finder now and install whatever plays the top title. */
