@@ -8,13 +8,6 @@
 Site verification method: `matched-title-control-player-v1`; legacy candidates awaiting recheck: 30.
 These checks do not establish playback or licensing.
 
-## Sites dropped, by reason
-
--    25  search returned nothing usable
--     9  no homepage
--     7  no player marker on sampled title
--     4  search control unavailable or unchanged
-
 ## server_pool source evidence (this run)
 
 | source | page attempts | page failures | candidates | new entries |
@@ -22,10 +15,10 @@ These checks do not establish playback or licensing.
 | cinemeta-community | 1 | 0 | 83 | 0 |
 | cinemeta-official | 1 | 0 | 4 | 0 |
 | community | 13 | 12 | 0 | 0 |
-| github | 93 | 11 | 33 | 0 |
-| github-pages | 0 | 0 | 2636 | 2 |
-| github-readme | 0 | 0 | 415 | 7 |
-| homepage | 0 | 0 | 429 | 3 |
+| github | 93 | 11 | 32 | 0 |
+| github-pages | 0 | 0 | 2513 | 0 |
+| github-readme | 0 | 0 | 404 | 0 |
+| homepage | 0 | 0 | 394 | 0 |
 | stremio-addons.net | 29 | 0 | 2873 | 0 |
 | stremio-collection | 1 | 0 | 83 | 0 |
 
@@ -33,20 +26,18 @@ These checks do not establish playback or licensing.
 
 | source | page attempts | page failures | candidates | new entries |
 |---|---:|---:|---:|---:|
-| addon-manifest | 0 | 0 | 8 | 0 |
-| ani-cli | 4 | 0 | 0 | 0 |
-| animdl | 4 | 4 | 0 | 0 |
-| anime-api-lists | 4 | 4 | 0 | 0 |
-| anime-list | 4 | 4 | 0 | 0 |
-| anime-sites-list | 4 | 4 | 0 | 0 |
-| anime-websites | 4 | 4 | 0 | 0 |
-| awesome-selfhosted | 4 | 0 | 0 | 0 |
-| github-lists | 40 | 9 | 4 | 0 |
+| ani-cli | 3 | 0 | 0 | 0 |
+| animdl | 3 | 3 | 0 | 0 |
+| anime-api-lists | 3 | 3 | 0 | 0 |
+| anime-list | 3 | 3 | 0 | 0 |
+| anime-sites-list | 3 | 3 | 0 | 0 |
+| anime-websites | 3 | 3 | 0 | 0 |
+| awesome-selfhosted | 3 | 0 | 0 | 0 |
+| github-lists | 30 | 0 | 0 | 0 |
 | github-lists:-L- | 8 | 6 | 0 | 0 |
 | github-lists:-ReelFind-Movie-Search-A | 4 | 3 | 0 | 0 |
 | github-lists:.github | 4 | 3 | 0 | 0 |
 | github-lists:241stream | 4 | 4 | 0 | 0 |
-| github-lists:2daymovie | 4 | 3 | 0 | 0 |
 | github-lists:3-tier-web-application | 4 | 3 | 0 | 0 |
 | github-lists:AI-Anime-Recomender | 4 | 3 | 0 | 0 |
 | github-lists:AI-Based-Movie-Recommend | 4 | 3 | 0 | 0 |
@@ -93,14 +84,13 @@ These checks do not establish playback or licensing.
 | github-lists:Anime-Watchlist-Website | 4 | 3 | 0 | 0 |
 | github-lists:Anime-calendar-api | 4 | 4 | 0 | 0 |
 | github-lists:Anime-list | 4 | 3 | 0 | 0 |
-| github-lists:AnimeAPI | 8 | 6 | 0 | 0 |
+| github-lists:AnimeAPI | 4 | 3 | 0 | 0 |
 | github-lists:AnimeArray | 4 | 3 | 0 | 0 |
 | github-lists:AnimeCalendar | 4 | 3 | 0 | 0 |
 | github-lists:AnimeDataAPI | 4 | 3 | 0 | 0 |
 | github-lists:AnimeDex | 4 | 3 | 0 | 0 |
 | github-lists:AnimeDiary-My-Anime-Watc | 4 | 3 | 0 | 0 |
 | github-lists:AnimeEpisodes | 4 | 3 | 0 | 0 |
-| github-lists:AnimeHaven | 4 | 4 | 0 | 0 |
 | github-lists:AnimeHouse | 4 | 3 | 0 | 0 |
 | github-lists:AnimeLegacy | 4 | 3 | 0 | 0 |
 | github-lists:AnimeList | 40 | 30 | 0 | 0 |
@@ -114,8 +104,7 @@ These checks do not establish playback or licensing.
 | github-lists:AnimeTracker | 8 | 7 | 0 | 0 |
 | github-lists:AnimeTrix | 4 | 3 | 0 | 0 |
 | github-lists:AnimeWatchList | 4 | 3 | 0 | 0 |
-| github-lists:AnimeWatcher.API | 4 | 4 | 0 | 0 |
-| github-lists:AnimeWatchlist | 8 | 6 | 0 | 0 |
+| github-lists:AnimeWatchlist | 4 | 3 | 0 | 0 |
 | github-lists:AnimeWatchlist-Anirec | 4 | 3 | 0 | 0 |
 | github-lists:AnimeWatchlistManager | 4 | 3 | 0 | 0 |
 | github-lists:AnimeWeb | 4 | 3 | 0 | 0 |
@@ -129,13 +118,12 @@ These checks do not establish playback or licensing.
 | github-lists:Animeworld-list-export | 4 | 3 | 0 | 0 |
 | github-lists:AnistreamIN | 4 | 3 | 0 | 0 |
 | github-lists:Anisync | 4 | 3 | 0 | 0 |
-| github-lists:Anivexa-API | 16 | 12 | 0 | 0 |
+| github-lists:Anivexa-API | 12 | 9 | 0 | 0 |
 | github-lists:ArduinoStreaming | 4 | 3 | 0 | 0 |
 | github-lists:Astri | 4 | 3 | 0 | 0 |
 | github-lists:BASEDFLIX_BACKEND_DJANGO | 4 | 4 | 0 | 0 |
 | github-lists:Badger | 4 | 3 | 0 | 0 |
 | github-lists:Better_anime_list | 4 | 3 | 0 | 0 |
-| github-lists:BingeFlix | 4 | 3 | 0 | 0 |
 | github-lists:BlackEagleLK | 4 | 3 | 0 | 0 |
 | github-lists:CClone | 4 | 4 | 0 | 0 |
 | github-lists:CYNE-API | 4 | 3 | 0 | 0 |
@@ -167,7 +155,6 @@ These checks do not establish playback or licensing.
 | github-lists:DiskCord | 4 | 3 | 0 | 0 |
 | github-lists:Disney | 4 | 4 | 0 | 0 |
 | github-lists:Django-Netflix-Clone | 4 | 3 | 0 | 0 |
-| github-lists:DokiDoki-AnimeExplorer | 4 | 3 | 0 | 0 |
 | github-lists:DungeonScrawlers | 4 | 4 | 0 | 0 |
 | github-lists:DzulAnimeList | 4 | 3 | 0 | 0 |
 | github-lists:EPATADA | 4 | 3 | 0 | 0 |
@@ -187,7 +174,7 @@ These checks do not establish playback or licensing.
 | github-lists:Free-Movie-Series-DB-API | 4 | 3 | 0 | 0 |
 | github-lists:Free-Movie-Streaming-Web | 8 | 6 | 0 | 0 |
 | github-lists:Freeplix | 4 | 3 | 0 | 0 |
-| github-lists:Full-stack-Free-Movie-St | 8 | 6 | 0 | 0 |
+| github-lists:Full-stack-Free-Movie-St | 4 | 3 | 0 | 0 |
 | github-lists:Funanime | 4 | 3 | 0 | 0 |
 | github-lists:GMTCloud-Video-Downloade | 4 | 3 | 0 | 0 |
 | github-lists:Gab-stream- | 4 | 3 | 0 | 0 |
@@ -221,7 +208,6 @@ These checks do not establish playback or licensing.
 | github-lists:La-kika-Streaming-video | 4 | 3 | 0 | 0 |
 | github-lists:LensAnime | 4 | 3 | 0 | 0 |
 | github-lists:Leo-Anime | 4 | 3 | 0 | 0 |
-| github-lists:Liberty | 4 | 3 | 0 | 0 |
 | github-lists:LibertyNow | 4 | 3 | 0 | 0 |
 | github-lists:ListYourAnime | 4 | 3 | 0 | 0 |
 | github-lists:Lister | 4 | 3 | 0 | 0 |
@@ -236,7 +222,6 @@ These checks do not establish playback or licensing.
 | github-lists:Manga-Anime-List | 4 | 3 | 0 | 0 |
 | github-lists:Mark1 | 4 | 3 | 0 | 0 |
 | github-lists:Marketing-Platform- | 4 | 3 | 0 | 0 |
-| github-lists:MeatFlicks | 4 | 3 | 0 | 0 |
 | github-lists:Mega-Flix-Vfinal | 4 | 4 | 0 | 0 |
 | github-lists:MegaFlix | 4 | 4 | 0 | 0 |
 | github-lists:Meu-cinema | 4 | 3 | 0 | 0 |
@@ -250,8 +235,6 @@ These checks do not establish playback or licensing.
 | github-lists:MorAnimeList | 4 | 4 | 0 | 0 |
 | github-lists:Movie | 4 | 3 | 0 | 0 |
 | github-lists:Movie-APIs-_Embedded-Mod | 4 | 4 | 0 | 0 |
-| github-lists:Movie-Discovery | 4 | 3 | 0 | 0 |
-| github-lists:Movie-Finder-App | 4 | 3 | 0 | 0 |
 | github-lists:Movie-Frenzy | 4 | 3 | 0 | 0 |
 | github-lists:Movie-Info-App | 4 | 3 | 0 | 0 |
 | github-lists:Movie-Recommendation-Sys | 4 | 3 | 0 | 0 |
@@ -269,15 +252,12 @@ These checks do not establish playback or licensing.
 | github-lists:MovieDB | 4 | 4 | 0 | 0 |
 | github-lists:MovieFeast | 4 | 4 | 0 | 0 |
 | github-lists:MovieMatch-Studio | 4 | 3 | 0 | 0 |
-| github-lists:MovieMind-AI | 4 | 3 | 0 | 0 |
 | github-lists:MovieOne | 4 | 4 | 0 | 0 |
 | github-lists:MovieWebsite | 4 | 3 | 0 | 0 |
 | github-lists:Movie_App | 4 | 3 | 0 | 0 |
 | github-lists:Movie_Explorer | 4 | 4 | 0 | 0 |
 | github-lists:Movie_Search_App | 4 | 3 | 0 | 0 |
-| github-lists:Movie_explorer | 4 | 3 | 0 | 0 |
 | github-lists:Movieflex | 4 | 4 | 0 | 0 |
-| github-lists:Moviemeld | 4 | 4 | 0 | 0 |
 | github-lists:Movies | 4 | 3 | 0 | 0 |
 | github-lists:MoviesFan | 4 | 3 | 0 | 0 |
 | github-lists:Movio-Movie-Recommender | 4 | 3 | 0 | 0 |
@@ -295,7 +275,6 @@ These checks do not establish playback or licensing.
 | github-lists:MyAnimeList-Web-Scraper | 4 | 3 | 0 | 0 |
 | github-lists:MyAnimeList-discord-bot | 4 | 3 | 0 | 0 |
 | github-lists:MyAnimeList-tracker | 4 | 3 | 0 | 0 |
-| github-lists:MyAnime_app | 4 | 3 | 0 | 0 |
 | github-lists:MyCrunchyList | 4 | 3 | 0 | 0 |
 | github-lists:MyMovieList | 4 | 3 | 0 | 0 |
 | github-lists:Neko-s-Index-Backup-Fall | 4 | 3 | 0 | 0 |
@@ -314,8 +293,6 @@ These checks do not establish playback or licensing.
 | github-lists:Nginx-Lua-Secure-Link-An | 4 | 3 | 0 | 0 |
 | github-lists:NightReel | 4 | 3 | 0 | 0 |
 | github-lists:Nxt-watch-React-ott-App | 4 | 3 | 0 | 0 |
-| github-lists:Omni-Stream | 4 | 4 | 0 | 0 |
-| github-lists:OmniGate | 4 | 3 | 0 | 0 |
 | github-lists:OpenFlix | 4 | 3 | 0 | 0 |
 | github-lists:OtakuPoi | 4 | 3 | 0 | 0 |
 | github-lists:Ott-platform | 4 | 3 | 0 | 0 |
@@ -334,7 +311,6 @@ These checks do not establish playback or licensing.
 | github-lists:RaisiX | 4 | 3 | 0 | 0 |
 | github-lists:React_movie | 4 | 3 | 0 | 0 |
 | github-lists:RecoHub | 4 | 3 | 0 | 0 |
-| github-lists:ReleaseRadar | 4 | 3 | 0 | 0 |
 | github-lists:Rename-videos-from-movie | 4 | 3 | 0 | 0 |
 | github-lists:Ronajo | 4 | 3 | 0 | 0 |
 | github-lists:RoninX-Anime-Client | 4 | 3 | 0 | 0 |
@@ -355,21 +331,17 @@ These checks do not establish playback or licensing.
 | github-lists:SpringAPI_EspacoGeek | 4 | 3 | 0 | 0 |
 | github-lists:Stream | 4 | 3 | 0 | 0 |
 | github-lists:Stream-Enhancer-Site | 4 | 3 | 0 | 0 |
-| github-lists:StreamBDIXPlus | 4 | 3 | 1 | 0 |
-| github-lists:StreamHub | 4 | 3 | 0 | 0 |
+| github-lists:StreamBDIXPlus | 4 | 3 | 0 | 0 |
 | github-lists:StreamNest | 4 | 3 | 0 | 0 |
 | github-lists:StreamRush | 4 | 4 | 0 | 0 |
 | github-lists:StreamerWebSeries | 4 | 3 | 0 | 0 |
 | github-lists:Streamify | 8 | 7 | 0 | 0 |
 | github-lists:Streaming-Site | 4 | 3 | 0 | 0 |
-| github-lists:Streamly | 4 | 3 | 0 | 0 |
-| github-lists:Strideo | 4 | 4 | 0 | 0 |
 | github-lists:SunshineTr | 8 | 8 | 0 | 0 |
 | github-lists:Surviv.io | 4 | 4 | 0 | 0 |
 | github-lists:Sushi-Unofficial-MyAnime | 4 | 3 | 0 | 0 |
 | github-lists:Suzune | 4 | 3 | 0 | 0 |
 | github-lists:Symfony-anime-list | 4 | 3 | 0 | 0 |
-| github-lists:THE-ULTIMATE | 8 | 6 | 0 | 0 |
 | github-lists:TMDB-Embed-API-PHP | 4 | 3 | 0 | 0 |
 | github-lists:TMDB-Import | 4 | 3 | 0 | 0 |
 | github-lists:Test-Anime-Site | 4 | 3 | 0 | 0 |
@@ -386,7 +358,6 @@ These checks do not establish playback or licensing.
 | github-lists:VPN-Proxy-Master-Pro-Fre | 4 | 4 | 0 | 0 |
 | github-lists:VidSrc-Alternative-for-2 | 4 | 3 | 0 | 0 |
 | github-lists:VideoStreaming | 4 | 3 | 0 | 0 |
-| github-lists:Vidlo-Free-Movies | 4 | 3 | 0 | 0 |
 | github-lists:Void | 4 | 3 | 0 | 0 |
 | github-lists:WCO_wrapper | 4 | 3 | 0 | 0 |
 | github-lists:WP-Movie-Showcase | 4 | 3 | 0 | 0 |
@@ -429,17 +400,15 @@ These checks do not establish playback or licensing.
 | github-lists:ani-watch | 4 | 3 | 0 | 0 |
 | github-lists:aniBASE | 4 | 3 | 0 | 0 |
 | github-lists:aniTS | 4 | 3 | 0 | 0 |
-| github-lists:aniapi2.0 | 4 | 3 | 0 | 0 |
 | github-lists:anim-list | 4 | 4 | 0 | 0 |
 | github-lists:animanage-api-webserver | 4 | 3 | 0 | 0 |
 | github-lists:anime | 8 | 6 | 0 | 0 |
-| github-lists:anime-api | 8 | 6 | 0 | 0 |
+| github-lists:anime-api | 4 | 3 | 0 | 0 |
 | github-lists:anime-api-practice | 4 | 3 | 0 | 0 |
 | github-lists:anime-cli | 4 | 3 | 0 | 0 |
 | github-lists:anime-discovery | 4 | 3 | 0 | 0 |
 | github-lists:anime-dl-core | 4 | 3 | 0 | 0 |
 | github-lists:anime-filler-checker | 4 | 3 | 0 | 0 |
-| github-lists:anime-info-provider-for- | 4 | 3 | 0 | 0 |
 | github-lists:anime-list | 48 | 37 | 0 | 0 |
 | github-lists:anime-list-app | 4 | 3 | 0 | 0 |
 | github-lists:anime-list-website | 4 | 3 | 0 | 0 |
@@ -450,9 +419,9 @@ These checks do not establish playback or licensing.
 | github-lists:anime-season-watcher | 4 | 3 | 0 | 0 |
 | github-lists:anime-stream-website | 4 | 4 | 0 | 0 |
 | github-lists:anime-streaming-platform | 4 | 3 | 0 | 0 |
-| github-lists:anime-streaming-website | 4 | 3 | 0 | 0 |
+| github-lists:anime-streaming-website | 2 | 1 | 0 | 0 |
 | github-lists:anime-tier-list | 4 | 3 | 0 | 0 |
-| github-lists:anime-tracker-api | 8 | 6 | 0 | 0 |
+| github-lists:anime-tracker-api | 4 | 3 | 0 | 0 |
 | github-lists:anime-watch-api | 4 | 4 | 0 | 0 |
 | github-lists:anime-watch-list-API | 4 | 3 | 0 | 0 |
 | github-lists:anime-watch-order | 4 | 3 | 0 | 0 |
@@ -470,7 +439,6 @@ These checks do not establish playback or licensing.
 | github-lists:animeKmoney | 4 | 3 | 0 | 0 |
 | github-lists:animeList-ReactJS | 4 | 3 | 0 | 0 |
 | github-lists:animeWatchList | 8 | 7 | 0 | 0 |
-| github-lists:animeWatcherApi | 4 | 3 | 0 | 0 |
 | github-lists:animeWebsite-v2 | 4 | 3 | 0 | 0 |
 | github-lists:anime_chill | 4 | 3 | 0 | 0 |
 | github-lists:anime_indonesia | 4 | 4 | 0 | 0 |
@@ -492,7 +460,6 @@ These checks do not establish playback or licensing.
 | github-lists:animunet | 4 | 3 | 0 | 0 |
 | github-lists:anipy-cli | 4 | 3 | 0 | 0 |
 | github-lists:anirush | 4 | 3 | 0 | 0 |
-| github-lists:anisteam-api-animistad1 | 4 | 4 | 0 | 0 |
 | github-lists:anistream | 4 | 3 | 0 | 0 |
 | github-lists:anivault | 4 | 3 | 0 | 0 |
 | github-lists:anivault-scraper | 4 | 3 | 0 | 0 |
@@ -515,21 +482,15 @@ These checks do not establish playback or licensing.
 | github-lists:best-vidsrc-alternative | 8 | 6 | 0 | 0 |
 | github-lists:bestMoviesWithReact | 4 | 3 | 0 | 0 |
 | github-lists:booru-nsfw-anime-bot | 4 | 3 | 0 | 0 |
-| github-lists:bottom_radioplayer | 4 | 3 | 0 | 0 |
 | github-lists:brandshop-client-10 | 4 | 3 | 0 | 0 |
-| github-lists:broken-hentai | 4 | 3 | 0 | 0 |
-| github-lists:butter-provider-anime-es | 4 | 3 | 0 | 0 |
-| github-lists:bytebox | 4 | 4 | 0 | 0 |
 | github-lists:c-basic-programs | 4 | 3 | 0 | 0 |
 | github-lists:cassette | 4 | 3 | 0 | 0 |
 | github-lists:castan | 4 | 4 | 0 | 0 |
 | github-lists:chumon-server-js | 4 | 3 | 0 | 0 |
 | github-lists:cine-sync-v2 | 4 | 3 | 0 | 0 |
-| github-lists:cinescope | 8 | 6 | 0 | 0 |
+| github-lists:cinescope | 4 | 3 | 0 | 0 |
 | github-lists:cinestream | 4 | 3 | 0 | 0 |
-| github-lists:cineva | 4 | 3 | 0 | 0 |
 | github-lists:cinevia | 4 | 3 | 0 | 0 |
-| github-lists:cinevoid | 4 | 3 | 0 | 0 |
 | github-lists:comic-site | 4 | 3 | 0 | 0 |
 | github-lists:core | 4 | 3 | 0 | 0 |
 | github-lists:darelchaabi-tv | 4 | 4 | 0 | 0 |
@@ -543,14 +504,12 @@ These checks do not establish playback or licensing.
 | github-lists:docflare-ai | 4 | 3 | 0 | 0 |
 | github-lists:donde-lo-veo | 4 | 4 | 0 | 0 |
 | github-lists:download-series | 4 | 3 | 0 | 0 |
-| github-lists:downloader_api | 4 | 3 | 0 | 0 |
 | github-lists:drupal-bootstrap-live-de | 8 | 6 | 0 | 0 |
 | github-lists:ecchi-fanservice-anime-l | 4 | 3 | 0 | 0 |
 | github-lists:embed-movies | 4 | 3 | 0 | 0 |
 | github-lists:embed-sdk-js | 4 | 3 | 0 | 0 |
 | github-lists:embedding_movies_project | 4 | 3 | 0 | 0 |
 | github-lists:emby-plugin-bangumi | 4 | 3 | 0 | 0 |
-| github-lists:emnexmovies-api | 4 | 3 | 0 | 0 |
 | github-lists:enime.moe | 8 | 6 | 0 | 0 |
 | github-lists:enimet-api | 4 | 3 | 0 | 0 |
 | github-lists:entertainment-recommende | 4 | 3 | 0 | 0 |
@@ -564,7 +523,6 @@ These checks do not establish playback or licensing.
 | github-lists:firevideoplayer | 4 | 3 | 0 | 0 |
 | github-lists:flixfree | 4 | 3 | 0 | 0 |
 | github-lists:free-streaming-resources | 8 | 6 | 0 | 0 |
-| github-lists:freereels-api | 4 | 3 | 0 | 0 |
 | github-lists:generator-stratic | 4 | 3 | 0 | 0 |
 | github-lists:gpt3-embeddings-movies-s | 4 | 3 | 0 | 0 |
 | github-lists:gstreamer-android-sample | 4 | 3 | 0 | 0 |
@@ -584,7 +542,6 @@ These checks do not establish playback or licensing.
 | github-lists:imdb-movie-app | 4 | 3 | 0 | 0 |
 | github-lists:java-mystream-using-spri | 4 | 3 | 0 | 0 |
 | github-lists:jellyfin-css | 4 | 3 | 0 | 0 |
-| github-lists:jigsaw-photo-stream | 4 | 3 | 0 | 0 |
 | github-lists:jr.flix | 4 | 4 | 0 | 0 |
 | github-lists:js-capstone-group | 4 | 3 | 0 | 0 |
 | github-lists:kari | 4 | 3 | 0 | 0 |
@@ -598,24 +555,20 @@ These checks do not establish playback or licensing.
 | github-lists:kullanime | 4 | 3 | 0 | 0 |
 | github-lists:kumostamp | 4 | 3 | 0 | 0 |
 | github-lists:laravel-api | 8 | 8 | 0 | 0 |
-| github-lists:leflix | 4 | 3 | 0 | 0 |
 | github-lists:lemontv-scrapers | 4 | 3 | 0 | 0 |
 | github-lists:lhai36366 | 4 | 4 | 0 | 0 |
 | github-lists:limitr | 4 | 3 | 0 | 0 |
 | github-lists:listofanime | 4 | 3 | 0 | 0 |
-| github-lists:lmovies | 4 | 3 | 0 | 0 |
 | github-lists:loopifi | 4 | 3 | 0 | 0 |
 | github-lists:m3u8-grabber-downloader | 4 | 3 | 0 | 0 |
 | github-lists:m3u8_StreamSniper | 4 | 3 | 0 | 0 |
 | github-lists:mal-ani-cli-sync | 4 | 3 | 0 | 0 |
-| github-lists:mal-streaming | 4 | 3 | 0 | 0 |
 | github-lists:mal-stremio-addon | 4 | 3 | 0 | 0 |
 | github-lists:malrework | 4 | 3 | 0 | 0 |
 | github-lists:malted.dev | 4 | 3 | 0 | 0 |
 | github-lists:martv | 4 | 3 | 0 | 0 |
 | github-lists:mcp-unifi | 4 | 3 | 0 | 0 |
 | github-lists:media-control | 4 | 3 | 0 | 0 |
-| github-lists:modb-core | 4 | 3 | 0 | 0 |
 | github-lists:mongodb-atlas-vector-sea | 4 | 3 | 0 | 0 |
 | github-lists:mongodb-vector-semantic- | 4 | 3 | 0 | 0 |
 | github-lists:movbor | 4 | 4 | 0 | 0 |
@@ -632,7 +585,6 @@ These checks do not establish playback or licensing.
 | github-lists:movieCreator-Recommender | 4 | 4 | 0 | 0 |
 | github-lists:movie_rag | 4 | 3 | 0 | 0 |
 | github-lists:movie_recommender | 4 | 3 | 0 | 0 |
-| github-lists:movie_streamer | 4 | 3 | 0 | 0 |
 | github-lists:moviebox-internal-api | 4 | 3 | 0 | 0 |
 | github-lists:moviedatabase | 4 | 3 | 0 | 0 |
 | github-lists:movieflix-clone | 4 | 3 | 0 | 0 |
@@ -646,7 +598,6 @@ These checks do not establish playback or licensing.
 | github-lists:movito.ai | 4 | 3 | 0 | 0 |
 | github-lists:mrowser | 4 | 3 | 0 | 0 |
 | github-lists:mtdb-angular-laravel | 4 | 3 | 0 | 0 |
-| github-lists:multisite-streams-page | 4 | 3 | 0 | 0 |
 | github-lists:my-sweet-revenge | 4 | 3 | 0 | 0 |
 | github-lists:myentertainmenthub | 4 | 3 | 0 | 0 |
 | github-lists:mymanganimelist.com | 8 | 6 | 0 | 0 |
@@ -668,7 +619,7 @@ These checks do not establish playback or licensing.
 | github-lists:node-vidstreaming | 4 | 3 | 0 | 0 |
 | github-lists:notalone.py | 4 | 3 | 0 | 0 |
 | github-lists:novelas | 4 | 4 | 0 | 0 |
-| github-lists:ohiyo | 4 | 3 | 0 | 0 |
+| github-lists:ohiyo | 2 | 1 | 0 | 0 |
 | github-lists:okruhlsplayer | 4 | 3 | 0 | 0 |
 | github-lists:openstream | 4 | 3 | 0 | 0 |
 | github-lists:orionfilmes.io | 4 | 4 | 0 | 0 |
@@ -681,7 +632,6 @@ These checks do not establish playback or licensing.
 | github-lists:phlix-plugin-myanimelist | 4 | 3 | 0 | 0 |
 | github-lists:play-movies-series-api | 4 | 3 | 0 | 0 |
 | github-lists:plex-anime-metadata-prov | 4 | 3 | 0 | 0 |
-| github-lists:plex-tmdb-proxy | 4 | 3 | 0 | 0 |
 | github-lists:plugin.video.anitube | 4 | 3 | 0 | 0 |
 | github-lists:plugin.video.retrospect | 4 | 3 | 0 | 0 |
 | github-lists:polish-http-stremio-addo | 4 | 3 | 0 | 0 |
@@ -705,13 +655,10 @@ These checks do not establish playback or licensing.
 | github-lists:reactjs-netflixclone | 4 | 3 | 0 | 0 |
 | github-lists:recsys | 4 | 3 | 0 | 0 |
 | github-lists:reprint | 4 | 3 | 0 | 0 |
-| github-lists:roig_AniDb_api | 4 | 3 | 0 | 0 |
 | github-lists:ronix-backend | 4 | 3 | 0 | 0 |
 | github-lists:rust-server | 4 | 3 | 0 | 0 |
 | github-lists:sakuga | 4 | 3 | 0 | 0 |
 | github-lists:sans-anime-list | 4 | 3 | 0 | 0 |
-| github-lists:sastaMovies_Backend | 4 | 4 | 0 | 0 |
-| github-lists:sastaMovies_Frontend | 4 | 3 | 0 | 0 |
 | github-lists:scraping-tutorial | 4 | 3 | 0 | 0 |
 | github-lists:scrimba-pop-choice | 4 | 3 | 0 | 0 |
 | github-lists:scrimba-simple-app-ReelR | 4 | 3 | 0 | 0 |
@@ -722,7 +669,6 @@ These checks do not establish playback or licensing.
 | github-lists:serie-streaming-base-dem | 4 | 4 | 0 | 0 |
 | github-lists:seriesplay.live | 4 | 3 | 0 | 0 |
 | github-lists:sf2tweets | 4 | 3 | 0 | 0 |
-| github-lists:signup-website | 4 | 4 | 0 | 0 |
 | github-lists:simple-movie-app | 4 | 3 | 0 | 0 |
 | github-lists:site-de-series | 4 | 3 | 0 | 0 |
 | github-lists:snatchflix | 4 | 3 | 0 | 0 |
@@ -739,8 +685,6 @@ These checks do not establish playback or licensing.
 | github-lists:streaming-de-filmes | 4 | 3 | 0 | 0 |
 | github-lists:streaming-sites | 4 | 3 | 0 | 0 |
 | github-lists:streaming_availability_p | 4 | 3 | 0 | 0 |
-| github-lists:streamx-web | 4 | 3 | 0 | 0 |
-| github-lists:streemi | 4 | 3 | 0 | 0 |
 | github-lists:stremio-aniskip | 4 | 3 | 0 | 0 |
 | github-lists:struct-tv | 4 | 3 | 0 | 0 |
 | github-lists:subatic | 4 | 3 | 0 | 0 |
@@ -757,16 +701,15 @@ These checks do not establish playback or licensing.
 | github-lists:trabalho-de-programa-o-s | 4 | 4 | 0 | 0 |
 | github-lists:trunk-player | 4 | 3 | 0 | 0 |
 | github-lists:ttv_adEraser | 4 | 3 | 0 | 0 |
-| github-lists:tubeo | 8 | 6 | 0 | 0 |
+| github-lists:tubeo | 4 | 3 | 0 | 0 |
 | github-lists:tweetwatcher | 4 | 3 | 0 | 0 |
-| github-lists:twitch_discovery | 4 | 3 | 0 | 0 |
 | github-lists:udfread-ERROR-ECMA-167-V | 4 | 3 | 0 | 0 |
 | github-lists:uniheroes | 4 | 3 | 0 | 0 |
 | github-lists:universal-extension | 4 | 3 | 0 | 0 |
 | github-lists:uzmovi | 4 | 4 | 0 | 0 |
 | github-lists:vegenta | 4 | 3 | 0 | 0 |
 | github-lists:vetra-providers | 4 | 3 | 0 | 0 |
-| github-lists:vibble-api | 4 | 3 | 2 | 0 |
+| github-lists:vibble-api | 4 | 3 | 0 | 0 |
 | github-lists:vibe-coding | 4 | 3 | 0 | 0 |
 | github-lists:vicous | 4 | 4 | 0 | 0 |
 | github-lists:video-api | 4 | 3 | 0 | 0 |
@@ -776,14 +719,12 @@ These checks do not establish playback or licensing.
 | github-lists:vidlux-streaming-api | 8 | 6 | 0 | 0 |
 | github-lists:vidstream-api | 4 | 3 | 0 | 0 |
 | github-lists:vidsuper | 8 | 6 | 0 | 0 |
-| github-lists:vitepress-chat | 4 | 3 | 0 | 0 |
 | github-lists:watch-anime-v1-api | 4 | 3 | 0 | 0 |
 | github-lists:watch-animes-api | 4 | 3 | 0 | 0 |
 | github-lists:watch-hub | 4 | 3 | 0 | 0 |
-| github-lists:watchAnime | 4 | 4 | 0 | 0 |
 | github-lists:watch_anime_api | 4 | 3 | 0 | 0 |
 | github-lists:watcharoo | 4 | 3 | 0 | 0 |
-| github-lists:watchers-heaven | 8 | 6 | 0 | 0 |
+| github-lists:watchers-heaven | 6 | 4 | 0 | 0 |
 | github-lists:watchtimer. | 4 | 3 | 0 | 0 |
 | github-lists:website-portal-anime-Rea | 4 | 3 | 0 | 0 |
 | github-lists:webtech2-netflix-2 | 4 | 3 | 0 | 0 |
@@ -803,11 +744,10 @@ These checks do not establish playback or licensing.
 | github-lists:zmov | 4 | 3 | 0 | 0 |
 | github-lists:zonetelechargement1 | 4 | 4 | 0 | 0 |
 | github-lists:zounoku | 4 | 4 | 0 | 0 |
-| legacy-recheck | 0 | 0 | 31 | 1 |
-| movie-sites-list | 4 | 4 | 0 | 0 |
-| movie-web | 4 | 4 | 0 | 0 |
-| streaming-sites | 4 | 4 | 0 | 0 |
+| movie-sites-list | 3 | 3 | 0 | 0 |
+| movie-web | 3 | 3 | 0 | 0 |
+| streaming-sites | 3 | 3 | 0 | 0 |
 
 Counts reflect the configured sources and time budget, not internet-wide exhaustion.
 
-_generated 2026-11-21T08:52:17Z by run 44886402950_
+_generated 2026-11-21T09:05:28Z by run 44887387025_
