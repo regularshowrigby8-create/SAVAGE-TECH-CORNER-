@@ -49,4 +49,13 @@ class UrlGuardTest {
     fun `mDNS names are refused`() {
         assertFalse(HttpClient.isAllowedUrl("http://router.local/x"))
     }
+
+    @Test
+    fun `host aliases for loopback are refused`() {
+        // The same host with a trailing dot, and the integer form of 127.0.0.1.
+        assertFalse(HttpClient.isAllowedUrl("http://localhost./x"))
+        assertFalse(HttpClient.isAllowedUrl("http://127.0.0.1./x"))
+        assertFalse(HttpClient.isAllowedUrl("http://2130706433/x"))
+        assertFalse(HttpClient.isAllowedUrl("http://0x7f000001/x"))
+    }
 }

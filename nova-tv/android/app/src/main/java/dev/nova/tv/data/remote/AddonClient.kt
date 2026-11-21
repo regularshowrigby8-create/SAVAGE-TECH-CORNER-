@@ -53,13 +53,33 @@ class AddonClient(private val http: HttpClient) {
 
     suspend fun fetchCatalog(addon: NovaAddon, catalog: CatalogDef, extra: Map<String, String> = emptyMap()): List<MetaPreview> {
         val suffix = if (extra.isEmpty()) "" else {
-            "/" + extra.entries.joinToString("&") { "${it.key}=${it.value}" }
+            "/" + extra.entries.joinToString("&") { "${it.key}=${encodeExtra(it.value)}" }
         }
         val url = normalise(addon.baseUrl) + "/catalog/${catalog.type}/${catalog.id}$suffix.json"
-        val raw = http.get(url)
-        return runCatching {
-            json.decodeFromString(CatalogResponse.serializer(), raw).metas
-        }.getOrElse { emptyList() }
+        readCatalog(url)?.let { return it }
+        // Cinemeta moved its shelves to cinemeta-catalogs and now answers 307
+        // from v3-cinemeta. OkHttp follows that, but a network that blocks the
+        // new host (or the hop itself) would leave every shelf empty, so the
+        // new path is also asked for directly.
+        if (!isCinemeta(addon.baseUrl)) return emptyList()
+        val direct = "$CINEMETA_CATALOGS/${catalog.id}/catalog/${catalog.type}/${catalog.id}$suffix.json"
+        return readCatalog(direct) ?: emptyList()
+    }
+
+    /** The metas of one catalogue URL, or null when the request or parse failed. */
+    private suspend fun readCatalog(url: String): List<MetaPreview>? = runCatching {
+        json.decodeFromString(CatalogResponse.serializer(), http.get(url)).metas
+    }.getOrNull()
+
+    private fun isCinemeta(base: String): Boolean =
+        runCatching { java.net.URI(normalise(base)).host }.getOrNull()
+            ?.equals(CINEMETA_HOST, ignoreCase = true) == true
+
+    /** `/meta/{type}/{id}.json`: full details, including the episode list. */
+    suspend fun fetchMeta(addon: NovaAddon, type: String, id: String): MetaPreview? {
+        val url = normalise(addon.baseUrl) + "/meta/$type/${FinderRules.streamSegment(id)}.json"
+        val raw = runCatching { http.get(url, attempts = 2) }.getOrElse { return null }
+        return runCatching { json.decodeFromString(dev.nova.tv.data.model.MetaResponse.serializer(), raw).meta }.getOrNull()
     }
 
     suspend fun fetchStreams(addon: NovaAddon, type: String, id: String): List<Stream> {
@@ -91,14 +111,20 @@ class AddonClient(private val http: HttpClient) {
      * catalogue already in memory.
      */
     suspend fun searchCatalog(addon: NovaAddon, catalog: CatalogDef, query: String): List<MetaPreview> {
-        val q = java.net.URLEncoder.encode(query.trim(), "UTF-8").replace("+", "%20")
-        return fetchCatalog(addon, catalog, mapOf("search" to q))
+        return fetchCatalog(addon, catalog, mapOf("search" to query.trim()))
     }
+
+    /** Extra values are path segments: "Sci-Fi" stays, "a b" becomes "a%20b". */
+    private fun encodeExtra(value: String): String =
+        java.net.URLEncoder.encode(value, "UTF-8").replace("+", "%20")
 
     private fun normalise(base: String): String =
         base.trim().trimEnd('/').replace(Regex("""/manifest\.json$""", RegexOption.IGNORE_CASE), "")
 
     companion object {
+        private const val CINEMETA_HOST = "v3-cinemeta.strem.io"
+        private const val CINEMETA_CATALOGS = "https://cinemeta-catalogs.strem.io"
+
         /**
          * Rank streams: playable only, best quality first, and one entry per
          * request (same URL + headers) so two addons mirroring a file do not

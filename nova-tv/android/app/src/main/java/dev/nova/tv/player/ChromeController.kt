@@ -54,6 +54,16 @@ class ChromeController(
         armIdle()
     }
 
+    /**
+     * Touch: a tap on the video hides the controls at once. Holds (an open
+     * menu) still win, exactly like the idle timeout.
+     */
+    fun hideNow() {
+        if (holds.isNotEmpty()) return
+        idleJob?.cancel()
+        _state.update { it.copy(userActive = false) }
+    }
+
     private fun armIdle() {
         idleJob?.cancel()
         if (holds.isNotEmpty()) return

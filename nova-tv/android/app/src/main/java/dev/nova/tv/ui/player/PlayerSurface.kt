@@ -4,9 +4,13 @@ package dev.nova.tv.ui.player
 
 import android.view.KeyEvent as AndroidKeyEvent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,11 +44,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.ui.PlayerView
-import androidx.tv.foundation.lazy.list.TvLazyColumn
-import androidx.tv.foundation.lazy.list.itemsIndexed
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import dev.nova.tv.ui.screens.UpNext
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.ui.draw.clip
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.tv.material3.Text
 import dev.nova.tv.player.NovaPlayer
 import dev.nova.tv.player.SkipSeconds
+import dev.nova.tv.player.SubtitleStyle
+import dev.nova.tv.player.formatPlaybackRate
+import dev.nova.tv.player.nextPlaybackRate
+import dev.nova.tv.player.applySubtitleStyle
 import dev.nova.tv.ui.components.FocusableRow
 import dev.nova.tv.ui.components.PrimaryButton
 import dev.nova.tv.ui.components.SecondaryButton
@@ -84,6 +101,7 @@ fun PlayerSurface(
     val session by player.session.collectAsStateWithLifecycle()
     val chrome by viewModel.chromeState.collectAsStateWithLifecycle()
     val ui by viewModel.state.collectAsStateWithLifecycle()
+    val buffering by player.buffering.collectAsStateWithLifecycle()
     val panel = ui.playerPanel
     val failure = session.failure
 
@@ -101,7 +119,7 @@ fun PlayerSurface(
     val rootFocus = remember { FocusRequester() }
     val playFocus = remember { FocusRequester() }
     val failureFocus = remember { FocusRequester() }
-    val showChrome = chrome.chromeVisible && failure == null && panel == null
+    val showChrome = chrome.chromeVisible && failure == null && panel == null && ui.upNext == null
 
     // Focus follows what is on screen. Without this, hiding the chrome removed
     // the focused button and the next key press went nowhere.
@@ -135,7 +153,7 @@ fun PlayerSurface(
                     AndroidKeyEvent.KEYCODE_MEDIA_REWIND -> { player.seekBy(-SkipSeconds.HOLD); true }
                     AndroidKeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> { player.seekBy(SkipSeconds.HOLD); true }
                     AndroidKeyEvent.KEYCODE_CAPTIONS -> { viewModel.openPlayerPanel(PlayerPanel.SUBTITLES); true }
-                    else -> if (showChrome || failure != null || panel != null) {
+                    else -> if (showChrome || failure != null || panel != null || ui.upNext != null) {
                         false // the focus system moves between buttons
                     } else when (code) {
                         AndroidKeyEvent.KEYCODE_DPAD_LEFT -> { player.seekBy(-SkipSeconds.TAP); true }
@@ -150,17 +168,35 @@ fun PlayerSurface(
             }
     ) {
         val exo = player.player
+        // Held so caption styling can be applied to the same view after it is
+        // created; PlayerView owns the Surface and the subtitle view.
+        var playerView by remember { mutableStateOf<PlayerView?>(null) }
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
                     useController = false
                     keepScreenOn = true
-                    setShowBuffering(PlayerView.SHOW_BUFFERING_WHEN_PLAYING)
+                    // The percentage ring below replaces PlayerView's spinner.
+                    setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
                     this.player = exo
-                }
+                }.also { playerView = it }
             },
             modifier = Modifier.fillMaxSize()
         )
+        LaunchedEffect(playerView, ui.subtitleStyle) {
+            playerView?.applySubtitleStyle(ui.subtitleStyle)
+        }
+
+        // Counted, not just spinning: the ring shows how far the buffer is.
+        // Only while the player is really waiting to play — a paused player can
+        // sit in STATE_BUFFERING, and a ring over a paused film reads as broken.
+        // `isPlaying` is real playback, so at the very start of a stream the
+        // play intent (`playWhenReady`) is what keeps the ring up.
+        if (failure == null && panel == null && engine.isBuffering && (engine.isPlaying || exo.playWhenReady)) {
+            buffering?.let { status ->
+                BufferingOverlay(status, Modifier.align(Alignment.Center))
+            }
+        }
 
         // Failover is never silent: say which source died and what is next.
         session.notice?.let { notice ->
@@ -189,6 +225,7 @@ fun PlayerSurface(
                 duration = engine.durationMs,
                 playing = engine.isPlaying,
                 buffering = engine.isBuffering,
+                rate = engine.playbackSpeed,
                 sourceLabel = session.current?.label,
                 sourceIndex = session.index,
                 sourceCount = session.sources.size,
@@ -207,28 +244,24 @@ fun PlayerSurface(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(problem.message, style = NovaType.sectionTitle, color = NovaPalette.danger)
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = "Reason: ${problem.reason}. Every source in the list was tried " +
-                        "(${session.tried.size} of ${session.sources.size}).",
-                    style = NovaType.meta
-                )
+                Text("This one won't play right now", style = NovaType.sectionTitle)
                 Spacer(Modifier.height(20.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    // Retry only when the failure is recoverable; a retry on an
-                    // undecodable container is a dead button.
                     if (problem.retryable) {
                         PrimaryButton("Try again", modifier = Modifier.focusRequester(failureFocus)) { player.retry() }
-                        SecondaryButton("Choose source") { viewModel.openPlayerPanel(PlayerPanel.SOURCES) }
+                        SecondaryButton("Other sources") { viewModel.openPlayerPanel(PlayerPanel.SOURCES) }
                     } else {
-                        PrimaryButton("Choose source", modifier = Modifier.focusRequester(failureFocus)) {
+                        PrimaryButton("Other sources", modifier = Modifier.focusRequester(failureFocus)) {
                             viewModel.openPlayerPanel(PlayerPanel.SOURCES)
                         }
                     }
-                    SecondaryButton("Close player", onClick = viewModel::stopPlayback)
+                    SecondaryButton("Close", onClick = viewModel::stopPlayback)
                 }
             }
+        }
+
+        ui.upNext?.let { next ->
+            UpNextCard(next, viewModel, Modifier.align(Alignment.BottomEnd))
         }
 
         if (panel != null) {
@@ -236,6 +269,7 @@ fun PlayerSurface(
                 panel = panel,
                 player = player,
                 viewModel = viewModel,
+                subtitleStyle = ui.subtitleStyle,
                 modifier = Modifier.align(Alignment.CenterEnd)
             )
         }
@@ -250,12 +284,14 @@ private fun Controls(
     duration: Long,
     playing: Boolean,
     buffering: Boolean,
+    rate: Float,
     sourceLabel: String?,
     sourceIndex: Int,
     sourceCount: Int,
     playFocus: FocusRequester,
     viewModel: NovaViewModel
 ) {
+    val preload by player.preloadStatus.collectAsStateWithLifecycle()
     Column(
         Modifier
             .fillMaxWidth()
@@ -270,17 +306,17 @@ private fun Controls(
         Text(title, style = NovaType.sectionTitle, maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (sourceLabel != null) {
             Text(
-                text = "Source ${sourceIndex + 1} of $sourceCount  ·  $sourceLabel",
+                text = sourceLabel,
                 style = NovaType.meta,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
         }
         Spacer(Modifier.height(14.dp))
-        ProgressBar(position, duration)
+        ProgressBar(position, duration, preloadedMs = if (preload.active) preload.aheadMs else 0L)
         Row(Modifier.fillMaxWidth().padding(top = 6.dp)) {
             Text(
-                text = if (buffering) "Buffering…" else formatTime(position),
+                text = formatTime(position),
                 style = NovaType.meta,
                 color = NovaPalette.textPrimary
             )
@@ -288,14 +324,38 @@ private fun Controls(
             Text(if (duration > 0) formatTime(duration) else "--:--", style = NovaType.meta)
         }
         Spacer(Modifier.height(14.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        // Scrolls with focus: eight pills do not fit 960 dp, and none may be cut off.
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             PrimaryButton(
                 if (playing) "Pause" else "Play",
                 modifier = Modifier.focusRequester(playFocus)
             ) { player.togglePlay() }
             SecondaryButton("−${SkipSeconds.TAP / 1000}s") { player.seekBy(-SkipSeconds.TAP) }
             SecondaryButton("+${SkipSeconds.TAP / 1000}s") { player.seekBy(SkipSeconds.TAP) }
-            SecondaryButton("Sources ($sourceCount)") { viewModel.openPlayerPanel(PlayerPanel.SOURCES) }
+            // FastStream-style anti-buffering: Off → Preload → Multi-thread.
+            SecondaryButton(
+                label = if (preload.unavailable) "No preload" else preload.mode.label,
+                icon = Icons.Filled.Refresh,
+                active = preload.mode != dev.nova.tv.player.preload.PreloadMode.OFF && !preload.unavailable
+            ) {
+                val next = player.preloadMode().next()
+                player.setPreload(next)
+                viewModel.setPreload(next)
+            }
+            // Speed is the persisted player rate, shared with the phone surface.
+            SecondaryButton(
+                label = formatPlaybackRate(rate),
+                active = rate != 1f
+            ) {
+                val next = nextPlaybackRate(rate)
+                player.setRate(next)
+                viewModel.setPlaybackRate(next)
+            }
+            if (sourceCount > 1) SecondaryButton("Sources") { viewModel.openPlayerPanel(PlayerPanel.SOURCES) }
             SecondaryButton("Audio") { viewModel.openPlayerPanel(PlayerPanel.AUDIO) }
             SecondaryButton("Subtitles") { viewModel.openPlayerPanel(PlayerPanel.SUBTITLES) }
             SecondaryButton("Close", onClick = viewModel::stopPlayback)
@@ -304,14 +364,24 @@ private fun Controls(
 }
 
 @Composable
-private fun ProgressBar(position: Long, duration: Long) {
+private fun ProgressBar(position: Long, duration: Long, preloadedMs: Long = 0L) {
     val fraction = if (duration <= 0) 0f else (position.toFloat() / duration).coerceIn(0f, 1f)
+    val preloaded = if (duration <= 0) 0f else ((position + preloadedMs).toFloat() / duration).coerceIn(0f, 1f)
     Box(
         Modifier
             .fillMaxWidth()
             .height(6.dp)
             .background(NovaPalette.surfaceHigh, RoundedCornerShape(3.dp))
     ) {
+        // What is already on disk ahead of the playhead.
+        if (preloaded > fraction) {
+            Box(
+                Modifier
+                    .fillMaxWidth(preloaded)
+                    .fillMaxHeight()
+                    .background(NovaPalette.textPrimary.copy(alpha = 0.35f), RoundedCornerShape(3.dp))
+            )
+        }
         Box(
             Modifier
                 .fillMaxWidth(fraction)
@@ -321,12 +391,15 @@ private fun ProgressBar(position: Long, duration: Long) {
     }
 }
 
-/** One option in a panel. */
-private data class PanelOption(val label: String, val detail: String?, val selected: Boolean, val onPick: () -> Unit)
-
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun Panel(panel: PlayerPanel, player: NovaPlayer, viewModel: NovaViewModel, modifier: Modifier) {
+private fun Panel(
+    panel: PlayerPanel,
+    player: NovaPlayer,
+    viewModel: NovaViewModel,
+    subtitleStyle: SubtitleStyle,
+    modifier: Modifier
+) {
     val engine by player.engineState.collectAsStateWithLifecycle()
     val session by player.session.collectAsStateWithLifecycle()
 
@@ -334,10 +407,10 @@ private fun Panel(panel: PlayerPanel, player: NovaPlayer, viewModel: NovaViewMod
         PlayerPanel.SOURCES -> session.sources.mapIndexed { i, stream ->
             val tried = i in session.tried && i != session.index
             PanelOption(
-                label = "${i + 1}.  ${stream.label}",
+                label = stream.label,
                 detail = when {
                     i == session.index -> "Playing"
-                    tried -> "Tried"
+                    tried -> "Failed"
                     else -> null
                 },
                 selected = i == session.index
@@ -362,10 +435,24 @@ private fun Panel(panel: PlayerPanel, player: NovaPlayer, viewModel: NovaViewMod
                 player.engine.selectSubtitleTrack(null)
                 viewModel.closePlayerPanel()
             }
+        ) + listOf(
+            // Style stays on screen while it is adjusted, unlike a track pick.
+            PanelOption("Caption style", subtitleStyle.tone.label, false) {
+                viewModel.setSubtitleStyle(subtitleStyle.nextTone())
+            },
+            PanelOption("Caption size", subtitleStyle.sizeLabel, false) {
+                viewModel.setSubtitleStyle(subtitleStyle.nextSize())
+            },
+            PanelOption("Caption box", subtitleStyle.backgroundLabel, false) {
+                viewModel.setSubtitleStyle(subtitleStyle.nextBackground())
+            },
+            PanelOption("Caption height", subtitleStyle.bottomLabel, false) {
+                viewModel.setSubtitleStyle(subtitleStyle.nextBottom())
+            }
         ) + engine.subtitleTracks.map { track ->
             PanelOption(
                 track.displayLabel(),
-                if (track.isExternal) "From subtitle addon" else "In the stream",
+                null,
                 track.id == engine.selectedSubtitleTrack?.id
             ) {
                 player.engine.selectSubtitleTrack(track)
@@ -391,20 +478,19 @@ private fun Panel(panel: PlayerPanel, player: NovaPlayer, viewModel: NovaViewMod
             .focusProperties { onExit = { cancelFocusChange() } }
     ) {
         Text(panel.label, style = NovaType.sectionTitle)
-        Text("BACK closes this panel", style = NovaType.meta)
         Spacer(Modifier.height(16.dp))
         if (options.isEmpty()) {
             Text(
                 text = when (panel) {
-                    PlayerPanel.AUDIO -> "This stream reports no selectable audio tracks."
-                    else -> "Nothing to choose yet."
+                    PlayerPanel.AUDIO -> "One audio track"
+                    else -> "None available"
                 },
                 style = NovaType.meta
             )
             Spacer(Modifier.height(16.dp))
             PrimaryButton("Close", modifier = Modifier.focusRequester(first), onClick = viewModel::closePlayerPanel)
         } else {
-            TvLazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 itemsIndexed(options) { i, option ->
                     FocusableRow(
                         onClick = option.onPick,
@@ -420,7 +506,8 @@ private fun Panel(panel: PlayerPanel, player: NovaPlayer, viewModel: NovaViewMod
                         }
                     ) {
                         Text(
-                            text = if (option.selected) "✓  ${option.label}" else option.label,
+                            text = option.label,
+                            color = if (option.selected) NovaPalette.accent else NovaPalette.textPrimary,
                             style = NovaType.body,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis
@@ -439,3 +526,47 @@ internal fun formatTime(ms: Long): String {
     val s = total % 60
     return if (h > 0) "%d:%02d:%02d".format(h, m, s) else "%d:%02d".format(m, s)
 }
+
+/**
+ * Up next (ARVIO NextEpisodeOverlay): a card in the corner with a countdown.
+ * OK plays now, BACK or Cancel stays on the finished episode.
+ */
+@Composable
+private fun UpNextCard(next: UpNext, viewModel: NovaViewModel, modifier: Modifier) {
+    var left by androidx.compose.runtime.remember(next) { mutableIntStateOf(UP_NEXT_SECONDS) }
+    val focus = remember(next) { FocusRequester() }
+    LaunchedEffect(next) {
+        withFrameNanos { }
+        runCatching { focus.requestFocus() }
+        while (left > 0) {
+            delay(1_000)
+            left--
+        }
+        viewModel.playNext()
+    }
+    Column(
+        modifier
+            .padding(NovaSpace.safeHorizontal)
+            .width(380.dp)
+            .background(NovaPalette.surface.copy(alpha = 0.96f), RoundedCornerShape(18.dp))
+            .padding(18.dp)
+            .focusGroup(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        if (!next.thumbnail.isNullOrBlank()) {
+            AsyncImage(
+                model = next.thumbnail,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(RoundedCornerShape(12.dp))
+            )
+        }
+        Text(next.label, style = NovaType.body, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            PrimaryButton("Play in $left", modifier = Modifier.focusRequester(focus), onClick = viewModel::playNext)
+            SecondaryButton("Cancel", onClick = viewModel::cancelUpNext)
+        }
+    }
+}
+
+private const val UP_NEXT_SECONDS = 8

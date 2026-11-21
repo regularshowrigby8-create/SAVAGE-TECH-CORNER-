@@ -102,10 +102,34 @@ android {
         }
     }
 
+    // Flavored tasks are named packageTvRelease / validateSigningMobileRelease,
+    // so matching the unflavored names never wired the keystore generator and
+    // the mobile release failed in CI with "Keystore file not found".
     tasks.matching {
-        it.name.startsWith("packageRelease") || it.name.startsWith("validateSigningRelease")
+        (it.name.startsWith("package") && it.name.endsWith("Release")) ||
+            (it.name.startsWith("validateSigning") && it.name.endsWith("Release"))
     }.configureEach {
         dependsOn(ensureKeystore)
+    }
+
+    /**
+     * Two form factors, one codebase. Everything under src/main (catalogue,
+     * finders, server pool, player engine, view model) is shared; only the
+     * shell differs. `tv` keeps the D-pad UI in src/main + src/tv; `mobile`
+     * adds a touch UI in src/mobile. Different application ids, so both can
+     * be installed on one device.
+     */
+    flavorDimensions += "device"
+    productFlavors {
+        create("tv") {
+            dimension = "device"
+            applicationId = "dev.nova.tv"
+        }
+        create("mobile") {
+            dimension = "device"
+            applicationId = "dev.nova.mobile"
+            versionNameSuffix = "-mobile"
+        }
     }
 
     buildTypes {
@@ -127,6 +151,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     /**
@@ -177,6 +202,8 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
+    // Rail and button icons (Home, Search, Play...). Vector paths, no image assets.
+    implementation(libs.compose.material.icons)
     implementation(libs.compose.animation)
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui.tooling.preview)
@@ -209,6 +236,9 @@ dependencies {
 
     // Networking + JSON — HttpClient.kt uses OkHttp, Models.kt uses serialization
     implementation(libs.okhttp)
+    implementation(libs.okhttp.doh)
+    implementation(libs.media3.datasource)
+    implementation(libs.media3.database)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
 

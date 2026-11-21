@@ -13,12 +13,17 @@ import android.content.Context
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.cache.Cache
+import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.SeekParameters
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
+import androidx.media3.exoplayer.upstream.BandwidthMeter
+import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 
@@ -27,6 +32,8 @@ class NovaExoPlayerBundle internal constructor(
     val player: ExoPlayer,
     val renderers: NovaRenderersFactory,
     val dataSource: OkHttpDataSource.Factory,
+    /** Measured throughput, used by NovaPlayer's quality-downshift fallback. */
+    val bandwidthMeter: BandwidthMeter,
     private val mediaSources: DefaultMediaSourceFactory
 ) {
     /**
@@ -49,11 +56,24 @@ class NovaExoPlayerBundle internal constructor(
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 object NovaExoPlayerFactory {
 
+    private const val NOVA_START_BUFFER_MS = 1_200
+
+    /**
+     * ARVIO waits up to 8 s of media after a rebuffer before resuming; that is
+     * a long spinner for a viewer who just wanted to keep watching. With the
+     * preloader feeding the same cache, 2.5 s is enough to resume safely.
+     */
+    private const val NOVA_REBUFFER_BUFFER_MS = 2_500
+
     fun create(
         context: Context,
         baseClient: OkHttpClient,
         userAgent: String,
-        preferredAudioLanguage: String? = null
+        preferredAudioLanguage: String? = null,
+        /** bits/s measured by StreamProbe; 0 lets ExoPlayer start from its own table. */
+        initialBitrateEstimate: Long = 0L,
+        /** Nova preload cache: the player reads through it, the preloader fills it. */
+        cache: Cache? = null
     ): NovaExoPlayerBundle {
         val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
         val profile = buildPlaybackBufferProfile(
@@ -69,16 +89,25 @@ object NovaExoPlayerFactory {
             .callTimeout(0, TimeUnit.SECONDS)
             .build()
         val http = OkHttpDataSource.Factory(playbackClient).setUserAgent(userAgent)
-        val dataSourceFactory = DefaultDataSource.Factory(context, http)
+        val direct = DefaultDataSource.Factory(context, http)
+        // Reads come from disk when the preloader got there first; a cache
+        // error never fails playback, it falls through to the network.
+        val dataSourceFactory = if (cache == null) direct else CacheDataSource.Factory()
+            .setCache(cache)
+            .setUpstreamDataSourceFactory(direct)
+            .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
         val mediaSourceFactory = DefaultMediaSourceFactory(context)
             .setDataSourceFactory(dataSourceFactory)
 
+        // Nova anti-buffering: ARVIO starts after 450 ms of media, which is
+        // quick but means the first network dip is a visible stall. 1.2 s is
+        // still well under a second of extra wait on a healthy source.
         val loadControl = DefaultLoadControl.Builder()
             .setBufferDurationsMs(
                 profile.minBufferMs,
                 profile.maxBufferMs,
-                profile.bufferForPlaybackMs,
-                profile.bufferForPlaybackAfterRebufferMs
+                maxOf(profile.bufferForPlaybackMs, NOVA_START_BUFFER_MS),
+                minOf(profile.bufferForPlaybackAfterRebufferMs, NOVA_REBUFFER_BUFFER_MS)
             )
             .setTargetBufferBytes(profile.targetBufferBytes)
             .setPrioritizeTimeOverSizeThresholds(profile.prioritizeTimeOverSizeThresholds)
@@ -107,7 +136,14 @@ object NovaExoPlayerFactory {
                 .build()
         }
 
+        // Seed adaptive selection with what the probe measured, so HLS starts
+        // on a variant this connection can actually sustain.
+        val bandwidthMeter = DefaultBandwidthMeter.Builder(context).apply {
+            if (initialBitrateEstimate > 0) setInitialBitrateEstimate(initialBitrateEstimate)
+        }.build()
+
         val player = ExoPlayer.Builder(context)
+            .setBandwidthMeter(bandwidthMeter)
             .setVideoChangeFrameRateStrategy(C.VIDEO_CHANGE_FRAME_RATE_STRATEGY_OFF)
             .setMediaSourceFactory(mediaSourceFactory)
             .setRenderersFactory(renderers)
@@ -122,8 +158,14 @@ object NovaExoPlayerFactory {
             )
             .setHandleAudioBecomingNoisy(true)
             .build()
-            .apply { volume = 1.0f }
+            .apply {
+                volume = 1.0f
+                // Exact seeks decode from the previous keyframe, which is a
+                // visible pause on a remote; snapping to the nearest keyframe
+                // is what makes skipping feel instant.
+                setSeekParameters(SeekParameters.CLOSEST_SYNC)
+            }
 
-        return NovaExoPlayerBundle(player, renderers, http, mediaSourceFactory)
+        return NovaExoPlayerBundle(player, renderers, http, bandwidthMeter, mediaSourceFactory)
     }
 }

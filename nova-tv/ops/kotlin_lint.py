@@ -270,7 +270,7 @@ def main(argv: list[str] | None = None) -> int:
         code = strip_comments_and_strings(raw)
         # Sources live under main/ and test/; both must map package -> directory.
         relative = None
-        for root_name in ("main", "test", "androidTest"):
+        for root_name in ("main", "tv", "mobile", "test", "androidTest"):
             candidate = src / root_name / "java"
             try:
                 relative = path.relative_to(candidate)

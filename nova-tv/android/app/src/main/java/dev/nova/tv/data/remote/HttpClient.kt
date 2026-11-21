@@ -35,6 +35,11 @@ class HttpClient(
         .callTimeout(30, TimeUnit.SECONDS)
         .followRedirects(true)
         .followSslRedirects(true)
+        // ARVIO: a larger pool keeps video hosts' connections warm between
+        // seeks and source switches; DNS is cached and IPv4-first (NovaDns).
+        .connectionPool(okhttp3.ConnectionPool(24, 5, TimeUnit.MINUTES))
+        .dns(NovaDns)
+        .retryOnConnectionFailure(true)
         .addNetworkInterceptor { chain ->
             val url = chain.request().url.toString()
             if (!isAllowedUrl(url)) throw HttpFailure("refused unsafe redirect: $url")
@@ -115,8 +120,13 @@ class HttpClient(
             val parsed = runCatching { java.net.URI(url) }.getOrNull() ?: return false
             val scheme = parsed.scheme?.lowercase() ?: return false
             if (scheme != "http" && scheme != "https") return false
-            val host = parsed.host?.lowercase()?.removePrefix("[")?.removeSuffix("]") ?: return false
+            // A trailing dot is the same host ("localhost." resolves like
+            // "localhost"), and a bare integer is still an IPv4 address
+            // ("http://2130706433/" is 127.0.0.1), so neither may slip past.
+            val host = parsed.host?.lowercase()?.removePrefix("[")?.removeSuffix("]")?.trimEnd('.') ?: return false
             if (host.isEmpty()) return false
+            if (host.all { it.isDigit() }) return false
+            if (host.startsWith("0x") && host.length > 2 && host.drop(2).all { it in '0'..'9' || it in 'a'..'f' }) return false
             if (host == "localhost" || host.endsWith(".localhost") ||
                 host.endsWith(".local") || host.endsWith(".internal")
             ) return false

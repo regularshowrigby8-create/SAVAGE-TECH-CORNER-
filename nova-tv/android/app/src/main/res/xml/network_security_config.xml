@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- No cleartext anywhere: addon feeds and streams must be https. -->
+<!--
+  Many direct video hosts and user-added websites still serve plain http, and
+  refusing them cost Nova a large share of playable sources. Cleartext is
+  allowed; the guarded HttpClient still refuses private and loopback hosts,
+  so an addon cannot point the app at the local network.
+-->
 <network-security-config>
-    <base-config cleartextTrafficPermitted="false">
+    <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>

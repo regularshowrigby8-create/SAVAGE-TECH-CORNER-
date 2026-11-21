@@ -47,7 +47,11 @@ class CatalogRepository(
         val saved = store?.savedAddonUrls().orEmpty().filter { url -> builtIns.none { same(it, url) } }
         val loaded = (builtIns.map { it to true } + saved.map { it to false }).map { (url, builtIn) ->
             async {
-                runCatching { client.loadAddon(url).copy(isBuiltIn = builtIn) }.getOrNull()
+                // One saved server that no longer answers must not hold the
+                // shelf hostage: each manifest gets its own deadline.
+                withTimeoutOrNull(INSTALL_TIMEOUT_MS) {
+                    runCatching { client.loadAddon(url).copy(isBuiltIn = builtIn) }.getOrNull()
+                }
             }
         }.awaitAll().filterNotNull()
         _addons.value = loaded.distinctBy { it.baseUrl.lowercase() }
@@ -90,6 +94,43 @@ class CatalogRepository(
         merge(results.flatten())
     }
 
+    /**
+     * One page of one catalogue, for endless rows: Popular / Featured / New,
+     * optionally narrowed to a genre, from the first addon that declares it
+     * (Cinemeta for the built-in rows). `skip` is the number already shown.
+     */
+    suspend fun loadPage(type: String, catalogId: String, genre: String? = null, skip: Int = 0): List<MetaPreview> {
+        val pair = _addons.value.filter { it.enabled }.firstNotNullOfOrNull { addon ->
+            addon.catalogDefs.firstOrNull { it.type == type && it.id == catalogId }?.let { addon to it }
+        } ?: return emptyList()
+        val (addon, def) = pair
+        if (genre == null && def.extra.any { it.isRequired && it.name == "genre" }) return emptyList()
+        val extra = buildMap {
+            if (genre != null) put("genre", genre)
+            if (skip > 0) put("skip", skip.toString())
+        }
+        return withTimeoutOrNull(PAGE_TIMEOUT_MS) {
+            runCatching { client.fetchCatalog(addon, def, extra) }.getOrDefault(emptyList())
+        }.orEmpty().filter { it.id.isNotBlank() && it.name.isNotBlank() }
+    }
+
+    /** Genres the first matching catalogue offers ("Action", "Comedy", ...). */
+    fun genres(type: String, catalogId: String = "top"): List<String> =
+        _addons.value.firstNotNullOfOrNull { addon ->
+            addon.catalogDefs.firstOrNull { it.type == type && it.id == catalogId }
+                ?.extra?.firstOrNull { it.name == "genre" }?.options
+        }.orEmpty()
+
+    /** Full details with episodes, from the first addon that serves `meta` for this id. */
+    suspend fun loadMeta(type: String, id: String): MetaPreview? {
+        val addons = _addons.value.filter { it.enabled && it.supportsMeta() && it.acceptsId(id) }
+        for (addon in addons) {
+            val meta = withTimeoutOrNull(PAGE_TIMEOUT_MS) { client.fetchMeta(addon, type, id) }
+            if (meta != null) return meta
+        }
+        return null
+    }
+
     /** Ask every addon that declares a search catalogue. */
     suspend fun search(query: String): List<MetaPreview> = coroutineScope {
         if (query.isBlank()) return@coroutineScope emptyList()
@@ -110,7 +151,13 @@ class CatalogRepository(
     suspend fun loadStreams(type: String, id: String): List<Stream> = coroutineScope {
         val enabled = _addons.value.filter { it.enabled && it.supportsStreams() && it.acceptsId(id) }
         val all = enabled.map { addon ->
-            async { client.fetchStreams(addon, type, id) }
+            async {
+                // One hung addon must not hold the fast path open: the caller
+                // has no time bound of its own around this call.
+                withTimeoutOrNull(STREAM_TIMEOUT_MS) {
+                    runCatching { client.fetchStreams(addon, type, id) }.getOrDefault(emptyList())
+                }.orEmpty()
+            }
         }.awaitAll().flatten()
         AddonClient.rank(all)
     }
@@ -137,5 +184,8 @@ class CatalogRepository(
 
     private companion object {
         const val SEARCH_TIMEOUT_MS = 8_000L
+        const val STREAM_TIMEOUT_MS = 10_000L
+        const val PAGE_TIMEOUT_MS = 10_000L
+        const val INSTALL_TIMEOUT_MS = 12_000L
     }
 }

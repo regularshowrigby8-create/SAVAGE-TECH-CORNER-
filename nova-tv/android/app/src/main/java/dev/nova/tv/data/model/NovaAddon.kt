@@ -19,6 +19,9 @@ data class NovaAddon(
     fun supportsStreams(): Boolean =
         manifest.resources.any { it.name.equals("stream", ignoreCase = true) }
 
+    fun supportsMeta(): Boolean =
+        manifest.resources.any { it.name.equals("meta", ignoreCase = true) }
+
     fun supportsSubtitles(): Boolean =
         manifest.resources.any { it.name.equals("subtitles", ignoreCase = true) }
 

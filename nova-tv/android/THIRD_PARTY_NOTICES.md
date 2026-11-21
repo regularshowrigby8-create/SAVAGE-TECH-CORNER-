@@ -54,3 +54,55 @@ rules) and `tv/zeroplay-debrid/lib/global-resolver/sources.js` (stream id and
 playability rules), both from this repository. The rules are kept; the one
 deliberate change is that streams with `proxyHeaders` are accepted, because
 ExoPlayer can send request headers and a browser `<video>` cannot.
+
+## ARVIO additions in v2 (Apache-2.0)
+
+From https://github.com/ProdigyV21/ARVIO at commit 31ce7d7, Apache License 2.0:
+
+- `ui/focus/ArvioDpadFocus.kt`: D-pad focus helpers, ported; the deprecated
+  `BringIntoViewResponder` part was dropped.
+- `ui/components/Shimmer.kt`: adapted from ARVIO's `SkeletonLoader`.
+- `FinderRules.parseSizeBytes`: adapted from ARVIO's `parseSizeToBytes`.
+- `player/StreamProbe.kt` `HostHealth` and connection warm-up: the idea follows
+  ARVIO's host health tracking and warm connections; the code is new.
+- The Up Next card follows ARVIO's `NextEpisodeOverlay` concept; the code is new.
+
+`ui/focus/PivotScroll.kt` uses the pivot formula from the Android TV
+documentation for Compose `BringIntoViewSpec`
+(https://developer.android.com/training/tv/playback/compose).
+- `data/remote/NovaDns.kt`: DNS-over-HTTPS resolver after ARVIO's
+  `OkHttpProvider` (pinned bootstrap IPs, system fallback, IPv4 first); the
+  provider list and TTL cache are new.
+- `ui/focus/NovaDpad.kt`: held-key gating at ARVIO's 80 ms / 112 ms intervals
+  (`HomeScreen.kt`, `DetailsScreen.kt`, `SettingsScreen.kt`).
+
+## FastStream (mechanics only, no code)
+
+The Preload button follows the behaviour of FastStream
+(https://github.com/Andrews54757/FastStream, commit 4c5cb57). FastStream's
+licence reserves all rights and requires permission to reuse its code, so no
+FastStream code was copied. Only the publicly described mechanics were
+reimplemented from scratch in `player/preload/`: fixed-size byte-range
+fragments, a window kept a few minutes ahead of the playhead, up to six
+parallel downloaders, and an adaptive speed test that adds a downloader only
+while throughput keeps rising.
+
+## Player buffering work (mechanics, no code copied)
+
+The additions to `player/` and `player/preload/` follow published behaviour
+from players that solved the same problems. No source was copied from any of
+them; the implementations are new Kotlin on Media3:
+
+- **mpv** `--cache-secs` / **VLC** network caching: a lookahead depth that
+  grows with the measured link headroom (`FragmentPlan.depthMs`), and a
+  sequential whole-file cache for hosts without byte ranges
+  (`FragmentPreloader.startSequential`).
+- **FastStream**: fragment sizing and the connection governor (see above);
+  fragment shrinking after repeated range failures is Nova's addition.
+- **AndroidX Media3** `DefaultLoadControl`, `CacheWriter`, `CacheDataSource`,
+  `CaptionStyleCompat` are used as published, Apache License 2.0.
+- **ExoPlayer seek behaviour**: `SeekParameters.CLOSEST_SYNC` for VOD seeks,
+  which is the setting Android's own media samples use for instant skipping.
+- Caption presets (Cinema / Outline / Minimal / High contrast) follow the
+  BBC Subtitle Guidelines and iPlayer's outline style, implemented with
+  `CaptionStyleCompat`.

@@ -14,6 +14,7 @@ on:
   push:
     branches:
       - main
+      - nova-tv-v2
       - arena/*
     paths:
       - 'nova-tv/android/**'
@@ -39,10 +40,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '17'
@@ -51,7 +52,7 @@ jobs:
       # because the lint jars in Compose 1.10 / lifecycle 2.8 need a newer Kotlin
       # Analysis API than AGP 8.7's lint ships; on 8.7.3 those detectors crashed.
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: '8.13'
 
@@ -88,7 +89,7 @@ jobs:
 
       - name: Run unit tests
         working-directory: nova-tv/android
-        run: ./gradlew :app:testDebugUnitTest --no-daemon --console=plain 2>&1 | tee "${{ runner.temp }}/nova-test.log"
+        run: ./gradlew :app:testTvDebugUnitTest :app:testMobileDebugUnitTest --no-daemon --console=plain 2>&1 | tee "${{ runner.temp }}/nova-test.log"
 
       # Lint is a gate, not a report. A UI with accessibility or API-level
       # problems should fail the build rather than ship and be discovered by a
@@ -97,7 +98,7 @@ jobs:
         working-directory: nova-tv/android
         run: |
           set +e
-          ./gradlew :app:lintDebug --no-daemon --console=plain > lint.log 2>&1
+          ./gradlew :app:lintTvDebug :app:lintMobileDebug --no-daemon --console=plain > lint.log 2>&1
           STATUS=$?
           echo "lint exit: $STATUS"
           grep -nE "Error:|Warning:|errors?, [0-9]+ warnings?" lint.log | head -30
@@ -136,8 +137,8 @@ jobs:
           BT=$(ls -d "$SDK"/build-tools/* | sort -V | tail -1)
           echo "build-tools: $BT"
           FOUND=0
-          for apk in nova-tv/android/app/build/outputs/apk/debug/*.apk \
-                     nova-tv/android/app/build/outputs/apk/release/*.apk; do
+          for apk in nova-tv/android/app/build/outputs/apk/*/debug/*.apk \
+                     nova-tv/android/app/build/outputs/apk/*/release/*.apk; do
             [ -f "$apk" ] || continue
             FOUND=$((FOUND+1))
             echo "=== $apk"
@@ -156,14 +157,14 @@ jobs:
             echo
             echo "| APK | bytes |"
             echo "|---|---|"
-            for f in nova-tv/android/app/build/outputs/apk/*/*.apk; do
+            for f in nova-tv/android/app/build/outputs/apk/*/*/*.apk; do
               echo "| $(basename "$f") | $(stat -c%s "$f") |"
             done
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload build log on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nova-build-log
           path: |
@@ -174,18 +175,26 @@ jobs:
 
       - name: Upload release APK
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nova-tv-release-apk
-          path: nova-tv/android/app/build/outputs/apk/release/*.apk
+          path: nova-tv/android/app/build/outputs/apk/tv/release/*.apk
+          retention-days: 30
+
+      - name: Upload mobile release APK
+        if: success()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nova-mobile-release-apk
+          path: nova-tv/android/app/build/outputs/apk/mobile/release/*.apk
           retention-days: 30
 
       - name: Upload debug APK
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nova-tv-debug-apk
-          path: nova-tv/android/app/build/outputs/apk/debug/*.apk
+          path: nova-tv/android/app/build/outputs/apk/*/debug/*.apk
           if-no-files-found: warn
           retention-days: 14
 

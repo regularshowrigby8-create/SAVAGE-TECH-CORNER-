@@ -1,5 +1,54 @@
 # nova-tv — build status
 
+## Current (nova-tv-v2, local build)
+
+One module, two product flavors (`device` dimension):
+
+| Flavor | applicationId | APK | Bytes |
+|---|---|---|---|
+| `tv` | `dev.nova.tv` | `apk/tv/release/app-tv-release.apk` | 8,559,588 |
+| `mobile` | `dev.nova.mobile` | `apk/mobile/release/app-mobile-release.apk` | 8,885,347 |
+
+`./gradlew :app:testTvDebugUnitTest :app:testMobileDebugUnitTest :app:assembleRelease`
+— BUILD SUCCESSFUL (measured 2026-11-20).
+107 unit tests per flavor (214 total), 0 failures, 0 errors. `lintVitalRelease`
+runs inside `assembleRelease` and passed; the full `lintTvDebug` / `lintMobileDebug`
+gate passes in CI, where an error fails the job.
+Both release APKs signed (`apksigner verify` passes). Different package names,
+so both install side by side. Neither has been installed on a device from this
+environment.
+
+### Why the APK is ~8.5 MB and not 20–30 MB
+
+Measured from the APK itself: ~5.9 MB is native code (the Media3 FFmpeg audio
+decoder, `libffmpegJNI.so`, ~1.4 MB for each of 4 ABIs), ~3.9 MB is dex after
+R8, ~0.5 MB resources. R8 minify + resource shrinking are on for release.
+Size is not a quality signal. Larger players usually bundle things Nova
+deliberately does not: a torrent/streaming server (Nova plays direct HTTP
+only, no torrents), a second player engine such as libVLC/libmpv, analytics
+and crash SDKs, or unminified builds. Splitting by ABI would make each
+device's download several MB smaller still.
+
+## Latest CI run (nova-tv-v2)
+
+Workflow: `nova-tv Android` (`.github/workflows/nova-tv-android.yml`), which now
+also triggers on `nova-tv-v2`, so the branch builds itself.
+Run: [44847977271](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/44847977271)
+(commit `c7c8042`) — every step green (build, both unit suites, lint, R8 release,
+APK verification).
+
+| Artefact | zipped | sha256 |
+|---|---|---|
+| `nova-tv-release-apk` | 5.01 MB | `145bff10d8a7c3f84712c95ab9c1bdd3ce00faf3776cd678c3441d849f990a66` |
+| `nova-mobile-release-apk` | 5.3 MB | `b47b36f780b5f27bec241abaee889910220d8118b59700782877fd02b5b20865` |
+| `nova-tv-debug-apk` | 37 MB | `53d6010f30935d82cfe897f06e7b8370eb862e0cab9f13c2c0713d4d18c841f4` |
+
+The committed `artifacts/*.apk` files are still the pre-debug-pass binaries; the
+freshly built ones are the CI artefacts above. Downloading them needs a signed-in
+GitHub session.
+
+## Earlier CI run (v1)
+
 **The build is finalised: both variants compile, are signed, and are verified.**
 
 Workflow: `nova-tv Android` (`.github/workflows/nova-tv-android.yml`)
