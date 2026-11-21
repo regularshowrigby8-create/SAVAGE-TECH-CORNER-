@@ -68,6 +68,15 @@ not run and its distribution gate and APK upload were skipped. The site check
 did not establish playback or licensing, and the manifest count is not a fresh
 liveness test of every retained entry.
 
+The later independent [patch build 44887387017](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/44887387017)
+passed compilation, both unit-test suites, assembly and the nonempty packaged-pool
+check, and uploaded `nova-debug-apks`. It did not perform an emulator test.
+[Crawl 44887387025](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/44887387025)
+again built and byte-checked 518/1 entries, but the emulator action failed before
+it produced a smoke summary. KVM was available after permissions were adjusted;
+the exact action error was not captured. The workflow now requests the API 34
+Android TV `x86` image and records SDK setup diagnostics on the next run.
+
 `nova-pool-crawl.yml` runs the threaded manifest and site crawlers on GitHub
 Actions. It validates and publishes both JSON files, copies them to the two app
 assets, and reports the real counts and per-source evidence in

@@ -46,6 +46,8 @@ on:
       - 'nova-patch/nova-tv/tools/site_crawler.py'
       - 'tools/nova_emulator_smoke.py'
       - 'tools/test_nova_emulator_smoke.py'
+      - 'tools/nova_prepare_emulator.sh'
+      - 'tools/test_nova_prepare_emulator.py'
       - 'tools/verify_nova_apk_pools.py'
       - 'tools/test_verify_nova_apk_pools.py'
       - '.github/workflows/nova-pool-crawl.yml'
@@ -389,19 +391,31 @@ jobs:
             fi
           } 2>&1 | tee crawl-results/emulator-acceleration.log
 
+      - name: Test emulator image preparation (offline)
+        run: python3 tools/test_nova_prepare_emulator.py
+
+      - name: Prepare the Android TV emulator image
+        run: |
+          set -euo pipefail
+          # Capture SDK/download failures rather than losing them inside the
+          # third-party emulator action. The helper retries bounded failures.
+          bash tools/nova_prepare_emulator.sh 2>&1 | tee crawl-results/emulator-sdk.log
+
       - name: Observe both flavors after server finding starts
         id: emulator
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
         with:
           api-level: 34
           target: android-tv
-          arch: x86_64
+          arch: x86
           profile: tv_1080p
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           disable-linux-hw-accel: auto
           # Software boot can take much longer than an accelerated boot.
           emulator-boot-timeout: 1200
           disable-animations: true
+          # This marker distinguishes SDK/AVD setup failures from boot failures.
+          pre-emulator-launch-script: echo 'SDK installation and AVD creation completed; boot was attempted.' > crawl-results/emulator-prelaunch.log
           # The action runs each script line in a separate POSIX shell.
           script: python3 tools/nova_emulator_smoke.py --tv work/nova-tv/android/app/build/outputs/apk/tv/debug/*.apk --mobile work/nova-tv/android/app/build/outputs/apk/mobile/debug/*.apk --out emulator-results --seconds 90
 
@@ -467,11 +481,12 @@ jobs:
             printf '# Nova emulator startup smoke\n\nRun: %s\n\nNOT COMPLETED (emulator step: %s).\n' \
               "$GITHUB_RUN_ID" "${EMULATOR_OUTCOME:-not started}" > nova-patch/EMULATOR-SMOKE.md
           fi
-          if [ -s crawl-results/emulator-acceleration.log ]; then
-            printf '\n## Runner acceleration\n\n```\n' >> nova-patch/EMULATOR-SMOKE.md
-            cat crawl-results/emulator-acceleration.log >> nova-patch/EMULATOR-SMOKE.md
+          for f in crawl-results/emulator-acceleration.log crawl-results/emulator-sdk.log crawl-results/emulator-prelaunch.log; do
+            [ -s "$f" ] || continue
+            printf '\n## %s\n\n```\n' "$f" >> nova-patch/EMULATOR-SMOKE.md
+            tail -30 "$f" >> nova-patch/EMULATOR-SMOKE.md
             printf '```\n' >> nova-patch/EMULATOR-SMOKE.md
-          fi
+          done
           git config user.name "nova-ci"
           git config user.email "nova-ci@users.noreply.github.com"
           git add nova-patch/EMULATOR-SMOKE.md
@@ -501,6 +516,8 @@ jobs:
                      crawl-results/apk-verification.log \
                      crawl-results/apk-distribution-check.log \
                      crawl-results/emulator-acceleration.log \
+                     crawl-results/emulator-sdk.log \
+                     crawl-results/emulator-prelaunch.log \
                      work/nova-tv/android/crawl-build.log; do
               [ -f "$f" ] || continue
               echo "## $f"
