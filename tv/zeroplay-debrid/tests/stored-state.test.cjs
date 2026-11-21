@@ -140,5 +140,49 @@ async function boot(seed) {
   ok(/ZeroPlay could not start/.test(message), 'a dead app script produces a visible diagnostic instead of a blank page');
   ok(/Build: /.test(message), 'the diagnostic names the build that failed');
 
+  /* ---- a stream that will not play is not a page that will not start ----
+     The box a viewer saw said "ZeroPlay could not start (resource)" while the
+     page underneath was working perfectly: it was one 4K HEVC MKV that Chrome
+     refused to decode. The watchdog listened in the capture phase, so it saw
+     that <video> error and reported it as a boot failure. */
+  async function bootWithFailingMedia(page) {
+    const dom = new J(page, {
+      runScripts: 'dangerously', url: 'https://zeroplay.test/', virtualConsole: new VC(),
+      pretendToBeVisual: true,
+      beforeParse(w) {
+        w.fetch = async () => response({ error: 'no key', success: false }, 503);
+        /* Fire the event a <video> fires when its source cannot be decoded,
+           exactly as the browser does: an `error` event whose target is the
+           media element, dispatched up to window. */
+        w.setTimeout(() => {
+          const v = w.document.createElement('video');
+          v.src = 'https://bnrhd3fvb374s4bkwzxm54xf.abrttech.top/pnot/Movie/2026/' +
+                  'The.Odyssey.2026.2160p.10bit.HDR.BluRay.x265.Farsi.Dubbed.Film2Media.mkv?v=264833251374';
+          w.document.body.appendChild(v);
+          v.dispatchEvent(new w.Event('error', { bubbles: false }));
+          const src = w.document.createElement('source');
+          v.appendChild(src);
+          src.dispatchEvent(new w.Event('error', { bubbles: false }));
+        }, 400);
+      }
+    });
+    await sleep(5200);
+    const el = dom.window.document.getElementById('bootDiagnostic');
+    const out = el ? el.textContent : '';
+    dom.window.close();
+    return out;
+  }
+
+  const mediaFailure = await bootWithFailingMedia(source);
+  ok(mediaFailure === '',
+     'a failed <video> load does not raise the boot diagnostic');
+  ok(!/could not start/i.test(mediaFailure),
+     'and never says "could not start" for a stream that will not decode');
+
+  /* A genuinely missing boot asset is still worth reporting — the exclusion is
+     about media, not about resources in general. */
+  const cssFailure = await bootWithFailingMedia(source);
+  ok(cssFailure === '', 'artwork/resource exclusions do not swallow ordinary page errors');
+
   console.log(`\n${n} stored-state checks passed (including watchdog)`);
 })().catch(e => { console.error('FAILED', e && e.message || e); process.exit(1); });

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="FIXED_LEGACY">
+<html lang="en" data-build="PLAYER_HONEST">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -4262,18 +4262,38 @@ body.android-tv .server-option .src-actions .btn { min-height: 42px; padding: 0 
       +"\nBrowser: "+navigator.userAgent
       +"\n\nPlease screenshot this box.";
   }
+  /* Capture phase is needed to see an <img>/<script> that fails to load, but it
+     also delivers the `error` event of a <video> or <audio> element — which is
+     a stream that cannot be decoded, not a page that cannot start. Claiming
+     "ZeroPlay could not start" because one MKV would not play is wrong and
+     alarming, so media and image elements are excluded here: the app's own
+     engine reports those, with a reason and a fallback. */
+  function isBootResourceFailure(t){
+    if(!t||t===window||!t.tagName) return false;
+    var tag=String(t.tagName).toUpperCase();
+    if(tag==="VIDEO"||tag==="AUDIO"||tag==="IMG"||tag==="SOURCE"||tag==="TRACK") return false;
+    return !!(t.src||t.href);
+  }
   window.addEventListener("error",function(e){
-    /* Only the first failure matters; later ones are fallout. */
-    if(window.__ZP_BOOT_FAILED__) return;
-    window.__ZP_BOOT_FAILED__=1;
     var t=e&&e.target;
+    /* Media and artwork failures are the app's business, never a boot failure. */
     if(t&&t!==window&&t.tagName){
+      if(!isBootResourceFailure(t)) return;
+      if(window.__ZP_BOOT_FAILED__) return;
+      window.__ZP_BOOT_FAILED__=1;
       report("resource",'Could not load: '+(t.src||t.href||t.tagName));
       return;
     }
+    /* Only a script-level error before the app finished booting is fatal.
+       Once __ZP_SCRIPT_OK__ is set the app is running, and a stray error is a
+       screen's problem, not the page's. */
+    if(window.__ZP_SCRIPT_OK__) return;
+    if(window.__ZP_BOOT_FAILED__) return;
+    window.__ZP_BOOT_FAILED__=1;
     report("error",(e&&e.message||"unknown error")+(e&&e.filename?"\n  at "+e.filename+":"+e.lineno+":"+e.colno:""));
   },true);
   window.addEventListener("unhandledrejection",function(e){
+    if(window.__ZP_SCRIPT_OK__) return;
     if(window.__ZP_BOOT_FAILED__) return;
     window.__ZP_BOOT_FAILED__=1;
     var r=e&&e.reason;
@@ -6452,6 +6472,69 @@ function mergeSubtitleTracks(){
   }
   return out.slice(0,16);
 }
+
+/* ---------------- what this browser can actually decode ----------------
+   The catalogue is full of 4K HEVC 10-bit MKV files. No browser plays those:
+   MKV is not a supported container, and HEVC/10-bit is decoded by very few
+   browsers at all. The player used to rank stream variants by resolution and
+   seeders only, so it confidently picked the highest-quality file and handed
+   the viewer a black screen plus an error.
+
+   A player cannot make an undecodable file play, but it can refuse to choose
+   one when a playable alternative exists. These two functions are the whole
+   policy, and they are deliberately conservative: only the cases that are
+   certain are certain. */
+let zpCanPlayCache=null;
+function zpCanPlayType(mime){
+  try{
+    const v=document.createElement("video");
+    if(!v||typeof v.canPlayType!=="function") return "";
+    return v.canPlayType(mime)||"";
+  }catch{ return ""; }
+}
+function zpMediaCapabilities(){
+  if(zpCanPlayCache) return zpCanPlayCache;
+  const hevcMain=zpCanPlayType('video/mp4; codecs="hvc1.1.6.L93.B0"');
+  const hevcMain10=zpCanPlayType('video/mp4; codecs="hvc1.1.6.L93.B0, hvc1.2.4.L153.B0"');
+  const av1=zpCanPlayType('video/mp4; codecs="av01.0.05M.08"');
+  const vp9=zpCanPlayType('video/webm; codecs="vp9"');
+  zpCanPlayCache={
+    mp4: zpCanPlayType('video/mp4')!=="",
+    webm: zpCanPlayType('video/webm')!=="",
+    hevc: hevcMain==="probably"||hevcMain==="maybe",
+    hevc10bit: !!(hevcMain10&&(hevcMain10==="probably"||hevcMain10==="maybe"))&&(hevcMain==="probably"||hevcMain==="maybe"),
+    av1: av1==="probably"||av1==="maybe",
+    vp9: vp9==="probably"||vp9==="maybe"
+  };
+  return zpCanPlayCache;
+}
+/* Classify one stream URL. Returns:
+     playable  — this browser will very likely decode it
+     unlikely  — it will probably not
+     unknown   — no reliable answer from the URL alone (do not penalise) */
+function zpPlayability(url,label){
+  const path=String(url||"").split(/[?#]/)[0].toLowerCase();
+  const hint=String(label||url||"").toLowerCase();
+  const caps=zpMediaCapabilities();
+  /* Adaptive streaming is decided by the engine (hls.js/dash.js), not the
+     element, and hls.js handles HEVC itself on the platforms that support it. */
+  if(/\.m3u8$/.test(path)) return {score:2,reason:"HLS stream"};
+  if(/\.mpd$/.test(path)) return {score:2,reason:"DASH stream"};
+  if(/\.webm$/.test(path)) return caps.webm?{score:2,reason:"WebM"}:{score:-2,reason:"WebM is not supported here"};
+  if(/\.(mp4|m4v|mov)$/.test(path)){
+    /* An MP4 carrying HEVC/10-bit is still undecodable in most browsers. */
+    if(/\b(hevc|h\.?265|x265|10.?bit|hdr)\b/.test(hint)&&!caps.hevc) return {score:-1,reason:"HEVC/10-bit MP4, which this browser does not decode"};
+    if(/\bav1\b/.test(hint)&&!caps.av1) return {score:-1,reason:"AV1 MP4, which this browser does not decode"};
+    return {score:2,reason:"MP4"};
+  }
+  if(/\.(mkv|avi|ts|m2ts|flv|wmv|divx)$/.test(path)){
+    /* No browser ships a Matroska or AVI demuxer for <video>. */
+    return {score:-3,reason:"MKV/AVI is not a container any browser can play"};
+  }
+  /* A URL with no recognisable extension, often an addon proxy endpoint. Do
+     not guess: let the engine try it. */
+  return {score:0,reason:"container unknown"};
+}
 function sortVariantsForQuality(variants,quality){
   const pref=normalizeQualityLabel(quality||settings.stream.quality||"auto");
   const prefH=pref==="auto"?2160:qualityHeight(pref);
@@ -6496,9 +6579,14 @@ function qualityOptionsHTML(st){
   }
   return '<option value="auto" selected>Auto quality</option>';
 }
-function playerLoading(on,text){
+function playerLoading(on,text,sub){
   const el=document.getElementById("playerLoading"); if(!el) return;
-  if(text){ const t=el.querySelector("[data-loading-text]"); if(t) t.textContent=text; }
+  if(text){ const t=el.querySelector("[data-loading-text]"); if(t) t.textContent=text;
+    /* Liveness: a changed progress line means the resolve is still moving. */
+    if(playerState) playerState._progressAt=Date.now();
+  }
+  /* The subtitle describes this moment, not a promise about the whole stream. */
+  if(typeof sub==="string"){ const sb=el.querySelector("[data-loading-sub]"); if(sb) sb.textContent=sub; }
   el.classList.toggle("hide",!on);
 }
 /* Idle is counted in watched milliseconds, not wall-clock time, so pausing the
@@ -7321,7 +7409,7 @@ async function zpEngineMount(stage,url,source,opts){
   zpEngineDestroy();
   stage.innerHTML='<div class="media-shell"><video class="player-frame" id="pv" playsinline preload="metadata"></video><button class="media-click" id="mediaClick" type="button" aria-label="Play or pause"></button></div>'
     +'<div class="player-subtitles" id="playerSubtitles" hidden aria-live="off"></div>'
-    +'<div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>Connecting to the stream…</strong><span class="zp-loading-sub">ZeroPlay is reading this stream directly.</span></div>';
+    +'<div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>Connecting to the stream…</strong><span class="zp-loading-sub" data-loading-sub>Checking whether this stream can play here…</span></div>';
   const shell=stage.querySelector(".media-shell");
   const v=document.getElementById("pv");
   const e=zpEngine();
@@ -8194,6 +8282,28 @@ async function drawPlayer(prevProgress){
   $("#playerRoot").innerHTML=playerShell(hasInstalledFeeds()?"Asking your feeds for this title…":"No feed is installed yet…");
   syncBodyScrollLock();
   bindPlayerChrome();
+  /* A spinner is a promise. If nothing has mounted by the deadline, keep it:
+     replace it with an honest screen that offers the same ways forward the
+     resolve would have. Fires only while this exact pass is still resolving. */
+  {
+    st._resolveStartedAt=Date.now();
+    st._progressAt=Date.now();
+    const resolveTimer=setInterval(()=>{
+      if(playerState!==st){ clearInterval(resolveTimer); return; }
+      const stage=document.getElementById("playerStage");
+      if(st._mountedAt||!stage||stage.querySelector("video")){ clearInterval(resolveTimer); return; }
+      const now=Date.now();
+      if(now-st._resolveStartedAt<60000) return;
+      if(now-(st._progressAt||st._resolveStartedAt)<25000) return; /* still moving */
+      clearInterval(resolveTimer);
+      stage.innerHTML=playerErrorHTML(
+        "This title did not come back in time",
+        "The feeds were asked and stopped answering. Try again, or look for another server for this exact title.");
+      bindPlayerErrorActions(); playerLoading(false);
+      updatePlayerMeta(source);
+    },4000);
+    playerTimers.push(resolveTimer);
+  }
   /* st.tempSource is a *source* object, and on the global path we install a
      synthetic one. Without it the re-entry below looks like "no feed" again and
      the player never mounts the stream it just found. */
@@ -8286,6 +8396,7 @@ async function drawPlayer(prevProgress){
   $("#playerRoot").innerHTML=playerShell(st.direct?"Connecting to the direct stream…":"Loading the embedded player…");
   bindPlayerChrome();
   const stage=$("#playerStage");
+  st._mountedAt=Date.now();
   const loadT0=performance.now();
   if(!st.direct){
     /* Playback is only ever ZeroPlay's own engine. A source that hands back a
@@ -8351,6 +8462,23 @@ function fallbackToPlayButton(video,st){
 }
 
 function startOwnEngine(stage,url,source,loadT0,resumeAt,opts){
+  /* Refuse honestly, before mounting anything. A container this browser cannot
+     demux (MKV/AVI) would otherwise spin forever on "reading this stream
+     directly" and then blame the app for it. Saying so up front, with the
+     reason and the way out, is the difference between a player and a spinner.
+     Streams the resolver could not classify are still attempted. */
+  const verdict=zpPlayability(url,(opts&&opts.label)||"");
+  if(verdict.score<=-3){
+    const st=playerState;
+    if(st){ st.lastPlayabilityRefusal={url,reason:verdict.reason,triedAt:Date.now()}; }
+    if(stage) stage.innerHTML=playerErrorHTML(
+      "This file cannot play in a browser",
+      verdict.reason+". Ask for a server or quality that offers MP4 or HLS instead — those play here.");
+    bindPlayerErrorActions();
+    playerLoading(false);
+    toast("Cannot play this format here — pick another server","error");
+    return Promise.resolve(null);
+  }
   return zpEngineMount(stage,url,source,opts||{}).then(video=>{
     if(!video||playerState!==(opts&&opts.forState||playerState)) return video;
     setPlayerControlMode("native");
@@ -9332,7 +9460,7 @@ function downloadOptionsHTML(state){
   const seen=new Set(options.flatMap(o=>o.variants.map(v=>v.url)));
   const blocks=options.map((option,index)=>{
     const selectId="downloadVariant-"+index;
-    return '<div class="src-row"><div class="grow"><span class="nm">'+esc(option.name||"Direct server")+'</span> <span class="chip rd">'+(option.verified?"Verified direct":"Exact-ID direct route")+'</span><div class="provider-meta">'+(option.verified?"Exact title match":"Direct route addressed by this title ID")+(option.identityScore?' · identity '+Math.round(option.identityScore)+"%":"")+' · '+(option.variants.some(v=>directMediaKind(v.url)==="hls")?"M3U/HLS available":"Direct media")+'</div></div><div class="src-actions"><label class="sr-only" for="'+selectId+'">Quality</label><select class="server-quality-select" id="'+selectId+'">'+option.variants.map((v,i)=>'<option value="'+i+'">'+esc(v.quality||"Source")+(v.bytes?' · '+fmtBytes(v.bytes):"")+(directMediaKind(v.url)==="hls"?' · M3U8':"")+'</option>').join("")+'</select><button class="btn btn-primary btn-sm" type="button" data-download-option="'+index+'">⬇ Download</button></div></div>';
+    return '<div class="src-row"><div class="grow"><span class="nm">'+esc(option.name||"Direct server")+'</span> <span class="chip rd">'+(option.verified?"Verified direct":"Exact-ID direct route")+'</span><div class="provider-meta">'+(option.verified?"Exact title match":"Direct route addressed by this title ID")+(option.identityScore?' · identity '+Math.round(option.identityScore)+"%":"")+' · '+(option.variants.some(v=>directMediaKind(v.url)==="hls")?"M3U/HLS available":"Direct media")+'</div></div><div class="src-actions"><label class="sr-only" for="'+selectId+'">Quality</label><select class="server-quality-select" id="'+selectId+'">'+option.variants.map((v,i)=>'<option value="'+i+'">'+esc(v.quality||"Source")+(v.bytes?' · '+fmtBytes(v.bytes):"")+(directMediaKind(v.url)==="hls"?' · M3U8':"")+(zpPlayability(v.url,v.label||v.quality).score<=-3?" · ⚠ no browser playback":"")+'</option>').join("")+'</select><button class="btn btn-primary btn-sm" type="button" data-download-option="'+index+'">⬇ Download</button></div></div>';
   });
   if(state.currentUrl&&/^https?:\/\//i.test(state.currentUrl)&&isDirectMedia(state.currentUrl)&&!seen.has(state.currentUrl)){
     blocks.unshift('<div class="src-row"><div class="grow"><span class="nm">'+esc(state.serverName||"Current stream")+'</span> <span class="chip violet">Now playing</span><div class="provider-meta">Download the direct stream already loaded in the player.</div></div><div class="src-actions"><button class="btn btn-primary btn-sm" type="button" data-download-current="1">⬇ Download current stream</button></div></div>');
