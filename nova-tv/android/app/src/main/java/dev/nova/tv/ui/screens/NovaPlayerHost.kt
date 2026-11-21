@@ -46,6 +46,8 @@ fun NovaPlayerHost(
 
     LaunchedEffect(request.token) {
         player.load(request.streams, request.startIndex, request.startPositionMs, request.subtitles)
+        // The saved speed applies to this title, not only to the one it was set on.
+        player.setRate(state.playbackRate)
     }
 
     // Subtitles arrive after playback starts (a separate addon call).

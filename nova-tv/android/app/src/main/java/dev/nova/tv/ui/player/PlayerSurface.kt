@@ -59,6 +59,8 @@ import androidx.tv.material3.Text
 import dev.nova.tv.player.NovaPlayer
 import dev.nova.tv.player.SkipSeconds
 import dev.nova.tv.player.SubtitleStyle
+import dev.nova.tv.player.formatPlaybackRate
+import dev.nova.tv.player.nextPlaybackRate
 import dev.nova.tv.player.applySubtitleStyle
 import dev.nova.tv.ui.components.FocusableRow
 import dev.nova.tv.ui.components.PrimaryButton
@@ -188,7 +190,9 @@ fun PlayerSurface(
         // Counted, not just spinning: the ring shows how far the buffer is.
         // Only while the player is really waiting to play — a paused player can
         // sit in STATE_BUFFERING, and a ring over a paused film reads as broken.
-        if (failure == null && panel == null && engine.isBuffering) {
+        // `isPlaying` is real playback, so at the very start of a stream the
+        // play intent (`playWhenReady`) is what keeps the ring up.
+        if (failure == null && panel == null && engine.isBuffering && (engine.isPlaying || exo.playWhenReady)) {
             buffering?.let { status ->
                 BufferingOverlay(status, Modifier.align(Alignment.Center))
             }
@@ -221,6 +225,7 @@ fun PlayerSurface(
                 duration = engine.durationMs,
                 playing = engine.isPlaying,
                 buffering = engine.isBuffering,
+                rate = engine.playbackSpeed,
                 sourceLabel = session.current?.label,
                 sourceIndex = session.index,
                 sourceCount = session.sources.size,
@@ -279,6 +284,7 @@ private fun Controls(
     duration: Long,
     playing: Boolean,
     buffering: Boolean,
+    rate: Float,
     sourceLabel: String?,
     sourceIndex: Int,
     sourceCount: Int,
@@ -340,6 +346,15 @@ private fun Controls(
                 player.setPreload(next)
                 viewModel.setPreload(next)
             }
+            // Speed is the persisted player rate, shared with the phone surface.
+            SecondaryButton(
+                label = formatPlaybackRate(rate),
+                active = rate != 1f
+            ) {
+                val next = nextPlaybackRate(rate)
+                player.setRate(next)
+                viewModel.setPlaybackRate(next)
+            }
             if (sourceCount > 1) SecondaryButton("Sources") { viewModel.openPlayerPanel(PlayerPanel.SOURCES) }
             SecondaryButton("Audio") { viewModel.openPlayerPanel(PlayerPanel.AUDIO) }
             SecondaryButton("Subtitles") { viewModel.openPlayerPanel(PlayerPanel.SUBTITLES) }
@@ -375,9 +390,6 @@ private fun ProgressBar(position: Long, duration: Long, preloadedMs: Long = 0L) 
         )
     }
 }
-
-/** One option in a panel. */
-private data class PanelOption(val label: String, val detail: String?, val selected: Boolean, val onPick: () -> Unit)
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable

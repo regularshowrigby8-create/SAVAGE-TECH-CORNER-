@@ -73,6 +73,18 @@ class ServerPoolTest {
     }
 
     @Test
+    fun `a server that missed once survives a scramble`() {
+        val pool = ServerPool(MemoryStore(), Random(3))
+        pool.add(many(4, "k"))
+        pool.noteResult("https://k1.example", hit = false)
+        pool.scramble(emptyList())
+        val keys = pool.entries().map { ServerPool.key(it.baseUrl) }.toSet()
+        // One miss is not evidence of death; retirement needs RETIRE_AFTER_MISSES.
+        assertTrue("a single miss dropped the entry", "k1.example" in keys)
+        assertEquals(4, keys.size)
+    }
+
+    @Test
     fun `revert restores the previous pool exactly`() {
         val pool = ServerPool(MemoryStore(), Random(2))
         pool.add(many(8, "a"))

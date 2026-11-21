@@ -112,6 +112,9 @@ class SourceEngine(
 
     private var poolFillJob: Job? = null
 
+    /** The finders currently switched on; the pool may only be fed by these. */
+    @Volatile private var poolKinds: Set<FinderKind> = FinderKind.entries.toSet()
+
     /**
      * Keep filling the pool from whichever finders are switched on.
      *
@@ -125,13 +128,14 @@ class SourceEngine(
     fun syncPoolFill(kinds: Set<FinderKind>) {
         poolFillJob?.cancel()
         poolFillJob = null
+        poolKinds = kinds
         val pool = pool ?: return
         if (harvester == null || kinds.isEmpty()) return
         poolFillJob = background.launch {
             var emptyRounds = 0
             while (isActive && pool.state.value.size < ServerPool.CAPACITY) {
                 val before = pool.state.value.size
-                runCatching { fillPool() }
+                runCatching { fillPool(kinds) }
                 val after = pool.state.value.size
                 if (after > before) emptyRounds = 0 else emptyRounds++
                 if (emptyRounds >= POOL_EMPTY_ROUNDS) break
@@ -142,16 +146,28 @@ class SourceEngine(
 
     private val harvestLock = Mutex()
 
-    /** Read the next slice of every directory into the pool (one round). */
-    suspend fun fillPool(): Int {
+    /**
+     * Read the next slice of every directory into the pool (one round).
+     *
+     * Only the finders in [kinds] may feed the pool: a finder switched off
+     * stops contributing, both its discovered candidates and the directory
+     * harvest behind it. Title search is not a directory source, so a pool fed
+     * only by it makes no background requests at all.
+     */
+    suspend fun fillPool(kinds: Set<FinderKind> = poolKinds): Int {
         val pool = pool ?: return 0
         val harvester = harvester ?: return 0
         return harvestLock.withLock {
             if (pool.state.value.size >= ServerPool.CAPACITY) return@withLock 0
-            val round = pool.cursor
-            val found = runCatching { harvester.harvest(round) }.getOrDefault(emptyList())
-            pool.cursor = round + 1
-            pool.add(found + cachedCandidates())
+            val found = if (kinds.any { it != FinderKind.TITLE }) {
+                val round = pool.cursor
+                val harvested = runCatching { harvester.harvest(round) }.getOrDefault(emptyList())
+                pool.cursor = round + 1
+                harvested
+            } else {
+                emptyList()
+            }
+            pool.add(found + cachedCandidates(kinds))
         }
     }
 
@@ -165,9 +181,14 @@ class SourceEngine(
         val harvester = harvester ?: return 0
         return harvestLock.withLock {
             val round = pool.cursor
-            val fresh = runCatching { harvester.harvest(round) }.getOrDefault(emptyList())
-            pool.cursor = round + 1
-            pool.scramble(fresh + cachedCandidates())
+            val fresh = if (poolKinds.any { it != FinderKind.TITLE }) {
+                val harvested = runCatching { harvester.harvest(round) }.getOrDefault(emptyList())
+                pool.cursor = round + 1
+                harvested
+            } else {
+                emptyList()
+            }
+            pool.scramble(fresh + cachedCandidates(poolKinds))
         }
     }
 
@@ -194,8 +215,10 @@ class SourceEngine(
         return report
     }
 
-    fun cachedCandidates(): List<FinderCandidate> =
-        discovered.values.flatMap { it.second.candidates }.distinctBy { it.baseUrl.lowercase() }
+    fun cachedCandidates(kinds: Set<FinderKind> = FinderKind.entries.toSet()): List<FinderCandidate> =
+        discovered.filterKeys { it in kinds }.values
+            .flatMap { it.second.candidates }
+            .distinctBy { it.baseUrl.lowercase() }
 
     fun report(kind: FinderKind): FinderReport? = discovered[kind]?.second
 

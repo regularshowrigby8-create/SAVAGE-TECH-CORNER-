@@ -151,7 +151,13 @@ class CatalogRepository(
     suspend fun loadStreams(type: String, id: String): List<Stream> = coroutineScope {
         val enabled = _addons.value.filter { it.enabled && it.supportsStreams() && it.acceptsId(id) }
         val all = enabled.map { addon ->
-            async { client.fetchStreams(addon, type, id) }
+            async {
+                // One hung addon must not hold the fast path open: the caller
+                // has no time bound of its own around this call.
+                withTimeoutOrNull(STREAM_TIMEOUT_MS) {
+                    runCatching { client.fetchStreams(addon, type, id) }.getOrDefault(emptyList())
+                }.orEmpty()
+            }
         }.awaitAll().flatten()
         AddonClient.rank(all)
     }
@@ -178,6 +184,7 @@ class CatalogRepository(
 
     private companion object {
         const val SEARCH_TIMEOUT_MS = 8_000L
+        const val STREAM_TIMEOUT_MS = 10_000L
         const val PAGE_TIMEOUT_MS = 10_000L
         const val INSTALL_TIMEOUT_MS = 12_000L
     }

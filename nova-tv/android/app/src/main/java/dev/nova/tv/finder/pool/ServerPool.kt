@@ -143,7 +143,12 @@ class ServerPool(private val store: PoolStore, private val random: Random = Rand
         val dead = previous.filter { it.hits == 0 && it.misses >= RETIRE_AFTER_MISSES }.map { key(it.baseUrl) }
         val retired = (data.retired + dead).distinct().takeLast(MAX_RETIRED)
         val keep = previous.filter { it.hits > 0 }
-        val untried = previous.filter { it.hits == 0 && it.misses == 0 }
+        // Zero hits and fewer than [RETIRE_AFTER_MISSES] misses survives the
+        // scramble. Filtering on misses == 0 silently binned every server that
+        // had failed exactly once but had never been given a second chance.
+        val untried = previous
+            .filter { it.hits == 0 && it.misses < RETIRE_AFTER_MISSES }
+            .sortedBy { it.misses }
         val known = previous.map { key(it.baseUrl) }.toHashSet()
         val newOnes = fresh.map { it.toEntry() }.filter { key(it.baseUrl) !in known }.shuffled(random)
         // Proven servers stay; never-seen options come next; untried old ones fill the rest.

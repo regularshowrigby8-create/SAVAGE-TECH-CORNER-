@@ -155,6 +155,8 @@ data class NovaState(
     val subtitleStyle: SubtitleStyle = SubtitleStyle(),
     /** Standard play target; 720p unless changed in Settings. */
     val preferredQuality: String = "720p",
+    /** Player speed, persisted so the next title starts at the same rate. */
+    val playbackRate: Float = 1f,
     /** Offline downloads, newest last. */
     val downloads: List<DownloadJob> = emptyList(),
     /** Pool servers that have answered for a title; the only ones listed. */
@@ -203,6 +205,7 @@ class NovaViewModel : ViewModel() {
             preferEnglishAudio = saved.preferEnglishAudio,
             subtitleStyle = saved.subtitleStyle,
             preferredQuality = saved.preferredQuality,
+            playbackRate = saved.playbackRate,
             pool = engine.pool?.state?.value ?: PoolState(),
             workingServers = engine.pool?.working()?.map { it.name.ifBlank { it.baseUrl } }.orEmpty(),
             websites = library.websites.value,
@@ -844,6 +847,12 @@ class NovaViewModel : ViewModel() {
     fun setReduceMotion(enabled: Boolean) {
         settings.setReduceMotion(enabled)
         _state.update { it.copy(reduceMotion = enabled) }
+    }
+
+    /** Speed chosen in the player; both surfaces read and write the same setting. */
+    fun setPlaybackRate(rate: Float) {
+        settings.setPlaybackRate(rate)
+        _state.update { it.copy(playbackRate = rate) }
     }
 
     // -- downloads ------------------------------------------------------------

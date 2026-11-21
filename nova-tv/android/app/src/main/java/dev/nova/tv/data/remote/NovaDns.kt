@@ -43,7 +43,11 @@ object NovaDns : Dns {
         val key = hostname.lowercase()
         val now = System.currentTimeMillis()
         cache[key]?.takeIf { it.expiresAt > now }?.let { return it.addresses }
-        val resolved = ipv4First(resolve(key))
+        // A public name that answers with a LAN or loopback address is a
+        // rebinding attempt; isAllowedUrl can only judge the literal in the URL.
+        // Refusing here is the connection-time check, because OkHttp resolves
+        // immediately before it connects.
+        val resolved = ipv4First(resolve(key)).filter(::isPublicAddress)
         if (resolved.isNotEmpty()) {
             if (cache.size > MAX_ENTRIES) cache.clear()
             cache[key] = Entry(resolved, now + TTL_MS)
@@ -79,6 +83,24 @@ object NovaDns : Dns {
      */
     internal fun ipv4First(addresses: List<InetAddress>): List<InetAddress> =
         addresses.filterIsInstance<Inet4Address>() + addresses.filterNot { it is Inet4Address }
+
+    /** False for loopback, link-local, private, CGNAT, multicast and IPv6 ULA. */
+    internal fun isPublicAddress(address: InetAddress): Boolean {
+        if (address.isAnyLocalAddress || address.isLoopbackAddress || address.isLinkLocalAddress ||
+            address.isSiteLocalAddress || address.isMulticastAddress
+        ) return false
+        val raw = address.address
+        // IPv6 unique-local fc00::/7 is not covered by isSiteLocalAddress.
+        if (raw.size == 16 && (raw[0].toInt() and 0xfe) == 0xfc) return false
+        if (raw.size == 4) {
+            val first = raw[0].toInt() and 0xff
+            val second = raw[1].toInt() and 0xff
+            // 0.0.0.0/8 "this host" and 100.64.0.0/10 carrier-grade NAT.
+            if (first == 0) return false
+            if (first == 100 && second in 64..127) return false
+        }
+        return true
+    }
 
     private fun doh(p: DnsProvider): Dns = when (p) {
         DnsProvider.GOOGLE -> google

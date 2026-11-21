@@ -53,9 +53,10 @@ class StreamProbe(baseClient: OkHttpClient) {
 
     suspend fun probe(stream: Stream): ProbeResult {
         val url = stream.url ?: return ProbeResult(ok = false)
-        cache[url]?.let { (at, result) -> if (System.currentTimeMillis() - at < CACHE_MS) return result }
+        val key = cacheKey(stream, url)
+        cache[key]?.let { (at, result) -> if (System.currentTimeMillis() - at < CACHE_MS) return result }
         val result = withTimeoutOrNull(PROBE_TIMEOUT_MS + 1_500) { read(stream, url) } ?: ProbeResult(ok = false)
-        cache[url] = System.currentTimeMillis() to result
+        cache[key] = System.currentTimeMillis() to result
         HostHealth.noteProbe(url, result)
         return result
     }
@@ -63,10 +64,17 @@ class StreamProbe(baseClient: OkHttpClient) {
     /** Probe the first [limit] streams, [CONCURRENCY] at a time. */
     suspend fun probeAll(streams: List<Stream>, limit: Int = DEFAULT_LIMIT): Map<String, ProbeResult> = coroutineScope {
         val gate = Semaphore(CONCURRENCY)
-        streams.take(limit).mapNotNull { s -> s.url?.let { it to s } }.distinctBy { it.first }
+        streams.take(limit).mapNotNull { s -> s.url?.let { it to s } }
+            .distinctBy { (url, s) -> cacheKey(s, url) }
             .map { (url, s) -> async { url to gate.withPermit { probe(s) } } }
             .awaitAll().toMap()
     }
+
+    /**
+     * The same URL through two different proxies is two different hosts: a
+     * cache keyed by URL alone served one host's probe result to the other.
+     */
+    private fun cacheKey(stream: Stream, url: String): String = url + "|" + stream.requestHeaders.hashCode()
 
     /**
      * ARVIO warmHttpConnection: a one-byte range request so the TLS session

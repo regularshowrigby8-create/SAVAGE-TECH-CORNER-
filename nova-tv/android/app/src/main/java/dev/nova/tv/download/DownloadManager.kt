@@ -12,6 +12,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
@@ -27,6 +30,7 @@ enum class DownloadStatus { QUEUED, RUNNING, PAUSED, DONE, FAILED }
  * One offline download. [connections] is how many HTTP range requests were
  * used; 1 means the server ignored ranges and the file came down in one piece.
  */
+@Serializable
 data class DownloadJob(
     val id: String,
     val title: String,
@@ -38,7 +42,9 @@ data class DownloadJob(
     val bytes: Long = 0,
     val connections: Int = 1,
     val status: DownloadStatus = DownloadStatus.QUEUED,
-    val error: String = ""
+    val error: String = "",
+    /** Bytes already on disk per range slice, so a stopped download resumes. */
+    val slices: List<Long> = emptyList()
 ) {
     val progress: Float get() = if (totalBytes <= 0) 0f else (bytes.toFloat() / totalBytes).coerceIn(0f, 1f)
 }
@@ -63,6 +69,17 @@ class DownloadManager(
     /** Touched from the main thread and from IO; completed entries remove themselves. */
     private val tasks = java.util.concurrent.ConcurrentHashMap<String, Job>()
 
+    /**
+     * The job list outlives the process. Without this file a relaunch showed an
+     * empty Downloads screen and the partial bytes sat on disk with no record.
+     */
+    private val json = Json { ignoreUnknownKeys = true }
+    private val storeFile = File(dir, "downloads.json")
+    private val saveLock = Any()
+    @Volatile private var lastSave = 0L
+
+    init { restore() }
+
     /** Returns the new job id, or null for a duplicate or non-HTTP url. */
     fun start(title: String, subtitle: String, url: String, headers: Map<String, String>): String? {
         if (!url.startsWith("http://", true) && !url.startsWith("https://", true)) return null
@@ -77,6 +94,7 @@ class DownloadManager(
             path = File(dir, fileName(title, url, id)).absolutePath
         )
         _jobs.update { it + job }
+        save(force = true)
         launch(job)
         return id
     }
@@ -85,7 +103,7 @@ class DownloadManager(
         val job = _jobs.value.firstOrNull { it.id == id } ?: return
         if (job.status == DownloadStatus.DONE) return
         tasks[id]?.cancel()
-        update(id) { it.copy(status = DownloadStatus.PAUSED) }
+        update(id, force = true) { it.copy(status = DownloadStatus.PAUSED) }
     }
 
     fun resume(id: String) {
@@ -102,6 +120,7 @@ class DownloadManager(
             runCatching { File(job.path + ".part").delete() }
         }
         _jobs.update { list -> list.filterNot { it.id == id } }
+        save(force = true)
     }
 
     private fun launch(job: DownloadJob) {
@@ -115,27 +134,60 @@ class DownloadManager(
     }
 
     private suspend fun download(job: DownloadJob) {
-        update(job.id) { it.copy(status = DownloadStatus.RUNNING, error = "", bytes = 0) }
         val target = File(job.path)
         val part = File(job.path + ".part")
+        // Resume where the previous attempt stopped instead of restarting at 0.
+        val onDisk = bytesOnDisk(job, part)
+        update(job.id, force = true) {
+            it.copy(status = DownloadStatus.RUNNING, error = "", bytes = onDisk)
+        }
         try {
             dir.mkdirs()
             val (total, ranges) = probe(job)
             val connections = if (ranges && total > 0) CONNECTIONS else 1
-            update(job.id) { it.copy(totalBytes = if (total > 0) total else it.totalBytes, connections = connections) }
-            if (connections > 1) rangeDownload(job, part, total) else streamDownload(job, part)
+            // Slice offsets only describe this attempt if its shape did not
+            // change; a host that stopped honouring ranges starts over.
+            val slices = if (connections > 1 && job.slices.size == connections) job.slices else emptyList()
+            update(job.id, force = true) {
+                it.copy(
+                    totalBytes = if (total > 0) total else it.totalBytes,
+                    connections = connections,
+                    slices = slices,
+                    bytes = if (slices.isNotEmpty()) slices.sum() else onDisk
+                )
+            }
+            if (connections > 1) {
+                rangeDownload(job, part, total, slices)
+            } else {
+                // A previous ranged attempt pre-allocated the file to its full
+                // length; a single stream must resume from the real bytes.
+                if (job.connections > 1 && part.isFile) {
+                    RandomAccessFile(part, "rw").use { it.setLength(job.slices.sum()) }
+                }
+                streamDownload(job, part)
+            }
             if (!part.renameTo(target)) {
                 part.copyTo(target, overwrite = true)
                 part.delete()
             }
-            update(job.id) { it.copy(status = DownloadStatus.DONE, bytes = maxOf(it.bytes, it.totalBytes)) }
+            update(job.id, force = true) {
+                it.copy(status = DownloadStatus.DONE, bytes = maxOf(it.bytes, it.totalBytes), slices = emptyList())
+            }
         } catch (cancelled: CancellationException) {
-            update(job.id) { it.copy(status = DownloadStatus.PAUSED) }
+            update(job.id, force = true) { it.copy(status = DownloadStatus.PAUSED) }
             throw cancelled
         } catch (e: Exception) {
             if (e is CancellationException) throw e
-            update(job.id) { it.copy(status = DownloadStatus.FAILED, error = e.message?.take(140) ?: "Download failed") }
+            update(job.id, force = true) {
+                it.copy(status = DownloadStatus.FAILED, error = e.message?.take(140) ?: "Download failed")
+            }
         }
+    }
+
+    /** How far a previous attempt got, before any network call. */
+    private fun bytesOnDisk(job: DownloadJob, part: File): Long {
+        if (!part.isFile) return 0L
+        return if (job.slices.isNotEmpty()) job.slices.sum() else if (job.connections <= 1) part.length() else 0L
     }
 
     /** Total size and whether the server honours Range requests. */
@@ -150,18 +202,27 @@ class DownloadManager(
         }
     }
 
-    private suspend fun rangeDownload(job: DownloadJob, part: File, total: Long) = coroutineScope {
+    private suspend fun rangeDownload(
+        job: DownloadJob,
+        part: File,
+        total: Long,
+        slices: List<Long> = emptyList()
+    ) = coroutineScope {
         val written = AtomicLongArray(CONNECTIONS)
+        slices.forEachIndexed { i, done -> if (i < CONNECTIONS) written.set(i, done.coerceAtLeast(0)) }
         val lastPublish = AtomicLong(0)
         RandomAccessFile(part, "rw").use { file ->
-            file.setLength(total)
+            if (file.length() != total) file.setLength(total)
             val chunk = (total + CONNECTIONS - 1) / CONNECTIONS
             (0 until CONNECTIONS).map { i ->
                 async(Dispatchers.IO) {
                     val start = i * chunk
                     val end = minOf(total - 1, start + chunk - 1)
                     if (start > end) return@async
-                    val request = request(job).header("Range", "bytes=$start-$end").build()
+                    // Resume this slice where the previous attempt stopped.
+                    val from = resumeOffset(start, end, written.get(i))
+                    if (from > end) return@async
+                    val request = request(job).header("Range", "bytes=$from-$end").build()
                     client.newCall(request).execute().use { response ->
                         if (!response.isSuccessful) throw IOException("HTTP ${response.code}")
                         // The probe saw 206 for bytes=0-0, but a host may answer a
@@ -169,10 +230,10 @@ class DownloadManager(
                         // would corrupt the download and still mark it DONE.
                         if (response.code != 206) throw IOException("Range ignored (HTTP ${response.code})")
                         val body = response.body ?: throw IOException("Empty body")
-                        val expected = end - start + 1
+                        val expected = end - from + 1
                         body.byteStream().use { input ->
                             val buffer = ByteArray(BUFFER_BYTES)
-                            var offset = start
+                            var offset = from
                             while (offset <= end) {
                                 // Never write past this slice, however much the
                                 // server sends.
@@ -189,8 +250,8 @@ class DownloadManager(
                             }
                             // A body that ends early leaves a zero-filled tail. Fail
                             // so the job is retried instead of renamed into place.
-                            if (offset != start + expected) {
-                                throw IOException("Short range response (${offset - start}/$expected bytes)")
+                            if (offset != end + 1) {
+                                throw IOException("Short range response (${offset - from}/$expected bytes)")
                             }
                         }
                     }
@@ -201,16 +262,26 @@ class DownloadManager(
     }
 
     private fun streamDownload(job: DownloadJob, part: File) {
-        val request = request(job).build()
-        client.newCall(request).execute().use { response ->
+        // A single stream has no slice map: its length on disk is the resume point.
+        val have = if (part.isFile) part.length() else 0L
+        val builder = request(job)
+        if (have > 0) builder.header("Range", "bytes=$have-")
+        client.newCall(builder.build()).execute().use { response ->
             if (!response.isSuccessful) throw IOException("HTTP ${response.code}")
             val body = response.body ?: throw IOException("Empty body")
-            val total = body.contentLength()
+            // 206 means the bytes on disk were kept; 200 means the host ignored
+            // the range and the file starts again from zero.
+            val resuming = have > 0 && response.code == 206
+            val total = totalFrom(response.header("Content-Range"))
+                ?: body.contentLength().takeIf { it > 0 }?.plus(if (resuming) have else 0L)
+                ?: -1L
             if (total > 0) update(job.id) { it.copy(totalBytes = total) }
-            part.outputStream().use { output ->
+            // Appending keeps the bytes a previous attempt already wrote;
+            // not resuming truncates the file back to zero.
+            java.io.FileOutputStream(part, resuming).use { output ->
                 body.byteStream().use { input ->
                     val buffer = ByteArray(BUFFER_BYTES)
-                    var bytes = 0L
+                    var bytes = if (resuming) have else 0L
                     var last = 0L
                     while (true) {
                         val read = input.read(buffer)
@@ -234,8 +305,13 @@ class DownloadManager(
         if (!force && now - lastPublish.get() < PROGRESS_MS) return
         lastPublish.set(now)
         var sum = 0L
-        for (i in 0 until written.length()) sum += written.get(i)
-        update(job.id) { it.copy(bytes = sum) }
+        val slices = ArrayList<Long>(written.length())
+        for (i in 0 until written.length()) {
+            val done = written.get(i)
+            sum += done
+            slices += done
+        }
+        update(job.id) { it.copy(bytes = sum, slices = slices) }
     }
 
     private fun request(job: DownloadJob): Request.Builder {
@@ -244,8 +320,65 @@ class DownloadManager(
         return builder
     }
 
-    private fun update(id: String, block: (DownloadJob) -> DownloadJob) {
+    private fun update(id: String, force: Boolean = false, block: (DownloadJob) -> DownloadJob) {
         _jobs.update { list -> list.map { if (it.id == id) block(it) else it } }
+        save(force)
+    }
+
+    /** Reload the job list from disk. Nothing resumes until the viewer asks. */
+    private fun restore() {
+        val stored = runCatching {
+            if (storeFile.isFile) json.decodeFromString(ListSerializer(DownloadJob.serializer()), storeFile.readText()) else null
+        }.getOrNull().orEmpty()
+        if (stored.isEmpty()) return
+        _jobs.value = stored.map { job ->
+            val target = File(job.path)
+            when {
+                // A finished file that the viewer deleted is not still finished.
+                job.status == DownloadStatus.DONE && !target.isFile ->
+                    job.copy(status = DownloadStatus.FAILED, error = "File removed")
+                job.status == DownloadStatus.DONE -> job.copy(bytes = maxOf(job.bytes, job.totalBytes))
+                else -> {
+                    // Bytes only exist while the .part file does, and a job that
+                    // was mid-flight when the process died comes back paused.
+                    val part = File(job.path + ".part")
+                    val slices = if (part.isFile) job.slices else emptyList()
+                    job.copy(
+                        status = when (job.status) {
+                            DownloadStatus.RUNNING, DownloadStatus.QUEUED -> DownloadStatus.PAUSED
+                            else -> job.status
+                        },
+                        slices = slices,
+                        bytes = when {
+                            slices.isNotEmpty() -> slices.sum()
+                            !part.isFile -> 0L
+                            else -> job.bytes
+                        }
+                    )
+                }
+            }
+        }
+    }
+
+    /** Persist the list, throttled so progress updates do not hammer the disk. */
+    private fun save(force: Boolean = false) {
+        val now = System.currentTimeMillis()
+        synchronized(saveLock) {
+            if (!force && now - lastSave < SAVE_MS) return
+            lastSave = now
+            val text = runCatching {
+                json.encodeToString(ListSerializer(DownloadJob.serializer()), _jobs.value)
+            }.getOrNull() ?: return
+            runCatching {
+                dir.mkdirs()
+                val tmp = File(storeFile.path + ".tmp")
+                tmp.writeText(text)
+                if (!tmp.renameTo(storeFile)) {
+                    storeFile.writeText(text)
+                    tmp.delete()
+                }
+            }
+        }
     }
 
     private fun fileName(title: String, url: String, id: String): String {
@@ -267,8 +400,17 @@ class DownloadManager(
         const val CONNECTIONS = 4
         private const val BUFFER_BYTES = 256 * 1024
         private const val PROGRESS_MS = 250L
+        /** Progress writes are throttled to this; state changes are not. */
+        private const val SAVE_MS = 1_500L
         private const val USER_AGENT = "Nova/1.0 (Android)"
         private val EXTENSIONS = setOf("mp4", "mkv", "webm", "m4v", "mov", "avi", "ts")
+
+        /**
+         * Where slice [sliceStart]..[sliceEnd] must restart, given [done] bytes
+         * already written. [sliceEnd] + 1 means the slice is complete.
+         */
+        fun resumeOffset(sliceStart: Long, sliceEnd: Long, done: Long): Long =
+            sliceStart + done.coerceIn(0L, sliceEnd - sliceStart + 1)
 
         /** "bytes 0-0/12345" -> 12345. */
         fun totalFrom(contentRange: String?): Long? =

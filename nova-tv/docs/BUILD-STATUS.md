@@ -6,12 +6,14 @@ One module, two product flavors (`device` dimension):
 
 | Flavor | applicationId | APK | Bytes |
 |---|---|---|---|
-| `tv` | `dev.nova.tv` | `apk/tv/release/app-tv-release.apk` | 8,541,300 |
-| `mobile` | `dev.nova.mobile` | `apk/mobile/release/app-mobile-release.apk` | 8,867,067 |
+| `tv` | `dev.nova.tv` | `apk/tv/release/app-tv-release.apk` | 8,559,588 |
+| `mobile` | `dev.nova.mobile` | `apk/mobile/release/app-mobile-release.apk` | 8,885,347 |
 
-`./gradlew :app:testTvDebugUnitTest :app:testMobileDebugUnitTest :app:lintTvDebug
-:app:lintMobileDebug :app:assembleRelease` — BUILD SUCCESSFUL.
-81 unit tests per flavor, 0 failures. Lint: 0 errors (tv 70 warnings, mobile 74).
+`./gradlew :app:testTvDebugUnitTest :app:testMobileDebugUnitTest :app:assembleRelease`
+— BUILD SUCCESSFUL (measured 2026-11-20).
+107 unit tests per flavor (214 total), 0 failures, 0 errors. `lintVitalRelease`
+runs inside `assembleRelease` and passed; the full `lintTvDebug` / `lintMobileDebug`
+gate passes in CI, where an error fails the job.
 Both release APKs signed (`apksigner verify` passes). Different package names,
 so both install side by side. Neither has been installed on a device from this
 environment.
@@ -26,6 +28,23 @@ deliberately does not: a torrent/streaming server (Nova plays direct HTTP
 only, no torrents), a second player engine such as libVLC/libmpv, analytics
 and crash SDKs, or unminified builds. Splitting by ABI would make each
 device's download several MB smaller still.
+
+## Latest CI run (nova-tv-v2)
+
+Workflow: `nova-tv Android` (`.github/workflows/nova-tv-android.yml`), which now
+also triggers on `nova-tv-v2`, so the branch builds itself.
+Run: [44838961363](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/44838961363)
+— every step green (build, both unit suites, lint, R8 release, APK verification).
+
+| Artefact | zipped | sha256 |
+|---|---|---|
+| `nova-tv-release-apk` | 5.01 MB | `a3793fe171ac8f874d766854bf17d81926600c6a1138e1025daecfc684c8446e` |
+| `nova-mobile-release-apk` | 5.3 MB | `2fe62e5b12b6303d4c113fddd33c909e7fda5594fbc6de12a957a50818473054` |
+| `nova-tv-debug-apk` | 37 MB | `6d0e03acaaf3f3eba89426be94025612b6f1ac8b7b0f44438b2fcd4ab544866b` |
+
+The committed `artifacts/*.apk` files are still the pre-debug-pass binaries; the
+freshly built ones are the CI artefacts above. Downloading them needs a signed-in
+GitHub session.
 
 ## Earlier CI run (v1)
 

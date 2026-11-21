@@ -92,10 +92,13 @@ import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
 import dev.nova.tv.player.NovaPlayer
 import dev.nova.tv.player.SkipSeconds
+import dev.nova.tv.player.formatPlaybackRate
+import dev.nova.tv.player.nextPlaybackRate
 import dev.nova.tv.player.SubtitleStyle
 import dev.nova.tv.player.applySubtitleStyle
 import dev.nova.tv.player.preload.PreloadMode
 import dev.nova.tv.ui.player.BufferingOverlay
+import dev.nova.tv.ui.player.PanelOption
 import dev.nova.tv.ui.screens.NovaViewModel
 import dev.nova.tv.ui.screens.PlayerPanel
 import dev.nova.tv.ui.screens.UpNext
@@ -103,7 +106,6 @@ import dev.nova.tv.ui.theme.LocalReduceMotion
 import dev.nova.tv.ui.theme.NovaPalette
 import kotlinx.coroutines.delay
 
-private val Speeds = listOf(1f, 1.25f, 1.5f, 2f, 0.75f)
 private const val DOUBLE_TAP_MS = 10_000L
 
 /**
@@ -375,7 +377,6 @@ private fun Controls(player: NovaPlayer, title: String, viewModel: NovaViewModel
     val session by player.session.collectAsStateWithLifecycle()
     val preload by player.preloadStatus.collectAsStateWithLifecycle()
     val buffering by player.buffering.collectAsStateWithLifecycle()
-    var speed by remember { mutableIntStateOf(0) }
     val upNext = remember(title) { viewModel.nextEpisode() }
 
     Box(Modifier.fillMaxSize()) {
@@ -455,9 +456,15 @@ private fun Controls(player: NovaPlayer, title: String, viewModel: NovaViewModel
                 if (session.sources.size > 1) TextButtonPill("Sources  ${session.sources.size}") { viewModel.openPlayerPanel(PlayerPanel.SOURCES) }
                 TextButtonPill("Audio") { viewModel.openPlayerPanel(PlayerPanel.AUDIO) }
                 TextButtonPill("Subtitles") { viewModel.openPlayerPanel(PlayerPanel.SUBTITLES) }
-                TextButtonPill(if (speed == 0) "Speed" else "${Speeds[speed]}x", active = speed != 0) {
-                    speed = (speed + 1) % Speeds.size
-                    player.setRate(Speeds[speed])
+                // Speed reads the live engine rate and persists it, so the TV
+                // surface and the next title start at the same speed.
+                TextButtonPill(
+                    if (engine.playbackSpeed == 1f) "Speed" else formatPlaybackRate(engine.playbackSpeed),
+                    active = engine.playbackSpeed != 1f
+                ) {
+                    val next = nextPlaybackRate(engine.playbackSpeed)
+                    player.setRate(next)
+                    viewModel.setPlaybackRate(next)
                     viewModel.chrome.onUserActive()
                 }
                 if (upNext != null) TextButtonPill("Next episode", onClick = viewModel::playNext)
@@ -566,8 +573,6 @@ private fun SeekBar(
         }
     }
 }
-
-private data class PanelOption(val label: String, val detail: String?, val selected: Boolean, val onPick: () -> Unit)
 
 @Composable
 private fun Panel(
