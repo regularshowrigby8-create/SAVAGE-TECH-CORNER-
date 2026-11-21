@@ -5,7 +5,8 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-const script = html.slice(html.indexOf('<script>') + 8, html.lastIndexOf('</script>'));
+const { appScript } = require('./app-script.cjs');
+const script = appScript(html);
 
 function between(start, end) {
   const a = script.indexOf(start);

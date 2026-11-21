@@ -3,7 +3,8 @@
 const fs=require('fs'), path=require('path'), vm=require('vm');
 const {JSDOM, VirtualConsole}=require('jsdom');
 const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
-const src=html.slice(html.indexOf('<script>')+8, html.lastIndexOf('</script>'));
+const { appScript } = require('./app-script.cjs');
+const src=appScript(html);
 let n=0;
 const ok=(cond,label)=>{ if(!cond){ console.error('FAIL',label); process.exit(1); } n++; console.log('PASS',label); };
 const has=(needle,label)=>ok(src.includes(needle),label);

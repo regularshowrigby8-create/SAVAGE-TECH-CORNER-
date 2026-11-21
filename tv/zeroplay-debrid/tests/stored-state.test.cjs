@@ -97,5 +97,39 @@ async function boot(seed) {
   ok(net.text.length > 0, 'a failure that cannot be normalised never leaves an empty page');
   ok(net.retry || net.posters > 0, 'and it offers a retry, or renders anyway');
 
-  console.log(`\n${n} stored-state checks passed`);
+  /* fall through to the watchdog checks below */
+
+/* ---- the boot watchdog -------------------------------------------------
+   The blank page arrived with no error and no retry UI, which meant the app
+   script never ran. Nothing inside that script can report such a failure, so
+   a separate early script does. These checks keep it honest: it must stay
+   silent on a healthy page, and it must speak up when the app script dies. */
+  const { JSDOM: J, VirtualConsole: VC } = require('jsdom');
+  const source = require('fs').readFileSync('dist/index.html', 'utf8');
+
+  async function bootPage(page) {
+    const dom = new J(page, {
+      runScripts: 'dangerously', url: 'https://zeroplay.test/', virtualConsole: new VC(),
+      pretendToBeVisual: true,
+      beforeParse(w) { w.fetch = async () => response({ error: 'no key', success: false }, 503); }
+    });
+    await sleep(5200);
+    const el = dom.window.document.getElementById('bootDiagnostic');
+    const out = el ? el.textContent : '';
+    dom.window.close();
+    return out;
+  }
+
+  const silent = await bootPage(source);
+  ok(silent === '', 'the watchdog stays silent on a healthy page');
+
+  /* Break the app script so it cannot parse: this is the failure mode that
+     produced "it's still the same" with no message of any kind. */
+  const broken = source.replace('const APP_VERSION="4.3.0";', 'const APP_VERSION=;');
+  ok(broken !== source, 'the test can actually break the app script');
+  const message = await bootPage(broken);
+  ok(/ZeroPlay could not start/.test(message), 'a dead app script produces a visible diagnostic instead of a blank page');
+  ok(/Build: /.test(message), 'the diagnostic names the build that failed');
+
+  console.log(`\n${n} stored-state checks passed (including watchdog)`);
 })().catch(e => { console.error('FAILED', e && e.message || e); process.exit(1); });

@@ -1,7 +1,8 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert'),path=require('path');
 const root=path.resolve(__dirname,'..');
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
-const script=html.slice(html.indexOf('<script>')+8,html.lastIndexOf('</script>'));
+const { appScript } = require('./app-script.cjs');
+const script=appScript(html);
 function between(a,b){const i=script.indexOf(a);assert(i>=0,a);const j=script.indexOf(b,i+a.length);assert(j>i,b);return script.slice(i,j);}
 const manifest=(id,name)=>({id,name,version:'1',resources:['stream','catalog','meta'],types:['movie','series'],idPrefixes:['tt'],catalogs:[{type:'movie',id:'top',extra:[{name:'search'}]}]});
 const cinemetaManifest={id:'com.linvo.cinemeta',name:'Cinemeta',version:'3',resources:['catalog','meta','addon_catalog'],types:['movie','series'],idPrefixes:['tt'],addonCatalogs:[{type:'all',id:'community'},{type:'all',id:'official'}],catalogs:[]};

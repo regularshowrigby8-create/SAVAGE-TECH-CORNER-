@@ -3,7 +3,8 @@ const vm = require("node:vm");
 const assert = require("node:assert/strict");
 const path = require("node:path");
 const html = fs.readFileSync(path.join(__dirname, "../index.html"), "utf8");
-const script = html.slice(html.indexOf("<script>") + 8, html.lastIndexOf("</script>"));
+const { appScript } = require("./app-script.cjs");
+const script = appScript(html);
 let passed = 0;
 function check(condition, label) {
   assert(condition, label);
