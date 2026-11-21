@@ -8,12 +8,12 @@
   "stremio-collection": {
    "pages_requested": 1,
    "candidates": 83,
-   "candidate_fetch_failed": 20
+   "candidate_fetch_failed": 19
   },
   "cinemeta-community": {
    "pages_requested": 1,
    "candidates": 83,
-   "candidate_fetch_failed": 17
+   "candidate_fetch_failed": 16
   },
   "cinemeta-official": {
    "pages_requested": 1,
@@ -25,21 +25,21 @@
   },
   "github": {
    "pages_requested": 93,
-   "candidates": 32,
-   "candidate_fetch_failed": 25,
+   "candidates": 33,
+   "candidate_fetch_failed": 26,
    "pages_failed": 11
   },
   "github-readme": {
    "candidates": 404,
-   "candidate_fetch_failed": 235
+   "candidate_fetch_failed": 239
   },
   "homepage": {
-   "candidates": 394,
-   "candidate_fetch_failed": 304
+   "candidates": 427,
+   "candidate_fetch_failed": 330
   },
   "github-pages": {
-   "candidates": 2513,
-   "candidate_fetch_failed": 2463
+   "candidates": 2633,
+   "candidate_fetch_failed": 2583
   }
  },
  "generation": 0,
