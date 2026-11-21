@@ -66,6 +66,15 @@ async function boot(seed) {
 (async () => {
   const SETTINGS = 'zp_rd_settings_v1';
   const cases = [
+    /* The one that actually took the site down. `isLegacyEmbedHost` was called
+       at load time from a line ~900 lines above its `const`, so the first
+       saved site threw "Cannot access 'LEGACY_EMBED_HOSTS' before
+       initialization" and killed the whole script. An *empty* registry never
+       exercised the filter callback, which is why nothing here caught it. */
+    ['a saved registry with real sites (the outage)', { [SETTINGS]: JSON.stringify({ sites: [{ id: 's1', name: 'Old', base: 'https://old.example' }] }) }],
+    ['a saved registry with real providers', { [SETTINGS]: JSON.stringify({ providers: [{ id: 'p1', name: 'P', base: 'https://p.example' }] }) }],
+    ['a saved site that is a legacy embed host', { [SETTINGS]: JSON.stringify({ sites: [{ id: 's1', name: 'V', base: 'https://vidstuck.cc' }] }) }],
+    ['saved sites and providers both populated', { [SETTINGS]: JSON.stringify({ sites: [{ id: 's1', name: 'S', base: 'https://s.example' }], providers: [{ id: 'p1', name: 'P', base: 'https://p.example' }] }) }],
     ['a watchlist saved as an object', { ['zp_rd_watchlist_v1']: '{"a":1}', [SETTINGS]: '{}' }],
     ['a watchlist saved as a string', { ['zp_rd_watchlist_v1']: '"nope"', [SETTINGS]: '{}' }],
     ['a watchlist saved as a number', { ['zp_rd_watchlist_v1']: '42', [SETTINGS]: '{}' }],

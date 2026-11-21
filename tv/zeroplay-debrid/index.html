@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="63844c4">
+<html lang="en" data-build="FIXED_LEGACY">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -4379,7 +4379,21 @@ if(settings.source==="vidstuck"||settings.source==="zxcstream"||settings.source=
 /* Registry hygiene: the old flow auto-pasted embed hosts as lookup
    websites, and discovery used to auto-add providers nobody asked for. Both
    left tombstones behind that resurrect themselves. The app now starts with
-   an empty registry unless the viewer added a feed on purpose. */
+   an empty registry unless the viewer added a feed on purpose.
+
+   The predicate has to be declared here, above its first use. It used to live
+   ~900 lines further down with `allSources()`, and these two filters call it
+   at load time: `const` is in the temporal dead zone until its declaration
+   runs, so the very first saved `sites`/`providers` entry threw
+   "Cannot access 'LEGACY_EMBED_HOSTS' before initialization" and killed the
+   whole script. An empty registry hid it, because `.filter()` never invoked
+   the callback — which is exactly what every test started from. */
+const LEGACY_EMBED_HOSTS=["vidstuck.cc","zxcstream.cc","embedwave.cc"];
+function isLegacyEmbedHost(value){
+  const text=String(value||"").toLowerCase();
+  return LEGACY_EMBED_HOSTS.some(host=>text.includes(host));
+}
+
 /* Normalise shape first, drop legacy entries second. Doing the filter first
    meant a saved `sites`/`providers` of any other shape threw here and killed
    the whole script before the first paint. */
@@ -5304,11 +5318,6 @@ function routeNow(){ const r=(location.hash.replace(/^#\/?/,"").split("?")[0]||"
    and a direct file link becomes a one-off feed at play time. `site` entries
    are lookup-only pages the resolver extracts from; they never play by
    themselves. */
-const LEGACY_EMBED_HOSTS=["vidstuck.cc","zxcstream.cc","embedwave.cc"];
-function isLegacyEmbedHost(value){
-  const text=String(value||"").toLowerCase();
-  return LEGACY_EMBED_HOSTS.some(host=>text.includes(host));
-}
 function allSources(includeDisabled){
   const dis=new Set(settings.disabledSources||[]);
   const list=(settings.customSources||[])

@@ -19,7 +19,12 @@ const ctx = {
 };
 ctx.globalThis = ctx; vm.createContext(ctx);
 vm.runInContext([
-  between('const LEGACY_EMBED_HOSTS', 'function allSources'),
+  /* Exactly the predicate and nothing else. It moved earlier in the file
+     because it must precede its first use (see tests/load-order.test.cjs);
+     the old range ran from here to `function allSources`, which after the
+     move spanned 62 KB and pulled in a second `CAP_GB_HARD`. Anchoring on the
+     block's own closing brace cannot drift again. */
+  between('const LEGACY_EMBED_HOSTS', 'LEGACY_EMBED_HOSTS.some(host=>text.includes(host));\n}') + 'LEGACY_EMBED_HOSTS.some(host=>text.includes(host));\n}',
   between('const FEED_MANIFEST_TIMEOUT', 'async function fetchFeedManifest'),
   between('async function collectFeedStreams', 'async function customTemplateStreams'),
   between('function feedSources()', 'function hasInstalledFeeds'),

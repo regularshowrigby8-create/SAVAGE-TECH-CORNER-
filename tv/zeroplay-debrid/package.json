@@ -6,7 +6,7 @@
   "description": "ZeroPlay keyless discovery and playback \u2014 single-file site + serverless functions.",
   "scripts": {
     "build": "node scripts/build.js",
-    "test": "node tests/discovery-identity.test.cjs && node tests/crawler.test.cjs && node tests/regressions.test.cjs && node tests/tv-player.test.cjs && node tests/android-tv-ui.test.cjs && node tests/downloads-m3u.test.cjs && node tests/home-navigation.test.cjs && node tests/tv-navigation-contract.test.cjs && node tests/settings-sections.test.cjs && node tests/global-resolver.test.cjs && node tests/overlays.test.cjs && node tests/overlay-session.test.cjs && node tests/player-core.test.cjs && node tests/boot-feed.test.cjs && node tests/stored-state.test.cjs && node tests/catalogue-player.test.cjs",
+    "test": "node tests/discovery-identity.test.cjs && node tests/crawler.test.cjs && node tests/regressions.test.cjs && node tests/tv-player.test.cjs && node tests/android-tv-ui.test.cjs && node tests/downloads-m3u.test.cjs && node tests/home-navigation.test.cjs && node tests/tv-navigation-contract.test.cjs && node tests/settings-sections.test.cjs && node tests/global-resolver.test.cjs && node tests/overlays.test.cjs && node tests/overlay-session.test.cjs && node tests/player-core.test.cjs && node tests/boot-feed.test.cjs && node tests/stored-state.test.cjs && node tests/load-order.test.cjs && node tests/catalogue-player.test.cjs",
     "test:browser": "node tests/browser/home-navigation.cjs",
     "test:all": "npm run validate:html && npm test",
     "validate:html": "htmlhint index.html && html-validate index.html",
