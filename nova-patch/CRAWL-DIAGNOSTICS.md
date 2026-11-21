@@ -1,6 +1,6 @@
 # Nova crawl failure diagnostics
 
-Run: 44886402950
+Run: 44887387025
 
 ## crawl-results/server-selftest.log
 ```
@@ -35,7 +35,7 @@ test_private_addresses_refused (__main__.UrlRules.test_private_addresses_refused
 test_public_ranges_allowed (__main__.UrlRules.test_public_ranges_allowed) ... ok
 
 ----------------------------------------------------------------------
-Ran 27 tests in 0.018s
+Ran 27 tests in 0.022s
 
 OK
 ```
@@ -63,114 +63,112 @@ test_site_is_added_only_after_same_host_title_search_and_player_marker (__main__
 test_title_search_without_a_player_is_not_a_streaming_candidate (__main__.VerificationTests.test_title_search_without_a_player_is_not_a_streaming_candidate) ... ok
 
 ----------------------------------------------------------------------
-Ran 19 tests in 0.048s
+Ran 19 tests in 0.065s
 
 OK
 ```
 
 ## crawl-results/server-crawl.log
 ```
-round  75  +  0  pool  517/3000  queue  30  requests  2390  refused  595  rate-limited 5  64.1s
-round  77  +  0  pool  517/3000  queue  29  requests  2482  refused  605  rate-limited 5  65.4s
-round  78  +  0  pool  517/3000  queue  28  requests  2485  refused  606  rate-limited 5  66.3s
-round  81  +  0  pool  517/3000  queue  27  requests  2486  refused  606  rate-limited 5  68.5s
-round  88  +  0  pool  517/3000  queue  27  requests  2629  refused  629  rate-limited 5  74.8s
-round  89  +  0  pool  517/3000  queue  26  requests  2629  refused  629  rate-limited 5  74.8s
-round  90  +  0  pool  517/3000  queue  26  requests  2632  refused  629  rate-limited 5  78.8s
-round  91  +  0  pool  517/3000  queue  25  requests  2632  refused  629  rate-limited 5  78.8s
-round  92  +  1  pool  518/3000  queue  24  requests  2814  refused  679  rate-limited 5  82.9s
-round  93  +  0  pool  518/3000  queue  25  requests  2817  refused  720  rate-limited 5  86.9s
-round  94  +  0  pool  518/3000  queue  22  requests  2817  refused  720  rate-limited 5  86.9s
-round  95  +  0  pool  518/3000  queue  19  requests  2822  refused  755  rate-limited 5  86.9s
-round  96  +  0  pool  518/3000  queue  18  requests  2822  refused  798  rate-limited 5  86.9s
-round  97  +  0  pool  518/3000  queue  18  requests  2822  refused  843  rate-limited 5  87.0s
-round  98  +  0  pool  518/3000  queue  18  requests  2822  refused  886  rate-limited 5  87.0s
-round  99  +  0  pool  518/3000  queue  18  requests  2847  refused  887  rate-limited 5  91.0s
-round 100  +  0  pool  518/3000  queue  17  requests  2847  refused  887  rate-limited 5  91.0s
-round 102  +  0  pool  518/3000  queue  15  requests  2848  refused  887  rate-limited 5  92.7s
-round 105  +  0  pool  518/3000  queue  14  requests  2849  refused  887  rate-limited 5  95.0s
-round 114  +  0  pool  518/3000  queue  14  requests  3082  refused  905  rate-limited 5  103.5s
-round 115  +  0  pool  518/3000  queue  14  requests  3082  refused  906  rate-limited 5  103.6s
-round 118  +  0  pool  518/3000  queue  13  requests  3189  refused  919  rate-limited 6  105.9s
-round 121  +  0  pool  518/3000  queue  12  requests  3296  refused  922  rate-limited 7  108.1s
-round 122  +  0  pool  518/3000  queue  12  requests  3296  refused  922  rate-limited 7  108.8s
-round 123  +  0  pool  518/3000  queue  11  requests  3297  refused  922  rate-limited 7  108.8s
-round 124  +  0  pool  518/3000  queue  10  requests  3298  refused  922  rate-limited 7  108.9s
-round 125  +  0  pool  518/3000  queue   9  requests  3299  refused  922  rate-limited 7  108.9s
-round 126  +  0  pool  518/3000  queue   9  requests  3300  refused  957  rate-limited 7  109.0s
-round 127  +  0  pool  518/3000  queue   9  requests  3301  refused  998  rate-limited 7  109.1s
-round 128  +  0  pool  518/3000  queue   9  requests  3302  refused 1043  rate-limited 7  109.1s
-round 129  +  0  pool  518/3000  queue   8  requests  3303  refused 1086  rate-limited 7  109.2s
-round 130  +  0  pool  518/3000  queue   8  requests  3304  refused 1125  rate-limited 7  109.2s
-round 131  +  0  pool  518/3000  queue   7  requests  3305  refused 1125  rate-limited 7  109.3s
-round 133  +  0  pool  518/3000  queue   6  requests  3306  refused 1125  rate-limited 7  110.3s
-round 134  +  0  pool  518/3000  queue   5  requests  3306  refused 1125  rate-limited 7  111.3s
-round 136  +  0  pool  518/3000  queue   4  requests  3307  refused 1125  rate-limited 7  112.5s
-round 137  +  0  pool  518/3000  queue   4  requests  3308  refused 1170  rate-limited 7  112.5s
-round 138  +  0  pool  518/3000  queue   4  requests  3309  refused 1205  rate-limited 7  112.6s
-round 139  +  0  pool  518/3000  queue   3  requests  3310  refused 1248  rate-limited 7  112.7s
-round 140  +  0  pool  518/3000  queue   3  requests  3311  refused 1289  rate-limited 7  112.7s
-round 141  +  0  pool  518/3000  queue   2  requests  3312  refused 1332  rate-limited 7  112.8s
-round 142  +  0  pool  518/3000  queue   2  requests  3313  refused 1377  rate-limited 7  112.8s
-round 143  +  0  pool  518/3000  queue   2  requests  3314  refused 1412  rate-limited 7  112.9s
-round 144  +  0  pool  518/3000  queue   1  requests  3315  refused 1455  rate-limited 7  112.9s
-round 145  +  0  pool  518/3000  queue   1  requests  3316  refused 1500  rate-limited 7  113.0s
-round 146  +  0  pool  518/3000  queue   0  requests  3317  refused 1543  rate-limited 7  113.0s
-round 150  +  0  pool  518/3000  queue   0  requests  3351  refused 1545  rate-limited 7  116.9s
-round 151  +  0  pool  518/3000  queue   0  requests  3420  refused 1547  rate-limited 7  117.4s
-round 153  +  0  pool  518/3000  queue   0  requests  3421  refused 1547  rate-limited 7  119.1s
-round 156  +  0  pool  518/3000  queue   0  requests  3422  refused 1547  rate-limited 7  121.3s
-round 159  +  0  pool  518/3000  queue   0  requests  3433  refused 1547  rate-limited 7  123.9s
-round 161  +  0  pool  518/3000  queue   0  requests  3434  refused 1547  rate-limited 7  125.7s
-round 164  +  0  pool  518/3000  queue   0  requests  3435  refused 1547  rate-limited 7  127.9s
-round 167  +  0  pool  518/3000  queue   0  requests  3436  refused 1547  rate-limited 7  130.1s
-round 172  +  0  pool  518/3000  queue   0  requests  3507  refused 1551  rate-limited 7  134.5s
-round 173  +  0  pool  518/3000  queue   0  requests  3507  refused 1551  rate-limited 7  135.0s
-round 175  +  0  pool  518/3000  queue   0  requests  3508  refused 1551  rate-limited 7  136.7s
-round 178  +  0  pool  518/3000  queue   0  requests  3509  refused 1551  rate-limited 7  138.9s
-round 185  +  0  pool  518/3000  queue   1  requests  3640  refused 1566  rate-limited 7  145.3s
-round 190  +  0  pool  518/3000  queue   1  requests  3855  refused 1572  rate-limited 7  149.4s
-round 195  +  0  pool  518/3000  queue   1  requests  4007  refused 1577  rate-limited 9  153.8s
-round 200  +  0  pool  518/3000  queue   1  requests  4176  refused 1581  rate-limited 10  158.1s
-round 203  +  0  pool  518/3000  queue   1  requests  4210  refused 1582  rate-limited 10  160.2s
-round 205  +  0  pool  518/3000  queue   1  requests  4249  refused 1584  rate-limited 10  161.6s
-round 206  +  0  pool  518/3000  queue   0  requests  4317  refused 1588  rate-limited 10  162.1s
-round 208  +  0  pool  518/3000  queue   1  requests  4462  refused 1591  rate-limited 10  163.9s
-round 209  +  0  pool  518/3000  queue   0  requests  4462  refused 1593  rate-limited 10  164.0s
-round 214  +  0  pool  518/3000  queue   1  requests  4596  refused 1599  rate-limited 10  168.8s
-round 217  +  0  pool  518/3000  queue   1  requests  4712  refused 1623  rate-limited 10  171.3s
-round 221  +  0  pool  518/3000  queue   0  requests  4900  refused 1633  rate-limited 10  175.1s
-round 222  +  0  pool  518/3000  queue   1  requests  4963  refused 1636  rate-limited 10  175.4s
-round 225  +  0  pool  518/3000  queue   2  requests  5050  refused 1640  rate-limited 10  182.2s
+round  76  +  0  pool  518/3000  queue  30  requests  2376  refused  597  rate-limited 5  64.2s
+round  78  +  0  pool  518/3000  queue  29  requests  2471  refused  609  rate-limited 5  66.0s
+round  79  +  0  pool  518/3000  queue  28  requests  2471  refused  609  rate-limited 5  66.4s
+round  82  +  0  pool  518/3000  queue  27  requests  2472  refused  609  rate-limited 5  68.6s
+round  89  +  0  pool  518/3000  queue  26  requests  2616  refused  630  rate-limited 5  75.0s
+round  90  +  0  pool  518/3000  queue  25  requests  2616  refused  632  rate-limited 5  75.2s
+round  91  +  0  pool  518/3000  queue  25  requests  2617  refused  632  rate-limited 5  75.2s
+round  92  +  0  pool  518/3000  queue  25  requests  2682  refused  633  rate-limited 5  79.2s
+round  93  +  0  pool  518/3000  queue  25  requests  2798  refused  684  rate-limited 5  83.2s
+round  94  +  0  pool  518/3000  queue  23  requests  2798  refused  684  rate-limited 5  83.2s
+round  95  +  0  pool  518/3000  queue  21  requests  2803  refused  727  rate-limited 5  83.3s
+round  96  +  0  pool  518/3000  queue  21  requests  2804  refused  762  rate-limited 5  83.3s
+round  97  +  0  pool  518/3000  queue  21  requests  2805  refused  801  rate-limited 5  83.3s
+round  98  +  0  pool  518/3000  queue  21  requests  2805  refused  844  rate-limited 5  83.3s
+round  99  +  0  pool  518/3000  queue  21  requests  2807  refused  890  rate-limited 5  87.3s
+round 100  +  0  pool  518/3000  queue  22  requests  2832  refused  891  rate-limited 5  91.3s
+round 101  +  0  pool  518/3000  queue  17  requests  2832  refused  891  rate-limited 5  91.3s
+round 103  +  0  pool  518/3000  queue  15  requests  2833  refused  891  rate-limited 5  92.8s
+round 106  +  0  pool  518/3000  queue  14  requests  2834  refused  891  rate-limited 5  95.0s
+round 116  +  0  pool  518/3000  queue  14  requests  3067  refused  908  rate-limited 5  104.5s
+round 117  +  0  pool  518/3000  queue  14  requests  3078  refused  912  rate-limited 5  104.9s
+round 119  +  0  pool  518/3000  queue  13  requests  3134  refused  913  rate-limited 5  106.0s
+round 122  +  0  pool  518/3000  queue  12  requests  3277  refused  926  rate-limited 7  108.2s
+round 125  +  0  pool  518/3000  queue  11  requests  3282  refused  926  rate-limited 7  110.4s
+round 126  +  0  pool  518/3000  queue  10  requests  3283  refused  926  rate-limited 7  110.4s
+round 127  +  0  pool  518/3000  queue  10  requests  3284  refused  926  rate-limited 7  110.4s
+round 128  +  0  pool  518/3000  queue   9  requests  3285  refused  926  rate-limited 7  110.4s
+round 129  +  0  pool  518/3000  queue   9  requests  3286  refused  961  rate-limited 7  110.5s
+round 130  +  0  pool  518/3000  queue   9  requests  3287  refused 1006  rate-limited 7  110.5s
+round 131  +  0  pool  518/3000  queue   9  requests  3288  refused 1047  rate-limited 7  110.6s
+round 132  +  0  pool  518/3000  queue   9  requests  3289  refused 1086  rate-limited 7  110.6s
+round 133  +  0  pool  518/3000  queue   8  requests  3290  refused 1129  rate-limited 7  110.8s
+round 134  +  0  pool  518/3000  queue   7  requests  3291  refused 1129  rate-limited 7  110.8s
+round 135  +  0  pool  518/3000  queue   6  requests  3291  refused 1129  rate-limited 7  110.9s
+round 137  +  0  pool  518/3000  queue   5  requests  3292  refused 1129  rate-limited 7  112.6s
+round 138  +  0  pool  518/3000  queue   4  requests  3292  refused 1129  rate-limited 7  112.9s
+round 139  +  0  pool  518/3000  queue   4  requests  3293  refused 1174  rate-limited 7  113.1s
+round 140  +  0  pool  518/3000  queue   3  requests  3294  refused 1217  rate-limited 7  113.1s
+round 141  +  0  pool  518/3000  queue   3  requests  3295  refused 1252  rate-limited 7  113.2s
+round 142  +  0  pool  518/3000  queue   3  requests  3296  refused 1293  rate-limited 7  113.3s
+round 143  +  0  pool  518/3000  queue   2  requests  3297  refused 1336  rate-limited 7  113.4s
+round 144  +  0  pool  518/3000  queue   2  requests  3298  refused 1381  rate-limited 7  113.5s
+round 145  +  0  pool  518/3000  queue   2  requests  3299  refused 1416  rate-limited 7  113.5s
+round 146  +  0  pool  518/3000  queue   1  requests  3300  refused 1459  rate-limited 7  113.6s
+round 147  +  0  pool  518/3000  queue   1  requests  3301  refused 1504  rate-limited 7  113.7s
+round 148  +  0  pool  518/3000  queue   0  requests  3302  refused 1547  rate-limited 7  113.8s
+round 152  +  0  pool  518/3000  queue   0  requests  3327  refused 1549  rate-limited 7  117.0s
+round 154  +  0  pool  518/3000  queue   0  requests  3405  refused 1551  rate-limited 7  118.5s
+round 155  +  0  pool  518/3000  queue   0  requests  3406  refused 1551  rate-limited 7  119.2s
+round 158  +  0  pool  518/3000  queue   0  requests  3407  refused 1551  rate-limited 7  121.4s
+round 161  +  0  pool  518/3000  queue   0  requests  3418  refused 1551  rate-limited 7  124.3s
+round 163  +  0  pool  518/3000  queue   0  requests  3419  refused 1551  rate-limited 7  125.8s
+round 166  +  0  pool  518/3000  queue   0  requests  3420  refused 1551  rate-limited 7  128.0s
+round 169  +  0  pool  518/3000  queue   0  requests  3421  refused 1551  rate-limited 7  130.2s
+round 174  +  0  pool  518/3000  queue   0  requests  3492  refused 1555  rate-limited 7  134.6s
+round 175  +  0  pool  518/3000  queue   0  requests  3492  refused 1555  rate-limited 7  135.1s
+round 177  +  0  pool  518/3000  queue   0  requests  3493  refused 1555  rate-limited 7  136.8s
+round 180  +  0  pool  518/3000  queue   0  requests  3494  refused 1555  rate-limited 7  139.0s
+round 188  +  0  pool  518/3000  queue   1  requests  3643  refused 1570  rate-limited 7  146.4s
+round 193  +  0  pool  518/3000  queue   1  requests  3857  refused 1576  rate-limited 8  150.8s
+round 198  +  0  pool  518/3000  queue   1  requests  4012  refused 1582  rate-limited 8  155.0s
+round 204  +  0  pool  518/3000  queue   1  requests  4195  refused 1586  rate-limited 10  160.3s
+round 206  +  0  pool  518/3000  queue   1  requests  4214  refused 1586  rate-limited 10  161.6s
+round 207  +  0  pool  518/3000  queue   1  requests  4236  refused 1588  rate-limited 10  162.1s
+round 209  +  0  pool  518/3000  queue   1  requests  4307  refused 1592  rate-limited 10  163.5s
+round 211  +  0  pool  518/3000  queue   0  requests  4381  refused 1596  rate-limited 10  164.6s
+round 212  +  0  pool  518/3000  queue   0  requests  4451  refused 1600  rate-limited 10  165.1s
+round 217  +  0  pool  518/3000  queue   1  requests  4558  refused 1603  rate-limited 10  169.5s
+round 221  +  0  pool  518/3000  queue   1  requests  4792  refused 1626  rate-limited 10  172.6s
+round 222  +  0  pool  518/3000  queue   1  requests  4866  refused 1630  rate-limited 10  173.5s
+round 225  +  0  pool  518/3000  queue   0  requests  4943  refused 1636  rate-limited 10  175.8s
+round 228  +  0  pool  518/3000  queue   1  requests  4983  refused 1639  rate-limited 10  180.2s
 time limit reached
 
 pool      518/3000
-file      /home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/crawl-results/server_pool.json  (189868 bytes)
-requests  5050  failures 3128  refused 1640  rate-limited 10
-per source {"github-pages": 2, "github-readme": 7, "homepage": 3}
-elapsed   187.5s
+file      /home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/crawl-results/server_pool.json  (189762 bytes)
+requests  4983  failures 3080  refused 1639  rate-limited 10
+per source {}
+elapsed   189.9s
 stopped below target: 518 of 3000. The sources above are what produced them; raising --pages/--gh-pages or running again later (GitHub's index changes hourly) will find more.
 ```
 
 ## crawl-results/site-crawl.log
 ```
-merged 0 sites from ../../pools/site_pool.json
-rechecked 31 legacy candidate(s); 1 passed the current heuristic
+merged 1 sites from ../../pools/site_pool.json
+rechecked 30 legacy candidate(s); 0 passed the current heuristic
 seeded 0 site(s) from /home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/crawl-results/server_pool.json
-round   1  +  0  sites    1/3000  requests  1487  rejected    40  76.5s
-          rejected by reason: {'search returned nothing usable': 23, 'no player marker on sampled title': 7, 'no homepage': 6, 'search control unavailable or unchanged': 4}
-round   2  +  0  sites    1/3000  requests  2565  rejected    42  124.5s
-          rejected by reason: {'search returned nothing usable': 24, 'no homepage': 7, 'no player marker on sampled title': 7, 'search control unavailable or unchanged': 4}
-round   3  +  0  sites    1/3000  requests  3628  rejected    45  175.5s
-          rejected by reason: {'search returned nothing usable': 25, 'no homepage': 9, 'no player marker on sampled title': 7, 'search control unavailable or unchanged': 4}
-round   4  +  0  sites    1/3000  requests  3639  rejected    45  178.8s
-          rejected by reason: {'search returned nothing usable': 25, 'no homepage': 9, 'no player marker on sampled title': 7, 'search control unavailable or unchanged': 4}
+round   1  +  0  sites    1/3000  requests  1072  rejected     0  65.7s
+          rejected by reason: {}
+round   2  +  0  sites    1/3000  requests  2128  rejected     0  122.0s
+          rejected by reason: {}
+round   3  +  0  sites    1/3000  requests  3197  rejected     0  180.0s
+          rejected by reason: {}
 time limit reached
 
 sites     1/3000
-file      /home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/crawl-results/site_pool.json  (171202 bytes)
-rejected  {'search returned nothing usable': 25, 'no homepage': 9, 'no player marker on sampled title': 7, 'search control unavailable or unchanged': 4}
-per source {"legacy-recheck": 1}
+file      /home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/crawl-results/site_pool.json  (166235 bytes)
+rejected  {}
+per source {}
 stopped below target: 1 of 3000 site candidates passed the current heuristic.
 The count covers this crawl's configured sources and search checks; it does not establish
 internet-wide exhaustion or guarantee that a site will produce playable media.
@@ -190,7 +188,7 @@ test_unrecorded_patch_path_is_a_conflict (__main__.ApplyPatchTests.test_unrecord
 test_write_preserves_root_readme_and_creates_backup (__main__.ApplyPatchTests.test_write_preserves_root_readme_and_creates_backup) ... ok
 
 ----------------------------------------------------------------------
-Ran 4 tests in 0.006s
+Ran 4 tests in 0.007s
 
 OK
 ```
@@ -202,8 +200,8 @@ base commit: 334719831cffc93f1d8b635cf8235d01ed7adacf
 target     : /home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/work
 files      : 22  to change 22  already applied 0  conflicts 0
 
-  + nova-tv/android/app/src/main/assets/server_pool.json  (new file, 189868 B)
-  + nova-tv/android/app/src/main/assets/site_pool.json  (new file, 171202 B)
+  + nova-tv/android/app/src/main/assets/server_pool.json  (new file, 189762 B)
+  + nova-tv/android/app/src/main/assets/site_pool.json  (new file, 166235 B)
   ~ nova-tv/android/app/src/main/java/dev/nova/tv/NovaApplication.kt  (87 changed lines)
   ~ nova-tv/android/app/src/main/java/dev/nova/tv/data/repo/LibraryStore.kt  (16 changed lines)
   + nova-tv/android/app/src/main/java/dev/nova/tv/data/store/AtomicFileStore.kt  (new file, 1551 B)
@@ -225,7 +223,7 @@ files      : 22  to change 22  already applied 0  conflicts 0
   + nova-tv/tools/test_server_crawler.py  (new file, 14758 B)
   + nova-tv/tools/test_site_crawler.py  (new file, 12771 B)
 
-sha256 of the files to write (first 12): 884385862c66
+sha256 of the files to write (first 12): 3645bcca9044
 
 wrote 22 file(s); previous versions are under /home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/work/.nova-patch-backup/
 next: build and test the patched checkout before distributing it
@@ -235,9 +233,17 @@ next: build and test the patched checkout before distributing it
 ```
 server_pool.json: 518 entries in both APKs
 site_pool.json: 1 entries in both APKs
-tv: app-tv-debug.apk sha256=3364b757571f0a9acc28e180c5d7869a5c30c0fb49b37ef6abd753bd8ab34cc3
-mobile: app-mobile-debug.apk sha256=71747b204af29d94d26d4c14357dbf579758a33eca1c82828b68a79e030e5d96
+tv: app-tv-debug.apk sha256=fe36d7ffe6649350310b1997cd31c84a9a0c2d698312759cc2c639cc326f2e4d
+mobile: app-mobile-debug.apk sha256=7c62727c7bc6f48fa77d6961c34fbcfad998aa55f21fd7e825975fbb257e015c
 Packaging and recorded heuristic metadata checked; playback, licensing and liveness were not verified.
+```
+
+## crawl-results/emulator-acceleration.log
+```
+Runner: Linux runnervm0hi8g 7.0.0-1020-azure #21-Ubuntu SMP PREEMPT Tue Oct 27 22:34:38 UTC 2026 x86_64 GNU/Linux
+crw-rw---- 1 root kvm 10, 232 Nov 21 08:53 /dev/kvm
+Adjusted /dev/kvm permissions on this ephemeral runner.
+Acceleration mode: KVM
 ```
 
 ## work/nova-tv/android/crawl-build.log
@@ -249,8 +255,8 @@ w: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/work/nova-tv
 w: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/work/nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/exoplayer/SurroundAudioRecovery.kt:59:24 'static fun isDirectPlaybackSupported(p0: AudioFormat, p1: AudioAttributes): Boolean' is deprecated. Deprecated in Java.
 
 > Task :app:compileTvDebugJavaWithJavac
-> Task :app:bundleTvDebugClassesToRuntimeJar
 > Task :app:bundleTvDebugClassesToCompileJar
+> Task :app:bundleTvDebugClassesToRuntimeJar
 > Task :app:processTvDebugJavaRes
 > Task :app:javaPreCompileMobileDebug FROM-CACHE
 > Task :app:compileMobileDebugJavaWithJavac
@@ -276,9 +282,9 @@ w: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/work/nova-tv
 > Task :app:desugarTvDebugFileDependencies
 > Task :app:checkTvDebugDuplicateClasses
 > Task :app:dexBuilderTvDebug
+> Task :app:mergeExtDexTvDebug
 > Task :app:mergeLibDexTvDebug
 > Task :app:mergeProjectDexTvDebug
-> Task :app:mergeExtDexTvDebug
 > Task :app:mergeTvDebugGlobalSynthetics
 > Task :app:mergeTvDebugJavaResource
 > Task :app:mergeTvDebugJniLibFolders
@@ -299,12 +305,12 @@ Unable to strip the following libraries, packaging them as they are: libandroidx
 > Task :app:checkMobileDebugDuplicateClasses
 > Task :app:desugarMobileDebugFileDependencies FROM-CACHE
 > Task :app:mergeExtDexMobileDebug FROM-CACHE
-> Task :app:packageTvDebug
-> Task :app:createTvDebugApkListingFileRedirect
-> Task :app:assembleTvDebug
 > Task :app:mergeLibDexMobileDebug FROM-CACHE
 > Task :app:dexBuilderMobileDebug
 > Task :app:mergeMobileDebugGlobalSynthetics FROM-CACHE
+> Task :app:packageTvDebug
+> Task :app:createTvDebugApkListingFileRedirect
+> Task :app:assembleTvDebug
 > Task :app:mergeMobileDebugJavaResource
 > Task :app:mergeMobileDebugJniLibFolders
 > Task :app:mergeMobileDebugNativeLibs
@@ -320,7 +326,7 @@ Unable to strip the following libraries, packaging them as they are: libandroidx
 > Task :app:createMobileDebugApkListingFileRedirect
 > Task :app:assembleMobileDebug
 
-BUILD SUCCESSFUL in 2m 36s
+BUILD SUCCESSFUL in 3m 22s
 90 actionable tasks: 80 executed, 10 from cache
 ```
 
