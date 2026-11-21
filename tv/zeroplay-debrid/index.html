@@ -4249,25 +4249,43 @@ const ANDROID_TV_LOW_RAM=!!(ANDROID_TV_PROFILE&&(ANDROID_TV_PROFILE.lowRamDevice
 
 /* ---------------- storage ---------------- */
 const LS = { settings:"zp_rd_settings_v1", watchlist:"zp_rd_watchlist_v1", progress:"zp_rd_progress_v1" };
-const loadJSON = (k,f)=>{ try{ const v=JSON.parse(localStorage.getItem(k)); return v??f; }catch{ return f; } };
+const loadJSON = (k,f)=>{
+  try{
+    const raw=localStorage.getItem(k);
+    if(raw==null) return f;
+    const v=JSON.parse(raw);
+    if(v==null) return f;
+    return v;
+  }catch{ return f; }
+};
+/* Saved state outlives the build that wrote it. An older version of this app
+   stored a different shape under the same key, and the render path assumed
+   arrays — so a viewer who had used a previous build got a blank page: the
+   shell painted, then `renderHome` threw on the first `.map` and nothing ever
+   replaced it. Every value that is about to be used as a collection is
+   normalised here, once, where it enters the app. */
+const asArray = v => Array.isArray(v) ? v : [];
+const asObject = v => (v && typeof v === "object" && !Array.isArray(v)) ? v : {};
+const loadArray = (k) => asArray(loadJSON(k,[]));
+const loadObject = (k) => asObject(loadJSON(k,{}));
 const saveJSON = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch{} };
 
 let settings = Object.assign({
   source:"", disabledSources:[]
-}, loadJSON(LS.settings,{}));
+}, loadObject(LS.settings));
 const LEGACY_SETTING_KEYS=["tmdbKey","rdToken","rdUser","addonBase","debrid","debridManifestUrl","siteCatalogues"];
 const hadLegacySettings=LEGACY_SETTING_KEYS.some(k=>Object.prototype.hasOwnProperty.call(settings,k));
 for(const k of LEGACY_SETTING_KEYS) delete settings[k]; /* no user API keys and no Real-Debrid configuration */
-settings.stream=Object.assign({preload:"smart",player:"native",raceTimeoutSec:20,stallSwitch:true,stallTimeoutSec:45,quality:"auto",resolutions:["2160p","1080p","720p","480p"],maxFileSizeGb:5,dataSaver:"auto",dnsWarm:true,sortByHealth:true,trailerPreviews:!ANDROID_TV_APP,volume:.9,muted:false,rate:1,autoFailover:true,engineProbe:false,nextEpisodeWarm:true,primeThreads:ANDROID_TV_APP?1:2,primeChunkKb:ANDROID_TV_APP?128:256,primeBudgetMb:ANDROID_TV_APP?1:2,bufferTargetSec:ANDROID_TV_APP?12:16},settings.stream||{});
+settings.stream=Object.assign({preload:"smart",player:"native",raceTimeoutSec:20,stallSwitch:true,stallTimeoutSec:45,quality:"auto",resolutions:["2160p","1080p","720p","480p"],maxFileSizeGb:5,dataSaver:"auto",dnsWarm:true,sortByHealth:true,trailerPreviews:!ANDROID_TV_APP,volume:.9,muted:false,rate:1,autoFailover:true,engineProbe:false,nextEpisodeWarm:true,primeThreads:ANDROID_TV_APP?1:2,primeChunkKb:ANDROID_TV_APP?128:256,primeBudgetMb:ANDROID_TV_APP?1:2,bufferTargetSec:ANDROID_TV_APP?12:16},asObject(settings.stream));
 /* Screen size and subtitle appearance persist with the rest of the player
    settings, so a viewer sets them once. */
 settings.stream.resizeMode=["fit","zoom","stretch"].includes(settings.stream.resizeMode)?settings.stream.resizeMode:"fit";
-settings.stream.subtitleStyle=Object.assign({syncMs:0,size:100,vertical:100},settings.stream.subtitleStyle||{});
+settings.stream.subtitleStyle=Object.assign({syncMs:0,size:100,vertical:100},asObject(settings.stream.subtitleStyle));
 settings.stream.subtitleStyle.syncMs=Math.max(-10000,Math.min(10000,Number(settings.stream.subtitleStyle.syncMs)||0));
 settings.stream.subtitleStyle.size=Math.max(60,Math.min(220,Number(settings.stream.subtitleStyle.size)||100));
 settings.stream.subtitleStyle.vertical=Math.max(4,Math.min(250,Number(settings.stream.subtitleStyle.vertical)||100));
-settings.ui=Object.assign({autoplayNext:true,reduceMotion:ANDROID_TV_APP,compactCards:false,showCategoryStrip:true,tvPerformanceMode:ANDROID_TV_APP,androidTvLaunchFocus:true},settings.ui||{});
-settings.downloads=Object.assign({enabled:true,multithreaded:true,threads:ANDROID_TV_APP?2:4,chunkMb:ANDROID_TV_APP?1:2,concurrent:1,m3uExtraction:true,autoSave:true,autoResume:false,refreshExpired:true,keepCompleted:true},settings.downloads||{});
+settings.ui=Object.assign({autoplayNext:true,reduceMotion:ANDROID_TV_APP,compactCards:false,showCategoryStrip:true,tvPerformanceMode:ANDROID_TV_APP,androidTvLaunchFocus:true},asObject(settings.ui));
+settings.downloads=Object.assign({enabled:true,multithreaded:true,threads:ANDROID_TV_APP?2:4,chunkMb:ANDROID_TV_APP?1:2,concurrent:1,m3uExtraction:true,autoSave:true,autoResume:false,refreshExpired:true,keepCompleted:true},asObject(settings.downloads));
 /* ZeroPlay plays every stream itself, and that is the only engine there is.
    Older saved settings that pointed at a hosted player are dropped. */
 settings.stream.player="native";
@@ -4277,11 +4295,14 @@ if(settings.source==="vidstuck"||settings.source==="zxcstream"||settings.source=
    websites, and discovery used to auto-add providers nobody asked for. Both
    left tombstones behind that resurrect themselves. The app now starts with
    an empty registry unless the viewer added a feed on purpose. */
-settings.sites=(settings.sites||[]).filter(site=>!isLegacyEmbedHost(site.base||site.home||""));
-settings.providers=(settings.providers||[]).filter(provider=>!isLegacyEmbedHost(provider.base||provider.endpoint||provider.manifestUrl||""));
+/* Normalise shape first, drop legacy entries second. Doing the filter first
+   meant a saved `sites`/`providers` of any other shape threw here and killed
+   the whole script before the first paint. */
+settings.sites=asArray(settings.sites).filter(site=>site&&!isLegacyEmbedHost(site.base||site.home||""));
+settings.providers=asArray(settings.providers).filter(provider=>provider&&!isLegacyEmbedHost(provider.base||provider.endpoint||provider.manifestUrl||""));
 if(!Array.isArray(settings.customSources)) settings.customSources=[];
 if(!Array.isArray(settings.disabledSources)) settings.disabledSources=[];
-settings.feed=Object.assign({url:"",auto:true,intervalMin:15,lastCheck:0,healthAuto:true,addonsAuto:true,lastAddonCheck:0},settings.feed||{});
+settings.feed=Object.assign({url:"",auto:true,intervalMin:15,lastCheck:0,healthAuto:true,addonsAuto:true,lastAddonCheck:0},asObject(settings.feed));
 /* Discovery is a catalogue of *candidates*, not an installer. It used to boot
    with autoStart:true, and every crawl that found a stream addon marked it
    "installed" and synced it into the feed list — so a first run silently
@@ -4292,12 +4313,12 @@ settings.discovery=Object.assign({
   crawlers:{catalogGraph:true,stremioAddons:true,github:true,githubProbe:true,candidateIdentification:true,feeds:true,websites:true,health:true},
   githubQueries:["topic:stremio-addon","topic:stremio-addons","stremio addon in:name,description,readme","topic:stremio","topic:iptv","topic:m3u","topic:streaming-api","topic:anime-api","topic:subtitle-api"],
   cursors:{}, seeds:[], stats:{cycles:0,lastCycleAt:0,lastAdded:0,lastInstalled:0,lastIdentified:0,lastErrors:0,lastSummary:""}
-},settings.discovery||{});
-settings.discovery.crawlers=Object.assign({catalogGraph:true,stremioAddons:true,github:true,githubProbe:true,candidateIdentification:true,feeds:true,websites:true,health:true},settings.discovery.crawlers||{});
+},asObject(settings.discovery));
+settings.discovery.crawlers=Object.assign({catalogGraph:true,stremioAddons:true,github:true,githubProbe:true,candidateIdentification:true,feeds:true,websites:true,health:true},asObject(settings.discovery.crawlers));
 if(!Array.isArray(settings.discovery.githubQueries)||!settings.discovery.githubQueries.length) settings.discovery.githubQueries=["topic:stremio-addon","topic:stremio-addons","stremio addon in:name,description,readme"];
 if(!settings.discovery.cursors||typeof settings.discovery.cursors!=="object") settings.discovery.cursors={};
 if(!Array.isArray(settings.discovery.seeds)) settings.discovery.seeds=[];
-settings.discovery.stats=Object.assign({cycles:0,lastCycleAt:0,lastAdded:0,lastInstalled:0,lastIdentified:0,lastErrors:0,lastSummary:""},settings.discovery.stats||{});
+settings.discovery.stats=Object.assign({cycles:0,lastCycleAt:0,lastAdded:0,lastInstalled:0,lastIdentified:0,lastErrors:0,lastSummary:""},asObject(settings.discovery.stats));
 if(!Array.isArray(settings.providers)) settings.providers=[];
 if(!settings.providerTombstones||typeof settings.providerTombstones!=="object") settings.providerTombstones={};
 if(!settings.health||typeof settings.health!=="object") settings.health={};
@@ -4305,8 +4326,13 @@ if(!Array.isArray(settings.dlog)) settings.dlog=[];
 if(!Array.isArray(settings.sites)) settings.sites=[];
 if(!Array.isArray(settings.addons)) settings.addons=[];
 settings.artwork=Object.assign({enabled:true,cinemeta:true,tvmaze:true,anilist:true,itunes:true},settings.artwork||{});
-let watchlist = loadJSON(LS.watchlist,[]);
-let progress  = loadJSON(LS.progress,{});
+/* An entry with no id is not a title: it cannot be opened, matched or played,
+   and every consumer would have to defend against it. Drop those once, here,
+   so no render, matcher or catalogue mapping can meet one. */
+const isSavedTitle = v => v && typeof v === "object" && !Array.isArray(v) && v.id != null;
+let watchlist = loadArray(LS.watchlist).filter(isSavedTitle);
+const progressRaw = loadObject(LS.progress);
+const progress  = Object.fromEntries(Object.entries(progressRaw).filter(([,v])=>isSavedTitle(v)));
 const saveSettings = ()=>saveJSON(LS.settings,settings);
 if(hadLegacySettings) saveSettings();
 const saveWatchlist= ()=>saveJSON(LS.watchlist,watchlist);
@@ -9599,7 +9625,10 @@ async function renderHome(){
   const resumeItems = continueItems();
   const resumeHTML = resumeItems.length ? continueRailHTML(resumeItems) : "";
   const heroHTML = '<div id="heroSlot" aria-label="Featured title">' + skeletonRail("Featured") + '</div>';
-  const watchlistItems = watchlist.map(item => ({
+  /* Saved entries outlive the build that wrote them: a null or a string in
+     somebody's library must not be able to stop the home screen. Drop what is
+     not a title, keep the rest. */
+  const watchlistItems = watchlist.filter(item => item && typeof item === "object" && item.id != null).map(item => ({
     id: item.id,
     media_type: item.type,
     title: item.type === "movie" ? item.title : undefined,
@@ -12536,6 +12565,18 @@ function goRoute(route){
   if(location.hash===target) render(); else location.hash=target;
 }
 function render(){
+  try{ renderRoute(); }
+  catch(err){ routeRecovery(err); }
+}
+/* Async views reject instead of throwing, so a try/catch around them proves
+   nothing. This is the same guard for the promise side, and it is what stops
+   one bad saved item from leaving an empty page: the viewer gets a retry
+   instead of a blank shell. */
+function routePromise(promise){
+  if(!promise||typeof promise.then!=="function") return promise;
+  return promise.catch(err=>{ routeRecovery(err); });
+}
+function renderRoute(){
   if(typeof downloadModalState!=="undefined"&&downloadModalState) closeDownloadModal();
   if(streamsCtx) closeStreams();
   closeMenuDrawer();
@@ -12558,8 +12599,8 @@ function render(){
   else if(route==="settings"){ setNav("sources"); renderSources(false,{settingsPage:true,section:params.get("section")||""}); }
   else if(route==="downloads"){ setNav(""); renderDownloadsPage(); }
   else if(route==="debrid"||route==="configure"){ setNav("sources"); renderSources(false,{settingsPage:true,section:""}); }
-  else if(route.startsWith("title/")){ const [,t,id]=route.split("/"); setNav("home"); renderHome().then(()=>openDetail(t,Number(id))); }
-  else { setNav("home"); renderHome(); }
+  else if(route.startsWith("title/")){ const [,t,id]=route.split("/"); setNav("home"); void routePromise(renderHome()).then(()=>openDetail(t,Number(id))); }
+  else { setNav("home"); void routePromise(renderHome()); }
   scheduleTvInitialFocus();
 }
 $$(".nav button").forEach(b=>b.onclick=()=>goRoute(b.dataset.nav));
@@ -13264,8 +13305,59 @@ window.addEventListener("hashchange",render);
   const cleanSearch=location.search||"";
   if(cleanRoute&&!location.hash){ history.replaceState(null,"","/"); location.hash="#/"+cleanRoute+cleanSearch; }
   if(location.pathname==="/search"&&!location.hash){ const q=new URLSearchParams(location.search).get("q")||""; history.replaceState(null,"","/"); location.hash="#/search?q="+encodeURIComponent(q); }
-  render();
+  /* The first paint is the one that cannot fail silently. Whatever a view
+     throws — a saved value of an unexpected shape, a browser API that is
+     missing — the app must show something the viewer can act on rather than
+     an empty page under a working header. */
+  try{ render(); }
+  catch(err){ bootRecovery(err); }
 })();
+
+/* A route that throws mid-paint would otherwise leave half a page behind, so
+   the error is caught here and turned into something the viewer can retry.
+   This does NOT touch saved data: one broken screen is not a reason to throw
+   away somebody's watchlist. */
+function routeRecovery(err, opts){
+  opts=opts||{};
+  try{ window.__bootRecoveryRan=(window.__bootRecoveryRan||0)+1; window.__lastBootErr=String(err&&err.message||err); }catch{}
+  try{ console.error("ZeroPlay: render failed", err); }catch{}
+  const view=document.getElementById("view");
+  if(!view) return;
+  view.innerHTML='<div class="status-box error" role="alert" style="margin:2rem 1rem">'
+    +'<strong>'+esc(opts.title||"This screen could not be drawn.")+'</strong> '
+    +esc(opts.help||"")
+    +'<button class="btn btn-primary btn-xs" type="button" id="routeRetryBtn">Try again</button>'
+    +'</div>';
+  const btn=document.getElementById("routeRetryBtn");
+  if(btn) btn.onclick=()=>{ location.hash="#/home"; try{ render(); }catch{} };
+}
+
+/* The very first paint is different: an empty page under a working header has
+   no way out, and the usual cause is saved state written by an older build.
+   That is the one case that offers a reset, and it still waits for a click. */
+function bootRecovery(err){
+  routeRecovery(err,{
+    title:"The catalogue could not be drawn.",
+    help:"Saved app data from an older version of ZeroPlay can cause this."
+  });
+  const view=document.getElementById("view");
+  const btn=view&&document.getElementById("routeRetryBtn");
+  if(!btn) return;
+  const reset=document.createElement("button");
+  reset.type="button";
+  reset.className="btn btn-secondary btn-xs";
+  reset.style.marginLeft=".5rem";
+  reset.textContent="Reset app data and reload";
+  reset.onclick=()=>{
+    try{
+      /* Only this app's keys. A viewer's other sites are untouched. */
+      for(const k of Object.keys(localStorage)) if(/^zp[_-]/.test(k)) localStorage.removeItem(k);
+    }catch{}
+    location.hash="#/home";
+    location.reload();
+  };
+  btn.parentNode.insertBefore(reset,btn.nextSibling);
+}
 </script>
 </body>
 </html>
