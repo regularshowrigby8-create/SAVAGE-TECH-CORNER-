@@ -8,6 +8,7 @@ import dev.nova.tv.data.model.NovaAddon
 import dev.nova.tv.data.model.Stream
 import dev.nova.tv.data.model.SubtitleRef
 import dev.nova.tv.data.model.Video
+import dev.nova.tv.data.repo.CatalogOrigin
 import dev.nova.tv.data.repo.WatchProgress
 import dev.nova.tv.download.DownloadJob
 import dev.nova.tv.data.remote.DnsProvider
@@ -72,9 +73,10 @@ data class Shelf(
     val exhausted: Boolean = false,
     /** Progress for landscape cards, by title id. */
     val progress: Map<String, Float> = emptyMap(),
-    /** Dual Audio rows keep only international titles, so they page by [cursor], not item count. */
+    /** The raw provider cursor and pinned origin survive filtering and paging. */
     val international: Boolean = false,
-    val cursor: Int = 0
+    val cursor: Int = 0,
+    val origin: CatalogOrigin? = null
 )
 
 /** Movies / Series screens: one genre at a time, endless grid. */
@@ -82,7 +84,10 @@ data class BrowseState(
     val genre: String? = null,
     val items: List<MetaPreview> = emptyList(),
     val loading: Boolean = false,
-    val exhausted: Boolean = false
+    val exhausted: Boolean = false,
+    val cursor: Int = 0,
+    val origin: CatalogOrigin? = null,
+    val error: String? = null
 )
 
 /** The opened title. Sources stream in while the viewer looks at it. */
@@ -99,8 +104,8 @@ data class DetailState(
 ) {
     val title: MetaPreview get() = full ?: meta
     val isSeries: Boolean get() = meta.isSeries
-    val streamId: String get() = FinderRules.catalogueId(meta.id, isSeries, season, episode)
     val currentVideo: Video? get() = title.videos.firstOrNull { it.season == season && it.episode == episode }
+    val streamId: String get() = FinderRules.catalogueId(meta.id, isSeries, season, episode, currentVideo?.id)
 }
 
 /** Which panel is open over the player. */
@@ -199,6 +204,8 @@ class NovaViewModel : ViewModel() {
     private var menuHold: (() -> Unit)? = null
 
     private var resolveJob: Job? = null
+    private var refreshJob: Job? = null
+    private var refreshGeneration = 0
     private var autoPlayJob: Job? = null
     private var searchJob: Job? = null
     private var toastJob: Job? = null
@@ -224,6 +231,17 @@ class NovaViewModel : ViewModel() {
             myList = library.myList.value.map { it.toMeta() }
         )
         refresh()
+        // Background manifest refreshes and restored user addons should appear
+        // without requiring the viewer to restart the app.
+        viewModelScope.launch {
+            repository.addons.collect { addons ->
+                _state.update { it.copy(addons = addons, genres = mapOf("movie" to repository.genres("movie"), "series" to repository.genres("series"))) }
+                if (!_state.value.homeLoading) {
+                    val known = shelfPlan.map { it.key }.toSet()
+                    shelfPlan = shelfPlan + planShelves().filter { it.origin != null && it.key !in known }
+                }
+            }
+        }
         engine.pool?.let { pool ->
             viewModelScope.launch {
                 pool.state.collect { p ->
@@ -312,52 +330,62 @@ class NovaViewModel : ViewModel() {
     // -- home -------------------------------------------------------------------
 
     fun refresh() {
+        val generation = ++refreshGeneration
+        refreshJob?.cancel()
         _state.update { it.copy(homeLoading = true, homeError = null) }
-        viewModelScope.launch {
-            // The whole body is guarded, and homeLoading is cleared in
-            // `finally`. Before this, anything that threw between the two
-            // (a finder warm-up, a shelf plan, a cancelled page) left
-            // homeLoading true for the life of the process: the home screen
-            // showed its shimmer and then nothing at all -- a blank catalogue
-            // with no error and no way back.
+        refreshJob = viewModelScope.launch {
             var shelves: List<Shelf> = emptyList()
             var failure: String? = null
             try {
-                runCatching { repository.installDefaults() }
+                repository.installDefaults()
                 runCatching { engine.warmUp(_state.value.finders) }
                 runCatching { engine.syncPoolFill(_state.value.finders) }
                 shelfPlan = planShelves()
                 val first = shelfPlan.take(INITIAL_SHELVES)
-                val loaded = first.map { shelf ->
-                    async { shelf.copy(items = repository.loadPage(shelf.type, shelf.catalog, shelf.genre)) }
-                }.awaitAll().filter { it.items.isNotEmpty() }
+                var attempted = first.map { shelf -> async { loadShelf(shelf) } }.awaitAll()
+                var loaded = attempted.map { it.first }.filter { it.items.isNotEmpty() }
+                // If the general rows all fail, try the other named services
+                // before presenting an error. A niche but available catalogue is
+                // more useful than an empty screen.
+                if (loaded.isEmpty()) {
+                    val backups = shelfPlan.drop(INITIAL_SHELVES).filter { it.origin != null }
+                    val extra = backups.map { shelf -> async { loadShelf(shelf) } }.awaitAll()
+                    attempted += extra
+                    loaded = extra.map { it.first }.filter { it.items.isNotEmpty() }
+                }
+                val emptyKeys = attempted.filter { it.first.items.isEmpty() }.map { it.first.key }.toSet()
+                shelfPlan = shelfPlan.filterNot { it.key in emptyKeys }
                 shelves = libraryShelves() + loaded
-                if (loaded.isEmpty()) failure = "Couldn't reach the catalogue."
+                if (loaded.isEmpty()) failure = attempted.mapNotNull { it.second }.firstOrNull()
+                    ?: "No catalogue returned titles. Check the connection and retry."
             } catch (cancelled: kotlinx.coroutines.CancellationException) {
                 throw cancelled
             } catch (error: Exception) {
-                failure = error.message ?: "Couldn't reach the catalogue."
+                failure = "Couldn't load the catalogue. Check the connection and retry."
             } finally {
-                val hero = shelves.firstOrNull { it.items.isNotEmpty() }
-                    ?.items.orEmpty()
-                    .filter { !it.background.isNullOrBlank() }
-                    .take(HERO_COUNT)
-                val result = shelves
-                val reason = failure
-                _state.update {
-                    it.copy(
-                        homeLoading = false,
-                        // Keep whatever is already on screen rather than
-                        // replacing a good catalogue with an empty one.
-                        shelves = result.ifEmpty { it.shelves },
-                        hero = hero.ifEmpty { it.hero },
-                        homeError = if (result.isEmpty()) reason ?: "Couldn't reach the catalogue." else null,
-                        addons = repository.addons.value,
-                        genres = mapOf("movie" to repository.genres("movie"), "series" to repository.genres("series"))
-                    )
+                if (generation == refreshGeneration) {
+                    val hero = shelves.firstOrNull { it.items.isNotEmpty() }?.items.orEmpty()
+                        .filter { !it.background.isNullOrBlank() || !it.poster.isNullOrBlank() }.take(HERO_COUNT)
+                    val result = shelves
+                    val reason = failure
+                    _state.update {
+                        val visible = result.ifEmpty { it.shelves }
+                        val hasCatalogue = visible.any { shelf -> shelf.key != KEY_CONTINUE && shelf.key != KEY_MY_LIST }
+                        it.copy(homeLoading = false, shelves = visible,
+                            hero = hero.ifEmpty { it.hero },
+                            homeError = if (!hasCatalogue) reason ?: "Couldn't reach the catalogue." else null,
+                            addons = repository.addons.value,
+                            genres = mapOf("movie" to repository.genres("movie"), "series" to repository.genres("series")))
+                    }
                 }
             }
         }
+    }
+
+    private suspend fun loadShelf(shelf: Shelf): Pair<Shelf, String?> {
+        val page = repository.loadPage(shelf.type, shelf.catalog, shelf.genre, origin = shelf.origin)
+        return shelf.copy(items = page.items, origin = page.origin ?: shelf.origin,
+            cursor = page.nextSkip, exhausted = page.exhausted) to page.error
     }
 
     /**
@@ -375,6 +403,14 @@ class NovaViewModel : ViewModel() {
             Shelf("movie:year", "New Movies", "movie", "year", genre = year),
             Shelf("series:year", "New Series", "series", "year", genre = year)
         )
+        val providerShelves = repository.homeCatalogs().map { origin ->
+            val label = origin.catalog.name.ifBlank { origin.addon.name }
+            Shelf(
+                key = "addon:${origin.addon.baseUrl}:${origin.catalog.type}:${origin.catalog.id}",
+                title = if (label.equals(origin.addon.name, true)) label else "${origin.addon.name} · $label",
+                type = origin.catalog.type, catalog = origin.catalog.id, origin = origin
+            )
+        }
         val movieGenres = repository.genres("movie")
         val seriesGenres = repository.genres("series")
         val genreShelves = (0 until maxOf(movieGenres.size, seriesGenres.size)).flatMap { i ->
@@ -383,7 +419,9 @@ class NovaViewModel : ViewModel() {
                 seriesGenres.getOrNull(i)?.let { Shelf("series:top:$it", "$it Series", "series", "top", it) }
             )
         }
-        return base + genreShelves
+        // Put a couple of explicitly named services on the first screen; the
+        // rest follow the main rows as the viewer scrolls.
+        return base.take(2) + providerShelves.take(2) + base.drop(2) + providerShelves.drop(2) + genreShelves
     }
 
     private fun libraryShelves(): List<Shelf> = buildList {
@@ -415,12 +453,13 @@ class NovaViewModel : ViewModel() {
         val next = shelfPlan.filter { it.key !in loadedKeys }.take(MORE_SHELVES)
         if (next.isEmpty()) return
         shelfJobs[KEY_MORE] = viewModelScope.launch {
-            val loaded = next.map { shelf -> async { shelf.copy(items = repository.loadPage(shelf.type, shelf.catalog, shelf.genre)) } }
-                .awaitAll()
-            // Empty genre rows are dropped from the plan, not shown.
-            shelfPlan = shelfPlan.filterNot { p -> loaded.any { it.key == p.key && it.items.isEmpty() } }
-            _state.update { st -> st.copy(shelves = st.shelves + loaded.filter { it.items.isNotEmpty() }) }
-            shelfJobs.remove(KEY_MORE)
+            try {
+                val loaded = next.map { shelf -> async { loadShelf(shelf).first } }.awaitAll()
+                shelfPlan = shelfPlan.filterNot { p -> loaded.any { it.key == p.key && it.items.isEmpty() } }
+                _state.update { st -> st.copy(shelves = st.shelves + loaded.filter { it.items.isNotEmpty() }) }
+            } finally {
+                shelfJobs.remove(KEY_MORE)
+            }
         }
     }
 
@@ -431,22 +470,26 @@ class NovaViewModel : ViewModel() {
         updateShelf(key) { it.copy(loading = true) }
         if (shelf.international) {
             shelfJobs[key] = viewModelScope.launch {
-                val (found, cursor, end) = loadInternational(shelf, shelf.cursor, DUAL_MORE)
-                updateShelf(key) { current ->
-                    val fresh = found.filter { p -> current.items.none { it.id == p.id } }
-                    current.copy(items = current.items + fresh, loading = false, exhausted = end || fresh.isEmpty(), cursor = cursor)
-                }
-                shelfJobs.remove(key)
+                try {
+                    val result = loadInternational(shelf, shelf.cursor, DUAL_MORE)
+                    updateShelf(key) { current ->
+                        val fresh = result.items.filter { p -> current.items.none { it.id == p.id } }
+                        current.copy(items = current.items + fresh, loading = false,
+                            exhausted = result.exhausted || fresh.isEmpty(), cursor = result.cursor, origin = result.origin)
+                    }
+                } finally { shelfJobs.remove(key) }
             }
             return
         }
         shelfJobs[key] = viewModelScope.launch {
-            val page = repository.loadPage(shelf.type, shelf.catalog, shelf.genre, skip = shelf.items.size)
-            updateShelf(key) { current ->
-                val fresh = page.filter { p -> current.items.none { it.id == p.id } }
-                current.copy(items = current.items + fresh, loading = false, exhausted = fresh.isEmpty())
-            }
-            shelfJobs.remove(key)
+            try {
+                val page = repository.loadPage(shelf.type, shelf.catalog, shelf.genre, skip = shelf.cursor, origin = shelf.origin)
+                updateShelf(key) { current ->
+                    val fresh = page.items.filter { p -> current.items.none { it.id == p.id } }
+                    current.copy(items = current.items + fresh, loading = false,
+                        exhausted = page.exhausted || fresh.isEmpty(), cursor = page.nextSkip, origin = page.origin ?: current.origin)
+                }
+            } finally { shelfJobs.remove(key) }
         }
     }
 
@@ -505,24 +548,29 @@ class NovaViewModel : ViewModel() {
     private suspend fun loadDualShelves(plan: List<Shelf>): List<Shelf> = coroutineScope {
         plan.map { shelf ->
             async {
-                val (items, cursor, end) = loadInternational(shelf, 0, DUAL_FIRST)
-                shelf.copy(items = items, cursor = cursor, exhausted = end)
+                val result = loadInternational(shelf, 0, DUAL_FIRST)
+                shelf.copy(items = result.items, cursor = result.cursor, exhausted = result.exhausted, origin = result.origin)
             }
         }.awaitAll().filter { it.items.isNotEmpty() }
     }
 
-    /** Page a catalogue from [start] until [want] international titles or [DUAL_PAGES] pages. */
-    private suspend fun loadInternational(shelf: Shelf, start: Int, want: Int): Triple<List<MetaPreview>, Int, Boolean> {
+    private data class InternationalPage(val items: List<MetaPreview>, val cursor: Int, val exhausted: Boolean, val origin: CatalogOrigin?)
+
+    /** Page the same provider until [want] international titles or [DUAL_PAGES] pages. */
+    private suspend fun loadInternational(shelf: Shelf, start: Int, want: Int): InternationalPage {
         val out = LinkedHashMap<String, MetaPreview>()
         var cursor = start
+        var origin = shelf.origin
         repeat(DUAL_PAGES) {
-            val page = runCatching { repository.loadPage(shelf.type, shelf.catalog, shelf.genre, skip = cursor) }.getOrDefault(emptyList())
-            if (page.isEmpty()) return Triple(out.values.toList(), cursor, true)
-            cursor += page.size
-            page.filter { DualAudio.isInternational(it) }.forEach { out.putIfAbsent(it.id, it) }
-            if (out.size >= want) return Triple(out.values.toList(), cursor, false)
+            val page = repository.loadPage(shelf.type, shelf.catalog, shelf.genre, skip = cursor, origin = origin)
+            origin = page.origin ?: origin
+            if (page.items.isEmpty()) return InternationalPage(out.values.toList(), cursor, true, origin)
+            cursor = page.nextSkip
+            page.items.filter { DualAudio.isInternational(it) }.forEach { out.putIfAbsent(it.id, it) }
+            if (page.exhausted) return InternationalPage(out.values.toList(), cursor, true, origin)
+            if (out.size >= want) return InternationalPage(out.values.toList(), cursor, false, origin)
         }
-        return Triple(out.values.toList(), cursor, false)
+        return InternationalPage(out.values.toList(), cursor, false, origin)
     }
 
     // -- movies / series --------------------------------------------------------
@@ -530,6 +578,7 @@ class NovaViewModel : ViewModel() {
     fun selectGenre(route: Route, genre: String?) {
         val current = _state.value.browse[route]
         if (current != null && current.genre == genre && current.items.isNotEmpty()) return
+        shelfJobs.remove("browse:$route")?.cancel()
         _state.update { it.copy(browse = it.browse + (route to BrowseState(genre = genre))) }
         loadBrowse(route, reset = true)
     }
@@ -540,20 +589,27 @@ class NovaViewModel : ViewModel() {
         if (current.loading || (current.exhausted && !reset)) return
         val key = "browse:$route"
         if (shelfJobs.containsKey(key)) return
-        val skip = if (reset) 0 else current.items.size
-        _state.update { it.copy(browse = it.browse + (route to current.copy(loading = true, items = if (reset) emptyList() else current.items))) }
+        val skip = if (reset) 0 else current.cursor
+        _state.update { it.copy(browse = it.browse + (route to current.copy(loading = true,
+            items = if (reset) emptyList() else current.items, error = null))) }
         shelfJobs[key] = viewModelScope.launch {
-            if (repository.addons.value.isEmpty()) runCatching { repository.installDefaults() }
-            val page = repository.loadPage(type, "top", current.genre, skip)
-            _state.update { st ->
-                val b = st.browse[route] ?: BrowseState()
-                val fresh = page.filter { p -> b.items.none { it.id == p.id } }
-                st.copy(
-                    browse = st.browse + (route to b.copy(items = b.items + fresh, loading = false, exhausted = fresh.isEmpty())),
-                    genres = st.genres + (type to repository.genres(type))
-                )
+            try {
+                if (repository.addons.value.isEmpty()) repository.installDefaults()
+                val page = repository.loadPage(type, "top", current.genre, skip, if (reset) null else current.origin)
+                _state.update { st ->
+                    val b = st.browse[route] ?: BrowseState()
+                    if (b.genre != current.genre) return@update st
+                    val fresh = page.items.filter { p -> b.items.none { it.id == p.id } }
+                    st.copy(
+                        browse = st.browse + (route to b.copy(items = b.items + fresh, loading = false,
+                            exhausted = page.exhausted || fresh.isEmpty(), cursor = page.nextSkip,
+                            origin = page.origin ?: b.origin, error = page.error)),
+                        genres = st.genres + (type to repository.genres(type))
+                    )
+                }
+            } finally {
+                if (shelfJobs[key] === kotlinx.coroutines.currentCoroutineContext()[Job]) shelfJobs.remove(key)
             }
-            shelfJobs.remove(key)
         }
     }
 
@@ -581,7 +637,8 @@ class NovaViewModel : ViewModel() {
                 // A series with a known list starts on its first real episode.
                 val firstSeason = full.seasons.firstOrNull { it > 0 } ?: d.season
                 val keep = full.videos.any { it.season == d.season && it.episode == d.episode }
-                s.copy(detail = d.copy(full = full, season = if (keep) d.season else firstSeason, episode = if (keep) d.episode else (full.episodes(firstSeason).firstOrNull()?.episode ?: 1)))
+                val enriched = full.copy(imdbId = full.imdbId ?: d.meta.imdbId)
+                s.copy(detail = d.copy(full = enriched, season = if (keep) d.season else firstSeason, episode = if (keep) d.episode else (enriched.episodes(firstSeason).firstOrNull()?.episode ?: 1)))
             }
             if (title.isSeries) resolve()
         }
@@ -696,7 +753,8 @@ class NovaViewModel : ViewModel() {
         val type = if (d.isSeries) "series" else "movie"
         // Subtitles after playback starts (WuPlay SDK rule): they never delay Play.
         viewModelScope.launch {
-            val subs = runCatching { repository.loadSubtitles(type, d.streamId) }.getOrDefault(emptyList())
+            val subtitleId = TitleRequest(d.title, d.season, d.episode).imdbStreamId ?: d.streamId
+            val subs = runCatching { repository.loadSubtitles(type, subtitleId) }.getOrDefault(emptyList())
             _state.update { st -> st.playback?.let { pb -> st.copy(playback = pb.copy(subtitles = subs)) } ?: st }
         }
     }
@@ -824,6 +882,7 @@ class NovaViewModel : ViewModel() {
         _state.update { it.copy(finderRunning = it.finderRunning + kind) }
         viewModelScope.launch {
             val report = if (kind == FinderKind.TITLE) null else runCatching { engine.discover(kind, force = true) }.getOrNull()
+            if (report != null) _state.update { it.copy(finderReports = it.finderReports + (kind to report)) }
             val probe = _state.value.shelves.firstOrNull { it.type == "movie" && it.style == ShelfStyle.POSTER }?.items?.firstOrNull()
             var installed = 0
             var found = 0
@@ -850,6 +909,7 @@ class NovaViewModel : ViewModel() {
                 when {
                     installed > 0 -> "Added $installed new source${if (installed == 1) "" else "s"}"
                     noServers -> "No servers yet: run the ZeroPlay or Stremio finder"
+                    report != null && report.sources.isNotEmpty() && report.sourcesFailed == report.sources.size -> "${kind.label}: discovery unavailable; check Sources"
                     probe == null -> "Catalogue not loaded yet"
                     found > 0 -> "${kind.label}: sources ready"
                     else -> "${kind.label}: nothing new found"

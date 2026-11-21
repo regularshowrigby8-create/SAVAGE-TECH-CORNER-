@@ -17,13 +17,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
-import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
+import java.net.URI
 import java.net.URLEncoder
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
@@ -52,8 +52,9 @@ import java.util.concurrent.atomic.AtomicLong
  *
  *  3. **It lied about exhaustion.** A round that added nothing was treated as a
  *     pause, then retried forever. Now each source tracks the pages it has read,
- *     retries with backoff on 403/429, and reports DONE when it has no unseen
- *     work left. The loop stops when the pool is full (3000), the caller stops
+ *     pauses on 403/429, and reports DONE when it has no unseen work left.
+ *     Failed requests are counted; a skipped page is not proof of success.
+ *     The loop stops when the pool is full (3000), the caller stops
  *     it, or every source is done *and* their retry windows have expired. The
  *     `exhausted` flag means "no source has unseen work", never "the internet is
  *     empty": the Internet keeps growing, and a new round can always be started.
@@ -63,9 +64,12 @@ import java.util.concurrent.atomic.AtomicLong
  * validation every other finder uses ([SourceFinder.candidateFor]).
  */
 class ServerHarvester(
-    private val http: HttpClient,
+    http: HttpClient,
     /** Injected in tests so crawling needs no network. */
-    sources: List<Source>? = null
+    sources: List<Source>? = null,
+    private val requester: suspend (String, Map<String, String>, Long) -> String = { url, headers, limit ->
+        http.get(url, headers = headers, attempts = 1, limitBytes = limit)
+    }
 ) {
 
     /**
@@ -110,15 +114,15 @@ class ServerHarvester(
             if (safe.isEmpty()) return null
             requests.incrementAndGet()
             return try {
-                gate.withPermit {
-                    withTimeout(REQUEST_TIMEOUT_MS) {
-                        http.get(safe, headers = headers, attempts = 1, limitBytes = limitBytes)
-                    }
-                }
+                val host = URI(safe).host.lowercase()
+                val hostGate = hostGates.computeIfAbsent(host) { Semaphore(HOST_CONCURRENCY) }
+                kotlinx.coroutines.withTimeoutOrNull(REQUEST_TIMEOUT_MS) {
+                    hostGate.withPermit { gate.withPermit { requester(safe, headers, limitBytes) } }
+                } ?: throw HttpClient.HttpFailure("Request timed out")
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (error: Exception) {
-                rateLimits.computeIfAbsent(source.id) { AtomicLong(0) }
+                failures.incrementAndGet()
                 backoff(source, error)
                 null
             }
@@ -135,6 +139,7 @@ class ServerHarvester(
 
     private val jsonParser = Json { ignoreUnknownKeys = true; isLenient = true }
     private val gate = Semaphore(GLOBAL_CONCURRENCY)
+    private val hostGates = ConcurrentHashMap<String, Semaphore>()
     private val firstSeen: MutableSet<String> = ConcurrentHashMap.newKeySet()
     private val requests = AtomicInteger(0)
     private val failures = AtomicInteger(0)
@@ -187,7 +192,7 @@ class ServerHarvester(
         val ctx = sweepContext()
         val perSource = sources.map { source ->
             async {
-                if (source.isDone() || source.coolingDown(System.currentTimeMillis())) {
+                if (source.isDone() || coolingDown(source, System.currentTimeMillis())) {
                     emptyList()
                 } else {
                     // Not runCatching: an exception here is a broken source, and
@@ -230,7 +235,7 @@ class ServerHarvester(
                     }
                     val ctx = sweepContext()
                     val t0 = System.currentTimeMillis()
-                    val active = sources.filter { !it.isDone() && !it.coolingDown(t0) }
+                    val active = sources.filter { !it.isDone() && !coolingDown(it, t0) }
 
                     if (active.isEmpty()) {
                         // Nothing is asking to run. That is only "exhausted" when
@@ -239,7 +244,7 @@ class ServerHarvester(
                         // false green at exactly the moment GitHub or the
                         // directory asked us to slow down.
                         val waiting = sources.filterNot { it.isDone() }
-                            .map { it.backoffUntil() - t0 }
+                            .map { maxOf(it.backoffUntil(), rateLimits[it.id]?.get() ?: 0L) - t0 }
                             .filter { it > 0 }
                         if (waiting.isEmpty()) {
                             _state.value = _state.value.copy(
@@ -298,14 +303,17 @@ class ServerHarvester(
         }
     }
 
+    private fun coolingDown(source: Source, now: Long): Boolean =
+        source.coolingDown(now) || now < (rateLimits[source.id]?.get() ?: 0L)
+
     private fun backoff(source: Source, error: Exception) {
         val limited = error is HttpClient.HttpFailure && (error.status == 429 || error.status == 403)
         // GitHub allows ten searches a minute unauthenticated, so a throttle is
         // waited out rather than retried. Anything else is one failed request
         // among thousands and needs no pause.
-        rateLimits.computeIfAbsent(source.id) { AtomicLong(0) }
-            .set(System.currentTimeMillis() + if (limited) RATE_LIMIT_PAUSE_MS else 0L)
         if (limited) {
+            val until = System.currentTimeMillis() + RATE_LIMIT_PAUSE_MS
+            rateLimits.computeIfAbsent(source.id) { AtomicLong(0) }.updateAndGet { maxOf(it, until) }
             _state.update { it.copy(rateLimited = it.rateLimited + 1) }
         }
     }
@@ -319,7 +327,7 @@ class ServerHarvester(
         val sourcesDone: Int = 0,
         val requests: Int = 0,
         val rateLimited: Int = 0,
-        /** Sources that threw. Non-zero means "try again", not "nothing there". */
+        /** Failed requests and source errors; non-zero means the pass was incomplete. */
         val failures: Int = 0,
         val lastRoundMs: Long = 0,
         val lastAdded: Int = 0,
@@ -668,13 +676,11 @@ private class CommunityLists : PagedSource() {
     }
 
     private companion object {
-        // Only locations that are public, stable and keyless. A dead one costs one
-        // request and is reported as an empty source, not as a failure of the pool.
+        // The archived issue feed and curated project index are different
+        // collections; either may contain stale or configuration-only entries.
         val LISTS = listOf(
-            "https://raw.githubusercontent.com/doingodswork/more-stremio-addons/master/README.md" to "community list",
-            "https://raw.githubusercontent.com/nzahasan/stremio-addons/main/README.md" to "community list",
-            "https://stremio-addons.com/" to "community list",
-            "https://raw.githubusercontent.com/Stremio/stremio-addons-list/master/README.md" to "community list"
+            "https://api.github.com/repos/stremio-community/stremio-addons-list/issues?state=all&per_page=100" to "community issues",
+            "https://raw.githubusercontent.com/doingodswork/awesome-stremio/master/README.md" to "curated projects"
         )
         const val MAX_PER_LIST = 20
     }

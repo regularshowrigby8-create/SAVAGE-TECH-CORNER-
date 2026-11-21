@@ -112,6 +112,16 @@ fun MobileSources(state: NovaState, viewModel: NovaViewModel, onBack: () -> Unit
                 }
             }
 
+            FinderKind.entries.forEach { kind ->
+                state.finderReports[kind]?.let { report ->
+                    item { Text("${kind.label}: ${report.candidates.size} candidates", style = MType.meta) }
+                    items(report.sources, key = { "${kind.name}:${it.id}" }) { source ->
+                        val note = if (source.error.isBlank()) "${source.candidates} candidates" else source.error
+                        Text("${source.id} · ${source.status.name.lowercase()} · $note", style = MType.meta)
+                    }
+                }
+            }
+
             item { Section("Servers") }
             item {
                 // Only servers that have answered for a title are listed; the
@@ -155,7 +165,7 @@ fun MobileSources(state: NovaState, viewModel: NovaViewModel, onBack: () -> Unit
                         if (harvest.running) {
                             "${harvest.found} found · ${harvest.sourcesDone}/${harvest.sourceCount} sources done · ${harvest.requests} requests"
                         } else if (harvest.exhausted) {
-                            "All ${harvest.sourceCount} sources exhausted at ${harvest.poolSize}/${harvest.target}"
+                            "All ${harvest.sourceCount} sources attempted · ${harvest.failures} failures · pool ${harvest.poolSize}/${harvest.target}"
                         } else if (harvest.stopped.isNotEmpty()) {
                             "Stopped (${harvest.stopped}) at ${harvest.poolSize}/${harvest.target}"
                         } else {

@@ -43,9 +43,9 @@ class NovaApplication : Application(), ImageLoaderFactory {
 
     val settings: SettingsStore by lazy { SettingsStore(getSharedPreferences("nova_settings", MODE_PRIVATE)) }
     val library: LibraryStore by lazy { LibraryStore(getSharedPreferences("nova_library", MODE_PRIVATE)) }
-    val repository: CatalogRepository by lazy { CatalogRepository(addonClient, settings) }
+    val repository: CatalogRepository by lazy { CatalogRepository(addonClient, settings, appScope) }
     val zeroPlayFinder: SourceFinder by lazy { SourceFinder(http, addonClient) }
-    val stremioFinder: StremioFinder by lazy { StremioFinder(http) }
+    val stremioFinder: StremioFinder by lazy { StremioFinder(http, zeroPlayFinder) }
     val websiteFinder: WebsiteFinder by lazy { WebsiteFinder(http) }
     val probe: StreamProbe by lazy { StreamProbe(http.okHttp) }
 

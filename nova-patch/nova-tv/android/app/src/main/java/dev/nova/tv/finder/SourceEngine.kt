@@ -51,7 +51,20 @@ data class TitleRequest(
     val preferredQuality: String = StreamRanker.DEFAULT_QUALITY
 ) {
     val type: String get() = if (meta.isSeries) "series" else "movie"
-    val streamId: String get() = FinderRules.catalogueId(meta.id, meta.isSeries, season, episode)
+    private val video get() = meta.videos.firstOrNull { it.season == season && it.episode == episode }
+    val streamId: String get() = FinderRules.catalogueId(meta.id, meta.isSeries, season, episode, video?.id)
+
+    /** Use only an explicit provider mapping, never assume Kitsu season numbers equal IMDb's. */
+    val imdbStreamId: String? get() {
+        if (Regex("^tt\\d+(?::\\d+:\\d+)?$", RegexOption.IGNORE_CASE).matches(streamId)) return streamId
+        if (!meta.isSeries) return meta.imdbId?.takeIf { Regex("^tt\\d+$", RegexOption.IGNORE_CASE).matches(it) }
+        val episode = video ?: return null
+        val imdb = episode.imdbId?.takeIf { Regex("^tt\\d+$", RegexOption.IGNORE_CASE).matches(it) } ?: return null
+        val s = episode.imdbSeason?.takeIf { it >= 0 } ?: return null
+        val e = episode.imdbEpisode?.takeIf { it > 0 } ?: return null
+        return "$imdb:$s:$e"
+    }
+    val streamIds: List<String> get() = listOfNotNull(streamId, imdbStreamId).distinct()
 }
 
 /** One progressive update. The list is always ranked and always playable. */
@@ -274,7 +287,10 @@ class SourceEngine(
             // 1. Installed addons: the fast path.
             launch {
                 state.track("addons") {
-                    state.add(runCatching { repo.loadStreams(request.type, request.streamId) }.getOrDefault(emptyList()))
+                    val streams = request.streamIds.map { id ->
+                        async { repo.loadStreams(request.type, id) }
+                    }.awaitAll().flatten()
+                    state.add(streams)
                     publish(state)
                     // Probe the first answers straight away; Play is ranked by health.
                     state.probe(probe)
@@ -321,7 +337,7 @@ class SourceEngine(
                                 year = request.meta.year.orEmpty().take(4),
                                 season = request.season.coerceAtLeast(1),
                                 episode = request.episode.coerceAtLeast(1),
-                                imdb = request.meta.id.substringBefore(':')
+                                imdb = request.imdbStreamId?.substringBefore(':').orEmpty()
                             )
                             val found = websites.findStreams(site, query).filter { it.isPlayable }
                             state.add(found)
@@ -363,7 +379,8 @@ class SourceEngine(
     ) {
         val request = state.request
         val todo = candidates
-            .filter { it.acceptsImdbIds && FinderRules.manifestSupports(listOf("stream"), it.types, request.type) }
+            .filter { candidate -> request.streamIds.any { candidate.acceptsId(it) } &&
+                FinderRules.manifestSupports(listOf("stream"), candidate.types, request.type) }
             .filterNot { repo.isInstalled(it.baseUrl) }
             .filter { state.claim(it.baseUrl) }
             .sortedByDescending { it.stars }
@@ -373,7 +390,11 @@ class SourceEngine(
             todo.map { candidate ->
                 async {
                     gate.withPermit {
-                        val hit = verifier.verify(listOf(candidate), request.type, request.streamId).firstOrNull()
+                        var hit: VerifiedSource? = null
+                        for (id in request.streamIds.filter { candidate.acceptsId(it) }) {
+                            hit = verifier.verify(listOf(candidate), request.type, id).firstOrNull()
+                            if (hit != null) break
+                        }
                         this@SourceEngine.pool?.noteResult(candidate.baseUrl, hit != null)
                         if (hit != null) {
                             state.add(hit.streams.filter { it.isPlayable })

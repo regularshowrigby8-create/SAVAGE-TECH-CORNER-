@@ -43,6 +43,42 @@ of the recorded baseline or resolve the conflicts deliberately.
 - Pool files are persisted through an atomic replacement attempt. A failed write
   keeps the previous file and reports an error rather than overwriting it.
 
+## Catalogue and parallel discovery
+
+The app bootstraps Cinemeta and **12 additional catalogue addon services**:
+IMDb Popular, IMDb Catalogs, Rotten Tomatoes, Watch Atlas, Halloween After Dark,
+Film Festivals, Animes' season, Anime Kitsu, Streaming Catalogs, IndiaStreams,
+Public Domain Movies and StremShare. These are separate endpoints, **not 12
+independent non-TMDB databases**: several share IMDb, Cinemeta or TMDB data or
+artwork, and some upstreams have not been independently verified. IMDb Popular,
+Kitsu, AniList-backed anime seasons and Rotten Tomatoes are examples of
+non-TMDB catalogue sources. Availability can change; a manifest or catalogue
+response does not establish playback, content rights, or future uptime.
+
+Catalogue manifests refresh in the background. Home and browse use bounded,
+staggered fallback between compatible catalogues, and later pages stay pinned to
+the provider that supplied page one. An empty later page is exhaustion; network
+and malformed-response failures surface a retry. Individual provider rows show
+which service supplied them. Built-in third-party catalogue requests expose the
+user's IP address to those services. Kitsu IDs are preserved; an IMDb episode
+is used only when a provider supplies an explicit episode mapping.
+
+The ZeroPlay and Stremio finders each consult six channels concurrently: the
+current community directory, the Stremio collection, Cinemeta's addon-catalog
+network, GitHub repository search, archived community submissions, and a
+separate curated project index. These are six **discovery channels**, not six
+independent search companies; some share GitHub infrastructure and can overlap.
+The Stremio finder reads a deeper bounded selection. Per-channel results and
+failures appear after running a finder in Sources. Network and per-host limits,
+response caps and deadlines bound discovery; 403/429 pauses the harvester, which
+also counts failed requests. A discovered candidate still needs to return a
+playable stream for the requested title before it is installed.
+
+The blank catalogue reported on the user's device has not been reproduced or
+confirmed fixed on that device. The manifest decoding, partial-record handling,
+pagination, fallback, identifiers and concurrency now have offline regression
+tests, but only the current build/test run can confirm that these changes compile.
+
 ## GitHub Actions
 
 `nova-patch-build.yml` applies the patch to a fresh Nova checkout, compiles both

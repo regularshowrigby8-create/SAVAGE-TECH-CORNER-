@@ -117,6 +117,16 @@ fun SourcesScreen(state: NovaState, viewModel: NovaViewModel) {
                 }
             }
 
+            FinderKind.entries.forEach { kind ->
+                state.finderReports[kind]?.let { report ->
+                    item { Text("${kind.label}: ${report.candidates.size} candidates", style = NovaType.meta) }
+                    items(report.sources, key = { "${kind.name}:${it.id}" }) { source ->
+                        val note = if (source.error.isBlank()) "${source.candidates} candidates" else source.error
+                        Text("${source.id} · ${source.status.name.lowercase()} · $note", style = NovaType.meta)
+                    }
+                }
+            }
+
             item { SectionLabel("Servers") }
             item {
                 FocusableRow(
@@ -399,8 +409,8 @@ private fun harvestLine(harvest: ServerHarvester.HarvestState): String = when {
         "${harvest.found} found · ${harvest.sourcesDone}/${harvest.sourceCount} sources done · " +
             "${harvest.requests} requests · pool ${harvest.poolSize}/${harvest.target}"
     harvest.exhausted ->
-        "All ${harvest.sourceCount} sources exhausted at ${harvest.poolSize}/${harvest.target} · " +
-            "${harvest.found} found in ${harvest.rounds} rounds"
+        "All ${harvest.sourceCount} sources attempted · pool ${harvest.poolSize}/${harvest.target} · " +
+            "${harvest.found} found · ${harvest.failures} request/source failures"
     harvest.stopped.isNotEmpty() ->
         "Stopped (${harvest.stopped}) at ${harvest.poolSize}/${harvest.target}"
     else -> "Not running"
