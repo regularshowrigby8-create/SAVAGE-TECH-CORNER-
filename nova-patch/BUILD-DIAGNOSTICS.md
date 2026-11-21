@@ -2,7 +2,7 @@
 
 Written automatically by the "Nova patch build" workflow.
 
-- run: 44886402927
+- run: 44886699550
 - sources: `arena/nova-final-debug` @ `3347198`
 - patched compile status: 0
 - unit tests: success
@@ -11,13 +11,21 @@ Written automatically by the "Nova patch build" workflow.
 
 ## compiler errors
 ```
-no compiler errors captured
+e: The daemon has terminated unexpectedly on startup attempt #1 with error code: 0. The daemon process output:
 ```
 
 ## test errors
 ```
-e: The daemon has terminated unexpectedly on startup attempt #1 with error code: 0. The daemon process output:
-e: The daemon has terminated unexpectedly on startup attempt #2 with error code: 0. The daemon process output:
+no test errors captured
+> Task :app:generateMobileDebugBuildConfig UP-TO-DATE
+> Task :app:checkMobileDebugAarMetadata UP-TO-DATE
+> Task :app:processMobileDebugNavigationResources UP-TO-DATE
+> Task :app:compileMobileDebugNavigationResources UP-TO-DATE
+> Task :app:generateMobileDebugResValues UP-TO-DATE
+> Task :app:mapMobileDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateMobileDebugResources UP-TO-DATE
+> Task :app:mergeMobileDebugResources UP-TO-DATE
+> Task :app:packageMobileDebugResources UP-TO-DATE
 > Task :app:parseMobileDebugLocalResources UP-TO-DATE
 > Task :app:createMobileDebugCompatibleScreenManifests UP-TO-DATE
 > Task :app:extractDeepLinksMobileDebug UP-TO-DATE
@@ -30,24 +38,15 @@ e: The daemon has terminated unexpectedly on startup attempt #2 with error code:
 > Task :app:compileMobileDebugJavaWithJavac
 > Task :app:bundleMobileDebugClassesToRuntimeJar
 > Task :app:bundleMobileDebugClassesToCompileJar
-
-> Task :app:compileTvDebugUnitTestKotlin
-e: The daemon has terminated unexpectedly on startup attempt #1 with error code: 0. The daemon process output:
-    1. Kotlin compile daemon is ready
-e: The daemon has terminated unexpectedly on startup attempt #2 with error code: 0. The daemon process output:
-    1. Kotlin compile daemon is ready
-Problems may have occurred during auto-selection of GC. The preferred GC is Parallel GC.
-If the problems persist, try adding the JVM option to the Kotlin daemon JVM arguments: -XX:-UseParallelGC.
-GC auto-selection logic is disabled temporary for the next daemon startup.
-
 > Task :app:compileMobileDebugUnitTestKotlin
-> Task :app:compileTvDebugUnitTestJavaWithJavac NO-SOURCE
-> Task :app:processTvDebugUnitTestJavaRes
-> Task :app:testTvDebugUnitTest
 > Task :app:preMobileDebugUnitTestBuild UP-TO-DATE
 > Task :app:javaPreCompileMobileDebugUnitTest FROM-CACHE
 > Task :app:compileMobileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:compileTvDebugUnitTestKotlin
 > Task :app:processMobileDebugJavaRes
+> Task :app:compileTvDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processTvDebugUnitTestJavaRes
+> Task :app:testTvDebugUnitTest
 > Task :app:processMobileDebugUnitTestJavaRes
 > Task :app:testMobileDebugUnitTest
 
@@ -81,7 +80,7 @@ Unable to strip the following libraries, packaging them as they are: libandroidx
 > Task :app:createMobileDebugApkListingFileRedirect
 > Task :app:assembleMobileDebug
 
-BUILD SUCCESSFUL in 49s
+BUILD SUCCESSFUL in 59s
 78 actionable tasks: 33 executed, 5 from cache, 40 up-to-date
 ```
 
@@ -97,7 +96,8 @@ FAIL: site_pool.json: pool is empty
   ~ nova-tv/android/app/src/main/java/dev/nova/tv/NovaApplication.kt  (87 changed lines)
   ~ nova-tv/android/app/src/main/java/dev/nova/tv/data/repo/LibraryStore.kt  (16 changed lines)
   + nova-tv/android/app/src/main/java/dev/nova/tv/data/store/AtomicFileStore.kt  (new file, 1551 B)
-  ~ nova-tv/android/app/src/main/java/dev/nova/tv/finder/SourceEngine.kt  (136 changed lines)
+  + nova-tv/android/app/src/main/java/dev/nova/tv/finder/FillCoordinator.kt  (new file, 2400 B)
+  ~ nova-tv/android/app/src/main/java/dev/nova/tv/finder/SourceEngine.kt  (161 changed lines)
   ~ nova-tv/android/app/src/main/java/dev/nova/tv/finder/pool/ServerHarvester.kt  (768 changed lines)
   ~ nova-tv/android/app/src/main/java/dev/nova/tv/finder/pool/ServerPool.kt  (99 changed lines)
   + nova-tv/android/app/src/main/java/dev/nova/tv/finder/website/SitePool.kt  (new file, 10157 B)
@@ -105,6 +105,7 @@ FAIL: site_pool.json: pool is empty
   ~ nova-tv/android/app/src/main/java/dev/nova/tv/ui/screens/NovaViewModel.kt  (90 changed lines)
   ~ nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobileSources.kt  (46 changed lines)
   + nova-tv/android/app/src/test/java/dev/nova/tv/data/store/AtomicFileStoreTest.kt  (new file, 1111 B)
+  + nova-tv/android/app/src/test/java/dev/nova/tv/finder/FillCoordinatorTest.kt  (new file, 4020 B)
   + nova-tv/android/app/src/test/java/dev/nova/tv/finder/pool/ServerPoolBundledTest.kt  (new file, 2615 B)
   + nova-tv/android/app/src/test/java/dev/nova/tv/finder/pool/ServerPoolFillTest.kt  (new file, 8312 B)
   + nova-tv/android/app/src/test/java/dev/nova/tv/finder/website/SitePoolTest.kt  (new file, 11636 B)
