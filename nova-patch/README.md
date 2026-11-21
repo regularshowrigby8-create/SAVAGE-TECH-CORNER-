@@ -75,7 +75,15 @@ check, and uploaded `nova-debug-apks`. It did not perform an emulator test.
 again built and byte-checked 518/1 entries, but the emulator action failed before
 it produced a smoke summary. KVM was available after permissions were adjusted;
 the exact action error was not captured. The workflow now requests the API 34
-Android TV `x86` image and records SDK setup diagnostics on the next run.
+Android TV `x86` image and records SDK setup diagnostics.
+
+[Crawl 44888502419](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/44888502419)
+then passed its Android tests, byte-for-byte pool checks, distribution gate and
+bounded emulator smoke test. Each flavor imported 518 manifests and 1 site and
+remained alive for 90 seconds after server filling started on an Android TV
+emulator. The [TV and mobile debug APKs](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/44888502419/artifacts/14700877985)
+are in the `nova-crawled-debug-apks` artifact (14-day retention). This is not a
+playback test or a diagnosis of the separate device-specific crash.
 
 `nova-pool-crawl.yml` runs the threaded manifest and site crawlers on GitHub
 Actions. It validates and publishes both JSON files, copies them to the two app
