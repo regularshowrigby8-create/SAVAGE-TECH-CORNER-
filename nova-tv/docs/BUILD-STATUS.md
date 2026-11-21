@@ -33,14 +33,15 @@ device's download several MB smaller still.
 
 Workflow: `nova-tv Android` (`.github/workflows/nova-tv-android.yml`), which now
 also triggers on `nova-tv-v2`, so the branch builds itself.
-Run: [44838961363](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/44838961363)
-— every step green (build, both unit suites, lint, R8 release, APK verification).
+Run: [44847977271](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/44847977271)
+(commit `c7c8042`) — every step green (build, both unit suites, lint, R8 release,
+APK verification).
 
 | Artefact | zipped | sha256 |
 |---|---|---|
-| `nova-tv-release-apk` | 5.01 MB | `a3793fe171ac8f874d766854bf17d81926600c6a1138e1025daecfc684c8446e` |
-| `nova-mobile-release-apk` | 5.3 MB | `2fe62e5b12b6303d4c113fddd33c909e7fda5594fbc6de12a957a50818473054` |
-| `nova-tv-debug-apk` | 37 MB | `6d0e03acaaf3f3eba89426be94025612b6f1ac8b7b0f44438b2fcd4ab544866b` |
+| `nova-tv-release-apk` | 5.01 MB | `145bff10d8a7c3f84712c95ab9c1bdd3ce00faf3776cd678c3441d849f990a66` |
+| `nova-mobile-release-apk` | 5.3 MB | `b47b36f780b5f27bec241abaee889910220d8118b59700782877fd02b5b20865` |
+| `nova-tv-debug-apk` | 37 MB | `53d6010f30935d82cfe897f06e7b8370eb862e0cab9f13c2c0713d4d18c841f4` |
 
 The committed `artifacts/*.apk` files are still the pre-debug-pass binaries; the
 freshly built ones are the CI artefacts above. Downloading them needs a signed-in
