@@ -4214,7 +4214,7 @@ body.android-tv .server-option .src-actions .btn { min-height: 42px; padding: 0 
 
 <div class="demo-banner hidden" id="demoBanner">
   <div class="status-box info">
-    <span><strong>You are offline</strong> — saved titles, sources and downloads are still available.</span>
+    <span id="demoBannerText"><strong>You are offline</strong> — saved titles, sources and downloads are still available.</span>
     <button class="btn btn-primary btn-xs" id="demoBannerBtn" type="button">Open Sources</button>
   </div>
 </div>
@@ -4754,8 +4754,52 @@ function setCatalogMode(m){
   catalogMode=m;
   const c=$("#catalogModeChip"); if(c){ c.textContent=CATALOG_MODE_LABELS[m]||"TMDB"; c.title="Active catalogue: "+(CATALOG_MODE_LABELS[m]||"TMDB"); }
 }
+/* The offline banner is a claim about the whole app, so it is decided by the
+   whole app. It used to be toggled by whichever request finished last: a
+   single shelf whose query came back empty (a genre that has nothing this
+   year) raised "You are offline" while nine other shelves had real posters on
+   screen. Now every catalogue answer is recorded, and only a page with no
+   live rail at all is called offline. */
+const catalogHealth={live:0,failed:0};
+let bannerPartial=false;
 function setDemo(on){
   demoMode=on; $("#demoBanner").classList.toggle("hidden",!on);
+}
+function bannerText(html){ const t=$("#demoBannerText"); if(t) t.innerHTML=html; }
+function hideBanner(){
+  bannerPartial=false;
+  const b=$("#demoBanner"); if(b) b.classList.add("hidden");
+  bannerText(OFFLINE_BANNER_TEXT);
+}
+const OFFLINE_BANNER_TEXT="<strong>You are offline</strong> — saved titles, sources and downloads are still available.";
+/* kind: "live" (a source answered), "saved" (the persisted answer was used) or
+   "empty" (nothing was available for this request). Only "live" means the
+   network is working, but "live" and "saved" both mean there is something to
+   watch, and that is what the banner is actually announcing. */
+function catalogReport(kind){
+  const hasContent=kind!=="empty";
+  if(hasContent) catalogHealth.live++; else catalogHealth.failed++;
+  if(hasContent){
+    /* There is something on screen, so this is not an offline page — and any
+       earlier "some shelves are empty" notice is stale. */
+    if(demoMode||bannerPartial) hideBanner();
+    return;
+  }
+  if(catalogHealth.live===0){
+    /* Nothing has answered with content on this page at all. */
+    bannerPartial=false; bannerText(OFFLINE_BANNER_TEXT); setDemo(true);
+  }else if(!demoMode){
+    /* Some shelves are empty but the page is not offline. Say that instead of
+       lying about the network. */
+    bannerPartial=true;
+    bannerText("<strong>Some shelves are empty</strong> — their source did not answer. Everything else is live.");
+    const b=$("#demoBanner"); if(b) b.classList.remove("hidden");
+  }
+}
+/* Counts are per rendered page: a new shelf set is a new claim. */
+function catalogReportReset(){
+  catalogHealth.live=0; catalogHealth.failed=0;
+  bannerText(OFFLINE_BANNER_TEXT);
 }
 /* ---------------- Cinemeta keyless catalogue ----------------
    Stremio's official catalogue addon (no API key, CORS-open; `https://v3-cinemeta.strem.io`). Used whenever
@@ -4948,7 +4992,18 @@ async function cinemetaResponse(path, params){
   }
   if(path==="/movie/popular") return cmWrap(await cmCatalog("movie","top",{skip}), page);
   if(path==="/movie/top_rated") return cmWrap(await cmCatalog("movie","imdbRating",{skip}), page);
-  if(path==="/movie/now_playing"||path==="/movie/upcoming") return cmWrap(await cmCatalog("movie","year",{genre:String(new Date().getFullYear()),skip}), page);
+  if(path==="/movie/now_playing"||path==="/movie/upcoming"){
+    /* This year's releases are empty early in the year (and Cinemeta's year
+       filter is exact), which used to hand back zero titles and, before the
+       banner fix, could call the whole page offline. Widen backwards until
+       there is something to show. */
+    const year=new Date().getFullYear();
+    for(const y of [year, year-1, year-2]){
+      const list=await cmCatalog("movie","year",{genre:String(y),skip});
+      if(list.length) return cmWrap(list, page);
+    }
+    return cmWrap(await cmCatalog("movie","top",{skip}), page);
+  }
   if(path==="/tv/popular"||path==="/tv/airing_today"||path==="/tv/on_the_air") return cmWrap(await cmCatalog("tv","top",{skip}), page);
   if(path==="/search/multi"){
     const q = params.query||"";
@@ -5073,21 +5128,23 @@ async function catalogRespond(path,params,fallback){
       const r=await fetch(url,{headers:{Accept:"application/json"}});
       if(r.ok){
         const data=await r.json();
-        if(data&&data.success!==false&&catalogAnswerHasContent(path,data)){ setCatalogMode("tmdb"); setDemo(false); catalogCachePut(key,data); return data; }
+        if(data&&data.success!==false&&catalogAnswerHasContent(path,data)){ setCatalogMode("tmdb"); catalogReport("live"); catalogCachePut(key,data); return data; }
       }
     }catch{}
     /* 2. Keyless Cinemeta, for a deployment with no TMDB credential at all. */
     const live=await cinemetaSafe(path,params);
-    if(live&&catalogAnswerHasContent(path,live)){ setCatalogMode("cinemeta"); setDemo(false); catalogCachePut(key,live); return live; }
+    if(live&&catalogAnswerHasContent(path,live)){ setCatalogMode("cinemeta"); catalogReport("live"); catalogCachePut(key,live); return live; }
     /* 3. The last real answer. No banner: this is still catalogue data. */
-    if(cached&&cached.data){ setCatalogMode("cached"); return cached.data; }
+    if(cached&&cached.data){ setCatalogMode("cached"); catalogReport("saved"); return cached.data; }
   }else{
     const live=await cinemetaSafe(path,params);
-    if(live&&catalogAnswerHasContent(path,live)){ setCatalogMode("cinemeta"); setDemo(false); catalogCachePut(key,live); return live; }
-    if(cached&&cached.data){ setCatalogMode("cached"); return cached.data; }
+    if(live&&catalogAnswerHasContent(path,live)){ setCatalogMode("cinemeta"); catalogReport("live"); catalogCachePut(key,live); return live; }
+    if(cached&&cached.data){ setCatalogMode("cached"); catalogReport("saved"); return cached.data; }
   }
-  /* 4. Nothing real is reachable. Say so, and say why. */
-  setCatalogMode("demo"); setDemo(true);
+  /* 4. Nothing real is reachable. Say so, and say why — but only if no other
+     shelf on the page answered live, so one empty rail cannot speak for the
+     whole catalogue. */
+  setCatalogMode("demo"); catalogReport("empty");
   return fallback();
 }
 
@@ -9576,6 +9633,7 @@ async function renderHome(){
     </div>
   `;
   bindCards(view);
+  catalogReportReset();
   const fill=async(id,title,path,params,opts)=>{ try{ const d=await tmdb(path,params); const el=document.getElementById(id); if(el){ el.outerHTML=railHTML(title,(d.results||[]).filter(x=>typeOf(x)==="movie"||typeOf(x)==="tv").slice(0,tvPerformanceEnabled()?12:16),opts); bindCards(view); } return d.results||[]; }catch{ const el=document.getElementById(id); if(el) el.innerHTML='<div class="status-box error">'+esc(title)+' failed to load. <button class="btn btn-secondary btn-xs" onclick="location.hash=\'#/home\';location.reload()">Retry</button></div>'; return []; } };
   const trending=await fill("railTrending","Trending Today","/trending/all/day",{page:1});
   const hero=(trending||[]).find(x=>x.backdrop_path||x.backdrop_url)||(trending||[])[0];

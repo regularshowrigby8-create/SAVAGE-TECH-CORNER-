@@ -48,6 +48,11 @@ async function fakeFetch(url){
   url=String(url); net.requests.push(url);
   if(url.includes('/api/tmdb')) return net.tmdb==='up'?fakeResponse(TMDB_RESULT):fakeResponse({error:'The catalog is temporarily unavailable.',code:'TMDB_NOT_CONFIGURED'},503);
   const mirror=/^https:\/\/(v3-cinemeta\.strem\.io|cinemeta\.strem\.io|cinemeta-catalogs\.strem\.io)\//;
+  if(mirror.test(url)&&url.includes('/catalog/')&&url.includes('year=')){
+    /* A real Cinemeta shape for a filter with no releases yet: valid JSON,
+       zero titles. This is the rail that made the live page say "offline". */
+    return fakeResponse({metas:[]});
+  }
   if(mirror.test(url)&&url.includes('/catalog/')){
     if(net.cinemeta==='blocked') return fakeResponse({error:'blocked by network'},403);
     return net.cinemeta==='up'?fakeResponse(CATALOGUE):fakeResponse({error:'down'},503);
@@ -179,6 +184,28 @@ async function fakeFetch(url){
   ok(w.eval('Date.now() < cinemetaRelayUntil'),'the relay preference is on a timer, so a fixed network does not stay pinned to it forever');
 
   net.cinemeta='up'; net.relay=false; w.eval('cinemetaRelayUntil=0; cinemetaCache.clear();');
+
+  /* --- One empty rail must not speak for the whole page. ---
+     The live build showed "You are offline" above a full grid of posters
+     because a single shelf (a year filter with no releases yet) came back
+     empty and toggled a page-wide banner. */
+  w.eval('catalogReportReset(); setDemo(false); catalogMode="tmdb";');
+  await w.eval('tmdb("/movie/popular",{page:1})');
+  ok(!w.eval('demoMode'),'a page with a live shelf is not offline');
+  await w.eval('tmdb("/movie/now_playing",{page:1})');
+  const bannerVisible=!d.getElementById('demoBanner').classList.contains('hidden');
+  ok(!bannerVisible,'an empty shelf on a page that has live titles raises no offline banner');
+  ok(w.eval('demoMode')===false,'one empty shelf does not set the sticky offline mode');
+
+  /* And the now-playing rail widened its year instead of handing back zero. */
+  const nowPlaying=await w.eval('tmdb("/movie/now_playing",{page:1})');
+  ok((nowPlaying.results||[]).length>0,'the now-playing rail widens the year instead of coming back empty');
+
+  /* A genuinely dead page still says so, once. */
+  w.eval('catalogReportReset(); setDemo(false);'); net.cinemeta='down';
+  await w.eval('cinemetaDownUntil=Date.now()+600000; catalogResponseCache.clear(); tmdb("/tv/on_the_air",{page:7})');
+  ok(w.eval('demoMode'),'a page where nothing answers still says it is offline');
+  net.cinemeta='up'; w.eval('cinemetaDownUntil=0');
 
   ok(errors.length===0,'the app runs the whole pipeline with no runtime error');
   console.log(`\n${n} catalogue/player checks passed`);
