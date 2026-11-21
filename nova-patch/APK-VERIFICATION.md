@@ -1,6 +1,6 @@
 # Nova APK pool verification
 
-Run: 44886402950
+Run: 44887387025
 
 - Byte-for-byte asset check: success
 - Nonempty distribution gate: skipped
@@ -8,7 +8,7 @@ Run: 44886402950
 ```
 server_pool.json: 518 entries in both APKs
 site_pool.json: 1 entries in both APKs
-tv: app-tv-debug.apk sha256=3364b757571f0a9acc28e180c5d7869a5c30c0fb49b37ef6abd753bd8ab34cc3
-mobile: app-mobile-debug.apk sha256=71747b204af29d94d26d4c14357dbf579758a33eca1c82828b68a79e030e5d96
+tv: app-tv-debug.apk sha256=fe36d7ffe6649350310b1997cd31c84a9a0c2d698312759cc2c639cc326f2e4d
+mobile: app-mobile-debug.apk sha256=7c62727c7bc6f48fa77d6961c34fbcfad998aa55f21fd7e825975fbb257e015c
 Packaging and recorded heuristic metadata checked; playback, licensing and liveness were not verified.
 ```
