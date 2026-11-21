@@ -29,7 +29,7 @@ const vc=new VirtualConsole();
 vc.on('jsdomError',e=>{ const m=String(e.detail||e.message); if(!/scrollTo|Not implemented/.test(m)) errors.push(m); });
 
 /* Per-test network switches. */
-const net={tmdb:'off',cinemeta:'up',requests:[]};
+const net={tmdb:'off',cinemeta:'up',relay:false,requests:[]};
 function fakeResponse(body,status){
   status=status||200;
   return {ok:status>=200&&status<300,status,headers:{get(){return null;}},async json(){return body;},async text(){return typeof body==='string'?body:JSON.stringify(body);}};
@@ -47,15 +47,29 @@ const step=ms=>new Promise(r=>setTimeout(r,ms));
 async function fakeFetch(url){
   url=String(url); net.requests.push(url);
   if(url.includes('/api/tmdb')) return net.tmdb==='up'?fakeResponse(TMDB_RESULT):fakeResponse({error:'The catalog is temporarily unavailable.',code:'TMDB_NOT_CONFIGURED'},503);
-  if(url.includes('v3-cinemeta.strem.io/catalog/')) return net.cinemeta==='up'?fakeResponse(CATALOGUE):fakeResponse({error:'down'},503);
-  if(url.includes('v3-cinemeta.strem.io/meta/')) return net.cinemeta==='up'?fakeResponse({meta:CINEMETA_META}):fakeResponse({error:'down'},503);
+  const mirror=/^https:\/\/(v3-cinemeta\.strem\.io|cinemeta\.strem\.io|cinemeta-catalogs\.strem\.io)\//;
+  if(mirror.test(url)&&url.includes('/catalog/')){
+    if(net.cinemeta==='blocked') return fakeResponse({error:'blocked by network'},403);
+    return net.cinemeta==='up'?fakeResponse(CATALOGUE):fakeResponse({error:'down'},503);
+  }
+  if(mirror.test(url)&&url.includes('/meta/')){
+    if(net.cinemeta==='blocked') return fakeResponse({error:'blocked by network'},403);
+    return net.cinemeta==='up'?fakeResponse({meta:CINEMETA_META}):fakeResponse({error:'down'},503);
+  }
   if(url.includes('v3-cinemeta.strem.io/addon_catalog/')) return fakeResponse({addons:[
     {transportUrl:'https://addon.test/manifest.json',manifest:STREAM_ADDON_MANIFEST},
     {transportUrl:'https://meta.test/manifest.json',manifest:{id:'org.cinemeta',name:'Cinemeta',version:'3',resources:['catalog','meta','addon_catalog'],types:['movie','series'],idPrefixes:['tt'],catalogs:[]}}
   ]});
   if(url==='https://addon.test/manifest.json') return fakeResponse(STREAM_ADDON_MANIFEST);
   if(url.includes('addon.test/stream/movie/tt1375666.json')) return fakeResponse({streams:[{url:'https://cdn.test/inception.mp4',name:'ZeroPlay',title:'1080p · 900 MB'}]});
-  if(url.includes('/api/extract')) return fakeResponse({ok:true,mode:'json'});
+  if(url.includes('/api/extract')){
+    /* The relay is server-side: it reaches the mirror the browser cannot. */
+    const inner=new URL(url,'https://zeroplay.test/').searchParams.get('url')||'';
+    if(!net.relay) return fakeResponse({error:'relay disabled'},502);
+    if(inner.includes('/catalog/')) return fakeResponse(CATALOGUE);
+    if(inner.includes('/meta/')) return fakeResponse({meta:CINEMETA_META});
+    return fakeResponse({ok:true,mode:'json'});
+  }
   return fakeResponse({},404);
 };
 
@@ -129,6 +143,42 @@ async function fakeFetch(url){
   /* A second pass must not duplicate the roster. */
   await w.eval('runDiscoveryCycle("test-again")');
   ok(w.eval('(settings.addons||[]).filter(a=>a.base==="https://addon.test").length')===1,'re-reading the index does not duplicate the same feed');
+
+  /* --- A browser that cannot reach the catalogue at all. ---
+     This is the state a school/ISP/content-filter puts a viewer in: every
+     mirror refuses, so a client-only catalogue renders nothing. The relay is
+     server-side and must take over, and the shelves must end up populated
+     rather than falling to the offline fixtures. */
+  net.cinemeta='blocked'; net.relay=true;
+  w.eval('catalogResponseCache.clear(); cinemetaCache.clear(); catalogCacheLoaded=false; cinemetaDownUntil=0;');
+  /* catalogRespond takes (path, params, fallback) — the fallback is the last
+     rung, so it must be supplied or the call itself throws. The path has to
+     be one the ladder actually maps (`/movie/popular` → Cinemeta top). */
+  const blocked=await w.eval('catalogRespond("/movie/popular",{page:1},()=>demoResponse("/movie/popular",{page:1}))');
+  /* The ladder answers in TMDB shape ({page,total_results,results}), so the
+     rows live under `results` whether they came from TMDB or Cinemeta. */
+  const rows=(blocked&&blocked.results)||[];
+  ok(rows.length>0,'with every mirror blocked, the deployment relay still returns real titles');
+  ok(rows.some(m=>(m.title||m.name)==='Inception'),'the titles are the real catalogue titles, not offline demo fixtures');
+  ok(net.requests.some(u=>u.startsWith('/api/extract?mode=json&url=')&&decodeURIComponent(u).includes('/catalog/')),'the blocked browser asks this deployment relay instead of giving up');
+
+  /* The relay is a documented capability, not an accidental fallback: it must
+     never be handed a non-catalogue URL by this path. */
+  const relayed=net.requests.filter(u=>u.startsWith('/api/extract?mode=json&url='));
+  const catalogueHosts=/cinemeta\.strem\.io|stremio-addons\.net/;
+  ok(relayed.every(u=>catalogueHosts.test(decodeURIComponent(u))),'the relay only ever receives catalogue URLs');
+
+  /* The second shelf must go straight to the relay: three doomed direct
+     attempts per rail is what makes a filtered TV feel frozen. */
+  const before2=net.requests.length;
+  /* A fresh path: the previous shelf is still in cinemetaCache, and a cache
+     hit would test nothing. */
+  await w.eval('cinemetaFetch(cinemetaWithBase("https://v3-cinemeta.strem.io/catalog/series/top/skip=0.json",0))');
+  const second=net.requests.slice(before2);
+  ok(second.length===1&&second[0].startsWith('/api/extract?mode=json&url='),'once the relay works it is preferred, so later shelves skip the blocked mirrors');
+  ok(w.eval('Date.now() < cinemetaRelayUntil'),'the relay preference is on a timer, so a fixed network does not stay pinned to it forever');
+
+  net.cinemeta='up'; net.relay=false; w.eval('cinemetaRelayUntil=0; cinemetaCache.clear();');
 
   ok(errors.length===0,'the app runs the whole pipeline with no runtime error');
   console.log(`\n${n} catalogue/player checks passed`);

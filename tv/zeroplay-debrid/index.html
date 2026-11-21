@@ -8,7 +8,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data: blob:; connect-src 'self' https:; frame-src https:; media-src https: blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <title>ZeroPlay</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='18' fill='%237c3aed'/><path d='M38 28 L72 50 L38 72 Z' fill='white'/></svg>">
-<link rel="manifest" href='data:application/manifest+json,{"name":"ZeroPlay","short_name":"ZeroPlay","display":"standalone","background_color":"%23101214","theme_color":"%23101214","start_url":"."}'>
+<link rel="manifest" href="data:application/manifest+json,{&quot;name&quot;:&quot;ZeroPlay&quot;,&quot;short_name&quot;:&quot;ZeroPlay&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;%23101214&quot;,&quot;theme_color&quot;:&quot;%23101214&quot;,&quot;start_url&quot;:&quot;.&quot;}">
 <link rel="preconnect" href="https://image.tmdb.org" crossorigin>
 <link rel="dns-prefetch" href="https://api.themoviedb.org">
 <link rel="dns-prefetch" href="https://www.youtube-nocookie.com">
@@ -4138,12 +4138,12 @@ body.android-tv .server-option .src-actions .btn { min-height: 42px; padding: 0 
     <button class="menu-button" id="btnMenu" type="button" aria-label="Open menu" aria-controls="menuDrawer" aria-expanded="false">☰</button>
     <a class="logo-badge" href="#/home" title="ZeroPlay home"><span class="logo-mark" aria-hidden="true">▶</span><span>ZeroPlay</span></a>
     <nav class="nav" aria-label="Primary">
-      <button data-nav="home">Home</button>
-      <button data-nav="movies">Movies</button>
-      <button data-nav="series">Series</button>
-      <button data-nav="categories">Categories</button>
-      <button data-nav="library">Library</button>
-      <button data-nav="sources">Sources</button>
+      <button type="button" data-nav="home">Home</button>
+      <button type="button" data-nav="movies">Movies</button>
+      <button type="button" data-nav="series">Series</button>
+      <button type="button" data-nav="categories">Categories</button>
+      <button type="button" data-nav="library">Library</button>
+      <button type="button" data-nav="sources">Sources</button>
     </nav>
     <form class="topbar-search" id="topSearch">
       <input type="search" id="topQuery" placeholder="Search movies and series" autocomplete="off" maxlength="200" aria-label="Search movies and TV series">
@@ -4151,7 +4151,7 @@ body.android-tv .server-option .src-actions .btn { min-height: 42px; padding: 0 
     </form>
     <span class="catalog-state" id="catalogModeChip" title="Active catalogue source">TMDB</span>
   </div>
-  <div class="category-strip" aria-label="Popular categories">
+  <div class="category-strip" role="group" aria-label="Popular categories">
     <button type="button" data-category-type="movie" data-category-id="28">Action</button>
     <button type="button" data-category-type="movie" data-category-id="16">Animation</button>
     <button type="button" data-category-type="movie" data-category-id="35">Comedy</button>
@@ -4164,7 +4164,7 @@ body.android-tv .server-option .src-actions .btn { min-height: 42px; padding: 0 
   </div>
 </header>
 <div class="menu-scrim" id="menuScrim" hidden></div>
-<aside class="menu-drawer" id="menuDrawer" aria-label="ZeroPlay menu" aria-hidden="true">
+<aside class="menu-drawer" id="menuDrawer" aria-label="ZeroPlay menu" aria-hidden="true" inert>
   <div class="menu-drawer-head"><h2>Menu</h2><button class="icon-btn" id="btnCloseMenu" type="button" aria-label="Close menu">✕</button></div>
   <div class="menu-section">
     <h3>Browse</h3>
@@ -4763,10 +4763,35 @@ function setDemo(on){
    with real poster/backdrop artwork (Metahub). Metas include moviedb_id,
    so titles keep working with the TMDB-id playback sources. */
 const CINEMETA = "https://v3-cinemeta.strem.io";
+/* Mirrors of the same public catalogue addon. A single hard-coded host is a
+   single point of failure: when it is blocked by a network or a content
+   filter, every shelf goes empty at once. The list is tried in order and the
+   one that answered is reused for a while. */
+const CINEMETA_BASES = [
+  "https://v3-cinemeta.strem.io",
+  "https://cinemeta.strem.io",
+  "https://cinemeta-catalogs.strem.io"
+];
+let cinemetaBaseIndex = 0;
+/* When the browser itself is the problem (a content filter, a CORS-blocking
+   extension, a captive portal), every shelf would otherwise pay for three
+   doomed direct attempts before the relay answers. Once the relay proves it
+   can reach the catalogue, prefer it for a while. */
+let cinemetaRelayUntil = 0;
 const cinemetaCache = new Map();
 const cinemetaMetaCache = new Map();
 const cinemetaByTmdb = new Map();
 let cinemetaDownUntil = 0;
+function cinemetaActiveBase(){ return CINEMETA_BASES[cinemetaBaseIndex] || CINEMETA; }
+/* Re-point a request at a mirror. Catalogue URLs are `/catalog/…` and meta
+   URLs are `/meta/…`; only the origin changes. */
+function cinemetaWithBase(url, index){
+  const base=CINEMETA_BASES[index];
+  if(!base) return "";
+  const marker=url.indexOf("/catalog/")>=0?"/catalog/":url.indexOf("/meta/")>=0?"/meta/":url.indexOf("/addon_catalog/")>=0?"/addon_catalog/":"";
+  if(!marker) return url;
+  return base + url.slice(url.indexOf(marker));
+}
 const CM_TMDB_GENRES={
  movie:{28:"Action",12:"Adventure",16:"Animation",35:"Comedy",80:"Crime",99:"Documentary",18:"Drama",10751:"Family",14:"Fantasy",36:"History",27:"Horror",10402:"Music",9648:"Mystery",10749:"Romance",878:"Science Fiction",10770:"TV Movie",53:"Thriller",10752:"War",37:"Western"},
  tv:{10759:"Action & Adventure",16:"Animation",35:"Comedy",80:"Crime",99:"Documentary",18:"Drama",10751:"Family",10762:"Kids",9648:"Mystery",10763:"News",10764:"Reality",10765:"Sci-Fi & Fantasy",10766:"Soap",10767:"Talk",10768:"War & Politics",37:"Western"}
@@ -4774,6 +4799,18 @@ const CM_TMDB_GENRES={
 function cmGenreName(type,id){ return (CM_TMDB_GENRES[type]||{})[id] || ""; }
 const CM_GENRE_ALIAS = {"Science Fiction":"Sci-Fi","Action & Adventure":"Action","Sci-Fi & Fantasy":"Sci-Fi","War & Politics":"War","Reality":"Reality-TV","Talk":"Talk-Show","News":null,"TV Movie":null,"Kids":"Family","Soap":null};
 
+/* One transport for the keyless catalogue.
+   The order matters and it is the same order for every request:
+     1. the browser, against the mirror that last answered;
+     2. the browser, against each other mirror;
+     3. this deployment's own JSON relay (`/api/extract?mode=json`), which is
+        server-side and therefore immune to a browser block, a CORS policy or
+        a content filter on the device;
+     4. the saved catalogue (handled by catalogRespond, not here).
+   A response that is JSON but has no `metas`/`meta` is a failure, not an
+   empty catalogue — that distinction is the difference between "this title is
+   not in the list" and "the catalogue did not answer", and only the second
+   one may fall through. */
 async function cinemetaFetch(url){
   const hit = cinemetaCache.get(url);
   if(hit && Date.now()-hit.t < 300000) return hit.data;
@@ -4785,14 +4822,37 @@ async function cinemetaFetch(url){
       return await r.json();
     } finally { clearTimeout(to); }
   };
-  let data;
-  try{ data = await fetchJson(url, 9000); }
-  catch(directErr){
-    // Online launches without a bundled TMDB env key can still reach the
-    // keyless catalogue through this deployment's own JSON relay if the
-    // browser/network cannot reach Cinemeta directly.
-    data = await fetchJson("/api/extract?mode=json&url=" + encodeURIComponent(url), 12000);
+  const usable=data=>!!data&&typeof data==="object"&&(
+    (Array.isArray(data.metas)&&data.metas.length>0)||
+    (data.meta&&typeof data.meta==="object"&&Object.keys(data.meta).length>0)
+  );
+  let data=null, error=null;
+  const relayPreferred=Date.now()<cinemetaRelayUntil;
+  /* 1 + 2: direct, starting at the mirror that answered last. Skipped while
+     the relay is known to be the only route that works. */
+  for(let offset=0;offset<CINEMETA_BASES.length&&!usable(data)&&!relayPreferred;offset++){
+    const index=(cinemetaBaseIndex+offset)%CINEMETA_BASES.length;
+    const target=cinemetaWithBase(url,index);
+    if(!target) continue;
+    try{
+      const attempt=await fetchJson(target, 9000);
+      if(usable(attempt)){ data=attempt; cinemetaBaseIndex=index; }
+    }catch(err){ error=err; }
   }
+  /* 3: the deployment's relay, for a browser that cannot reach any mirror.
+     Server-side, so it is not subject to the viewer's DNS, CORS or filter. */
+  if(!usable(data)){
+    for(let offset=0;offset<CINEMETA_BASES.length&&!usable(data);offset++){
+      const index=(cinemetaBaseIndex+offset)%CINEMETA_BASES.length;
+      const target=cinemetaWithBase(url,index);
+      if(!target) continue;
+      try{
+        const relayed=await fetchJson("/api/extract?mode=json&url="+encodeURIComponent(target), 8000);
+        if(usable(relayed)){ data=relayed; cinemetaBaseIndex=index; cinemetaRelayUntil=Date.now()+600000; }
+      }catch(err){ error=err; }
+    }
+  }
+  if(!usable(data)) cinemetaDownUntil=Date.now()+60000;
   cinemetaCache.set(url, {t: Date.now(), data});
   return data;
 }
@@ -4921,6 +4981,9 @@ async function cinemetaResponse(path, params){
   return null;
 }
 async function cinemetaSafe(path, params){
+  /* cinemetaDownUntil is the cool-off after a *complete* transport failure,
+     set inside cinemetaFetch. An empty-but-valid list is not a failure and
+     must not suppress the catalogue for the next minute. */
   if(Date.now() < cinemetaDownUntil) return null;
   try{ const c = await cinemetaResponse(path, params); if(c) return c; return null; }
   catch{ cinemetaDownUntil = Date.now() + 60000; return null; }
@@ -10198,7 +10261,10 @@ function providerFromManifest(manifestUrl, manifest, meta){
     stars:Number(meta.stars||0)||0, source:meta.from||meta.source||"", from:meta.from||meta.source||"",
     repoUrl:meta.repoUrl||"", homepage:meta.homepage||"", tags:uniqueStringList(meta.tags||[]),
     description:String(manifest.description||meta.description||"").slice(0,240),
-    identification, lastCheckedAt:Date.now(), lastError:""
+    identification, lastCheckedAt:Date.now(), lastError:"",
+    /* Which leg found it. This travels to the feed roster ("From catalogue"),
+       so a viewer can tell a discovered feed from one they pasted. */
+    installedVia:meta.viaCatalogue?"catalogue":(meta.from||meta.source||"discovery")
   };
 }
 function providerToAddon(provider){
@@ -10703,6 +10769,13 @@ function addonCatalogEndpointUrls(){
 /* The community index is the stable one (the official index is short and the
    catalogue graph already reads both). Read it first so one crawl is one
    predictable document, then rotate the rest. */
+/* Same mirrors as the catalogue client, declared here so this block can be
+   extracted and exercised on its own. */
+const CATALOGUE_ADDON_INDEX_BASES=[
+  "https://v3-cinemeta.strem.io",
+  "https://cinemeta.strem.io",
+  "https://cinemeta-catalogs.strem.io"
+];
 const CATALOGUE_ADDON_INDEXES=[
   {url:"https://v3-cinemeta.strem.io/addon_catalog/all/community.json",label:"community addon index"},
   {url:"https://v3-cinemeta.strem.io/addon_catalog/all/official.json",label:"official addon index"}
@@ -10768,7 +10841,19 @@ async function crawlCatalogueAddons(){
   const start=extras?Math.max(0,Number(cfg.cursors.catalogueAddonIndex)||0)%extras:0;
   const entry=extras&&start?indexes[builtins+start%extras]:indexes[0];
   if(extras) cfg.cursors.catalogueAddonIndex=(start+1)%extras;
-  const data=await fetchJsonLoose(entry.url,15000);
+  /* Built-in indexes live on the Cinemeta mirrors: try each base for the same
+     path so one blocked host does not empty the feed roster. Kept local so
+     this block stays self-contained for the crawler harness. */
+  let data=null;
+  if(!extras){
+    for(const base of CATALOGUE_ADDON_INDEX_BASES){
+      const tail=entry.url.slice(entry.url.indexOf("/addon_catalog/"));
+      const attempt=await fetchJsonLoose(base+tail,15000);
+      if(attempt&&Array.isArray(attempt.addons)){ data=attempt; break; }
+    }
+  }else{
+    data=await fetchJsonLoose(entry.url,15000);
+  }
   if(!data||!Array.isArray(data.addons)){ result.errors.push(entry.label+" unavailable"); return result; }
   for(const addon of data.addons){
     if(!addon) continue;
@@ -12111,7 +12196,8 @@ function feedRosterHTML(){
   return feeds.map(feed=>{
     const health=healthBadge(feed.id);
     const types=(feed.types||[]).join(", ")||"movie, series";
-    const origin=feed.installedVia==="catalogue"?'<span class="chip violet" title="Found in an addon catalogue and installed because it declares a stream endpoint">From catalogue</span> ':"";
+    const discovered=feed.installedVia&&feed.installedVia!=="manual";
+    const origin=discovered?'<span class="chip violet" title="'+(feed.installedVia==="catalogue"?"Found in an addon catalogue":"Found by the continuous searcher")+' and installed because it declares a stream endpoint">'+(feed.installedVia==="catalogue"?"From catalogue":"Discovered")+'</span> ':"";
     return '<div class="src-row feed-row" data-feed-row="'+esc(feed.id)+'">'
       +'<div class="grow"><span class="nm">'+esc(feed.name)+'</span> '
       +'<span class="chip">Feed</span> '+origin+health
@@ -12352,6 +12438,15 @@ function renderMenuQuickSwitches(){
   if(typeof updateDownloadMenuCount==="function") updateDownloadMenuCount();
 }
 
+/* The drawer is a focus trap while open, not an aria-hidden box: marking a
+   container that holds buttons `aria-hidden` leaves its controls focusable
+   and unnamed for assistive tech. Closed, it is `inert` (so nothing inside is
+   reachable at all) behind an `aria-hidden` for older engines. */
+function setMenuDrawerInert(drawer, open){
+  if(!drawer) return;
+  if(open){ drawer.removeAttribute("inert"); drawer.setAttribute("aria-hidden","false"); }
+  else { drawer.setAttribute("inert",""); drawer.setAttribute("aria-hidden","true"); }
+}
 function openMenuDrawer(){
   const drawer=document.getElementById("menuDrawer"), scrim=document.getElementById("menuScrim"), btn=document.getElementById("btnMenu");
   if(!drawer||!scrim) return;
@@ -12359,7 +12454,7 @@ function openMenuDrawer(){
   cancelTvInitialFocus();
   menuReturnFocus=document.activeElement;
   tvRememberReturnFocus();
-  scrim.hidden=false; drawer.classList.add("open"); drawer.setAttribute("aria-hidden","false");
+  scrim.hidden=false; drawer.classList.add("open"); setMenuDrawerInert(drawer,true);
   if(btn) btn.setAttribute("aria-expanded","true");
   $$("[data-open-menu]").forEach(b=>b.setAttribute("aria-expanded","true"));
   syncBodyScrollLock();
@@ -12368,7 +12463,7 @@ function openMenuDrawer(){
 function closeMenuDrawer(){
   const drawer=document.getElementById("menuDrawer"), scrim=document.getElementById("menuScrim"), btn=document.getElementById("btnMenu");
   if(!drawer||!scrim||!drawer.classList.contains("open")) return;
-  drawer.classList.remove("open"); drawer.setAttribute("aria-hidden","true"); scrim.hidden=true;
+  drawer.classList.remove("open"); setMenuDrawerInert(drawer,false); scrim.hidden=true;
   if(btn) btn.setAttribute("aria-expanded","false");
   $$("[data-open-menu]").forEach(b=>b.setAttribute("aria-expanded","false"));
   syncBodyScrollLock();
