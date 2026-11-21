@@ -22,6 +22,9 @@ of the recorded baseline or resolve the conflicts deliberately.
 
 - `ServerHarvester` runs several discovery sources concurrently and reports
   actual progress and failures. Stop, fill and scramble are exposed on both UIs.
+  A coordinator serializes replacement fills and one-shot scrambles while
+  cancellation unwinds, and a stop during a scramble stays stopped. This is a
+  race-prevention measure, not a demonstrated fix for the reported crash.
 - `server_pool.json` holds up to **3000** addon manifests; `site_pool.json`
   holds up to **3000** sites. They have separate capacities and are imported
   from separate assets on an IO thread. Bundled imports preserve on-device data.
@@ -43,8 +46,9 @@ of the recorded baseline or resolve the conflicts deliberately.
 ## GitHub Actions
 
 `nova-patch-build.yml` applies the patch to a fresh Nova checkout, compiles both
-debug flavors, propagates unit-test failures, assembles both APKs, and uploads
-`nova-debug-apks`. Run
+debug flavors, propagates unit-test failures, and assembles both APKs. It uploads
+`nova-debug-apks` only after both APKs match the current nonempty pool assets
+and the site records carry current-method evidence. Run
 [44805110661](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/44805110661)
 compiled, ran the tests, assembled and uploaded the TV and mobile debug APKs.
 That run used commit `916946a` and **empty initial bundled pool assets**. Later
@@ -60,8 +64,11 @@ Actions. It validates and publishes both JSON files, copies them to the two app
 assets, and reports the real counts and per-source evidence in
 `POOL-COUNTS.md` and `pools/counts.json`. It accepts a below-target crawl as a
 bounded result, but a crawler crash, invalid output, or failed push is a failure.
-A later workflow revision also builds and checks APKs against the exact assets
-from that crawl; check the particular run before relying on that artifact.
+The workflow builds both APKs against those exact assets and runs a bounded
+emulator smoke test. An empty checked site pool may be used for that smoke test,
+but fails the distribution gate; `APK-VERIFICATION.md` and `EMULATOR-SMOKE.md`
+record the respective outcomes. Push runs use a short budget for validation;
+manual and scheduled runs can use longer budgets.
 
 The schedule is hourly **only after the workflow exists on the repository's
 default branch**: GitHub Actions does not run scheduled workflows from this

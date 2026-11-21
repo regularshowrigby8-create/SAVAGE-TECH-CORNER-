@@ -17,7 +17,6 @@ import dev.nova.tv.player.StreamRanker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
@@ -122,7 +121,7 @@ class SourceEngine(
         syncPoolFill(kinds)
     }
 
-    private var poolFillJob: Job? = null
+    private val fillCoordinator = FillCoordinator(background)
 
     /**
      * Keep filling the pool from whichever finders are switched on, until the
@@ -145,16 +144,22 @@ class SourceEngine(
      * viewer pressed stop). Nothing is ever reported as full while slots are
      * free -- [ServerPool.PoolState.full] reads the real count.
      */
+    @Synchronized
     fun syncPoolFill(kinds: Set<FinderKind>) {
-        activeKinds = kinds
-        poolFillJob?.cancel()
-        poolFillJob = null
-        val pool = pool ?: return
+        val unchanged = activeKinds == kinds
+        activeKinds = kinds.toSet()
+        val pool = pool
+        val harvester = harvester
         // No finder on means no harvesting at all. With even one finder on, the
-        // shared pool is filled to capacity by the directories plus whatever
-        // that finder discovered -- the remaining finders close the gap.
-        if (harvester == null || kinds.isEmpty()) return
-        poolFillJob = background.launch {
+        // shared pool is filled by the directories and enabled finders.
+        if (pool == null || harvester == null || kinds.isEmpty()) {
+            fillCoordinator.stop()
+            return
+        }
+        // warmUp and refresh can request the same fill back-to-back; don't
+        // cancel a running fill and start a second copy for an identical state.
+        if (unchanged && fillCoordinator.filling) return
+        fillCoordinator.start {
             android.util.Log.i("NovaHarvester", "server pool fill started")
             try {
                 harvester.continuousFill(
@@ -172,21 +177,17 @@ class SourceEngine(
     }
 
     /** Stop filling; the pool keeps everything it has. */
-    fun stopPoolFill() {
-        poolFillJob?.cancel()
-        poolFillJob = null
-    }
+    @Synchronized
+    fun stopPoolFill() = fillCoordinator.stop()
 
-    /** Is the background fill still running? Read by the Sources screen. */
-    val filling: Boolean get() = poolFillJob?.isActive == true
+    /** Is filling wanted (including while a one-shot harvest pauses it)? */
+    val filling: Boolean get() = fillCoordinator.filling
 
     /**
      * The harvester's live counters, so the UI can show real numbers
      * (sources done, requests made, whether anything is still being looked at).
      */
     val harvestState get() = harvester?.state?.value
-
-    private val harvestLock = Mutex()
 
     /**
      * Read the next slice of every directory into the pool (one round).
@@ -200,8 +201,8 @@ class SourceEngine(
     suspend fun fillPool(): Int {
         val pool = pool ?: return 0
         val harvester = harvester ?: return 0
-        return harvestLock.withLock {
-            if (pool.state.value.size >= ServerPool.CAPACITY) return@withLock 0
+        return fillCoordinator.pauseAndRun {
+            if (pool.state.value.size >= ServerPool.CAPACITY) return@pauseAndRun 0
             // harvest() keeps its single-argument shape for callers, and is one
             // parallel pass over every source in the new harvester.
             val found = harvester.harvest(0)
@@ -217,20 +218,12 @@ class SourceEngine(
     suspend fun scramblePool(): Int {
         val pool = pool ?: return 0
         val harvester = harvester ?: return 0
-        // Pause the continuous fill first, then take the lock: it also wants the
-        // lock for each of its passes, so cancelling inside the lock would be a
-        // cancel-and-wait for a job that is waiting on us.
-        val wasFilling = poolFillJob?.isActive == true
-        if (wasFilling) poolFillJob?.cancel()
-        val added = try {
-            harvestLock.withLock {
-                val fresh = harvester.harvestOnce()
-                pool.scramble(fresh + cachedCandidates())
-            }
-        } finally {
-            if (wasFilling) syncPoolFill(activeKinds)
+        // Cancel and wait for any in-flight continuous sweep before touching
+        // the same source cursors. A Stop during this operation must stay stopped.
+        return fillCoordinator.pauseAndRun {
+            val fresh = harvester.harvestOnce()
+            pool.scramble(fresh + cachedCandidates())
         }
-        return added
     }
 
     /** Back to the previous pool. */
