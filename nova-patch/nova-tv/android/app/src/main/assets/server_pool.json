@@ -1,21 +1,23 @@
 {
  "by_source": {
-  "github-readme": 1
+  "homepage": 3,
+  "github-readme": 7,
+  "github-pages": 2
  },
  "source_evidence": {
   "stremio-addons.net": {
    "pages_requested": 29,
-   "candidates": 2880
+   "candidates": 2873
   },
   "stremio-collection": {
    "pages_requested": 1,
    "candidates": 83,
-   "candidate_fetch_failed": 19
+   "candidate_fetch_failed": 20
   },
   "cinemeta-community": {
    "pages_requested": 1,
    "candidates": 83,
-   "candidate_fetch_failed": 19
+   "candidate_fetch_failed": 20
   },
   "cinemeta-official": {
    "pages_requested": 1,
@@ -26,22 +28,25 @@
    "pages_failed": 12
   },
   "github": {
-   "pages_requested": 101,
-   "candidates": 51,
-   "candidate_fetch_failed": 35
+   "pages_requested": 93,
+   "candidates": 33,
+   "candidate_fetch_failed": 26,
+   "pages_failed": 11
   },
   "github-readme": {
-   "candidates": 553,
-   "candidate_fetch_failed": 324,
-   "added": 1
+   "candidates": 415,
+   "candidate_fetch_failed": 237,
+   "added": 7
   },
   "homepage": {
-   "candidates": 577,
-   "candidate_fetch_failed": 465
+   "candidates": 429,
+   "candidate_fetch_failed": 334,
+   "added": 3
   },
   "github-pages": {
-   "candidates": 3734,
-   "candidate_fetch_failed": 3678
+   "candidates": 2636,
+   "candidate_fetch_failed": 2582,
+   "added": 2
   }
  },
  "generation": 0,
@@ -8283,6 +8288,213 @@
    ],
    "stars": 5,
    "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://sondog001-cyber.github.io/Stremio-TV/manifest.json",
+   "baseUrl": "https://sondog001-cyber.github.io/Stremio-TV",
+   "name": "Stremio TV",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "stremiotv_"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://liamcanning.github.io/stremio-imdb-rows/manifest.json",
+   "baseUrl": "https://liamcanning.github.io/stremio-imdb-rows",
+   "name": "IMDb Rows",
+   "types": [
+    "movie",
+    "series",
+    "Combined"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://flixnest.app/flix-streams/u/6p9xzp78nunz/manifest.json",
+   "baseUrl": "https://flixnest.app/flix-streams/u/6p9xzp78nunz",
+   "name": "Flix-Streams",
+   "types": [
+    "movie",
+    "series",
+    "anime",
+    "tv"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb",
+    "aniways",
+    "kitsu",
+    "kisskh",
+    "streamsports99",
+    "flixlivetvtest:trex:"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://doom-addon-s.zxflix.com/manifest.json",
+   "baseUrl": "https://doom-addon-s.zxflix.com",
+   "name": "Doom-addon-S",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://doom-addon-s.zxflix.com/addons/quality-4k/manifest.json",
+   "baseUrl": "https://doom-addon-s.zxflix.com/addons/quality-4k",
+   "name": "UHD",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://doom-addon-s.zxflix.com/addons/quality-1080/manifest.json",
+   "baseUrl": "https://doom-addon-s.zxflix.com/addons/quality-1080",
+   "name": "FHD",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://doom-addon-s.zxflix.com/addons/quality-low/manifest.json",
+   "baseUrl": "https://doom-addon-s.zxflix.com/addons/quality-low",
+   "name": "HD",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://haidangvu3.github.io/bleach-paced-stremio/manifest.json",
+   "baseUrl": "https://haidangvu3.github.io/bleach-paced-stremio",
+   "name": "Concentrated + Hollowed Bleach",
+   "types": [
+    "series"
+   ],
+   "idPrefixes": [
+    "cb_"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 github-pages",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://noe359866-code.github.io/screaper56/manifest.json",
+   "baseUrl": "https://noe359866-code.github.io/screaper56",
+   "name": "Peerflix Static (personal, aggregated)",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 github-pages",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://autopick.click/manifest.json",
+   "baseUrl": "https://autopick.click",
+   "name": "AutoPick",
+   "types": [
+    "movie",
+    "series"
+   ],
+   "idPrefixes": [
+    "tt"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 github-readme",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://nuvio-jet.vercel.app/manifest.json",
+   "baseUrl": "https://nuvio-jet.vercel.app",
+   "name": "Magyar Streaming Pro (HU)",
+   "types": [
+    "movie",
+    "series",
+    "tv",
+    "channel"
+   ],
+   "idPrefixes": [
+    "tt",
+    "tmdb:",
+    "tvdb:",
+    "kitsu:",
+    "mal:",
+    "anilist:",
+    "anidb:",
+    "tvmaze:"
+   ],
+   "stars": 0,
+   "from": "Server pool \u00b7 homepage",
+   "hits": 0,
+   "misses": 0
+  },
+  {
+   "manifestUrl": "https://tv-br-unificada.vercel.app/manifest.json",
+   "baseUrl": "https://tv-br-unificada.vercel.app",
+   "name": "TV BR Unificada",
+   "types": [
+    "tv"
+   ],
+   "idPrefixes": [
+    "brtv:"
+   ],
+   "stars": 1,
+   "from": "Server pool \u00b7 homepage",
    "hits": 0,
    "misses": 0
   }
