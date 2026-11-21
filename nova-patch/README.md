@@ -59,16 +59,28 @@ follow-on build failed before APK assembly and its emulator step did not run.
 Some legacy site candidates were false positives; do not treat that 31 as a
 count of usable streaming sites.
 
+Crawl run [44886402950](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/44886402950)
+published **518 manifest entries and 1 current-heuristic site candidate**,
+with 30 legacy candidates still pending recheck. It passed both Android flavor
+unit-test suites and assembled both debug APKs; their packaged assets matched
+those published pools byte-for-byte. Its KVM setup failed, so the emulator did
+not run and its distribution gate and APK upload were skipped. The site check
+did not establish playback or licensing, and the manifest count is not a fresh
+liveness test of every retained entry.
+
 `nova-pool-crawl.yml` runs the threaded manifest and site crawlers on GitHub
 Actions. It validates and publishes both JSON files, copies them to the two app
 assets, and reports the real counts and per-source evidence in
 `POOL-COUNTS.md` and `pools/counts.json`. It accepts a below-target crawl as a
 bounded result, but a crawler crash, invalid output, or failed push is a failure.
-The workflow builds both APKs against those exact assets and runs a bounded
-emulator smoke test. An empty checked site pool may be used for that smoke test,
-but fails the distribution gate; `APK-VERIFICATION.md` and `EMULATOR-SMOKE.md`
-record the respective outcomes. Push runs use a short budget for validation;
-manual and scheduled runs can use longer budgets.
+The workflow builds both APKs against those exact assets and attempts a bounded
+emulator smoke test, requiring both pool-import markers as well as the fill
+start marker. It tries KVM when available and otherwise attempts a slower
+software emulator; an emulator boot failure is not a pass. An empty checked
+site pool may be used for smoke testing, but fails the distribution gate;
+`APK-VERIFICATION.md` and `EMULATOR-SMOKE.md` record the respective outcomes.
+Push runs use a short budget for validation; manual and scheduled runs can use
+longer budgets.
 
 The schedule is hourly **only after the workflow exists on the repository's
 default branch**: GitHub Actions does not run scheduled workflows from this

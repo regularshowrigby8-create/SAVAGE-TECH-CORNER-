@@ -44,6 +44,10 @@ on:
     paths:
       - 'nova-patch/nova-tv/tools/server_crawler.py'
       - 'nova-patch/nova-tv/tools/site_crawler.py'
+      - 'tools/nova_emulator_smoke.py'
+      - 'tools/test_nova_emulator_smoke.py'
+      - 'tools/verify_nova_apk_pools.py'
+      - 'tools/test_verify_nova_apk_pools.py'
       - '.github/workflows/nova-pool-crawl.yml'
 
 permissions:
@@ -353,13 +357,37 @@ jobs:
       - name: Test the emulator smoke checker
         run: python3 tools/test_nova_emulator_smoke.py
 
-      - name: Enable KVM for the emulator
+      - name: Check emulator acceleration
+        id: acceleration
         run: |
           set -euo pipefail
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-          test -r /dev/kvm && test -w /dev/kvm
+          # Some hosted runners have no /dev/kvm, or cannot reload udev. Do
+          # not skip the smoke test just because the permission setup failed:
+          # android-emulator-runner's `auto` mode uses software in that case.
+          # The mode is recorded; a boot timeout or failed smoke is still a
+          # job failure, never a pass for an unavailable emulator.
+          {
+            echo "Runner: $(uname -a)"
+            if [ -e /dev/kvm ]; then
+              ls -l /dev/kvm
+              if [ ! -r /dev/kvm ] || [ ! -w /dev/kvm ]; then
+                if sudo chmod a+rw /dev/kvm; then
+                  echo 'Adjusted /dev/kvm permissions on this ephemeral runner.'
+                else
+                  echo 'Could not adjust /dev/kvm permissions.'
+                fi
+              fi
+            else
+              echo '/dev/kvm is absent.'
+            fi
+            if [ -r /dev/kvm ] && [ -w /dev/kvm ]; then
+              echo 'Acceleration mode: KVM'
+              echo 'mode=kvm' >> "$GITHUB_OUTPUT"
+            else
+              echo 'Acceleration mode: software fallback (may be slow)'
+              echo 'mode=software' >> "$GITHUB_OUTPUT"
+            fi
+          } 2>&1 | tee crawl-results/emulator-acceleration.log
 
       - name: Observe both flavors after server finding starts
         id: emulator
@@ -370,6 +398,9 @@ jobs:
           arch: x86_64
           profile: tv_1080p
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          disable-linux-hw-accel: auto
+          # Software boot can take much longer than an accelerated boot.
+          emulator-boot-timeout: 1200
           disable-animations: true
           # The action runs each script line in a separate POSIX shell.
           script: python3 tools/nova_emulator_smoke.py --tv work/nova-tv/android/app/build/outputs/apk/tv/debug/*.apk --mobile work/nova-tv/android/app/build/outputs/apk/mobile/debug/*.apk --out emulator-results --seconds 90
@@ -436,6 +467,11 @@ jobs:
             printf '# Nova emulator startup smoke\n\nRun: %s\n\nNOT COMPLETED (emulator step: %s).\n' \
               "$GITHUB_RUN_ID" "${EMULATOR_OUTCOME:-not started}" > nova-patch/EMULATOR-SMOKE.md
           fi
+          if [ -s crawl-results/emulator-acceleration.log ]; then
+            printf '\n## Runner acceleration\n\n```\n' >> nova-patch/EMULATOR-SMOKE.md
+            cat crawl-results/emulator-acceleration.log >> nova-patch/EMULATOR-SMOKE.md
+            printf '```\n' >> nova-patch/EMULATOR-SMOKE.md
+          fi
           git config user.name "nova-ci"
           git config user.email "nova-ci@users.noreply.github.com"
           git add nova-patch/EMULATOR-SMOKE.md
@@ -464,6 +500,7 @@ jobs:
                      crawl-results/apply.log \
                      crawl-results/apk-verification.log \
                      crawl-results/apk-distribution-check.log \
+                     crawl-results/emulator-acceleration.log \
                      work/nova-tv/android/crawl-build.log; do
               [ -f "$f" ] || continue
               echo "## $f"

@@ -2,8 +2,9 @@
 """Install both APKs on an already-running Android emulator and observe startup.
 
 This is a bounded smoke test, not proof that playback or every UI control works.
-It requires a real log marker from the server-fill coroutine, an alive app
-process after the observation period, and no crash/ANR for the tested package.
+It requires real log markers for both bundled-pool imports and the server-fill
+coroutine, an alive app process after the observation period, and no crash/ANR
+for the tested package. Import counts are newly added entries, not pool totals.
 """
 from __future__ import annotations
 
@@ -22,6 +23,16 @@ CASES = (
     ("mobile", "dev.nova.mobile", "dev.nova.tv.mobile.MobileActivity"),
 )
 MARKER = "NovaHarvester: server pool fill started"
+IMPORT_MARKERS = {
+    "server": re.compile(r"NovaServerPool:\s+imported\s+(\d+)\s+bundled servers\b"),
+    "site": re.compile(r"NovaSitePool:\s+imported\s+(\d+)\s+bundled sites\b"),
+}
+
+
+def imported_counts(log: str) -> dict[str, int]:
+    """Parse successful import log lines; missing lines are not zero imports."""
+    return {name: int(match.group(1)) for name, pattern in IMPORT_MARKERS.items()
+            if (match := pattern.search(log)) is not None}
 
 
 def assess_observation(package: str, launch: str, pid: str, log: str, crash_log: str) -> list[str]:
@@ -35,6 +46,10 @@ def assess_observation(package: str, launch: str, pid: str, log: str, crash_log:
         errors.append("the server-fill start marker was not observed")
     if "NovaHarvester: server pool fill failed" in log:
         errors.append("the server-fill coroutine reported an error")
+    imports = imported_counts(log)
+    for name in IMPORT_MARKERS:
+        if name not in imports:
+            errors.append(f"the bundled {name} pool did not report a successful import")
     if re.search(r"Process:\s*" + re.escape(package) + r"(?:\s*[,\n]|\s*$)", crash_log):
         errors.append("Android crash buffer contains a fatal exception for this package")
     if f">>> {package} <<<" in crash_log:
@@ -67,14 +82,22 @@ def run_case(flavor: str, package: str, activity: str, apk: Path, seconds: int, 
         adb("logcat", "-b", "crash", "-c")
         launch = adb("shell", "am", "start", "-W", "-n", f"{package}/{activity}").stdout
         (out / f"{flavor}-launch.txt").write_text(launch)
-        # Wait for real evidence that the finder started, then observe for the
-        # full requested interval *after* that marker, not merely after launch.
-        start_log = ""
-        for _ in range(30):
-            start_log = adb("logcat", "-d", "-v", "threadtime").stdout
-            if MARKER in start_log:
+        # Wait for the actual fill and import markers. Preserve their lines
+        # across polls in case logcat wraps before the other markers arrive.
+        # The full observation interval starts only *after* the fill marker.
+        evidence: dict[str, None] = {}
+        latest_log = ""
+        for attempt in range(30):
+            latest_log = adb("logcat", "-d", "-v", "threadtime").stdout
+            for line in latest_log.splitlines():
+                if any(tag in line for tag in ("NovaHarvester:", "NovaServerPool:", "NovaSitePool:")):
+                    evidence[line] = None
+            captured = "\n".join(evidence)
+            if MARKER in captured and len(imported_counts(captured)) == len(IMPORT_MARKERS):
                 break
-            time.sleep(3)
+            if attempt < 29:
+                time.sleep(3)
+        start_log = "\n".join(evidence) + "\n" + latest_log
         started = MARKER in start_log
         (out / f"{flavor}-start-logcat.txt").write_text(start_log)
         if started:
@@ -85,10 +108,12 @@ def run_case(flavor: str, package: str, activity: str, apk: Path, seconds: int, 
         crashes = adb("logcat", "-b", "crash", "-d", "-v", "threadtime").stdout
         (out / f"{flavor}-logcat.txt").write_text(log)
         (out / f"{flavor}-crashes.txt").write_text(crashes)
-        errors = assess_observation(package, launch, pid, start_log + "\n" + log, crashes)
+        combined_log = start_log + "\n" + log
+        errors = assess_observation(package, launch, pid, combined_log, crashes)
         if not started:
             errors.append("finder marker did not arrive in time to observe it for the required interval")
-        record.update({"pid": pid, "finder_marker": started, "errors": errors,
+        record.update({"pid": pid, "finder_marker": started,
+                       "bundled_imports": imported_counts(combined_log), "errors": errors,
                        "status": "passed" if not errors else "failed"})
     except (OSError, RuntimeError, subprocess.TimeoutExpired) as error:
         record["errors"] = [str(error)]
@@ -104,15 +129,19 @@ def summary(records: list[dict]) -> str:
     lines = ["# Nova emulator startup smoke", "",
              "Both flavors were tested separately on an Android TV emulator. This is a bounded",
              "startup/server-fill observation, not a playback or complete UI test.", "",
-             "| flavor | result | observed seconds | server fill marker | APK SHA-256 |",
-             "|---|---|---:|---|---|"]
+             "| flavor | result | observed seconds | fill marker | newly imported server / site entries | APK SHA-256 |",
+             "|---|---|---:|---|---:|---|"]
     for item in records:
+        imports = item.get("bundled_imports", {})
+        counts = f"{imports.get('server', 'missing')} / {imports.get('site', 'missing')}"
         lines.append(f"| {item['flavor']} | {item['status']} | {item['observed_seconds']} | "
-                     f"{item.get('finder_marker', False)} | `{item['sha256']}` |")
+                     f"{item.get('finder_marker', False)} | {counts} | `{item['sha256']}` |")
+    for item in records:
         if item.get("errors"):
             lines.extend(["", f"**{item['flavor']} errors:**", ""] + [f"- {e}" for e in item["errors"]])
-    lines.extend(["", "Full device logs are in the workflow artifact; these results do not",
-                  "establish the cause of any separate device-specific crash.", ""])
+    lines.extend(["", "Import counts are new entries, not pool totals; existing or duplicate entries",
+                  "can make them smaller. Full device logs are in the workflow artifact. These",
+                  "results do not establish the cause of any separate device-specific crash.", ""])
     return "\n".join(lines)
 
 
