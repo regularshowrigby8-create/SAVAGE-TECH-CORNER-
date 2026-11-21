@@ -136,7 +136,15 @@ private fun SpotlightFeed(
             }
             items(shelves, key = { it.key }) { shelf ->
                 if (shelf.items.isNotEmpty() || shelf.loading) {
-                    ShelfRow(shelf, onOpen = viewModel::openTitle, onNearEnd = { viewModel.loadMoreInShelf(shelf.key) })
+                    Column {
+                        ShelfRow(shelf, onOpen = viewModel::openTitle, onNearEnd = { viewModel.loadMoreInShelf(shelf.key) })
+                        if (shelf.error != null) {
+                            Row(Modifier.padding(horizontal = ScreenPadding), verticalAlignment = Alignment.CenterVertically) {
+                                Text("Couldn't load more titles", style = MType.body, modifier = Modifier.weight(1f))
+                                Button(onClick = { viewModel.loadMoreInShelf(shelf.key, retry = true) }) { Text("Try again") }
+                            }
+                        }
+                    }
                 }
             }
             item(key = "end") { Spacer(Modifier.height(28.dp)) }

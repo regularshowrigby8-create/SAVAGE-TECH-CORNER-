@@ -37,6 +37,7 @@
     "nova-tv/android/app/src/test/java/dev/nova/tv/finder/pool/ServerPoolBundledTest.kt": null,
     "nova-tv/android/app/src/test/java/dev/nova/tv/finder/pool/ServerPoolFillTest.kt": null,
     "nova-tv/android/app/src/test/java/dev/nova/tv/finder/website/SitePoolTest.kt": null,
+    "nova-tv/android/app/src/test/java/dev/nova/tv/ui/screens/CatalogPagingTest.kt": null,
     "nova-tv/tools/server_crawler.py": null,
     "nova-tv/tools/site_crawler.py": null,
     "nova-tv/tools/test_server_crawler.py": null,

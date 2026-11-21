@@ -66,6 +66,12 @@ fun MobileBrowse(route: Route, state: NovaState, viewModel: NovaViewModel) {
                 items(genres, key = { it }) { g -> GenreChip(g, browse?.genre == g) { viewModel.selectGenre(route, g) } }
             }
         }
+        if (browse != null && browse.items.isNotEmpty() && !browse.loading && browse.error != null) {
+            Column(Modifier.fillMaxWidth().padding(horizontal = ScreenPadding)) {
+                Text("Couldn't load more titles", style = MType.body)
+                Button(onClick = { viewModel.loadBrowse(route, retry = true) }) { Text("Try again") }
+            }
+        }
         if (browse != null && browse.items.isEmpty() && !browse.loading && browse.error != null) {
             Column(Modifier.fillMaxWidth().padding(ScreenPadding)) {
                 Text(browse.error, style = MType.body)

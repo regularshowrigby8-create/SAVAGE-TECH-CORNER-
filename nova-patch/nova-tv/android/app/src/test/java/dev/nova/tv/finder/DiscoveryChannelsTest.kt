@@ -62,6 +62,19 @@ class DiscoveryChannelsTest {
         assertTrue(deep.candidates.all { it.from.startsWith("Stremio · ") })
     }
 
+    @Test fun `inline catalog only entries do not consume discovery slots`() = runTest {
+        val catalog = """{"id":"catalog","name":"Catalog","resources":["catalog"],"types":["movie"]}"""
+        val unusable = (1..12).joinToString(",") { n ->
+            """{"transportUrl":"https://catalog$n.example/manifest.json","manifest":$catalog}"""
+        }
+        val finder = SourceFinder(HttpClient(), api) { _, _, _ ->
+            """{"addons":[$unusable,${entry("later.example")}]}"""
+        }
+        val report = finder.find(sourceIds = listOf("stremio-addons"), maxPerSource = 2)
+        assertEquals(listOf("https://later.example"), report.candidates.map { it.baseUrl })
+        assertEquals(13, report.sources.single().checked)
+    }
+
     @Test fun `failed and partially failed channels are reported separately`() = runTest {
         val report = fixture(failIssues = true, failOfficial = true, requests = mutableListOf()).find()
         val byId = report.sources.associateBy { it.id }

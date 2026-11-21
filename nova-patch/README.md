@@ -58,10 +58,12 @@ response does not establish playback, content rights, or future uptime.
 Catalogue manifests refresh in the background. Home and browse use bounded,
 staggered fallback between compatible catalogues, and later pages stay pinned to
 the provider that supplied page one. An empty later page is exhaustion; network
-and malformed-response failures surface a retry. Individual provider rows show
-which service supplied them. Built-in third-party catalogue requests expose the
-user's IP address to those services. Kitsu IDs are preserved; an IMDb episode
-is used only when a provider supplies an explicit episode mapping.
+and malformed-response failures retain the page cursor and offer a retry.
+Individual provider rows show which service supplied them. Built-in third-party
+catalogue requests expose the user's IP address to those services. Kitsu IDs
+are preserved; an IMDb episode is used only when a provider supplies an explicit
+episode mapping. The sampled Kitsu season-two metadata maps its local S1E1 to
+IMDb S2E1; mapping coverage and actual playback are not established.
 
 The ZeroPlay and Stremio finders each consult six channels concurrently: the
 current community directory, the Stremio collection, Cinemeta's addon-catalog
@@ -70,9 +72,11 @@ separate curated project index. These are six **discovery channels**, not six
 independent search companies; some share GitHub infrastructure and can overlap.
 The Stremio finder reads a deeper bounded selection. Per-channel results and
 failures appear after running a finder in Sources. Network and per-host limits,
-response caps and deadlines bound discovery; 403/429 pauses the harvester, which
-also counts failed requests. A discovered candidate still needs to return a
-playable stream for the requested title before it is installed.
+response caps and deadlines bound discovery; 403/429 pauses the harvester. Root
+feed pages receive up to three attempts, and a pass with failed requests is
+reported as incomplete rather than proven exhausted. A discovered candidate
+still needs to return a playable stream for the requested title before it is
+installed.
 
 The blank catalogue reported on the user's device has not been reproduced or
 confirmed fixed on that device. The manifest decoding, partial-record handling,

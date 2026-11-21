@@ -48,12 +48,14 @@ internal object CatalogDefaults {
 
     private fun source(
         base: String, id: String, name: String, catalogs: List<CatalogDef>,
-        meta: Boolean = false, prefixes: List<String>? = listOf("tt")
+        meta: Boolean = false, subtitles: Boolean = false, prefixes: List<String>? = listOf("tt")
     ) = NovaAddon(
         baseUrl = base, isBuiltIn = true,
         manifest = Manifest(
             id = id, name = name, version = "seed", catalogs = catalogs,
-            resources = listOf(ResourceDef("catalog")) + if (meta) listOf(ResourceDef("meta")) else emptyList(),
+            resources = listOf(ResourceDef("catalog")) +
+                (if (meta) listOf(ResourceDef("meta")) else emptyList()) +
+                (if (subtitles) listOf(ResourceDef("subtitles")) else emptyList()),
             types = catalogs.map { it.type }.distinct(), idPrefixes = prefixes
         )
     )
@@ -92,7 +94,7 @@ internal object CatalogDefaults {
         source(KITSU, "community.anime.kitsu", "Anime Kitsu",
             listOf(def("anime", "kitsu-anime-trending", "Kitsu Trending"),
                 def("anime", "kitsu-anime-popular", "Kitsu Most Popular", skip = true, genre = true)),
-            meta = true, prefixes = listOf("kitsu", "mal", "anilist", "anidb")),
+            meta = true, subtitles = true, prefixes = listOf("kitsu", "mal", "anilist", "anidb")),
         source(STREAMING, "pw.ers.netflix-catalog", "Streaming Catalogs", both("nfx", "Netflix")),
         source(INDIA, "in.rdata.indiastreams", "IndiaStreams",
             listOf(def("movie", "trendingmovies", "Trending movies in India"),

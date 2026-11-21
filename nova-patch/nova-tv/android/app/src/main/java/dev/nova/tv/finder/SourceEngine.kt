@@ -109,7 +109,7 @@ class SourceEngine(
     private val harvester: ServerHarvester? = null,
     private val sitePool: SitePool? = null
 ) {
-    /** At most [PARALLELISM] network calls at once, across every finder. */
+    /** Bounds coroutine execution threads; individual network paths have separate request gates. */
     private val io = Dispatchers.IO.limitedParallelism(PARALLELISM)
     private val background = CoroutineScope(SupervisorJob() + io)
 

@@ -197,6 +197,7 @@ private fun Shelves(shelves: List<Shelf>, viewModel: NovaViewModel, onMoreShelve
                     onOpen = viewModel::openTitle,
                     onFocused = onFocused,
                     onNearEnd = { viewModel.loadMoreInShelf(shelf.key) },
+                    onRetry = { viewModel.loadMoreInShelf(shelf.key, retry = true) },
                     modifier = Modifier.animateItem()
                 )
             }
@@ -211,6 +212,7 @@ internal fun ShelfRow(
     onOpen: (MetaPreview) -> Unit,
     onFocused: (MetaPreview) -> Unit,
     onNearEnd: () -> Unit,
+    onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier) {
@@ -219,6 +221,9 @@ internal fun ShelfRow(
             style = NovaType.sectionTitle,
             modifier = Modifier.padding(start = ContentStart, bottom = 18.dp)
         )
+        if (shelf.error != null) {
+            ErrorState("Can't load more titles", shelf.error, onRetry, Modifier.height(180.dp))
+        }
         PivotScroll(parentFraction = 0.05f) {
             LazyRow(
                 modifier = Modifier.fillMaxWidth().arvioDpadFocusGroup(),

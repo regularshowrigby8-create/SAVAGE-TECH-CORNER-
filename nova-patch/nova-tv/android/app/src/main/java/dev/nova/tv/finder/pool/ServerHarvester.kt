@@ -4,6 +4,7 @@ import dev.nova.tv.data.remote.HttpClient
 import dev.nova.tv.finder.FinderCandidate
 import dev.nova.tv.finder.FinderRules
 import dev.nova.tv.finder.SourceFinder
+import dev.nova.tv.finder.StremioFinder
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -53,8 +54,8 @@ import java.util.concurrent.atomic.AtomicLong
  *  3. **It lied about exhaustion.** A round that added nothing was treated as a
  *     pause, then retried forever. Now each source tracks the pages it has read,
  *     pauses on 403/429, and reports DONE when it has no unseen work left.
- *     Failed requests are counted; a skipped page is not proof of success.
- *     The loop stops when the pool is full (3000), the caller stops
+ *     Failed feed pages receive bounded retries; failures are counted and a
+ *     skipped page is not proof of a complete pass. The loop stops when the pool is full (3000), the caller stops
  *     it, or every source is done *and* their retry windows have expired. The
  *     `exhausted` flag means "no source has unseen work", never "the internet is
  *     empty": the Internet keeps growing, and a new round can always be started.
@@ -104,20 +105,22 @@ class ServerHarvester(
         val seen: MutableSet<String>
     ) {
         /**
-         * GET text through the shared gate. Returns null on any failure -- the
-         * caller treats a failure as "no more from this page", never as success.
-         * 403/429 raise the source's backoff through [noteFailure].
+         * GET text through the shared gate. Returns null on failure; sources
+         * retry their root feed pages a bounded number of times. 403/429 raise
+         * the source's backoff through [backoff].
          */
         suspend fun get(url: String, source: Source, headers: Map<String, String> = ACCEPT_JSON,
                         limitBytes: Long = FinderRules.MAX_JSON_BYTES): String? {
             val safe = FinderRules.publicHttpsUrl(url)
             if (safe.isEmpty()) return null
-            requests.incrementAndGet()
             return try {
                 val host = URI(safe).host.lowercase()
                 val hostGate = hostGates.computeIfAbsent(host) { Semaphore(HOST_CONCURRENCY) }
                 kotlinx.coroutines.withTimeoutOrNull(REQUEST_TIMEOUT_MS) {
-                    hostGate.withPermit { gate.withPermit { requester(safe, headers, limitBytes) } }
+                    hostGate.withPermit { gate.withPermit {
+                        requests.incrementAndGet()
+                        requester(safe, headers, limitBytes)
+                    } }
                 } ?: throw HttpClient.HttpFailure("Request timed out")
             } catch (cancelled: CancellationException) {
                 throw cancelled
@@ -131,6 +134,9 @@ class ServerHarvester(
         /** Parse JSON, returning null rather than throwing on malformed input. */
         fun json(text: String?): JsonElement? =
             text?.let { runCatching { jsonParser.parseToJsonElement(it) }.getOrNull() }
+
+        /** A malformed feed is a failure, not a successfully empty page. */
+        fun invalidFeed() { failures.incrementAndGet() }
 
         /** Only unseen servers are worth asking about again. */
         fun fresh(candidates: List<FinderCandidate>): List<FinderCandidate> =
@@ -204,6 +210,7 @@ class ServerHarvester(
                 }
             }
         }.awaitAll()
+        _state.update { it.copy(requests = requests.get(), failures = failures.get()) }
         perSource.flatten().distinctBy { ServerPool.key(it.baseUrl) }
     }
 
@@ -247,10 +254,16 @@ class ServerHarvester(
                             .map { maxOf(it.backoffUntil(), rateLimits[it.id]?.get() ?: 0L) - t0 }
                             .filter { it > 0 }
                         if (waiting.isEmpty()) {
+                            val incomplete = failures.get() > 0
                             _state.value = _state.value.copy(
                                 running = false,
-                                stopped = if (stopWhenExhausted) "every source exhausted" else "no work left",
-                                exhausted = stopWhenExhausted,
+                                stopped = when {
+                                    incomplete -> "pass finished with failed requests"
+                                    stopWhenExhausted -> "every source exhausted"
+                                    else -> "no work left"
+                                },
+                                exhausted = stopWhenExhausted && !incomplete,
+                                failures = failures.get(), requests = requests.get(),
                                 sourcesDone = sources.count { it.isDone() },
                                 sourceCount = sources.size,
                                 finishedAt = System.currentTimeMillis()
@@ -343,7 +356,7 @@ class ServerHarvester(
     }
 
     companion object {
-        /** Requests in flight, app-wide. Chosen to fill 3000 slots in minutes, not hours. */
+        /** Concurrent requests in this harvester; other subsystems have their own limits. */
         const val GLOBAL_CONCURRENCY = 24
         const val HOST_CONCURRENCY = 3
         private const val REQUEST_TIMEOUT_MS = 15_000L
@@ -377,11 +390,20 @@ private fun JsonObject.str(key: String): String = (this[key] as? JsonPrimitive)?
 abstract class PagedSource : ServerHarvester.Source {
     private val cursor = AtomicInteger(0)
     private var cooling = AtomicLong(0)
+    private val pageFailures = HashMap<Int, Int>()
     @Volatile private var done = false
 
     protected fun nextPage(): Int = cursor.incrementAndGet() - 1
     protected fun pageCount(): Int = cursor.get()
+    /** Retry a failed root feed twice, then move on rather than looping forever. */
+    protected fun retryPage(page: Int) {
+        val failures = (pageFailures[page] ?: 0) + 1
+        pageFailures[page] = failures
+        if (failures < MAX_PAGE_ATTEMPTS) cursor.compareAndSet(page + 1, page)
+    }
+    protected fun completePage(page: Int) { pageFailures.remove(page) }
     protected fun markDone() { done = true }
+    private companion object { const val MAX_PAGE_ATTEMPTS = 3 }
     override fun isDone(): Boolean = done
     override fun backoffUntil(): Long = cooling.get()
 
@@ -401,13 +423,17 @@ private class StremioAddonsNet : PagedSource() {
 
     override suspend fun sweep(sweep: ServerHarvester.SweepContext): List<FinderCandidate> {
         if (pageCount() >= MAX_PAGES) { markDone(); return emptyList() }
-        val page = nextPage() + 1
+        val index = nextPage()
+        val page = index + 1
         val body = sweep.get(
             "https://stremio-addons.net/api/v0/addons?limit=100&nsfw=exclude&sort_by=stars&order=desc&page=$page",
             this
-        ) ?: return emptyList()
-        val data = sweep.json(body) as? JsonObject ?: return emptyList()
-        val addons = (data["addons"] as? JsonArray).orEmpty().filterIsInstance<JsonObject>()
+        ) ?: run { retryPage(index); return emptyList() }
+        val data = sweep.json(body) as? JsonObject
+        val array = data?.get("addons") as? JsonArray
+        if (array == null) { sweep.invalidFeed(); retryPage(index); return emptyList() }
+        completePage(index)
+        val addons = array.filterIsInstance<JsonObject>()
         if (addons.isEmpty()) {
             emptyPages += 1
             if (emptyPages >= 2) markDone()
@@ -433,13 +459,14 @@ private class StremioAddonsNet : PagedSource() {
 private class StremioCollections : PagedSource() {
     override val id = "stremio-collection"
     override val label = "Stremio collection"
-    private var fetched = false
-
     override suspend fun sweep(sweep: ServerHarvester.SweepContext): List<FinderCandidate> {
-        if (fetched) { markDone(); return emptyList() }
-        fetched = true
-        val body = sweep.get("https://api.strem.io/addonscollection.json", this) ?: return emptyList()
-        val array = sweep.json(body) as? JsonArray ?: return emptyList()
+        val index = nextPage()
+        if (index > 0) { markDone(); return emptyList() }
+        val body = sweep.get("https://api.strem.io/addonscollection.json", this)
+            ?: run { retryPage(index); return emptyList() }
+        val array = sweep.json(body) as? JsonArray
+        if (array == null) { sweep.invalidFeed(); retryPage(index); return emptyList() }
+        completePage(index)
         return array.filterIsInstance<JsonObject>().mapNotNull { entry ->
             val url = FinderRules.entryUrl(entry)
             val manifest = (entry["manifest"] as? JsonObject) ?: (entry["addon"] as? JsonObject)?.get("manifest") as? JsonObject
@@ -457,25 +484,37 @@ private class StremioCollections : PagedSource() {
 private class CinemetaCatalogueGraph : PagedSource() {
     override val id = "cinemeta-graph"
     override val label = "Cinemeta catalogue graph"
+    private data class Page(val url: String, val depth: Int)
     private val frontier = ArrayDeque(
         listOf(
-            "https://v3-cinemeta.strem.io/addon_catalog/all/community.json",
-            "https://v3-cinemeta.strem.io/addon_catalog/all/official.json"
+            Page("https://v3-cinemeta.strem.io/addon_catalog/all/community.json", 0),
+            Page("https://v3-cinemeta.strem.io/addon_catalog/all/official.json", 0)
         )
     )
     private val visited = HashSet<String>()
+    private val attempts = HashMap<String, Int>()
 
     override suspend fun sweep(sweep: ServerHarvester.SweepContext): List<FinderCandidate> {
-        if (frontier.isEmpty() || pageCount() >= MAX_PAGES) { markDone(); return emptyList() }
-        val url = frontier.removeFirst()
-        if (!visited.add(url)) return emptyList()
-        val body = sweep.get(url, this) ?: return emptyList()
-        val root = sweep.json(body) ?: return emptyList()
-        val list = when (root) {
-            is JsonArray -> root.filterIsInstance<JsonObject>()
-            is JsonObject -> (root["addons"] as? JsonArray).orEmpty().filterIsInstance<JsonObject>()
-            else -> emptyList()
+        if (frontier.isEmpty() || visited.size >= MAX_PAGES) { markDone(); return emptyList() }
+        val page = frontier.removeFirst()
+        if (page.url in visited) return emptyList()
+        val body = sweep.get(page.url, this)
+        val root = body?.let { sweep.json(it) }
+        val array = when (root) {
+            is JsonArray -> root
+            is JsonObject -> root["addons"] as? JsonArray
+            else -> null
         }
+        if (array == null) {
+            if (body != null) sweep.invalidFeed()
+            val failures = (attempts[page.url] ?: 0) + 1
+            attempts[page.url] = failures
+            if (failures < 3) frontier.addFirst(page) else visited.add(page.url)
+            return emptyList()
+        }
+        attempts.remove(page.url)
+        visited.add(page.url)
+        val list = array.filterIsInstance<JsonObject>()
         val out = list.mapNotNull { entry ->
             val manifest = entry["manifest"] as? JsonObject ?: return@mapNotNull null
             val manifestUrl = FinderRules.entryUrl(entry)
@@ -483,20 +522,21 @@ private class CinemetaCatalogueGraph : PagedSource() {
             else SourceFinder.candidateFor(manifestUrl, manifest, "cinemeta-graph", entry)
                 ?.copy(from = "Server pool · Cinemeta")
         }
-        // Follow any catalogue endpoint this page names, one level down, bounded.
-        if (pageCount() < MAX_DEPTH_PAGES) {
-            list.mapNotNull { (it["transportUrl"] as? JsonPrimitive)?.contentOrNull }
-                .filter { it.endsWith(".json") }
-                .map { FinderRules.publicHttpsUrl(it) }
-                .filter { it.isNotEmpty() && frontier.size < MAX_FRONTIER }
-                .forEach { frontier.addLast(it) }
+        // A transport is a manifest, not itself an addon catalogue. Follow
+        // only explicitly declared addon_catalog resources, with real depth.
+        if (page.depth < MAX_DEPTH) {
+            list.flatMap { StremioFinder.addonCatalogEndpoints(it) }.forEach { next ->
+                if (next !in visited && frontier.none { it.url == next } && frontier.size < MAX_FRONTIER) {
+                    frontier.addLast(Page(next, page.depth + 1))
+                }
+            }
         }
         return out
     }
 
     private companion object {
         const val MAX_PAGES = 40
-        const val MAX_DEPTH_PAGES = 20
+        const val MAX_DEPTH = 2
         const val MAX_FRONTIER = 60
     }
 }
@@ -520,9 +560,12 @@ private class GitHubRepositories : PagedSource() {
         val body = sweep.get(
             "https://api.github.com/search/repositories?q=$encoded&sort=updated&order=desc&per_page=100&page=$page",
             this
-        ) ?: return emptyList()
-        val root = sweep.json(body) as? JsonObject ?: return emptyList()
-        val repos = (root["items"] as? JsonArray).orEmpty().filterIsInstance<JsonObject>()
+        ) ?: run { retryPage(index); return emptyList() }
+        val root = sweep.json(body) as? JsonObject
+        val array = root?.get("items") as? JsonArray
+        if (array == null) { sweep.invalidFeed(); retryPage(index); return emptyList() }
+        completePage(index)
+        val repos = array.filterIsInstance<JsonObject>()
         if (repos.isEmpty()) return emptyList()
 
         // Manifest links straight from the metadata need no extra request.
@@ -606,9 +649,11 @@ private class GitHubPagesHosts : PagedSource() {
         val body = sweep.get(
             "https://api.github.com/search/repositories?q=$encoded&sort=stars&order=desc&per_page=100&page=$page",
             this
-        ) ?: return emptyList()
-        val repos = ((sweep.json(body) as? JsonObject)?.get("items") as? JsonArray)
-            .orEmpty().filterIsInstance<JsonObject>().take(PROBE_BUDGET)
+        ) ?: run { retryPage(index); return emptyList() }
+        val array = (sweep.json(body) as? JsonObject)?.get("items") as? JsonArray
+        if (array == null) { sweep.invalidFeed(); retryPage(index); return emptyList() }
+        completePage(index)
+        val repos = array.filterIsInstance<JsonObject>().take(PROBE_BUDGET)
 
         return coroutineScope {
             repos.map { repo ->
@@ -660,8 +705,27 @@ private class CommunityLists : PagedSource() {
         val index = nextPage()
         if (index >= LISTS.size) { markDone(); return emptyList() }
         val (url, kind) = LISTS[index]
-        val text = sweep.get(url, this, ServerHarvester.ACCEPT_HTML, FinderRules.MAX_JSON_BYTES) ?: return emptyList()
-        val urls = FinderRules.extractManifestUrls(text)
+        val text = sweep.get(url, this, ServerHarvester.ACCEPT_HTML, FinderRules.MAX_JSON_BYTES)
+            ?: run { retryPage(index); return emptyList() }
+        val urls = if (kind == "community issues") {
+            val issues = sweep.json(text) as? JsonArray
+            if (issues == null) { sweep.invalidFeed(); retryPage(index); return emptyList() }
+            issues.filterIsInstance<JsonObject>().flatMap { issue ->
+                FinderRules.extractManifestUrls(issue.str("body").replace("stremio://", "https://", ignoreCase = true))
+            }.distinct()
+        } else {
+            val repos = REPO_LINK.findAll(text.substringAfter("## Addons", text).substringBefore("## Tutorials"))
+                .map { it.groupValues[1] }.distinct().take(12).toList()
+            val fromReadmes = coroutineScope {
+                repos.map { repo -> async {
+                    val body = sweep.get("https://raw.githubusercontent.com/$repo/HEAD/README.md", this@CommunityLists,
+                        ServerHarvester.ACCEPT_HTML, FinderRules.MAX_JSON_BYTES)
+                    FinderRules.extractManifestUrls(body)
+                } }.awaitAll().flatten()
+            }
+            (FinderRules.extractManifestUrls(text) + fromReadmes).distinct()
+        }
+        completePage(index)
         return coroutineScope {
             urls.take(MAX_PER_LIST).map { manifestUrl ->
                 async {
@@ -683,5 +747,6 @@ private class CommunityLists : PagedSource() {
             "https://raw.githubusercontent.com/doingodswork/awesome-stremio/master/README.md" to "curated projects"
         )
         const val MAX_PER_LIST = 20
+        val REPO_LINK = Regex("""https://github\.com/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)""", RegexOption.IGNORE_CASE)
     }
 }

@@ -297,25 +297,35 @@ class SourceFinder(
     }
 
     private suspend fun identifyEntries(sourceId: String, entries: List<JsonObject>, maxPerSource: Int): Identified = coroutineScope {
-        val seen = LinkedHashMap<String, JsonObject>()
+        val seen = HashSet<String>()
+        val inline = mutableListOf<FinderCandidate>()
+        val pending = LinkedHashMap<String, JsonObject>()
+        var checked = 0
         for (entry in entries) {
             val url = FinderRules.entryUrl(entry)
-            if (url.isEmpty() || url in seen) continue
-            seen[url] = entry
-            if (seen.size >= maxPerSource) break
+            if (url.isEmpty() || !seen.add(url)) continue
+            val manifest = entry["manifest"] as? JsonObject
+            if (manifest != null) {
+                // Directory manifests are free to inspect. Applying the cap
+                // before validation meant the first few catalogue/torrent-only
+                // entries could hide every usable stream addon further down.
+                checked++
+                candidateFor(url, manifest, sourceId, entry)?.let { inline += it }
+                if (inline.size >= maxPerSource) break
+            } else if (pending.size < maxPerSource) {
+                pending[url] = entry
+            }
         }
-        val results = seen.map { (url, entry) ->
+        val slots = (maxPerSource - inline.size).coerceAtLeast(0)
+        val results = pending.entries.take(slots).map { (url, entry) ->
             async {
                 val parsed = withTimeoutOrNull(MANIFEST_TIMEOUT_MS) {
-                    attempt {
-                        val manifest = entry["manifest"] as? JsonObject ?: fetchJson(url, FinderRules.MAX_MANIFEST_BYTES)
-                        candidateFor(url, manifest, sourceId, entry)
-                    }
+                    attempt { candidateFor(url, fetchJson(url, FinderRules.MAX_MANIFEST_BYTES), sourceId, entry) }
                 }
                 (parsed?.getOrNull()) to (parsed == null || parsed.isFailure)
             }
         }.awaitAll()
-        Identified(results.mapNotNull { it.first }, seen.size, results.count { it.second })
+        Identified(inline + results.mapNotNull { it.first }, checked + results.size, results.count { it.second })
     }
 
     companion object {

@@ -36,6 +36,18 @@ class AddonClientDecoderTest {
         assertEquals("tt3", page.items.last().imdbId)
     }
 
+    @Test fun `explicit provider episode mapping survives decoding`() {
+        // Same shape as Kitsu's second-season metadata: its local S1E1 is
+        // IMDb S2E1. Never infer that relationship from the local season alone.
+        val page = client.decodeCatalog("""
+            {"metas":[{"id":"kitsu:12268","type":"series","name":"Anime",
+              "videos":[{"id":"kitsu:12268:1","season":1,"episode":1,
+                "imdb_id":"tt5626028","imdbSeason":2,"imdbEpisode":1}]}]}
+        """.trimIndent(), "series")
+        val request = dev.nova.tv.finder.TitleRequest(page.items.single(), season = 1, episode = 1)
+        assertEquals(listOf("kitsu:12268:1", "tt5626028:2:1"), request.streamIds)
+    }
+
     @Test(expected = IllegalStateException::class)
     fun `missing metas is an error rather than a successful empty feed`() {
         client.decodeCatalog("{}", "movie")

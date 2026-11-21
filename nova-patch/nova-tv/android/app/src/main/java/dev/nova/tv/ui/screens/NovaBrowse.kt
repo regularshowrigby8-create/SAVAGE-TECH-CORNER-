@@ -82,6 +82,10 @@ fun BrowseScreen(route: Route, state: NovaState, viewModel: NovaViewModel) {
             }
         }
         Spacer(Modifier.height(24.dp))
+        if (browse.items.isNotEmpty() && !browse.loading && browse.error != null) {
+            ErrorState(title = "Can't load more titles", detail = browse.error,
+                onRetry = { viewModel.loadBrowse(route, retry = true) }, modifier = Modifier.height(180.dp))
+        }
         if (browse.items.isEmpty() && !browse.loading && browse.error != null) {
             ErrorState(title = "Can't load this catalogue", detail = browse.error,
                 onRetry = { viewModel.loadBrowse(route, reset = true) })
