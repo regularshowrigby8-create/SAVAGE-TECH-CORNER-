@@ -22,6 +22,8 @@ on:
       - 'nova-patch/**'
       - 'tools/apply_nova_patch.py'
       - 'tools/test_apply_nova_patch.py'
+      - 'tools/verify_nova_apk_pools.py'
+      - 'tools/test_verify_nova_apk_pools.py'
       - '.github/workflows/nova-patch-build.yml'
 
 permissions:
@@ -153,8 +155,21 @@ jobs:
           compgen -G 'app/build/outputs/apk/tv/debug/*.apk' >/dev/null || exit 1
           compgen -G 'app/build/outputs/apk/mobile/debug/*.apk' >/dev/null || exit 1
 
+      - name: Test the APK pool verifier
+        run: python3 tools/test_verify_nova_apk_pools.py
+
+      - name: Verify both APKs contain checked, nonempty pools
+        id: assets
+        run: |
+          set -euo pipefail
+          python3 tools/verify_nova_apk_pools.py \
+            --assets nova-patch/nova-tv/android/app/src/main/assets \
+            --tv work/nova-tv/android/app/build/outputs/apk/tv/debug/*.apk \
+            --mobile work/nova-tv/android/app/build/outputs/apk/mobile/debug/*.apk \
+            2>&1 | tee apk-pools.log
+
       - name: Upload debug APKs
-        if: steps.package.outcome == 'success'
+        if: steps.package.outcome == 'success' && steps.assets.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: nova-debug-apks
@@ -175,6 +190,7 @@ jobs:
             echo "- compile (patched): **$([ '${{ steps.patched.outputs.status }}' = '0' ] && echo PASS || echo FAIL)**"
             echo "- unit tests: **${{ steps.tests.outcome }}**"
             echo "- debug APK assembly: **${{ steps.package.outcome }}**"
+            echo "- checked, nonempty APK pools: **${{ steps.assets.outcome }}**"
             echo
             if [ '${{ steps.patched.outputs.status }}' != '0' ]; then
               echo "- baseline (unpatched): **${BASELINE:-not-run}**"
@@ -202,13 +218,14 @@ jobs:
             baseline/nova-tv/android/baseline.log
             work/nova-tv/android/tests.log
             work/nova-tv/android/package.log
+            apk-pools.log
           if-no-files-found: warn
           retention-days: 14
 
       - name: Publish build or test errors into the repository
         # Also run after a failed test or packaging step, whose exit codes are
         # now propagated instead of being masked by the subsequent grep.
-        if: always() && (steps.patched.outputs.status != '0' || steps.tests.outcome == 'failure' || steps.package.outcome == 'failure')
+        if: always() && (steps.patched.outputs.status != '0' || steps.tests.outcome == 'failure' || steps.package.outcome == 'failure' || steps.assets.outcome == 'failure')
         run: |
           set -uo pipefail
           OUT="nova-patch/BUILD-DIAGNOSTICS.md"
@@ -222,6 +239,7 @@ jobs:
             echo "- patched compile status: ${{ steps.patched.outputs.status }}"
             echo "- unit tests: ${{ steps.tests.outcome }}"
             echo "- APK assembly: ${{ steps.package.outcome }}"
+            echo "- APK pool verification: ${{ steps.assets.outcome }}"
             echo
             echo '## compiler errors'
             echo '```'
@@ -238,6 +256,11 @@ jobs:
             echo '```'
             grep -E '^e: |FAILURE:|FAILED|What went wrong:' work/nova-tv/android/package.log | head -60 || echo 'no packaging errors captured'
             tail -25 work/nova-tv/android/package.log 2>/dev/null || true
+            echo '```'
+            echo
+            echo '## APK pool verification'
+            echo '```'
+            if [ -f apk-pools.log ]; then cat apk-pools.log; else echo 'not run'; fi
             echo '```'
             echo
             echo '## applied patch'
@@ -257,7 +280,7 @@ jobs:
           head -40 "$OUT"
 
       - name: Commit the diagnostics
-        if: always() && (steps.patched.outputs.status != '0' || steps.tests.outcome == 'failure' || steps.package.outcome == 'failure') && !startsWith(github.ref, 'refs/pull/')
+        if: always() && (steps.patched.outputs.status != '0' || steps.tests.outcome == 'failure' || steps.package.outcome == 'failure' || steps.assets.outcome == 'failure') && !startsWith(github.ref, 'refs/pull/')
         run: |
           set -euo pipefail
           git config user.name "nova-ci"

@@ -14,8 +14,9 @@ name: Nova pool crawl
 # that cannot play.
 #
 # A crawl that finds fewer than the target is a SUCCESS with an honest number,
-# not a failure and not a claim of 3000: the number counts stored entries that
-# passed the crawler's search heuristic, not verified playable or licensed media.
+# not a claim of 3000: the number counts candidates that passed search and
+# player-marker heuristics, not verified playable or licensed media. An empty
+# result is published honestly but the APK verification step then fails.
 # A crawler crash, invalid output, or failed publication fails the job.
 #
 # One job, per the repository's own GATE 2 rule.
@@ -61,9 +62,9 @@ jobs:
     timeout-minutes: 150
     env:
       CRAWL_TARGET: ${{ inputs.target || '3000' }}
-      # A short first push verifies the complete publish path in Actions;
-      # scheduled/normal runs can be raised once that has succeeded.
-      CRAWL_MINUTES: ${{ inputs.minutes || '12' }}
+      # Pushes exercise the full pipeline quickly; scheduled/manual runs use
+      # the longer budget. Each budget applies independently to both crawlers.
+      CRAWL_MINUTES: ${{ inputs.minutes || (github.event_name == 'push' && '3') || '45' }}
       CRAWL_PROBE: ${{ inputs.probe || 'one piece' }}
       # Provided by Actions; sent only to api.github.com, never to crawled hosts.
       GITHUB_TOKEN: ${{ github.token }}
@@ -79,9 +80,12 @@ jobs:
       - name: Self-test both crawlers (offline, no network)
         run: |
           set -euo pipefail
+          # Keep generated files OUTSIDE the mirrored patch tree. Otherwise the
+          # drift-safe applier sees the logs as unrecorded patch files.
+          mkdir -p "$GITHUB_WORKSPACE/crawl-results"
           cd nova-patch/nova-tv/tools
-          python3 test_server_crawler.py 2>&1 | tee server-selftest.log
-          python3 test_site_crawler.py 2>&1 | tee site-selftest.log
+          python3 test_server_crawler.py 2>&1 | tee "$GITHUB_WORKSPACE/crawl-results/server-selftest.log"
+          python3 test_site_crawler.py 2>&1 | tee "$GITHUB_WORKSPACE/crawl-results/site-selftest.log"
           # The site crawler has no network in a self-test either; this checks
           # its HTML parsing, template extraction and verification scoring.
           python3 - <<'PY'
@@ -89,9 +93,10 @@ jobs:
           html = '<form action="/search" method="get"><input name="keyword" type="text"></form>'
           t = s.search_templates(html, "https://a.example/")
           assert any("{q}" in x for x in t), t
-          good = '<a href="/watch/one-piece-1">ep</a><a href="/watch/one-piece-2">ep</a><a href="/episode/3">3</a> One Piece 1080p'
-          assert s.result_score(good, "one piece")[0] >= 3, s.result_score(good, "one piece")
-          assert s.result_score("<h1>Domain for sale</h1>", "one piece") == (0, 0)
+          good = '<a href="/watch/one-piece-1">ep</a><a href="/watch/one-piece-2">ep</a><a href="/episode/one-piece-3">3</a> One Piece 1080p'
+          assert s.result_score(good, "one piece", "https://a.example/")[0] == 3
+          assert s.result_score("<h1>Domain for sale</h1>", "one piece", "https://a.example/") == (0, 0)
+          assert s.player_marker('<iframe src="https://player.example/embed/test"></iframe>', "https://a.example/") == 'iframe'
           assert s.page_title("<title>Watch Anime | NineAnime</title>") == "NineAnime"
           print("site_crawler self-test ok")
           PY
@@ -116,14 +121,14 @@ jobs:
             --target "$CRAWL_TARGET" \
             --max-seconds "$(( 10#$CRAWL_MINUTES * 60 ))" \
             "${seed[@]}" \
-            --out server_pool.json 2>&1 | tee server-crawl.log
+            --out "$GITHUB_WORKSPACE/crawl-results/server_pool.json" 2>&1 | tee "$GITHUB_WORKSPACE/crawl-results/server-crawl.log"
           statuses=("${PIPESTATUS[@]}")
           set -e
           if [[ "${statuses[1]}" != 0 ]]; then exit "${statuses[1]}"; fi
           if [[ "${statuses[0]}" != 0 && "${statuses[0]}" != 3 ]]; then exit "${statuses[0]}"; fi
           python3 - <<'PY'
-          import json, pathlib
-          d = json.loads(pathlib.Path("server_pool.json").read_text())
+          import json, os, pathlib
+          d = json.loads((pathlib.Path(os.environ["GITHUB_WORKSPACE"]) / "crawl-results/server_pool.json").read_text())
           n = len(d["entries"])
           print(f"manifest pool: {n} entries")
           assert 0 < n <= 3000, "the crawler wrote an empty or oversized pool"
@@ -141,24 +146,27 @@ jobs:
             --probe "$CRAWL_PROBE" \
             --max-seconds "$(( 10#$CRAWL_MINUTES * 60 ))" \
             "${seed[@]}" \
-            --manifests server_pool.json \
-            --out site_pool.json 2>&1 | tee site-crawl.log
+            --manifests "$GITHUB_WORKSPACE/crawl-results/server_pool.json" \
+            --out "$GITHUB_WORKSPACE/crawl-results/site_pool.json" 2>&1 | tee "$GITHUB_WORKSPACE/crawl-results/site-crawl.log"
           statuses=("${PIPESTATUS[@]}")
           set -e
           if [[ "${statuses[1]}" != 0 ]]; then exit "${statuses[1]}"; fi
           if [[ "${statuses[0]}" != 0 && "${statuses[0]}" != 3 ]]; then exit "${statuses[0]}"; fi
           python3 - <<'PY'
-          import json, pathlib
-          d = json.loads(pathlib.Path("site_pool.json").read_text())
+          import json, os, pathlib
+          import site_crawler as site
+          d = json.loads((pathlib.Path(os.environ["GITHUB_WORKSPACE"]) / "crawl-results/site_pool.json").read_text())
           n = len(d["entries"])
           rejected = d.get("rejected", {})
-          print(f"site pool: {n} search-verified, rejected {sum(rejected.values())}")
+          pending = d.get("pending_recheck", [])
+          print(f"site pool: {n} passed the current heuristic, {len(pending)} pending recheck, rejected {sum(rejected.values())}")
           print("rejected by reason:", rejected)
-          assert 0 < n <= 3000, "the crawler wrote an empty or oversized site pool"
-          # Every entry must be searchable, or the app cannot use it.
+          assert n <= 3000, "the crawler wrote an oversized site pool"
+          assert d.get("verification_method") == site.VERIFICATION_METHOD
           bad = [e for e in d["entries"]
-                 if not any("{q}" in t or "{slug}" in t for t in e.get("templates", []))]
-          assert not bad, f"{len(bad)} entries have no query placeholder"
+                 if not site.verification_is_current(e.get("verification"))
+                 or not any("{q}" in t or "{slug}" in t for t in e.get("templates", []))]
+          assert not bad, f"{len(bad)} entries lack current verification or a query placeholder"
           PY
 
       - name: Merge any pools published while this run was crawling
@@ -177,7 +185,7 @@ jobs:
           import site_crawler as site
           for name, cls in (('server_pool', server.Pool), ('site_pool', site.SitePool)):
               previous = pathlib.Path('nova-patch/pools') / (name + '.json')
-              fresh = tools / (name + '.json')
+              fresh = pathlib.Path('crawl-results') / (name + '.json')
               if not previous.is_file():
                   continue
               fresh_doc = json.loads(fresh.read_text())
@@ -198,7 +206,7 @@ jobs:
           set -euo pipefail
           mkdir -p nova-patch/pools nova-patch/nova-tv/android/app/src/main/assets
           for name in server_pool site_pool; do
-            src="nova-patch/nova-tv/tools/$name.json"
+            src="crawl-results/$name.json"
             test -s "$src"
             cp "$src" "nova-patch/pools/$name.json"
             cp "$src" "nova-patch/nova-tv/android/app/src/main/assets/$name.json"
@@ -219,7 +227,7 @@ jobs:
           out = {"generated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
           for name in ("server_pool", "site_pool"):
               f = pathlib.Path(f"nova-patch/pools/{name}.json")
-              alt = pathlib.Path(f"nova-patch/nova-tv/tools/{name}.json")
+              alt = pathlib.Path(f"crawl-results/{name}.json")
               f = f if f.is_file() else alt
               if not f.is_file():
                   out[name] = {"entries": None, "note": "crawler wrote no file"}
@@ -229,6 +237,8 @@ jobs:
               out[name] = {
                   "entries": len(entries),
                   "ceiling": 3000,
+                  "verification_method": d.get("verification_method"),
+                  "pending_recheck": len(d.get("pending_recheck", [])),
                   "rejected": d.get("rejected", {}),
                   "by_source": d.get("by_source", {}),
                   "source_evidence": d.get("source_evidence", {}),
@@ -238,6 +248,9 @@ jobs:
               info = out[name]
               lines.append(f"| {name}.json | {info.get('entries')} | 3000 |")
           site = out.get("site_pool", {})
+          lines += ["", f"Site verification method: `{site.get('verification_method')}`; "
+                        f"legacy candidates awaiting recheck: {site.get('pending_recheck', 0)}.",
+                    "These checks do not establish playback or licensing."]
           if site.get("rejected"):
               lines += ["", "## Sites dropped, by reason", ""]
               for reason, count in sorted(site["rejected"].items(), key=lambda kv: -kv[1]):
@@ -292,11 +305,16 @@ jobs:
       - name: Fetch the Nova source checkout
         run: |
           set -euo pipefail
-          git fetch --depth=1 origin arena/nova-final-debug:refs/remotes/origin/nova-src
+          git fetch --depth=1 origin arena/nova-final-debug:refs/remotes/origin/nova-src 2>&1 | tee crawl-results/source-fetch.log
           mkdir -p work
           git archive origin/nova-src nova-tv | tar -x -C work
-          python3 tools/test_apply_nova_patch.py
-          python3 tools/apply_nova_patch.py --target work --write
+          test -f work/nova-tv/android/gradlew
+
+      - name: Test and apply the Nova patch
+        run: |
+          set -euo pipefail
+          python3 tools/test_apply_nova_patch.py 2>&1 | tee crawl-results/apply-tests.log
+          python3 tools/apply_nova_patch.py --target work --write 2>&1 | tee crawl-results/apply.log
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -317,35 +335,20 @@ jobs:
           ./gradlew :app:testTvDebugUnitTest :app:testMobileDebugUnitTest \
             :app:assembleTvDebug :app:assembleMobileDebug --no-daemon --console=plain 2>&1 | tee crawl-build.log
 
-      - name: Verify both APKs contain both current pools
+      - name: Test the APK pool verifier
+        run: python3 tools/test_verify_nova_apk_pools.py
+
+      - name: Verify both APKs contain the current pool assets
+        id: apk_verify
         run: |
           set -euo pipefail
-          python3 - <<'PY'
-          import json, pathlib, zipfile
-          assets = pathlib.Path('nova-patch/nova-tv/android/app/src/main/assets')
-          out = pathlib.Path('work/nova-tv/android/app/build/outputs/apk')
-          for flavor in ('tv', 'mobile'):
-              apks = list((out / flavor / 'debug').glob('*.apk'))
-              assert len(apks) == 1, f'{flavor}: expected one APK, got {apks}'
-              with zipfile.ZipFile(apks[0]) as apk:
-                  for name in ('server_pool.json', 'site_pool.json'):
-                      expected = (assets / name).read_bytes()
-                      actual = apk.read('assets/' + name)
-                      assert actual == expected, f'{flavor}: {name} is missing or stale'
-                      count = len(json.loads(actual)['entries'])
-                      assert count > 0, f'{flavor}: {name} is empty'
-                      print(f'{flavor}: {name} contains {count} entries')
-          PY
-
-      - name: Upload APKs with both crawled pools
-        uses: actions/upload-artifact@v4
-        with:
-          name: nova-crawled-debug-apks
-          path: |
-            work/nova-tv/android/app/build/outputs/apk/tv/debug/*.apk
-            work/nova-tv/android/app/build/outputs/apk/mobile/debug/*.apk
-          if-no-files-found: error
-          retention-days: 14
+          # Even with zero checked sites we can test the crash path, but that
+          # APK is not eligible for distribution as a fully populated build.
+          python3 tools/verify_nova_apk_pools.py \
+            --assets nova-patch/nova-tv/android/app/src/main/assets \
+            --tv work/nova-tv/android/app/build/outputs/apk/tv/debug/*.apk \
+            --mobile work/nova-tv/android/app/build/outputs/apk/mobile/debug/*.apk \
+            --allow-empty-sites-for-smoke 2>&1 | tee crawl-results/apk-verification.log
 
       - name: Test the emulator smoke checker
         run: python3 tools/test_nova_emulator_smoke.py
@@ -370,6 +373,55 @@ jobs:
           disable-animations: true
           # The action runs each script line in a separate POSIX shell.
           script: python3 tools/nova_emulator_smoke.py --tv work/nova-tv/android/app/build/outputs/apk/tv/debug/*.apk --mobile work/nova-tv/android/app/build/outputs/apk/mobile/debug/*.apk --out emulator-results --seconds 90
+
+      - name: Require nonempty checked pools for distribution
+        id: distribution
+        run: |
+          set -euo pipefail
+          python3 tools/verify_nova_apk_pools.py \
+            --assets nova-patch/nova-tv/android/app/src/main/assets \
+            --tv work/nova-tv/android/app/build/outputs/apk/tv/debug/*.apk \
+            --mobile work/nova-tv/android/app/build/outputs/apk/mobile/debug/*.apk \
+            2>&1 | tee crawl-results/apk-distribution-check.log
+
+      - name: Upload APKs with both crawled pools
+        uses: actions/upload-artifact@v4
+        with:
+          name: nova-crawled-debug-apks
+          path: |
+            work/nova-tv/android/app/build/outputs/apk/tv/debug/*.apk
+            work/nova-tv/android/app/build/outputs/apk/mobile/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Publish APK pool verification outcome
+        if: always() && !startsWith(github.ref, 'refs/pull/')
+        env:
+          APK_VERIFY_OUTCOME: ${{ steps.apk_verify.outcome }}
+          DISTRIBUTION_OUTCOME: ${{ steps.distribution.outcome }}
+        run: |
+          set -euo pipefail
+          {
+            echo '# Nova APK pool verification'
+            echo
+            echo "Run: $GITHUB_RUN_ID"
+            echo
+            echo "- Byte-for-byte asset check: ${APK_VERIFY_OUTCOME:-not started}"
+            echo "- Nonempty distribution gate: ${DISTRIBUTION_OUTCOME:-not started}"
+            echo
+            echo '```'
+            if [ -f crawl-results/apk-verification.log ]; then cat crawl-results/apk-verification.log; else echo 'Asset check did not complete.'; fi
+            if [ -f crawl-results/apk-distribution-check.log ]; then cat crawl-results/apk-distribution-check.log; fi
+            echo '```'
+          } > nova-patch/APK-VERIFICATION.md
+          git config user.name "nova-ci"
+          git config user.email "nova-ci@users.noreply.github.com"
+          git add nova-patch/APK-VERIFICATION.md
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "ci(nova): APK pool verification for run $GITHUB_RUN_ID"
+          git fetch -q origin "$GITHUB_REF_NAME"
+          git rebase FETCH_HEAD
+          git push -q origin "HEAD:$GITHUB_REF_NAME"
 
       - name: Publish the emulator outcome
         if: always() && !startsWith(github.ref, 'refs/pull/')
@@ -403,10 +455,15 @@ jobs:
             echo
             echo "Run: $GITHUB_RUN_ID"
             echo
-            for f in nova-patch/nova-tv/tools/server-selftest.log \
-                     nova-patch/nova-tv/tools/site-selftest.log \
-                     nova-patch/nova-tv/tools/server-crawl.log \
-                     nova-patch/nova-tv/tools/site-crawl.log \
+            for f in crawl-results/server-selftest.log \
+                     crawl-results/site-selftest.log \
+                     crawl-results/server-crawl.log \
+                     crawl-results/site-crawl.log \
+                     crawl-results/source-fetch.log \
+                     crawl-results/apply-tests.log \
+                     crawl-results/apply.log \
+                     crawl-results/apk-verification.log \
+                     crawl-results/apk-distribution-check.log \
                      work/nova-tv/android/crawl-build.log; do
               [ -f "$f" ] || continue
               echo "## $f"
@@ -431,14 +488,10 @@ jobs:
         with:
           name: nova-pools
           path: |
-            nova-patch/nova-tv/tools/server_pool.json
-            nova-patch/nova-tv/tools/site_pool.json
-            nova-patch/nova-tv/tools/server-crawl.log
-            nova-patch/nova-tv/tools/site-crawl.log
-            nova-patch/nova-tv/tools/server-selftest.log
-            nova-patch/nova-tv/tools/site-selftest.log
+            crawl-results/
             nova-patch/POOL-COUNTS.md
             nova-patch/CRAWL-DIAGNOSTICS.md
+            nova-patch/APK-VERIFICATION.md
             nova-patch/EMULATOR-SMOKE.md
             emulator-results/
             work/nova-tv/android/crawl-build.log

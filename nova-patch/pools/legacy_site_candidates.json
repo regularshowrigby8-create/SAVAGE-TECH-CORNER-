@@ -1,0 +1,583 @@
+{
+ "source_run": "44810790179",
+ "note": "Historical candidates from the weaker heuristic; not active or verified.",
+ "entries": [
+  {
+   "url": "https://www.moviedb.wiki",
+   "name": "Watch Movies & TV Shows HD Free",
+   "templates": [
+    "https://www.moviedb.wiki/home/search?q={q}"
+   ],
+   "categories": [
+    "movies",
+    "series",
+    "embed"
+   ],
+   "score": 27,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:awesome-entertainment"
+  },
+  {
+   "url": "https://www.tvids.net",
+   "name": "Watch TV Series online",
+   "templates": [
+    "https://www.tvids.net/search?q={q}"
+   ],
+   "categories": [
+    "movies",
+    "series",
+    "embed"
+   ],
+   "score": 46,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:awesome-entertainment"
+  },
+  {
+   "url": "https://haho.moe",
+   "name": "Fast and Free Hentai Anime Streaming",
+   "templates": [
+    "https://haho.moe/anime?q={q}"
+   ],
+   "categories": [
+    "anime",
+    "embed"
+   ],
+   "score": 45,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:awesome-entertainment"
+  },
+  {
+   "url": "https://simkl.com",
+   "name": "Simkl - Watch and Track Movies, Anime, TV Shows",
+   "templates": [
+    "https://simkl.com/?s={q}",
+    "https://simkl.com/search?keyword={q}",
+    "https://simkl.com/search?q={q}",
+    "https://simkl.com/search?query={q}",
+    "https://simkl.com/filter?keyword={q}"
+   ],
+   "categories": [
+    "anime",
+    "movies",
+    "series",
+    "embed"
+   ],
+   "score": 198,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:PinguSync"
+  },
+  {
+   "url": "https://animelegacy.org",
+   "name": "Anime tracker &amp; chronicle",
+   "templates": [
+    "https://animelegacy.org/search?keyword={q}",
+    "https://animelegacy.org/search?q={q}",
+    "https://animelegacy.org/search?query={q}",
+    "https://animelegacy.org/?s={q}",
+    "https://animelegacy.org/filter?keyword={q}"
+   ],
+   "categories": [
+    "anime",
+    "movies",
+    "series"
+   ],
+   "score": 20,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:AnimeLegacy"
+  },
+  {
+   "url": "https://www.businessinsider.com",
+   "name": "Business Insider - Latest News in Tech, Markets, Economy & I",
+   "templates": [
+    "https://www.businessinsider.com/answers?q={q}"
+   ],
+   "categories": [
+    "movies"
+   ],
+   "score": 23,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:awesome-piracy"
+  },
+  {
+   "url": "https://www.rts.ch",
+   "name": "RTS",
+   "templates": [
+    "https://www.rts.ch/services/recherche/?q={q}"
+   ],
+   "categories": [
+    "embed"
+   ],
+   "score": 71,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:awesome-piracy"
+  },
+  {
+   "url": "https://arrowtv.net",
+   "name": "ArrowTV",
+   "templates": [
+    "https://arrowtv.net/search?keyword={q}",
+    "https://arrowtv.net/search?q={q}",
+    "https://arrowtv.net/search?query={q}",
+    "https://arrowtv.net/?s={q}",
+    "https://arrowtv.net/filter?keyword={q}"
+   ],
+   "categories": [
+    "movies",
+    "series",
+    "embed"
+   ],
+   "score": 20,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:free-streaming-resources"
+  },
+  {
+   "url": "https://movish.to",
+   "name": "Movish",
+   "templates": [
+    "https://movish.to/search?q={q}"
+   ],
+   "categories": [
+    "movies",
+    "series",
+    "embed"
+   ],
+   "score": 43,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:free-streaming-resources"
+  },
+  {
+   "url": "https://cinemove.cc",
+   "name": "Watch Movies and TV Shows Online Streaming",
+   "templates": [
+    "https://cinemove.cc/?s={q}",
+    "https://cinemove.cc/search?keyword={q}",
+    "https://cinemove.cc/search?q={q}",
+    "https://cinemove.cc/search?query={q}",
+    "https://cinemove.cc/filter?keyword={q}"
+   ],
+   "categories": [
+    "movies",
+    "series",
+    "embed"
+   ],
+   "score": 87,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:free-streaming-resources"
+  },
+  {
+   "url": "https://latestmovies.net",
+   "name": "LatestMovies - Discover Movies &amp; TV Shows",
+   "templates": [
+    "https://latestmovies.net/search?q={q}",
+    "https://latestmovies.net/search?keyword={q}",
+    "https://latestmovies.net/search?query={q}",
+    "https://latestmovies.net/?s={q}",
+    "https://latestmovies.net/filter?keyword={q}"
+   ],
+   "categories": [
+    "movies",
+    "series"
+   ],
+   "score": 25,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:free-streaming-resources"
+  },
+  {
+   "url": "https://chillflix.lol",
+   "name": "Chillflix - Watch Free Movies &amp; TV Shows Online",
+   "templates": [
+    "https://chillflix.lol/search?q={q}",
+    "https://chillflix.lol#?q={q}"
+   ],
+   "categories": [
+    "movies",
+    "series",
+    "embed"
+   ],
+   "score": 27,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:free-streaming-resources"
+  },
+  {
+   "url": "https://tioanime.com",
+   "name": "Anime Online en HD - TioAnime",
+   "templates": [
+    "https://tioanime.com/directorio?q={q}"
+   ],
+   "categories": [
+    "anime",
+    "movies",
+    "series"
+   ],
+   "score": 29,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:tioanime"
+  },
+  {
+   "url": "https://your-anime-list-pearl.vercel.app",
+   "name": "Your Anime List",
+   "templates": [
+    "https://your-anime-list-pearl.vercel.app/?s={q}",
+    "https://your-anime-list-pearl.vercel.app/search?keyword={q}",
+    "https://your-anime-list-pearl.vercel.app/search?q={q}",
+    "https://your-anime-list-pearl.vercel.app/search?query={q}",
+    "https://your-anime-list-pearl.vercel.app/filter?keyword={q}"
+   ],
+   "categories": [
+    "anime",
+    "embed"
+   ],
+   "score": 14,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:YourAnimeList"
+  },
+  {
+   "url": "https://aniliberty.top",
+   "name": "\u0442\u0430\u043a \u0437\u0432\u0443\u0447\u0438\u0442 \u0430\u043d\u0438\u043c\u0435!",
+   "templates": [
+    "https://aniliberty.top/?s={q}",
+    "https://aniliberty.top/search?keyword={q}",
+    "https://aniliberty.top/search?q={q}",
+    "https://aniliberty.top/search?query={q}",
+    "https://aniliberty.top/filter?keyword={q}"
+   ],
+   "categories": [
+    "movies"
+   ],
+   "score": 38,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:AniLibDown"
+  },
+  {
+   "url": "https://kuromi-pi.vercel.app",
+   "name": "Discover &amp; Track Anime",
+   "templates": [
+    "https://kuromi-pi.vercel.app/?s={q}",
+    "https://kuromi-pi.vercel.app/search?keyword={q}",
+    "https://kuromi-pi.vercel.app/search?q={q}",
+    "https://kuromi-pi.vercel.app/search?query={q}",
+    "https://kuromi-pi.vercel.app/filter?keyword={q}"
+   ],
+   "categories": [
+    "anime"
+   ],
+   "score": 82,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists"
+  },
+  {
+   "url": "https://tubeo.vercel.app",
+   "name": "TUBEO: Stream boundless",
+   "templates": [
+    "https://tubeo.vercel.app/?s={q}",
+    "https://tubeo.vercel.app/search?keyword={q}",
+    "https://tubeo.vercel.app/search?q={q}",
+    "https://tubeo.vercel.app/search?query={q}",
+    "https://tubeo.vercel.app/filter?keyword={q}"
+   ],
+   "categories": [
+    "embed"
+   ],
+   "score": 86,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists"
+  },
+  {
+   "url": "https://www.tvmaze.com",
+   "name": "TVmaze.com - Your personal TV guide",
+   "templates": [
+    "https://www.tvmaze.com/search?q={q}"
+   ],
+   "categories": [
+    "series",
+    "embed"
+   ],
+   "score": 10,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:kinshow"
+  },
+  {
+   "url": "https://animeworld.ac",
+   "name": "AnimeWorld - Download e Streaming Anime Sub ITA e ITA",
+   "templates": [
+    "https://www.animeworld.ac/search?keyword={q}"
+   ],
+   "categories": [
+    "anime",
+    "series",
+    "embed"
+   ],
+   "score": 92,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:HACHI-API"
+  },
+  {
+   "url": "https://w1.123animes.ru",
+   "name": "123animehub - Watch Anime Online free Dub and Sub",
+   "templates": [
+    "https://w1.123animes.ru/search?keyword={q}"
+   ],
+   "categories": [
+    "anime",
+    "movies",
+    "embed"
+   ],
+   "score": 100,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:HACHI-API"
+  },
+  {
+   "url": "https://gogoanime.com.by",
+   "name": "Catalog \u00b7 AnimeHub",
+   "templates": [
+    "https://gogoanime.com.by/search.php?keyword={q}"
+   ],
+   "categories": [
+    "anime",
+    "series",
+    "embed"
+   ],
+   "score": 70,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:HACHI-API"
+  },
+  {
+   "url": "https://laracasts.com",
+   "name": "Laracasts",
+   "templates": [
+    "https://laracasts.com/search?keyword={q}",
+    "https://laracasts.com/search?q={q}",
+    "https://laracasts.com/search?query={q}",
+    "https://laracasts.com/?s={q}",
+    "https://laracasts.com/filter?keyword={q}"
+   ],
+   "categories": [
+    "embed"
+   ],
+   "score": 40,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:OtakuPoi"
+  },
+  {
+   "url": "https://sakuga-pink.vercel.app",
+   "name": "Anime discovery &amp; library",
+   "templates": [
+    "https://sakuga-pink.vercel.app/search?q={q}"
+   ],
+   "categories": [
+    "anime"
+   ],
+   "score": 78,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists"
+  },
+  {
+   "url": "https://www.wetv.vip",
+   "name": "WeTV",
+   "templates": [
+    "https://www.wetv.vip/search?keyword={q}",
+    "https://www.wetv.vip/search?q={q}",
+    "https://www.wetv.vip/search?query={q}",
+    "https://www.wetv.vip/?s={q}",
+    "https://www.wetv.vip/filter?keyword={q}"
+   ],
+   "categories": [
+    "series"
+   ],
+   "score": 60,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:Neko-s-Index-Backup-Fall"
+  },
+  {
+   "url": "https://www.pluto.tv",
+   "name": "Pluto TV",
+   "templates": [
+    "https://www.pluto.tv/search?keyword={q}",
+    "https://www.pluto.tv/search?q={q}",
+    "https://www.pluto.tv/search?query={q}",
+    "https://www.pluto.tv/?s={q}",
+    "https://www.pluto.tv/filter?keyword={q}"
+   ],
+   "categories": [
+    "movies",
+    "series",
+    "embed"
+   ],
+   "score": 46,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:Neko-s-Index-Backup-Fall"
+  },
+  {
+   "url": "https://www.bilibili.com",
+   "name": "\u54d4\u54e9\u54d4\u54e9 (\u309c-\u309c)\u3064\u30ed \u5e72\u676f~-bilibili",
+   "templates": [
+    "https://www.bilibili.com/?s={q}",
+    "https://www.bilibili.com/search?keyword={q}",
+    "https://www.bilibili.com/search?q={q}",
+    "https://www.bilibili.com/search?query={q}",
+    "https://www.bilibili.com/filter?keyword={q}"
+   ],
+   "categories": [
+    "anime",
+    "movies",
+    "series"
+   ],
+   "score": 33,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:TMDB-Import"
+  },
+  {
+   "url": "https://moviewave-streaming.netlify.app",
+   "name": "Movie Wave",
+   "templates": [
+    "https://moviewave-streaming.netlify.app/?s={q}",
+    "https://moviewave-streaming.netlify.app/search?keyword={q}",
+    "https://moviewave-streaming.netlify.app/search?q={q}",
+    "https://moviewave-streaming.netlify.app/search?query={q}",
+    "https://moviewave-streaming.netlify.app/filter?keyword={q}"
+   ],
+   "categories": [
+    "movies",
+    "embed"
+   ],
+   "score": 241,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:projeto-movie-wave-strea"
+  },
+  {
+   "url": "https://streamifyxyz.vercel.app",
+   "name": "Streamify",
+   "templates": [
+    "https://streamifyxyz.vercel.app/?s={q}",
+    "https://streamifyxyz.vercel.app/search?keyword={q}",
+    "https://streamifyxyz.vercel.app/search?q={q}",
+    "https://streamifyxyz.vercel.app/search?query={q}",
+    "https://streamifyxyz.vercel.app/filter?keyword={q}"
+   ],
+   "categories": [
+    "series",
+    "embed"
+   ],
+   "score": 20,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists"
+  },
+  {
+   "url": "https://www.zee5.com",
+   "name": "Zee 5",
+   "templates": [
+    "https://www.zee5.com/?s={q}",
+    "https://www.zee5.com/search?keyword={q}",
+    "https://www.zee5.com/search?q={q}",
+    "https://www.zee5.com/search?query={q}",
+    "https://www.zee5.com/filter?keyword={q}"
+   ],
+   "categories": [
+    "anime",
+    "embed"
+   ],
+   "score": 519,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:Zee5-Stream-Scrapper"
+  },
+  {
+   "url": "https://aniworld.to",
+   "name": "AniWorld.to - Animes gratis legal online ansehen",
+   "templates": [
+    "https://aniworld.to/?s={q}",
+    "https://aniworld.to/search?keyword={q}",
+    "https://aniworld.to/search?q={q}",
+    "https://aniworld.to/search?query={q}",
+    "https://aniworld.to/filter?keyword={q}"
+   ],
+   "categories": [
+    "anime",
+    "series",
+    "embed"
+   ],
+   "score": 150,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:sdl"
+  },
+  {
+   "url": "https://lakika.vercel.app",
+   "name": "La kika est le premier site de streaming en ligne sans pub e",
+   "templates": [
+    "https://lakika.vercel.app/?s={q}",
+    "https://lakika.vercel.app/search?keyword={q}",
+    "https://lakika.vercel.app/search?q={q}",
+    "https://lakika.vercel.app/search?query={q}",
+    "https://lakika.vercel.app/filter?keyword={q}"
+   ],
+   "categories": [
+    "movies",
+    "embed"
+   ],
+   "score": 34,
+   "hits": 0,
+   "misses": 0,
+   "resolved": 0,
+   "from": "github-lists:La-kika-Streaming-video"
+  }
+ ]
+}

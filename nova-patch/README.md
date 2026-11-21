@@ -28,12 +28,15 @@ of the recorded baseline or resolve the conflicts deliberately.
 - Site imports are deduplicated by host and batched into the saved-site list;
   manually saved sites are not replaced. The resolver tries a bounded batch,
   prioritizing sites that have produced streams; removed sites are not tried.
-- Newly crawled sites must return a title search with at least three distinct
-  same-host content links, in addition to the score threshold. This is a **search
-  check**, not proof that playback works, that a site remains online, or that its
-  content is licensed. The resolver only emits direct media, not embed pages.
-  URL checks reject obvious private literal addresses, including redirects, but
-  do not independently validate every hostname's DNS resolution.
+- New site candidates must produce a matching, same-host title link that is not
+  also present in a nonsense-query control response, plus a potential player or
+  direct-media marker on a sampled title or episode page. These conservative
+  **heuristics are not proof of playback**, continued availability, or licensing;
+  they may also reject usable sites. Legacy entries from the weaker check are
+  retained as `pending_recheck` candidates, not counted as checked entries.
+  The resolver only emits direct media, not embed pages. URL checks reject
+  obvious private literal addresses, including redirects, but do not independently
+  validate every hostname's DNS resolution.
 - Pool files are persisted through an atomic replacement attempt. A failed write
   keeps the previous file and reports an error rather than overwriting it.
 
@@ -45,7 +48,12 @@ debug flavors, propagates unit-test failures, assembles both APKs, and uploads
 [44805110661](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/44805110661)
 compiled, ran the tests, assembled and uploaded the TV and mobile debug APKs.
 That run used commit `916946a` and **empty initial bundled pool assets**. Later
-runs must be checked separately for their status and pool contents.
+runs must be checked separately for their status and pool contents. Crawl run
+[44810790179](https://github.com/regularshowrigby8-create/SAVAGE-TECH-CORNER-/actions/runs/44810790179)
+published 506 manifests and 31 *legacy-heuristic* site candidates, but its
+follow-on build failed before APK assembly and its emulator step did not run.
+Some legacy site candidates were false positives; do not treat that 31 as a
+count of usable streaming sites.
 
 `nova-pool-crawl.yml` runs the threaded manifest and site crawlers on GitHub
 Actions. It validates and publishes both JSON files, copies them to the two app

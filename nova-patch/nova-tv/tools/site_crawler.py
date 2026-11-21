@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Crawl for streaming *sites* and write a verified 3000-entry site pool.
+"""Crawl for searchable site candidates in a separate 3000-slot pool.
 
 This is the second crawler. It is deliberately separate from
 ``server_crawler.py``, which fills the addon-manifest pool, because the two hold
@@ -11,13 +11,13 @@ different things:
     direct ``.m3u8``/``.mp4``/``.mpd`` links it finds. An embed host is only ever
     a step on that path, never a stream on its own.
 
-A site is only written to the pool once it has **answered a search**. Fetching a
-homepage and string-matching "anime" is not verification -- half the expired
-domains in these lists still serve a parked page with the right words on it. So
-each candidate is profiled the way the app profiles a site when you add it: find
-the search form (or fall back to the common search paths), run a real query, and
-require the result page to contain episode/movie links. A domain that fails is
-dropped and counted, never guessed at.
+New entries must return a same-host result link matching the probe title that
+is absent from a nonsense-query control page, and a sampled title or episode
+page must contain a potential player or direct-media marker. Reflected query
+text and unrelated links do not qualify. This is still a heuristic: it does not
+execute JavaScript, prove playback, check licensing, or ensure the page stays
+online. Candidates from the older, weaker heuristic are retained separately for
+rechecking rather than counted as verified entries.
 
 Discovery is from public lists, not from a hardcoded domain dump: GitHub
 repositories whose READMEs keep these lists, an "awesome"-style set of sources,
@@ -37,6 +37,7 @@ Exit codes: 0 target reached, 3 finished below target, 2 usage error.
 from __future__ import annotations
 
 import argparse
+import html as html_lib
 import json
 import os
 import re
@@ -44,6 +45,7 @@ import signal
 import sys
 import threading
 import time
+import unicodedata
 import urllib.parse
 from collections import Counter
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
@@ -70,14 +72,17 @@ TIMEOUT = 20
 BROWSER_UA = ("Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 "
               "(KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36")
 
-# Paths that mean "this URL is a page about one title", which is what a working
-# search result looks like. Used only to score a result page.
-CONTENT_LINK = re.compile(
-    r"""href=["']([^"']*(?:/(?:watch|episode|episodes|movie|movies|series|anime|tv|show|film|play)/
-        |[?&](?:ep|episode|id|watch)=)[^"']*)["']""",
-    re.IGNORECASE | re.VERBOSE,
+# Match what WebsiteRules.parseResultLinks can actually inspect. In particular,
+# its anchor parser accepts double-quoted hrefs and rejects navigation paths.
+RESULT_LINK = re.compile(r'''<a\s[^>]*href\s*=\s*"([^"]+)"[^>]*>([\s\S]{0,1200}?)</a>''', re.IGNORECASE)
+BLOCKED_PATH = re.compile(
+    r"/(login|register|signup|filter|search|genre|genres|tag|tags|category|categories|type|types|year|years|status|user|profile|dmca|terms|privacy|contact|about|home)(/|\?|$)",
+    re.IGNORECASE,
 )
+EPISODE_LINK = re.compile(r"(?:/(?:ep|episode)[-_/]\d+|-ep(?:isode)?-\d+|[?&](?:ep|episode|episode_id)=\d+)", re.IGNORECASE)
 EPISODE_WORD = re.compile(r"""\b(episode|ep\.?\s*\d+|season\s*\d+|sub|dub|hindi|1080p|720p)\b""", re.IGNORECASE)
+VERIFICATION_METHOD = "matched-title-control-player-v1"
+CONTROL_QUERY = "nova-zzq-search-check-841729"
 SEARCH_INPUT = re.compile(r"""<input\b[^>]*>""", re.IGNORECASE)
 FORM = re.compile(r"""<form\b[^>]*>[\s\S]{0,4000}?</form>""", re.IGNORECASE)
 ATTR = re.compile(r"""(\w[\w:-]*)\s*=\s*["']([^"']*)["']""")
@@ -161,26 +166,137 @@ def search_templates(html: str, base: str) -> List[str]:
     return list(dict.fromkeys(out))[:5]
 
 
+def normalize_title(value: str) -> str:
+    """Comparable to the app's ASCII title normalization, not raw HTML text."""
+    text = unicodedata.normalize("NFKD", html_lib.unescape(urllib.parse.unquote(value)))
+    text = "".join(c for c in text if not unicodedata.combining(c)).lower()
+    return " ".join(re.findall(r"[a-z0-9]+", text))
+
+
+def _same_host(url: str, origin: str) -> bool:
+    try:
+        host = (urlparse(url).hostname or "").lower().removeprefix("www.")
+        expected = (urlparse(origin).hostname or "").lower().removeprefix("www.")
+        return bool(host and "." in host and host == expected and is_public_https(url))
+    except ValueError:
+        return False
+
+
+def matched_title_links(html: str, query: str, origin: str) -> List[str]:
+    """Same-host title links the app can parse, with the probe in the link itself.
+
+    A search page can echo a query in an input or URL while returning unrelated
+    recommendations. Only an anchor's title, image alt, visible text or URL
+    *path* is evidence; query parameters and the surrounding page are not.
+    """
+    wanted = normalize_title(query)
+    if not wanted or not origin:
+        return []
+    out: List[str] = []
+    inspected: Set[str] = set()
+    for match in RESULT_LINK.finditer(html or ""):
+        href = html_lib.unescape(match.group(1))
+        url = absolute(href, origin).split("#", 1)[0]
+        if not _same_host(url, origin):
+            continue
+        parsed = urlparse(url)
+        if not parsed.path or parsed.path == "/" or BLOCKED_PATH.search(parsed.path + ("?" + parsed.query if parsed.query else "")):
+            continue
+        if url not in inspected:
+            if len(inspected) >= 220:  # WebsiteRules.parseResultLinks uses this bound.
+                break
+            inspected.add(url)
+        opening = match.group(0).split(">", 1)[0] + ">"
+        image = re.search(r"<img\s[^>]*>", match.group(2), re.IGNORECASE)
+        title = attrs(opening).get("title") or (attrs(image.group(0)).get("alt") if image else "")
+        title = title or re.sub(r"<[^>]*>", " ", match.group(2))
+        candidates = (normalize_title(title), normalize_title(parsed.path))
+        if any(f" {wanted} " in f" {candidate} " for candidate in candidates) and url not in out:
+            out.append(url)
+    return out
+
+
+def result_identity(url: str) -> Tuple[str, str, Tuple[Tuple[str, str], ...]]:
+    """Compare result targets without search/tracking parameters or fragments."""
+    parsed = urlparse(url)
+    params = urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
+    params = sorted((name, value) for name, value in params
+                    if name.lower() not in QUERY_NAMES and not name.lower().startswith("utm_"))
+    return ((parsed.hostname or "").lower().removeprefix("www."),
+            urllib.parse.unquote(parsed.path).rstrip("/").lower(), tuple(params))
+
+
 def result_score(html: str, query: str, origin: str = "") -> Tuple[int, int]:
-    """(distinct content links, episode hints), optionally restricted to one host."""
-    links = set()
-    expected = (urlparse(origin).hostname or "").lower().removeprefix("www.") if origin else ""
-    for match in CONTENT_LINK.finditer(html or ""):
-        href = match.group(1)
-        if expected:
-            try:
-                host = (urlparse(absolute(href, origin)).hostname or "").lower().removeprefix("www.")
-            except ValueError:
-                continue
-            if host != expected:
-                continue
-        links.add(href.split("?")[0].split("#")[0].lower())
-    hints = len(EPISODE_WORD.findall(html or ""))
-    # A result page that does not mention the query anywhere is a search box that
-    # returned the homepage, which is the common way a dead site fakes a hit.
-    if query.lower() not in (html or "").lower():
-        return 0, 0
-    return len(links), hints
+    """(matching same-host title links, episode hints), not proof of playback."""
+    links = matched_title_links(html, query, origin)
+    return (len(links), len(EPISODE_WORD.findall(html or ""))) if links else (0, 0)
+
+
+def verification_is_current(value: object) -> bool:
+    if not isinstance(value, dict) or value.get("method") != VERIFICATION_METHOD:
+        return False
+    probe = value.get("probe")
+    path = value.get("title_path")
+    marker = value.get("player_marker")
+    return (isinstance(probe, str) and bool(normalize_title(probe)) and len(probe) <= 120
+            and isinstance(path, str) and path.startswith("/") and len(path) <= 500
+            and not BLOCKED_PATH.search(path)
+            and value.get("control") == "different-results"
+            and marker in ("iframe", "direct-media", "player-url"))
+
+
+def player_marker(html: str, base: str) -> str:
+    """Find a potential media/player marker the app's static resolver can inspect.
+
+    This deliberately excludes common ad/trailer frames. It doesn't fetch a
+    player, execute JavaScript, or assert that media will actually play.
+    """
+    blocked = ("youtube.com", "youtu.be", "youtube-nocookie.com", "doubleclick.net",
+               "googletagmanager.com", "google.com", "facebook.com", "disqus.com")
+
+    def allowed(raw: str) -> str:
+        url = absolute(html_lib.unescape(raw).replace("\\/", "/"), base)
+        if not is_public_https(url):
+            return ""
+        host = (urlparse(url).hostname or "").lower()
+        if "." not in host or any(host == name or host.endswith("." + name) for name in blocked):
+            return ""
+        if re.search(r"\.(?:js|css|png|jpe?g|gif|webp|svg|ico|woff2?)(?:\?|#|$)", url, re.IGNORECASE):
+            return ""
+        return url
+
+    for tag in re.findall(r"<(?:video|source|iframe)\b[^>]*>", html or "", re.IGNORECASE):
+        fields = attrs(tag)
+        raw = fields.get("src") or fields.get("data-src") or fields.get("data-lazy-src") or ""
+        url = allowed(raw) if raw else ""
+        if not url:
+            continue
+        if re.match(r"<iframe\b", tag, re.IGNORECASE):
+            return "iframe"
+        if re.search(r"\.(?:m3u8|mp4|mpd|webm)(?:\?|#|$)", url, re.IGNORECASE):
+            return "direct-media"
+    normalized = html_lib.unescape(html or "").replace("\\/", "/")
+    for match in re.finditer(r'''https://[^\s"'<>]+''', normalized, re.IGNORECASE):
+        url = allowed(match.group(0).rstrip("),.;"))
+        if not url:
+            continue
+        if re.search(r"\.(?:m3u8|mp4|mpd)(?:\?|#|$)", url, re.IGNORECASE):
+            return "direct-media"
+        if re.search(r"/(?:embed|player)(?:/|\?|#|[-_])", url, re.IGNORECASE):
+            return "player-url"
+    return ""
+
+
+def episode_links(html: str, base: str) -> List[str]:
+    """Episode pages the app could follow from a series page, bounded by caller."""
+    out: List[str] = []
+    for match in RESULT_LINK.finditer(html or ""):
+        url = absolute(html_lib.unescape(match.group(1)), base).split("#", 1)[0]
+        if not _same_host(url, base) or not EPISODE_LINK.search(url):
+            continue
+        if url not in out:
+            out.append(url)
+    return out
 
 
 def categories_for(url: str, html: str, title: str) -> List[str]:
@@ -234,6 +350,7 @@ class SiteEntry:
     misses: int = 0
     resolved: int = 0
     from_: str = ""
+    verification: Dict[str, str] = field(default_factory=dict)
 
     def as_json(self) -> Dict[str, object]:
         return {
@@ -246,6 +363,7 @@ class SiteEntry:
             "misses": self.misses,
             "resolved": self.resolved,
             "from": self.from_,
+            "verification": self.verification,
         }
 
 
@@ -256,6 +374,9 @@ class SitePool:
         self.rejected: Counter = Counter()
         # Failed hosts are retried after a day, not on every hourly crawl.
         self.attempted: Dict[str, float] = {}
+        # Old heuristic results are candidates, not counted entries. Keep them
+        # across runs until they can be rechecked under the current method.
+        self.pending: Dict[str, str] = {}
         self.lock = threading.RLock()
 
     @property
@@ -275,15 +396,41 @@ class SitePool:
 
     def offer(self, entry: SiteEntry) -> bool:
         key = self.key(entry.url)
-        if not key or not is_public_https(entry.url):
+        if not key or "." not in key or not is_public_https(entry.url):
             return False
-        if not any("{q}" in t or "{slug}" in t for t in entry.templates):
+        if not verification_is_current(entry.verification):
+            return False
+        if not any(("{q}" in t or "{slug}" in t) and _same_host(
+                t.replace("{q}", "test").replace("{slug}", "test"), entry.url)
+                   for t in entry.templates):
             return False
         with self.lock:
-            if key in self.entries or len(self.entries) >= self.target:
+            if key in self.entries:
+                self.pending.pop(key, None)
+                return False
+            if len(self.entries) >= self.target:
                 return False
             self.entries[key] = entry
+            self.pending.pop(key, None)
             return True
+
+    def queue_recheck(self, url: str, reset_attempt: bool = False) -> None:
+        """Preserve a legacy candidate without counting it as verified."""
+        if not isinstance(url, str) or not is_public_https(url):
+            return
+        origin = origin_of(url)
+        key = self.key(origin)
+        if not key or "." not in key:
+            return
+        with self.lock:
+            if key not in self.entries:
+                self.pending[key] = origin
+                if reset_attempt:
+                    self.attempted.pop(key, None)
+
+    def pending_origins(self) -> List[str]:
+        with self.lock:
+            return list(self.pending.values())
 
     def start_host(self, host: str) -> bool:
         """Claim a host once, including across concurrent workers and recent runs."""
@@ -316,18 +463,38 @@ class SitePool:
                       if isinstance(host, str) and isinstance(stamp, (int, float)) and cutoff <= stamp <= time.time()]
             with self.lock:
                 self.attempted.update(sorted(recent, key=lambda pair: pair[1])[-20_000:])
+        pending = data.get("pending_recheck", [])
+        if not isinstance(pending, list):
+            raise ValueError(f"{path}: pending_recheck must be a list")
+        for url in pending:
+            self.queue_recheck(url)
         added = 0
         for item in entries:
+            if not isinstance(item, dict):
+                raise ValueError(f"{path}: invalid site entry")
+            verification = item.get("verification")
+            if not verification_is_current(verification):
+                # Older accepted entries were checked by the weaker heuristic.
+                # Force their first recheck even if that old run just tried them.
+                self.queue_recheck(item.get("url", ""), reset_attempt=True)
+                continue
+            templates = item.get("templates", [])
+            categories = item.get("categories", [])
+            if not isinstance(templates, list) or not all(isinstance(t, str) for t in templates):
+                raise ValueError(f"{path}: invalid site templates")
+            if not isinstance(categories, list) or not all(isinstance(t, str) for t in categories):
+                raise ValueError(f"{path}: invalid site categories")
             entry = SiteEntry(
                 url=item.get("url", ""),
                 name=item.get("name", ""),
-                templates=list(item.get("templates", [])),
-                categories=list(item.get("categories", [])),
+                templates=templates,
+                categories=categories,
                 score=int(item.get("score", 0) or 0),
                 hits=int(item.get("hits", 0) or 0),
                 misses=int(item.get("misses", 0) or 0),
                 resolved=int(item.get("resolved", 0) or 0),
                 from_=item.get("from", ""),
+                verification=verification,
             )
             if entry.url and self.offer(entry):
                 added += 1
@@ -339,10 +506,12 @@ class SitePool:
         with self.lock:
             recent = sorted(self.attempted.items(), key=lambda pair: pair[1])[-20_000:]
             return {
-                "version": 1,
+                "version": 2,
                 "target": self.target,
                 "generated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "verification_method": VERIFICATION_METHOD,
                 "entries": [e.as_json() for e in self.entries.values()],
+                "pending_recheck": list(self.pending.values()),
                 "rejected": dict(rejected),
                 "by_source": by_source or {},
                 "source_evidence": source_evidence or {},
@@ -448,7 +617,7 @@ class SiteCrawler:
     # -- verification -------------------------------------------------------
 
     def profile_and_verify(self, origin: str, source: str) -> Optional[SiteEntry]:
-        """A site enters the pool only if a real search on it returns title links."""
+        """Require a matched title link and a potential player marker, not playback."""
         if self.stop or self.pool.full or self.time_is_up() or not is_public_https(origin):
             return None
         parsed = urlparse(origin)
@@ -471,48 +640,95 @@ class SiteCrawler:
         templates = search_templates(html, final_base)
         title = page_title(html) or host
 
-        # The search is the verification: no template that answers, no entry.
         best_score = 0
         best_template = ""
-        best_links = 0
+        verified_title = ""
+        marker = ""
+        saw_match = False
+        saw_distinct_result = False
+        saw_qualified_result = False
         minimum = int(os.environ.get("NOVA_SITE_MIN_SCORE", "8"))
-        encoded = urllib.parse.quote(self.probe)
+        encoded = urllib.parse.quote(self.probe, safe="")
         slug = re.sub(r"[^a-z0-9]+", "-", self.probe.lower()).strip("-")
+        control = CONTROL_QUERY if normalize_title(self.probe) != normalize_title(CONTROL_QUERY) else CONTROL_QUERY + "-other"
+        control_encoded = urllib.parse.quote(control, safe="")
+        control_slug = re.sub(r"[^a-z0-9]+", "-", control.lower()).strip("-")
         for template in templates[:4]:
             if self.stop or self.pool.full or self.time_is_up():
                 self.pool.release_host(host)
                 return None
             candidate = template.replace("{q}", encoded).replace("{slug}", slug)
             # WebsiteFinder only uses templates on the site's own host.
-            if not is_public_https(candidate) or SitePool.key(candidate) != host:
+            if not _same_host(candidate, final_base):
                 continue
             page = self.get(candidate)
             if page is None:
                 continue
-            links, hints = result_score(page, self.probe, final_base)
-            score = links + min(hints, 40)
-            if links >= 3 and score > best_score:
-                best_score, best_template, best_links = score, template, links
-            if links >= 3 and score >= minimum:
+            matches = matched_title_links(page, self.probe, final_base)
+            if not matches:
+                continue
+            saw_match = True
+            control_url = template.replace("{q}", control_encoded).replace("{slug}", control_slug)
+            control_page = self.get(control_url) if _same_host(control_url, final_base) else None
+            if control_page is None:
+                continue
+            control_results = {result_identity(url) for url in matched_title_links(control_page, self.probe, final_base)}
+            matches = [url for url in matches if result_identity(url) not in control_results]
+            if not matches:
+                continue
+            saw_distinct_result = True
+            score = len(matches) * 8 + min(len(EPISODE_WORD.findall(page)), 40)
+            if score < minimum:
+                continue
+            saw_qualified_result = True
+            # A directory or news site can have genuine title search results but
+            # no player. Sample at most two results and one episode page each.
+            for matched in matches[:2]:
+                detail = self.get(matched)
+                if detail is None:
+                    continue
+                hint = player_marker(detail, matched)
+                if not hint:
+                    for episode in episode_links(detail, matched)[:1]:
+                        episode_page = self.get(episode)
+                        if episode_page is not None:
+                            hint = player_marker(episode_page, episode)
+                        if hint:
+                            break
+                if hint:
+                    best_score, best_template, verified_title, marker = score, template, matched, hint
+                    break
+            if marker:
                 break
 
-        # Hints alone cannot pass this check: there must be three distinct
-        # content links as well as a mention of the searched title.
         if self.stop or self.pool.full or self.time_is_up():
             self.pool.release_host(host)
             return None
-        if best_links < 3 or best_score < minimum:
-            self.stats.source_event(source, "search_unusable")
-            self.pool.note("search returned nothing usable")
+        if not marker:
+            if not saw_match:
+                reason, event = "search returned nothing usable", "search_unusable"
+            elif not saw_distinct_result:
+                reason, event = "search control unavailable or unchanged", "search_control_failed"
+            elif not saw_qualified_result:
+                reason, event = "search score below threshold", "search_score_low"
+            else:
+                reason, event = "no player marker on sampled title", "player_unusable"
+            self.stats.source_event(source, event)
+            self.pool.note(reason)
             return None
 
         entry = SiteEntry(
             url=final_base,
             name=title[:60],
-            templates=([best_template] + [t for t in templates if t != best_template])[:5],
+            # Only the template that passed is advertised as checked. The app
+            # may independently try its common fallback paths later.
+            templates=[best_template],
             categories=categories_for(final_base, html, title),
             score=best_score,
             from_=source,
+            verification={"method": VERIFICATION_METHOD, "probe": self.probe[:120],
+                          "title_path": urlparse(verified_title).path[:500],
+                          "control": "different-results", "player_marker": marker},
         )
         if self.pool.offer(entry):
             self.stats.add_source(source, 1)
@@ -732,8 +948,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         ap.error(f"--target must be between 1 and {CAPACITY}")
     if args.workers < 1 or args.pages < 1 or args.empty_rounds < 1 or args.max_seconds < 0:
         ap.error("workers, pages and empty-rounds must be positive; max-seconds cannot be negative")
-    if not args.probe.strip():
-        ap.error("--probe must not be empty")
+    if not args.probe.strip() or not normalize_title(args.probe) or len(args.probe) > 120:
+        ap.error("--probe must contain a searchable title of at most 120 characters")
 
     pool = SitePool(target=args.target)
     if args.merge:
@@ -754,6 +970,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     signal.signal(signal.SIGTERM, _stop)
 
     try:
+        legacy = pool.pending_origins()
+        if legacy:
+            rechecked = crawler._profile_all(legacy, "legacy-recheck", limit=len(legacy))
+            print(f"rechecked {len(legacy)} legacy candidate(s); {rechecked} passed the current heuristic")
         if Path(args.manifests).is_file():
             seeded = crawler.from_manifest_pool(Path(args.manifests))
             print(f"seeded {seeded} site(s) from {args.manifests}")
@@ -775,7 +995,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if pool.size >= args.target:
         print("target reached")
         return 0
-    print(f"stopped below target: {pool.size} of {args.target} verified sites.")
+    print(f"stopped below target: {pool.size} of {args.target} site candidates passed the current heuristic.")
     print("The count covers this crawl's configured sources and search checks; it does not establish")
     print("internet-wide exhaustion or guarantee that a site will produce playable media.")
     return 3
