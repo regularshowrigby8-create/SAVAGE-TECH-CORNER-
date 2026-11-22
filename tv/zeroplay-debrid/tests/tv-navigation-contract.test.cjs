@@ -95,6 +95,14 @@ class FakeNode {
   getAttribute(name) {
     return Object.prototype.hasOwnProperty.call(this.attrs, name) ? this.attrs[name] : null;
   }
+  hasAttribute(name) {
+    return Object.prototype.hasOwnProperty.call(this.attrs, name);
+  }
+  /* jsdom and this fake both report no layout; the spatial engine skips
+     elements whose offset box is empty, so the box is derived from the same
+     rect the rest of the contract navigates by. */
+  get offsetWidth() { return this.rect.width; }
+  get offsetHeight() { return this.rect.height; }
   setAttribute(name, value) {
     this.attrs[name] = String(value);
   }
@@ -128,8 +136,13 @@ class FakeNode {
   focus() {
     this.ownerDocument.activeElement = this;
   }
+  blur() {
+    if (this.ownerDocument.activeElement === this) this.ownerDocument.activeElement = this.ownerDocument.body;
+  }
   scrollIntoView() {}
   addEventListener() {}
+  /* The spatial engine notifies willfocus/focused on the element itself. */
+  dispatchEvent() { return true; }
 }
 
 class FakeDocument {
@@ -191,7 +204,10 @@ class FakeDocument {
     return this.querySelectorAll(selector)[0] || null;
   }
   addEventListener() {}
-  dispatchEvent() {}
+  dispatchEvent() { return true; }
+  createEvent() {
+    return { initCustomEvent() {} };
+  }
 }
 
 function matchAttr(node, selector) {
@@ -247,6 +263,23 @@ function loadContract(doc) {
   sandbox.window.scrollX = 0;
   sandbox.window.scrollY = 0;
   vm.createContext(sandbox);
+  /* The real spatial engine, not a stub. `moveTvFocus` drives it through its
+     public API, so loading the vendored file here is what makes these checks
+     a test of the navigation engine rather than of a mock. */
+  /* A browser has Element.prototype.matches; this sandbox does not. It is
+     wired to the same tiny selector engine everything else here uses. */
+  sandbox.Element = {
+    prototype: {
+      matches(selector) {
+        return this.ownerDocument ? this.ownerDocument.matches(this, selector) : false;
+      },
+    },
+  };
+  const engineSrc = fs.readFileSync(path.join(__dirname, "..", "vendor", "spatial-navigation.js"), "utf8");
+  vm.runInContext(engineSrc, sandbox);
+  /* The engine publishes itself on `window`; the app block reads the global
+     the same way a browser would. */
+  sandbox.SpatialNavigation = sandbox.window.SpatialNavigation;
   vm.runInContext(block, sandbox);
   return sandbox;
 }
@@ -551,6 +584,43 @@ ok(html.includes("streamProviderChip") && !html.includes('id="serverDirect"'), "
   const restore = script.slice(script.indexOf("function restoreTvFocus()"), script.indexOf("function handlePlayerNextKeys(e)"));
   ok(restore.includes("if(tvOverlayOwnsFocus()) return;"), "restoring page focus stands down while an overlay owns the remote");
   ok(restore.includes("cancelTvInitialFocus()"), "restoring page focus cancels a pending launch-focus timer first");
+}
+
+/* R8. The D-pad is driven by a real spatial-navigation engine, not by the
+   hand-rolled geometry it replaced. These checks fail if the engine is
+   unplugged, if it stops being vendored or shipped, or if the row policy that
+   the engine cannot know about is dropped. */
+{
+  ok(typeof ctx.SpatialNavigation === "object" && typeof ctx.SpatialNavigation.move === "function",
+    "the vendored spatial-navigation engine is what the contract executes");
+  ok(fs.existsSync(path.join(__dirname, "..", "vendor", "spatial-navigation.js")),
+    "the engine is vendored, so a build cannot depend on a CDN at runtime");
+  ok(html.includes('{src:"vendor/spatial-navigation.js",global:"SpatialNavigation"}'),
+    "the engine is in the app's on-demand script list");
+  ok(html.includes('try{ void loadScriptOnce("vendor/spatial-navigation.js","SpatialNavigation"); }catch{}'),
+    "a TV boots the engine up front, so the first D-pad press is not a download");
+  ok(script.includes('SN.set(TV_NAV_SECTION') && script.includes("SN.move(direction)"),
+    "movement is delegated to the engine instead of computing its own search");
+  ok(script.includes("navigableFilter") && script.includes("tvRowOf(elem)===myRow"),
+    "the shelf rule is applied to the engine as a filter, so Left/Right cannot leave the row");
+  /* The engine must not install its own keydown listener: this app already has
+     one and two listeners would move focus twice per press. */
+  ok(!script.includes("SpatialNavigation.init("),
+    "the engine is driven through its API, so no second global keydown is installed");
+}
+
+/* R9. An unset computed opacity is opaque. Reading the empty string as 0 made
+   every control unfocusable wherever the computed style is partial — the
+   failure that a jsdom run of the built page surfaced. */
+{
+  ok(!/(style|upStyle)\.opacity!==\"\"&&Number\(\1\.opacity\)===0/.test(script) === false,
+    "the opacity test is guarded on the focused node");
+  ok(!/if\(style&&Number\(style\.opacity\)===0\)/.test(script),
+    "an empty computed opacity is not treated as invisible on the focused node");
+  ok(script.includes('upStyle.opacity!==""&&Number(upStyle.opacity)===0'),
+    "the ancestor opacity test is guarded too");
+  ok(/style\.opacity!==""&&Number\(style\.opacity\)===0/.test(script),
+    "opacity 0 is still excluded when the browser actually reports it");
 }
 
 console.log(`\n${passed} TV navigation contract checks passed`);

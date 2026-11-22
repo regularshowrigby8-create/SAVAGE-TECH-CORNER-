@@ -184,7 +184,7 @@ function main() {
      missing, so the built site served a Watch screen that quietly fell back to
      the app's own deck: the source tree looked converted, the deployment was
      not. A missing asset is a build error, not a silent degradation. */
-  const vendorAssets = ["hls.min.js", "dash.min.js", "plyr.min.js", "plyr.css"];
+  const vendorAssets = ["hls.min.js", "dash.min.js", "plyr.min.js", "plyr.css", "spatial-navigation.js"];
   const missing = [];
   for (const file of vendorAssets) {
     const from = path.join(ROOT, "vendor", file);

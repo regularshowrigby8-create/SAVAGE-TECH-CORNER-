@@ -1,0 +1,6 @@
+ZeroPlay bundles js-spatial-navigation 1.0.1
+https://github.com/luke-chang/js-spatial-navigation
+Copyright (c) 2017 Luke Chang
+Licensed under the Mozilla Public License 2.0 (MPL-2.0).
+The unmodified upstream source is vendored at vendor/spatial-navigation.js
+Modifications, if any, are described in the commit that touched this file.

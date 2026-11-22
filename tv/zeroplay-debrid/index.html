@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="PLYR_FIRST">
+<html lang="en" data-build="DPAD_ENGINE">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7140,6 +7140,11 @@ async function tryNextDirectVariant(reason){
    server supplies a URL, the app supplies the player.
    ===================================================================== */
 const ZP_ENGINE_SCRIPTS=[
+  /* Directional focus. js-spatial-navigation (MPL-2.0) is the engine used by
+     real TV interfaces: it scores every candidate by distance and overlap in
+     the pressed direction instead of assuming DOM order. It replaces the
+     hand-rolled search below, which walked rows and then guessed. */
+  {src:"vendor/spatial-navigation.js",global:"SpatialNavigation"},
   {src:"vendor/hls.min.js",global:"Hls"},
   {src:"vendor/dash.min.js",global:"dashjs"},
   /* Plyr is the Watch screen's player shell: transport, scrub, volume,
@@ -13310,14 +13315,17 @@ function tvIsFocusable(node){
   /* A control inside a collapsed or transparent container is not reachable:
      this is what made the poster card's hidden Watch/Details overlay swallow
      D-pad presses. Hidden means opacity 0 or a 0-width ancestor. */
-  if(style&&Number(style.opacity)===0) return false;
+  /* An empty computed opacity means "not specified", which is opaque.
+     Reading it as 0 would treat every element as invisible anywhere the
+     computed style is partial (jsdom, some webviews). */
+  if(style&&style.opacity!==""&&Number(style.opacity)===0) return false;
   if(node.closest&&node.closest("[hidden],[aria-hidden='true']")) return false;
   /* An ancestor faded to zero (the parked player chrome, the collapsed More
      sheet) must not stay in the arrow path: otherwise a press lands on an
      invisible control and the viewer sees the D-pad do nothing. */
   for(let up=node.parentElement;up&&up!==document.body;up=up.parentElement){
     const upStyle=window.getComputedStyle?getComputedStyle(up):null;
-    if(upStyle&&(upStyle.visibility==="hidden"||upStyle.display==="none"||Number(upStyle.opacity)===0)) return false;
+    if(upStyle&&(upStyle.visibility==="hidden"||upStyle.display==="none"||(upStyle.opacity!==""&&Number(upStyle.opacity)===0))) return false;
     if(up.hasAttribute&&(up.hasAttribute("hidden")||up.getAttribute("aria-hidden")==="true")) return false;
   }
   const rect=node.getBoundingClientRect();
@@ -13533,6 +13541,49 @@ function tvActivateTarget(target){
 /* One D-pad press. Rows move first (Left/Right inside a shelf), then shelves
    (Up/Down between them); a shelf that has more cards than fit scrolls before
    focus is given up, and the chrome is never a neighbour. */
+/* ---- 1 & 2. Directional movement ------------------------------------
+   The geometry is not ours any more. `SpatialNavigation.move()` from
+   vendor/spatial-navigation.js scores every candidate by distance and
+   overlap in the pressed direction — the same algorithm shipped in TV
+   browsers and used by web-based TV clients. It is driven through its API
+   rather than its own keydown listener, so this app keeps the one global
+   keydown handler that also owns Back, Home and the player's keys; the
+   engine never installs a second listener and no press is handled twice.
+
+   What stays here is policy the engine has no concept of, and each piece is
+   thin by design:
+
+     * SCOPE.  The engine is handed the active scope's elements only, so an
+       open drawer or modal cannot be walked out of (rule 3).
+     * ROW EDGES.  A horizontal press never leaves the shelf it started in
+       (rule 1). The engine's own scoring would happily jump to the header
+       button at the right edge of a shelf, so candidates are filtered to
+       the current row; at the true edge the press is absorbed, or the rail
+       scrolls to reveal cards that are still off screen.
+     * REVEAL.  The engine focuses the element itself, so the reveal runs
+       afterwards (rule 4).
+     * RECOVERY.  If the focused node was replaced by a re-render, the viewer
+       is put back on the same card before the engine is asked anything
+       (rule 6).
+   --------------------------------------------------------------------- */
+const TV_NAV_SECTION="zeroplay";
+let tvNavEngineReady=false;
+
+/* Register the one section the engine navigates. New elements arrive on every
+   render, so it is re-registered from the current scope list before each
+   move; `set()` updates the selector in place and never throws on repeat. */
+function tvNavEnsureEngine(){
+  const SN=window.SpatialNavigation;
+  if(!SN||typeof SN.add!=="function"||typeof SN.move!=="function") return null;
+  try{
+    if(!tvNavEngineReady){ SN.add(TV_NAV_SECTION,{selector:[],restrict:"self-only"}); tvNavEngineReady=true; }
+  }catch(err){
+    /* A section that already exists (hot reload, second initialisation) is
+       fine: set() below re-points it. */
+    tvNavEngineReady=true;
+  }
+  return SN;
+}
 function moveTvFocus(direction){
   const scopeRoot=tvScopeRoot();
   const list=tvFocusables(scopeRoot);
@@ -13558,23 +13609,54 @@ function moveTvFocus(direction){
     tvFocusAndReveal(target);
     return true;
   }
-  const chrome=tvIsChrome(current);
-  const rows=tvRows(list);
-  const myRow=tvRowOf(current);
-  const myIndex=rows.findIndex(r=>r.row===myRow);
 
-  if(direction==="left"||direction==="right"){
-    /* 1. Inside the shelf the viewer is already on. */
-    const row=rows[myIndex];
-    if(row){
-      const i=row.items.indexOf(current);
-      if(i>=0){
-        const next=row.items[i+(direction==="right"?1:-1)];
-        if(next&&next!==current){ tvFocusAndReveal(next); return true; }
+  /* Both axes go through the engine. The only policy handed to it is which
+     elements are legal targets for this press:
+
+       horizontal — only the shelf the press started in. That is rule 1, and
+         it is a filter, not a search: inside the row the engine still scores
+         by real geometry, so a shelf that mixes 168px continue-cards with
+         198px posters moves correctly instead of by DOM index.
+       vertical — the whole scope, minus whatever is not above or below, so
+         Up and Down cross shelves instead of landing back inside one.
+
+     The engine focuses the winner, so the reveal runs afterwards. */
+  const SN=tvNavEnsureEngine();
+  const myRow=(direction==="left"||direction==="right")?tvRowOf(current):null;
+  if(SN){
+    const cr=current.getBoundingClientRect();
+    /* Chrome sits at the top of the page; Up from it releases to the menu key. */
+    if(direction==="up"&&tvIsChrome(current)) return false;
+    try{
+      SN.set(TV_NAV_SECTION,{
+        selector:list,
+        restrict:"self-only",
+        straightOnly:false,
+        navigableFilter:function(elem){
+          if(elem===current) return false;
+          if(myRow){ return tvRowOf(elem)===myRow; }
+          const r=elem.getBoundingClientRect();
+          if(direction==="up"&&r.bottom>cr.top+2) return false;
+          if(direction==="down"&&r.top<cr.bottom-2) return false;
+          return true;
+        }
+      });
+      if(SN.move(direction)){
+        const target=document.activeElement;
+        if(target&&target!==document.body&&target!==document.documentElement){
+          if(target!==current) tvFocusAndReveal(target);
+          return true;
+        }
       }
+    }catch(err){
+      /* Fall through to the geometry below: a remote must never go dead
+         because a navigation library threw. */
     }
-    /* 2. At the shelf edge. If the shelf still has cards off screen, bring them
-          in; otherwise absorb the press rather than wandering into the chrome. */
+  }
+
+  /* Nothing legal in that direction. Horizontally, a shelf with cards still
+     off screen scrolls to reveal them; otherwise the press is absorbed. */
+  if(direction==="left"||direction==="right"){
     const rowRect=myRow&&myRow.getBoundingClientRect?myRow.getBoundingClientRect():null;
     if(rowRect&&tvRowScrollsX(myRow)){
       const hidden=direction==="right"
@@ -13588,17 +13670,8 @@ function moveTvFocus(direction){
     return true;
   }
 
-  /* Up/Down: move between shelves. Chrome counts as one shelf at the very top. */
-  const cr=current.getBoundingClientRect(), cx=cr.left+cr.width/2;
-  if(direction==="up"&&chrome){
-    return false; /* the top of the page: the drawer/menu key handles it */
-  }
-  if(direction==="down"&&chrome){
-    const target=tvFirstContentBelow(cr,cx,list);
-    if(target){ tvFocusAndReveal(target); return true; }
-    return false;
-  }
-  /* From content: Up off the first shelf returns to the chrome. */
+  /* Engine unavailable (or it refused the move): the nearest control on the
+     pressed axis still wins, so Up/Down can never go dead. */
   if(direction==="up"){
     const above=tvNearestAbove(current,list);
     if(above){ tvFocusAndReveal(above); return true; }
@@ -13609,11 +13682,8 @@ function moveTvFocus(direction){
     }
     return false;
   }
-  /* Down to the next shelf, keeping the horizontal position. */
   const below=tvNearestBelow(current,list);
   if(below){ tvFocusAndReveal(below); return true; }
-  /* Nothing below on this axis: the page itself scrolls. Let the browser do it
-     (the keyup is not swallowed) so the last shelf is still reachable. */
   return false;
 }
 function tvFirstContentBelow(cr,cx,list){
@@ -13823,6 +13893,10 @@ window.handleZeroPlayTvMenu=handleZeroPlayTvMenu;
 window.handleZeroPlayTvSearch=handleZeroPlayTvSearch;
 window.handleZeroPlayTvMediaKey=handleZeroPlayTvMediaKey;
 window.handleZeroPlayTvLowMemory=handleZeroPlayTvLowMemory;
+/* The D-pad engine is a separate file. On a TV the remote is the only input,
+   so it is fetched when the page boots rather than on the first press: a
+   first press that has to wait for a download feels like a dropped key. */
+if(ANDROID_TV_APP){ try{ void loadScriptOnce("vendor/spatial-navigation.js","SpatialNavigation"); }catch{} }
 window.addEventListener("zeroplay-android-tv-ready",()=>{ document.body.classList.add("tv-mode"); scheduleTvInitialFocus(); });
 document.addEventListener("focusin",e=>{ if(ANDROID_TV_APP) rememberTvFocus(e.target); });
 
