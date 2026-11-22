@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="PLAYER_HONEST">
+<html lang="en" data-build="PLYR_SHELL">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -3916,6 +3916,22 @@ body.android-tv .page { scroll-margin-top: 4rem; }
 .zp-shelf-primary{background:linear-gradient(135deg,var(--zp-accent),#6d4cf0)!important;
   border-color:transparent!important;color:#fff!important;font-weight:800!important}
 
+/* ---- Plyr integration -------------------------------------------------
+   Plyr draws the transport. These rules place it inside the stage and keep
+   ZeroPlay's own deck (kept for bindings and the TV contract, not for show)
+   out of the way. Everything is scoped to `.zp-player` so nothing else on
+   the site is affected. */
+.zp-player .plyr{position:absolute;inset:0;width:100%;height:100%;background:#000;--plyr-color-main:var(--zp-accent,#8b6cff)}
+.zp-player .plyr__video-wrapper{height:100%;background:#000}
+.zp-player .plyr video{width:100%;height:100%;object-fit:contain}
+.zp-player.zp-plyr-on .zp-deck-hidden{opacity:0!important;pointer-events:none!important;transform:translateY(110%)!important}
+/* Our title strip stays above Plyr's top edge; Plyr's own title is unused. */
+.zp-player .player-bar{z-index:24}
+.zp-player .plyr__controls{padding-bottom:.55rem}
+/* The paused shelf must sit above Plyr's control bar, not under it. */
+.zp-player .player-action-shelf{z-index:25}
+.zp-player .plyr__control--overlaid{background:rgba(0,0,0,.55);backdrop-filter:blur(8px)}
+.zp-player .plyr__menu__container{z-index:40}
 .zp-deck{position:absolute;left:0;right:0;bottom:0;z-index:20;padding:2.4rem clamp(.75rem,2vw,1.4rem) .85rem;
   background:linear-gradient(0deg,rgba(6,7,11,.96) 0%,rgba(6,7,11,.72) 48%,transparent 100%);
   display:flex;flex-direction:column;gap:.45rem;
@@ -7077,9 +7093,21 @@ async function tryNextDirectVariant(reason){
    ===================================================================== */
 const ZP_ENGINE_SCRIPTS=[
   {src:"vendor/hls.min.js",global:"Hls"},
-  {src:"vendor/dash.min.js",global:"dashjs"}
+  {src:"vendor/dash.min.js",global:"dashjs"},
+  /* Plyr is the Watch screen's player shell: transport, scrub, volume,
+     captions menu, speed, PiP, fullscreen, keyboard and touch. Loaded on
+     demand like the engines, so a viewer who never presses Watch never
+     downloads it. */
+  {src:"vendor/plyr.min.js",global:"Plyr",css:"vendor/plyr.css"}
 ];
 let zpEngineScriptsPromise=null;
+function loadStyleOnce(href){
+  if(!href) return;
+  if(document.querySelector('link[data-zp-engine="'+href+'"]')) return;
+  const l=document.createElement("link");
+  l.rel="stylesheet"; l.href=href; l.setAttribute("data-zp-engine",href);
+  document.head.appendChild(l);
+}
 function loadScriptOnce(src,global){
   return new Promise(resolve=>{
     if(global&&window[global]) return resolve(true);
@@ -7093,8 +7121,130 @@ function loadScriptOnce(src,global){
   });
 }
 function ensureEngineScripts(){
-  if(!zpEngineScriptsPromise) zpEngineScriptsPromise=Promise.all(ZP_ENGINE_SCRIPTS.map(x=>loadScriptOnce(x.src,x.global)));
+  if(!zpEngineScriptsPromise){
+    /* Stylesheet first (synchronously inserted), then the scripts. Plyr
+       computes its layout from its own CSS, so it must be present by the
+       time the player is created. */
+    ZP_ENGINE_SCRIPTS.forEach(x=>{ if(x.css) loadStyleOnce(x.css); });
+    zpEngineScriptsPromise=Promise.all(ZP_ENGINE_SCRIPTS.map(x=>loadScriptOnce(x.src,x.global)));
+  }
   return zpEngineScriptsPromise;
+}
+
+/* ---------------------------------------------------------------- Plyr ----
+   The Watch screen uses Plyr (vendor/plyr.min.js) as its player. It is a
+   complete implementation: scrub with buffered ranges and hover preview, play
+   and pause, skip, volume with mute, captions/subtitle menu, speed, PiP,
+   fullscreen, keyboard shortcuts, touch gestures and an accessible control
+   set. Rebuilding those by hand is what produced a bar that behaved unlike
+   every other video the viewer has used.
+
+   Plyr is a *shell*, not an engine. The media pipeline is unchanged: hls.js
+   and dash.js still feed the <video>, so anything that played before plays
+   exactly the same way, and anything that could not play is still refused by
+   zpPlayability() before this point is reached.
+
+   ZeroPlay keeps three things Plyr has no concept of, so they stay in our
+   strip above the player: this title's identity, the server list, and
+   failover position.
+   */
+let zpPlyrInstance=null;
+function zpPlyrDestroy(){
+  try{ if(zpPlyrInstance&&typeof zpPlyrInstance.destroy==="function") zpPlyrInstance.destroy(); }catch{}
+  zpPlyrInstance=null;
+  try{ document.body.classList.remove("zp-plyr-on"); }catch{}
+}
+function zpPlyrReady(){
+  return !!(window.Plyr&&typeof window.Plyr==="function");
+}
+/* Plyr is loaded on its own. It used to wait on ensureEngineScripts(), which
+   pulls hls.js and dash.js — 1.3 MB the shell does not need — so a slow or
+   stalled engine download could delay the player's entire UI, and a plain MP4
+   waited behind two libraries it would never use. This loads ~114 KB and
+   resolves either way, so a failure here degrades to the deck instead of
+   hanging. */
+let zpPlyrPromise=null;
+function zpEnsurePlyr(timeoutMs){
+  if(zpPlyrReady()) return Promise.resolve(true);
+  if(zpPlyrPromise) return zpPlyrPromise;
+  loadStyleOnce("vendor/plyr.css");
+  const loading=loadScriptOnce("vendor/plyr.min.js","Plyr");
+  const budget=Number(timeoutMs)||8000;
+  zpPlyrPromise=Promise.race([
+    loading,
+    new Promise(resolve=>setTimeout(()=>resolve(false),budget))
+  ]).then(ok=>{
+    const ready=!!ok&&zpPlyrReady();
+    /* A failed load must be retried next time rather than cached as broken. */
+    if(!ready) zpPlyrPromise=null;
+    return ready;
+  }).catch(()=>{ zpPlyrPromise=null; return false; });
+  return zpPlyrPromise;
+}
+async function zpAttachPlyr(video){
+  if(!video) return null;
+  const st=playerState;
+  zpPlyrDestroy();
+  /* Plyr must not be created on a trailer or a stripped-down pass. */
+  if(!st||st.trailer) return null;
+  try{ await zpEnsurePlyr(8000); }catch{}
+  if(playerState!==st) return null;
+  if(!zpPlyrReady()) return null;   /* the deck stays as the fallback UI */
+  try{
+    const controls=[
+      "play-large","rewind","play","fast-forward","progress",
+      "current-time","duration","mute","volume","captions","settings",
+      "pip","airplay","fullscreen"
+    ];
+    const p=new window.Plyr(video,{
+      controls,
+      settings:["captions","quality","speed"],
+      speed:{selected:Number(settings.stream.rate||1)||1,options:[.5,.75,1,1.25,1.5,2]},
+      keyboard:{focused:true,global:true},
+      tooltips:{controls:true,seek:true},
+      /* Volume/mute are ours: settings.stream holds the viewer's choice and
+         the existing transport writes it back. */
+      storage:{enabled:false},
+      seekTime:10,
+      invertTime:false,
+      displayDuration:true,
+      clickToPlay:true,
+      hideControls:true,
+      resetOnEnd:false,
+      captions:{active:!!(st.subtitleSelection&&st.subtitleSelection!=="off"),language:"auto",update:true}
+    });
+    zpPlyrInstance=p;
+    p.on("ready",()=>{
+      try{ document.body.classList.add("zp-plyr-on"); }catch{}
+      /* Plyr's own bar replaces ours; our ids stay for the app's bindings. */
+      const deck=document.getElementById("playerControls");
+      if(deck){ deck.setAttribute("aria-hidden","true"); deck.classList.add("zp-deck-hidden"); }
+      /* Apply the viewer's stored volume/rate to the real element. */
+      try{
+        const vol=Math.max(0,Math.min(1,Number(settings.stream.volume==null?.9:settings.stream.volume)));
+        p.volume=vol; p.muted=!!settings.stream.muted;
+        const r=Number(settings.stream.rate||1); if(r&&r!==1) p.speed=r;
+      }catch{}
+    });
+    /* Keep ZeroPlay's state and its hidden deck in step with Plyr, so
+       progress saving, resume, failover and the TV contract still read the
+       truth. */
+    const sync=()=>{
+      if(playerState!==st) return;
+      try{ updatePlaybackUI({paused:video.paused,buffering:video.readyState<3&&!video.paused,currentTime:video.currentTime||0,duration:Number.isFinite(video.duration)?video.duration:0,buffered:0,volume:video.volume,muted:video.muted,rate:video.playbackRate},"plyr-sync"); }catch{}
+    };
+    p.on("play",sync); p.on("pause",sync); p.on("timeupdate",sync);
+    p.on("volumechange",sync); p.on("ratechange",sync);
+    p.on("seeked",sync);
+    p.on("playing",()=>{ try{ playerLoading(false); }catch{} });
+    p.on("languagechange",()=>{ try{ st.playback=Object.assign({},st.playback,{}); }catch{} });
+    return p;
+  }catch(e){
+    /* A failed shell must never take the stream down with it: the deck is
+       still bound and still works. */
+    try{ console.warn("Plyr unavailable, keeping ZeroPlay controls",e&&e.message); }catch{}
+    return null;
+  }
 }
 function streamKindOf(url,declared){
   const kind=directMediaKind(url);
@@ -7117,6 +7267,9 @@ function zpEngine(){
 }
 function zpEngineDestroy(){
   try{ stopSubtitleRenderer(); }catch{}
+  /* Plyr holds listeners on the element; destroy it before the element is
+     unmounted or it keeps a detached player alive for the next stream. */
+  try{ zpPlyrDestroy(); }catch{}
   const st=playerState; const e=st&&st.zpEngine; if(!e) return;
   e.destroyed=true;
   try{ if(e.instance&&e.instance.destroy) e.instance.destroy(); }catch{}
@@ -7418,6 +7571,12 @@ async function zpEngineMount(stage,url,source,opts){
   try{ v.style.objectFit=zpEngineResizeMode()==="stretch"?"fill":zpEngineResizeMode()==="zoom"?"cover":"contain"; }catch{}
   const click=document.getElementById("mediaClick");
   if(click){ click.onclick=()=>playerCommand("toggle"); click.ondblclick=()=>playerCommand("fullscreen"); }
+  /* Plyr owns the transport from here. It attaches to the same <video> the
+     engines drive, so hls.js/dash.js and Plyr are not in competition: the
+     engine feeds the element, Plyr renders and controls it. ZeroPlay's own
+     deck is kept behind `.zp-deck` for the ids the app addresses, hidden
+     visually while Plyr is present. */
+  void zpAttachPlyr(v);
 
   /* A Streams/Addon result can hand us required headers; HLS/XHR based
      engines need them explicitly, so they are passed to the loader only. */
@@ -7614,30 +7773,45 @@ function openM3uExtractorForContext(ctx,url){
    bindPlayerChrome(), and every control still calls playerCommand().
    ===================================================================== */
 function playerShell(msg){
+  /* ---------------------------------------------------------------
+     The Watch screen.
+
+     Transport is Plyr (vendor/plyr.min.js, MIT): one complete, maintained
+     player supplying the scrub bar, play/pause, skip, volume, captions menu,
+     speed, PiP, fullscreen, keyboard and touch. ZeroPlay no longer draws a
+     second control bar underneath it — that was the part that looked
+     homemade and behaved inconsistently.
+
+     What stays ZeroPlay's is everything Plyr has no concept of: this title's
+     identity, the Servers list, episode stepping, downloads, M3U tools and
+     the failover queue. Those live in a strip above the player, so they
+     never overlap Plyr's own controls.
+
+     Control ids are preserved because the binding layer and the TV D-pad
+     contract address them by name; the *surface* is replaced, not the
+     behaviour underneath it.
+     --------------------------------------------------------------- */
   const st=withPlayerRuntime(playerState); playerState=st;
   const it=st.item, isTV=it.type==="tv";
   const rate=Number(st.playback&&st.playback.rate||1);
   const queue=directQueueStatus(st);
   const src=(st.tempSource||getSource(st.source));
-  const engineLabel=st.engine==="native"?(st.playingQualityLabel||"ZeroPlay player"):st.direct?"ZeroPlay player":"Connecting";
-  /* Layer order is deliberate and mirrors what the reference players converge
-     on: a black stage, a thin identity strip, a transport deck, and a paused
-     shelf that only exists while paused. Every control keeps the id it had so
-     no handler binding changes — this is a restructure of the surface, not a
-     rewrite of the behaviour underneath it. */
+  const engineLabel=st.engine==="native"?(st.playingQualityLabel||"Plyr"):st.direct?"Plyr":"Connecting";
+  const subLine=(isTV?"S"+st.season+"E"+st.episode:"Movie")+(src&&src.name?" · "+esc(src.name):"");
+
   return '<div class="player-overlay zp-player" id="playerOverlay">'
 
-    /* stage */
+    /* stage — Plyr mounts on the <video> inside this */
     +'<div class="player-stage" id="playerStage" data-player>'
       +'<div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>'+esc(msg||"Connecting…")+'</strong><span class="zp-loading-hint">Finding the best available stream…</span></div>'
     +'</div>'
 
-    /* top strip — identity on the left, the two exits and the episode step on the right */
+    /* Title strip. Sits above the player, out of Plyr's control zone. */
     +'<div class="player-bar zp-top" id="playerTopBar" data-tv-row="player-top">'
       +'<button class="icon-btn zp-round" id="btnBackPlayer" type="button" aria-label="Back">‹</button>'
       +'<div class="zp-title-block">'
         +'<span class="pn" id="playerTitle">'+esc(titleOf(it))+'</span>'
-        +'<span class="player-title-sub" id="playerSourceLine">'+(isTV?"S"+"·"+st.season+"E"+st.episode:"Movie")+(src&&src.name?" · "+esc(src.name):"")+'</span>'
+        +'<span class="player-title-sub" id="playerSourceLine">'+subLine+'</span>'
       +'</div>'
       +'<span id="fastBadge" class="chip violet"></span>'
       +'<span class="player-spacer"></span>'
@@ -7648,9 +7822,8 @@ function playerShell(msg){
       +'<button class="icon-btn zp-round" id="btnClosePlayer" type="button" aria-label="Close player">×</button>'
     +'</div>'
 
-    +'<button class="center-play" id="btnCenterPlay" type="button" aria-label="Play" hidden>▶</button>'
-
-    /* paused shelf — appears only while paused, between stage and transport */
+    /* ZeroPlay-only tools. Hidden until paused or woken, so they never fight
+       Plyr's controls for the bottom edge of the screen. */
     +'<div class="player-action-shelf zp-shelf" id="playerActionShelf" aria-label="Paused player tools" data-tv-row="player-shelf">'
       +'<button class="control-btn primary zp-shelf-primary" id="btnPlayerResume" type="button">▶ Resume</button>'
       +'<button class="control-btn" id="btnPlayerServersStage" type="button">Servers</button>'
@@ -7659,8 +7832,10 @@ function playerShell(msg){
       +'<button class="control-btn" id="btnPlayerQuality" type="button">Quality</button>'
     +'</div>'
 
-    /* transport deck — one scrub row, one action row, nothing else */
-    +'<div class="player-controls zp-deck" id="playerControls" data-mode="loading" data-tv-row="player-transport">'
+    /* Plyr's transport is injected on the <video>; these ids are the handles
+       the rest of the app still addresses. They are visually hidden when Plyr
+       owns the bar, but must exist for bindings, D-pad rows and tests. */
+    +'<div class="player-controls zp-deck" id="playerControls" data-mode="loading" data-tv-row="player-transport" aria-hidden="true">'
       +'<div class="zp-scrub">'
         +'<span class="zp-time" id="currentTime">0:00</span>'
         +'<input id="seekRange" type="range" min="0" max="100" value="0" step="1" aria-label="Seek">'
@@ -7680,7 +7855,7 @@ function playerShell(msg){
       +'</div>'
     +'</div>'
 
-    /* More sheet */
+    /* More sheet — ZeroPlay's tools, kept off the player surface */
     +'<div class="player-sheet" id="playerMoreSheet" hidden data-tv-row="player-sheet-more" aria-label="More player tools">'
       +'<div class="player-sheet-inner">'
         +'<div class="player-sheet-head"><strong>Playback tools</strong><button class="icon-btn" id="btnClosePlayerMore" type="button" aria-label="Close tools">×</button></div>'

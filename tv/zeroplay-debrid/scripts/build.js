@@ -180,9 +180,20 @@ function main() {
   fs.writeFileSync(path.join(OUT_DIR, "index.html"), injectScript(html), "utf8");
 
   fs.mkdirSync(path.join(OUT_DIR, "vendor"), { recursive: true });
-  for (const file of ["hls.min.js", "dash.min.js"]) {
+  /* Every runtime asset the app loads by URL must be listed here. plyr was
+     missing, so the built site served a Watch screen that quietly fell back to
+     the app's own deck: the source tree looked converted, the deployment was
+     not. A missing asset is a build error, not a silent degradation. */
+  const vendorAssets = ["hls.min.js", "dash.min.js", "plyr.min.js", "plyr.css"];
+  const missing = [];
+  for (const file of vendorAssets) {
     const from = path.join(ROOT, "vendor", file);
-    if (fs.existsSync(from)) fs.copyFileSync(from, path.join(OUT_DIR, "vendor", file));
+    if (!fs.existsSync(from)) { missing.push(file); continue; }
+    fs.copyFileSync(from, path.join(OUT_DIR, "vendor", file));
+  }
+  if (missing.length) {
+    console.error("Build failed: missing vendor asset(s): " + missing.join(", "));
+    process.exitCode = 1;
   }
 
   const size = Buffer.byteLength(bundle, "utf8");

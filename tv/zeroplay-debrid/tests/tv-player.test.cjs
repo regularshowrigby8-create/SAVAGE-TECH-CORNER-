@@ -232,6 +232,28 @@ eq(sorted.map(x => x.id), ['direct:a', 'feed:z', 'feed:y'], 'streams come before
   ok(/function handlePlayerNextKeys\(e\)/.test(html) && html.includes('handlePlayerNextKeys(e)) return true'), 'the Up Next card owns the remote while it is open');
   ok(/function nextEpisodeAvailable\(\)/.test(html) && /function finishPlaybackAndLeave\(reason\)/.test(html), 'a finished video either offers the next episode or leaves the player');
   ok(/function startOwnEngine\(stage,url,source,loadT0,resumeAt,opts\)/.test(html), 'one mount path owns the player');
+
+  /* ---- the Watch screen is Plyr, not a hand-built bar ------------------
+     The transport used to be ZeroPlay's own deck: a scrub row and a button
+     row drawn by hand, which is what made the screen feel homemade and
+     behave unlike the video players a viewer already knows. Plyr supplies
+     that surface now. The ids stay because the app binds to them. */
+  ok(/vendor\/plyr\.min\.js/.test(html), 'Plyr is bundled locally rather than fetched from a CDN');
+  ok(/css:"vendor\/plyr\.css"/.test(html), "Plyr's stylesheet loads with it, or the layout paints unstyled");
+  ok(/function zpAttachPlyr\(video\)/.test(html), 'the player shell is attached at the mount point');
+  ok(/new window\.Plyr\(video,/.test(html), 'Plyr is constructed on the same <video> the engines feed');
+  ok(html.includes('"progress"') && html.includes('"captions"') && html.includes('"fullscreen"'),
+     'the imported shell brings scrub, captions and fullscreen with it');
+  ok(/zpPlyrDestroy\(\)/.test(html) && /try\{ zpPlyrDestroy\(\); \}catch\{\}/.test(html),
+     'leaving the player destroys Plyr before the element is unmounted');
+  ok(/if\(!zpPlyrReady\(\)\) return null/.test(html),
+     'a missing shell degrades to the app\'s own deck instead of a dead screen');
+  ok(html.includes('zp-plyr-on') && html.includes('.zp-player .plyr'),
+     "Plyr's bar replaces ours rather than stacking a second one on top");
+  ok(/function zpEnsurePlyr\(timeoutMs\)/.test(html) && /Promise\.race/.test(html),
+     "Plyr loads on its own budget, not behind the 1.3 MB of engines it does not need");
+  ok(/if\(!ready\) zpPlyrPromise=null/.test(html),
+     'a failed shell download is retried next time instead of cached as broken');
   ok(html.includes('zpEngineDestroy()'), 'leaving the player tears the engine down');
   ok(/st\.triedUrls=st\.triedUrls\|\|new Set\(\)/.test(html), 'a failed stream is remembered so failover cannot loop');
   ok(!/mountEmbedPlayer[\s\S]{0,400}postMessage/.test(html), 'the framed fallback is never remote-controlled');
