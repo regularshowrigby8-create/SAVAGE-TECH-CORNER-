@@ -156,7 +156,13 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms));
      promise. Calling it with a variant object left the stage blank. */
   ok(/startOwnEngine\(stage,variant\.url,source,performance\.now\(\),0,\{kind:variant\.kind\}\)/.test(src),
      "the global mount path uses startOwnEngine's real signature");
-  ok(src.includes("staleStage.innerHTML=\"\""),"a recovering pass clears the previous error card");
+  /* The stage now holds the live <video> Plyr is attached to, so a recovering
+     pass must clear the old error card without wiping the element the player
+     owns. The assertion follows the behaviour, not one exact statement. */
+  ok(/\.player-message"\)\.forEach\(el=>el\.remove\(\)\)/.test(src),
+     "a recovering pass clears the previous error card");
+  ok(!/staleStage\.innerHTML=""/.test(src),
+     "and does it without destroying the video the player is mounted on");
   ok(!/drawPlayer\(prevP\);\s*\n\s*return;/.test(src),
      "the no-feed path does not recurse into drawPlayer (it paints out of order)");
   ok(html.includes('id="playerStage" data-player'),"the player stage carries the data-player mount point");

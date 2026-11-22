@@ -250,6 +250,26 @@ eq(sorted.map(x => x.id), ['direct:a', 'feed:z', 'feed:y'], 'streams come before
      'a missing shell degrades to the app\'s own deck instead of a dead screen');
   ok(html.includes('zp-plyr-on') && html.includes('.zp-player .plyr'),
      "Plyr's bar replaces ours rather than stacking a second one on top");
+  /* The complaint that mattered: the screen you see when you press Watch was
+     still ZeroPlay's own bar. Plyr existed only after a stream mounted, so on
+     a title that failed to resolve it never appeared at all. The player must
+     be on screen from the first frame. */
+  ok(/function playerShell\(msg\)\{[\s\S]{0,2600}id="pv"/.test(html),
+     "the Watch screen renders the player's <video> immediately, before any stream resolves");
+  ok(/void zpAttachPlyr\(document\.getElementById\("pv"\)\)/.test(html),
+     "and Plyr is attached at render time, not only after a successful resolve");
+  ok(!/id="seekRange" type="range"/.test(html),
+     "the old range-based scrub bar is gone rather than hidden behind the new player");
+  ok(!html.includes('class="zp-scrub"') && !html.includes('class="zp-actions"'),
+     "the old control deck markup is deleted, not duplicated");
+  ok(html.includes('const hadVideo=!!document.getElementById("pv")'),
+     "a resolving stream reuses the live element instead of replacing the one Plyr owns");
+  ok(/if\(!hadVideo\)\{[\s\S]{0,200}stage\.innerHTML=/.test(html),
+     "the stage is only rebuilt when there was no player to keep");
+  ok(html.includes('btnPlayerTracks') && html.includes('btnPlayerAspect'),
+     "subtitles and screen size survive as real controls in the More sheet");
+  ok(/body\.zp-plyr-on \.zp-player \.player-loading/.test(html),
+     "the loading wash is scoped to where the host class actually lives");
   ok(/function zpEnsurePlyr\(timeoutMs\)/.test(html) && /Promise\.race/.test(html),
      "Plyr loads on its own budget, not behind the 1.3 MB of engines it does not need");
   ok(/if\(!ready\) zpPlyrPromise=null/.test(html),

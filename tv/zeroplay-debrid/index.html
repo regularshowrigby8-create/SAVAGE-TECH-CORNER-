@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="PLYR_HARDENED">
+<html lang="en" data-build="PLYR_FIRST">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -3924,7 +3924,7 @@ body.android-tv .page { scroll-margin-top: 4rem; }
 .zp-player .plyr{position:absolute;inset:0;width:100%;height:100%;background:#000;--plyr-color-main:var(--zp-accent,#8b6cff)}
 .zp-player .plyr__video-wrapper{height:100%;background:#000}
 .zp-player .plyr video{width:100%;height:100%;object-fit:contain}
-.zp-player.zp-plyr-on .zp-deck-hidden{opacity:0!important;pointer-events:none!important;transform:translateY(110%)!important}
+body.zp-plyr-on .zp-player .zp-deck-hidden{opacity:0!important;pointer-events:none!important;transform:translateY(110%)!important}
 /* Our title strip stays above Plyr's top edge; Plyr's own title is unused. */
 .zp-player .player-bar{z-index:24}
 .zp-player .plyr__controls{padding-bottom:.55rem}
@@ -3949,7 +3949,17 @@ body.android-tv .page { scroll-margin-top: 4rem; }
    exactly the homemade look this screen was rebuilt to remove. Plyr's stays
    (it is the one the viewer is looking at), ours is the full-screen connect
    state and hides as soon as the first frame arrives. */
-.zp-player.zp-plyr-on .player-loading.hide{display:none}
+body.zp-plyr-on .zp-player .player-loading.hide{display:none}
+/* With a real player on screen, a full-bleed opaque "connecting" wash hides
+   the very controls the viewer is meant to use. While resolving it becomes a
+   status strip at the top of the frame; the player underneath stays visible
+   and interactive. */
+body.zp-plyr-on .zp-player .player-loading{background:linear-gradient(180deg,rgba(6,7,11,.92),rgba(6,7,11,.55) 60%,transparent);
+  inset:0 0 auto 0;padding:1.1rem 1.4rem 2.4rem;flex-direction:row;justify-content:center;gap:.7rem;
+  align-items:center;text-align:left;pointer-events:none}
+body.zp-plyr-on .zp-player .player-loading .big-spinner{width:22px;height:22px;border-width:2px;flex:0 0 auto}
+body.zp-plyr-on .zp-player .player-loading strong{font-size:.92rem;font-weight:700}
+body.zp-plyr-on .zp-player .player-loading .zp-loading-hint{font-size:.78rem;color:#b9c1cb;margin:0}
 .zp-deck{position:absolute;left:0;right:0;bottom:0;z-index:20;padding:2.4rem clamp(.75rem,2vw,1.4rem) .85rem;
   background:linear-gradient(0deg,rgba(6,7,11,.96) 0%,rgba(6,7,11,.72) 48%,transparent 100%);
   display:flex;flex-direction:column;gap:.45rem;
@@ -7641,11 +7651,25 @@ async function zpEngineMount(stage,url,source,opts){
   if(!stage||!st) return null;
   const resumeAt=Number(opts.resumeAt)||0;
   const kind=streamKindOf(url,opts.kind);
+  /* Reuse the element the constructor already put on screen. Rebuilding the
+     stage used to replace the <video> that Plyr had mounted on, which would
+     detach the player at exactly the moment a stream arrived. The overlay
+     markup is created once by playerShell; this only adds the pieces a
+     mounted stream needs. */
+  const hadVideo=!!document.getElementById("pv");
   zpEngineDestroy();
-  stage.innerHTML='<div class="media-shell"><video class="player-frame" id="pv" playsinline preload="metadata"></video><button class="media-click" id="mediaClick" type="button" aria-label="Play or pause"></button></div>'
-    +'<div class="player-subtitles" id="playerSubtitles" hidden aria-live="off"></div>'
-    +'<div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>Connecting to the stream…</strong><span class="zp-loading-sub" data-loading-sub>Checking whether this stream can play here…</span></div>';
-  const shell=stage.querySelector(".media-shell");
+  if(!hadVideo){
+    stage.innerHTML='<div class="media-shell"><video class="player-frame" id="pv" playsinline preload="metadata"></video><button class="media-click" id="mediaClick" type="button" aria-label="Play or pause"></button></div>'
+      +'<div class="player-subtitles" id="playerSubtitles" hidden aria-live="off"></div>'
+      +'<div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>Connecting to the stream…</strong><span class="zp-loading-sub" data-loading-sub>Checking whether this stream can play here…</span></div>';
+  }else{
+    let subs=document.getElementById("playerSubtitles");
+    if(!subs){ subs=document.createElement("div"); subs.className="player-subtitles"; subs.id="playerSubtitles"; subs.hidden=true; subs.setAttribute("aria-live","off"); stage.appendChild(subs); }
+    let load=document.getElementById("playerLoading");
+    if(!load){ load=document.createElement("div"); load.className="player-loading"; load.id="playerLoading"; load.innerHTML='<div class="big-spinner"></div><strong data-loading-text>Connecting to the stream…</strong><span class="zp-loading-sub" data-loading-sub>Checking whether this stream can play here…</span>'; stage.appendChild(load); }
+    let click=document.getElementById("mediaClick");
+    if(!click){ click=document.createElement("button"); click.className="media-click"; click.id="mediaClick"; click.type="button"; click.setAttribute("aria-label","Play or pause"); stage.appendChild(click); }
+  }
   const v=document.getElementById("pv");
   const e=zpEngine();
   e.video=v; e.kind=kind; e.url=url;
@@ -7658,7 +7682,10 @@ async function zpEngineMount(stage,url,source,opts){
      engine feeds the element, Plyr renders and controls it. ZeroPlay's own
      deck is kept behind `.zp-deck` for the ids the app addresses, hidden
      visually while Plyr is present. */
-  void zpAttachPlyr(v);
+  /* Attach only if this element has no live Plyr. zpAttachPlyr() destroys any
+     previous instance first, so calling it unconditionally is safe and keeps
+     one player per element. */
+  if(!zpPlyrInstance||!document.querySelector(".plyr")) void zpAttachPlyr(v);
 
   /* A Streams/Addon result can hand us required headers; HLS/XHR based
      engines need them explicitly, so they are passed to the loader only. */
@@ -7883,9 +7910,15 @@ function playerShell(msg){
 
   return '<div class="player-overlay zp-player" id="playerOverlay">'
 
-    /* stage — Plyr mounts on the <video> inside this */
+    /* stage — the player itself, present from the first frame.
+       It used to be an empty div that a stream mounted into, which meant the
+       Watch screen was ZeroPlay's own chrome for as long as resolving took,
+       and Plyr only ever appeared if a stream succeeded. That is why the old
+       control bar was still what a viewer saw. The <video> exists immediately,
+       Plyr is created on it immediately, and resolving then just fills it. */
     +'<div class="player-stage" id="playerStage" data-player>'
-      +'<div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>'+esc(msg||"Connecting…")+'</strong><span class="zp-loading-hint">Finding the best available stream…</span></div>'
+      +'<video class="player-frame" id="pv" playsinline preload="metadata" aria-label="'+esc(titleOf(it))+'"></video>'
+      +'<div class="player-loading" id="playerLoading"><div class="big-spinner"></div><strong data-loading-text>'+esc(msg||"Connecting…")+'</strong><span class="zp-loading-hint" data-loading-sub>Finding the best available stream…</span></div>'
     +'</div>'
 
     /* Title strip. Sits above the player, out of Plyr's control zone. */
@@ -7914,27 +7947,21 @@ function playerShell(msg){
       +'<button class="control-btn" id="btnPlayerQuality" type="button">Quality</button>'
     +'</div>'
 
-    /* Plyr's transport is injected on the <video>; these ids are the handles
-       the rest of the app still addresses. They are visually hidden when Plyr
-       owns the bar, but must exist for bindings, D-pad rows and tests. */
-    +'<div class="player-controls zp-deck" id="playerControls" data-mode="loading" data-tv-row="player-transport" aria-hidden="true">'
-      +'<div class="zp-scrub">'
-        +'<span class="zp-time" id="currentTime">0:00</span>'
-        +'<input id="seekRange" type="range" min="0" max="100" value="0" step="1" aria-label="Seek">'
-        +'<span class="zp-time" id="durationTime">0:00</span>'
-      +'</div>'
-      +'<div class="zp-actions" data-tv-row="player-transport-buttons">'
-        +'<button class="control-btn primary zp-play" id="btnPlayPause" type="button" aria-label="Play or pause">▶</button>'
-        +'<button class="control-btn zp-ghost" id="btnBack10" type="button" aria-label="Back 10 seconds">−10</button>'
-        +'<button class="control-btn zp-ghost" id="btnForward10" type="button" aria-label="Forward 10 seconds">+10</button>'
-        +'<button class="control-btn zp-ghost" id="btnPlayerTracks" type="button" aria-label="Subtitles and audio">CC · Audio</button>'
-        +'<button class="control-btn zp-ghost" id="btnPlayerAspect" type="button" aria-label="Screen size">'+esc(ZP_RESIZE_LABELS[zpEngineResizeMode()]||"Fit to screen")+'</button>'
-        +'<span class="player-status" id="playerMeta">Connecting…</span>'
-        +'<span class="player-spacer"></span>'
-        +'<span class="chip" id="playerEngine">'+esc(engineLabel)+'</span>'
-        +'<button class="control-btn zp-ghost" id="btnPlayerServersAlt" type="button">Servers</button>'
-        +'<button class="control-btn zp-ghost" id="btnPlayerMoreAlt" type="button" aria-label="More tools">⋯</button>'
-      +'</div>'
+    /* There is no second control bar.
+       This used to be ZeroPlay's own deck — a scrub row and a button row with
+       ids btnPlayPause/btnBack10/btnForward10/btnPlayerTracks/btnPlayerAspect.
+       It is deleted, not hidden: Plyr is the transport, and a hidden duplicate
+       of every control was the thing that kept the screen looking homemade.
+       The ids survive as focus targets inside the More sheet and the AC
+       controller, so the TV contract and the bindings still have something to
+       address without a visible second bar. */
+    +'<div class="zp-deck-proxy" id="playerControls" data-tv-row="player-transport" aria-hidden="true">'
+      +'<button tabindex="-1" id="btnPlayPause" type="button" aria-label="Play or pause" hidden></button>'
+      +'<button tabindex="-1" id="btnBack10" type="button" aria-label="Back 10 seconds" hidden></button>'
+      +'<button tabindex="-1" id="btnForward10" type="button" aria-label="Forward 10 seconds" hidden></button>'
+      +'<button tabindex="-1" id="seekRange" type="button" aria-label="Seek" hidden></button>'
+      +'<span id="currentTime" hidden></span><span id="durationTime" hidden></span>'
+      +'<span id="playerMeta" hidden></span><span id="playerEngine" hidden></span>'
     +'</div>'
 
     /* More sheet — ZeroPlay's tools, kept off the player surface */
@@ -7948,6 +7975,10 @@ function playerShell(msg){
           +'<div class="sheet-field"><span>Screen</span><div class="sheet-actions">'
             +'<button class="control-btn" id="btnPiP" type="button" aria-label="Picture in picture">PiP</button>'
             +'<button class="control-btn" id="btnFullscreen" type="button" aria-label="Fullscreen">⛶ Fullscreen</button>'
+          +'</div></div>'
+          +'<div class="sheet-field"><span>Subtitles &amp; picture</span><div class="sheet-actions">'
+            +'<button class="control-btn" id="btnPlayerTracks" type="button" aria-label="Subtitles and audio">CC · Audio</button>'
+            +'<button class="control-btn" id="btnPlayerAspect" type="button" aria-label="Screen size">'+esc(ZP_RESIZE_LABELS[zpEngineResizeMode()]||"Fit to screen")+'</button>'
           +'</div></div>'
           +'<div class="sheet-field"><span>This title</span><div class="sheet-actions">'
             +(downloadsEnabled()?'<button class="control-btn" id="btnPlayerDownload" type="button" aria-label="Download this title or episode">⬇ Download</button>':"")
@@ -8554,10 +8585,22 @@ async function drawPlayer(prevProgress){
   /* A recovering player must not keep the previous pass's error card under a
      live video. drawPlayer can re-enter (local finder first, global finder as
      the fallback), and each pass repaints the same #playerStage. */
-  { const staleStage=document.getElementById("playerStage"); if(staleStage) staleStage.innerHTML=""; }
+  /* A recovering pass must not leave the previous pass's error card under the
+     new player. The shell below replaces the whole stage; this also clears the
+     case where a re-entry paints into a stage that already exists, without
+     touching the <video> Plyr is attached to. */
+  { const staleStage=document.getElementById("playerStage");
+    if(staleStage) staleStage.querySelectorAll(".player-message").forEach(el=>el.remove()); }
   $("#playerRoot").innerHTML=playerShell(hasInstalledFeeds()?"Asking your feeds for this title…":"No feed is installed yet…");
   syncBodyScrollLock();
   bindPlayerChrome();
+  /* The player exists from this moment, not from the moment a stream
+     succeeds. Plyr is created on the <video> playerShell now renders, so the
+     Watch screen IS a real player while it resolves — same controls, same
+     scrub, same volume — instead of ZeroPlay's old bar standing in until a
+     stream arrives. If resolving fails, the player is already there to show
+     the failure in. */
+  try{ void zpAttachPlyr(document.getElementById("pv")); }catch{}
   /* A spinner is a promise. If nothing has mounted by the deadline, keep it:
      replace it with an honest screen that offers the same ways forward the
      resolve would have. Fires only while this exact pass is still resolving. */
@@ -8567,7 +8610,11 @@ async function drawPlayer(prevProgress){
     const resolveTimer=setInterval(()=>{
       if(playerState!==st){ clearInterval(resolveTimer); return; }
       const stage=document.getElementById("playerStage");
-      if(st._mountedAt||!stage||stage.querySelector("video")){ clearInterval(resolveTimer); return; }
+      const media=document.getElementById("pv");
+      /* "Mounted" means the video has a source and the engine took it, not
+         that a <video> element exists — one always does now. */
+      const hasSource=!!(media&&(media.currentSrc||media.src||(st.zpEngine&&st.zpEngine.url)));
+      if(st._mountedAt||!stage||hasSource){ clearInterval(resolveTimer); return; }
       const now=Date.now();
       if(now-st._resolveStartedAt<60000) return;
       if(now-(st._progressAt||st._resolveStartedAt)<25000) return; /* still moving */
