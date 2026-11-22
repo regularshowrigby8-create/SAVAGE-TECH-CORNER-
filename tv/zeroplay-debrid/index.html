@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="PLYR_SHELL">
+<html lang="en" data-build="PLYR_HARDENED">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -3932,6 +3932,24 @@ body.android-tv .page { scroll-margin-top: 4rem; }
 .zp-player .player-action-shelf{z-index:25}
 .zp-player .plyr__control--overlaid{background:rgba(0,0,0,.55);backdrop-filter:blur(8px)}
 .zp-player .plyr__menu__container{z-index:40}
+/* Focus can only live on a control the viewer can see. While the app's chrome
+   is awake, Plyr's bar stays up with it. */
+.zp-player .plyr.zp-plyr-reveal .plyr__controls{opacity:1;pointer-events:auto}
+.zp-player .plyr.zp-plyr-reveal [data-plyr="play"]{outline:none}
+.zp-player .plyr__controls button:focus-visible,
+.zp-player .plyr__controls input:focus-visible{outline:3px solid var(--zp-accent,#8b6cff);outline-offset:2px}
+/* The loading overlay belongs to the stage, but `.plyr` is absolutely
+   positioned inside it with its own black background. Without an explicit
+   stacking order Plyr paints over our spinner, so buffering looked like a
+   frozen black screen. The overlay is ours; it must sit on top. */
+.zp-player .player-loading{z-index:30}
+.zp-player .player-indicator{z-index:32}
+.zp-player .player-paused-card{z-index:31}
+/* Plyr draws its own buffering spinner; two spinners in the same corner is
+   exactly the homemade look this screen was rebuilt to remove. Plyr's stays
+   (it is the one the viewer is looking at), ours is the full-screen connect
+   state and hides as soon as the first frame arrives. */
+.zp-player.zp-plyr-on .player-loading.hide{display:none}
 .zp-deck{position:absolute;left:0;right:0;bottom:0;z-index:20;padding:2.4rem clamp(.75rem,2vw,1.4rem) .85rem;
   background:linear-gradient(0deg,rgba(6,7,11,.96) 0%,rgba(6,7,11,.72) 48%,transparent 100%);
   display:flex;flex-direction:column;gap:.45rem;
@@ -4369,7 +4387,7 @@ const ANDROID_TV_TOTAL_RAM_MB=Math.round(Number(ANDROID_TV_PROFILE&&ANDROID_TV_P
 const ANDROID_TV_LOW_RAM=!!(ANDROID_TV_PROFILE&&(ANDROID_TV_PROFILE.lowRamDevice||(ANDROID_TV_TOTAL_RAM_MB>0&&ANDROID_TV_TOTAL_RAM_MB<=2560)));
 
 /* ---------------- storage ---------------- */
-const LS = { settings:"zp_rd_settings_v1", watchlist:"zp_rd_watchlist_v1", progress:"zp_rd_progress_v1" };
+const LS = { settings:"zp_rd_settings_v1", watchlist:"zp_rd_watchlist_v1", progress:"zp_rd_progress_v1", feedHealth:"zp_rd_feed_health_v1" };
 const loadJSON = (k,f)=>{
   try{
     const raw=localStorage.getItem(k);
@@ -5461,7 +5479,27 @@ function recordHealth(id, ok, ms){
   saveSettings();
 }
 function healthScore(id){ const h=settings.health[id]; if(!h||(!h.ok&&!h.fail)) return 50; const ratio=h.ok/Math.max(1,h.ok+h.fail); let s=ratio*80; if(h.avgMs) s+=Math.max(0,20-Math.min(20,h.avgMs/100)); return Math.round(Math.max(0,Math.min(100,s))); }
-function healthBadge(id){ const h=settings.health[id]; const sc=healthScore(id); const untouched=!h||(!h.ok&&!h.fail); const cls=untouched?"unk":sc>=70?"ok":sc>=40?"slow":"bad"; const label=untouched?"not checked":sc+" · "+(h.avgMs?h.avgMs+" ms":"—"); return '<span class="health"><span class="health-dot '+cls+'"></span>'+esc(label)+"</span>"; }
+function healthBadge(id){
+  /* Two different questions, both worth answering in one badge:
+       - is the host reachable (settings.health, from runHealthChecks)
+       - does the feed actually return streams for real titles (feedHealth)
+     A feed can pass a favicon ping forever while answering every stream
+     request with nothing, which is the failure a viewer actually feels. The
+     resolve-derived record wins when it has something to say. */
+  const resolved=typeof feedHealthFor==="function"?feedHealthFor(id):null;
+  if(resolved&&resolved.failing){
+    return '<span class="health" title="'+esc(resolved.lastError||"No stream returned")+'"><span class="health-dot bad"></span>not returning streams · '+resolved.fails+' misses</span>';
+  }
+  const h=settings.health[id]; const sc=healthScore(id); const untouched=!h||(!h.ok&&!h.fail);
+  const cls=untouched?"unk":sc>=70?"ok":sc>=40?"slow":"bad";
+  let label=untouched?"not checked":sc+" · "+(h.avgMs?h.avgMs+" ms":"—");
+  if(resolved&&Number(resolved.ok)>0){
+    /* Answered a real resolve: that is stronger evidence than a ping. */
+    label=(resolved.lastCount||0)+" stream"+(resolved.lastCount===1?"":"s")+" on last check";
+  }
+  const cls2=resolved&&Number(resolved.ok)>0?"ok":cls;
+  return '<span class="health"><span class="health-dot '+cls2+'"></span>'+esc(label)+"</span>";
+}
 async function pingHost(origin, timeoutMs){
   if(!origin) return {ok:false,ms:0};
   const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(),timeoutMs||6000); const t0=performance.now();
@@ -7150,6 +7188,7 @@ function ensureEngineScripts(){
    */
 let zpPlyrInstance=null;
 function zpPlyrDestroy(){
+  try{ if(playerState&&playerState.zpPlyrObserver){ playerState.zpPlyrObserver.disconnect(); playerState.zpPlyrObserver=null; } }catch{}
   try{ if(zpPlyrInstance&&typeof zpPlyrInstance.destroy==="function") zpPlyrInstance.destroy(); }catch{}
   zpPlyrInstance=null;
   try{ document.body.classList.remove("zp-plyr-on"); }catch{}
@@ -7200,7 +7239,12 @@ async function zpAttachPlyr(video){
       controls,
       settings:["captions","quality","speed"],
       speed:{selected:Number(settings.stream.rate||1)||1,options:[.5,.75,1,1.25,1.5,2]},
-      keyboard:{focused:true,global:true},
+      /* The app owns the global keyboard contract: handlePlayerKeyboard
+         handles Space/K/Left/Right/F/M/S/C and the TV back/menu keys on
+         document. Plyr binding the same keys on window made every press fire
+         twice - Space paused and instantly unpaused - so Plyr is limited to
+         keys pressed inside its own container. */
+      keyboard:{focused:true,global:false},
       tooltips:{controls:true,seek:true},
       /* Volume/mute are ours: settings.stream holds the viewer's choice and
          the existing transport writes it back. */
@@ -7234,10 +7278,48 @@ async function zpAttachPlyr(video){
       try{ updatePlaybackUI({paused:video.paused,buffering:video.readyState<3&&!video.paused,currentTime:video.currentTime||0,duration:Number.isFinite(video.duration)?video.duration:0,buffered:0,volume:video.volume,muted:video.muted,rate:video.playbackRate},"plyr-sync"); }catch{}
     };
     p.on("play",sync); p.on("pause",sync); p.on("timeupdate",sync);
-    p.on("volumechange",sync); p.on("ratechange",sync);
+    p.on("volumechange",()=>{
+      sync();
+      /* Persist what the viewer actually chose in Plyr's own slider. The old
+         binding did this on the element; once Plyr owned the element that
+         listener no longer ran for slider changes, so volume reset on every
+         new title. */
+      try{
+        if(playerState!==st) return;
+        const vol=Math.max(0,Math.min(1,Number(video.volume)));
+        if(Number.isFinite(vol)&&Math.abs(vol-Number(settings.stream.volume))>0.001){
+          settings.stream.volume=vol; saveSettings();
+        }
+        if(settings.stream.muted!==!!video.muted){ settings.stream.muted=!!video.muted; saveSettings(); }
+      }catch{}
+    }); p.on("ratechange",sync);
     p.on("seeked",sync);
     p.on("playing",()=>{ try{ playerLoading(false); }catch{} });
-    p.on("languagechange",()=>{ try{ st.playback=Object.assign({},st.playback,{}); }catch{} });
+    /* D-pad focus after this point lives on Plyr's buttons, so Plyr's bar must
+       be visible whenever the app decides the chrome is up. Without this the
+       remote stepped through controls nobody could see. */
+    const revealPlyr=on=>{
+      try{
+        if(on) p.elements.container.classList.add("zp-plyr-reveal");
+        else p.elements.container.classList.remove("zp-plyr-reveal");
+      }catch{}
+    };
+    try{
+      const overlay=document.getElementById("playerOverlay");
+      if(overlay&&window.MutationObserver){
+        const mo=new MutationObserver(()=>{
+          const awake=!overlay.classList.contains("chrome-hidden");
+          revealPlyr(awake||overlay.classList.contains("player-paused"));
+        });
+        mo.observe(overlay,{attributes:true,attributeFilter:["class"]});
+        revealPlyr(true);
+        st.zpPlyrObserver=mo;
+      }
+    }catch{}
+    p.on("controlshidden",()=>{
+      const overlay=document.getElementById("playerOverlay");
+      if(overlay&&!overlay.classList.contains("chrome-hidden")) revealPlyr(true);
+    });
     return p;
   }catch(e){
     /* A failed shell must never take the stream down with it: the deck is
@@ -8356,6 +8438,25 @@ async function topUpWithGlobal(st,n){
     if(!fresh.length) return;
     st.variants=rankGlobalVariants([...(st.variants||[]),...fresh]);
     st.directQueue=st.variants.slice();
+    /* The Servers list is built from availableServers, not from variants. The
+       top-up used to add variants only, so pressing Servers during playback
+       showed the list assembled before the finder answered and the new streams
+       were invisible until the next title. Append them as their own option so
+       the list the viewer opens matches what actually exists. */
+    try{
+      const existingIds=new Set((st.availableServers||[]).map(o=>o&&o.id));
+      const topUpOption={
+        id:"global-topup",
+        name:"Global finder",
+        kind:"direct",
+        verified:false,
+        identityScore:null,
+        variants:fresh.slice(0,8)
+      };
+      if(!existingIds.has(topUpOption.id)&&fresh.length){
+        st.availableServers=[topUpOption].concat(st.availableServers||[]);
+      }
+    }catch{}
     if(st.engine==="loading"||!st.zpEngine){
       void tryNextGlobalVariant(st,fresh[0]);
     }else{
@@ -12278,8 +12379,67 @@ async function collectFeedStreams(identity,opts){
     }
   }
   agg.variants=sortVariantsForQuality(agg.variants,settings.stream.quality);
+  try{ recordFeedHealth(agg.perFeed); }catch{}
   return agg;
 }
+/* ---------------- feed health ----------------
+   A feed that dies keeps returning nothing, and nothing anywhere said so: the
+   viewer just saw "no streams" for every title and could not tell that one of
+   their sources had been dead for a week. Every resolve already knows which
+   feed answered, which failed and which returned nothing useful, so that is
+   recorded here against the feed id and survives a reload.
+
+   Deliberately conservative: one failure is noise (a slow network, one bad
+   title), so a feed is only called "failing" after repeated consecutive
+   misses. Health is advisory - it never disables a feed, it only tells the
+   truth in Sources. */
+const FEED_HEALTH_FAIL_THRESHOLD=3;
+function readFeedHealth(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(LS.feedHealth)||"{}");
+    return raw&&typeof raw==="object"?raw:{};
+  }catch{ return {}; }
+}
+function writeFeedHealth(map){
+  /* Bound the record so a long-lived install cannot grow without limit. */
+  try{
+    const ids=Object.keys(map||{});
+    if(ids.length>60){
+      ids.sort((a,b)=>Number(map[a]&&map[a].at||0)-Number(map[b]&&map[b].at||0));
+      for(const id of ids.slice(0,ids.length-60)) delete map[id];
+    }
+    localStorage.setItem(LS.feedHealth,JSON.stringify(map));
+  }catch{}
+}
+function recordFeedHealth(perFeed){
+  if(!Array.isArray(perFeed)||!perFeed.length) return;
+  const map=readFeedHealth();
+  let changed=false;
+  for(const v of perFeed){
+    if(!v||!v.feedId) continue;
+    const prev=map[v.feedId]||{fails:0,ok:0,at:0,lastOk:0};
+    const answered=!v.error;
+    const produced=Array.isArray(v.variants)&&v.variants.length>0;
+    const entry={
+      fails: answered?(produced?0:prev.fails||0):(Number(prev.fails)||0)+1,
+      ok: answered?(Number(prev.ok)||0)+1:(Number(prev.ok)||0),
+      at: Date.now(),
+      lastOk: answered?Date.now():(Number(prev.lastOk)||0),
+      lastError: answered?"":String(v.error||"").slice(0,200),
+      lastCount: Array.isArray(v.variants)?v.variants.length:0
+    };
+    map[v.feedId]=entry; changed=true;
+  }
+  if(changed) writeFeedHealth(map);
+}
+function feedHealthFor(id){
+  if(!id) return null;
+  const entry=readFeedHealth()[id];
+  if(!entry) return null;
+  const failing=Number(entry.fails)>=FEED_HEALTH_FAIL_THRESHOLD;
+  return Object.assign({failing},entry);
+}
+
 /* A pasted URL template is a feed with exactly one route. It is resolved by
    substitution, then treated like any other stream URL. */
 async function customTemplateStreams(source,identity,opts){

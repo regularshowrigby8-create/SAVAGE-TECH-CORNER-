@@ -184,5 +184,43 @@ async function boot(seed) {
   const cssFailure = await bootWithFailingMedia(source);
   ok(cssFailure === '', 'artwork/resource exclusions do not swallow ordinary page errors');
 
+  /* ---- feed health -----------------------------------------------------
+     A feed that dies answers every request with nothing, and for a viewer
+     that is indistinguishable from a title nobody has. These functions keep
+     track of which feeds actually produce streams. Pure functions, so they
+     are exercised directly rather than through the UI. */
+  {
+    const healthSource = source;
+    const from = healthSource.indexOf('const FEED_HEALTH_FAIL_THRESHOLD');
+    const to = healthSource.indexOf('/* A pasted URL template is a feed');
+    ok(from > 0 && to > from, 'the feed health block is present and self-contained');
+    const block = 'const LS={feedHealth:"zp_rd_feed_health_v1"};\n' + healthSource.slice(from, to);
+    const bag = (() => { const m = new Map(); return {
+      getItem: k => (m.has(k) ? m.get(k) : null),
+      setItem: (k, v) => m.set(k, String(v)),
+      removeItem: k => m.delete(k)
+    }; })();
+    const api = new Function('localStorage', block + '\nreturn {recordFeedHealth, feedHealthFor};')(bag);
+
+    ok(api.feedHealthFor('unknown') === null, 'a feed that has never resolved has no health record');
+    api.recordFeedHealth([{ feedId: 'a', error: 'timeout', variants: [] }]);
+    ok(api.feedHealthFor('a').failing === false, 'one failed resolve is noise, not a verdict');
+    api.recordFeedHealth([{ feedId: 'a', error: 'timeout', variants: [] }]);
+    api.recordFeedHealth([{ feedId: 'a', error: 'timeout', variants: [] }]);
+    ok(api.feedHealthFor('a').failing === true, 'a feed that misses three times running is reported as failing');
+    ok(/timeout/.test(api.feedHealthFor('a').lastError), 'and the reason it gave is kept, so it can be shown');
+
+    api.recordFeedHealth([{ feedId: 'a', variants: [{ url: 'x' }, { url: 'y' }] }]);
+    const recovered = api.feedHealthFor('a');
+    ok(recovered.failing === false, 'one good answer clears the failing state');
+    ok(recovered.lastCount === 2, 'and records how many streams it actually returned');
+
+    api.recordFeedHealth([{ feedId: 'b', variants: [] }]);
+    ok(api.feedHealthFor('b').lastCount === 0, 'an answer with no streams is recorded as zero, not as success');
+
+    const persisted = JSON.parse(bag.getItem('zp_rd_feed_health_v1'));
+    ok(persisted && persisted.a && persisted.b, 'health survives a reload instead of resetting every visit');
+  }
+
   console.log(`\n${n} stored-state checks passed (including watchdog)`);
 })().catch(e => { console.error('FAILED', e && e.message || e); process.exit(1); });
