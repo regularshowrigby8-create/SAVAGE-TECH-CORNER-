@@ -93,8 +93,11 @@ jobs:
           # A gate that passes having checked nothing is a false green. This is
           # the minimum this audit has ever produced; if a refactor stops the
           # checks being collected, the count collapses and this fails.
-          if total < 150:
-              print(f"::error title=audit too small::only {total} checks ran, expected >= 150")
+          # Raised 150 -> 185 when the player, seek-gesture and cookie-jar
+          # checks were added. The floor exists so a future edit cannot quietly
+          # delete coverage and still report a pass.
+          if total < 185:
+              print(f"::error title=audit too small::only {total} checks ran, expected >= 185")
               sys.exit(1)
 
           summary = os.environ.get("GITHUB_STEP_SUMMARY")

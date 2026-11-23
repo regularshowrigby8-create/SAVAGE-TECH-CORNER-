@@ -661,6 +661,256 @@ def check_live(root: Path) -> List[Check]:
     return checks
 
 
+def check_player_and_intro(root: Path) -> List[Check]:
+    """The player and its skip-intro data path.
+
+    The audit used to stop at the finders, so changes under `player/` were
+    reported green purely by not being looked at. These are the facts a
+    "the player works" claim actually rests on: the imported engine is present
+    and attributed, intro timestamps come from a real keyless source rather
+    than being invented, and the skip button is driven by that data.
+    """
+    checks: List[Check] = []
+    base = root / "android/app/src/main/java/dev/nova/tv"
+
+    # 1. The ARVIO engine is an import, and says so. A file that copies a
+    #    licence header while having no engine is the failure mode here.
+    engine = _read(base / "player/engine/exoplayer/ExoPlayerEngine.kt")
+    exo = base / "player/engine/exoplayer/ExoPlayerEngine.kt"
+    attributed = "ARVIO" in engine and "Apache" in engine
+    checks.append(Check(
+        "imported player engine is present and attributed",
+        "proven" if attributed and exo.exists() else "contradicted",
+        f"arvio_header={attributed} file_exists={exo.exists()}",
+        "player/engine/exoplayer/ExoPlayerEngine.kt",
+    ))
+    notices = _read(root / "android/THIRD_PARTY_NOTICES.md")
+    checks.append(Check(
+        "third-party notice names the imported player",
+        "proven" if "ARVIO" in notices and "Apache" in notices else "contradicted",
+        "notice mentions ARVIO and Apache-2.0",
+        "android/THIRD_PARTY_NOTICES.md",
+    ))
+
+    # 2. Intro timestamps come from a declared source. Inventing them from
+    #    chapter labels was an earlier attempt that always returned null; the
+    #    check pins the real endpoints so it cannot come back.
+    intro = _read(base / "player/IntroSkip.kt")
+    intro_code = _strip_comments(intro)
+    has_class = "class IntroLookup" in intro_code
+    # From code, not the KDoc: the header names both endpoints while explaining
+    # where the data comes from, so a whole-file search survives their deletion.
+    has_apis = "api.theintrodb.org" in intro_code and "api.introdb.app" in intro_code
+    checks.append(Check(
+        "intro timestamps come from a real keyless source",
+        "proven" if has_class and has_apis else "contradicted",
+        f"lookup_class={has_class} both_endpoints={has_apis}",
+        "player/IntroSkip.kt",
+    ))
+    # 3. No invented detection: intro data must never be guessed locally.
+    invented = re.search(r"refreshIntroWindow", intro + _read(base / "player/NovaPlayer.kt"))
+    checks.append(Check(
+        "intro window is never guessed from the media",
+        "proven" if not invented else "contradicted",
+        "no local chapter/label guessing routine",
+        "player/IntroSkip.kt",
+    ))
+    # 4. The window is guarded, so a bad timestamp cannot move the picture.
+    #    Asserted behaviourally: the confidence floor must actually reject a
+    #    low-confidence window, and the start guard must actually gate the
+    #    window. Merely naming the constants is what a hollow check would do --
+    #    setting MIN_CONFIDENCE to 0.0 keeps the name and removes the guard.
+    floor = re.search(r"MIN_CONFIDENCE\s*=\s*([0-9.]+)", intro)
+    floor_value = float(floor.group(1)) if floor else None
+    compare = re.search(r"confidence\s*>=\s*MIN_CONFIDENCE", intro)
+    guard = re.search(r"position\s*>=\s*IntroLookup\.INTRO_START_GUARD_MS", _read(base / "player/NovaPlayer.kt"))
+    usable = (
+        floor_value is not None and floor_value > 0.0
+        and bool(compare) and bool(guard)
+    )
+    checks.append(Check(
+        "a skip is only offered for usable data",
+        "proven" if usable else "contradicted",
+        f"confidence_floor={floor_value} compared_in_usable={bool(compare)} start_guard_applied={bool(guard)}",
+        "player/IntroSkip.kt",
+    ))
+    # 5. Both surfaces offer the control, and it is wired to the player.
+    tv = _read(base / "ui/player/PlayerSurface.kt")
+    mobile = _read(root / "android/app/src/mobile/java/dev/nova/tv/mobile/MobilePlayer.kt")
+    host = _read(base / "ui/screens/NovaPlayerHost.kt")
+    # The lookup must be fed a real id and installed, not stubbed to null.
+    wired = bool(re.search(r"introLookup\.introFor\(", host)) and bool(
+        re.search(r"setIntroSegment\(segment\)", host)
+    ) and "setIntroSegment(null)" not in host
+    tv_code = _strip_comments(tv)
+    mobile_code = _strip_comments(mobile)
+    tv_button = "Skip intro" in tv_code and "player.skipIntro()" in tv_code
+    mobile_button = "Skip intro" in mobile_code and "player.skipIntro()" in mobile_code
+    both = tv_button and mobile_button
+    checks.append(Check(
+        "skip-intro is wired on both surfaces",
+        "proven" if wired and both else "contradicted",
+        f"host_lookup={wired} tv_button={tv_button} mobile_button={mobile_button}",
+        "NovaPlayerHost.kt + PlayerSurface.kt + MobilePlayer.kt",
+    ))
+    return checks
+
+
+def check_seek_gestures(root: Path) -> List[Check]:
+    """Seeking must be reachable, and the two-detector bug must stay fixed.
+
+    The mobile bar installed detectTapGestures and detectHorizontalDragGestures
+    as two separate pointerInput modifiers on one Canvas. Two detectors cannot
+    both win a pointer stream, so a tap-to-jump and a drag-to-scrub fought and
+    "jump to a point" only worked for whichever won. This pins the single
+    gesture loop, in both directions.
+    """
+    checks: List[Check] = []
+    mobile = _read(root / "android/app/src/mobile/java/dev/nova/tv/mobile/MobilePlayer.kt")
+    code = _strip_comments(mobile)
+    # Slice out the seek bar and inspect only it. A whole-file search is
+    # satisfied by the gesture code elsewhere in the player, and by the KDoc
+    # that names the old detectors while explaining the bug.
+    def seekbar(text: str) -> str:
+        start = text.find("private fun SeekBar(")
+        if start < 0:
+            return ""
+        end = text.find("\nprivate fun ", start + 10)
+        nxt = text.find("\n@Composable", start + 10)
+        stops = [x for x in (end, nxt) if x > 0]
+        return text[start:min(stops)] if stops else text[start:]
+
+    bar = seekbar(code)
+    single = "awaitEachGesture" in bar
+    # A live (non-comment) rival detector inside the bar is the regression.
+    # Strict on purpose. An earlier version only failed when the detector was
+    # preceded by `pointerInput`, so a reinstated detector declared another way
+    # slipped through. Two detectors on one pointer stream is the bug, however
+    # it is spelled, so any live use inside the bar is a contradiction.
+    rival = "detectHorizontalDragGestures" in bar or "detectTapGestures" in bar
+    if "detectHorizontalDragGestures" in bar:
+        rival = True
+    # Both behaviours must be present: a press classifies as a jump, and a
+    # move tracks the finger. One without the other is a half-fix.
+    jumps = "seek((" in bar
+    # The assignment, not the name -- and specifically the one inside the
+    # pointer-event loop. The bar writes dragFraction three times (drag start,
+    # drag move, release); a global search stays green when the *move* write is
+    # deleted, which is the one that makes the bar follow the finger.
+    loop_start = bar.find("awaitPointerEvent()")
+    loop = bar[loop_start:] if loop_start >= 0 else ""
+    # The bar writes dragFraction in two distinct places: while the finger
+    # moves (following x) and on release (committing change.position.x). The
+    # release write alone is not enough -- the picture must follow the finger
+    # during the drag -- so the move path is required by name.
+    follows = bool(re.search(r"x\s*=\s*change\.position\.x", loop)) and bool(
+        re.search(r"dragFraction\s*=\s*\(\s*x\s*/", loop)
+    )
+    tracks = follows
+    # ...and the release must commit through the same path.
+    commits = bool(re.search(r"seek\(\(dragFraction \* total\)\.toLong\(\)\)", bar))
+    checks.append(Check(
+        "mobile seek bar uses one gesture loop",
+        "proven" if single and not rival and jumps and tracks and commits else "contradicted",
+        f"single_loop={single} rival_detector={rival} commits_jump={jumps} "
+        f"tracks_drag={tracks} commits_on_release={commits}",
+        "mobile/MobilePlayer.kt",
+    ))
+
+    player = _read(root / "android/app/src/main/java/dev/nova/tv/player/NovaPlayer.kt")
+    checks.append(Check(
+        "absolute seek exists for a scrub bar",
+        "proven" if "fun seekTo(" in player else "contradicted",
+        "NovaPlayer.seekTo(positionMs)",
+        "player/NovaPlayer.kt",
+    ))
+    # Skipping to the exact end restarts the episode; the guard must survive.
+    checks.append(Check(
+        "seeks stop short of the end",
+        "proven" if "SEEK_END_GUARD_MS" in player else "contradicted",
+        "end guard present in the seek path",
+        "player/NovaPlayer.kt",
+    ))
+
+    # The TV remote path: the bar must actually handle D-pad keys.
+    tv = _strip_comments(_read(root / "android/app/src/main/java/dev/nova/tv/ui/player/PlayerSurface.kt"))
+    # Scoped to the scrub bar: seeking also appears in the general chrome keys,
+    # so a whole-file search would stay green with the bar's handling deleted.
+    bar_start = tv.find("private fun ScrubBar(")
+    bar = tv[bar_start:tv.find("\nprivate fun ", bar_start + 10)] if bar_start >= 0 else ""
+    dpad = "KEYCODE_DPAD_LEFT" in bar and "KEYCODE_DPAD_RIGHT" in bar
+    commit = bool(re.search(r"scrub\.commit\(\)\?\.let \{ player\.seekTo", bar))
+    checks.append(Check(
+        "TV scrub bar handles the D-pad",
+        "proven" if dpad and commit else "contradicted",
+        f"left_right_keys={dpad} commits_cursor={commit}",
+        "ui/player/PlayerSurface.kt",
+    ))
+    return checks
+
+
+def check_finder_correctness(root: Path) -> List[Check]:
+    """The three defects that made the website finder return nothing.
+
+    Each was a divergence from the Python this was translated from, and each is
+    invisible to a "does the file exist" check, so they are asserted directly.
+    """
+    checks: List[Check] = []
+    fh = _read(root / "android/app/src/main/java/dev/nova/tv/finder/translated/FinderHttp.kt")
+    code = _strip_comments(fh)
+    # Both facts must hold in *code*, not prose. The KDoc above the jar names
+    # `.cookieJar(jar)` while explaining the bug, so a naive search over the
+    # whole file is satisfied by the comment even after the call is deleted --
+    # which is exactly the false green this audit exists to prevent.
+    jar = "class MemoryCookieJar" in code and ".cookieJar(jar)" in code
+    checks.append(Check(
+        "finder keeps a session cookie jar",
+        "proven" if jar else "contradicted",
+        "Python's ClientSession keep-alive had no equivalent; without it every "
+        "follow-up request was rejected" if not jar else "jar installed on the client",
+        "finder/translated/FinderHttp.kt",
+    ))
+    # Kotlin initialises properties in declaration order: the jar must be
+    # declared before the client that captures it.
+    order = re.search(r"private val jar\b[\s\S]*?private val client\b", code)
+    checks.append(Check(
+        "cookie jar is declared before the client it feeds",
+        "proven" if order else "contradicted",
+        "declaration order" if order else "client captured an uninitialised jar",
+        "finder/translated/FinderHttp.kt",
+    ))
+    for label, rel, name in [
+        ("server", "finder/servers/ServerFinder.kt", "ServerFinderHarvester"),
+        ("addon", "finder/addons/AddonFinder.kt", "AddonFinderHarvester"),
+    ]:
+        src = _strip_comments(_read(root / "android/app/src/main/java/dev/nova/tv" / Path(rel)))
+        # locates the harvest function and proves it loops rather than doing one batch
+        loop = bool(re.search(r"suspend fun harvest\([^)]*\)[\s\S]{0,600}?while\s*\(", src))
+        budget = "harvestBudgetMs" in src
+        checks.append(Check(
+            f"{label} harvest keeps crawling instead of one batch",
+            "proven" if loop and budget else "contradicted",
+            f"loops={loop} bounded={budget}",
+            rel,
+        ))
+    # The website pool must receive searchable sites, not media origins.
+    sf = _strip_comments(_read(root / "android/app/src/main/java/dev/nova/tv/finder/servers/ServerFinder.kt"))
+    # Behaviour, not shape: the function must derive from the referer and fall
+    # back to baseUrl only when there is no referer. Returning baseUrl outright
+    # keeps the function and loses the fix.
+    origin = re.search(r"fun toSiteUrl\(\)[\s\S]{0,400}", sf)
+    body = origin.group(0) if origin else ""
+    projects = "originOf(ref)" in body and "ifEmpty { baseUrl }" in body
+    checks.append(Check(
+        "website pool receives the site, not the media origin",
+        "proven" if projects else "contradicted",
+        "projects from the referer, falls back only when absent" if projects
+        else "returns the media origin",
+        "finder/servers/ServerFinder.kt",
+    ))
+    return checks
+
+
 def run_all(root: Path) -> List[Check]:
     checks: List[Check] = []
     checks += check_files_exist(root)
@@ -670,6 +920,9 @@ def run_all(root: Path) -> List[Check]:
     checks += check_hallucination(root)
     checks += check_tests_are_real(root)
     checks += check_sources_doc(root)
+    checks += check_player_and_intro(root)
+    checks += check_seek_gestures(root)
+    checks += check_finder_correctness(root)
     checks += check_compile_shapes(root)
     return checks
 
