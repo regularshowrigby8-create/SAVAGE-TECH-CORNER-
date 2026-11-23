@@ -171,6 +171,39 @@ jobs:
             done
           } >> "$GITHUB_STEP_SUMMARY"
 
+      # File size cannot prove a code change reached the APK: an APK built from
+      # the old stub has exactly the same right to be 5.6 MB, and +3 KB on a
+      # 5.6 MB package is inside the noise a size check would shrug at. This
+      # looks for a string that exists *only* in the new WebView renderer, so a
+      # green here means the dex actually contains the fix. `strings` over the
+      # whole archive covers the multidex layout R8 and D8 may choose.
+      - name: Prove the APK contains the new renderer
+        run: |
+          set -euo pipefail
+          MARKER="documentElement.outerHTML"
+          SOURCES=0
+          grep -rq "$MARKER" nova-tv/android/app/src || SOURCES=1
+          if [ "$SOURCES" -eq 0 ]; then
+            echo "::error title=marker missing from source::the renderer marker is gone from app/src"
+            exit 1
+          fi
+          MISSING=0
+          for apk in nova-tv/android/app/build/outputs/apk/tv/release/*.apk \
+                     nova-tv/android/app/build/outputs/apk/mobile/release/*.apk; do
+            [ -f "$apk" ] || { echo "::error title=APK missing::$apk"; MISSING=1; continue; }
+            # APK entries are deflated, so unzip to a temp file before searching.
+            TMP=$(mktemp -d)
+            unzip -qo "$apk" 'classes*.dex' -d "$TMP" || true
+            if grep -rqa "$MARKER" "$TMP"; then
+              echo "OK: $(basename "$apk") contains the WebView renderer"
+            else
+              echo "::error title=renderer not in APK::$(basename "$apk") does not contain $MARKER"
+              MISSING=1
+            fi
+            rm -rf "$TMP"
+          done
+          [ "$MISSING" -eq 0 ] || exit 1
+
       - name: Upload build log on failure
         if: failure()
         uses: actions/upload-artifact@v7
