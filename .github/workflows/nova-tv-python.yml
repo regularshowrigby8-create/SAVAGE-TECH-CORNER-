@@ -10,7 +10,12 @@
 
 on:
   push:
-    branches: [main]
+    # arena/* is where the work actually happens here. Without it the gate
+    # below only ran after a merge, which is the one moment it cannot stop a
+    # bad change from landing.
+    branches:
+      - main
+      - arena/*
   pull_request:
   workflow_dispatch:
   schedule:
