@@ -566,14 +566,6 @@ private fun ScrubBar(
     }
 }
 
-/** One option in a panel. */
-private data class PanelOption(
-    val label: String,
-    val detail: String?,
-    val selected: Boolean,
-    val onPick: () -> Unit
-)
-
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun Panel(

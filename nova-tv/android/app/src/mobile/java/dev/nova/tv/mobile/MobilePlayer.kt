@@ -51,7 +51,6 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -80,7 +79,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.addPathNodes
-import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -112,6 +110,7 @@ import dev.nova.tv.player.imported.SubtitleOffsetController
 import dev.nova.tv.player.imported.attachSubtitleOffset
 import dev.nova.tv.player.preload.PreloadMode
 import dev.nova.tv.ui.player.BufferingOverlay
+import dev.nova.tv.ui.player.PanelOption
 import dev.nova.tv.ui.screens.NovaViewModel
 import dev.nova.tv.ui.screens.PlayerPanel
 import dev.nova.tv.ui.screens.UpNext
@@ -676,8 +675,6 @@ private fun subtitleOffsetLabel(ms: Long): String = when {
     ms > 0 -> "+${"%.1f".format(ms / 1000f)}s"
     else -> "${"%.1f".format(ms / 1000f)}s"
 }
-
-private data class PanelOption(val label: String, val detail: String?, val selected: Boolean, val onPick: () -> Unit)
 
 @Composable
 private fun Panel(
