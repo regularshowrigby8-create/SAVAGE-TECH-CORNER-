@@ -213,6 +213,57 @@ class ServerFinderTest {
         assertEquals("no url may be fetched twice", seenOrder.size, seenOrder.toSet().size)
     }
 
+    @Test
+    fun `junk filter rejects cms admin handlers but keeps media`() {
+        // The exact false positive from the device trace: the only candidate
+        // the extractor produced on 9anime.org.lv, which 400'd on every probe.
+        assertTrue(ServerFinder.isJunk("https://9anime.org.lv/wp-admin/admin-ajax.php"))
+        assertTrue(ServerFinder.isJunk("https://site.example/wp-json/wp/v2/posts"))
+        assertTrue(ServerFinder.isJunk("https://site.example/analytics/collect"))
+        assertFalse(ServerFinder.isJunk("https://cdn.example/hls/master.m3u8"))
+        // wp-content can legitimately host media, so it must not be filtered.
+        assertFalse(ServerFinder.isJunk("https://site.example/wp-content/uploads/ep1.mp4"))
+    }
+
+    @Test
+    fun `extractor drops admin ajax but keeps the real player`() {
+        val html = """
+            <iframe src="https://9anime.org.lv/wp-admin/admin-ajax.php"></iframe>
+            <script>file: "https://cdn.example/hls/master.m3u8"</script>
+        """.trimIndent()
+        val found = ServerExtractor().extract(html, "https://9anime.org.lv/watch/1")
+        assertEquals(1, found.size)
+        assertTrue(found.keys.first().endsWith("master.m3u8"))
+        assertFalse(found.keys.any { "admin-ajax" in it })
+    }
+
+    @Test
+    fun `api hints recognise the servers and sources endpoints`() {
+        assertTrue(ServerFinder.API_HINT.containsMatchIn("https://9anime.org.lv/ajax/v2/episode/servers?episodeId=1"))
+        assertTrue(ServerFinder.API_HINT.containsMatchIn("https://9anime.org.lv/ajax/v2/episode/sources?id=42"))
+        assertTrue(ServerFinder.API_HINT.containsMatchIn("https://site.example/api/stream/1"))
+        assertFalse(ServerFinder.API_HINT.containsMatchIn("https://cdn.example/logo.png"))
+    }
+
+    @Test
+    fun `data id extracts the numeric server id`() {
+        val body = """<div class="server" data-id="12345">HD</div><div data-id='678'>SD</div>"""
+        assertEquals(listOf("12345", "678"), ServerFinder.DATA_ID.findAll(body).map { it.groupValues[1] }.toList())
+    }
+
+    @Test
+    fun `media in json finds escaped stream urls`() {
+        val body = """{"sources":[{"file":"https:\/\/cdn.example\/hls\/master.m3u8?t=1"}]}"""
+        val hit = ServerFinder.MEDIA_IN_JSON.find(body)?.groupValues?.get(1).orEmpty()
+        assertTrue(hit.contains("master.m3u8"))
+    }
+
+    @Test
+    fun `api replay is bounded so one page cannot run away`() {
+        assertEquals(12, ServerFinder.MAX_API_CALLS)
+        assertEquals(24, ServerFinder.MAX_SERVERS)
+    }
+
     private fun finderRecord(baseUrl: String, referer: String) = ServerRecord(
         id = "x",
         name = "p",

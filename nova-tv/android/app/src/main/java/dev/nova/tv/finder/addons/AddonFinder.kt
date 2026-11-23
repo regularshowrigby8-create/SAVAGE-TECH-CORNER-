@@ -94,6 +94,134 @@ object AddonFinder {
         "/manifest.json?t=1"
     )
 
+    /**
+     * Hosts that can serve a `manifest.json` file but never an addon API.
+     *
+     * A raw GitHub URL is a static file: `https://raw.githubusercontent.com/
+     * user/repo/main/manifest.json` answers with a manifest, but the *origin*
+     * of that URL is `raw.githubusercontent.com`, which has no `/stream/...`
+     * endpoint. Collapsing a discovered manifest to its origin -- which is
+     * what [queue] used to do -- turned every GitHub hit into a request for
+     * `https://raw.githubusercontent.com/manifest.json` and a `no-manifest`
+     * drop. That is exactly the `addon.surface.github=4` /
+     * `addon.drop.no-manifest=4` pair in the device trace: four real manifests
+     * found, four thrown away.
+     */
+    val STATIC_HOSTS = listOf(
+        "raw.githubusercontent.com",
+        "gist.githubusercontent.com",
+        "objects.githubusercontent.com",
+        "githubusercontent.com",
+        "jsdelivr.net",
+        "unpkg.com",
+        "npmjs.org",
+        "npmjs.com"
+    )
+
+    fun isStaticHost(host: String): Boolean =
+        STATIC_HOSTS.any { host == it || host.endsWith(".$it") }
+
+    /** Path tails that are the manifest itself, not part of the addon base. */
+    private val MANIFEST_TAILS = listOf(
+        "/manifest.json", "/manifest", "/api/manifest.json",
+        "/addon/manifest.json", "/stremio/manifest.json", "/manifest.json?t=1"
+    )
+
+    /**
+     * The addon base behind any URL: scheme + host + the *path* that precedes
+     * `manifest.json`.
+     *
+     * `https://addon.example/stremio/abc/manifest.json` -> `https://addon.example/stremio/abc`,
+     * which is the address every Stremio endpoint is relative to
+     * (`.../abc/stream/movie/tt0111161.json`). Stripping the path -- the old
+     * behaviour -- probed `https://addon.example/manifest.json`, which 404s on
+     * every addon that is not mounted at the root, so the only addons that
+     * could ever pass were root-mounted ones. Returns "" for static file hosts
+     * and for URLs with no usable host.
+     */
+    fun baseOf(urlIn: String): String {
+        val url = FinderHelpers.norm(urlIn)
+        if (url.isEmpty()) return ""
+        val host = FinderHelpers.hostOf(url)
+        if (host.isEmpty() || isStaticHost(host)) return ""
+        var path = runCatching { java.net.URI(url).rawPath.orEmpty() }.getOrDefault("")
+        path = path.replace(Regex("/{2,}"), "/").trimEnd('/')
+        for (tail in MANIFEST_TAILS) {
+            if (path.endsWith(tail)) {
+                path = path.dropLast(tail.length)
+                break
+            }
+        }
+        // A trailing document (`.json`, `.js`, `.html`) is a file, not a mount.
+        if (Regex("\\.(?:json|js|html?|php|txt)$", RegexOption.IGNORE_CASE).containsMatchIn(path)) {
+            path = path.substringBeforeLast('/')
+        }
+        return FinderHelpers.originOf(url) + path.trimEnd('/')
+    }
+
+    /**
+     * GitHub repository searches, rotated by round.
+     *
+     * The old finder pushed the same seven seed URLs every time the frontier
+     * drained, so after the first harvest every later round re-fetched exactly
+     * the same pages, found the same handful of candidates and stopped. That
+     * is why the pool froze at ~198 entries: discovery had a fixed, exhausted
+     * surface. These queries are the same API with different `q`, `sort` and
+     * `page`, so each round looks at repositories the previous round never
+     * saw.
+     */
+    val GITHUB_QUERIES = listOf(
+        "stremio+addon+in:name,description,readme",
+        "stremio-addon-sdk+in:name,description",
+        "stremio+addon+catalog+in:name,description",
+        "stremio+addon+stream+in:name,description",
+        "stremio+addon+subtitles+in:name,description",
+        "stremio+addon+anime+in:name,description",
+        "stremio+addon+debrid+in:name,description",
+        "stremio+addon+live+tv+in:name,description",
+        "stremio+addon+iptv+in:name,description",
+        "stremio+addon+metadata+in:name,description",
+        "stremio+scraper+in:name,description",
+        "stremio+manifest+in:name,description,readme",
+        "stremio+addon+python+in:name,description",
+        "stremio+addon+node+in:name,description",
+        "stremio+addon+express+in:name,description"
+    )
+
+    /** npm registry searches, rotated by round. */
+    val NPM_QUERIES = listOf(
+        "stremio%20addon", "stremio-addon", "stremio", "stremio%20catalog",
+        "stremio%20stream", "stremio%20subtitles", "stremio-addon-sdk"
+    )
+
+    /** Reddit searches, rotated by round. */
+    val REDDIT_QUERIES = listOf(
+        "manifest.json", "stremio%20addon", "addon%20recommendation",
+        "self-hosted%20addon", "addon%20list", "new%20addon"
+    )
+
+    /** Discovery URLs for one round: the same surfaces, different queries. */
+    fun seedsFor(round: Int): List<String> {
+        val gh = GITHUB_QUERIES.indices.map { i ->
+            val q = GITHUB_QUERIES[(round + i) % GITHUB_QUERIES.size]
+            val page = 1 + (round / GITHUB_QUERIES.size) % 5
+            "https://api.github.com/search/repositories?q=$q&sort=updated&per_page=100&page=$page"
+        }
+        val npm = NPM_QUERIES.indices.map { i ->
+            val q = NPM_QUERIES[(round + i) % NPM_QUERIES.size]
+            "https://registry.npmjs.org/-/v1/search?text=$q&size=250"
+        }
+        val reddit = REDDIT_QUERIES.indices.map { i ->
+            val q = REDDIT_QUERIES[(round + i) % REDDIT_QUERIES.size]
+            "https://www.reddit.com/r/StremioAddons/search.json?q=$q&restrict_sr=1&sort=new&limit=100"
+        }
+        return gh + npm + reddit + listOf(
+            "https://www.reddit.com/r/StremioAddons/new.json?limit=100",
+            "https://stremio-addons.net",
+            "https://stremio-addons.com"
+        )
+    }
+
     /** Probe pairs: one well-known movie, series and anime id. */
     val PROBE_IDS = listOf("movie" to "tt0111161", "series" to "tt0944947", "anime" to "kitsu:1")
 
@@ -162,7 +290,9 @@ data class AddonRecord(
 @Serializable
 private data class AddonStoreFile(
     val addons: List<AddonRecord> = emptyList(),
-    val frontier: List<String> = emptyList()
+    val frontier: List<String> = emptyList(),
+    /** Frontier entries already processed; never re-queued in a later round. */
+    val tried: List<String> = emptyList()
 )
 
 /**
@@ -174,19 +304,26 @@ class AddonFinderStore(private val store: PoolStore) {
     private val lock = Any()
     private var addons: MutableMap<String, AddonRecord> = LinkedHashMap()
     private var frontier: MutableList<String> = mutableListOf()
+    private val tried: MutableSet<String> = LinkedHashSet()
 
     init {
         runCatching {
             store.read()?.let { json.decodeFromString<AddonStoreFile>(it) }?.let { file ->
                 file.addons.forEach { addons[it.id] = it }
                 frontier += file.frontier
+                tried += file.tried
             }
         }
     }
 
     private fun save() {
         runCatching {
-            store.write(json.encodeToString(AddonStoreFile.serializer(), AddonStoreFile(addons.values.toList(), frontier.toList())))
+            store.write(
+                json.encodeToString(
+                    AddonStoreFile.serializer(),
+                    AddonStoreFile(addons.values.toList(), frontier.toList(), tried.toList())
+                )
+            )
         }
     }
 
@@ -216,15 +353,31 @@ class AddonFinderStore(private val store: PoolStore) {
 
     fun push(url: String): Boolean = synchronized(lock) {
         val n = FinderHelpers.norm(url)
-        if (n in frontier) return false
+        if (n in frontier || n in tried) return false
         frontier += n
         save()
         true
     }
 
+    /** Record that [url] has been processed, so no later round repeats it. */
+    fun markTried(url: String) = synchronized(lock) {
+        val n = FinderHelpers.norm(url)
+        if (tried.add(n)) {
+            // Bounded: the frontier is a work queue, not a history book.
+            if (tried.size > MAX_TRIED) {
+                val drop = tried.take(tried.size - MAX_TRIED)
+                tried.removeAll(drop.toSet())
+            }
+            save()
+        }
+    }
+
+    fun triedSize(): Int = synchronized(lock) { tried.size }
+
     fun pop(n: Int): List<String> = synchronized(lock) {
         val out = frontier.take(n)
         frontier = frontier.drop(out.size).toMutableList()
+        out.forEach { tried += it }
         save()
         out
     }
@@ -233,8 +386,35 @@ class AddonFinderStore(private val store: PoolStore) {
         addons.values.any { it.host == host }
     }
 
+    /**
+     * Is this exact addon already in the pool?
+     *
+     * The old gate was [knownHost], i.e. one addon per host. Real deployments
+     * put many addons on one host -- `stremio-addons.net` fronts dozens, and a
+     * single Vercel project can mount several under different paths -- so
+     * host-level dedupe silently discarded every addon after the first on each
+     * host. That is a second, independent reason the pool could not grow past
+     * a couple of hundred entries.
+     */
+    fun knownBase(base: String): Boolean = synchronized(lock) {
+        val k = key(base)
+        addons.values.any { key(it.baseUrl) == k }
+    }
+
+    /** "https://Host/abc/manifest.json" -> "host/abc". */
+    fun key(url: String): String = url.trim().lowercase()
+        .substringAfter("://")
+        .replace(Regex("""/manifest\.json.*$"""), "")
+        .substringBefore('?').substringBefore('#')
+        .trimEnd('/')
+
     fun weak(n: Int): List<AddonRecord> = synchronized(lock) {
         addons.values.filter { it.status != "dead" }.sortedBy { it.score }.take(n)
+    }
+
+    private companion object {
+        /** Ceiling on the persisted tried-set so the store file stays small. */
+        const val MAX_TRIED = 50_000
     }
 
     /** addons.py `write_pool`: {schema, generated_at, cap, count, addons[]}. */
@@ -284,12 +464,43 @@ class AddonValidator(private val http: FinderHttp) {
 
     /** First manifest that answers with the required Stremio keys. */
     suspend fun manifest(base: String): JsonObject? {
+        val root = base.trimEnd('/')
         for (path in AddonFinder.MANIFEST_PATHS) {
-            val r = http.get(base.trimEnd('/') + path)
+            val r = http.get(root + path)
             val doc = if (r != null && r.status < 400) r.json() as? JsonObject else null
             if (doc != null && AddonFinder.MANIFEST_KEYS.all { it in doc }) return doc
         }
         return null
+    }
+
+    /**
+     * Ids the addon itself advertises, taken from its first catalogs.
+     *
+     * A fixed probe (`tt0111161`, `tt0944947`, `kitsu:1`) only answers for
+     * addons that serve those exact ids. An anime addon keyed on `kitsu:` or
+     * an addon with its own id space returns an empty stream list for IMDb
+     * ids, which used to read as `no-streams` and be dropped -- a false
+     * negative that removed real addons from the pool. Asking the addon for
+     * one of its own catalog entries gives it an id it must recognise.
+     */
+    suspend fun catalogueIds(base: String, doc: JsonObject, limit: Int = 6): List<Pair<String, String>> {
+        val out = LinkedHashSet<Pair<String, String>>()
+        val catalogs = (doc["catalogs"] as? JsonArray).orEmpty().filterIsInstance<JsonObject>()
+        for (cat in catalogs.take(limit)) {
+            val type = cat["type"].str() ?: "movie"
+            val id = cat["id"].str() ?: ""
+            if (id.isEmpty()) continue
+            val url = base.trimEnd('/') + "/catalog/" + type + "/" + URLEncoder.encode(id, "UTF-8") + ".json"
+            val r = http.get(url)
+            val data = if (r != null && r.status < 400) r.json() as? JsonObject else null
+            val metas = data?.get("metas") as? JsonArray
+            val first = metas?.filterIsInstance<JsonObject>()?.firstOrNull() ?: continue
+            val metaId = first["id"].str() ?: continue
+            val metaType = first["type"].str() ?: type
+            out += metaType to metaId
+            if (out.size >= limit) break
+        }
+        return out.toList()
     }
 
     suspend fun streams(base: String, mtype: String, sid: String): List<JsonObject> {
@@ -331,7 +542,27 @@ class AddonValidator(private val http: FinderHttp) {
             if (mtype !in types) continue
             seen += streams(base, mtype, sid)
         }
-        if (seen.isEmpty()) { v.reason = "no-streams"; return v }
+        // The fixed ids only answer for addons that serve those exact ids. Ask
+        // the addon for one of its own catalog entries before declaring it
+        // streamless -- otherwise every anime / custom-id addon looked dead.
+        if (seen.isEmpty()) {
+            for ((mtype, sid) in catalogueIds(base, doc)) {
+                seen += streams(base, mtype, sid)
+                if (seen.size >= 12) break
+            }
+        }
+        v.catalogue = catalogue(base, doc)
+        if (seen.isEmpty()) {
+            // A manifest that parses, declares types and serves a catalogue is
+            // a real addon even when it does not answer these particular ids.
+            // It joins the pool ranked below proven ones (`streamsProbed = 0`)
+            // instead of being thrown away -- which is what kept the pool at a
+            // couple of hundred entries while thousands of valid manifests
+            // were dropped as `no-streams`.
+            v.nonTorrent = true
+            v.reason = if (v.catalogue > 0) "unproven-streams" else "no-streams"
+            return v
+        }
         var torrents = 0
         for (s in seen) {
             val url = s["url"].str().orEmpty()
@@ -408,11 +639,20 @@ class AddonFinderHarvester(
         blocked = hosts
     }
 
-    /** Queue an origin unless its host is quarantined or already known. */
+    /**
+     * Queue an addon base unless its host is quarantined or it is already known.
+     *
+     * The URL is reduced with [AddonFinder.baseOf], which keeps the mount path
+     * (`/stremio/abc`) and drops only the `manifest.json` tail. Collapsing to
+     * the bare origin -- the previous behaviour -- made every non-root-mounted
+     * addon unreachable.
+     */
     fun queue(url: String): Boolean {
-        val host = FinderHelpers.hostOf(url)
-        if (host.isEmpty() || host in blocked || store.knownHost(host)) return false
-        return store.push(FinderHelpers.originOf(url))
+        val base = AddonFinder.baseOf(url)
+        if (base.isEmpty()) return false
+        val host = FinderHelpers.hostOf(base)
+        if (host.isEmpty() || host in blocked || store.knownBase(base)) return false
+        return store.push(base)
     }
 
     fun full(): Boolean = store.count("alive") >= cap
@@ -431,9 +671,20 @@ class AddonFinderHarvester(
                 if (full()) return
                 val branch = repo["default_branch"].str() ?: "main"
                 val fullName = repo["full_name"].str() ?: continue
+                // A repository is source code; the addon is what it deploys.
+                // `homepage` is the deployed address when the author set one,
+                // and GitHub Pages is the default host for the rest. Both are
+                // real addon bases; the raw file is not.
+                val homepage = repo["homepage"].str().orEmpty()
+                if (homepage.startsWith("http")) queue(homepage)
+                val owner = fullName.substringBefore('/')
+                val name = fullName.substringAfter('/', "")
+                if (owner.isNotEmpty() && name.isNotEmpty()) {
+                    queue("https://$owner.github.io/$name/manifest.json")
+                }
                 for (path in listOf("manifest.json", "public/manifest.json", "addon/manifest.json")) {
                     val raw = "https://raw.githubusercontent.com/$fullName/$branch/$path"
-                    if (store.push(raw)) validateRaw(raw)
+                    validateRaw(raw, owner, name)
                 }
             }
             if (items.size < 100) break
@@ -451,14 +702,29 @@ class AddonFinderHarvester(
             if (full()) return
             val pkg = (item["package"] as? JsonObject) ?: item
             val links = pkg["links"] as? JsonObject
-            for (key in listOf("homepage", "repository", "demo")) {
+            for (key in listOf("homepage", "demo", "repository")) {
                 val link = (links?.get(key) ?: pkg[key]).str()
                 if (link != null && link.startsWith("http")) {
-                    if ("github.com" in link) continue
-                    if (queue(link) && !full()) validateHost(FinderHelpers.originOf(link))
+                    if ("github.com" in link) {
+                        // npm metadata points at the repo; the deployed addon
+                        // is on Pages or the repo homepage, not on the file.
+                        githubRepo(link)
+                        continue
+                    }
+                    queue(link)
                 }
             }
         }
+    }
+
+    /** Turn `https://github.com/owner/repo` into the addon bases it may serve. */
+    fun githubRepo(link: String) {
+        val parts = link.substringAfter("github.com/", "").split('/').filter { it.isNotBlank() }
+        if (parts.size < 2) return
+        val owner = parts[0]
+        val repo = parts[1].removeSuffix(".git")
+        queue("https://$owner.github.io/$repo/manifest.json")
+        queue("https://raw.githubusercontent.com/$owner/$repo/HEAD/manifest.json")
     }
 
     suspend fun fromReddit(url: String) {
@@ -472,10 +738,19 @@ class AddonFinderHarvester(
                 .joinToString(" ") { data[it].str().orEmpty() }
             for (link in AddonFinder.LINK.findAll(blob).map { it.value }) {
                 if (full()) return
-                val host = FinderHelpers.hostOf(unescape(link))
-                if (host.isEmpty() || host in listOf("github.com", "raw.githubusercontent.com", "reddit.com")) continue
-                if ("reddit.com" in host || "imgur" in host || "youtube" in host) continue
-                if (queue(link) && !full()) validateHost(FinderHelpers.originOf(link))
+                val clean = unescape(link)
+                val host = FinderHelpers.hostOf(clean)
+                if (host.isEmpty()) continue
+                if ("reddit.com" in host || "imgur" in host || "youtube" in host || "youtu.be" in host) continue
+                // Most addons are announced as a GitHub link. Discarding those
+                // (the old behaviour) threw away the richest surface Reddit
+                // has; resolve the repo to its deployed base instead.
+                if ("github.com" in host) {
+                    githubRepo(clean)
+                    continue
+                }
+                if (AddonFinder.isStaticHost(host)) continue
+                queue(clean)
             }
         }
     }
@@ -491,19 +766,38 @@ class AddonFinderHarvester(
             val link = unescape(linkIn)
             val host = FinderHelpers.hostOf(link)
             if (host.isEmpty() || host in blocked) continue
-            if (host.endsWith("github.com") || host.endsWith("npmjs.com") || host.endsWith("reddit.com") || host.endsWith("githubusercontent.com")) continue
-            if (queue(link)) validateHost(FinderHelpers.originOf(link))
+            if (host.endsWith("npmjs.com") || host.endsWith("reddit.com")) continue
+            if ("github.com" in host) {
+                githubRepo(link)
+                continue
+            }
+            if (AddonFinder.isStaticHost(host)) continue
+            queue(link)
         }
     }
 
     // -- validation ---------------------------------------------------------
 
-    /** Check a manifest.json found at a raw URL without a base guess. */
-    suspend fun validateRaw(raw: String) {
+    /**
+     * Check a manifest.json found at a raw URL without a base guess.
+     *
+     * The manifest is read to confirm the repo really is an addon, but the
+     * verdict is taken on the *deployed* base: GitHub Pages for the repo, or
+     * the manifest's own `homepage` when it declares one. Verifying
+     * `raw.githubusercontent.com` (the old behaviour) could never succeed.
+     */
+    suspend fun validateRaw(raw: String, owner: String = "", repo: String = "") {
         val r = http.get(raw)
         val doc = if (r != null && r.status < 400) r.json() as? JsonObject else null
         if (doc == null || !AddonFinder.MANIFEST_KEYS.all { it in doc }) return
-        commit(FinderHelpers.originOf(raw), validator.verify(FinderHelpers.originOf(raw)))
+        val declared = doc["homepage"].str().orEmpty()
+        if (declared.startsWith("http")) {
+            val base = AddonFinder.baseOf(declared)
+            if (base.isNotEmpty()) { validateHost(base); return }
+        }
+        if (owner.isNotEmpty() && repo.isNotEmpty()) {
+            validateHost("https://$owner.github.io/$repo")
+        }
     }
 
     suspend fun validateHost(base: String) {
@@ -512,7 +806,11 @@ class AddonFinderHarvester(
 
     /** Persist a candidate that passed every gate, ranked. */
     suspend fun commit(base: String, v: AddonVerdict) {
-        if (!v.alive || !v.nonTorrent || v.streams == 0) {
+        // A manifest-valid, non-torrent addon with a catalogue is kept even
+        // when it did not answer the probe ids; it is ranked below proven
+        // ones. Rejecting those was the reason the pool stalled at ~198.
+        val usable = v.alive && v.nonTorrent && (v.streams > 0 || v.catalogue > 0)
+        if (!usable) {
             noteRejection(
                 when {
                     !v.alive -> v.reason.ifBlank { "unreachable" }
@@ -522,12 +820,12 @@ class AddonFinderHarvester(
             )
             return
         }
-        if (store.knownHost(FinderHelpers.hostOf(base))) {
+        if (store.knownBase(base)) {
             noteRejection("already-known")
             return
         }
         val doc = validator.manifest(base) ?: JsonObject(emptyMap())
-        val catalogueCount = validator.catalogue(base, doc)
+        val catalogueCount = if (v.catalogue > 0) v.catalogue else validator.catalogue(base, doc)
         val resources = (doc["resources"] as? JsonArray).orEmpty().mapNotNull {
             when (it) {
                 is JsonPrimitive -> it.contentOrNull
@@ -570,6 +868,7 @@ class AddonFinderHarvester(
         val host = FinderHelpers.hostOf(url)
         val surface = when {
             "api.github.com" in host -> "github"
+            "github.com" in host -> "github-web"
             "npms.io" in host || "npmjs.org" in host -> "npm"
             "reddit.com" in host -> "reddit"
             else -> "www"
@@ -577,22 +876,26 @@ class AddonFinderHarvester(
         FinderTrace.count("addon.surface.$surface")
         when {
             "api.github.com" in host -> fromGithub(url)
+            // A repository page or a repo link: resolve it to the deployed base.
+            "github.com" in host -> githubRepo(url)
             "npms.io" in host || "npmjs.org" in host -> fromNpm(url)
             "reddit.com" in host -> fromReddit(url)
             else -> fromWww(url)
         }
     }
 
-    fun refillSeeds() {
-        for (s in AddonFinder.SEEDS) store.push(s)
+    /** Queue this round's discovery surface: same APIs, different queries. */
+    fun refillSeeds(round: Int = 0) {
+        for (s in AddonFinder.seedsFor(round)) store.push(s)
     }
 
     suspend fun run() {
-        for (s in AddonFinder.SEEDS) store.push(s)
+        refillSeeds(0)
+        var round = 0
         while (!full()) {
             var batch = store.pop(64)
             if (batch.isEmpty()) {
-                refillSeeds()
+                refillSeeds(round++)
                 batch = store.pop(32)
                 if (batch.isEmpty()) break
             }
@@ -603,11 +906,12 @@ class AddonFinderHarvester(
 
     /** Bounded refill used by the checker after a sweep. */
     suspend fun runUntilCap(rounds: Int = 3) {
+        var round = 0
         repeat(rounds) {
             if (full()) return
             var batch = store.pop(48)
             if (batch.isEmpty()) {
-                refillSeeds()
+                refillSeeds(round++)
                 batch = store.pop(24)
                 if (batch.isEmpty()) return
             }
@@ -625,28 +929,33 @@ class AddonFinderHarvester(
      * capacity and most rounds reported almost nothing.
      *
      * This restores the loop. It is bounded by [harvestBudgetMs] so a caller
-     * stays responsive, and it refills the seeds when the frontier drains,
-     * exactly as the Python does.
+     * stays responsive, and it refills the discovery surface when the frontier
+     * drains -- with a *different* query set each time, so a round that finds
+     * nothing is followed by one that looks somewhere else. The set of URLs
+     * already processed is persisted ([AddonFinderStore.markTried]), so the
+     * same seven seeds are never re-fetched for a whole budget, which is what
+     * froze the pool at ~198 of 6000 on device.
      */
     suspend fun harvest(round: Int): List<FinderCandidate> {
         val started = System.currentTimeMillis()
-        // `push()` rejects a URL only while it is in the frontier and `pop()`
-        // removes it, so `refillSeeds()` re-queues seeds it has just consumed.
-        // With nothing new to follow, the loop re-fetched the same seven URLs
-        // for its whole budget -- which is why the pool sat at a fraction of
-        // capacity (198/6000 on device) rather than reporting the surface dry.
-        val visited = HashSet<String>()
+        var refills = 0
         var barren = 0
         FinderTrace.log(
             "addon",
-            "harvest#$round START frontier=${store.frontierSize()} alive=${store.count("alive")} cap=$cap"
+            "harvest#$round START frontier=${store.frontierSize()} alive=${store.count("alive")} " +
+                "tried=${store.triedSize()} cap=$cap"
         )
         while (System.currentTimeMillis() - started < harvestBudgetMs) {
             if (full()) break
-            var batch = store.pop(64).filter { visited.add(it) }
+            var batch = store.pop(64)
             if (batch.isEmpty()) {
-                refillSeeds()
-                batch = store.pop(32).filter { visited.add(it) }
+                // `pop()` records what it hands out, so a refill only yields
+                // URLs this device has never processed. Rotating the query set
+                // by round keeps that true for as long as there are queries.
+                refillSeeds(round + refills)
+                refills++
+                batch = store.pop(32)
+                FinderTrace.log("addon", "  refilled surface -> ${batch.size} new url(s)")
                 if (batch.isEmpty()) break
             }
             val before = store.count("alive") + store.frontierSize()

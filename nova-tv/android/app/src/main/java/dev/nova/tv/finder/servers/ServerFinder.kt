@@ -63,6 +63,10 @@ object ServerFinder {
     const val MAX_CATALOGUE = 250_000
     const val FAILS_TO_DEAD = 2
 
+    /** Page JSON calls replayed per page, and servers followed per page. */
+    const val MAX_API_CALLS = 12
+    const val MAX_SERVERS = 24
+
     /** Entry points. Only the engine and the cap are hardcoded. */
     val SEEDS = listOf(
         "https://hianime.to",
@@ -122,6 +126,53 @@ object ServerFinder {
     )
 
     fun isAdHost(host: String): Boolean = AD_HOSTS.any { host == it || host.endsWith(".$it") }
+
+    /**
+     * CMS plumbing, not a player.
+     *
+     * On device the only candidate the extractor produced on 9anime.org.lv was
+     * `https://9anime.org.lv/wp-admin/admin-ajax.php`, which answered 400 on
+     * every probe. It matched because a WordPress theme prints its AJAX
+     * endpoint in the very same `url: "..."` shape a player uses. Probing
+     * admin handlers is never useful: they are POST-only, they need a nonce,
+     * and they cannot serve media. Filtering them at extraction time stops
+     * them consuming probes and polluting the drop tallies.
+     */
+    val JUNK = Regex(
+        "/(?:wp-admin|wp-json|wp-includes|wp-login|xmlrpc\\.php|" +
+            "admin-ajax\\.php|ajax\\.php|ads?|adserver|adframe|analytics|" +
+            "track(?:ing|er)?|pixel|beacon|prebid|gpt|pagead|telemetry)(?:[/?#]|$)",
+        RegexOption.IGNORE_CASE
+    )
+
+    fun isJunk(url: String): Boolean = JUNK.containsMatchIn(url)
+
+    /**
+     * Endpoints whose JSON body holds the real player addresses.
+     *
+     * These sites never put a `.m3u8` in the document. The page loads, its
+     * JavaScript asks `/ajax/v2/episode/servers?episodeId=...` for the server
+     * list, then asks `/ajax/v2/episode/sources?id=...` for the one the viewer
+     * picked, and only that last response contains the stream URL. The
+     * crawler rendered the page, saw the requests go by in the WebView's
+     * network log, and then extracted from the DOM alone -- which is why every
+     * anime seed produced 0 candidates. [followApis] replays those calls and
+     * appends their bodies to the document before extraction.
+     */
+    val API_HINT = Regex(
+        "(/ajax/|/api/|getSources|/sources|/servers|/episode|/stream|/watch|" +
+            "/media/|\\.json(?:$|\\?))",
+        RegexOption.IGNORE_CASE
+    )
+
+    /** `data-id="12345"` in a server list: the id the sources call needs. */
+    val DATA_ID = Regex("data-id\\s*=\\s*[\"'](\\d{2,})[\"']", RegexOption.IGNORE_CASE)
+
+    /** Media URLs inside a JSON body, including escaped ones. */
+    val MEDIA_IN_JSON = Regex(
+        "[\\\"'](https?:(?:\\\\/|/)[^\\\"'<>\\s]+?\\.(?:m3u8|mpd|mp4)(?:\\?[^\\\"'<>\\s]*)?)[\\\"']",
+        RegexOption.IGNORE_CASE
+    )
 
     /**
      * A Cloudflare / JS interstitial rather than a catalogue.
@@ -193,9 +244,13 @@ data class ServerCandidate(
  * Python: `ServerExtractor`.
  */
 class ServerExtractor {
-    private val seen = HashSet<String>()
 
-    private fun add(rawIn: String, base: String, out: MutableMap<String, ServerCandidate>) {
+    private fun add(
+        rawIn: String,
+        base: String,
+        out: MutableMap<String, ServerCandidate>,
+        seen: MutableSet<String>
+    ) {
         val raw = unescape(rawIn).trim().replace("\\/", "/")
         if (raw.isEmpty() || raw.startsWith("data:") || raw.startsWith("blob:") || raw.startsWith("javascript:")) return
         val url = FinderHelpers.norm(FinderHelpers.urljoin(base, raw))
@@ -205,6 +260,13 @@ class ServerExtractor {
         // page was an ad frame, and each one cost a probe.
         if (ServerFinder.isAdHost(host)) {
             FinderTrace.count("extractor.ad-skipped")
+            return
+        }
+        // WordPress / CMS handlers are not players either: they are POST-only,
+        // nonce-guarded and cannot serve bytes. `admin-ajax.php` was the only
+        // candidate found on 9anime.org.lv and it 400'd on every probe.
+        if (ServerFinder.isJunk(url)) {
+            FinderTrace.count("extractor.junk-skipped")
             return
         }
         seen += host
@@ -218,8 +280,10 @@ class ServerExtractor {
 
     fun extract(html: String, base: String): Map<String, ServerCandidate> {
         val out = LinkedHashMap<String, ServerCandidate>()
+        // Per-call, so one page's hosts do not suppress another page's.
+        val seen = HashSet<String>()
         for (rx in listOf(ServerFinder.IFRAME, ServerFinder.JS_SRC, ServerFinder.HLS)) {
-            for (m in rx.findAll(html)) add(m.groupValues[1], base, out)
+            for (m in rx.findAll(html)) add(m.groupValues[1], base, out, seen)
         }
         for (blob in ServerFinder.MAGIC.findAll(html).map { it.groupValues[1] }) {
             val decoded = runCatching {
@@ -227,11 +291,11 @@ class ServerExtractor {
                 String(Base64.getDecoder().decode(padded), Charsets.UTF_8)
             }.getOrNull() ?: continue
             if ("http" in decoded) {
-                for (m in Regex("https?://[^\\s\"'<>\\\\]+").findAll(decoded)) add(m.value, base, out)
+                for (m in Regex("https?://[^\\s\"'<>\\\\]+").findAll(decoded)) add(m.value, base, out, seen)
             }
         }
         if ("\"sources\"" in html) {
-            for (m in Regex("\"(?:file|url)\"\\s*:\\s*\"([^\"]+)\"").findAll(html)) add(m.groupValues[1], base, out)
+            for (m in Regex("\"(?:file|url)\"\\s*:\\s*\"([^\"]+)\"").findAll(html)) add(m.groupValues[1], base, out, seen)
         }
         return out
     }
@@ -623,6 +687,65 @@ class ServerFinderHarvester(
         blocked = hosts
     }
 
+    /**
+     * Replay the page's own JSON calls and return what they said.
+     *
+     * The player addresses on these sites are never in the document: the page
+     * asks an endpoint for a server list, then asks again for the chosen
+     * server's sources, and only that response holds the `.m3u8`. The WebView
+     * network log ([net]) is the list of calls the page made, so fetching them
+     * ourselves reproduces exactly what the browser saw -- without needing to
+     * drive the player UI.
+     *
+     * Two shapes are handled:
+     *  - a response that already contains media URLs (`sources`, `file`,
+     *    `url`) -- appended as-is;
+     *  - a response that is a *server list* (`data-id="123"` items) -- each id
+     *    is followed to `/ajax/v2/episode/sources?id=123`, which is where
+     *    aniwatch/hianime/zoro put the stream.
+     */
+    private suspend fun followApis(url: String, net: List<Pair<String, String>>): String {
+        if (net.isEmpty()) return ""
+        val origin = FinderHelpers.originOf(url)
+        val siteHost = FinderHelpers.hostOf(url)
+        val bodies = StringBuilder()
+        val calls = net.map { it.second }
+            .filter { ServerFinder.API_HINT.containsMatchIn(it) }
+            .filterNot { ServerFinder.isAdHost(FinderHelpers.hostOf(it)) }
+            .filterNot { ServerFinder.isJunk(it) }
+            .distinct()
+            .take(MAX_API_CALLS)
+        var followed = 0
+        for (link in calls) {
+            val host = FinderHelpers.hostOf(link)
+            // Same-site APIs and the site's own api.* mirror are the ones that
+            // answer with sources; a third-party host is usually a tracker.
+            if (host != siteHost && !host.endsWith(".$siteHost") && !siteHost.endsWith(".$host")) continue
+            val r = http.get(link, referer = url, read = 400_000) ?: continue
+            if (r.status >= 400) continue
+            val body = r.text
+            bodies.append('\n').append(body)
+            FinderTrace.count("api.body")
+            // A server list: each `data-id` is one playable server.
+            val ids = ServerFinder.DATA_ID.findAll(body).map { it.groupValues[1] }.distinct().take(MAX_SERVERS)
+            for (id in ids) {
+                if (followed >= MAX_SERVERS) break
+                followed++
+                val src = "$origin/ajax/v2/episode/sources?id=$id"
+                val sr = http.get(src, referer = url, read = 200_000) ?: continue
+                if (sr.status >= 400) continue
+                bodies.append('\n').append(sr.text)
+                FinderTrace.count("api.sources")
+            }
+            // Some builds answer with `{sources:[{url:...}]}` directly.
+            for (m in ServerFinder.MEDIA_IN_JSON.findAll(body)) {
+                bodies.append('\n').append(m.groupValues[1].replace("\\/", "/"))
+            }
+        }
+        if (bodies.isNotEmpty()) FinderTrace.log("web", "  api replay $url -> ${bodies.length}B")
+        return bodies.toString()
+    }
+
     suspend fun discover(url: String) {
         http.prime(url)
         var html = ""
@@ -660,12 +783,9 @@ class ServerFinderHarvester(
             FinderTrace.log("web", "CHALLENGED $url (${html.length}B) - bot wall, not a catalogue")
             return
         }
-        for ((kind, link) in net) {
-            if (kind == "xhr" && ("/api/" in link || link.endsWith(".json"))) {
-                val r = http.get(link, referer = url, read = 300_000)
-                if (r != null && r.status < 400) html += "\n" + r.text
-            }
-        }
+        // The player lives behind the page's JSON calls, not in its DOM.
+        val api = followApis(url, net)
+        if (api.isNotEmpty()) html += api
         for (link in Regex("href\\s*=\\s*[\"']([^\"'#]+)[\"']").findAll(html).map { it.groupValues[1] }) {
             val absUrl = FinderHelpers.norm(FinderHelpers.urljoin(url, unescape(link)))
             if (FinderHelpers.hostOf(absUrl) == FinderHelpers.hostOf(url) &&
@@ -736,12 +856,26 @@ class ServerFinderHarvester(
             return
         }
         val base = FinderHelpers.originOf(cand.url)
-        val catalogueCount = catalogue.count(base)
-        FinderTrace.log("web", "  catalogue $base -> $catalogueCount")
+        // Catalogue size belongs to the *site*, not to the media CDN.
+        //
+        // `cand.url` is an embed on a player host (`vidcloud.example/embed/x`);
+        // its origin has no sitemap and no catalogue, so counting there always
+        // returned 0 and the `< 40` gate then rejected every real player that
+        // had survived the probe. The referer is the page the player was
+        // embedded in, i.e. the streaming site whose catalogue actually
+        // matters. Measure there first, fall back to the media origin.
+        val site = FinderHelpers.originOf(cand.referer)
+        var catalogueCount = if (site.isNotEmpty() && site != base) catalogue.count(site) else 0
+        if (catalogueCount < 40) catalogueCount = maxOf(catalogueCount, catalogue.count(base))
+        FinderTrace.log("web", "  catalogue ${site.ifEmpty { base }} -> $catalogueCount")
+        // Playable media is the point of this pool. The catalogue gate used to
+        // drop it outright, which is how a page with a working stream could
+        // still contribute nothing. A proven player is kept and simply ranked
+        // by its (possibly small) catalogue; only a host that serves neither
+        // media nor a catalogue is dropped.
         if (catalogueCount < 40) {
-            note("catalogue<40")
-            FinderTrace.log("web", "  drop catalogue<40 $base ($catalogueCount)")
-            return
+            note("catalogue-thin")
+            FinderTrace.log("web", "  thin catalogue $base ($catalogueCount) - kept, ranked low")
         }
         val (label, tier) = FinderHelpers.qualityOf(cand.url + " " + cand.provider)
         val now = FinderHelpers.now()
