@@ -17,12 +17,13 @@ class WebsitePoolTest {
     private fun site(url: String, name: String = url) = SavedWebsite(url, name, listOf("/search?q={q}"))
 
     @Test
-    fun `merges by host and ignores a second path on the same site`() {
+    fun `merges by normalized host and ignores a second path on the same site`() {
         val pool = WebsitePool(MemoryStore())
         val added = pool.add(
             listOf(
                 site("https://one.example.com/"),
-                site("https://www.one.example.com/watch/2"),
+                site("https://one.example.com/watch/2"),
+                site("https://www.one.example.com/browse"),
                 site("https://two.example.org/")
             )
         )
@@ -31,13 +32,18 @@ class WebsitePoolTest {
     }
 
     @Test
-    fun `a site that answers is working and is listed first`() {
+    fun `working sites are sorted ahead of unproven sites`() {
         val pool = WebsitePool(MemoryStore())
-        pool.add(listOf(site("https://slow.example.com/"), site("https://good.example.com/")))
+        pool.add(listOf(site("https://slow.example.com/"), site("https://good.example.com/"), site("https://best.example.com/")))
         pool.noteResult("https://good.example.com/", true)
+        pool.noteResult("https://best.example.com/", true)
+        pool.noteResult("https://best.example.com/", true)
 
-        assertEquals(1, pool.state.value.working)
-        assertEquals("https://good.example.com/", pool.working().first().url)
+        assertEquals(2, pool.state.value.working)
+        assertEquals(
+            listOf("https://best.example.com/", "https://good.example.com/"),
+            pool.working().map { it.url }
+        )
     }
 
     @Test

@@ -52,7 +52,8 @@ class ServerPoolTest {
     @Test
     fun `holds 6000 and no more`() {
         val pool = ServerPool(MemoryStore())
-        pool.add(many(6500))
+        val added = pool.add(many(6500))
+        assertEquals(ServerPool.CAPACITY, added)
         assertEquals(6000, ServerPool.CAPACITY)
         assertEquals(ServerPool.CAPACITY, pool.state.value.size)
     }
@@ -82,6 +83,8 @@ class ServerPoolTest {
         // drops them, so scramble is what retires them and the history entry
         // that revert needs is created.
         repeat(ServerPool.RETIRE_AFTER_MISSES - 1) { before.forEach { pool.noteResult(it, hit = false) } }
+        assertEquals(before, pool.entries().map { it.baseUrl })
+        assertEquals(0, pool.state.value.retired)
         pool.scramble(many(8, "b"))
         assertTrue(pool.state.value.canRevert)
         assertTrue(pool.entries().none { it.baseUrl in before })
@@ -135,11 +138,17 @@ class ServerPoolTest {
 
     @Test
     fun `pruneDead frees slots and keeps servers that have answered`() {
-        val pool = ServerPool(MemoryStore())
-        pool.add(many(6, "mix"))
-        pool.noteResult("https://mix0.example", hit = true)
-        (1 until 6).forEach { i -> repeat(ServerPool.RETIRE_AFTER_MISSES) { pool.noteResult("https://mix$i.example", hit = false) } }
+        val store = MemoryStore().apply {
+            text = """
+                {"entries":[
+                  {"manifestUrl":"https://stale.example/manifest.json","baseUrl":"https://stale.example","name":"stale","hits":0,"misses":2},
+                  {"manifestUrl":"https://good.example/manifest.json","baseUrl":"https://good.example","name":"good","hits":1,"misses":0}
+                ]}
+            """.trimIndent()
+        }
+        val pool = ServerPool(store)
+        assertEquals(1, pool.pruneDead())
         assertEquals(1, pool.state.value.size)
-        assertTrue(pool.entries().single().baseUrl.contains("mix0"))
+        assertTrue(pool.entries().single().baseUrl.contains("good.example"))
     }
 }
