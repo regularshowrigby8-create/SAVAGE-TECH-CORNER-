@@ -721,7 +721,12 @@ class ServerFinderHarvester(
         // that need playable media filter on `kind`; see `toSavedWebsite`.
         if (probe.kind == "page" && probe.status in listOf(200, 206) && !probe.poisoned) {
             note("page-not-media")
-            FinderTrace.log("web", "  page ok $base (not media; kept as a site candidate)")
+            // `base` is declared below (after the alive gate); this branch runs
+            // before it, so the origin is derived here.
+            FinderTrace.log(
+                "web",
+                "  page ok ${FinderHelpers.originOf(cand.url)} (not media; kept as a site candidate)"
+            )
             return
         }
         if (!probe.alive) {
