@@ -93,6 +93,9 @@ jobs:
           # A gate that passes having checked nothing is a false green. This is
           # the minimum this audit has ever produced; if a refactor stops the
           # checks being collected, the count collapses and this fails.
+          # Raised 193 -> 198 when the finder flight recorder was added: the
+          # trace, its call sites in both crawlers and the browser, and the
+          # diagnostics screen that can copy it off the phone.
           # Raised 190 -> 193 when the website finder's silence was made
           # diagnosable: an empty round now reports *why* (unreachable seed,
           # shell with no embeds, page-not-media, catalogue<40) through the
@@ -107,8 +110,8 @@ jobs:
           # Raised 150 -> 185 when the player, seek-gesture and cookie-jar
           # checks were added. The floor exists so a future edit cannot quietly
           # delete coverage and still report a pass.
-          if total < 193:
-              print(f"::error title=audit too small::only {total} checks ran, expected >= 193")
+          if total < 198:
+              print(f"::error title=audit too small::only {total} checks ran, expected >= 198")
               sys.exit(1)
 
           summary = os.environ.get("GITHUB_STEP_SUMMARY")

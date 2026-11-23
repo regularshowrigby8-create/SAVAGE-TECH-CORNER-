@@ -7,6 +7,7 @@ import dev.nova.tv.data.repo.LibraryStore
 import dev.nova.tv.finder.website.WebsiteFinder
 import dev.nova.tv.finder.website.WebsiteRules
 import dev.nova.tv.finder.addons.AddonFinderHarvester
+import dev.nova.tv.finder.diag.FinderTrace
 import dev.nova.tv.finder.pool.ServerPool
 import dev.nova.tv.finder.pool.WebsitePool
 import dev.nova.tv.finder.servers.ServerFinderHarvester
@@ -223,14 +224,30 @@ class SourceEngine(
 
     /** One website-discovery round, for the Sources screen's "Find sites" button. */
     suspend fun fillWebsitePoolOnce(): Int {
-        val sites = websitePool ?: return 0
-        val crawl = spider ?: return 0
-        val harvest = runCatching { crawl.harvest(webRound) }.getOrNull() ?: return 0
+        val sites = websitePool ?: run {
+            FinderTrace.log("web", "fillWebsitePoolOnce: NO WEBSITE POOL")
+            return 0
+        }
+        val crawl = spider ?: run {
+            FinderTrace.log("web", "fillWebsitePoolOnce: NO SPIDER wired")
+            return 0
+        }
+        FinderTrace.log("web", "fillWebsitePoolOnce: round $webRound BEGIN")
+        val harvest = runCatching { crawl.harvest(webRound) }.getOrNull() ?: run {
+            FinderTrace.log("web", "fillWebsitePoolOnce: harvest THREW")
+            return 0
+        }
         webRound++
         // Captured on both paths: an empty round is exactly when the reason
         // matters, and that is the case that used to report nothing at all.
         lastServerRejections = runCatching { crawl.rejectionReport() }.getOrNull() ?: lastServerRejections
-        return sites.add(harvest.sites, from = "Website finder")
+        val added = sites.add(harvest.sites, from = "Website finder")
+        FinderTrace.log(
+            "web",
+            "fillWebsitePoolOnce: round ${webRound - 1} got ${harvest.sites.size} site(s), " +
+                "added=$added, pool=${sites.state.value.size} drops=${lastServerRejections.summary.ifEmpty { "-" }}"
+        )
+        return added
     }
 
     private val harvestLock = Mutex()

@@ -8,6 +8,7 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import dev.nova.tv.finder.diag.FinderTrace
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -111,9 +112,19 @@ class FinderBrowser(private val context: Context? = null) {
         referer: String? = null,
         waitMs: Int = 1600
     ): Pair<String, List<Pair<String, String>>> {
-        if (!available) return "" to emptyList()
+        if (!available) {
+            FinderTrace.log("browser", "render SKIPPED (no context) $url")
+            FinderTrace.count("browser.nocontext")
+            return "" to emptyList()
+        }
         val net = mutableListOf<Pair<String, String>>()
         val html = load(url, referer, waitMs.toLong(), net)
+        // The three numbers that decide whether a seed can yield anything.
+        FinderTrace.count(if (html.isEmpty()) "browser.empty" else "browser.dom")
+        FinderTrace.log(
+            "browser",
+            "render ${if (html.isEmpty()) "EMPTY" else "OK"} ${html.length}B net=${net.size} $url"
+        )
         return html to net.toList()
     }
 
@@ -166,6 +177,7 @@ class FinderBrowser(private val context: Context? = null) {
                 net?.clear()
                 val view = view() ?: return@withContext ""
                 val finished = awaitFinish(view, url, referer, net)
+            FinderTrace.log("browser", "load finished=$finished $url")
                 // Late XHRs still count: they are often where /api/ JSON lives.
                 // Capped so settling cannot eat the whole load budget.
                 if (finished) delay(waitMs.coerceAtMost(1_200L))
@@ -239,7 +251,10 @@ class FinderBrowser(private val context: Context? = null) {
     /** Create the shared view on first use. Main thread only. */
     @SuppressLint("SetJavaScriptEnabled")
     private fun view(): WebView? {
-        val ctx = context ?: return null
+        val ctx = context ?: run {
+            FinderTrace.log("browser", "no context -> cannot create WebView")
+            return null
+        }
         web?.let { return it }
         return runCatching {
             val v = WebView(ctx)
@@ -258,7 +273,12 @@ class FinderBrowser(private val context: Context? = null) {
             }
             CookieManager.getInstance().setAcceptCookie(true)
             web = v
+            FinderTrace.log("browser", "WebView created, js=on dom=${v.settings.domStorageEnabled}")
+            FinderTrace.count("browser.created")
             v
+        }.onFailure {
+            FinderTrace.log("browser", "WebView creation FAILED: ${it.javaClass.simpleName}: ${it.message}")
+            FinderTrace.count("browser.createfail")
         }.getOrNull()
     }
 }

@@ -84,7 +84,12 @@ private fun MoreRow(label: String, icon: ImageVector, onClick: () -> Unit) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun MobileSources(state: NovaState, viewModel: NovaViewModel, onBack: () -> Unit) {
+fun MobileSources(
+    state: NovaState,
+    viewModel: NovaViewModel,
+    onBack: () -> Unit,
+    onDiagnostics: () -> Unit = {}
+) {
     Column(Modifier.fillMaxSize()) {
         ScreenHeader("Sources", onBack = onBack)
         LazyColumn(contentPadding = PaddingValues(horizontal = ScreenPadding, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -112,6 +117,14 @@ fun MobileSources(state: NovaState, viewModel: NovaViewModel, onBack: () -> Unit
                             Text("Run ${kind.label.substringBefore(' ')}", style = MType.label)
                         }
                     }
+                }
+            }
+
+            // The flight recorder lives here because this is the screen that
+            // reports the numbers, and "0 sites" is the question it answers.
+            item {
+                SettingRow("Diagnostics", onClick = { onDiagnostics() }) {
+                    Text("error log", style = MType.meta)
                 }
             }
 

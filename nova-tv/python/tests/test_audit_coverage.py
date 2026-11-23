@@ -77,6 +77,11 @@ class AuditCoversThisTurnsWork(unittest.TestCase):
             "website harvest reports why a round found nothing",
             "website rejection report reaches the engine",
             "Sources screen can show why the website pool is empty",
+            "finder flight recorder exists and can be dumped",
+            "website crawl records render, fetch, probe and extract",
+            "addon crawl counts every drop reason",
+            "browser records whether it rendered or had no context",
+            "diagnostics screen shows the trace and can copy it",
         }
         missing = required - self.names
         self.assertEqual(set(), missing, f"audit lost checks: {sorted(missing)}")
@@ -85,7 +90,7 @@ class AuditCoversThisTurnsWork(unittest.TestCase):
         # The original 170 were almost entirely "file exists / symbol is
         # referenced". This is the floor that stops the report drifting back to
         # a file listing.
-        self.assertGreaterEqual(len(self.checks), 193)
+        self.assertGreaterEqual(len(self.checks), 198)
 
 
 class AuditCatchesBrokenFixes(unittest.TestCase):
@@ -295,6 +300,51 @@ class AuditCatchesBrokenFixes(unittest.TestCase):
             "",
         )
         self._assert_caught("Sources screen can show why the website pool is empty")
+
+
+    # -- the flight recorder --------------------------------------------------
+    def test_audit_catches_a_missing_recorder(self) -> None:
+        self._mutate(
+            TV / "finder/diag/FinderTrace.kt",
+            "fun dump(): String",
+            "fun dumpDisabled(): String",
+        )
+        self._assert_caught("finder flight recorder exists and can be dumped")
+
+    def test_audit_catches_a_silent_website_crawl(self) -> None:
+        # The exact failure mode that cost three rounds: a crawl that runs and
+        # says nothing about what it saw.
+        self._mutate(
+            TV / "finder/servers/ServerFinder.kt",
+            '"extract $url -> ${extracted.size} candidate(s)"',
+            '"extract"',
+        )
+        self._assert_caught("website crawl records render, fetch, probe and extract")
+
+    def test_audit_catches_untraced_addon_drops(self) -> None:
+        self._mutate(
+            TV / "finder/addons/AddonFinder.kt",
+            'FinderTrace.count("addon.drop.$key")',
+            "/* not traced */",
+        )
+        self._assert_caught("addon crawl counts every drop reason")
+
+    def test_audit_catches_a_silent_browser(self) -> None:
+        self._mutate(
+            TV / "finder/translated/FinderBrowser.kt",
+            'FinderTrace.count("browser.created")',
+            "/* silent */",
+        )
+        self._assert_caught("browser records whether it rendered or had no context")
+
+    def test_audit_catches_an_unreachable_trace(self) -> None:
+        # A recorder nobody can read off the device is worth nothing.
+        self._mutate(
+            Path("android/app/src/mobile/java/dev/nova/tv/mobile/MobileDiagnostics.kt"),
+            "copyToClipboard(context, dump)",
+            "/* no clipboard */",
+        )
+        self._assert_caught("diagnostics screen shows the trace and can copy it")
 
 
 if __name__ == "__main__":

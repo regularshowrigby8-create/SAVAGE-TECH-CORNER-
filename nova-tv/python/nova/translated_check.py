@@ -933,10 +933,14 @@ def check_finder_correctness(root: Path) -> List[Check]:
     # for a missing context, not the old stub: the stub returned empty
     # *unconditionally*. Require that the empty return sits behind the
     # availability guard, so deleting the render path cannot pass this.
-    guards = re.findall(r"""if \(!available\) return "" to emptyList\(\)""", fb)
+    # The guard may be a one-liner or a block (it is a block now that it also
+    # logs). Require the *behaviour*: an `if (!available)` branch exists AND the
+    # real load path is present, so deleting the load cannot pass by keeping
+    # the guard, and vice versa.
     body = fb[fb.find("suspend fun render("):fb.find("suspend fun renderText(")]
+    has_guard = "!available" in body
     renders_in_body = "load(" in body
-    not_stub = bool(guards) and renders_in_body
+    not_stub = has_guard and renders_in_body
     checks.append(Check(
         "finder browser really renders pages",
         "proven" if renders and not_stub else "contradicted",
@@ -1038,6 +1042,68 @@ def check_finder_correctness(root: Path) -> List[Check]:
         "proven" if shown else "contradicted",
         "reason kept in state, not only in a toast" if shown else "only a toast",
         "ui/screens/NovaViewModel.kt",
+    ))
+    # --- the flight recorder ------------------------------------------------
+    # Every previous fix was diagnosed blind. The trace is what makes the next
+    # report evidence instead of another guess, so it is held to the same
+    # standard as the fixes themselves: it must record at each decision point,
+    # and it must be reachable from the screen that reports the number.
+    tr = _strip_comments(_read(root / "android/app/src/main/java/dev/nova/tv/finder/diag/FinderTrace.kt"))
+    records = "fun log(" in tr and "fun count(" in tr and "fun dump(" in tr
+    checks.append(Check(
+        "finder flight recorder exists and can be dumped",
+        "proven" if records else "contradicted",
+        "log/count/dump present" if records else "no trace recorder",
+        "finder/diag/FinderTrace.kt",
+    ))
+
+    srv2 = _strip_comments(_read(root / "android/app/src/main/java/dev/nova/tv/finder/servers/ServerFinder.kt"))
+    # The four facts needed to explain an empty website round: render outcome,
+    # http fallback, probe result, and extract count.
+    # Each fact must be attached to a trace call, not merely be a word that
+    # happens to appear: "extract" survives in the code even when the logging
+    # of it is deleted, which is how this check first went green on a silent
+    # crawl. Require the logged string itself.
+    wanted = ["render OK", "http fallback", "probe ", "extract $url"]
+    plain = ["render OK", "http fallback", "probe", "extract $url"]
+    have = [p for p in plain if p in srv2]
+    checks.append(Check(
+        "website crawl records render, fetch, probe and extract",
+        "proven" if len(have) == len(plain) else "contradicted",
+        f"records: {have}" if len(have) == len(plain) else f"missing: {sorted(set(plain) - set(have))}",
+        "finder/servers/ServerFinder.kt",
+    ))
+
+    add = _strip_comments(_read(root / "android/app/src/main/java/dev/nova/tv/finder/addons/AddonFinder.kt"))
+    drop_hook = "FinderTrace.count(\"addon.drop." in add
+    checks.append(Check(
+        "addon crawl counts every drop reason",
+        "proven" if drop_hook else "contradicted",
+        "noteRejection feeds the trace" if drop_hook else "drops are counted but not traced",
+        "finder/addons/AddonFinder.kt",
+    ))
+
+    br = _strip_comments(_read(root / "android/app/src/main/java/dev/nova/tv/finder/translated/FinderBrowser.kt"))
+    # The question that decided three fixes: did the WebView render at all?
+    checks.append(Check(
+        "browser records whether it rendered or had no context",
+        "proven" if "FinderTrace" in br and "browser.created" in br else "contradicted",
+        "logs creation and render outcome" if "FinderTrace" in br else "silent",
+        "finder/translated/FinderBrowser.kt",
+    ))
+
+    diag = _read(root / "android/app/src/mobile/java/dev/nova/tv/mobile/MobileDiagnostics.kt")
+    # `ClipData` alone is satisfied by the helper function still existing even
+    # when nothing calls it, which is not a way to get the trace off the phone.
+    # Both the dump and the *call site* that copies it must be present.
+    reachable = "FinderTrace.dump()" in diag \
+        and "copyToClipboard(context, dump)" in diag \
+        and "setPrimaryClip" in diag
+    checks.append(Check(
+        "diagnostics screen shows the trace and can copy it",
+        "proven" if reachable else "contradicted",
+        "dump + clipboard" if reachable else "no way to get the trace off the phone",
+        "mobile/MobileDiagnostics.kt",
     ))
     return checks
 

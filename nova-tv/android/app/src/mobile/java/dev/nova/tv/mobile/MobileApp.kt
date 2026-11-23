@@ -61,14 +61,17 @@ enum class Tab(val label: String, val icon: ImageVector) {
 }
 
 /** Destinations reached from the More tab. */
-internal val MoreRoutes = setOf(Route.DUAL_AUDIO, Route.MY_LIST, Route.SOURCES, Route.SETTINGS)
+internal val MoreRoutes = setOf(
+    Route.DUAL_AUDIO, Route.MY_LIST, Route.SOURCES, Route.SETTINGS, Route.DIAGNOSTICS
+)
 
 internal fun tabFor(route: Route): Tab = when (route) {
     Route.HOME -> Tab.HOME
     Route.MOVIES -> Tab.MOVIES
     Route.SERIES -> Tab.SERIES
     Route.SEARCH -> Tab.SEARCH
-    Route.DUAL_AUDIO, Route.MY_LIST, Route.SOURCES, Route.SETTINGS -> Tab.MORE
+    Route.DUAL_AUDIO, Route.MY_LIST, Route.SOURCES, Route.SETTINGS,
+    Route.DIAGNOSTICS -> Tab.MORE
 }
 
 internal fun routeFor(tab: Tab): Route? = when (tab) {
@@ -148,7 +151,11 @@ fun MobileApp(viewModel: NovaViewModel = viewModel()) {
                         Route.DUAL_AUDIO -> MobileDualAudio(state, viewModel, onBack = backToMore)
                         Route.SEARCH -> MobileSearch(state, viewModel)
                         Route.MY_LIST -> MobileMyList(state, viewModel, onBack = backToMore)
-                        Route.SOURCES -> MobileSources(state, viewModel, onBack = backToMore)
+                        Route.SOURCES -> MobileSources(
+                            state, viewModel, onBack = backToMore,
+                            onDiagnostics = { viewModel.navigate(Route.DIAGNOSTICS) }
+                        )
+                        Route.DIAGNOSTICS -> MobileDiagnostics(onBack = backToMore)
                         Route.SETTINGS -> MobileSettings(state, viewModel, onBack = backToMore)
                     }
                 }

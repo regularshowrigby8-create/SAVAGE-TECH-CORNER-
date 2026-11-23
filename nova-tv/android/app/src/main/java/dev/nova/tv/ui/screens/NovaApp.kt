@@ -133,6 +133,10 @@ fun NovaApp(viewModel: NovaViewModel = viewModel()) {
                         Route.MY_LIST -> MyListScreen(state, viewModel)
                         Route.SOURCES -> SourcesScreen(state, viewModel)
                         Route.SETTINGS -> SettingsScreen(state, viewModel)
+                        // The trace viewer is a mobile surface; on the TV the
+                        // route exists so the enum stays exhaustive, and falls
+                        // back to Settings rather than dead-ending.
+                        Route.DIAGNOSTICS -> SettingsScreen(state, viewModel)
                     }
                 }
 
@@ -300,5 +304,6 @@ internal fun icon(route: Route): ImageVector = when (route) {
     Route.SEARCH -> Icons.Filled.Search
     Route.MY_LIST -> Icons.Filled.Favorite
     Route.SOURCES -> Icons.Filled.Build
+    Route.DIAGNOSTICS -> Icons.Filled.Build
     Route.SETTINGS -> Icons.Filled.Settings
 }

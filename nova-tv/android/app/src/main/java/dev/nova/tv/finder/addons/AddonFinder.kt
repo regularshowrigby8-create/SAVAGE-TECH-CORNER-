@@ -2,6 +2,7 @@ package dev.nova.tv.finder.addons
 
 import dev.nova.tv.finder.FinderCandidate
 import dev.nova.tv.finder.pool.PoolStore
+import dev.nova.tv.finder.diag.FinderTrace
 import dev.nova.tv.finder.translated.FinderBrowser
 import dev.nova.tv.finder.translated.FinderFingerprint
 import dev.nova.tv.finder.translated.FinderHelpers
@@ -567,6 +568,13 @@ class AddonFinderHarvester(
     /** Route one frontier entry to the right surface handler. */
     suspend fun process(url: String) {
         val host = FinderHelpers.hostOf(url)
+        val surface = when {
+            "api.github.com" in host -> "github"
+            "npms.io" in host || "npmjs.org" in host -> "npm"
+            "reddit.com" in host -> "reddit"
+            else -> "www"
+        }
+        FinderTrace.count("addon.surface.$surface")
         when {
             "api.github.com" in host -> fromGithub(url)
             "npms.io" in host || "npmjs.org" in host -> fromNpm(url)
@@ -629,6 +637,10 @@ class AddonFinderHarvester(
         // capacity (198/6000 on device) rather than reporting the surface dry.
         val visited = HashSet<String>()
         var barren = 0
+        FinderTrace.log(
+            "addon",
+            "harvest#$round START frontier=${store.frontierSize()} alive=${store.count("alive")} cap=$cap"
+        )
         while (System.currentTimeMillis() - started < harvestBudgetMs) {
             if (full()) break
             var batch = store.pop(64).filter { visited.add(it) }
@@ -641,9 +653,19 @@ class AddonFinderHarvester(
             coroutineScope { batch.map { u -> async { process(u) } }.awaitAll() }
             val after = store.count("alive") + store.frontierSize()
             barren = if (after > before) 0 else barren + 1
+            FinderTrace.log(
+                "addon",
+                "  batch=${batch.size} alive=${store.count("alive")} " +
+                    "frontier=${store.frontierSize()} barren=$barren"
+            )
             if (barren >= BARREN_ROUNDS) break
             delay(200)
         }
+        FinderTrace.log(
+            "addon",
+            "harvest#$round END ${System.currentTimeMillis() - started}ms " +
+                "alive=${store.count("alive")} drops=${rejectionReport().summary.ifEmpty { "-" }}"
+        )
         return store.alive().take(cap).map { it.toFinderCandidate() }
     }
 
@@ -658,6 +680,9 @@ class AddonFinderHarvester(
     internal fun noteRejection(reason: String) {
         val key = reason.substringBefore('(').ifBlank { "unreachable" }
         rejections.merge(key, 1) { a, b -> a + b }
+        // Every dropped candidate passes through here, so one hook covers the
+        // whole addon gate chain without touching each early return.
+        FinderTrace.count("addon.drop.$key")
     }
 
     /** How long one [harvest] call may crawl before returning what it has. */

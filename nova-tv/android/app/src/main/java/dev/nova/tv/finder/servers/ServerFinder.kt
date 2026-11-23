@@ -2,6 +2,7 @@ package dev.nova.tv.finder.servers
 
 import dev.nova.tv.finder.FinderSourceReport
 import dev.nova.tv.finder.pool.PoolStore
+import dev.nova.tv.finder.diag.FinderTrace
 import dev.nova.tv.finder.translated.FinderBrowser
 import dev.nova.tv.finder.translated.FinderFingerprint
 import dev.nova.tv.finder.translated.FinderHelpers
@@ -560,19 +561,32 @@ class ServerFinderHarvester(
         http.prime(url)
         var html = ""
         var net: List<Pair<String, String>> = emptyList()
-        if (browser != null) {
+        val rendered = if (browser != null) {
             val (h, n) = browser.render(url)
             html = h
             net = n
+            // The single most important distinction on a phone: did the
+            // WebView do anything at all?
+            h.isNotEmpty()
+        } else false
+        if (rendered) {
+            FinderTrace.log("web", "render OK $url (${html.length}B, net=${net.size})")
+            FinderTrace.count("render.ok")
+        } else {
+            FinderTrace.log("web", "render EMPTY $url")
+            FinderTrace.count("render.empty")
         }
         if (html.isEmpty()) {
             val r = http.get(url, read = 400_000)
             html = r?.text.orEmpty()
+            FinderTrace.log("web", "http fallback $url -> status=${r?.status ?: -1} ${html.length}B")
+            FinderTrace.count(if (html.isEmpty()) "http.empty" else "http.ok")
         }
         // A page that never came back cannot yield anything, and that is the
         // single most useful thing to know when the pool is empty.
         if (html.isEmpty()) {
             note("unreachable")
+            FinderTrace.log("web", "UNREACHABLE $url")
             return
         }
         for ((kind, link) in net) {
@@ -591,9 +605,18 @@ class ServerFinderHarvester(
         }
         val extracted = extractor.extract(html, url)
         if (extracted.isEmpty()) note("no-embeds")
+        FinderTrace.log("web", "extract $url -> ${extracted.size} candidate(s)")
+        FinderTrace.count("extracted", extracted.size)
         for (cand in extracted.values) {
-            if (cand.host in blocked) { note("blocked"); continue }
-            if (store.knownHost(cand.host)) continue
+            if (cand.host in blocked) {
+                note("blocked")
+                FinderTrace.log("web", "  drop blocked ${cand.url}")
+                continue
+            }
+            if (store.knownHost(cand.host)) {
+                FinderTrace.log("web", "  skip known host ${cand.host}")
+                continue
+            }
             if (store.count("alive") >= cap) return
             validate(cand)
         }
@@ -601,6 +624,12 @@ class ServerFinderHarvester(
 
     suspend fun validate(cand: ServerCandidate) {
         val probe = prober.probe(cand.url, cand.referer)
+        FinderTrace.log(
+            "web",
+            "  probe ${cand.url} status=${probe.status} kind=${probe.kind} " +
+                "buf=${probe.bufferScore} alive=${probe.alive} err=${probe.err.ifEmpty { "-" }}"
+        )
+        FinderTrace.count("probe.${if (probe.alive) "alive" else "dead"}")
         if (!probe.alive) {
             // Distinguishes "the host is down" from "the host answered but
             // served a page/JS shell with no playable media".
@@ -609,8 +638,10 @@ class ServerFinderHarvester(
         }
         val base = FinderHelpers.originOf(cand.url)
         val catalogueCount = catalogue.count(base)
+        FinderTrace.log("web", "  catalogue $base -> $catalogueCount")
         if (catalogueCount < 40) {
             note("catalogue<40")
+            FinderTrace.log("web", "  drop catalogue<40 $base ($catalogueCount)")
             return
         }
         val (label, tier) = FinderHelpers.qualityOf(cand.url + " " + cand.provider)
@@ -639,6 +670,8 @@ class ServerFinderHarvester(
         )
         store.upsert(rec, "alive")
         written += 1
+        FinderTrace.log("web", "ACCEPT ${rec.host} kind=${rec.kind} cat=$catalogueCount")
+        FinderTrace.count("accepted")
     }
 
     fun refillSeeds() {
@@ -694,6 +727,10 @@ class ServerFinderHarvester(
     suspend fun harvest(round: Int): ServerHarvest {
         val started = System.currentTimeMillis()
         resetRejections()
+        FinderTrace.log(
+            "web",
+            "harvest#$round START frontier=${store.frontierSize()} alive=${store.count("alive")} cap=$cap"
+        )
         var seen = 0
         // URLs already fetched by this call. `push()` only rejects a URL that is
         // currently *in* the frontier and `pop()` removes it, so `refillSeeds()`
@@ -710,6 +747,7 @@ class ServerFinderHarvester(
             if (batch.isEmpty()) {
                 refillSeeds()
                 batch = store.pop(32).filter { visited.add(it) }
+                FinderTrace.log("web", "  refilled seeds -> ${batch.size} new url(s)")
                 // Every seed was fetched by this call and led nowhere: stop.
                 // Resetting `visited` here would reintroduce the spin.
                 if (batch.isEmpty()) break
@@ -719,6 +757,11 @@ class ServerFinderHarvester(
             coroutineScope { batch.map { u -> async { discover(u) } }.awaitAll() }
             val after = store.count("alive") + store.frontierSize()
             barren = if (after > before) 0 else barren + 1
+            FinderTrace.log(
+                "web",
+                "  batch=${batch.size} seen=$seen alive=${store.count("alive")} " +
+                    "frontier=${store.frontierSize()} barren=$barren"
+            )
             if (barren >= BARREN_ROUNDS) break
             // Python sleeps 0.2 s between rounds; keep the same courtesy pause
             // so a hostile host is not hammered by a tight loop.
@@ -754,6 +797,11 @@ class ServerFinderHarvester(
             }.awaitAll()
         }
         val elapsed = System.currentTimeMillis() - started
+        FinderTrace.log(
+            "web",
+            "harvest#$round END ${elapsed}ms seen=$seen alive=${store.count("alive")} " +
+                "sites=${found.size} drops=${rejectionReport().summary.ifEmpty { "-" }}"
+        )
         return ServerHarvest(
             sites = sites,
             // `more` means "there is still work to do", exactly like the Python

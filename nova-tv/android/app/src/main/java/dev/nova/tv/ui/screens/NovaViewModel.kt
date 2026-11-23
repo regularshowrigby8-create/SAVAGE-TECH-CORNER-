@@ -14,6 +14,7 @@ import dev.nova.tv.data.remote.DnsProvider
 import dev.nova.tv.data.remote.NovaDns
 import dev.nova.tv.finder.DualAudio
 import dev.nova.tv.finder.FinderKind
+import dev.nova.tv.finder.diag.FinderTrace
 import dev.nova.tv.finder.pool.PoolState
 import dev.nova.tv.finder.pool.WebsitePoolState
 import dev.nova.tv.data.remote.SubtitleProvider
@@ -53,7 +54,10 @@ enum class Route(val label: String) {
     SEARCH("Search"),
     MY_LIST("My List"),
     SOURCES("Sources"),
-    SETTINGS("Settings")
+    SETTINGS("Settings"),
+
+    /** The finder flight recorder. Reachable from Sources; see finder/diag. */
+    DIAGNOSTICS("Diagnostics")
 }
 
 enum class ShelfStyle { POSTER, LANDSCAPE }
@@ -1160,7 +1164,12 @@ class NovaViewModel : ViewModel() {
         if (_state.value.poolBusy) return
         _state.update { it.copy(poolBusy = true) }
         viewModelScope.launch {
-            val added = runCatching { engine.fillWebsitePoolOnce() }.getOrDefault(0)
+            FinderTrace.log("ui", "Find sites tapped")
+            val added = runCatching { engine.fillWebsitePoolOnce() }
+                .onFailure {
+                    FinderTrace.log("ui", "fillWebsitePoolOnce FAILED: ${it.javaClass.simpleName}: ${it.message}")
+                }
+                .getOrDefault(0)
             _state.update { it.copy(poolBusy = false) }
             // "No new websites right now" hid the reason, the same way the
             // addon toast did before AddonRejections existed. Report the tally
@@ -1206,7 +1215,12 @@ class NovaViewModel : ViewModel() {
         if (_state.value.poolBusy) return
         _state.update { it.copy(poolBusy = true) }
         viewModelScope.launch {
-            val added = runCatching { engine.fillPool() }.getOrDefault(0)
+            FinderTrace.log("ui", "Fill addons tapped")
+            val added = runCatching { engine.fillPool() }
+                .onFailure {
+                    FinderTrace.log("ui", "fillPool FAILED: ${it.javaClass.simpleName}: ${it.message}")
+                }
+                .getOrDefault(0)
             _state.update { it.copy(poolBusy = false) }
             // "Nothing new" on its own hid the real reason: most of what the
             // directories list is dead hosts or torrent-only addons. Say which.
