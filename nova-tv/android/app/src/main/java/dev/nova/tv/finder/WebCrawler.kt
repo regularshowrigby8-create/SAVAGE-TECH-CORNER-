@@ -87,15 +87,18 @@ class WebCrawler(private val http: HttpClient) {
     }
 
     /**
-     * Web-search result pages. DuckDuckGo's HTML endpoint needs no key and
-     * returns plain links; a blocked or empty answer is not an error, the
-     * other seeds still run.
+     * Web-search result pages. Both endpoints are keyless and independently
+     * optional, so one engine being blocked cannot make the addon pool empty.
      */
     private fun searchPages(round: Int): List<String> {
         val queries = SEARCH_QUERIES
         val picked = (0 until SEARCH_PER_ROUND).map { queries[(round * SEARCH_PER_ROUND + it) % queries.size] }
-        return picked.map { q ->
-            "https://html.duckduckgo.com/html/?q=" + URLEncoder.encode(q, "UTF-8")
+        return picked.flatMap { q ->
+            val encoded = URLEncoder.encode(q, "UTF-8")
+            listOf(
+                "https://html.duckduckgo.com/html/?q=$encoded",
+                "https://yandex.com/search/?text=$encoded"
+            )
         }
     }
 

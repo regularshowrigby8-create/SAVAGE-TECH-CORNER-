@@ -74,7 +74,8 @@ class WebsiteSpider(
         val elapsed = System.currentTimeMillis() - started
         val reports = listOf(
             report("fmhy", loaded.fmhy, loaded.pages.size, verified.size, elapsed),
-            report("github-lists", loaded.github.takeIf { it > 0 }?.let { "" }, loaded.github, verified.size, elapsed)
+            report("github-lists", loaded.github.takeIf { it > 0 }?.let { "" }, loaded.github, verified.size, elapsed),
+            report("yandex-crawler", loaded.web.takeIf { it > 0 }?.let { "" }, loaded.web, verified.size, elapsed)
         )
         Harvest(
             sites = verified,
@@ -122,7 +123,7 @@ class WebsiteSpider(
         return site.copy(templates = working.toList())
     }
 
-    private class Lists(val pages: List<Pair<String, String>>, val fmhy: String?, val github: Int)
+    private class Lists(val pages: List<Pair<String, String>>, val fmhy: String?, val github: Int, val web: Int)
 
     private var cachedLists: Lists? = null
 
@@ -134,13 +135,39 @@ class WebsiteSpider(
         cachedLists?.let { return it }
         val fmhy = runCatching { withTimeoutOrNull(SOURCE_TIMEOUT_MS) { fetchText(FMHY_VIDEO) } }.getOrNull()
         val github = runCatching { withTimeoutOrNull(SOURCE_TIMEOUT_MS) { githubLists() } }.getOrNull().orEmpty()
+        val web = runCatching { withTimeoutOrNull(SOURCE_TIMEOUT_MS) { yandexAndCrawlerLists(fmhy) } }.getOrNull().orEmpty()
         val pages = buildList {
             if (fmhy != null) add("fmhy" to fmhy)
             github.forEach { (name, text) -> add("github:$name" to text) }
+            addAll(web)
         }
-        val result = Lists(pages, fmhy, github.size)
+        val result = Lists(pages, fmhy, github.size, web.size)
         if (pages.isNotEmpty()) cachedLists = result
         return result
+    }
+
+    /** Search beyond curated lists, then crawl a bounded set of result hosts. */
+    private suspend fun yandexAndCrawlerLists(seed: String?): List<Pair<String, String>> = coroutineScope {
+        val queries = listOf(
+            "free streaming sites watch movies series",
+            "watch movies online streaming site",
+            "streaming website server list"
+        )
+        val searches = queries.map { query ->
+            async {
+                runCatching {
+                    fetchText("https://yandex.com/search/?text=" + java.net.URLEncoder.encode(query, "UTF-8"))
+                }.getOrNull()
+            }
+        }.awaitAll().filterNotNull()
+        val roots = buildList {
+            if (seed != null) addAll(siteCandidates(seed).take(32))
+            searches.forEach { addAll(siteCandidates(it).take(32)) }
+        }.distinct().take(64)
+        val crawled = roots.map { url ->
+            async { runCatching { "crawler:$url" to fetchText(url) }.getOrNull() }
+        }.awaitAll().filterNotNull()
+        crawled + searches.mapIndexed { index, text -> "yandex:$index" to text }
     }
 
     /** The link lists, from GitHub, in parallel through the guarded client. */

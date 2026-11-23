@@ -132,6 +132,67 @@ def strip_comments_and_strings(text: str) -> str:
     return _scan_kotlin(text, keep_strings=False)
 
 
+def stray_escaped_quote_lines(text: str) -> list[int]:
+    """Return lines containing ``\\\"`` outside Kotlin strings/comments."""
+    bad: list[int] = []
+    i, line, n = 0, 1, len(text)
+    in_string = False
+    triple = False
+    block_depth = 0
+    while i < n:
+        if text[i] == "\n":
+            line += 1
+            i += 1
+            continue
+        if block_depth:
+            if text.startswith("/*", i):
+                block_depth += 1
+                i += 2
+            elif text.startswith("*/", i):
+                block_depth -= 1
+                i += 2
+            else:
+                i += 1
+            continue
+        if not in_string and text.startswith("//", i):
+            end = text.find("\n", i)
+            i = n if end == -1 else end
+            continue
+        if not in_string and text.startswith("/*", i):
+            block_depth = 1
+            i += 2
+            continue
+        if in_string:
+            if triple and text.startswith('"""', i):
+                in_string = False
+                triple = False
+                i += 3
+                continue
+            if not triple and text[i] == "\\":
+                i += 2
+                continue
+            if not triple and text[i] == '"':
+                in_string = False
+            i += 1
+            continue
+        if text.startswith('"""', i):
+            in_string = True
+            triple = True
+            i += 3
+            continue
+        if text[i] == '"':
+            in_string = True
+            triple = False
+            i += 1
+            continue
+        if text.startswith('\\"', i):
+            bad.append(line)
+            i += 2
+            continue
+        i += 1
+    return bad
+
+
 def check_build_files(root: Path) -> list[str]:
     """Cross-check the Gradle build files against the sources they must build.
 
@@ -268,6 +329,8 @@ def main(argv: list[str] | None = None) -> int:
     for path in files:
         raw = path.read_text("utf-8")
         code = strip_comments_and_strings(raw)
+        for line in stray_escaped_quote_lines(raw):
+            problems.append(f"{path.name}:{line}: stray escaped quote outside a string literal")
         # Sources live under main/ and test/; both must map package -> directory.
         relative = None
         for root_name in ("main", "tv", "mobile", "test", "androidTest"):

@@ -31,6 +31,48 @@ internal fun subtitleOffsetLabel(ms: Long): String = when {
     else -> "%.1f".format(ms / 1000f) + "s"
 }
 
+internal fun sourcePanelOptions(
+    session: NovaPlayer.Session,
+    onPick: (Int) -> Unit
+): List<PanelOption> = session.sources.mapIndexed { i, stream ->
+    val tried = i in session.tried && i != session.index
+    PanelOption(
+        label = stream.label,
+        detail = when {
+            i == session.index -> "Playing"
+            tried -> "Failed"
+            else -> null
+        },
+        selected = i == session.index
+    ) { onPick(i) }
+}
+
+internal fun qualityPanelOptions(
+    session: NovaPlayer.Session,
+    qualityCapHeight: Int,
+    onPick: (Int, Int) -> Unit
+): List<PanelOption> = buildList {
+    add(PanelOption("Auto", if (qualityCapHeight == 0) "Adaptive" else "Cap off", qualityCapHeight == 0) {
+        onPick(session.index, 0)
+    })
+    QualityLadder.rungs(session.sources, session.index).forEach { rung ->
+        val height = rung.label.removeSuffix("p").toIntOrNull() ?: 0
+        add(PanelOption(rung.label, rung.detail, rung.streamIndex == session.index && height == qualityCapHeight) {
+            onPick(rung.streamIndex, height)
+        })
+    }
+}
+
+internal fun subtitleDelayOptions(
+    offsetMs: Long,
+    onStep: (Long) -> Unit,
+    onReset: () -> Unit
+): List<PanelOption> = buildList {
+    add(PanelOption("Delay later", subtitleOffsetLabel(offsetMs), false) { onStep(SubtitleOffsetController.STEP_MS) })
+    add(PanelOption("Delay earlier", subtitleOffsetLabel(offsetMs), false) { onStep(-SubtitleOffsetController.STEP_MS) })
+    if (offsetMs != 0L) add(PanelOption("Reset delay", subtitleOffsetLabel(offsetMs), false, onReset))
+}
+
 /**
  * Every row of [panel], built once for both surfaces.
  *
@@ -55,48 +97,16 @@ internal fun panelOptions(
     onOffsetChange: (Long) -> Unit,
     onAddSubtitleFile: () -> Unit
 ): List<PanelOption> = when (panel) {
-    PlayerPanel.SOURCES -> session.sources.mapIndexed { i, stream ->
-        val tried = i in session.tried && i != session.index
-        PanelOption(
-            label = stream.label,
-            detail = when {
-                i == session.index -> "Playing"
-                tried -> "Failed"
-                else -> null
-            },
-            selected = i == session.index
-        ) {
+    PlayerPanel.SOURCES -> sourcePanelOptions(session) { i ->
             player.selectSource(i)
             viewModel.closePlayerPanel()
-        }
     }
 
-    PlayerPanel.QUALITY -> buildList {
-        add(
-            PanelOption(
-                label = "Auto",
-                detail = if (player.qualityCapHeight() == 0) "Adaptive" else "Cap off",
-                selected = player.qualityCapHeight() == 0
-            ) {
-                player.setQualityCap(0)
-                viewModel.closePlayerPanel()
-            }
-        )
-        QualityLadder.rungs(session.sources, session.index).forEach { rung ->
-            val height = rung.label.removeSuffix("p").toIntOrNull() ?: 0
-            add(
-                PanelOption(
-                    label = rung.label,
-                    detail = rung.detail,
-                    selected = rung.streamIndex == session.index && height == player.qualityCapHeight()
-                ) {
-                    if (rung.streamIndex != session.index) player.selectSource(rung.streamIndex)
-                    player.setQualityCap(height)
-                    viewModel.closePlayerPanel()
-                }
-            )
+    PlayerPanel.QUALITY -> qualityPanelOptions(session, player.qualityCapHeight()) { index, height ->
+            if (index != session.index) player.selectSource(index)
+            player.setQualityCap(height)
+            viewModel.closePlayerPanel()
         }
-    }
 
     PlayerPanel.AUDIO -> engine.audioTracks.map { track ->
         val detail = listOfNotNull(
@@ -136,29 +146,17 @@ internal fun panelOptions(
                 false
             ) { viewModel.reloadSubtitles() }
         )
-        // Delay: positive shows captions later. Two rows keep it one click per
-        // direction instead of a hidden submenu.
-        add(
-            PanelOption("Delay later", subtitleOffsetLabel(offsetMs), false) {
-                subtitleOffset.step(SubtitleOffsetController.STEP_MS)
+        addAll(subtitleDelayOptions(offsetMs,
+            onStep = { step ->
+                subtitleOffset.step(step)
                 onOffsetChange(subtitleOffset.offsetMs)
+            },
+            onReset = {
+                subtitleOffset.offsetMs = 0L
+                subtitleOffset.reset()
+                onOffsetChange(0L)
             }
-        )
-        add(
-            PanelOption("Delay earlier", subtitleOffsetLabel(offsetMs), false) {
-                subtitleOffset.step(-SubtitleOffsetController.STEP_MS)
-                onOffsetChange(subtitleOffset.offsetMs)
-            }
-        )
-        if (offsetMs != 0L) {
-            add(
-                PanelOption("Reset delay", subtitleOffsetLabel(offsetMs), false) {
-                    subtitleOffset.offsetMs = 0L
-                    subtitleOffset.reset()
-                    onOffsetChange(0L)
-                }
-            )
-        }
+        ))
         // Style stays on screen while it is adjusted, unlike a track pick.
         add(
             PanelOption("Caption style", subtitleStyle.tone.label, false) {

@@ -48,6 +48,11 @@ class ScannerTest(unittest.TestCase):
         code = lint.strip_comments_and_strings('fun f() { val s = "}" \n')
         self.assertNotEqual(code.count("{"), code.count("}"))
 
+    def test_stray_escaped_quote_is_reported_outside_strings(self):
+        self.assertEqual(lint.stray_escaped_quote_lines('val ok = "\\\"quoted\\\""\n'), [])
+        self.assertEqual(lint.stray_escaped_quote_lines('val broken = foo(\\")\n'), [1])
+        self.assertEqual(lint.stray_escaped_quote_lines('// \\" in a comment\n'), [])
+
     def test_appaudit_keeps_strings_drops_comments(self):
         out = appaudit._strip_comments(SRC)
         self.assertIn('"https://a.example/1.m3u8"', out)
