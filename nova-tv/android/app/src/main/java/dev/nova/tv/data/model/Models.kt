@@ -194,15 +194,41 @@ data class StreamHints(
 @Serializable
 data class ProxyHeaders(val request: Map<String, String> = emptyMap())
 
-/** One external subtitle file from a `subtitles` addon. */
+/** One external subtitle file, from an addon or a subtitle engine. */
 @Serializable
 data class SubtitleRef(
     val id: String = "",
     val url: String = "",
-    val lang: String = ""
+    val lang: String = "",
+    /** Which engine found it: "OpenSubtitles", "OpenSubtitles REST", "Addon subtitles". */
+    val source: String = "",
+    /** Release or file name, so two English files can be told apart. */
+    val release: String = "",
+    val encoding: String = "",
+    /** Download count, used to put the most likely file first. */
+    val downloads: Int = 0
 ) {
     /** ISO 639-2 codes from OpenSubtitles ("eng") shown as-is, upper-cased. */
     val label: String get() = lang.ifBlank { "Subtitle" }.uppercase()
+
+    /** The one-line description the subtitles panel shows under the language. */
+    val detail: String
+        get() = listOfNotNull(
+            source.takeIf { it.isNotBlank() },
+            release.take(46).takeIf { it.isNotBlank() },
+            encoding.takeIf { it.isNotBlank() }
+        ).joinToString("  ·  ").ifBlank { "Subtitle" }
+
+    /** "en", "eng" and "English" all match a preference of "eng". */
+    fun matchesLanguage(preferred: String): Boolean {
+        val a = code(lang)
+        val b = code(preferred)
+        if (a.isEmpty() || b.isEmpty()) return false
+        return a == b || a.startsWith(b) || b.startsWith(a)
+    }
+
+    private fun code(value: String): String =
+        value.trim().lowercase().replace('_', '-').substringBefore('-').takeIf { it.length >= 2 }.orEmpty()
 }
 
 @Serializable

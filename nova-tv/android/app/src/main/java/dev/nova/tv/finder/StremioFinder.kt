@@ -21,6 +21,8 @@ import kotlinx.serialization.json.contentOrNull
  * stays inside the Stremio ecosystem and goes deeper:
  *
  *  - stremio-addons.net, pages 1..[DIRECTORY_PAGES] fetched in parallel;
+ *  - api.strem.io/addonscollection.json, the real collection Stremio's own
+ *    web app loads -- a different index from stremio-addons.net;
  *  - the `addon_catalog` graph: Cinemeta's community/official lists, then the
  *    `addon_catalog` resource of every addon found there, breadth-first to
  *    depth [GRAPH_DEPTH]. This is how Stremio itself discovers addon
@@ -37,14 +39,18 @@ class StremioFinder(private val http: HttpClient) {
     suspend fun find(exclude: Set<String> = emptySet()): FinderReport = coroutineScope {
         val started = System.currentTimeMillis()
         val directory = async { withTimeoutOrNull(BUDGET_MS) { directoryEntries() } }
+        val collection = async { withTimeoutOrNull(BUDGET_MS) { collectionEntries() } }
         val graph = async { withTimeoutOrNull(BUDGET_MS) { graphEntries() } }
         val dirEntries = directory.await()
+        val collectionResult = collection.await()
         val graphResult = graph.await()
 
         val excluded = exclude.map { it.trimEnd('/').lowercase() }.toSet()
         val gate = Semaphore(MANIFEST_CONCURRENCY)
         val seen = LinkedHashMap<String, Pair<String, JsonObject>>()
-        (dirEntries.orEmpty().map { "stremio-addons" to it } + graphResult?.first.orEmpty().map { "catalog-graph" to it })
+        (dirEntries.orEmpty().map { "stremio-addons" to it } +
+            collectionResult.orEmpty().map { "stremio-collection" to it } +
+            graphResult?.first.orEmpty().map { "catalog-graph" to it })
             .forEach { (source, entry) ->
                 val url = FinderRules.entryUrl(entry)
                 if (url.isNotEmpty() && url !in seen && seen.size < MAX_MANIFESTS) seen[url] = source to entry
@@ -70,6 +76,7 @@ class StremioFinder(private val http: HttpClient) {
             candidates = candidates,
             sources = listOf(
                 report("stremio-addons", dirEntries, candidates.count { it.from.endsWith("stremio-addons") }, elapsed),
+                report("stremio-collection", collectionResult, candidates.count { it.from.endsWith("stremio-collection") }, elapsed),
                 report("catalog-graph", graphResult?.first, candidates.count { it.from.endsWith("catalog-graph") }, elapsed)
             )
         )
@@ -100,6 +107,15 @@ class StremioFinder(private val http: HttpClient) {
             }
         }.awaitAll().flatten()
     }
+
+    /** api.strem.io/addonscollection.json: Stremio's own collection, one request. */
+    private suspend fun collectionEntries(): List<JsonObject> = runCatching {
+        when (val body = fetch("https://api.strem.io/addonscollection.json")) {
+            is JsonArray -> body.filterIsInstance<JsonObject>()
+            is JsonObject -> (body["addons"] as? JsonArray).orEmpty().filterIsInstance<JsonObject>()
+            else -> emptyList()
+        }
+    }.getOrDefault(emptyList())
 
     /**
      * Breadth-first over `addon_catalog`. Depth 0 is Cinemeta's lists; each
@@ -141,13 +157,13 @@ class StremioFinder(private val http: HttpClient) {
     }
 
     companion object {
-        const val DIRECTORY_PAGES = 5
-        const val GRAPH_DEPTH = 2
-        private const val MAX_FRONTIER = 12
-        private const val MAX_MANIFESTS = 160
-        private const val MANIFEST_CONCURRENCY = 8
-        private const val BUDGET_MS = 25_000L
-        private const val MANIFEST_TIMEOUT_MS = 6_000L
+        const val DIRECTORY_PAGES = 12
+        const val GRAPH_DEPTH = 3
+        private const val MAX_FRONTIER = 32
+        private const val MAX_MANIFESTS = 800
+        private const val MANIFEST_CONCURRENCY = 12
+        private const val BUDGET_MS = 45_000L
+        private const val MANIFEST_TIMEOUT_MS = 5_000L
         private val ACCEPT_JSON = mapOf("Accept" to "application/json", "User-Agent" to "NovaTV-Stremio-Finder/1.0")
 
         /**

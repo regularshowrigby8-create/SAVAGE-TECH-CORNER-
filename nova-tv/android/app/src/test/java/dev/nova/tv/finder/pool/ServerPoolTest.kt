@@ -50,9 +50,10 @@ class ServerPoolTest {
     }
 
     @Test
-    fun `holds 3000 and no more`() {
+    fun `holds 6000 and no more`() {
         val pool = ServerPool(MemoryStore())
-        pool.add(many(3500))
+        pool.add(many(6500))
+        assertEquals(6000, ServerPool.CAPACITY)
         assertEquals(ServerPool.CAPACITY, pool.state.value.size)
     }
 

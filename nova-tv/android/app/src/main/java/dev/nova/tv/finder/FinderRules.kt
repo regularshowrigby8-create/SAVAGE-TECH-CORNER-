@@ -24,8 +24,8 @@ import java.net.URI
  */
 object FinderRules {
 
-    const val MAX_PER_SOURCE = 8
-    const val MAX_CANDIDATES = 1000
+    const val MAX_PER_SOURCE = 24
+    const val MAX_CANDIDATES = 6000
     const val MAX_MANIFEST_BYTES = 160_000L
     const val MAX_JSON_BYTES = 1_200_000L
 

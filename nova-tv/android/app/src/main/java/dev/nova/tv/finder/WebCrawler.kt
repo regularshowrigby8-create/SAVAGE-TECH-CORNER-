@@ -19,7 +19,7 @@ import java.net.URLEncoder
  * The open-web crawler that replaced the old fixed script sequence.
  *
  * The previous finder read three hard-coded directories in order and stopped
- * after eight manifests from each, so the pool ran dry long before its 3000
+ * after eight manifests from each, so the pool ran dry long before its 6000
  * slots were full. This one treats the whole web as the directory:
  *
  *  1. **Seed pages** - GitHub repository search across many queries, public
@@ -252,18 +252,18 @@ class WebCrawler(private val http: HttpClient) {
 
     companion object {
         /** Requests in flight at once. The old finder used 6-8. */
-        const val CONCURRENCY = 24
+        const val CONCURRENCY = 32
 
-        private const val BUDGET_MS = 25_000L
-        private const val MANIFEST_TIMEOUT_MS = 7_000L
+        private const val BUDGET_MS = 40_000L
+        private const val MANIFEST_TIMEOUT_MS = 5_000L
         private const val MAX_PAGE_BYTES = 2_000_000L
-        private const val MAX_FOLLOW = 80
-        private const val MAX_BASES = 120
-        private const val MAX_MANIFESTS = 400
-        private const val MAX_READMES = 120
-        private const val MAX_GITHUB_MANIFESTS = 240
-        private const val GITHUB_PAGES = 10
-        private const val SEARCH_PER_ROUND = 4
+        private const val MAX_FOLLOW = 160
+        private const val MAX_BASES = 300
+        private const val MAX_MANIFESTS = 1200
+        private const val MAX_READMES = 200
+        private const val MAX_GITHUB_MANIFESTS = 600
+        private const val GITHUB_PAGES = 20
+        private const val SEARCH_PER_ROUND = 8
 
         private val SLUG = Regex("^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
         private val HREF = Regex("""href\s*=\s*["']([^"']{3,400})["']""", RegexOption.IGNORE_CASE)

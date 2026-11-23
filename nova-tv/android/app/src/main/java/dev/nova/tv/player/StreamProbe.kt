@@ -1,6 +1,7 @@
 package dev.nova.tv.player
 
 import dev.nova.tv.data.model.Stream
+import dev.nova.tv.data.remote.NovaDns
 import dev.nova.tv.finder.FinderRules
 import dev.nova.tv.player.engine.safePlaybackHeaders
 import kotlinx.coroutines.Dispatchers
@@ -29,7 +30,9 @@ data class ProbeResult(
     val ttfbMs: Long = -1,
     val bytesPerSecond: Long = -1,
     /** From Content-Range / Content-Length; 0 when the server did not say. */
-    val totalBytes: Long = 0
+    val totalBytes: Long = 0,
+    /** DNS resolution latency for the stream's host; -1 when unresolved. */
+    val dnsMs: Long = -1
 )
 
 /**
@@ -54,7 +57,13 @@ class StreamProbe(baseClient: OkHttpClient) {
     suspend fun probe(stream: Stream): ProbeResult {
         val url = stream.url ?: return ProbeResult(ok = false)
         cache[url]?.let { (at, result) -> if (System.currentTimeMillis() - at < CACHE_MS) return result }
-        val result = withTimeoutOrNull(PROBE_TIMEOUT_MS + 1_500) { read(stream, url) } ?: ProbeResult(ok = false)
+        // Measured first: the resolver round trip is what a new connection waits
+        // for, and the ranker sorts by it before any bytes arrive.
+        val dnsMs = withContext(Dispatchers.IO) {
+            runCatching { NovaDns.pingMs(HostHealth.host(url)) }.getOrDefault(-1L)
+        }
+        val result = (withTimeoutOrNull(PROBE_TIMEOUT_MS + 1_500) { read(stream, url) } ?: ProbeResult(ok = false))
+            .copy(dnsMs = dnsMs)
         cache[url] = System.currentTimeMillis() to result
         HostHealth.noteProbe(url, result)
         return result

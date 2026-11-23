@@ -57,7 +57,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Text
 import coil.compose.AsyncImage
-import dev.nova.tv.data.model.Stream
+import dev.nova.tv.finder.SourceSnapshot
 import dev.nova.tv.ui.components.EpisodeCard
 import dev.nova.tv.ui.components.FilterChip
 import dev.nova.tv.ui.components.FocusableRow
@@ -169,7 +169,7 @@ fun DetailScreen(state: NovaState, viewModel: NovaViewModel) {
             exit = if (reduced) fadeOut(tween(0)) else slideOutHorizontally(tween(200)) { it } + fadeOut(),
             modifier = Modifier.align(Alignment.CenterEnd)
         ) {
-            SourceSheet(detail.sources.streams, viewModel, dualMode = state.route == Route.DUAL_AUDIO)
+            SourceSheet(detail.sources, state, viewModel, dualMode = state.route == Route.DUAL_AUDIO)
         }
 
         AnimatedVisibility(
@@ -178,7 +178,7 @@ fun DetailScreen(state: NovaState, viewModel: NovaViewModel) {
             exit = if (reduced) fadeOut(tween(0)) else slideOutHorizontally(tween(200)) { it } + fadeOut(),
             modifier = Modifier.align(Alignment.CenterEnd)
         ) {
-            DownloadSheet(detail, viewModel)
+            DownloadSheet(detail, state, viewModel)
         }
     }
 }
@@ -291,7 +291,8 @@ private fun Episodes(detail: DetailState, viewModel: NovaViewModel) {
 
 /** Every ranked source, best first. Hidden until asked for. */
 @Composable
-private fun SourceSheet(streams: List<Stream>, viewModel: NovaViewModel, dualMode: Boolean) {
+private fun SourceSheet(sources: SourceSnapshot, state: NovaState, viewModel: NovaViewModel, dualMode: Boolean) {
+    val streams = sources.streams
     val first = remember { FocusRequester() }
     LaunchedEffect(Unit) {
         withFrameNanos { }
@@ -309,6 +310,8 @@ private fun SourceSheet(streams: List<Stream>, viewModel: NovaViewModel, dualMod
     ) {
         Text("Sources", style = NovaType.sectionTitle)
         Spacer(Modifier.height(14.dp))
+        QualityChips(state, viewModel)
+        Spacer(Modifier.height(12.dp))
         LazyColumn(modifier = Modifier.arvioDpadFocusGroup(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             itemsIndexed(streams, key = { i, s -> s.url ?: "$i" }) { i, stream ->
                 FocusableRow(
@@ -318,6 +321,9 @@ private fun SourceSheet(streams: List<Stream>, viewModel: NovaViewModel, dualMod
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             if (dualMode && dev.nova.tv.finder.DualAudio.hasEnglishPlusOther(stream)) Badge("Dual")
                             stream.quality.takeIf { it.isNotBlank() }?.let { Badge(it) }
+                            // DNS latency: how soon this host can start, measured
+                            // before any bytes move.
+                            sources.pings[stream.url]?.takeIf { it >= 0 }?.let { Badge("$it ms") }
                         }
                     }
                 ) {
@@ -338,7 +344,7 @@ private fun SourceSheet(streams: List<Stream>, viewModel: NovaViewModel, dualMod
  * shows every downloadable source with its real quality and byte size.
  */
 @Composable
-private fun DownloadSheet(detail: DetailState, viewModel: NovaViewModel) {
+private fun DownloadSheet(detail: DetailState, state: NovaState, viewModel: NovaViewModel) {
     val first = remember { FocusRequester() }
     LaunchedEffect(Unit) {
         withFrameNanos { }
@@ -362,7 +368,9 @@ private fun DownloadSheet(detail: DetailState, viewModel: NovaViewModel) {
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
-        Spacer(Modifier.height(14.dp))
+        Spacer(Modifier.height(10.dp))
+        QualityChips(state, viewModel)
+        Spacer(Modifier.height(12.dp))
         if (streams.isEmpty()) {
             Text("No downloadable source", style = NovaType.body, color = NovaPalette.textMuted)
         } else {
@@ -372,7 +380,12 @@ private fun DownloadSheet(detail: DetailState, viewModel: NovaViewModel) {
                     FocusableRow(
                         onClick = { viewModel.downloadStream(i) },
                         modifier = if (i == 0) Modifier.focusRequester(first) else Modifier,
-                        trailing = { if (i == 0) Badge("Best") }
+                        trailing = {
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                if (i == 0) Badge("Best")
+                                detail.sources.pings[stream.url]?.takeIf { it >= 0 }?.let { Badge("$it ms") }
+                            }
+                        }
                     ) {
                         Column {
                             Text(
@@ -389,6 +402,21 @@ private fun DownloadSheet(detail: DetailState, viewModel: NovaViewModel) {
                     }
                 }
             }
+        }
+    }
+}
+
+/** Quality targets offered in the Sources and Download sheets. 1080p is the ceiling. */
+private val QUALITY_CHOICES = listOf("720p", "1080p", "auto")
+
+@Composable
+private fun QualityChips(state: NovaState, viewModel: NovaViewModel) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        QUALITY_CHOICES.forEach { quality ->
+            FilterChip(
+                label = if (quality == "auto") "Best" else quality,
+                selected = state.preferredQuality == quality
+            ) { viewModel.setQuality(quality) }
         }
     }
 }

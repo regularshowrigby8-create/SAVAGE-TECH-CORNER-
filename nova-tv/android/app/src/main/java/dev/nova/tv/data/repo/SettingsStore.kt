@@ -2,6 +2,7 @@ package dev.nova.tv.data.repo
 
 import android.content.SharedPreferences
 import dev.nova.tv.data.remote.DnsProvider
+import dev.nova.tv.data.remote.SubtitleProvider
 import dev.nova.tv.finder.FinderKind
 import dev.nova.tv.player.CaptionTone
 import dev.nova.tv.player.SubtitleStyle
@@ -23,6 +24,10 @@ class SettingsStore(private val prefs: SharedPreferences) : CatalogRepository.Ad
         val subtitleBackground: Int = 55,
         val subtitleBottom: Int = 8,
         val subtitleTone: String = CaptionTone.CINEMA.name,
+        /** Which subtitle engines are asked; every one is off/on per row. */
+        val subtitleProviders: Set<SubtitleProvider> = SubtitleProvider.entries.toSet(),
+        /** Preferred caption language, ISO 639-2 ("eng"); those files list first. */
+        val subtitleLanguage: String = "eng",
         val reduceMotion: Boolean = false,
         val volume: Float = 1f,
         val playbackRate: Float = 1f,
@@ -51,6 +56,8 @@ class SettingsStore(private val prefs: SharedPreferences) : CatalogRepository.Ad
         subtitleBackground = prefs.getInt(KEY_SUBTITLE_BG, 55),
         subtitleBottom = prefs.getInt(KEY_SUBTITLE_BOTTOM, 8),
         subtitleTone = prefs.getString(KEY_SUBTITLE_TONE, CaptionTone.CINEMA.name) ?: CaptionTone.CINEMA.name,
+        subtitleProviders = SubtitleProvider.entries.filter { prefs.getBoolean(KEY_SUB_PROVIDER + it.name, true) }.toSet(),
+        subtitleLanguage = prefs.getString(KEY_SUB_LANG, "eng") ?: "eng",
         reduceMotion = prefs.getBoolean(KEY_MOTION, false),
         volume = prefs.getFloat(KEY_VOLUME, 1f),
         playbackRate = prefs.getFloat(KEY_RATE, 1f),
@@ -63,6 +70,23 @@ class SettingsStore(private val prefs: SharedPreferences) : CatalogRepository.Ad
     override fun savedAddonUrls(): List<String> = _settings.value.addonUrls
 
     override fun saveAddonUrls(urls: List<String>) = saveAddons(urls)
+
+    override fun subtitleProviders(): Set<SubtitleProvider> = _settings.value.subtitleProviders
+
+    override fun subtitleLanguage(): String = _settings.value.subtitleLanguage
+
+    fun setSubtitleProviders(providers: Set<SubtitleProvider>) {
+        val edit = prefs.edit()
+        SubtitleProvider.entries.forEach { edit.putBoolean(KEY_SUB_PROVIDER + it.name, it in providers) }
+        edit.apply()
+        _settings.value = _settings.value.copy(subtitleProviders = providers)
+    }
+
+    fun setSubtitleLanguage(lang: String) {
+        val normalised = lang.ifBlank { "eng" }
+        prefs.edit().putString(KEY_SUB_LANG, normalised).apply()
+        _settings.value = _settings.value.copy(subtitleLanguage = normalised)
+    }
 
     fun saveAddons(urls: List<String>) {
         prefs.edit().putString(KEY_ADDONS, urls.distinct().joinToString("\n")).apply()
@@ -147,6 +171,8 @@ class SettingsStore(private val prefs: SharedPreferences) : CatalogRepository.Ad
         private const val KEY_SUBTITLE_BG = "subtitle_background"
         private const val KEY_SUBTITLE_BOTTOM = "subtitle_bottom"
         private const val KEY_SUBTITLE_TONE = "subtitle_tone"
+        private const val KEY_SUB_PROVIDER = "subtitle_provider_"
+        private const val KEY_SUB_LANG = "subtitle_language"
         private const val KEY_MOTION = "reduce_motion"
         private const val KEY_VOLUME = "volume"
         private const val KEY_RATE = "playback_rate"

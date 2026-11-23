@@ -4,6 +4,52 @@ This describes the source-discovery layer after the "aggressive finder" pass.
 It applies to both flavours: everything lives in `src/main`, so the TV and
 mobile builds share one finder.
 
+## 0. Two finders, two pools
+
+The finders are not interchangeable, and neither are their pools.
+
+| Finder | Pool | What it finds | How it is used |
+| --- | --- | --- | --- |
+| **Website finder** (`FinderKind.ZEROPLAY`, label "Website finder") | `WebsitePool` (6000 sites) | ordinary streaming **websites** — the same kind "Add website" saves | searched by title like a saved website: result page → episode → embeds/`m3u8`/`mp4` |
+| **Addon finder** (`FinderKind.STREMIO`, label "Addon finder") | `ServerPool` (6000 manifests) | Stremio **addons** (manifests) | asked for `/stream/{type}/{id}.json` |
+
+The two pools are separate files (`website_pool.json`, `server_pool.json`) and
+separate fill loops. Switching a finder off stops only its own pool: the other
+keeps serving playback. The viewer's own hand-added websites are always
+searched, whichever finder is on.
+
+The website pool is filled by `finder/website/WebsiteSpider.kt`, which is the
+website finder's engine:
+
+- **FMHY** (`fmhy/edit`, `docs/video.md`) — the community streaming-site index,
+  read as Markdown;
+- **GitHub lists** — a repository search for streaming-site lists, then each
+  README's links.
+
+Each candidate is profiled with `WebsiteFinder.profile` (where is its search?),
+then probed with a known film; only sites that return plausible result links
+keep their place, and only the templates that worked are stored. A site that
+answers for a title is kept, one that misses twice is retired. Per-title
+searches run 10 at a time, 24 sites per title, 12 s each.
+
+The addon pool is filled by `ServerHarvester` (`WebCrawler` + GitHub) and by
+`StremioFinder`'s discovery, exactly as described below.
+
+## 0.1 Subtitles
+
+`data/remote/SubtitleFinder.kt` adds two keyless engines next to the addon
+subtitles already supported:
+
+- **OpenSubtitles v3** (the Stremio endpoint) — language, release and encoding;
+- **OpenSubtitles REST** (`rest.opensubtitles.org`) — IMDb/season/episode
+  matched; its downloads are gzip `.srt` files, so they are decompressed into
+  the device cache before the player sees them.
+
+Each engine has its own switch on the Sources screen (`Subtitle sources`), and
+the Subtitles panel offers `Refresh subtitles` for a title that had none at
+Play time. Files are ordered by the preferred language (English by default),
+then by downloads, and the panel labels each with its source and release.
+
 ## 1. Internet Archive removed
 
 `FinderRules.REDUNDANT_NAMES` now carries `internet archive`,
@@ -24,6 +70,11 @@ every host they yielded arrived twice. They are gone; the ZeroPlay finder is now
 `web` + `github`.
 
 `ServerHarvester` lost the same two directories for the same reason.
+
+The Stremio finder now also reads `api.strem.io/addonscollection.json`, the
+collection Stremio's own web app loads. It is a separate index from
+stremio-addons.net, so it reaches hosts neither the directories nor the
+`addon_catalog` graph list.
 
 ## 3. The script sequence replaced by an open-web crawler
 
@@ -46,17 +97,18 @@ Every stage has its own share of the caller's time budget, so a crawl started
 inside a 30 s discovery window returns what it found instead of being cancelled
 with nothing.
 
-## 4. The 3000-slot pool now fills until it is full
+## 4. The 6000-slot pool now fills until it is full
 
 `SourceEngine.syncPoolFill` used to stop after four empty rounds. It now loops
-until `ServerPool.CAPACITY` (3000) is reached:
+until `ServerPool.CAPACITY` (6000) is reached:
 
 - a round that adds servers resets the counter and pauses 400 ms;
 - an empty round backs off exponentially up to 60 s;
 - every eighth empty round the retirement list is cleared, so hosts that came
   back online are reachable again.
 
-`SourceEngine.PARALLELISM` went from 12 to 24.
+`SourceEngine.PARALLELISM` went from 12 to 32, and the harvester's GitHub
+sweep, page count and manifest budget grew to match the larger pool.
 
 ## 5. Dead and faulty servers are discarded automatically
 

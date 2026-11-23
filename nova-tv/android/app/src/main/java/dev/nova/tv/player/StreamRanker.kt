@@ -27,6 +27,8 @@ object StreamRanker {
 
     data class Context(
         val probes: Map<String, ProbeResult> = emptyMap(),
+        /** DNS resolution latency per stream URL, from [NovaDns.pingMs]. */
+        val pings: Map<String, Long> = emptyMap(),
         val runtimeSeconds: Int = 0,
         val preferredGroup: String? = null,
         val preferredSource: String? = null,
@@ -67,6 +69,10 @@ object StreamRanker {
         val kind = (FinderRules.classifyStream(stream) as? FinderRules.Verdict.Playable)?.kind
         if (kind == FinderRules.StreamKind.HLS || kind == FinderRules.StreamKind.DASH) score += 15
 
+        // A host that answers DNS quickly is the one whose first frame arrives
+        // quickly. Measured before playback, so it ranks even unprobed sources.
+        score += pingScore(ctx.pings[stream.url] ?: -1)
+
         val size = maxOf(stream.sizeBytes, probe?.totalBytes ?: 0)
         val headroom = headroom(size, ctx.runtimeSeconds, probe?.bytesPerSecond ?: -1)
         score += when {
@@ -91,6 +97,19 @@ object StreamRanker {
         score += ctx.hostScore(stream.url)
         if (stream.requestHeaders.isEmpty()) score += 3
         return score
+    }
+
+    /**
+     * DNS latency weight. Small enough that a source which cannot sustain the
+     * bitrate still loses, large enough to order otherwise-equal sources.
+     */
+    fun pingScore(dnsMs: Long): Int = when {
+        dnsMs < 0 -> 0
+        dnsMs <= 50 -> 45
+        dnsMs <= 120 -> 30
+        dnsMs <= 250 -> 12
+        dnsMs <= 500 -> -10
+        else -> -35
     }
 
     /** throughput / bitrate, or null when either side is unknown. */

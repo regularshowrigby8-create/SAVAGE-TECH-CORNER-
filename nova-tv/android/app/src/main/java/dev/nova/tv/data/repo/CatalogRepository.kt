@@ -31,12 +31,17 @@ import kotlinx.coroutines.withTimeoutOrNull
  */
 class CatalogRepository(
     private val client: AddonClient,
-    private val store: AddonUrlStore? = null
+    private val store: AddonUrlStore? = null,
+    /** The subtitle engines that are not addons; null in tests. */
+    private val subtitles: dev.nova.tv.data.remote.SubtitleFinder? = null
 ) {
     /** The persistence half of [SettingsStore], so tests can pass a fake. */
     interface AddonUrlStore {
         fun savedAddonUrls(): List<String>
         fun saveAddonUrls(urls: List<String>)
+        fun subtitleProviders(): Set<dev.nova.tv.data.remote.SubtitleProvider> =
+            dev.nova.tv.data.remote.SubtitleProvider.entries.toSet()
+        fun subtitleLanguage(): String = "eng"
     }
 
     private val _addons = MutableStateFlow<List<NovaAddon>>(emptyList())
@@ -243,14 +248,35 @@ class CatalogRepository(
     }
 
     /** External subtitles from addons that declare a `subtitles` resource (OpenSubtitles). */
+    /**
+     * Every subtitle the enabled engines have for one title, best first.
+     *
+     * Addon subtitles were the only source before, so a title OpenSubtitles v3
+     * did not index had none. The non-addon engines ([dev.nova.tv.data.remote.SubtitleFinder])
+     * now run in parallel with them, and the viewer's provider switches decide
+     * which ones are asked at all.
+     */
     suspend fun loadSubtitles(type: String, id: String): List<SubtitleRef> = coroutineScope {
-        _addons.value.filter { it.enabled && it.supportsSubtitles() }.map { addon ->
-            async {
-                withTimeoutOrNull(SEARCH_TIMEOUT_MS) {
-                    runCatching { client.fetchSubtitles(addon, type, id) }.getOrDefault(emptyList())
-                }.orEmpty()
-            }
-        }.awaitAll().flatten().distinctBy { it.url }
+        val providers = store?.subtitleProviders() ?: dev.nova.tv.data.remote.SubtitleProvider.entries.toSet()
+        val lang = store?.subtitleLanguage() ?: "eng"
+        val fromAddons = if (dev.nova.tv.data.remote.SubtitleProvider.ADDONS in providers) {
+            _addons.value.filter { it.enabled && it.supportsSubtitles() }.map { addon ->
+                async {
+                    withTimeoutOrNull(SEARCH_TIMEOUT_MS) {
+                        runCatching { client.fetchSubtitles(addon, type, id) }.getOrDefault(emptyList())
+                    }.orEmpty().map { ref ->
+                        if (ref.source.isBlank()) ref.copy(source = dev.nova.tv.data.remote.SubtitleProvider.ADDONS.label) else ref
+                    }
+                }
+            }.awaitAll().flatten()
+        } else {
+            emptyList()
+        }
+        val fromEngines = runCatching { subtitles?.find(type, id, lang, providers) }.getOrNull().orEmpty()
+        (fromAddons + fromEngines)
+            .distinctBy { it.url }
+            .sortedWith(compareByDescending<SubtitleRef> { it.matchesLanguage(lang) }.thenByDescending { it.downloads })
+            .take(MAX_SUBTITLES)
     }
 
     /** De-duplicate by id, preferring the higher-rated copy. */
@@ -264,6 +290,7 @@ class CatalogRepository(
 
     private companion object {
         const val SEARCH_TIMEOUT_MS = 8_000L
+        private const val MAX_SUBTITLES = 60
         const val PAGE_TIMEOUT_MS = 10_000L
         const val INSTALL_TIMEOUT_MS = 12_000L
         /** Two tries at a manifest before falling back. */

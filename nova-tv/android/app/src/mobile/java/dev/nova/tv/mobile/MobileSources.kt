@@ -49,6 +49,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.nova.tv.BuildConfig
+import dev.nova.tv.data.remote.SubtitleProvider
 import dev.nova.tv.finder.FinderKind
 import dev.nova.tv.ui.screens.NovaState
 import dev.nova.tv.ui.screens.NovaViewModel
@@ -94,6 +95,8 @@ fun MobileSources(state: NovaState, viewModel: NovaViewModel, onBack: () -> Unit
                 SettingRow(kind.label, onClick = { viewModel.toggleFinder(kind) }) {
                     when {
                         running -> Text("Searching", style = MType.meta.copy(color = NovaPalette.accent))
+                        kind == FinderKind.ZEROPLAY -> Text("${state.sitePool.size} sites", style = MType.meta)
+                        kind == FinderKind.STREMIO -> Text("${state.pool.size} servers", style = MType.meta)
                         found != null -> Text("$found found", style = MType.meta)
                     }
                     Spacer(Modifier.width(10.dp))
@@ -112,41 +115,53 @@ fun MobileSources(state: NovaState, viewModel: NovaViewModel, onBack: () -> Unit
                 }
             }
 
-            item { Section("Servers") }
+            item { Section("Server pools") }
+            // Two pools, two finders: switch one finder off above and the other
+            // pool keeps serving playback on its own.
             item {
-                // Only servers that have answered for a title are listed; the
-                // 3000-slot pool is an internal queue, not a user-facing count.
-                SettingRow("Working servers", onClick = viewModel::fillServers) {
+                SettingRow("Addon pool", onClick = viewModel::fillServers) {
                     if (state.poolBusy) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = NovaPalette.accent)
-                    else Text("${state.workingServers.size}", style = MType.meta)
+                    else Text("${state.pool.size} / ${state.pool.capacity}", style = MType.meta)
                 }
             }
             item {
-                // The finders share this pool; whatever is switched on keeps
-                // filling it until every slot is used.
-                SettingRow("Server slots", onClick = null) {
-                    Text("${state.pool.size} / ${state.pool.capacity}", style = MType.meta)
+                SettingRow("Addon servers working", onClick = null) {
+                    Text("${state.workingServers.size}", style = MType.meta)
                 }
             }
-            items(state.workingServers.take(8), key = { "srv:" + it }) { name ->
+            items(state.workingServers.take(6), key = { "srv:" + it }) { name ->
                 SettingRow(name, onClick = null) { Text("Working", style = MType.meta.copy(color = NovaPalette.accent)) }
             }
-            if (state.workingServers.isEmpty()) {
-                item {
-                    Text(
-                        "No server has answered yet. Fill or scramble to find new ones.",
-                        style = MType.meta,
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-                    )
+            item {
+                SettingRow("Website pool", onClick = viewModel::findWebsites) {
+                    Text("${state.sitePool.size} sites", style = MType.meta)
                 }
+            }
+            item {
+                SettingRow("Websites working", onClick = null) {
+                    Text("${state.sitePool.working}", style = MType.meta)
+                }
+            }
+            items(state.workingSites.take(6), key = { "site:" + it }) { name ->
+                SettingRow(name, onClick = null) { Text("Working", style = MType.meta.copy(color = NovaPalette.accent)) }
             }
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilledTonalButton(onClick = viewModel::fillServers, enabled = !state.poolBusy) { Text("Fill", style = MType.label) }
+                    FilledTonalButton(onClick = viewModel::findWebsites, enabled = !state.poolBusy) { Text("Find sites", style = MType.label) }
+                    FilledTonalButton(onClick = viewModel::fillServers, enabled = !state.poolBusy) { Text("Fill addons", style = MType.label) }
                     FilledTonalButton(onClick = viewModel::scrambleServers, enabled = !state.poolBusy) { Text("Scramble", style = MType.label) }
                     if (state.pool.canRevert) {
                         FilledTonalButton(onClick = viewModel::revertServers, enabled = !state.poolBusy) { Text("Revert", style = MType.label) }
                     }
+                }
+            }
+            if (state.workingServers.isEmpty() && state.sitePool.working == 0) {
+                item {
+                    Text(
+                        "Nothing has answered yet. Find sites, fill addons or scramble to bring new sources in.",
+                        style = MType.meta,
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                    )
                 }
             }
 
@@ -160,6 +175,15 @@ fun MobileSources(state: NovaState, viewModel: NovaViewModel, onBack: () -> Unit
             }
             items(state.websites, key = { "w:" + it.url }) { site ->
                 ItemRow(site.name, site.url) { viewModel.removeWebsite(site.url) }
+            }
+
+            item { Section("Subtitle sources") }
+            items(SubtitleProvider.entries, key = { "sub:" + it.name }) { provider ->
+                SettingRow(provider.label, onClick = { viewModel.toggleSubtitleProvider(provider) }) {
+                    Text(provider.detail, style = MType.meta)
+                    Spacer(Modifier.width(10.dp))
+                    NovaSwitch(provider in state.subtitleProviders) { viewModel.toggleSubtitleProvider(provider) }
+                }
             }
 
             item { Section("Installed") }

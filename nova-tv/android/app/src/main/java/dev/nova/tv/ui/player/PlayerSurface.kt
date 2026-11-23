@@ -666,6 +666,15 @@ private fun Panel(
                 }
             )
             add(PanelOption("Add subtitle file…", "From this device", false, onAddSubtitleFile))
+            // The engines are asked again on demand: a title that had no
+            // captions at Play time often gains them a minute later.
+            add(
+                PanelOption(
+                    "Refresh subtitles",
+                    if (session.subtitles.isEmpty()) "Searching…" else "${session.subtitles.size} found",
+                    false
+                ) { viewModel.reloadSubtitles() }
+            )
             // Delay: positive shows captions later. Two rows keep it one click
             // per direction instead of a hidden submenu.
             add(
@@ -733,7 +742,7 @@ private fun Panel(
             // Sidecar tracks can be taken back out; embedded ones cannot.
             session.subtitles.forEach { ref ->
                 add(
-                    PanelOption("Remove ${ref.label}", ref.url.substringAfterLast('/'), false) {
+                    PanelOption("Remove ${ref.label}", ref.detail, false) {
                         player.removeSubtitle(ref.url)
                         viewModel.closePlayerPanel()
                     }

@@ -38,6 +38,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Text
 import dev.nova.tv.BuildConfig
+import dev.nova.tv.data.remote.SubtitleProvider
 import dev.nova.tv.finder.FinderKind
 import dev.nova.tv.ui.components.FocusableRow
 import dev.nova.tv.ui.components.PrimaryButton
@@ -93,8 +94,12 @@ fun SourcesScreen(state: NovaState, viewModel: NovaViewModel) {
                     modifier = if (kind == FinderKind.entries.first()) Modifier.focusRequester(firstRow) else Modifier,
                     trailing = {
                         Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                            if (running) Text("Searching", style = NovaType.meta, color = NovaPalette.accent)
-                            else if (found != null) Text("$found found", style = NovaType.meta)
+                            when {
+                                running -> Text("Searching", style = NovaType.meta, color = NovaPalette.accent)
+                                kind == FinderKind.ZEROPLAY -> Text("${state.sitePool.size} sites", style = NovaType.meta)
+                                kind == FinderKind.STREMIO -> Text("${state.pool.size} servers", style = NovaType.meta)
+                                found != null -> Text("$found found", style = NovaType.meta)
+                            }
                             Toggle(on)
                         }
                     }
@@ -114,32 +119,47 @@ fun SourcesScreen(state: NovaState, viewModel: NovaViewModel) {
                 }
             }
 
-            item { SectionLabel("Servers") }
+            item { SectionLabel("Server pools") }
+            // Two pools, two finders. Either can be switched off in Finders
+            // above and the other keeps serving playback on its own.
             item {
                 FocusableRow(
                     onClick = viewModel::fillServers,
                     trailing = {
                         Text(
-                            if (state.poolBusy) "Updating" else "${state.workingServers.size} working",
+                            if (state.poolBusy) "Updating" else "${state.pool.size} / ${state.pool.capacity}",
                             style = NovaType.meta,
                             color = if (state.poolBusy) NovaPalette.accent else NovaPalette.textMuted
                         )
                     }
                 ) {
                     Column {
-                        Text("Working servers", style = NovaType.body)
-                        // The finders share this pool; whatever is switched on
-                        // keeps filling it until every slot is used.
+                        Text("Addon pool", style = NovaType.body)
+                        Text("${state.workingServers.size} working · Stremio addons", style = NovaType.meta)
+                    }
+                }
+            }
+            item {
+                FocusableRow(
+                    onClick = viewModel::findWebsites,
+                    trailing = {
                         Text(
-                            "${state.pool.size} / ${state.pool.capacity} slots · filled by the finders that are on",
-                            style = NovaType.meta
+                            if (state.poolBusy) "Searching" else "${state.sitePool.size} sites",
+                            style = NovaType.meta,
+                            color = if (state.poolBusy) NovaPalette.accent else NovaPalette.textMuted
                         )
+                    }
+                ) {
+                    Column {
+                        Text("Website pool", style = NovaType.body)
+                        Text("${state.sitePool.working} working · sites like Add website", style = NovaType.meta)
                     }
                 }
             }
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.padding(top = 6.dp)) {
-                    SecondaryButton("Scramble servers", icon = Icons.Filled.Refresh, onClick = viewModel::scrambleServers)
+                    SecondaryButton("Find websites", icon = Icons.Filled.Refresh, onClick = viewModel::findWebsites)
+                    SecondaryButton("Scramble addons", icon = Icons.Filled.Refresh, onClick = viewModel::scrambleServers)
                     if (state.pool.canRevert) SecondaryButton("Revert", onClick = viewModel::revertServers)
                 }
             }
@@ -151,6 +171,19 @@ fun SourcesScreen(state: NovaState, viewModel: NovaViewModel) {
                     Column {
                         Text(site.name, style = NovaType.body, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(site.url, style = NovaType.meta, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                }
+            }
+
+            item { SectionLabel("Subtitle sources") }
+            items(SubtitleProvider.entries, key = { "sub:" + it.name }) { provider ->
+                FocusableRow(
+                    onClick = { viewModel.toggleSubtitleProvider(provider) },
+                    trailing = { Toggle(provider in state.subtitleProviders) }
+                ) {
+                    Column {
+                        Text(provider.label, style = NovaType.body)
+                        Text(provider.detail, style = NovaType.meta)
                     }
                 }
             }

@@ -70,10 +70,10 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import dev.nova.tv.data.model.Stream
 import dev.nova.tv.data.model.Video
 import dev.nova.tv.finder.DualAudio
 import dev.nova.tv.finder.FinderRules
+import dev.nova.tv.finder.SourceSnapshot
 import dev.nova.tv.ui.screens.DetailState
 import dev.nova.tv.ui.screens.NovaState
 import dev.nova.tv.ui.screens.NovaViewModel
@@ -151,10 +151,10 @@ fun MobileDetail(state: NovaState, viewModel: NovaViewModel) {
         }
 
         if (detail.showSources) {
-            SourcesSheet(detail.sources.streams, detail.resolving, viewModel, dualMode = state.route == Route.DUAL_AUDIO)
+            SourcesSheet(detail.sources, detail.resolving, state, viewModel, dualMode = state.route == Route.DUAL_AUDIO)
         }
         if (detail.showDownload) {
-            DownloadSheet(detail, viewModel)
+            DownloadSheet(detail, state, viewModel)
         }
     }
 }
@@ -351,7 +351,8 @@ private fun EpisodeRow(v: Video, detail: DetailState, viewModel: NovaViewModel) 
 /** Every ranked source, best first. Tap one to play it; the rest stay as failover. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SourcesSheet(streams: List<Stream>, resolving: Boolean, viewModel: NovaViewModel, dualMode: Boolean) {
+private fun SourcesSheet(sources: SourceSnapshot, resolving: Boolean, state: NovaState, viewModel: NovaViewModel, dualMode: Boolean) {
+    val streams = sources.streams
     val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     ModalBottomSheet(
         onDismissRequest = viewModel::toggleSourcesSheet,
@@ -362,6 +363,9 @@ private fun SourcesSheet(streams: List<Stream>, resolving: Boolean, viewModel: N
             Text("Sources", style = MType.title, modifier = Modifier.weight(1f))
             if (resolving) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = NovaPalette.accent)
         }
+        // One decision, two taps: which quality, then which source.
+        QualityChips(state, viewModel)
+        Spacer(Modifier.height(6.dp))
         if (streams.isEmpty()) {
             EmptyNote(if (resolving) "Searching" else "None found yet")
         } else {
@@ -387,6 +391,7 @@ private fun SourcesSheet(streams: List<Stream>, resolving: Boolean, viewModel: N
                             if (i == 0) Badge("Best", accent = true)
                             if (dualMode && DualAudio.hasEnglishPlusOther(stream)) Badge("Dual")
                             stream.quality.takeIf { it.isNotBlank() }?.let { Badge(it) }
+                            sources.pings[stream.url]?.takeIf { it >= 0 }?.let { Badge("$it ms") }
                         }
                     }
                     if (i < streams.lastIndex) HorizontalDivider(Modifier.padding(horizontal = 20.dp), color = Color.White.copy(alpha = 0.06f))
@@ -404,7 +409,7 @@ private fun SourcesSheet(streams: List<Stream>, resolving: Boolean, viewModel: N
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DownloadSheet(detail: DetailState, viewModel: NovaViewModel) {
+private fun DownloadSheet(detail: DetailState, state: NovaState, viewModel: NovaViewModel) {
     val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     val streams = detail.sources.streams.filter { !it.url.isNullOrBlank() }
     ModalBottomSheet(
@@ -421,6 +426,8 @@ private fun DownloadSheet(detail: DetailState, viewModel: NovaViewModel) {
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
+            Spacer(Modifier.height(8.dp))
+            QualityChips(state, viewModel)
             Spacer(Modifier.height(12.dp))
         }
         if (streams.isEmpty()) {
@@ -450,12 +457,38 @@ private fun DownloadSheet(detail: DetailState, viewModel: NovaViewModel) {
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                             if (i == 0) Badge("Best", accent = true)
+                            detail.sources.pings[stream.url]?.takeIf { it >= 0 }?.let { Badge("$it ms") }
                             Text("Download", style = MType.label.copy(color = NovaPalette.accent))
                         }
                     }
                     if (i < streams.lastIndex) HorizontalDivider(Modifier.padding(horizontal = 20.dp), color = Color.White.copy(alpha = 0.06f))
                 }
             }
+        }
+    }
+}
+
+/** Quality targets offered in the Sources and Download sheets. 1080p is the ceiling. */
+private val QUALITY_CHOICES = listOf("720p", "1080p", "auto")
+
+/** Chips that change the viewer's quality target from inside a sheet. */
+@Composable
+private fun QualityChips(state: NovaState, viewModel: NovaViewModel) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        QUALITY_CHOICES.forEach { quality ->
+            FilterChip(
+                selected = state.preferredQuality == quality,
+                onClick = { viewModel.setQuality(quality) },
+                label = { Text(if (quality == "auto") "Best" else quality, style = MType.label) },
+                shape = RoundedCornerShape(50),
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = NovaPalette.textPrimary,
+                    selectedLabelColor = NovaPalette.background
+                )
+            )
         }
     }
 }

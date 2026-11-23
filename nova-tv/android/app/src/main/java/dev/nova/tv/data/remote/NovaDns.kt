@@ -37,6 +37,9 @@ object NovaDns : Dns {
     @Volatile var provider: DnsProvider = DnsProvider.AUTO
 
     private class Entry(val addresses: List<InetAddress>, val expiresAt: Long)
+
+    private class Ping(val ms: Long, val expiresAt: Long)
+    private val pings = ConcurrentHashMap<String, Ping>()
     private val cache = ConcurrentHashMap<String, Entry>()
 
     override fun lookup(hostname: String): List<InetAddress> {
@@ -51,7 +54,33 @@ object NovaDns : Dns {
         return resolved
     }
 
-    fun clearCache() = cache.clear()
+    fun clearCache() {
+        cache.clear()
+        pings.clear()
+    }
+
+    /**
+     * How long this host takes to resolve, in milliseconds (-1 when it does not).
+     *
+     * Ranking sources by "ping" means the resolver round trip, not an ICMP
+     * echo Android will not send without root: the address lookup is the first
+     * thing every new video connection waits for, so a source whose host
+     * resolves in 20 ms starts visibly sooner than one that takes half a
+     * second. Results are cached for [PING_TTL_MS] so a list of 24 sources
+     * costs one lookup per host per title, not one per snapshot.
+     */
+    fun pingMs(hostname: String): Long {
+        val key = hostname.trim().lowercase().removePrefix("www.")
+        if (key.isEmpty()) return -1L
+        val now = System.currentTimeMillis()
+        pings[key]?.takeIf { it.expiresAt > now }?.let { return it.ms }
+        val started = System.nanoTime()
+        val resolved = runCatching { resolve(key).any(::isPublicAddress) }.getOrDefault(false)
+        val ms = if (!resolved) -1L else ((System.nanoTime() - started) / 1_000_000).coerceIn(0L, 5_000L)
+        if (pings.size > MAX_ENTRIES) pings.clear()
+        pings[key] = Ping(ms, now + PING_TTL_MS)
+        return ms
+    }
 
     private fun resolve(host: String): List<InetAddress> {
         val choice = provider
@@ -120,5 +149,6 @@ object NovaDns : Dns {
     }
 
     private const val TTL_MS = 10 * 60_000L
+    private const val PING_TTL_MS = 5 * 60_000L
     private const val MAX_ENTRIES = 512
 }

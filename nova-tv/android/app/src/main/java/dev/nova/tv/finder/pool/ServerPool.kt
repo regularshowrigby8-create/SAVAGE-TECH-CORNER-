@@ -89,7 +89,7 @@ class ServerPool(private val store: PoolStore, private val random: Random = Rand
 
     /**
      * Only servers that have actually answered for a title. The pool may hold
-     * 3000 discoveries, but an unproven one is not a source the UI should show:
+     * 6000 discoveries, but an unproven one is not a source the UI should show:
      * the Sources screen lists exactly what has worked.
      */
     fun working(): List<PoolEntry> = synchronized(lock) {
@@ -253,8 +253,8 @@ class ServerPool(private val store: PoolStore, private val random: Random = Rand
     )
 
     companion object {
-        const val CAPACITY = 3000
-        const val PER_HOST = 4
+        const val CAPACITY = 6000
+        const val PER_HOST = 8
         const val RETIRE_AFTER_MISSES = 2
         private const val MAX_HISTORY = 3
         private const val MAX_RETIRED = 20_000

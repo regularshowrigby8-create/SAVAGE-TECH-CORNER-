@@ -15,6 +15,8 @@ import dev.nova.tv.data.remote.NovaDns
 import dev.nova.tv.finder.DualAudio
 import dev.nova.tv.finder.FinderKind
 import dev.nova.tv.finder.pool.PoolState
+import dev.nova.tv.finder.pool.WebsitePoolState
+import dev.nova.tv.data.remote.SubtitleProvider
 import dev.nova.tv.player.preload.PreloadMode
 import dev.nova.tv.finder.FinderReport
 import dev.nova.tv.finder.FinderRules
@@ -172,8 +174,13 @@ data class NovaState(
     val preferredQuality: String = "720p",
     /** Offline downloads, newest last. */
     val downloads: List<DownloadJob> = emptyList(),
-    /** Pool servers that have answered for a title; the only ones listed. */
+    /** Addon-pool servers that have answered for a title; the only ones listed. */
     val workingServers: List<String> = emptyList(),
+    /** The website pool: ordinary sites found by the website finder. */
+    val sitePool: WebsitePoolState = WebsitePoolState(),
+    val workingSites: List<String> = emptyList(),
+    /** Subtitle engines the viewer has left on. */
+    val subtitleProviders: Set<SubtitleProvider> = SubtitleProvider.entries.toSet(),
     val dualShelves: List<Shelf> = emptyList(),
     val dualLoading: Boolean = false,
     val pool: PoolState = PoolState(),
@@ -221,6 +228,9 @@ class NovaViewModel : ViewModel() {
             preferredQuality = saved.preferredQuality,
             pool = engine.pool?.state?.value ?: PoolState(),
             workingServers = engine.pool?.working()?.map { it.name.ifBlank { it.baseUrl } }.orEmpty(),
+            sitePool = engine.websitePool?.state?.value ?: WebsitePoolState(),
+            workingSites = engine.websitePool?.working()?.map { it.name.ifBlank { it.url } }.orEmpty(),
+            subtitleProviders = saved.subtitleProviders,
             websites = library.websites.value,
             myList = library.myList.value.map { it.toMeta() }
         )
@@ -230,6 +240,15 @@ class NovaViewModel : ViewModel() {
                 pool.state.collect { p ->
                     _state.update {
                         it.copy(pool = p, workingServers = pool.working().map { entry -> entry.name.ifBlank { entry.baseUrl } })
+                    }
+                }
+            }
+        }
+        engine.websitePool?.let { sites ->
+            viewModelScope.launch {
+                sites.state.collect { p ->
+                    _state.update {
+                        it.copy(sitePool = p, workingSites = sites.working().map { entry -> entry.name.ifBlank { entry.url } })
                     }
                 }
             }
@@ -690,9 +709,18 @@ class NovaViewModel : ViewModel() {
         chrome.onUserActive()
         val type = if (d.isSeries) "series" else "movie"
         // Subtitles after playback starts (WuPlay SDK rule): they never delay Play.
+        reloadSubtitlesAfterStart(type, d.streamId)
+    }
+
+    /** Load captions for a just-started playback without blocking it. */
+    private fun reloadSubtitlesAfterStart(type: String, id: String) {
+        val token = _state.value.playback?.token ?: return
         viewModelScope.launch {
-            val subs = runCatching { repository.loadSubtitles(type, d.streamId) }.getOrDefault(emptyList())
-            _state.update { st -> st.playback?.let { pb -> st.copy(playback = pb.copy(subtitles = subs)) } ?: st }
+            val subs = runCatching { repository.loadSubtitles(type, id) }.getOrDefault(emptyList())
+            _state.update { st ->
+                val pb = st.playback
+                if (pb == null || pb.token != token) st else st.copy(playback = pb.copy(subtitles = subs))
+            }
         }
     }
 
@@ -861,8 +889,9 @@ class NovaViewModel : ViewModel() {
         val next = if (kind in set) set - kind else set + kind
         settings.setFinders(next)
         _state.update { it.copy(finders = next) }
-        // The finders share one 3000-slot pool: whichever are on keep filling
-        // it, so switching one off leaves the others to close the gap.
+        // Each finder owns a pool: the website finder fills the website pool,
+        // the addon finder fills the addon pool. Switching one off stops only
+        // that pool -- the other keeps serving playback on its own.
         engine.syncPoolFill(next)
     }
 
@@ -1045,11 +1074,24 @@ class NovaViewModel : ViewModel() {
      * phone or a TV stick, and it is the first thing to stall on a weak link.
      */
     fun cycleQuality() {
-        val options = listOf("720p", "1080p")
+        val options = listOf("720p", "1080p", "auto")
         val next = options[(options.indexOf(_state.value.preferredQuality).coerceAtLeast(0) + 1) % options.size]
+        setQuality(next)
+    }
+
+    /**
+     * The viewer's quality choice, from Settings or from the source/download
+     * sheets where a source is picked. Stored, then the open title is re-ranked
+     * with it immediately (discovery and probes are cached, so this is not a
+     * second search).
+     */
+    fun setQuality(quality: String) {
+        val next = quality.ifBlank { "720p" }
+        if (next == _state.value.preferredQuality) return
         settings.setPreferredQuality(next)
         _state.update { it.copy(preferredQuality = next) }
-        toast(next)
+        toast(if (next == "auto") "Best available" else next)
+        if (_state.value.detail != null) resolve()
     }
 
     fun toggleAutoplay() {
@@ -1074,6 +1116,52 @@ class NovaViewModel : ViewModel() {
     fun setSubtitleStyle(style: SubtitleStyle) {
         settings.setSubtitleStyle(style)
         _state.update { it.copy(subtitleStyle = style) }
+    }
+
+    /**
+     * Turn one subtitle engine on or off. The Sources screen owns the list;
+     * the subtitles panel then only shows what the enabled engines return.
+     */
+    fun toggleSubtitleProvider(provider: SubtitleProvider) {
+        val current = _state.value.subtitleProviders
+        val next = if (provider in current) current - provider else current + provider
+        settings.setSubtitleProviders(next)
+        _state.update { it.copy(subtitleProviders = next) }
+        toast(
+            when {
+                next.isEmpty() -> "All subtitle sources off"
+                provider in next -> "${provider.label} subtitles on"
+                else -> "${provider.label} subtitles off"
+            }
+        )
+        reloadSubtitles()
+    }
+
+    /** Ask the enabled subtitle engines for this title again (Subtitles panel). */
+    fun reloadSubtitles() {
+        val pb = _state.value.playback ?: return
+        val type = if (pb.meta.isSeries) "series" else "movie"
+        val id = FinderRules.catalogueId(pb.meta.id, pb.meta.isSeries, pb.season, pb.episode)
+        viewModelScope.launch {
+            val subs = runCatching { repository.loadSubtitles(type, id) }.getOrDefault(emptyList())
+            _state.update { st ->
+                val current = st.playback
+                if (current == null || current.token != pb.token) st
+                else st.copy(playback = current.copy(subtitles = subs))
+            }
+            toast(if (subs.isEmpty()) "No subtitles found" else "${subs.size} subtitles")
+        }
+    }
+
+    /** One website-discovery round from the Sources screen. */
+    fun findWebsites() {
+        if (_state.value.poolBusy) return
+        _state.update { it.copy(poolBusy = true) }
+        viewModelScope.launch {
+            val added = runCatching { engine.fillWebsitePoolOnce() }.getOrDefault(0)
+            _state.update { it.copy(poolBusy = false) }
+            toast(if (added > 0) "$added new websites" else "No new websites right now")
+        }
     }
 
     fun cycleDns() {

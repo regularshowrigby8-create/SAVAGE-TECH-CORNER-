@@ -11,7 +11,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.contentOrNull
 
 /**
- * Feeds [ServerPool] until its 3000 slots are full.
+ * Feeds [ServerPool] until its 6000 slots are full.
  *
  * The old harvester read stremio-addons.net page by page and a couple of
  * GitHub queries, which is why the pool stalled a few hundred entries in --
@@ -83,10 +83,10 @@ class ServerHarvester(
         (this[key] as? kotlinx.serialization.json.JsonPrimitive)?.contentOrNull.orEmpty()
 
     companion object {
-        const val GITHUB_PAGES = 10
-        private const val BUDGET_MS = 75_000L
-        private const val MANIFEST_TIMEOUT_MS = 7_000L
-        private const val MAX_MANIFESTS = 200
+        const val GITHUB_PAGES = 20
+        private const val BUDGET_MS = 120_000L
+        private const val MANIFEST_TIMEOUT_MS = 5_000L
+        private const val MAX_MANIFESTS = 600
         private val GITHUB_QUERIES = listOf(
             "topic:stremio-addon",
             "stremio addon",
@@ -94,7 +94,10 @@ class ServerHarvester(
             "manifest.json stremio",
             "addon manifest stream",
             "media catalog addon",
-            "streaming addon server"
+            "streaming addon server",
+            "addon stream 1080p manifest",
+            "topic:stremio",
+            "stremio stream addon"
         )
     }
 }

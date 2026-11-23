@@ -48,6 +48,21 @@ class StreamRankerTest {
     }
 
     @Test
+    fun `a faster DNS answer ranks an otherwise equal source first`() {
+        val slow = s("https://slow.example/1080.mp4", "1080p")
+        val fast = s("https://fast.example/1080.mp4", "1080p")
+        val ranked = StreamRanker.rank(
+            listOf(slow, fast),
+            StreamRanker.Context(pings = mapOf(slow.url!! to 420L, fast.url!! to 25L))
+        )
+        assertEquals(fast.url, ranked.first().url)
+        assertEquals(45, StreamRanker.pingScore(25))
+        assertEquals(-35, StreamRanker.pingScore(900))
+        // Unknown latency neither helps nor hurts.
+        assertEquals(0, StreamRanker.pingScore(-1))
+    }
+
+    @Test
     fun `headroom and bandwidth seed`() {
         assertNull(StreamRanker.headroom(0, 100, 100))
         assertEquals(2.0, StreamRanker.headroom(1_000, 10, 200)!!, 0.001)

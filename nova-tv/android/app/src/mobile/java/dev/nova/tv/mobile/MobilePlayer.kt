@@ -742,6 +742,11 @@ private fun Panel(
                 viewModel.closePlayerPanel()
             },
             PanelOption("Add subtitle file…", "From this device", false, onAddSubtitleFile),
+            PanelOption(
+                "Refresh subtitles",
+                if (session.subtitles.isEmpty()) "Searching…" else "${session.subtitles.size} found",
+                false
+            ) { viewModel.reloadSubtitles() },
             PanelOption("Delay later", subtitleOffsetLabel(offsetMs), false) {
                 subtitleOffset.step(SubtitleOffsetController.STEP_MS)
                 onOffsetChange(subtitleOffset.offsetMs)
@@ -780,7 +785,7 @@ private fun Panel(
                 viewModel.closePlayerPanel()
             }
         } + session.subtitles.map { ref ->
-            PanelOption("Remove ${ref.label}", ref.url.substringAfterLast('/'), false) {
+            PanelOption("Remove ${ref.label}", ref.detail, false) {
                 player.removeSubtitle(ref.url)
                 viewModel.closePlayerPanel()
             }
