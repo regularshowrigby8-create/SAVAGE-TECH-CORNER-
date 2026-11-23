@@ -181,12 +181,17 @@ jobs:
         run: |
           set -euo pipefail
           MARKER="documentElement.outerHTML"
-          SOURCES=0
-          grep -rq "$MARKER" nova-tv/android/app/src || SOURCES=1
-          if [ "$SOURCES" -eq 0 ]; then
+          # Guard against the check rotting into a tautology: if the marker
+          # leaves the source, the APK assertion below would trivially pass
+          # nothing. (An earlier draft of this used a 0/1 flag and inverted the
+          # sense, so it failed with "marker is gone from app/src" while the
+          # marker was present. Testing the whole script, not just the loop,
+          # is what catches that.)
+          if ! grep -rq "$MARKER" nova-tv/android/app/src; then
             echo "::error title=marker missing from source::the renderer marker is gone from app/src"
             exit 1
           fi
+          echo "OK: source contains $MARKER"
           MISSING=0
           for apk in nova-tv/android/app/build/outputs/apk/tv/release/*.apk \
                      nova-tv/android/app/build/outputs/apk/mobile/release/*.apk; do
