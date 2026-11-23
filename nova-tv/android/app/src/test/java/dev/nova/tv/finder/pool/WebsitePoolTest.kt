@@ -60,4 +60,13 @@ class WebsitePoolTest {
         assertEquals(1, batch.size)
         assertEquals("https://b.example.com/", batch.first().url)
     }
+
+    @Test
+    fun `holds 6000 discovered sites and no more`() {
+        val pool = WebsitePool(MemoryStore())
+        val added = pool.add((0 until 6500).map { site("https://site$it.example/") })
+
+        assertEquals(WebsitePool.CAPACITY, added)
+        assertEquals(WebsitePool.CAPACITY, pool.state.value.size)
+    }
 }
