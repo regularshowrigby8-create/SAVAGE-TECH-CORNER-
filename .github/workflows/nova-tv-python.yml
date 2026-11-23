@@ -93,6 +93,11 @@ jobs:
           # A gate that passes having checked nothing is a false green. This is
           # the minimum this audit has ever produced; if a refactor stops the
           # checks being collected, the count collapses and this fails.
+          # Raised 190 -> 193 when the website finder's silence was made
+          # diagnosable: an empty round now reports *why* (unreachable seed,
+          # shell with no embeds, page-not-media, catalogue<40) through the
+          # engine and onto the Sources screen, instead of a flat "0 sites"
+          # that three fixes in a row were guessed at.
           # Raised 185 -> 190 when the website finder's real cause was found:
           # FinderBrowser was a stub that always returned empty HTML, so every
           # seed page went down the plain-HTTP branch and the pool stayed at 0
@@ -102,8 +107,8 @@ jobs:
           # Raised 150 -> 185 when the player, seek-gesture and cookie-jar
           # checks were added. The floor exists so a future edit cannot quietly
           # delete coverage and still report a pass.
-          if total < 190:
-              print(f"::error title=audit too small::only {total} checks ran, expected >= 190")
+          if total < 193:
+              print(f"::error title=audit too small::only {total} checks ran, expected >= 193")
               sys.exit(1)
 
           summary = os.environ.get("GITHUB_STEP_SUMMARY")

@@ -179,6 +179,8 @@ data class NovaState(
     /** The website pool: ordinary sites found by the website finder. */
     val sitePool: WebsitePoolState = WebsitePoolState(),
     val workingSites: List<String> = emptyList(),
+    /** Why the last website round produced nothing, in the finder's own words. */
+    val siteRejections: String = "",
     /** Subtitle engines the viewer has left on. */
     val subtitleProviders: Set<SubtitleProvider> = SubtitleProvider.entries.toSet(),
     val dualShelves: List<Shelf> = emptyList(),
@@ -1160,7 +1162,16 @@ class NovaViewModel : ViewModel() {
         viewModelScope.launch {
             val added = runCatching { engine.fillWebsitePoolOnce() }.getOrDefault(0)
             _state.update { it.copy(poolBusy = false) }
-            toast(if (added > 0) "$added new websites" else "No new websites right now")
+            // "No new websites right now" hid the reason, the same way the
+            // addon toast did before AddonRejections existed. Report the tally
+            // so a flat zero on a phone is diagnosable without a debugger.
+            val why = engine.lastServerRejections.takeIf { it.total > 0 }?.summary.orEmpty()
+            _state.update { it.copy(siteRejections = why) }
+            if (added > 0) {
+                toast("$added new websites")
+            } else {
+                toast(if (why.isEmpty()) "No new websites right now" else "No sites: $why")
+            }
         }
     }
 

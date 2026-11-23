@@ -101,6 +101,24 @@ object ServerFinder {
         FinderHelpers.scoreOfServer(catalogue, tier, bufferScore, ttfb)
 }
 
+/**
+ * Why website candidates were dropped, counted per harvest.
+ *
+ * The addon finder has had this since the ~1% audit and it is the reason its
+ * yield is explainable. The website finder never had it, so three attempts to
+ * fix "0 sites" were made blind: the screen could only say "No new websites
+ * right now", which does not distinguish "every seed is unreachable" from "a
+ * seed answered but served a JS shell" from "we found embeds but the probe or
+ * the catalogue gate rejected all of them". These tallies make the difference
+ * visible on the device, where the answer actually is.
+ */
+data class ServerRejections(val counts: Map<String, Int> = emptyMap()) {
+    fun of(reason: String): Int = counts[reason] ?: 0
+    val total: Int get() = counts.values.sum()
+    val summary: String get() = counts.entries.sortedByDescending { it.value }
+        .joinToString(", ") { "${it.key}=${it.value}" }
+}
+
 /** One embed / stream option pulled out of a page. Python: extractor dict. */
 data class ServerCandidate(
     val url: String,
@@ -525,6 +543,15 @@ class ServerFinderHarvester(
     var written: Int = 0
         private set
 
+    /** Per-harvest drop tallies; read by [rejectionReport]. */
+    private val rejects = java.util.concurrent.ConcurrentHashMap<String, Int>()
+    private fun note(reason: String) {
+        rejects.merge(reason, 1, Int::plus)
+    }
+
+    fun rejectionReport(): ServerRejections = ServerRejections(rejects.toMap())
+    fun resetRejections() = rejects.clear()
+
     fun loadBlocklist(hosts: Set<String>) {
         blocked = hosts
     }
@@ -542,6 +569,12 @@ class ServerFinderHarvester(
             val r = http.get(url, read = 400_000)
             html = r?.text.orEmpty()
         }
+        // A page that never came back cannot yield anything, and that is the
+        // single most useful thing to know when the pool is empty.
+        if (html.isEmpty()) {
+            note("unreachable")
+            return
+        }
         for ((kind, link) in net) {
             if (kind == "xhr" && ("/api/" in link || link.endsWith(".json"))) {
                 val r = http.get(link, referer = url, read = 300_000)
@@ -556,8 +589,11 @@ class ServerFinderHarvester(
                 store.push(absUrl)
             }
         }
-        for (cand in extractor.extract(html, url).values) {
-            if (cand.host in blocked || store.knownHost(cand.host)) continue
+        val extracted = extractor.extract(html, url)
+        if (extracted.isEmpty()) note("no-embeds")
+        for (cand in extracted.values) {
+            if (cand.host in blocked) { note("blocked"); continue }
+            if (store.knownHost(cand.host)) continue
             if (store.count("alive") >= cap) return
             validate(cand)
         }
@@ -565,10 +601,18 @@ class ServerFinderHarvester(
 
     suspend fun validate(cand: ServerCandidate) {
         val probe = prober.probe(cand.url, cand.referer)
-        if (!probe.alive) return
+        if (!probe.alive) {
+            // Distinguishes "the host is down" from "the host answered but
+            // served a page/JS shell with no playable media".
+            note(if (probe.status in listOf(200, 206)) "page-not-media" else "probe-failed")
+            return
+        }
         val base = FinderHelpers.originOf(cand.url)
         val catalogueCount = catalogue.count(base)
-        if (catalogueCount < 40) return
+        if (catalogueCount < 40) {
+            note("catalogue<40")
+            return
+        }
         val (label, tier) = FinderHelpers.qualityOf(cand.url + " " + cand.provider)
         val now = FinderHelpers.now()
         val rec = ServerRecord(
@@ -649,6 +693,7 @@ class ServerFinderHarvester(
      */
     suspend fun harvest(round: Int): ServerHarvest {
         val started = System.currentTimeMillis()
+        resetRejections()
         var seen = 0
         // URLs already fetched by this call. `push()` only rejects a URL that is
         // currently *in* the frontier and `pop()` removes it, so `refillSeeds()`

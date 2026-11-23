@@ -74,6 +74,9 @@ class AuditCoversThisTurnsWork(unittest.TestCase):
             "finder browser serialises concurrent renders",
             "server harvest stops when a frontier round finds nothing",
             "addon harvest stops when a frontier round finds nothing",
+            "website harvest reports why a round found nothing",
+            "website rejection report reaches the engine",
+            "Sources screen can show why the website pool is empty",
         }
         missing = required - self.names
         self.assertEqual(set(), missing, f"audit lost checks: {sorted(missing)}")
@@ -82,7 +85,7 @@ class AuditCoversThisTurnsWork(unittest.TestCase):
         # The original 170 were almost entirely "file exists / symbol is
         # referenced". This is the floor that stops the report drifting back to
         # a file listing.
-        self.assertGreaterEqual(len(self.checks), 190)
+        self.assertGreaterEqual(len(self.checks), 193)
 
 
 class AuditCatchesBrokenFixes(unittest.TestCase):
@@ -264,6 +267,34 @@ class AuditCatchesBrokenFixes(unittest.TestCase):
             all_occurrences=True,
         )
         self._assert_caught("addon harvest stops when a frontier round finds nothing")
+
+
+    # -- a zero must be explainable ------------------------------------------
+    def test_audit_catches_a_silent_website_round(self) -> None:
+        # The whole reason three fixes were guesses: an empty round that says
+        # nothing. Removing one reason must be noticed.
+        self._mutate(
+            TV / "finder/servers/ServerFinder.kt",
+            'note("unreachable")',
+            '/* removed */',
+        )
+        self._assert_caught("website harvest reports why a round found nothing")
+
+    def test_audit_catches_the_reason_dropped_by_the_engine(self) -> None:
+        self._mutate(
+            TV / "finder/SourceEngine.kt",
+            "lastServerRejections = runCatching { crawl.rejectionReport() }.getOrNull() ?: lastServerRejections",
+            "/* reason discarded */",
+        )
+        self._assert_caught("website rejection report reaches the engine")
+
+    def test_audit_catches_a_toast_only_diagnosis(self) -> None:
+        self._mutate(
+            TV / "ui/screens/NovaViewModel.kt",
+            "val siteRejections: String = \"\",",
+            "",
+        )
+        self._assert_caught("Sources screen can show why the website pool is empty")
 
 
 if __name__ == "__main__":

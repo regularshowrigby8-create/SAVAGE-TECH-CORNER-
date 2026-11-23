@@ -986,6 +986,59 @@ def check_finder_correctness(root: Path) -> List[Check]:
             else "re-queues the same seeds until the budget expires",
             rel,
         ))
+    # --- a zero must be explainable ------------------------------------------
+    # Three separate attempts at "Website finder 0 sites" were made blind
+    # because an empty round reported nothing: "No new websites right now" is
+    # the same string for an unreachable seed, a JS shell with no embeds, and a
+    # probe that found only pages. The addon path has had AddonRejections since
+    # the 1% audit; the website path now has the same, wired to the screen.
+    srv = _strip_comments(_read(root / "android/app/src/main/java/dev/nova/tv/finder/servers/ServerFinder.kt"))
+    # `note("x")` is not the only shape: one call passes two literals through
+    # an `if` expression (`note(if (ok) "page-not-media" else "probe-failed")`).
+    # Collect every quoted literal inside each note(...) call instead of
+    # assuming the simple form, which silently reported both as missing.
+    # The window must not stop at the first ")" -- one call is
+    # `note(if (probe.status in listOf(200, 206)) "a" else "b")`, where that
+    # ")" belongs to listOf and truncating there lost both literals.
+    notes: List[str] = []
+    for call in re.finditer(r"note\(", srv):
+        window = srv[call.end():call.end() + 160]
+        for lit in re.findall(r'\"([a-z0-9<>-]+)\"', window.split("\n")[0]):
+            notes.append(lit)
+    want = {"unreachable", "no-embeds", "page-not-media", "probe-failed", "catalogue<40"}
+    checks.append(Check(
+        "website harvest reports why a round found nothing",
+        "proven" if want.issubset(set(notes)) else "contradicted",
+        f"reasons: {sorted(set(notes))}" if want.issubset(set(notes))
+        else f"missing: {sorted(want - set(notes))}",
+        "finder/servers/ServerFinder.kt",
+    ))
+    eng = _strip_comments(_read(root / "android/app/src/main/java/dev/nova/tv/finder/SourceEngine.kt"))
+    # Require the assignment, not just the two names: a property declaration
+    # plus an unrelated mention satisfied the first draft even with the capture
+    # deleted, which is the token-search false green this audit exists to stop.
+    surfaced = bool(re.search(r"lastServerRejections\s*=\s*runCatching \{", eng)) \
+        and ".rejectionReport()" in eng \
+        and "fillWebsitePoolOnce" in eng
+    checks.append(Check(
+        "website rejection report reaches the engine",
+        "proven" if surfaced else "contradicted",
+        "captured on an empty round too" if surfaced else "the engine drops the reason",
+        "finder/SourceEngine.kt",
+    ))
+    vm = _strip_comments(_read(root / "android/app/src/main/java/dev/nova/tv/ui/screens/NovaViewModel.kt"))
+    # A state field nobody writes is not a diagnosis. Both the declaration and
+    # the write that fills it must be present.
+    declares = bool(re.search(r"val siteRejections\s*:\s*String", vm))
+    writes = bool(re.search(r"copy\(siteRejections\s*=\s*why\)", vm))
+    reads = "lastServerRejections" in vm
+    shown = declares and writes and reads
+    checks.append(Check(
+        "Sources screen can show why the website pool is empty",
+        "proven" if shown else "contradicted",
+        "reason kept in state, not only in a toast" if shown else "only a toast",
+        "ui/screens/NovaViewModel.kt",
+    ))
     return checks
 
 

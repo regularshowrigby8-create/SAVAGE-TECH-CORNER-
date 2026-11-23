@@ -137,6 +137,19 @@ fun MobileSources(state: NovaState, viewModel: NovaViewModel, onBack: () -> Unit
                     Text("${state.sitePool.size} sites", style = MType.meta)
                 }
             }
+            // The finder's own tally of why sites were dropped. Without it a
+            // flat "0 sites" is indistinguishable from "no network" and the
+            // only way to tell was to guess -- which is how this got guessed at
+            // three times.
+            if (state.siteRejections.isNotEmpty()) {
+                item {
+                    Text(
+                        "Last round: ${state.siteRejections}",
+                        style = MType.meta.copy(color = NovaPalette.textMuted),
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    )
+                }
+            }
             item {
                 SettingRow("Websites working", onClick = null) {
                     Text("${state.sitePool.working}", style = MType.meta)

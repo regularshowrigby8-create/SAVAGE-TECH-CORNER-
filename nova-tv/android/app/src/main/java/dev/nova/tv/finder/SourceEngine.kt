@@ -224,8 +224,12 @@ class SourceEngine(
     /** One website-discovery round, for the Sources screen's "Find sites" button. */
     suspend fun fillWebsitePoolOnce(): Int {
         val sites = websitePool ?: return 0
-        val harvest = spider?.harvest(webRound) ?: return 0
+        val crawl = spider ?: return 0
+        val harvest = runCatching { crawl.harvest(webRound) }.getOrNull() ?: return 0
         webRound++
+        // Captured on both paths: an empty round is exactly when the reason
+        // matters, and that is the case that used to report nothing at all.
+        lastServerRejections = runCatching { crawl.rejectionReport() }.getOrNull() ?: lastServerRejections
         return sites.add(harvest.sites, from = "Website finder")
     }
 
@@ -255,6 +259,22 @@ class SourceEngine(
     @Volatile
     var lastAddonRejections: dev.nova.tv.finder.addons.AddonRejections =
         dev.nova.tv.finder.addons.AddonRejections()
+        private set
+
+    /**
+     * Why the last website round found nothing.
+     *
+     * The addon pool explained its low yield; the website pool did not, so
+     * "Website finder 0 sites" was indistinguishable from every other failure.
+     * `unreachable` means the seeds themselves never answered, which on a phone
+     * points at the network, not the crawler. `no-embeds` means a seed answered
+     * and served a shell with no player hosts in it. `page-not-media` means
+     * candidates were found but none was playable media. `catalogue<40` means a
+     * playable host existed but the site was too thin to be worth keeping.
+     */
+    @Volatile
+    var lastServerRejections: dev.nova.tv.finder.servers.ServerRejections =
+        dev.nova.tv.finder.servers.ServerRejections()
         private set
 
     /**
