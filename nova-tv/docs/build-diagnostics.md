@@ -1,26 +1,19 @@
 # nova-tv build diagnostics
 
 Written automatically by the "nova-tv Android" workflow.
-Run: 45238681629  Commit: 5e93ba11f55cc309bfba054c069b127076ecc113
+Run: 45249074210  Commit: 70bf16ecdda018c044e56ac9a24aea6d62383fa7
 Log: build.log
 
 ## errors
 ```
-47:> Task :app:compileMobileDebugKotlin FAILED
-48:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/finder/servers/ServerFinder.kt:206:15 'val' cannot be reassigned.
-49:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/finder/servers/ServerFinder.kt:302:41 Argument type mismatch: actual type is 'kotlin.String', but 'kotlin.Function1<kotlin.Char, kotlin.Boolean>' was expected.
-50:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/finder/servers/ServerFinder.kt:302:71 Argument type mismatch: actual type is 'kotlin.String', but 'kotlin.Function1<kotlin.Char, kotlin.Boolean>' was expected.
-51:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/finder/servers/ServerFinder.kt:302:98 Argument type mismatch: actual type is 'kotlin.String', but 'kotlin.Function1<kotlin.Char, kotlin.Boolean>' was expected.
-52:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/finder/translated/FinderHttp.kt:31:35 None of the following candidates is applicable:
-55:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/finder/translated/FinderHttp.kt:106:9 None of the following candidates is applicable:
-58:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/finder/translated/FinderHttp.kt:112:30 Only safe (?.) or non-null asserted (!!.) calls are allowed on a nullable receiver of type 'dev.nova.tv.finder.translated.FinderBrowser?'.
-59:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/finder/translated/FinderHttp.kt:162:25 None of the following candidates is applicable:
-64:FAILURE: Build failed with an exception.
-66:* What went wrong:
-67:Execution failed for task ':app:compileMobileDebugKotlin'.
-77:org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compileMobileDebugKotlin'.
-110:Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
-240:Caused by: org.jetbrains.kotlin.gradle.tasks.CompilationErrorException: Compilation error. See log for more details
+45:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobilePlayer.kt:508:13 Unresolved reference 'inIntro'.
+48:> Task :app:compileMobileDebugKotlin FAILED
+51:FAILURE: Build failed with an exception.
+53:* What went wrong:
+54:Execution failed for task ':app:compileMobileDebugKotlin'.
+64:org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compileMobileDebugKotlin'.
+97:Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+227:Caused by: org.jetbrains.kotlin.gradle.tasks.CompilationErrorException: Compilation error. See log for more details
 ```
 
 ## last 80 lines
@@ -103,6 +96,6 @@ Caused by: org.jetbrains.kotlin.gradle.tasks.CompilationErrorException: Compilat
 	... 2 more
 
 
-BUILD FAILED in 2m 24s
+BUILD FAILED in 2m 47s
 24 actionable tasks: 24 executed
 ```
