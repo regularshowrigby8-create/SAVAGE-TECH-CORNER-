@@ -73,16 +73,18 @@ object AddonFinder {
     const val MAX_CATALOGUE = 250_000
     const val FAILS_TO_DEAD = 2
 
-    /** Discovery surfaces. Only the engine and the cap are hardcoded. */
-    val SEEDS = listOf(
-        "https://api.github.com/search/repositories?q=stremio+addon+in:name,description,readme&sort=updated&per_page=100",
-        "https://api.npms.io/v2/search?q=stremio%20addon&size=250",
-        "https://registry.npmjs.org/-/v1/search?text=stremio%20addon&size=250",
-        "https://www.reddit.com/r/StremioAddons/new.json?limit=100",
-        "https://www.reddit.com/r/StremioAddons/search.json?q=manifest.json&restrict_sr=1&sort=new&limit=100",
-        "https://stremio-addons.net",
-        "https://stremio-addons.com"
-    )
+    /**
+     * There is deliberately no seed list.
+     *
+     * The previous version started from seven fixed URLs. On device they
+     * answered with the same Cloudflare interstitial every round, so the
+     * frontier never grew and the pool froze at ~198 of 6000. Discovery now
+     * comes from [Discovery]: generated queries answered by open indexes
+     * (GitHub, npm, Reddit, certificate transparency, urlscan.io, web search),
+     * with growth from the link graph and each host's sitemap. The only
+     * hardcoded strings are *topics*, which is what makes the search space
+     * unbounded rather than a list.
+     */
 
     /** Manifest paths tried against every discovered origin, cheapest first. */
     val MANIFEST_PATHS = listOf(
@@ -200,27 +202,14 @@ object AddonFinder {
         "self-hosted%20addon", "addon%20list", "new%20addon"
     )
 
-    /** Discovery URLs for one round: the same surfaces, different queries. */
-    fun seedsFor(round: Int): List<String> {
-        val gh = GITHUB_QUERIES.indices.map { i ->
-            val q = GITHUB_QUERIES[(round + i) % GITHUB_QUERIES.size]
-            val page = 1 + (round / GITHUB_QUERIES.size) % 5
-            "https://api.github.com/search/repositories?q=$q&sort=updated&per_page=100&page=$page"
-        }
-        val npm = NPM_QUERIES.indices.map { i ->
-            val q = NPM_QUERIES[(round + i) % NPM_QUERIES.size]
-            "https://registry.npmjs.org/-/v1/search?text=$q&size=250"
-        }
-        val reddit = REDDIT_QUERIES.indices.map { i ->
-            val q = REDDIT_QUERIES[(round + i) % REDDIT_QUERIES.size]
-            "https://www.reddit.com/r/StremioAddons/search.json?q=$q&restrict_sr=1&sort=new&limit=100"
-        }
-        return gh + npm + reddit + listOf(
-            "https://www.reddit.com/r/StremioAddons/new.json?limit=100",
-            "https://stremio-addons.net",
-            "https://stremio-addons.com"
-        )
-    }
+    /**
+     * One round of addon discovery surfaces, generated rather than listed.
+     *
+     * [Discovery.addonSurfaces] rotates its topic corpus by round, so round N
+     * asks questions round N-1 did not, and every refill can offer URLs this
+     * device has never processed.
+     */
+    fun seedsFor(round: Int): List<String> = Discovery.addonSurfaces(round)
 
     /** Probe pairs: one well-known movie, series and anime id. */
     val PROBE_IDS = listOf("movie" to "tt0111161", "series" to "tt0944947", "anime" to "kitsu:1")
@@ -755,19 +744,38 @@ class AddonFinderHarvester(
         }
     }
 
+    /**
+     * Crawl an arbitrary page found by discovery.
+     *
+     * Three things can come out of one page: the page *is* an addon (it talks
+     * about a manifest), it *links* to manifests, or it links to other pages.
+     * The old version only did the third, which is why a directory page full
+     * of `manifest.json` links produced almost nothing.
+     */
     suspend fun fromWww(url: String) {
         val r = http.get(url)
         var html = r?.text.orEmpty()
         if (browser != null && html.length < 4000) {
             html = browser.renderText(url).ifBlank { html }
         }
-        for (linkIn in AddonFinder.LINK.findAll(html).map { it.value }) {
+        if (html.isEmpty()) return
+        // The page may be the addon itself.
+        if (Discovery.looksLikeAddonPage(html)) queue(url)
+        // Explicit manifest links are the strongest signal on a directory page.
+        for (m in Discovery.manifestUrls(html)) {
             if (full()) return
-            val link = unescape(linkIn)
+            if (AddonFinder.isStaticHost(FinderHelpers.hostOf(m))) {
+                validateRaw(m)
+                continue
+            }
+            queue(m)
+        }
+        for (link in Discovery.linksFromHtml(html, url)) {
+            if (full()) return
             val host = FinderHelpers.hostOf(link)
             if (host.isEmpty() || host in blocked) continue
             if (host.endsWith("npmjs.com") || host.endsWith("reddit.com")) continue
-            if ("github.com" in host) {
+            if (host == "github.com" || host.endsWith(".github.com")) {
                 githubRepo(link)
                 continue
             }
@@ -863,24 +871,83 @@ class AddonFinderHarvester(
 
     // -- driver -------------------------------------------------------------
 
-    /** Route one frontier entry to the right surface handler. */
+    /**
+     * Route one frontier entry to the right surface handler.
+     *
+     * Every entry is either an *index* (an API or search page that lists
+     * places to look) or a *site* (a page that may itself be an addon or link
+     * to one). Indexes get their own parser; everything else is crawled as a
+     * page. Nothing here is a fixed address -- the frontier is whatever
+     * [Discovery] generated for this round.
+     */
     suspend fun process(url: String) {
         val host = FinderHelpers.hostOf(url)
         val surface = when {
-            "api.github.com" in host -> "github"
-            "github.com" in host -> "github-web"
-            "npms.io" in host || "npmjs.org" in host -> "npm"
+            host == "api.github.com" -> "github"
+            host == "github.com" || host.endsWith(".github.com") -> "github-web"
+            "npms.io" in host || "npmjs.org" in host || host == "registry.npmjs.org" -> "npm"
             "reddit.com" in host -> "reddit"
+            host == "crt.sh" || host.endsWith(".crt.sh") -> "ct"
+            host == "urlscan.io" || host.endsWith(".urlscan.io") -> "urlscan"
+            Discovery.isSearchHost(host) -> "search"
             else -> "www"
         }
         FinderTrace.count("addon.surface.$surface")
-        when {
-            "api.github.com" in host -> fromGithub(url)
+        when (surface) {
+            "github" -> fromGithub(url)
             // A repository page or a repo link: resolve it to the deployed base.
-            "github.com" in host -> githubRepo(url)
-            "npms.io" in host || "npmjs.org" in host -> fromNpm(url)
-            "reddit.com" in host -> fromReddit(url)
+            "github-web" -> githubRepo(url)
+            "npm" -> fromNpm(url)
+            "reddit" -> fromReddit(url)
+            "ct" -> fromCt(url)
+            "urlscan" -> fromUrlscan(url)
+            "search" -> fromSearch(url)
             else -> fromWww(url)
+        }
+    }
+
+    /** Certificate transparency: every certificate ever issued for a keyword. */
+    suspend fun fromCt(url: String) {
+        val r = http.get(url)
+        if (r == null || r.status >= 400) return
+        for (host in Discovery.hostsFromCt(r.text)) {
+            if (full()) return
+            if (!Discovery.usableHost(host)) continue
+            // A bare host has no path; ask it for the manifest directly.
+            queue("https://$host/manifest.json")
+        }
+    }
+
+    /** urlscan.io: domains seen serving pages matching a keyword. */
+    suspend fun fromUrlscan(url: String) {
+        val r = http.get(url)
+        if (r == null || r.status >= 400) return
+        for (host in Discovery.hostsFromUrlscan(r.text)) {
+            if (full()) return
+            if (!Discovery.usableHost(host)) continue
+            queue("https://$host/manifest.json")
+        }
+    }
+
+    /** A web-search result page: every result is somewhere else to look. */
+    suspend fun fromSearch(url: String) {
+        val r = http.get(url)
+        var html = r?.text.orEmpty()
+        if (browser != null && html.length < 2000) {
+            html = browser.renderText(url).ifBlank { html }
+        }
+        if (html.isEmpty()) return
+        for (link in Discovery.linksFromHtml(html, url)) {
+            if (full()) return
+            val host = FinderHelpers.hostOf(link)
+            if (host.isEmpty()) continue
+            if (host == "github.com" || host.endsWith(".github.com")) {
+                githubRepo(link)
+                continue
+            }
+            if (!Discovery.usableHost(host)) continue
+            if (AddonFinder.isStaticHost(host)) continue
+            queue(link)
         }
     }
 

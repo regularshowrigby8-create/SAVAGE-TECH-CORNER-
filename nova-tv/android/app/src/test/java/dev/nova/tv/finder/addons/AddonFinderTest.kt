@@ -17,12 +17,14 @@ class AddonFinderTest {
     }
 
     @Test
-    fun `cap is 6000 and seeds are github npm reddit and directories`() {
+    fun `cap is 6000 and discovery is generated rather than a seed list`() {
         assertEquals(6000, AddonFinder.CAP)
-        assertTrue(AddonFinder.SEEDS.any { "api.github.com" in it })
-        assertTrue(AddonFinder.SEEDS.any { "npms.io" in it })
-        assertTrue(AddonFinder.SEEDS.any { "reddit.com" in it })
-        assertTrue("https://stremio-addons.net" in AddonFinder.SEEDS)
+        // There is no SEEDS list any more; every round is generated.
+        val r0 = AddonFinder.seedsFor(0)
+        assertTrue(r0.any { "api.github.com" in it })
+        assertTrue(r0.any { "registry.npmjs.org" in it })
+        assertTrue(r0.any { "reddit.com" in it })
+        assertTrue(r0.any { "crt.sh" in it })
     }
 
     @Test
@@ -144,8 +146,8 @@ class AddonFinderTest {
         assertTrue(r0.isNotEmpty())
         assertEquals(r0.size, r1.size)
         assertTrue(r0 != r1)
-        // The static directory seeds are always present as a backstop.
-        assertTrue(r0.any { "stremio-addons.net" in it })
+        // No fixed directory backstop: every surface is generated.
+        assertTrue(r0.none { "stremio-addons.net" in it })
     }
 
     @Test

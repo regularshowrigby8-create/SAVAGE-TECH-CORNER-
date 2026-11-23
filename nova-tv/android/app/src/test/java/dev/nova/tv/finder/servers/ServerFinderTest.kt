@@ -1,5 +1,6 @@
 package dev.nova.tv.finder.servers
 
+import dev.nova.tv.finder.discovery.Discovery
 import dev.nova.tv.finder.pool.PoolStore
 import dev.nova.tv.finder.translated.FinderHelpers
 import org.junit.Assert.assertEquals
@@ -17,16 +18,16 @@ class ServerFinderTest {
     }
 
     @Test
-    fun `cap is 6000 and seeds are the 9anime mirrors`() {
+    fun `cap is 6000 and discovery starts from generated surfaces not a seed list`() {
         assertEquals(6000, ServerFinder.CAP)
         assertEquals(6000, FinderHelpers.CAP)
-        assertTrue("https://hianime.to" in ServerFinder.SEEDS)
-        assertTrue("https://9anime.pl" in ServerFinder.SEEDS)
-        // The anime mirrors the Python shipped are mostly Cloudflare-walled on
-        // device, so the list now also carries ordinary catalogue sites. Assert
-        // the intent (a workable surface exists) rather than a brittle count.
-        assertTrue(ServerFinder.SEEDS.size >= 12)
-        assertTrue(ServerFinder.SEEDS.any { "primewire" in it })
+        // There is no SEEDS list any more: discovery is generated per round.
+        val round0 = Discovery.webSurfaces(0)
+        assertTrue("a round must offer somewhere to look", round0.isNotEmpty())
+        assertTrue(round0.any { "crt.sh" in it })
+        assertTrue(round0.any { Discovery.isSearchHost(FinderHelpers.hostOf(it)) })
+        // Round 1 asks different questions, so it offers different surfaces.
+        assertTrue(Discovery.webSurfaces(1) != round0)
     }
 
     @Test

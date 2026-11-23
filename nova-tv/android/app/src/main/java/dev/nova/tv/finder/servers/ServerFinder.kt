@@ -3,6 +3,7 @@ package dev.nova.tv.finder.servers
 import dev.nova.tv.finder.FinderSourceReport
 import dev.nova.tv.finder.pool.PoolStore
 import dev.nova.tv.finder.diag.FinderTrace
+import dev.nova.tv.finder.discovery.Discovery
 import dev.nova.tv.finder.translated.FinderBrowser
 import dev.nova.tv.finder.translated.FinderFingerprint
 import dev.nova.tv.finder.translated.FinderHelpers
@@ -67,37 +68,23 @@ object ServerFinder {
     const val MAX_API_CALLS = 12
     const val MAX_SERVERS = 24
 
-    /** Entry points. Only the engine and the cap are hardcoded. */
-    val SEEDS = listOf(
-        "https://hianime.to",
-        "https://hianime.bz",
-        "https://aniwatchtv.to",
-        "https://9anime.org.lv",
-        "https://9animetv.to",
-        "https://aniwatch.to",
-        "https://zoroxtv.to",
-        "https://kaido.to",
-        "https://anikai.to",
-        "https://gogoanime.tel",
-        "https://animekai.to",
-        "https://9anime.pl",
+    /** Watch pages queued from one sitemap, and hosts from one page's links. */
+    const val MAX_SITEMAP_URLS = 40
+    const val MAX_GRAPH_HOSTS = 12
 
-        // Mainstream, CDN-fronted catalogues. The anime mirrors above are the
-        // ones the Python shipped, and on device ten of the twelve answered
-        // with a byte-identical Cloudflare interstitial ("just a moment",
-        // 2265 B, one subresource) -- so they cannot yield a site no matter
-        // how good the crawler is. These are ordinary sites whose pages are
-        // served to a plain client, which the same probe and >=40-title gate
-        // still has to accept before anything joins the pool.
-        "https://www1.primewire.tf",
-        "https://www6.fmovies.gd",
-        "https://ww1.123moviesfree.net",
-        "https://lookmovie2.to",
-        "https://www.vumoo.top",
-        "https://tubitv.com",
-        "https://pluto.tv",
-        "https://www.crackle.com"
-    )
+    /**
+     * There is deliberately no seed list.
+     *
+     * The previous build started from 20 hardcoded sites. On device every one
+     * of them rendered the same 2262-byte Cloudflare interstitial, so the
+     * crawl had exactly one page to read per site and nothing to extract --
+     * the list was the entire search space. Discovery is now generated in
+     * [dev.nova.tv.finder.discovery.Discovery]: queries are built from viewer
+     * intents and answered by open indexes (web search, certificate
+     * transparency, urlscan, Common Crawl), and the frontier grows from the
+     * link graph and sitemaps of whatever it touches. Nothing here names a
+     * site, so the surface is unbounded.
+     */
 
     val IFRAME = Regex("<(?:iframe|embed|source)[^>]+(?:src|data-src|data-file|file)\\s*=\\s*[\"']([^\"']+)[\"']", RegexOption.IGNORE_CASE)
     val JS_SRC = Regex("(?:file|source|src|url|link)\\s*:\\s*[\"']((?:https?:)?//[^\"'\\\\ ]+)[\"']", RegexOption.IGNORE_CASE)
@@ -560,7 +547,9 @@ data class ServerRecord(
 @Serializable
 private data class ServerStoreFile(
     val servers: List<ServerRecord> = emptyList(),
-    val frontier: List<String> = emptyList()
+    val frontier: List<String> = emptyList(),
+    /** Frontier entries already crawled; never re-queued in a later round. */
+    val tried: List<String> = emptyList()
 )
 
 /**
@@ -573,19 +562,26 @@ class ServerFinderStore(private val store: PoolStore) {
     private val lock = Any()
     private var servers: MutableMap<String, ServerRecord> = LinkedHashMap()
     private var frontier: MutableList<String> = mutableListOf()
+    private val tried: MutableSet<String> = LinkedHashSet()
 
     init {
         runCatching {
             store.read()?.let { json.decodeFromString<ServerStoreFile>(it) }?.let { file ->
                 file.servers.forEach { servers[it.id] = it }
                 frontier += file.frontier
+                tried += file.tried
             }
         }
     }
 
     private fun save() {
         runCatching {
-            store.write(json.encodeToString(ServerStoreFile.serializer(), ServerStoreFile(servers.values.toList(), frontier.toList())))
+            store.write(
+                json.encodeToString(
+                    ServerStoreFile.serializer(),
+                    ServerStoreFile(servers.values.toList(), frontier.toList(), tried.toList())
+                )
+            )
         }
     }
 
@@ -614,15 +610,35 @@ class ServerFinderStore(private val store: PoolStore) {
     }
 
     fun push(url: String): Boolean = synchronized(lock) {
-        if (url in frontier) return false
-        frontier += url
+        val n = FinderHelpers.norm(url)
+        if (n.isEmpty() || n in frontier || n in tried) return false
+        frontier += n
         save()
         true
     }
 
+    /** Record that [url] was crawled, so a refill never hands it out again. */
+    fun markTried(url: String) = synchronized(lock) {
+        if (tried.add(FinderHelpers.norm(url))) {
+            if (tried.size > MAX_TRIED) {
+                tried.removeAll(tried.take(tried.size - MAX_TRIED).toSet())
+            }
+            save()
+        }
+    }
+
+    fun triedSize(): Int = synchronized(lock) { tried.size }
+
     fun pop(n: Int): List<String> = synchronized(lock) {
         val out = frontier.take(n)
         frontier = frontier.drop(out.size).toMutableList()
+        // Whatever is handed out counts as tried, so a later refill cannot
+        // resurrect it. The set is bounded so a long crawl cannot grow the
+        // store file without limit.
+        out.forEach { tried += it }
+        if (tried.size > MAX_TRIED) {
+            tried.removeAll(tried.take(tried.size - MAX_TRIED).toSet())
+        }
         save()
         out
     }
@@ -634,6 +650,11 @@ class ServerFinderStore(private val store: PoolStore) {
     /** Lowest-scoring live records: the slice most likely to have died. */
     fun weak(n: Int): List<ServerRecord> = synchronized(lock) {
         servers.values.filter { it.status != "dead" }.sortedBy { it.score }.take(n)
+    }
+
+    private companion object {
+        /** Ceiling on the persisted tried-set so the store file stays small. */
+        const val MAX_TRIED = 60_000
     }
 
     /** servers.py `write_pool`: {schema, generated_at, cap, count, servers[]}. */
@@ -794,6 +815,10 @@ class ServerFinderHarvester(
                 store.push(absUrl)
             }
         }
+        // A homepage rarely holds a player, and a site's own links are how the
+        // frontier grows without a seed list.
+        expandSitemap(url)
+        expandHosts(html, url)
         val extracted = extractor.extract(html, url)
         if (extracted.isEmpty()) note("no-embeds")
         FinderTrace.log("web", "extract $url -> ${extracted.size} candidate(s)")
@@ -907,26 +932,171 @@ class ServerFinderHarvester(
         FinderTrace.count("accepted")
     }
 
-    fun refillSeeds() {
-        // Python: push every SEED and its mirrors back onto the frontier.
-        for (s in ServerFinder.SEEDS) {
-            store.push(s)
-            for (m in FinderHelpers.mirrors(s)) store.push(m)
-        }
+    /**
+     * Refill the frontier from generated discovery, not from a fixed list.
+     *
+     * Each round pushes a different slice of [Discovery.webSurfaces]: search
+     * queries built from viewer intents, certificate-transparency and urlscan
+     * lookups for streaming keywords, and the Common Crawl index. The frontier
+     * is persisted and de-duplicated against everything already crawled
+     * ([ServerFinderStore.markTried]), so a refill can only ever add ground
+     * this device has not covered.
+     */
+    fun refillSeeds(round: Int = 0) {
+        var added = 0
+        for (u in Discovery.webSurfaces(round)) if (store.push(u)) added++
+        FinderTrace.log("web", "  discovery round $round -> $added surface url(s)")
+        FinderTrace.count("discovery.surface", added)
     }
 
     suspend fun run() {
-        for (s in ServerFinder.SEEDS) store.push(s)
+        var round = 0
         while (store.count("alive") < cap) {
             var batch = store.pop(64)
             if (batch.isEmpty()) {
-                refillSeeds()
+                refillSeeds(round++)
                 batch = store.pop(32)
                 if (batch.isEmpty()) break
             }
-            coroutineScope { batch.map { u -> async { discover(u) } }.awaitAll() }
+            coroutineScope { batch.map { u -> async { process(u) } }.awaitAll() }
             delay(200)
         }
+    }
+
+    /** Route one frontier entry: discovery surfaces first, then ordinary pages. */
+    suspend fun process(url: String) {
+        val host = FinderHelpers.hostOf(url)
+        when {
+            host == "crt.sh" || host.endsWith(".crt.sh") -> fromCt(url)
+            host == "urlscan.io" || host.endsWith(".urlscan.io") -> fromUrlscan(url)
+            host == "commoncrawl.org" || host.endsWith(".commoncrawl.org") -> fromCommonCrawl(url)
+            Discovery.isSearchHost(host) -> fromSearch(url)
+            else -> discover(url)
+        }
+    }
+
+    // -- discovery surfaces -------------------------------------------------
+
+    /** Read a search-results page and queue the streaming hosts it names. */
+    private suspend fun fromSearch(url: String) {
+        val r = http.get(url, read = 500_000) ?: return
+        if (r.status >= 400) return
+        var added = 0
+        for (link in Discovery.linksFromHtml(r.text, url)) {
+            if (added >= ServerFinder.MAX_GRAPH_HOSTS * 4) break
+            val host = FinderHelpers.hostOf(link)
+            if (!Discovery.usableHost(host)) continue
+            if (!Discovery.looksLikeStreaming(host, link)) continue
+            if (store.push(FinderHelpers.originOf(link) + "/")) added++
+        }
+        FinderTrace.log("web", "  search -> $added host(s) $url")
+        FinderTrace.count("discovery.host", added)
+    }
+
+    /** Certificate transparency: every domain issued a cert for a keyword. */
+    private suspend fun fromCt(url: String) {
+        val r = http.get(url, read = 2_000_000) ?: return
+        if (r.status >= 400) return
+        var added = 0
+        for (host in Discovery.hostsFromCt(r.text)) {
+            if (!Discovery.usableHost(host)) continue
+            if (!Discovery.looksLikeStreaming(host)) continue
+            if (store.push("https://$host/")) added++
+        }
+        FinderTrace.log("web", "  crt.sh -> $added domain(s)")
+        FinderTrace.count("discovery.ct", added)
+    }
+
+    private suspend fun fromUrlscan(url: String) {
+        val r = http.get(url, read = 2_000_000) ?: return
+        if (r.status >= 400) return
+        var added = 0
+        for (host in Discovery.hostsFromUrlscan(r.text)) {
+            if (!Discovery.usableHost(host)) continue
+            if (!Discovery.looksLikeStreaming(host)) continue
+            if (store.push("https://$host/")) added++
+        }
+        FinderTrace.log("web", "  urlscan -> $added domain(s)")
+        FinderTrace.count("discovery.urlscan", added)
+    }
+
+    /**
+     * Common Crawl. The index list is read once per round to learn the newest
+     * collection, then each keyword is queried against it.
+     */
+    private suspend fun fromCommonCrawl(url: String) {
+        val r = http.get(url, read = 1_500_000) ?: return
+        if (r.status >= 400) return
+        if ("collinfo" in url) {
+            val index = Discovery.latestCommonCrawlIndex(r.text)
+            if (index.isEmpty()) return
+            var pushed = 0
+            for (kw in Discovery.webKeywords(0)) {
+                for (u in Discovery.commonCrawlUrls(index, kw)) if (store.push(u)) pushed++
+            }
+            FinderTrace.log("web", "  common crawl index $index -> $pushed query url(s)")
+            return
+        }
+        var added = 0
+        for (u in Discovery.urlsFromCommonCrawl(r.text)) {
+            val host = FinderHelpers.hostOf(u)
+            if (!Discovery.usableHost(host)) continue
+            if (!Discovery.looksLikeStreaming(host, u)) continue
+            if (store.push(FinderHelpers.originOf(u) + "/")) added++
+        }
+        FinderTrace.log("web", "  common crawl -> $added domain(s)")
+        FinderTrace.count("discovery.cc", added)
+    }
+
+    /**
+     * A discovered domain becomes real watch pages through its own sitemap.
+     *
+     * A homepage almost never embeds a player; episodes live one level down.
+     * The sitemap is the site's own index of those pages, so this is how a
+     * domain found by a query turns into pages that actually hold embeds --
+     * without guessing URL shapes.
+     */
+    private suspend fun expandSitemap(url: String) {
+        val origin = FinderHelpers.originOf(url)
+        if (origin.isEmpty()) return
+        val r = http.get("$origin/sitemap.xml", read = 400_000) ?: return
+        if (r.status >= 400) return
+        var added = 0
+        val locs = ServerFinder.LOC.findAll(r.text).map { it.groupValues[1] }.toList()
+        for (loc in locs) {
+            if (added >= ServerFinder.MAX_SITEMAP_URLS) break
+            if (!Discovery.watchLike(loc)) continue
+            if (store.push(loc)) added++
+        }
+        if ("<sitemapindex" in r.text.lowercase()) {
+            for (child in locs.take(3)) {
+                if (added >= ServerFinder.MAX_SITEMAP_URLS) break
+                val c = http.get(child, read = 400_000) ?: continue
+                if (c.status >= 400) continue
+                for (loc in ServerFinder.LOC.findAll(c.text).map { it.groupValues[1] }) {
+                    if (added >= ServerFinder.MAX_SITEMAP_URLS) break
+                    if (!Discovery.watchLike(loc)) continue
+                    if (store.push(loc)) added++
+                }
+            }
+        }
+        if (added > 0) FinderTrace.log("web", "  sitemap $origin -> $added watch url(s)")
+        FinderTrace.count("discovery.sitemap", added)
+    }
+
+    /** Grow the frontier through the link graph: mirrors and sibling sites. */
+    private fun expandHosts(html: String, url: String) {
+        val self = FinderHelpers.hostOf(url)
+        var added = 0
+        for (link in Discovery.linksFromHtml(html, url)) {
+            if (added >= ServerFinder.MAX_GRAPH_HOSTS) break
+            val host = FinderHelpers.hostOf(link)
+            if (host.isEmpty() || host == self) continue
+            if (!Discovery.usableHost(host)) continue
+            if (!Discovery.looksLikeStreaming(host, link)) continue
+            if (store.push(FinderHelpers.originOf(link) + "/")) added++
+        }
+        if (added > 0) FinderTrace.count("discovery.graph", added)
     }
 
     /** Bounded refill used by the checker after a sweep. */
@@ -935,11 +1105,11 @@ class ServerFinderHarvester(
             if (store.count("alive") >= cap) return
             var batch = store.pop(48)
             if (batch.isEmpty()) {
-                refillSeeds()
+                refillSeeds(rounds)
                 batch = store.pop(24)
                 if (batch.isEmpty()) return
             }
-            coroutineScope { batch.map { u -> async { discover(u) } }.awaitAll() }
+            coroutineScope { batch.map { u -> async { process(u) } }.awaitAll() }
         }
     }
 
@@ -965,29 +1135,28 @@ class ServerFinderHarvester(
             "harvest#$round START frontier=${store.frontierSize()} alive=${store.count("alive")} cap=$cap"
         )
         var seen = 0
-        // URLs already fetched by this call. `push()` only rejects a URL that is
-        // currently *in* the frontier and `pop()` removes it, so `refillSeeds()`
-        // re-queues a seed it has just consumed. When discovery yields nothing
-        // -- the normal case for a JS shell fetched without a browser -- the
-        // loop re-fetched the same seeds until its budget ran out instead of
-        // concluding the surface was barren.
-        val visited = HashSet<String>()
+        // `pop()` records every URL it hands out in the persisted tried-set, so
+        // a refill can only add ground this device has never covered. That is
+        // what makes an unbounded discovery surface terminate instead of
+        // re-crawling the same pages until the budget expires.
         var barren = 0
+        var refills = 0
         while (System.currentTimeMillis() - started < harvestBudgetMs) {
             // Stop exactly where Python stops: the cap is a hard ceiling.
             if (store.count("alive") >= cap) break
-            var batch = store.pop(64).filter { visited.add(it) }
+            var batch = store.pop(64)
             if (batch.isEmpty()) {
-                refillSeeds()
-                batch = store.pop(32).filter { visited.add(it) }
-                FinderTrace.log("web", "  refilled seeds -> ${batch.size} new url(s)")
-                // Every seed was fetched by this call and led nowhere: stop.
-                // Resetting `visited` here would reintroduce the spin.
+                // Rotate the query set by round so a barren surface is
+                // followed by one that asks different questions.
+                refillSeeds(round + refills)
+                refills++
+                batch = store.pop(32)
+                FinderTrace.log("web", "  discovery refill -> ${batch.size} new url(s) tried=${store.triedSize()}")
                 if (batch.isEmpty()) break
             }
             seen += batch.size
             val before = store.count("alive") + store.frontierSize()
-            coroutineScope { batch.map { u -> async { discover(u) } }.awaitAll() }
+            coroutineScope { batch.map { u -> async { process(u) } }.awaitAll() }
             val after = store.count("alive") + store.frontierSize()
             barren = if (after > before) 0 else barren + 1
             FinderTrace.log(
@@ -1001,7 +1170,8 @@ class ServerFinderHarvester(
             delay(200)
             // A round that found nothing new and drained the frontier is done.
             if (store.frontierSize() == 0 && store.count("alive") == 0) {
-                refillSeeds()
+                refillSeeds(round + refills)
+                refills++
                 if (store.frontierSize() == 0) break
             }
         }
