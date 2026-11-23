@@ -574,6 +574,41 @@ class NovaPlayer(
         engine.seekTo(target)
     }
 
+    /** The declared intro window for the current episode, or null. */
+    @Volatile
+    private var intro: IntroSegment? = null
+
+    /** Install (or clear) the intro window once the timestamps arrive. */
+    fun setIntroSegment(segment: IntroSegment?) {
+        intro = segment
+    }
+
+    fun introSegment(): IntroSegment? = intro
+
+    /**
+     * True while playback sits inside the declared intro window.
+     *
+     * Deliberately conservative: the position must be past
+     * [INTRO_START_GUARD_MS] and at least one second before the intro ends, so
+     * the button never appears for a window already passed.
+     */
+    fun inIntroWindow(): Boolean {
+        val segment = intro ?: return false
+        val position = exo.currentPosition
+        // Nothing is offered in the first few seconds: that is always content,
+        // and it stops the button flashing before a title has really started.
+        return position >= IntroLookup.INTRO_START_GUARD_MS &&
+            position < segment.endMs - IntroLookup.INTRO_SKIP_SLACK_MS
+    }
+
+    /** Jump past the intro. Returns false when there is nothing to skip. */
+    fun skipIntro(): Boolean {
+        val segment = intro ?: return false
+        if (exo.currentPosition >= segment.endMs - IntroLookup.INTRO_SKIP_SLACK_MS) return false
+        seekTo(segment.endMs)
+        return true
+    }
+
     /** 0 = no cap. Applied live; the audio/subtitle choice is left alone. */
     private var qualityCap: Int = 0
 

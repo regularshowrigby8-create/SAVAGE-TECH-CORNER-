@@ -365,6 +365,9 @@ private fun Controls(
 
     val previous = remember(session.index, engine.durationMs) { viewModel.previousEpisode() }
     val next = remember(session.index, engine.durationMs) { viewModel.nextEpisode() }
+    // The intro window is a time range, not a flow, so it is sampled. The
+    // engine already ticks position 4x a second, which re-runs this.
+    val introActive = remember(player, engine.currentPositionMs) { player.inIntroWindow() }
 
     Column(
         Modifier
@@ -394,6 +397,16 @@ private fun Controls(
             preloadedMs = if (preload.active) preload.aheadMs else 0L
         )
         Spacer(Modifier.height(10.dp))
+        // Skip intro, while playback is inside a declared intro window. It is a
+        // normal focusable pill, so a remote reaches it with the D-pad; it is
+        // not auto-focused, so it never steals the Play button's focus.
+        if (introActive) {
+            SecondaryButton("Skip intro") {
+                player.skipIntro()
+                viewModel.chrome.onUserActive()
+            }
+            Spacer(Modifier.height(10.dp))
+        }
         // Scrolls with focus: thirteen pills do not fit 960 dp, and none may be
         // cut off.
         Row(

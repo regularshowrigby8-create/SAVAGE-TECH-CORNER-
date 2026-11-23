@@ -122,6 +122,11 @@ class NovaApplication : Application(), ImageLoaderFactory {
     }
     val probe: StreamProbe by lazy { StreamProbe(http.okHttp) }
 
+    /** Community intro timestamps (keyless), for the player's skip-intro button. */
+    val introLookup: dev.nova.tv.player.IntroLookup by lazy {
+        dev.nova.tv.player.IntroLookup(http)
+    }
+
     /** Up to 6000 server options, saved between launches. */
     val serverPool: ServerPool by lazy {
         val file = java.io.File(filesDir, "server_pool.json")

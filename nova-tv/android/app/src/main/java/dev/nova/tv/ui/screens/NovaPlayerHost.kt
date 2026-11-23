@@ -56,6 +56,21 @@ fun NovaPlayerHost(
         player.setSubtitles(request.subtitles)
     }
 
+    // Intro timestamps are community data, looked up by IMDb id. A miss just
+    // means the skip button is never offered; it must never block playback.
+    LaunchedEffect(request.token) {
+        // `season`/`episode` are always set on a PlaybackRequest; a film is
+        // identified by its meta type, which is what tells the APIs to omit
+        // season/episode and treat it as a movie.
+        val isSeries = request.meta.type != "movie"
+        val segment = app.introLookup.introFor(
+            imdbId = request.meta.id,
+            season = if (isSeries) request.season else null,
+            episode = if (isSeries) request.episode else null
+        )
+        player.setIntroSegment(segment)
+    }
+
     // Late sources join the failover queue.
     val live = state.detail?.takeIf { it.meta.id == request.meta.id && it.season == request.season && it.episode == request.episode }
         ?.sources?.streams

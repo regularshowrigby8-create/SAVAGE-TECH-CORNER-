@@ -18,7 +18,8 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.horizontalScroll
@@ -155,6 +156,13 @@ fun MobilePlayerSurface(player: NovaPlayer, title: String, viewModel: NovaViewMo
     // meant pressing Home on a paused film floated a frozen window.
     LaunchedEffect(engine.isPlaying) {
         MobilePlayback.active = engine.isPlaying
+    }
+
+    // The intro window is a time range, not a flow, so it has to be sampled.
+    // 500 ms is fine for a button that is shown for tens of seconds.
+    var inIntro by remember { mutableStateOf(false) }
+    LaunchedEffect(player, engine.currentPositionMs, engine.isPlaying) {
+        inIntro = player.inIntroWindow()
     }
 
     LaunchedEffect(engine.isPlaying, engine.isBuffering, session.ended, failure) {
@@ -494,6 +502,20 @@ private fun Controls(
             TextButtonPill("PiP", onClick = onPip)
         }
 
+        // Skip intro: only while playback is actually inside a declared intro
+        // window, so it never appears for a show that has none. The timestamps
+        // come from community data keyed on the IMDb id; a miss means no button.
+        if (inIntro) {
+            TextButtonPill(
+                "Skip intro",
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .safeDrawingPadding()
+                    .padding(end = 16.dp, bottom = 96.dp),
+                onClick = { player.skipIntro(); viewModel.chrome.onUserActive() }
+            )
+        }
+
         Row(
             Modifier.align(Alignment.Center),
             horizontalArrangement = Arrangement.spacedBy(44.dp),
@@ -570,12 +592,17 @@ private fun Controls(
 }
 
 @Composable
-private fun TextButtonPill(label: String, active: Boolean = false, onClick: () -> Unit) {
+private fun TextButtonPill(
+    label: String,
+    active: Boolean = false,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
     Text(
         label,
         style = MType.label.copy(color = if (active) NovaPalette.background else NovaPalette.textPrimary),
         maxLines = 1,
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(50))
             .background(if (active) NovaPalette.accent else Color.White.copy(alpha = 0.14f))
             .clickable(onClick = onClick)
@@ -624,26 +651,46 @@ private fun SeekBar(
         Canvas(
             Modifier
                 .fillMaxSize()
+                // One gesture loop, not two competing ones.
+                //
+                // This used to install detectTapGestures and
+                // detectHorizontalDragGestures as two separate pointerInput
+                // modifiers on the same Canvas. Two gesture detectors cannot
+                // both win the same pointer stream: whichever consumes first
+                // takes it, so a tap-to-jump and a drag-to-scrub fought, and
+                // "jump to a point in playback" only worked for whichever
+                // detector happened to win. This is a single awaitEachGesture
+                // that classifies the gesture itself: press-and-release is a
+                // tap (jump there), press-and-move is a scrub (track the
+                // finger, commit on release).
                 .pointerInput(Unit) {
-                    detectTapGestures { o ->
-                        if (total > 0) seek(((o.x / widthPx).coerceIn(0f, 1f) * total).toLong())
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = false)
+                        if (total <= 0) return@awaitEachGesture
+                        var moved = false
+                        var x = down.position.x
+                        dragFraction = (x / widthPx).coerceIn(0f, 1f)
+                        dragging = true
                         scrub()
-                    }
-                }
-                .pointerInput(Unit) {
-                    detectHorizontalDragGestures(
-                        onDragStart = { o -> dragging = true; dragFraction = (o.x / widthPx).coerceIn(0f, 1f); scrub() },
-                        onDragEnd = {
-                            if (total > 0) seek((dragFraction * total).toLong())
-                            dragging = false
-                        },
-                        onDragCancel = { dragging = false },
-                        onHorizontalDrag = { change, dx ->
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                            if (!change.pressed) {
+                                // Lifted: commit wherever the finger or tap
+                                // ended up.
+                                if (moved) {
+                                    dragFraction = (change.position.x / widthPx).coerceIn(0f, 1f)
+                                }
+                                seek((dragFraction * total).toLong())
+                                dragging = false
+                                break
+                            }
+                            if (change.position.x != x) moved = true
+                            x = change.position.x
+                            dragFraction = (x / widthPx).coerceIn(0f, 1f)
                             change.consume()
-                            dragFraction = (dragFraction + dx / widthPx).coerceIn(0f, 1f)
-                            scrub()
                         }
-                    )
+                    }
                 }
         ) {
             val h = if (dragging) 6.dp.toPx() else 4.dp.toPx()
