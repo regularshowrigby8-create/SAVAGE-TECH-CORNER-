@@ -131,19 +131,23 @@ class WebsiteSpider(
      * The lists change daily, not per round: fetch them once and reuse them so
      * a 24-site round costs 24 profiles, not 24 list downloads as well.
      */
-    private suspend fun lists(): Lists {
-        cachedLists?.let { return it }
-        val fmhy = runCatching { withTimeoutOrNull(SOURCE_TIMEOUT_MS) { fetchText(FMHY_VIDEO) } }.getOrNull()
-        val github = runCatching { withTimeoutOrNull(SOURCE_TIMEOUT_MS) { githubLists() } }.getOrNull().orEmpty()
-        val web = runCatching { withTimeoutOrNull(SOURCE_TIMEOUT_MS) { yandexAndCrawlerLists(fmhy) } }.getOrNull().orEmpty()
+    private suspend fun lists(): Lists = coroutineScope {
+        cachedLists?.let { return@coroutineScope it }
+        // The engines are independent network sources: do not let a slow FMHY
+        // response serialize GitHub and Yandex discovery behind it.
+        val fmhy = async { runCatching { withTimeoutOrNull(SOURCE_TIMEOUT_MS) { fetchText(FMHY_VIDEO) } }.getOrNull() }
+        val github = async { runCatching { withTimeoutOrNull(SOURCE_TIMEOUT_MS) { githubLists() } }.getOrNull().orEmpty() }
+        val fmhyText = fmhy.await()
+        val githubLists = github.await()
+        val web = runCatching { withTimeoutOrNull(SOURCE_TIMEOUT_MS) { yandexAndCrawlerLists(fmhyText) } }.getOrNull().orEmpty()
         val pages = buildList {
-            if (fmhy != null) add("fmhy" to fmhy)
-            github.forEach { (name, text) -> add("github:$name" to text) }
+            if (fmhyText != null) add("fmhy" to fmhyText)
+            githubLists.forEach { (name, text) -> add("github:$name" to text) }
             addAll(web)
         }
-        val result = Lists(pages, fmhy, github.size, web.size)
+        val result = Lists(pages, fmhyText, githubLists.size, web.size)
         if (pages.isNotEmpty()) cachedLists = result
-        return result
+        result
     }
 
     /** Search beyond curated lists, then crawl a bounded set of result hosts. */
