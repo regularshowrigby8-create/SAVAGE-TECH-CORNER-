@@ -1,21 +1,53 @@
 # nova-tv build diagnostics
 
 Written automatically by the "nova-tv Android" workflow.
-Run: 45176841079  Commit: 5c63936e8ab473a147374229516c3735a3fc717e
+Run: 45188915354  Commit: 5944953a60e8bf7fd3e20b71c8cf5adf621e713a
 Log: build.log
 
 ## errors
 ```
-46:e: The daemon has terminated unexpectedly on startup attempt #1 with error code: 0. The daemon process output:
-52:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/finder/SourceEngine.kt:178:42 Unresolved reference 'isActive'.
-53:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/finder/SourceEngine.kt:202:42 Unresolved reference 'isActive'.
-55:> Task :app:compileMobileDebugKotlin FAILED
-58:FAILURE: Build failed with an exception.
-60:* What went wrong:
-61:Execution failed for task ':app:compileMobileDebugKotlin'.
-71:org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compileMobileDebugKotlin'.
-104:Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
-234:Caused by: org.jetbrains.kotlin.gradle.tasks.CompilationErrorException: Compilation error. See log for more details
+45:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PanelOption.kt:28:54 'when' expression must be exhaustive. Add an 'else' branch.
+46:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PanelOption.kt:30:19 Syntax error: Expecting an expression.
+47:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PanelOption.kt:30:49 Syntax error: Expecting '}'.
+48:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PanelOption.kt:31:9 Syntax error: Expecting an expression.
+49:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PanelOption.kt:31:16 Syntax error: Expecting an expression.
+50:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PanelOption.kt:32:2 Syntax error: Expecting '"'.
+51:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PanelOption.kt:32:2 Syntax error: Expecting '}'.
+52:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PanelOption.kt:32:2 Syntax error: Incorrect template entry: .
+53:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PanelOption.kt:46:1 Unresolved reference 'internal'.
+54:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PanelOption.kt:46:9 Syntax error: Expecting '}'.
+55:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PanelOption.kt:46:10 Anonymous functions with names are prohibited.
+56:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PanelOption.kt:205:2 Syntax error: Expecting '}'.
+57:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PlayerSurface.kt:584:19 Unresolved reference 'panelOptions'.
+58:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PlayerSurface.kt:628:41 Cannot infer type for this parameter. Please specify it explicitly.
+59:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PlayerSurface.kt:628:44 Cannot infer type for this parameter. Please specify it explicitly.
+60:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PlayerSurface.kt:629:21 @Composable invocations can only happen from the context of a @Composable function
+61:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PlayerSurface.kt:630:42 Unresolved reference 'onPick'.
+62:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PlayerSurface.kt:633:36 Unresolved reference 'detail'.
+63:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PlayerSurface.kt:633:44 Cannot infer type for this parameter. Please specify it explicitly.
+64:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PlayerSurface.kt:633:48 Cannot infer type for this parameter. Please specify it explicitly.
+65:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PlayerSurface.kt:637:56 Unresolved reference 'selected'.
+66:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PlayerSurface.kt:643:43 Unresolved reference 'label'.
+67:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PlayerSurface.kt:644:48 Unresolved reference 'selected'.
+68:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobilePlayer.kt:112:30 Unresolved reference 'panelOptions'.
+69:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobilePlayer.kt:686:19 Unresolved reference 'panelOptions'.
+70:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobilePlayer.kt:717:41 Cannot infer type for this parameter. Please specify it explicitly.
+71:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobilePlayer.kt:717:44 Cannot infer type for this parameter. Please specify it explicitly.
+72:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobilePlayer.kt:718:21 @Composable invocations can only happen from the context of a @Composable function
+73:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobilePlayer.kt:719:76 Unresolved reference 'onPick'.
+74:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobilePlayer.kt:723:36 Unresolved reference 'label'.
+75:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobilePlayer.kt:724:72 Unresolved reference 'selected'.
+76:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobilePlayer.kt:729:32 Unresolved reference 'detail'.
+77:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobilePlayer.kt:729:40 Cannot infer type for this parameter. Please specify it explicitly.
+78:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobilePlayer.kt:729:44 Cannot infer type for this parameter. Please specify it explicitly.
+79:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobilePlayer.kt:730:36 Unresolved reference 'selected'.
+82:> Task :app:compileMobileDebugKotlin FAILED
+85:FAILURE: Build failed with an exception.
+87:* What went wrong:
+88:Execution failed for task ':app:compileMobileDebugKotlin'.
+98:org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compileMobileDebugKotlin'.
+131:Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+261:Caused by: org.jetbrains.kotlin.gradle.tasks.CompilationErrorException: Compilation error. See log for more details
 ```
 
 ## last 80 lines
@@ -98,6 +130,6 @@ Caused by: org.jetbrains.kotlin.gradle.tasks.CompilationErrorException: Compilat
 	... 2 more
 
 
-BUILD FAILED in 2m 54s
+BUILD FAILED in 2m 36s
 24 actionable tasks: 24 executed
 ```
