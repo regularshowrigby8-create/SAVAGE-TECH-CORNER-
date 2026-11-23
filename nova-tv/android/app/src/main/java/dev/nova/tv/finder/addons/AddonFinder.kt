@@ -3,6 +3,7 @@ package dev.nova.tv.finder.addons
 import dev.nova.tv.finder.FinderCandidate
 import dev.nova.tv.finder.pool.PoolStore
 import dev.nova.tv.finder.diag.FinderTrace
+import dev.nova.tv.finder.discovery.Discovery
 import dev.nova.tv.finder.translated.FinderBrowser
 import dev.nova.tv.finder.translated.FinderFingerprint
 import dev.nova.tv.finder.translated.FinderHelpers
