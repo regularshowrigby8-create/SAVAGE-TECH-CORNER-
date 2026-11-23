@@ -66,16 +66,46 @@ jobs:
         working-directory: nova-tv/python
         run: |
           set +e
-          python scripts/qa_translated.py --json > /tmp/translated.json 2>&1
+          # exported: the heredoc Python below reads it from the environment
+          export OUT="${RUNNER_TEMP:-/tmp}/translated.json"
+          python scripts/qa_translated.py --json > "$OUT" 2>&1
           STATUS=$?
+          # The report is printed and also written to the step summary, so the
+          # result is readable from the run page even when the log blob is not
+          # reachable through the API.
           python - <<'PY'
-          import json
-          data = json.load(open("/tmp/translated.json"))["result"]
-          print(f"checks: {data['total']}  proven: {data['counts']['proven']}  "
-                f"contradicted: {data['counts']['contradicted']}")
+          import json, os, sys
+
+          try:
+              payload = json.load(open(os.environ["OUT"]))
+              data = payload["result"]
+          except Exception as error:                       # noqa: BLE001
+              print(f"::error title=audit did not run::could not read the report: {error}")
+              sys.exit(1)
+
+          total = data["total"]
+          counts = data["counts"]
+          print(f"checks: {total}  proven: {counts['proven']}  "
+                f"contradicted: {counts['contradicted']}")
           for bad in data["contradicted"]:
               print(f"::error title=contradicted::{bad['name']} -- {bad['why']}")
+
+          # A gate that passes having checked nothing is a false green. This is
+          # the minimum this audit has ever produced; if a refactor stops the
+          # checks being collected, the count collapses and this fails.
+          if total < 150:
+              print(f"::error title=audit too small::only {total} checks ran, expected >= 150")
+              sys.exit(1)
+
+          summary = os.environ.get("GITHUB_STEP_SUMMARY")
+          if summary:
+              with open(summary, "a") as out:
+                  out.write("## Translated finder and source audit\n\n")
+                  out.write(f"| checks | proven | contradicted |\n|---|---|---|\n")
+                  out.write(f"| {total} | {counts['proven']} | {counts['contradicted']} |\n")
           PY
+          PARSE=$?
+          [ "$PARSE" -ne 0 ] && exit "$PARSE"
           exit $STATUS
 
   collect:
