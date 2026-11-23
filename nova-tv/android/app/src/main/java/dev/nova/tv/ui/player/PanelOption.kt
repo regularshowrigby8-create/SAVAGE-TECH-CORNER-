@@ -27,8 +27,8 @@ internal data class PanelOption(
 /** "Off", "+1.5s", "-0.8s": the delay rows and the touch chrome both use it. */
 internal fun subtitleOffsetLabel(ms: Long): String = when {
     ms == 0L -> "Off"
-    ms > 0 -> "+${\"%.1f\".format(ms / 1000f)}s"
-    else -> "${\"%.1f\".format(ms / 1000f)}s"
+    ms > 0 -> "+" + "%.1f".format(ms / 1000f) + "s"
+    else -> "%.1f".format(ms / 1000f) + "s"
 }
 
 /**
