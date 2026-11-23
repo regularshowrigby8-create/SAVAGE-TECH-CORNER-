@@ -82,6 +82,28 @@ object NovaDns : Dns {
         return ms
     }
 
+    /**
+     * A host answering only with private, loopback, link-local or multicast
+     * addresses is not a video host worth ranking, and a private answer for a
+     * public name is the DNS-rebinding case [build] already refuses.
+     */
+    internal fun isPublicAddress(address: InetAddress): Boolean {
+        if (address.isAnyLocalAddress || address.isLoopbackAddress ||
+            address.isLinkLocalAddress || address.isSiteLocalAddress ||
+            address.isMulticastAddress
+        ) return false
+        val bytes = address.address
+        if (bytes.size == 16) {
+            // fc00::/7 unique-local.
+            if ((bytes[0].toInt() and 0xfe) == 0xfc) return false
+            // ::ffff:a.b.c.d is an IPv4 host with a v6 wrapper.
+            val mapped = bytes.take(10).all { it == 0.toByte() } &&
+                bytes[10] == 0xff.toByte() && bytes[11] == 0xff.toByte()
+            if (mapped) return isPublicAddress(InetAddress.getByAddress(bytes.copyOfRange(12, 16)))
+        }
+        return true
+    }
+
     private fun resolve(host: String): List<InetAddress> {
         val choice = provider
         return when (choice) {

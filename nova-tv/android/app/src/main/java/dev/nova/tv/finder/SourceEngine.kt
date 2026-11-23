@@ -19,7 +19,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
@@ -175,7 +175,7 @@ class SourceEngine(
         // addons -- so an empty round backs off and tries different queries,
         // and after a long dry spell the retirement list is cleared so hosts
         // that came back are reachable again.
-        while (isActive && pool.state.value.size < ServerPool.CAPACITY) {
+        while (currentCoroutineContext().isActive && pool.state.value.size < ServerPool.CAPACITY) {
             val before = pool.state.value.size
             runCatching { fillPool() }
             runCatching { pool.pruneDead() }
@@ -199,7 +199,7 @@ class SourceEngine(
      */
     private suspend fun fillWebsitePool(sites: WebsitePool) {
         var failures = 0
-        while (isActive && sites.state.value.size < WebsitePool.CAPACITY) {
+        while (currentCoroutineContext().isActive && sites.state.value.size < WebsitePool.CAPACITY) {
             val before = sites.state.value.size
             val harvest = runCatching {
                 withTimeoutOrNull(WEBSITE_ROUND_BUDGET_MS) { spider?.harvest(webRound) }

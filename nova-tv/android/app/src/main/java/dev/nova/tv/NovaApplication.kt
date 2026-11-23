@@ -96,7 +96,7 @@ class NovaApplication : Application(), ImageLoaderFactory {
     val downloads: DownloadManager by lazy {
         DownloadManager(
             dir = File(getExternalFilesDir(null) ?: filesDir, "Downloads"),
-            client = http.okHttp,
+            baseClient = http.okHttp,
             scope = appScope
         )
     }
