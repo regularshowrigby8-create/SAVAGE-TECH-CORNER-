@@ -82,6 +82,10 @@ class AuditCoversThisTurnsWork(unittest.TestCase):
             "addon crawl counts every drop reason",
             "browser records whether it rendered or had no context",
             "diagnostics screen shows the trace and can copy it",
+            "extractor ignores ad and tracker frames",
+            "a bot wall is recorded as a challenge, not as an empty crawl",
+            "a page that answers is not silently discarded",
+            "mirrors keep the trailing slash on a root url",
         }
         missing = required - self.names
         self.assertEqual(set(), missing, f"audit lost checks: {sorted(missing)}")
@@ -90,7 +94,7 @@ class AuditCoversThisTurnsWork(unittest.TestCase):
         # The original 170 were almost entirely "file exists / symbol is
         # referenced". This is the floor that stops the report drifting back to
         # a file listing.
-        self.assertGreaterEqual(len(self.checks), 198)
+        self.assertGreaterEqual(len(self.checks), 203)
 
 
 class AuditCatchesBrokenFixes(unittest.TestCase):
@@ -345,6 +349,40 @@ class AuditCatchesBrokenFixes(unittest.TestCase):
             "/* no clipboard */",
         )
         self._assert_caught("diagnostics screen shows the trace and can copy it")
+
+
+    # -- what the device trace proved ----------------------------------------
+    def test_audit_catches_ads_being_probed(self) -> None:
+        self._mutate(
+            TV / "finder/servers/ServerFinder.kt",
+            "if (ServerFinder.isAdHost(host)) {",
+            "if (false) {",
+        )
+        self._assert_caught("extractor ignores ad and tracker frames")
+
+    def test_audit_catches_a_challenge_looking_like_an_empty_crawl(self) -> None:
+        self._mutate(
+            TV / "finder/servers/ServerFinder.kt",
+            'note("challenge")',
+            'note("no-embeds")',
+        )
+        self._assert_caught("a bot wall is recorded as a challenge, not as an empty crawl")
+
+    def test_audit_catches_pages_being_discarded(self) -> None:
+        self._mutate(
+            TV / "finder/servers/ServerFinder.kt",
+            'probe.kind == "page" && probe.status in listOf(200, 206) && !probe.poisoned',
+            "false",
+        )
+        self._assert_caught("a page that answers is not silently discarded")
+
+    def test_audit_catches_pathless_mirrors(self) -> None:
+        self._mutate(
+            TV / "finder/translated/FinderHelpers.kt",
+            'val path = p.rawPath.orEmpty().ifEmpty { "/" }',
+            "val path = p.rawPath.orEmpty()",
+        )
+        self._assert_caught("mirrors keep the trailing slash on a root url")
 
 
 if __name__ == "__main__":

@@ -1105,6 +1105,52 @@ def check_finder_correctness(root: Path) -> List[Check]:
         "dump + clipboard" if reachable else "no way to get the trace off the phone",
         "mobile/MobileDiagnostics.kt",
     ))
+
+    # --- what the device trace proved ---------------------------------------
+    # 29 of 29 candidates the rendered pages produced were Google ad frames,
+    # and every anime mirror was a byte-identical Cloudflare interstitial. Both
+    # facts came from the flight recorder; both are held here so they cannot
+    # quietly come back.
+    # The guard must be *live* and in both places. `if (false) { ... return }`
+    # keeps every token a token-search looks for while filtering nothing, which
+    # is how the first version of this check stayed green on a neutered filter.
+    live_guard = re.search(
+        r"if\s*\(\s*ServerFinder\.isAdHost\(\s*host\s*\)\s*\)", srv2
+    )
+    caller_guard = re.search(
+        r"if\s*\(\s*ServerFinder\.isAdHost\(\s*cand\.host\s*\)\s*\)", srv2
+    )
+    ads = "AD_HOSTS" in srv2 and bool(live_guard) and bool(caller_guard) \
+        and "extractor.ad-skipped" in srv2
+    checks.append(Check(
+        "extractor ignores ad and tracker frames",
+        "proven" if ads else "contradicted",
+        "ad hosts filtered before probing" if ads else "ads would be probed as players",
+        "finder/servers/ServerFinder.kt",
+    ))
+    chal = "looksChallenged" in srv2 and "CHALLENGE_MARKERS" in srv2 and 'note("challenge")' in srv2
+    checks.append(Check(
+        "a bot wall is recorded as a challenge, not as an empty crawl",
+        "proven" if chal else "contradicted",
+        "detected and named" if chal else "a Cloudflare page looks like no-embeds",
+        "finder/servers/ServerFinder.kt",
+    ))
+    page_split = 'probe.kind == "page"' in srv2 and "kept as a site candidate" in srv2
+    checks.append(Check(
+        "a page that answers is not silently discarded",
+        "proven" if page_split else "contradicted",
+        "page candidates named separately from dead ones" if page_split
+        else "pages are lumped into page-not-media and lost",
+        "finder/servers/ServerFinder.kt",
+    ))
+    helpers = _strip_comments(_read(root / "android/app/src/main/java/dev/nova/tv/finder/translated/FinderHelpers.kt"))
+    root_slash = 'ifEmpty { "/" }' in helpers
+    checks.append(Check(
+        "mirrors keep the trailing slash on a root url",
+        "proven" if root_slash else "contradicted",
+        "root urls normalised to /" if root_slash else "path-less mirrors render a blank page",
+        "finder/translated/FinderHelpers.kt",
+    ))
     return checks
 
 

@@ -111,6 +111,9 @@ object FinderHelpers {
         return "unknown" to 0
     }
 
+    /** Host prefixes worth trying; `m.`/`api.` are how these anime sites split. */
+    val MIRROR_PREFIXES = listOf("", "www.", "m.", "api.")
+
     /** www / m / api variants of a host. Python: `mirrors(url)`. */
     fun mirrors(url: String): Set<String> {
         val out = LinkedHashSet<String>()
@@ -118,10 +121,19 @@ object FinderHelpers {
         val p = runCatching { URI(url) }.getOrNull() ?: return out
         val bare = (p.rawAuthority ?: "").removePrefix("www.")
         val scheme = p.scheme ?: "https"
-        val path = p.rawPath.orEmpty()
         val query = p.rawQuery?.let { "?$it" }.orEmpty()
-        for (pre in listOf("", "www.", "m.", "api.")) {
-            out += norm("$scheme://$pre$bare$path$query")
+        // A root URL must keep its trailing slash. On device, mirrors of
+        // `https://hianime.to` (no path) rendered a 2 KB blank page, while
+        // `https://hianime.to/` from the same seed rendered 258 KB with the
+        // catalogue in it -- the site redirects `/` properly only when the
+        // slash is present, and every path-less mirror was wasted work.
+        // Likewise `9anime.org.lv` yielded 0 candidates where
+        // `www.9anime.org.lv/` yielded 1, so the bare form is kept too rather
+        // than treated as equivalent.
+        val path = p.rawPath.orEmpty().ifEmpty { "/" }
+        for (pre in MIRROR_PREFIXES) {
+            val host = if (pre.isEmpty()) bare else "$pre$bare"
+            out += norm("$scheme://$host$path$query")
         }
         return out
     }

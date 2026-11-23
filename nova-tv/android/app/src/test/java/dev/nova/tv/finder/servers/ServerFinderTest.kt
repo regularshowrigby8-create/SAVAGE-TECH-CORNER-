@@ -22,7 +22,11 @@ class ServerFinderTest {
         assertEquals(6000, FinderHelpers.CAP)
         assertTrue("https://hianime.to" in ServerFinder.SEEDS)
         assertTrue("https://9anime.pl" in ServerFinder.SEEDS)
-        assertEquals(12, ServerFinder.SEEDS.size)
+        // The anime mirrors the Python shipped are mostly Cloudflare-walled on
+        // device, so the list now also carries ordinary catalogue sites. Assert
+        // the intent (a workable surface exists) rather than a brittle count.
+        assertTrue(ServerFinder.SEEDS.size >= 12)
+        assertTrue(ServerFinder.SEEDS.any { "primewire" in it })
     }
 
     @Test

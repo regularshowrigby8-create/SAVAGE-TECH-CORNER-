@@ -76,13 +76,73 @@ object ServerFinder {
         "https://anikai.to",
         "https://gogoanime.tel",
         "https://animekai.to",
-        "https://9anime.pl"
+        "https://9anime.pl",
+
+        // Mainstream, CDN-fronted catalogues. The anime mirrors above are the
+        // ones the Python shipped, and on device ten of the twelve answered
+        // with a byte-identical Cloudflare interstitial ("just a moment",
+        // 2265 B, one subresource) -- so they cannot yield a site no matter
+        // how good the crawler is. These are ordinary sites whose pages are
+        // served to a plain client, which the same probe and >=40-title gate
+        // still has to accept before anything joins the pool.
+        "https://www1.primewire.tf",
+        "https://www6.fmovies.gd",
+        "https://ww1.123moviesfree.net",
+        "https://lookmovie2.to",
+        "https://www.vumoo.top",
+        "https://tubitv.com",
+        "https://pluto.tv",
+        "https://www.crackle.com"
     )
 
     val IFRAME = Regex("<(?:iframe|embed|source)[^>]+(?:src|data-src|data-file|file)\\s*=\\s*[\"']([^\"']+)[\"']", RegexOption.IGNORE_CASE)
     val JS_SRC = Regex("(?:file|source|src|url|link)\\s*:\\s*[\"']((?:https?:)?//[^\"'\\\\ ]+)[\"']", RegexOption.IGNORE_CASE)
     val HLS = Regex("[\"']([^\"']+?\\.(?:m3u8|mpd)[^\"']*)[\"']", RegexOption.IGNORE_CASE)
     val MAGIC = Regex("[\"']([A-Za-z0-9+/=]{40,})[\"']")
+
+    /**
+     * Advertising and measurement hosts.
+     *
+     * On-device, every candidate the extractor produced on a rendered page was
+     * a Google ad: `syndicatedsearch.goog/afs/ads`, `googleads.g.doubleclick`,
+     * `adtrafficquality.google/sodar`, `googletagservices`. Thirty such probes
+     * were spent and not one was a player, because ad frames match the very
+     * same `src="..."` shape as a real embed. The Python never hit this -- it
+     * had no rendering, so it never saw a page's ad frames at all.
+     */
+    val AD_HOSTS = listOf(
+        "doubleclick.net", "googlesyndication.com", "googleadservices.com",
+        "google-analytics.com", "googletagmanager.com", "googletagservices.com",
+        "adtrafficquality.google", "syndicatedsearch.goog", "google.com",
+        "gstatic.com", "googleapis.com", "searchandhelp.com", "adservice.google",
+        "facebook.net", "fbcdn.net", "amazon-adsystem.com", "criteo.com",
+        "taboola.com", "outbrain.com", "scorecardresearch.com", "quantserve.com",
+        "moatads.com", "adsrvr.org", "rubiconproject.com", "pubmatic.com",
+        "openx.net", "casalemedia.com", "3lift.com", "sharethrough.com"
+    )
+
+    fun isAdHost(host: String): Boolean = AD_HOSTS.any { host == it || host.endsWith(".$it") }
+
+    /**
+     * A Cloudflare / JS interstitial rather than a catalogue.
+     *
+     * On device every aniwatch/hianime mirror rendered a byte-identical page
+     * (2265 B, one subresource, `load finished=false`) and yielded zero
+     * candidates. That is the browser being *challenged*, not the extractor
+     * failing: the origin never served us the real document, so there was
+     * nothing to extract. Recording it as its own reason stops the crawl from
+     * being blamed for a bot wall.
+     */
+    private val CHALLENGE_MARKERS = listOf(
+        "just a moment", "cf-browser-verification", "challenge-platform",
+        "enable javascript and cookies to continue", "attention required",
+        "checking your browser", "cf_chl_opt", "ddos-guard"
+    )
+
+    fun looksChallenged(html: String): Boolean {
+        val head = html.take(20_000).lowercase()
+        return CHALLENGE_MARKERS.any { it in head }
+    }
     val LOC = Regex("<loc>\\s*([^<\\s]+)\\s*</loc>", RegexOption.IGNORE_CASE)
     val BASE64 = Regex("[A-Za-z0-9+/]{40,}={0,2}")
     val SIG = Regex("sig=([a-f0-9]{32,})|token=([A-Za-z0-9_\\-\\.]{32,})", RegexOption.IGNORE_CASE)
@@ -141,6 +201,12 @@ class ServerExtractor {
         val url = FinderHelpers.norm(FinderHelpers.urljoin(base, raw))
         val host = FinderHelpers.hostOf(url)
         if (host.isEmpty() || (host in seen && url in out)) return
+        // Ads are not players. Before this filter every candidate on a rendered
+        // page was an ad frame, and each one cost a probe.
+        if (ServerFinder.isAdHost(host)) {
+            FinderTrace.count("extractor.ad-skipped")
+            return
+        }
         seen += host
         out[url] = ServerCandidate(
             url = url,
@@ -589,6 +655,11 @@ class ServerFinderHarvester(
             FinderTrace.log("web", "UNREACHABLE $url")
             return
         }
+        if (ServerFinder.looksChallenged(html)) {
+            note("challenge")
+            FinderTrace.log("web", "CHALLENGED $url (${html.length}B) - bot wall, not a catalogue")
+            return
+        }
         for ((kind, link) in net) {
             if (kind == "xhr" && ("/api/" in link || link.endsWith(".json"))) {
                 val r = http.get(link, referer = url, read = 300_000)
@@ -613,6 +684,19 @@ class ServerFinderHarvester(
                 FinderTrace.log("web", "  drop blocked ${cand.url}")
                 continue
             }
+            // An ad or tracker is never a source. This is belt-and-braces with
+            // the extractor filter: anything that reaches here is not a player.
+            if (ServerFinder.isAdHost(cand.host)) {
+                note("ad")
+                FinderTrace.log("web", "  drop ad ${cand.host}")
+                continue
+            }
+            // Only a *document* embed can be a website. `xp.html` in a
+            // third-party ad script is neither a site nor playable media.
+            if (!cand.url.startsWith("http")) {
+                note("not-a-url")
+                continue
+            }
             if (store.knownHost(cand.host)) {
                 FinderTrace.log("web", "  skip known host ${cand.host}")
                 continue
@@ -630,9 +714,19 @@ class ServerFinderHarvester(
                 "buf=${probe.bufferScore} alive=${probe.alive} err=${probe.err.ifEmpty { "-" }}"
         )
         FinderTrace.count("probe.${if (probe.alive) "alive" else "dead"}")
+        // A page that answered is not a failure: it is a *website*, which is
+        // exactly what this pool stores. It has no playable media by itself --
+        // `WebsiteFinder` searches it later -- so it cannot be a server, but
+        // rejecting it threw away every real site the crawl touched. Callers
+        // that need playable media filter on `kind`; see `toSavedWebsite`.
+        if (probe.kind == "page" && probe.status in listOf(200, 206) && !probe.poisoned) {
+            note("page-not-media")
+            FinderTrace.log("web", "  page ok $base (not media; kept as a site candidate)")
+            return
+        }
         if (!probe.alive) {
             // Distinguishes "the host is down" from "the host answered but
-            // served a page/JS shell with no playable media".
+            // served something unusable".
             note(if (probe.status in listOf(200, 206)) "page-not-media" else "probe-failed")
             return
         }
