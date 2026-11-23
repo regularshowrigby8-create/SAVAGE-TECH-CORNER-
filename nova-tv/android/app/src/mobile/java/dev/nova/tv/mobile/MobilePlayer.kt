@@ -158,13 +158,6 @@ fun MobilePlayerSurface(player: NovaPlayer, title: String, viewModel: NovaViewMo
         MobilePlayback.active = engine.isPlaying
     }
 
-    // The intro window is a time range, not a flow, so it has to be sampled.
-    // 500 ms is fine for a button that is shown for tens of seconds.
-    var inIntro by remember { mutableStateOf(false) }
-    LaunchedEffect(player, engine.currentPositionMs, engine.isPlaying) {
-        inIntro = player.inIntroWindow()
-    }
-
     LaunchedEffect(engine.isPlaying, engine.isBuffering, session.ended, failure) {
         viewModel.chrome.update {
             it.copy(playing = engine.isPlaying, buffering = engine.isBuffering, ended = session.ended, error = failure?.message)
@@ -481,6 +474,9 @@ private fun Controls(
     val buffering by player.buffering.collectAsStateWithLifecycle()
     val upNext = remember(title) { viewModel.nextEpisode() }
     val previous = remember(title) { viewModel.previousEpisode() }
+    // The intro window is a time range, not a flow, so it is sampled against
+    // the position the engine already ticks four times a second.
+    val inIntro = remember(player, engine.currentPositionMs) { player.inIntroWindow() }
 
     Box(Modifier.fillMaxSize()) {
         // Scrims top and bottom so white text reads over any frame.
