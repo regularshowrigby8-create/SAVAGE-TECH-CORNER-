@@ -133,4 +133,47 @@ class ServerFinderTest {
         assertTrue("https://m.hianime.to/" in m)
         assertTrue("https://api.hianime.to/" in m)
     }
+
+    // -- website-pool projection -------------------------------------------
+
+    @Test
+    fun `a record projects to the site it was embedded on, not the media host`() {
+        // `base_url` is the media origin and is what the Python pool stored.
+        // WebsitePool needs a *searchable site* instead, so the referer's origin
+        // -- the page the player was embedded in -- is the address to return.
+        val rec = finderRecord(
+            baseUrl = "https://vidcloud.example",
+            referer = "https://watchfree.example/movie/42"
+        )
+        assertEquals("https://watchfree.example", rec.toSiteUrl())
+    }
+
+    @Test
+    fun `a record with no referer falls back to its media origin`() {
+        val rec = finderRecord(baseUrl = "https://vidcloud.example", referer = "")
+        assertEquals("https://vidcloud.example", rec.toSiteUrl())
+    }
+
+    private fun finderRecord(baseUrl: String, referer: String) = ServerRecord(
+        id = "x",
+        name = "p",
+        provider = "p",
+        host = FinderHelpers.hostOf(baseUrl),
+        baseUrl = baseUrl,
+        kind = "hls",
+        sampleUrl = baseUrl + "/m.m3u8",
+        referer = referer,
+        quality = "1080p",
+        qualityTier = 300,
+        catalogue = 100,
+        ttfbMs = 100,
+        kbps = 900,
+        stalls = 0,
+        bufferScore = 90,
+        signature = "none",
+        score = 10.0,
+        firstSeen = "",
+        lastChecked = "",
+        failures = 0
+    )
 }

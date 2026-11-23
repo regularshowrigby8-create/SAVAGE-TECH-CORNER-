@@ -240,9 +240,22 @@ class SourceEngine(
             val round = pool.cursor
             val found = runCatching { harvester.harvest(round) }.getOrDefault(emptyList())
             pool.cursor = round + 1
+            lastAddonRejections = runCatching { harvester.rejectionReport() }.getOrNull() ?: lastAddonRejections
             pool.add(found + cachedCandidates())
         }
     }
+
+    /**
+     * Why the last addon round dropped what it dropped.
+     *
+     * Surfaced so a low yield is explained instead of looking like a bug: most
+     * of what a directory lists is dead hosts (`no-manifest`) or torrent-only
+     * addons (`torrent`), neither of which can play through an ordinary player.
+     */
+    @Volatile
+    var lastAddonRejections: dev.nova.tv.finder.addons.AddonRejections =
+        dev.nova.tv.finder.addons.AddonRejections()
+        private set
 
     /**
      * Swap in new server options: harvest the next directory slice, then let

@@ -383,7 +383,29 @@ data class ServerRecord(
     val lastChecked: String = "",
     val deadAt: String = ""
 ) {
-    fun toSavedWebsite(): SavedWebsite = SavedWebsite(url = baseUrl, name = provider, templates = emptyList())
+    /**
+     * The website this record's media was found on.
+     *
+     * [baseUrl] is the *media origin* (`origin_of(cand.url)`), and that is what
+     * the Python pool stores -- it is a catalogue of playable endpoints, and
+     * `sample_url` is what the checker re-probes. It is deliberately **not**
+     * what `WebsitePool` wants: that pool feeds `WebsiteFinder.findStreams`,
+     * which opens the address as a homepage, reads its search form and matches
+     * a title. Handing it an embed host like `https://vidcloud.example` stored
+     * entries that could never answer for a title, so the website finder
+     * reported "no new websites" while the server pool filled up.
+     *
+     * The referer is the page the player was embedded in, so its origin is the
+     * actual streaming site: that is the address worth searching. Fall back to
+     * the media origin only when the record has no referer.
+     */
+    fun toSiteUrl(): String {
+        val ref = referer.trim()
+        val fromRef = if (ref.isNotEmpty()) FinderHelpers.originOf(ref) else ""
+        return fromRef.ifEmpty { baseUrl }
+    }
+
+    fun toSavedWebsite(): SavedWebsite = SavedWebsite(url = toSiteUrl(), name = provider, templates = emptyList())
 }
 
 @Serializable
@@ -487,7 +509,14 @@ class ServerFinderHarvester(
     private val store: ServerFinderStore,
     private val http: FinderHttp,
     private val browser: FinderBrowser? = null,
-    val cap: Int = ServerFinder.CAP
+    val cap: Int = ServerFinder.CAP,
+    /**
+     * Used to turn a discovered host into a searchable site (search template,
+     * real name) before it reaches `WebsitePool`. Optional so the harvester
+     * still works -- and still matches the Python -- without it; the Python
+     * recorded `base_url` and left searching to whoever consumed the pool.
+     */
+    private val profiler: (suspend (String) -> SavedWebsite)? = null
 ) {
     private val extractor = ServerExtractor()
     val prober = ServerProber(http)
@@ -569,6 +598,7 @@ class ServerFinderHarvester(
     }
 
     fun refillSeeds() {
+        // Python: push every SEED and its mirrors back onto the frontier.
         for (s in ServerFinder.SEEDS) {
             store.push(s)
             for (m in FinderHelpers.mirrors(s)) store.push(m)
@@ -604,34 +634,87 @@ class ServerFinderHarvester(
     }
 
     /**
-     * Plug point replacing `WebsiteSpider.harvest`: one round of discovery,
-     * returning validated servers as websites for `WebsitePool`.
+     * Plug point replacing `WebsiteSpider.harvest`.
+     *
+     * Python's `Harvester.run()` is a `while count('alive') < cap` loop, not a
+     * single batch: it pops 64 frontier URLs, discovers them, and keeps going,
+     * refilling the seeds when the frontier runs dry. The translation used to
+     * do exactly one batch per call, so a single seed homepage -- which yields
+     * same-host links but no players -- left the pool empty and the UI reported
+     * "No new websites right now" forever.
+     *
+     * This restores the loop shape. It stays bounded (one call cannot hang the
+     * caller) by [harvestBudgetMs], and it never reports `more = false` while
+     * the frontier still holds unvisited pages.
      */
     suspend fun harvest(round: Int): ServerHarvest {
         val started = System.currentTimeMillis()
-        var batch = store.pop(64)
-        if (batch.isEmpty()) {
-            refillSeeds()
-            batch = store.pop(32)
+        var seen = 0
+        while (System.currentTimeMillis() - started < harvestBudgetMs) {
+            // Stop exactly where Python stops: the cap is a hard ceiling.
+            if (store.count("alive") >= cap) break
+            var batch = store.pop(64)
+            if (batch.isEmpty()) {
+                refillSeeds()
+                batch = store.pop(32)
+                if (batch.isEmpty()) break
+            }
+            seen += batch.size
+            coroutineScope { batch.map { u -> async { discover(u) } }.awaitAll() }
+            // Python sleeps 0.2 s between rounds; keep the same courtesy pause
+            // so a hostile host is not hammered by a tight loop.
+            delay(200)
+            // A round that found nothing new and drained the frontier is done.
+            if (store.frontierSize() == 0 && store.count("alive") == 0) {
+                refillSeeds()
+                if (store.frontierSize() == 0) break
+            }
         }
-        coroutineScope { batch.map { u -> async { discover(u) } }.awaitAll() }
-        val sites = store.alive().take(cap).map { it.toSavedWebsite() }
+        // One entry per *site*, not per endpoint: `WebsitePool` keys on host, and
+        // a host with eight working embeds is still one website. Dedupe here so
+        // the round's `new` count and the pool's capacity are meaningful.
+        val found = store.alive()
+            .take(cap)
+            .map { it.toSavedWebsite() }
+            .distinctBy { FinderHelpers.hostOf(it.url) }
+
+        // Give each site its real search template so `WebsiteFinder` can query
+        // it. The Python left this to its consumer; here the consumer is a
+        // title search that needs a URL shape, so we profile while we are
+        // already holding the socket. Bounded, and a site that will not talk
+        // still keeps its standard search paths (`profile` never throws for
+        // that reason), so profiling can never empty the pool.
+        // Local, so the nullable property is smart-cast inside the lambda.
+        val profile = profiler
+        val sites = if (profile == null) found else coroutineScope {
+            found.map { site ->
+                async {
+                    if (System.currentTimeMillis() - started >= harvestBudgetMs) site
+                    else runCatching { profile(site.url) }.getOrDefault(site)
+                }
+            }.awaitAll()
+        }
         val elapsed = System.currentTimeMillis() - started
         return ServerHarvest(
             sites = sites,
-            more = store.count("alive") < cap,
+            // `more` means "there is still work to do", exactly like the Python
+            // loop's condition. Unvisited pages count, not just a sub-cap pool.
+            more = store.count("alive") < cap || store.frontierSize() > 0,
             sources = listOf(
                 FinderSourceReport(
                     id = "server-finder",
                     status = FinderSourceReport.Status.COMPLETE,
-                    seen = batch.size,
-                    checked = batch.size,
+                    seen = seen,
+                    checked = seen,
                     candidates = sites.size,
                     elapsedMs = elapsed
                 )
             )
         )
     }
+
+    /** How long one [harvest] call may crawl before returning what it has. */
+    private var harvestBudgetMs: Long = 45_000L
 
     private fun unescape(s: String): String = s
         .replace("&amp;", "&").replace("&quot;", "\"").replace("&#39;", "'")

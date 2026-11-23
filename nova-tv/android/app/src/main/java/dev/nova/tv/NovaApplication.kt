@@ -90,9 +90,18 @@ class NovaApplication : Application(), ImageLoaderFactory {
     /** addons.py pool: addons_pool.json {schema, generated_at, cap, count, addons[]}. */
     val addonFinderStore: AddonFinderStore by lazy { AddonFinderStore(fileStore("addons_pool.json")) }
 
-    /** servers.py harvester: replaces the old WebsiteSpider script. */
+    /**
+     * servers.py harvester: replaces the old WebsiteSpider script.
+     *
+     * The profiler teaches each discovered host where its search lives, so the
+     * website pool holds sites that can actually answer for a title. Without
+     * it the pool filled with bare media origins that never matched anything.
+     */
     val serverFinderHarvester: ServerFinderHarvester by lazy {
-        ServerFinderHarvester(serverFinderStore, serverFinderHttp, finderBrowser)
+        ServerFinderHarvester(
+            serverFinderStore, serverFinderHttp, finderBrowser,
+            profiler = { url -> websiteFinder.profile(url) }
+        )
     }
     /** addons.py harvester: replaces the old ServerHarvester script. */
     val addonFinderHarvester: AddonFinderHarvester by lazy {

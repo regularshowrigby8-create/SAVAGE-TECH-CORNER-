@@ -257,6 +257,26 @@ data class AddonVerdict(
     var reason: String = ""
 )
 
+/**
+ * Why candidates were dropped, counted per round.
+ *
+ * The finder passed ~1% of what it looked at, and the reason was invisible:
+ * `AddonVerdict.reason` was set and then thrown away, so a screen could only
+ * say "nothing new". These tallies are the Python's `reason` field, aggregated,
+ * so the yield is explainable instead of mysterious. A healthy crawl is mostly
+ * `no-manifest` (dead or non-addon hosts) plus `torrent` (real addons that only
+ * serve torrents, which this app deliberately cannot play); a crawl that is
+ * almost entirely `no-streams` means the probe ids, not the addons, are wrong.
+ */
+data class AddonRejections(
+    val counts: Map<String, Int> = emptyMap()
+) {
+    fun of(reason: String): Int = counts[reason] ?: 0
+    val total: Int get() = counts.values.sum()
+    val summary: String get() = counts.entries.sortedByDescending { it.value }
+        .joinToString(", ") { "${it.key}=${it.value}" }
+}
+
 /** Manifest fetch, stream fan-out, torrent classification, buffer probe. Python: `Validator`. */
 class AddonValidator(private val http: FinderHttp) {
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
@@ -491,8 +511,20 @@ class AddonFinderHarvester(
 
     /** Persist a candidate that passed every gate, ranked. */
     suspend fun commit(base: String, v: AddonVerdict) {
-        if (!v.alive || !v.nonTorrent || v.streams == 0) return
-        if (store.knownHost(FinderHelpers.hostOf(base))) return
+        if (!v.alive || !v.nonTorrent || v.streams == 0) {
+            noteRejection(
+                when {
+                    !v.alive -> v.reason.ifBlank { "unreachable" }
+                    !v.nonTorrent -> "torrent"
+                    else -> "no-streams"
+                }
+            )
+            return
+        }
+        if (store.knownHost(FinderHelpers.hostOf(base))) {
+            noteRejection("already-known")
+            return
+        }
         val doc = validator.manifest(base) ?: JsonObject(emptyMap())
         val catalogueCount = validator.catalogue(base, doc)
         val resources = (doc["resources"] as? JsonArray).orEmpty().mapNotNull {
@@ -576,18 +608,49 @@ class AddonFinderHarvester(
     }
 
     /**
-     * Plug point replacing `ServerHarvester.harvest`: one round of discovery,
-     * returning validated addons as finder candidates for `ServerPool`.
+     * Plug point replacing `ServerHarvester.harvest`.
+     *
+     * Python's `Harvester.run()` is a `while not full()` loop that keeps
+     * popping the frontier until the cap is reached. The translation did one
+     * batch per call, so a single call could only ever add the handful of
+     * addons in that batch -- which is why the pool sat at a fraction of its
+     * capacity and most rounds reported almost nothing.
+     *
+     * This restores the loop. It is bounded by [harvestBudgetMs] so a caller
+     * stays responsive, and it refills the seeds when the frontier drains,
+     * exactly as the Python does.
      */
     suspend fun harvest(round: Int): List<FinderCandidate> {
-        var batch = store.pop(64)
-        if (batch.isEmpty()) {
-            refillSeeds()
-            batch = store.pop(32)
+        val started = System.currentTimeMillis()
+        while (System.currentTimeMillis() - started < harvestBudgetMs) {
+            if (full()) break
+            var batch = store.pop(64)
+            if (batch.isEmpty()) {
+                refillSeeds()
+                batch = store.pop(32)
+                if (batch.isEmpty()) break
+            }
+            coroutineScope { batch.map { u -> async { process(u) } }.awaitAll() }
+            delay(200)
         }
-        coroutineScope { batch.map { u -> async { process(u) } }.awaitAll() }
         return store.alive().take(cap).map { it.toFinderCandidate() }
     }
+
+    /** Rejections observed since [resetRejections]; what this round threw away and why. */
+    private val rejections = java.util.concurrent.ConcurrentHashMap<String, Int>()
+
+    fun resetRejections() = rejections.clear()
+
+    fun rejectionReport(): AddonRejections = AddonRejections(rejections.toMap())
+
+    /** Record one dropped candidate. Called from [commit]'s early returns. */
+    internal fun noteRejection(reason: String) {
+        val key = reason.substringBefore('(').ifBlank { "unreachable" }
+        rejections.merge(key, 1) { a, b -> a + b }
+    }
+
+    /** How long one [harvest] call may crawl before returning what it has. */
+    private var harvestBudgetMs: Long = 45_000L
 
     private fun unescape(s: String): String = s
         .replace("&amp;", "&").replace("&quot;", "\"").replace("&#39;", "'")

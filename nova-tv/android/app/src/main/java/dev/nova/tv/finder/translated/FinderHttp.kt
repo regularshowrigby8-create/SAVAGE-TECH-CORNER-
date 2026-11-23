@@ -8,6 +8,9 @@ import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import okhttp3.Cookie
+import okhttp3.CookieJar
+import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okio.Buffer
@@ -65,10 +68,32 @@ class FinderHttp(
     private val cors: Boolean = false,
     private val fingerprint: FinderFingerprint = FinderFingerprint()
 ) {
+    /**
+     * The shared cookie store, standing in for aiohttp's `ClientSession`.
+     *
+     * This is a *fidelity fix*, not an enhancement: Python's `Http` passes one
+     * `ClientSession` to every request, so a cookie set by `prime()` is sent on
+     * the `get()` and `openStream()` calls that follow. OkHttp defaults to
+     * `CookieJar.NO_COOKIES`, so the translation was dropping every Set-Cookie.
+     *
+     * That made the finder return nothing on real sites: the first response's
+     * session cookie never came back, so the wall (Cloudflare `__cf_bm`,
+     * clearance cookies, and the plain session ids most streaming sites issue)
+     * rejected every subsequent request with 403. With no request ever
+     * reaching a 200 carrying media bytes, `Probe.alive` was never true and the
+     * pool stayed empty. Keeping cookies is exactly what the Python did.
+     *
+     * Declared *before* [client] on purpose: Kotlin initialises properties in
+     * declaration order, so `.cookieJar(jar)` below would otherwise capture a
+     * null field.
+     */
+    private val jar = MemoryCookieJar()
+
     private val client: OkHttpClient = baseClient.newBuilder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(20, TimeUnit.SECONDS)
         .callTimeout(25, TimeUnit.SECONDS)
+        .cookieJar(jar)
         .build()
 
     val okHttp: OkHttpClient get() = client
@@ -232,5 +257,53 @@ class FinderHttp(
         private val response: okhttp3.Response
     ) {
         fun close() = runCatching { response.close() }
+    }
+}
+
+/**
+ * In-memory cookie store for one [FinderHttp] session.
+ *
+ * Mirrors what `aiohttp.ClientSession` gives the Python scripts for free:
+ * Set-Cookie responses are remembered and replayed on later requests to the
+ * same host, including while following redirects and inside the byte-level
+ * probe. Domain and path matching are delegated to OkHttp's [Cookie] so the
+ * usual rules (`Domain`, `Path`, `Secure`, `HttpOnly`, expiry) are honoured.
+ *
+ * Deliberately memory-only: the finder's cookies are throwaway session
+ * identifiers for hosts it is crawling, so nothing is written to disk. The jar
+ * is bounded by [MAX_PER_HOST] so a hostile host cannot grow it without limit.
+ */
+internal class MemoryCookieJar : CookieJar {
+
+    private val lock = Any()
+    private val cookies = ArrayList<Cookie>()
+
+    override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) = synchronized(lock) {
+        for (cookie in cookies) {
+            this.cookies.removeAll { it.name == cookie.name && it.domain == cookie.domain && it.path == cookie.path }
+            this.cookies += cookie
+        }
+        // Evict the oldest entry for any host that grew past the cap.
+        val over = this.cookies.groupBy { it.domain }.filterValues { it.size > MAX_PER_HOST }
+        if (over.isNotEmpty()) {
+            val keep = HashSet<Cookie>()
+            for ((_, group) in over) keep += group.sortedBy { it.expiresAt }.takeLast(MAX_PER_HOST)
+            val dropped = over.values.flatten().filterNot { it in keep }.toSet()
+            this.cookies.removeAll { it in dropped }
+        }
+        // Drop expired entries as they are noticed, rather than growing forever.
+        val now = System.currentTimeMillis()
+        this.cookies.removeAll { it.expiresAt < now }
+        Unit
+    }
+
+    override fun loadForRequest(url: HttpUrl): List<Cookie> = synchronized(lock) {
+        val now = System.currentTimeMillis()
+        this.cookies.removeAll { it.expiresAt < now }
+        this.cookies.filter { it.matches(url) }
+    }
+
+    private companion object {
+        const val MAX_PER_HOST = 64
     }
 }

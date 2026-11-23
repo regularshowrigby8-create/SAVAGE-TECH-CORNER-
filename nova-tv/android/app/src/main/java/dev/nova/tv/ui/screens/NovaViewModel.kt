@@ -1197,7 +1197,14 @@ class NovaViewModel : ViewModel() {
         viewModelScope.launch {
             val added = runCatching { engine.fillPool() }.getOrDefault(0)
             _state.update { it.copy(poolBusy = false) }
-            toast(if (added > 0) "$added servers added" else "Pool is up to date")
+            // "Nothing new" on its own hid the real reason: most of what the
+            // directories list is dead hosts or torrent-only addons. Say which.
+            if (added > 0) {
+                toast("$added servers added")
+            } else {
+                val why = engine.lastAddonRejections.takeIf { it.total > 0 }?.summary
+                toast(if (why.isNullOrEmpty()) "Pool is up to date" else "No new servers: $why")
+            }
         }
     }
 
