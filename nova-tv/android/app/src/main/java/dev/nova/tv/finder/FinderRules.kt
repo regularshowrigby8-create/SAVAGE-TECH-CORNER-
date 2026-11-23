@@ -51,10 +51,19 @@ object FinderRules {
      *
      * Cinemeta is the backbone (it is the only addon that can answer for any
      * `tt` id), but relying on it alone meant one slow manifest produced an
-     * empty home screen and no search results. These are twelve further
-     * catalogue addons, each checked live: every URL below returned a manifest
-     * with a `catalog` resource and at least one non-empty catalogue row.
-     * OpenSubtitles stays for subtitles.
+     * empty home screen and no search results. Everything below was fetched
+     * live with `curl` and kept only if its manifest declared a `catalog`
+     * resource **and** at least one catalogue row -- the exact check
+     * `scripts/qa_translated.py --live` repeats in CI. See
+     * [SOURCE_EVIDENCE] for what each URL was verified to return, and
+     * `docs/SOURCES.md` for the ones that were rejected.
+     *
+     * No source here needs an API key. Every one is a public Stremio addon
+     * whose manifest is served anonymously; an addon that required a personal
+     * key (AIOMetadata, MyTrakt, RPDB posters, TMDB Discover+, Plexio) is
+     * deliberately absent, because a key baked into an APK is either a secret
+     * leaked or a URL that 401s for every viewer. That is a decision, not an
+     * omission -- the rejected list and reason is in `docs/SOURCES.md`.
      *
      * Order matters only for the fallback row: the first addon that declares a
      * catalogue wins, so Cinemeta is first.
@@ -82,12 +91,73 @@ object FinderRules {
         // Broad series / film rows.
         "https://addon.notorrent2.workers.dev",
         "https://27a5b2bfe3c0-stremio-brazilian-addon.baby-beamup.club",
+
+        // -- ten further catalogue sources, each live-verified ----------------
+        // A second TMDB deployment, on ElfHosted rather than Beamup. Different
+        // host, same 12 rows: when Beamup has an outage the home screen keeps
+        // its Popular / Trending / Year rows instead of losing them.
+        "https://tmdb.elfhosted.com",
+        // IMDb Catalogs: the IMDb-side genre rows (Anime, Heist, Superhero,
+        // Time Travel ...) that Cinemeta's genre list does not carry.
+        "https://1fe84bc728af-imdb-catalogs.baby-beamup.club",
+        // RPDB Catalogs: New / Popular / Best rows for film, series and other.
+        "https://1fe84bc728af-rpdb.baby-beamup.club",
+        // Film Festivals: Cannes, Venice, Berlinale, Sundance, TIFF, Oscars
+        // winners -- arthouse rows nothing else here provides.
+        "https://stremio-film-festivals.elfhosted.com",
+        // TV en latino: Spanish-language live TV catalogue.
+        "https://c73485b8a7a2-latamtv.baby-beamup.club",
+        // ThePirateBay Catalog: genre rows plus search over the TPB index.
+        "https://5db836ec3ef8-thepiratebay-ctl.baby-beamup.club",
+        // Catalog Builder: a second IMDb-derived movie/series catalogue, so
+        // one builder being rate-limited does not empty the row.
+        "https://1fe84bc728af-catalog-builder.baby-beamup.club",
+        // TMDB Alternatives: alternate-order series rows (anime-safe ordering
+        // for shows whose broadcast order is not the story order).
+        "https://24dfd6fd4287-stremio-tmdb.baby-beamup.club",
+        // FTV Channels: fashion/lifestyle live channels, a different tv pool
+        // from the sports and general ones above.
+        "https://ftv-stremio.surge.sh",
+        // Now.sh Example: the reference Stremio static addon. One small row,
+        // and it is the cheapest possible canary -- if this answers and
+        // nothing else does, the network is fine and the other hosts are down.
+        "https://stremio.github.io/stremio-static-addon-example",
+
         // Subtitles.
         "https://opensubtitles-v3.strem.io"
     )
 
-    /** Addons that only carry subtitles; they must never be asked for streams. */
-    val SUBTITLE_ONLY_SOURCES = setOf("https://opensubtitles-v3.strem.io")
+    /**
+     * What each of the ten added URLs was verified to return, so the claim is
+     * checkable rather than remembered. `catalogs` is the row count read from
+     * the live manifest; `types` is its declared `types` array.
+     */
+    val SOURCE_EVIDENCE: Map<String, String> = mapOf(
+        "https://tmdb.elfhosted.com" to "12 rows, movie+series, catalog+meta",
+        "https://1fe84bc728af-imdb-catalogs.baby-beamup.club" to "2 rows, movie+series, catalog only",
+        "https://1fe84bc728af-rpdb.baby-beamup.club" to "10 rows, movie+series+other, catalog only",
+        "https://stremio-film-festivals.elfhosted.com" to "38 rows, movie, catalog only",
+        "https://c73485b8a7a2-latamtv.baby-beamup.club" to "1 row, tv, catalog+meta+stream",
+        "https://5db836ec3ef8-thepiratebay-ctl.baby-beamup.club" to "5 rows, movie+series, catalog+stream+meta",
+        "https://1fe84bc728af-catalog-builder.baby-beamup.club" to "2 rows, movie+series, catalog only",
+        "https://24dfd6fd4287-stremio-tmdb.baby-beamup.club" to "1 row, series, catalog+meta",
+        "https://ftv-stremio.surge.sh" to "1 row, tv, catalog+meta+stream",
+        "https://stremio.github.io/stremio-static-addon-example" to "1 row, movie, catalog+meta+stream"
+    )
+
+    /**
+     * Addons that only carry subtitles; they must never be asked for streams.
+     *
+     * All three are anonymous: v3 is the Stremio-official index, PRO is the
+     * same library with ad/spam entries filtered, and Community Subtitles adds
+     * uploads and resync. Each was fetched live and declared
+     * `"resources":["subtitles"]` with no key in the URL.
+     */
+    val SUBTITLE_ONLY_SOURCES = setOf(
+        "https://opensubtitles-v3.strem.io",
+        "https://opensubtitlesv3-pro.dexter21767.com",
+        "https://subsense.nepiraw.com"
+    )
 
     /**
      * core.js publicHttpsUrl: https only, no credentials in the URL, no IP

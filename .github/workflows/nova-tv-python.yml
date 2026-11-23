@@ -51,6 +51,28 @@ jobs:
         working-directory: nova-tv/python
         run: python scripts/qa_secrets.py --json
 
+      # The gate for the translated finders, the ten added catalogue sources
+      # and the subtitle engines. It exits 1 when any check is contradicted, so
+      # a missing file, a stub, a constant that drifted from the Python
+      # original, a source listed without evidence, or a doc that describes a
+      # source the app does not have all fail the build instead of printing a
+      # green report. Full text: nova-tv/docs/SOURCES.md.
+      - name: Translated finder and source audit
+        working-directory: nova-tv/python
+        run: |
+          set +e
+          python scripts/qa_translated.py --json > /tmp/translated.json 2>&1
+          STATUS=$?
+          python - <<'PY'
+          import json
+          data = json.load(open("/tmp/translated.json"))["result"]
+          print(f"checks: {data['total']}  proven: {data['counts']['proven']}  "
+                f"contradicted: {data['counts']['contradicted']}")
+          for bad in data["contradicted"]:
+              print(f"::error title=contradicted::{bad['name']} -- {bad['why']}")
+          PY
+          exit $STATUS
+
   collect:
     name: Collect
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'

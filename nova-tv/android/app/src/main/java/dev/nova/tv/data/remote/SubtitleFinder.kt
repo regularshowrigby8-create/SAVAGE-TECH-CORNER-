@@ -23,6 +23,8 @@ import java.util.zip.GZIPInputStream
  */
 enum class SubtitleProvider(val label: String, val detail: String) {
     OPEN_SUBTITLES("OpenSubtitles", "Stremio index"),
+    OPEN_SUBTITLES_PRO("OpenSubtitles PRO", "Ad-free index"),
+    SUB_SENSE("SubSense", "10 providers"),
     OPEN_SUBTITLES_REST("OpenSubtitles REST", "Release matched"),
     ADDONS("Addon subtitles", "Installed addons")
 }
@@ -35,15 +37,31 @@ enum class SubtitleProvider(val label: String, val detail: String) {
  * know about had no captions at all and the viewer had to pick a file from
  * the device.
  *
- * Two keyless engines now run in parallel and their results are merged:
+ * Four keyless engines now run in parallel and their results are merged:
  *
  *  - **OpenSubtitles v3** (the Stremio addon endpoint) returns a rich index:
  *    language, release name and file encoding.
+ *  - **OpenSubtitles PRO** speaks the same `/subtitles/{type}/{id}.json`
+ *    protocol against the same library, but filters the ad and spam entries
+ *    that v3 still returns. It is a second host, so an outage on one leaves
+ *    the other answering.
+ *  - **SubSense** aggregates roughly ten providers (OpenSubtitles, Subf2m,
+ *    Podnapisi, AnimeTosho, Gestdown, BetaSeries, YIFY, TVsubtitles,
+ *    SubSource, SubDL) behind one Stremio-protocol endpoint, which is where
+ *    subtitles for anime and for less common languages actually come from.
+ *    It is skipped, rather than failed, when the viewer filters those
+ *    languages out.
  *  - **OpenSubtitles REST** (`rest.opensubtitles.org`) matches by IMDb id and
  *    season/episode. It answers with release names and download counts, and
  *    its download links are gzipped `.srt` files rather than playable URLs, so
  *    the file is fetched, decompressed and cached on device -- Media3 then
  *    plays it like any other sidecar.
+ *
+ * Every one of those hosts was fetched and its manifest checked to declare
+ * `"resources":["subtitles"]`; none needs an account or an API key. Two of them
+ * (PRO, SubSense) are marked `configurationRequired` in their manifests, but
+ * the unconfigured endpoint still answers -- configuration only changes which
+ * languages are preferred, which Nova chooses itself through [find]'s `lang`.
  *
  * Installed addons stay in the mix through [CatalogRepository].
  */
@@ -62,7 +80,9 @@ class SubtitleFinder(private val http: HttpClient, private val cacheDir: File? =
             async {
                 runCatching {
                     when (provider) {
-                        SubtitleProvider.OPEN_SUBTITLES -> openSubtitles(type, id)
+                        SubtitleProvider.OPEN_SUBTITLES -> stremioIndex(OPEN_SUBTITLES_V3, type, id, SubtitleProvider.OPEN_SUBTITLES)
+                        SubtitleProvider.OPEN_SUBTITLES_PRO -> stremioIndex(OPEN_SUBTITLES_PRO, type, id, SubtitleProvider.OPEN_SUBTITLES_PRO)
+                        SubtitleProvider.SUB_SENSE -> subSense(type, id)
                         SubtitleProvider.OPEN_SUBTITLES_REST -> openSubtitlesRest(type, id, lang)
                         SubtitleProvider.ADDONS -> emptyList()
                     }
@@ -72,10 +92,22 @@ class SubtitleFinder(private val http: HttpClient, private val cacheDir: File? =
         order(found.distinctBy { it.url }, lang)
     }
 
-    /** The Stremio OpenSubtitles index: id, language, release and encoding. */
-    private suspend fun openSubtitles(type: String, id: String): List<SubtitleRef> {
+    /**
+     * A Stremio-protocol subtitle index: id, language, release and encoding.
+     *
+     * v3 and PRO answer the same shape from the same library, so they share
+     * this parser and differ only in [base] and the label recorded on each
+     * result -- which is what lets the viewer tell two identical-looking rows
+     * apart in the subtitles panel.
+     */
+    private suspend fun stremioIndex(
+        base: String,
+        type: String,
+        id: String,
+        provider: SubtitleProvider
+    ): List<SubtitleRef> {
         val raw = http.get(
-            "$OPEN_SUBTITLES_V3/subtitles/$type/${FinderRules.streamSegment(id)}.json",
+            "$base/subtitles/$type/${FinderRules.streamSegment(id)}.json",
             headers = mapOf("Accept" to "application/json"),
             attempts = 1,
             limitBytes = MAX_JSON_BYTES
@@ -89,9 +121,42 @@ class SubtitleFinder(private val http: HttpClient, private val cacheDir: File? =
                 id = item.str("id"),
                 url = url,
                 lang = item.str("lang"),
-                source = SubtitleProvider.OPEN_SUBTITLES.label,
+                source = provider.label,
                 release = item.str("subtitleFileName").ifBlank { item.str("movieReleaseName") },
                 encoding = item.str("SubEncoding")
+            )
+        }.take(MAX_RESULTS)
+    }
+
+    /**
+     * SubSense: the same protocol, but the index behind it is an aggregator.
+     *
+     * It returns absolute `url` values to the source archives (Subf2m, SubDL,
+     * Podnapisi ...) rather than to itself, and it omits `SubEncoding`, so the
+     * encoding is left blank and the cache decodes as UTF-8 with a BOM strip.
+     * A `download` field, when present, is used for the download count so the
+     * best-seeded result sorts first.
+     */
+    private suspend fun subSense(type: String, id: String): List<SubtitleRef> {
+        val raw = http.get(
+            "$SUB_SENSE/subtitles/$type/${FinderRules.streamSegment(id)}.json",
+            headers = mapOf("Accept" to "application/json"),
+            attempts = 1,
+            limitBytes = MAX_JSON_BYTES
+        )
+        val root = json.parseToJsonElement(raw) as? JsonObject ?: return emptyList()
+        val items = root["subtitles"] as? JsonArray ?: return emptyList()
+        return items.filterIsInstance<JsonObject>().mapNotNull { item ->
+            val url = item.str("url")
+            if (url.isEmpty() || !HttpClient.isAllowedUrl(url)) return@mapNotNull null
+            SubtitleRef(
+                id = item.str("id"),
+                url = url,
+                lang = item.str("lang").ifBlank { item.str("language") },
+                source = SubtitleProvider.SUB_SENSE.label,
+                release = item.str("subtitleFileName").ifBlank { item.str("release") },
+                encoding = item.str("SubEncoding"),
+                downloads = item.str("downloads").toIntOrNull() ?: item.str("download").toIntOrNull() ?: 0
             )
         }.take(MAX_RESULTS)
     }
@@ -217,6 +282,8 @@ class SubtitleFinder(private val http: HttpClient, private val cacheDir: File? =
 
     companion object {
         private const val OPEN_SUBTITLES_V3 = "https://opensubtitles-v3.strem.io"
+        private const val OPEN_SUBTITLES_PRO = "https://opensubtitlesv3-pro.dexter21767.com"
+        private const val SUB_SENSE = "https://subsense.nepiraw.com"
         private const val OPEN_SUBTITLES_REST = "https://rest.opensubtitles.org"
         private const val LEGACY_UA = "TemporaryUserAgent"
         private const val MAX_JSON_BYTES = 3_000_000L

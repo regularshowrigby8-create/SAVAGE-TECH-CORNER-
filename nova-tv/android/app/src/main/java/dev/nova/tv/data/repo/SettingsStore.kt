@@ -22,7 +22,7 @@ class SettingsStore(private val prefs: SharedPreferences) : CatalogRepository.Ad
         val subtitleSize: Int = 100,
         /** Caption box opacity and lift off the bottom edge, see [SubtitleStyle]. */
         val subtitleBackground: Int = 55,
-        val subtitleBottom: Int = 8,
+        val subtitleBottom: Int = SubtitleStyle().bottomPercent,
         val subtitleTone: String = CaptionTone.CINEMA.name,
         /** Which subtitle engines are asked; every one is off/on per row. */
         val subtitleProviders: Set<SubtitleProvider> = SubtitleProvider.entries.toSet(),
@@ -54,7 +54,7 @@ class SettingsStore(private val prefs: SharedPreferences) : CatalogRepository.Ad
         preferredQuality = prefs.getString(KEY_QUALITY, "720p") ?: "720p",
         subtitleSize = prefs.getInt(KEY_SUBTITLE, 100),
         subtitleBackground = prefs.getInt(KEY_SUBTITLE_BG, 55),
-        subtitleBottom = prefs.getInt(KEY_SUBTITLE_BOTTOM, 8),
+        subtitleBottom = prefs.getInt(KEY_SUBTITLE_BOTTOM, SubtitleStyle().bottomPercent),
         subtitleTone = prefs.getString(KEY_SUBTITLE_TONE, CaptionTone.CINEMA.name) ?: CaptionTone.CINEMA.name,
         subtitleProviders = SubtitleProvider.entries.filter { prefs.getBoolean(KEY_SUB_PROVIDER + it.name, true) }.toSet(),
         subtitleLanguage = prefs.getString(KEY_SUB_LANG, "eng") ?: "eng",

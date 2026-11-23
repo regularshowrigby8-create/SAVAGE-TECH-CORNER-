@@ -182,24 +182,30 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+      # Artefacts are uploaded even when a later step fails: a debug APK that
+      # built is still installable, and losing it because the release step
+      # tripped R8 is how "both artifacts" turned into none. Each flavour gets
+      # its own named artefact so the download link says which is which.
       - name: Upload release APK
-        if: success()
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: nova-tv-release-apk
           path: nova-tv/android/app/build/outputs/apk/tv/release/*.apk
+          if-no-files-found: warn
           retention-days: 30
 
       - name: Upload mobile release APK
-        if: success()
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: nova-mobile-release-apk
           path: nova-tv/android/app/build/outputs/apk/mobile/release/*.apk
+          if-no-files-found: warn
           retention-days: 30
 
-      - name: Upload debug APK
-        if: success()
+      - name: Upload debug APKs
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: nova-tv-debug-apk

@@ -2,6 +2,7 @@ package dev.nova.tv.ui.player
 
 import dev.nova.tv.player.NovaPlayer
 import dev.nova.tv.player.SubtitleStyle
+import dev.nova.tv.player.stepSize
 import dev.nova.tv.player.engine.PlayerEngineState
 import dev.nova.tv.player.imported.QualityLadder
 import dev.nova.tv.player.imported.SpeedStep
@@ -163,11 +164,20 @@ internal fun panelOptions(
                 viewModel.setSubtitleStyle(subtitleStyle.nextTone())
             }
         )
+        // Two rows, smaller and larger, so overshooting a size does not mean
+        // cycling through all five presets to get back.
         add(
             PanelOption("Caption size", subtitleStyle.sizeLabel, false) {
-                viewModel.setSubtitleStyle(subtitleStyle.nextSize())
+                viewModel.setSubtitleStyle(subtitleStyle.stepSize(up = true))
             }
         )
+        if (subtitleStyle.sizePercent > SubtitleStyle.SIZES.first()) {
+            add(
+                PanelOption("Caption size down", null, false) {
+                    viewModel.setSubtitleStyle(subtitleStyle.stepSize(up = false))
+                }
+            )
+        }
         add(
             PanelOption("Caption box", subtitleStyle.backgroundLabel, false) {
                 viewModel.setSubtitleStyle(subtitleStyle.nextBackground())
