@@ -714,7 +714,7 @@ class ServerFinderHarvester(
             .filterNot { ServerFinder.isAdHost(FinderHelpers.hostOf(it)) }
             .filterNot { ServerFinder.isJunk(it) }
             .distinct()
-            .take(MAX_API_CALLS)
+            .take(ServerFinder.MAX_API_CALLS)
         var followed = 0
         for (link in calls) {
             val host = FinderHelpers.hostOf(link)
@@ -727,9 +727,9 @@ class ServerFinderHarvester(
             bodies.append('\n').append(body)
             FinderTrace.count("api.body")
             // A server list: each `data-id` is one playable server.
-            val ids = ServerFinder.DATA_ID.findAll(body).map { it.groupValues[1] }.distinct().take(MAX_SERVERS)
+            val ids = ServerFinder.DATA_ID.findAll(body).map { it.groupValues[1] }.distinct().take(ServerFinder.MAX_SERVERS)
             for (id in ids) {
-                if (followed >= MAX_SERVERS) break
+                if (followed >= ServerFinder.MAX_SERVERS) break
                 followed++
                 val src = "$origin/ajax/v2/episode/sources?id=$id"
                 val sr = http.get(src, referer = url, read = 200_000) ?: continue
