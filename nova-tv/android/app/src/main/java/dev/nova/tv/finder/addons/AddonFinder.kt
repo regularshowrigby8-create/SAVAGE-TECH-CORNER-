@@ -622,15 +622,26 @@ class AddonFinderHarvester(
      */
     suspend fun harvest(round: Int): List<FinderCandidate> {
         val started = System.currentTimeMillis()
+        // `push()` rejects a URL only while it is in the frontier and `pop()`
+        // removes it, so `refillSeeds()` re-queues seeds it has just consumed.
+        // With nothing new to follow, the loop re-fetched the same seven URLs
+        // for its whole budget -- which is why the pool sat at a fraction of
+        // capacity (198/6000 on device) rather than reporting the surface dry.
+        val visited = HashSet<String>()
+        var barren = 0
         while (System.currentTimeMillis() - started < harvestBudgetMs) {
             if (full()) break
-            var batch = store.pop(64)
+            var batch = store.pop(64).filter { visited.add(it) }
             if (batch.isEmpty()) {
                 refillSeeds()
-                batch = store.pop(32)
+                batch = store.pop(32).filter { visited.add(it) }
                 if (batch.isEmpty()) break
             }
+            val before = store.count("alive") + store.frontierSize()
             coroutineScope { batch.map { u -> async { process(u) } }.awaitAll() }
+            val after = store.count("alive") + store.frontierSize()
+            barren = if (after > before) 0 else barren + 1
+            if (barren >= BARREN_ROUNDS) break
             delay(200)
         }
         return store.alive().take(cap).map { it.toFinderCandidate() }
@@ -651,6 +662,11 @@ class AddonFinderHarvester(
 
     /** How long one [harvest] call may crawl before returning what it has. */
     private var harvestBudgetMs: Long = 45_000L
+
+    private companion object {
+        /** Consecutive rounds that add nothing before a harvest gives up. */
+        const val BARREN_ROUNDS = 2
+    }
 
     private fun unescape(s: String): String = s
         .replace("&amp;", "&").replace("&quot;", "\"").replace("&#39;", "'")

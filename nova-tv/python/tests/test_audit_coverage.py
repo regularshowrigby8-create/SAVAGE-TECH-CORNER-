@@ -68,6 +68,12 @@ class AuditCoversThisTurnsWork(unittest.TestCase):
             "server harvest keeps crawling instead of one batch",
             "addon harvest keeps crawling instead of one batch",
             "website pool receives the site, not the media origin",
+            "FinderBrowser renders through a browser engine",
+            "finder browser really renders pages",
+            "finder browser is given a context to render in",
+            "finder browser serialises concurrent renders",
+            "server harvest stops when a frontier round finds nothing",
+            "addon harvest stops when a frontier round finds nothing",
         }
         missing = required - self.names
         self.assertEqual(set(), missing, f"audit lost checks: {sorted(missing)}")
@@ -76,7 +82,7 @@ class AuditCoversThisTurnsWork(unittest.TestCase):
         # The original 170 were almost entirely "file exists / symbol is
         # referenced". This is the floor that stops the report drifting back to
         # a file listing.
-        self.assertGreaterEqual(len(self.checks), 185)
+        self.assertGreaterEqual(len(self.checks), 190)
 
 
 class AuditCatchesBrokenFixes(unittest.TestCase):
@@ -220,6 +226,44 @@ class AuditCatchesBrokenFixes(unittest.TestCase):
             "// local file",
         )
         self._assert_caught("imported player engine is present and attributed")
+
+
+    # -- the browser that renders, and the frontier that stops ---------------
+    def test_audit_catches_a_stubbed_browser(self) -> None:
+        # The exact defect the user reported: render() returning nothing while
+        # every other check stayed green.
+        self._mutate(
+            TV / "finder/translated/FinderBrowser.kt",
+            "val html = load(url, referer, waitMs.toLong(), net)",
+            'val html = ""',
+        )
+        self._assert_caught("finder browser really renders pages")
+
+    def test_audit_catches_a_browser_with_no_context(self) -> None:
+        # No context means `available` is false, so every render degrades to "".
+        self._mutate(TV / "NovaApplication.kt", "FinderBrowser(this)", "FinderBrowser()")
+        self._assert_caught("finder browser is given a context to render in")
+
+    def test_audit_catches_ungated_renders(self) -> None:
+        self._mutate(TV / "finder/translated/FinderBrowser.kt", "gate.withLock {", "run {")
+        self._assert_caught("finder browser serialises concurrent renders")
+
+    def test_audit_catches_a_spinning_server_frontier(self) -> None:
+        self._mutate(
+            TV / "finder/servers/ServerFinder.kt",
+            "store.pop(64).filter { visited.add(it) }",
+            "store.pop(64)",
+        )
+        self._assert_caught("server harvest stops when a frontier round finds nothing")
+
+    def test_audit_catches_a_missing_barren_stop(self) -> None:
+        self._mutate(
+            TV / "finder/addons/AddonFinder.kt",
+            "if (barren >= BARREN_ROUNDS) break",
+            "",
+            all_occurrences=True,
+        )
+        self._assert_caught("addon harvest stops when a frontier round finds nothing")
 
 
 if __name__ == "__main__":

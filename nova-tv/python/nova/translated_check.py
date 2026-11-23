@@ -275,13 +275,22 @@ def check_no_stubs(root: Path) -> List[Check]:
             checks.append(Check(f"no stubs in {path.name}", "contradicted", f"markers={hits} empty={empty[:3]}", path.name))
         else:
             checks.append(Check(f"no stubs in {path.name}", "proven", "no TODO/FIXME/empty bodies", path.name))
-    # FinderBrowser is the one documented stub: it must say why, in the file.
+    # FinderBrowser used to be a documented stub and this audit used to *require*
+    # the stub (`start(): Boolean = false`). That check was green while the
+    # website pool was empty on every phone, because "stub is documented" is not
+    # a property of a working finder. It now requires the opposite: a renderer
+    # backed by Android's own Chromium, and the reason recorded in the file.
     browser = root / "android/app/src/main/java/dev/nova/tv/finder/translated/FinderBrowser.kt"
     text = _read(browser)
-    if "Playwright" in text and "plain" in text.lower() and "start(): Boolean = false" in text:
-        checks.append(Check("FinderBrowser stub is documented", "proven", "Playwright -> plain HTTP branch documented", browser.name))
+    code = _strip_comments(text)
+    renders = "WebView(" in code and "loadUrl(" in code
+    documented = "Playwright" in text and "WebView" in text
+    if renders and documented:
+        checks.append(Check("FinderBrowser renders through a browser engine", "proven",
+                            "WebView-backed, Playwright mapping documented", browser.name))
     else:
-        checks.append(Check("FinderBrowser stub is documented", "contradicted", "FinderBrowser must document why it is a stub", browser.name))
+        checks.append(Check("FinderBrowser renders through a browser engine", "contradicted",
+                            "must drive a WebView and say how it maps to Playwright", browser.name))
     return checks
 
 
@@ -908,6 +917,75 @@ def check_finder_correctness(root: Path) -> List[Check]:
         else "returns the media origin",
         "finder/servers/ServerFinder.kt",
     ))
+
+    # --- the browser that actually renders -----------------------------------
+    # Root cause of "Website finder 0 sites" on device: FinderBrowser was a stub
+    # whose render() always returned "" and (later) no context was passed, so
+    # every seed page took the plain-HTTP branch, the extractor found nothing in
+    # the unrendered JS shell, and the pool stayed empty while the addon finder
+    # (JSON seeds, no rendering needed) filled up. Both facts are asserted from
+    # code, because the KDoc explains the old stub and would satisfy a prose
+    # search.
+    fb_rel = "finder/translated/FinderBrowser.kt"
+    fb = _strip_comments(_read(root / "android/app/src/main/java/dev/nova/tv" / fb_rel))
+    renders = "WebView(" in fb and "loadUrl(" in fb
+    # `if (!available) return "" to emptyList()` is the documented degradation
+    # for a missing context, not the old stub: the stub returned empty
+    # *unconditionally*. Require that the empty return sits behind the
+    # availability guard, so deleting the render path cannot pass this.
+    guards = re.findall(r"""if \(!available\) return "" to emptyList\(\)""", fb)
+    body = fb[fb.find("suspend fun render("):fb.find("suspend fun renderText(")]
+    renders_in_body = "load(" in body
+    not_stub = bool(guards) and renders_in_body
+    checks.append(Check(
+        "finder browser really renders pages",
+        "proven" if renders and not_stub else "contradicted",
+        "drives a WebView and returns its DOM" if renders and not_stub
+        else "render() still short-circuits to empty HTML",
+        fb_rel,
+    ))
+    # A rendering browser needs a context; without one `available` is false and
+    # every render silently degrades to "".
+    app_rel = "NovaApplication.kt"
+    app = _strip_comments(_read(root / "android/app/src/main/java/dev/nova/tv" / app_rel))
+    wired = bool(re.search(r"FinderBrowser\(\s*this\s*\)", app))
+    checks.append(Check(
+        "finder browser is given a context to render in",
+        "proven" if wired else "contradicted",
+        "FinderBrowser(this) in NovaApplication" if wired
+        else "FinderBrowser() has no context, so rendering is off on device",
+        app_rel,
+    ))
+    # A single WebView shows one document; concurrent harvest coroutines must not
+    # interleave two navigations or one caller reads the other's page.
+    serialised = bool(re.search(r"gate\.withLock\s*\{", fb))
+    checks.append(Check(
+        "finder browser serialises concurrent renders",
+        "proven" if serialised else "contradicted",
+        "renders are gated" if serialised else "parallel renders would cross-contaminate",
+        fb_rel,
+    ))
+
+    # --- the frontier must not spin -----------------------------------------
+    # push() only rejects a URL currently *in* the frontier and pop() removes it,
+    # so refillSeeds() re-queues what it just consumed. With a barren surface the
+    # loop re-fetched the same seeds until its budget ran out. Both harvesters
+    # must remember what they already fetched and stop after two barren rounds.
+    for label, rel in [("server", "finder/servers/ServerFinder.kt"),
+                       ("addon", "finder/addons/AddonFinder.kt")]:
+        src = _strip_comments(_read(root / "android/app/src/main/java/dev/nova/tv" / rel))
+        # *Both* pops must be filtered. Checking only that `visited.add` appears
+        # somewhere passes while the 64-batch path is unfiltered, which is the
+        # spin: the big pop then keeps returning URLs already fetched.
+        seen_once = src.count("visited.add(it)") >= 2
+        stops = "BARREN_ROUNDS" in src and "barren >= BARREN_ROUNDS" in src
+        checks.append(Check(
+            f"{label} harvest stops when a frontier round finds nothing",
+            "proven" if seen_once and stops else "contradicted",
+            "fetches each URL once and gives up on barren rounds" if seen_once and stops
+            else "re-queues the same seeds until the budget expires",
+            rel,
+        ))
     return checks
 
 

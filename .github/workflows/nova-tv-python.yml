@@ -93,11 +93,17 @@ jobs:
           # A gate that passes having checked nothing is a false green. This is
           # the minimum this audit has ever produced; if a refactor stops the
           # checks being collected, the count collapses and this fails.
+          # Raised 185 -> 190 when the website finder's real cause was found:
+          # FinderBrowser was a stub that always returned empty HTML, so every
+          # seed page went down the plain-HTTP branch and the pool stayed at 0
+          # on device while the addon finder filled up. The browser, the context
+          # that enables it, the render mutex and both frontier anti-spin guards
+          # are now asserted, and each is mutation-tested in test_audit_coverage.
           # Raised 150 -> 185 when the player, seek-gesture and cookie-jar
           # checks were added. The floor exists so a future edit cannot quietly
           # delete coverage and still report a pass.
-          if total < 185:
-              print(f"::error title=audit too small::only {total} checks ran, expected >= 185")
+          if total < 190:
+              print(f"::error title=audit too small::only {total} checks ran, expected >= 190")
               sys.exit(1)
 
           summary = os.environ.get("GITHUB_STEP_SUMMARY")

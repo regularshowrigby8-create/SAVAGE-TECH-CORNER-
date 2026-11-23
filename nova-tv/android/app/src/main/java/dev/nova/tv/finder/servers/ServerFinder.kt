@@ -650,17 +650,31 @@ class ServerFinderHarvester(
     suspend fun harvest(round: Int): ServerHarvest {
         val started = System.currentTimeMillis()
         var seen = 0
+        // URLs already fetched by this call. `push()` only rejects a URL that is
+        // currently *in* the frontier and `pop()` removes it, so `refillSeeds()`
+        // re-queues a seed it has just consumed. When discovery yields nothing
+        // -- the normal case for a JS shell fetched without a browser -- the
+        // loop re-fetched the same seeds until its budget ran out instead of
+        // concluding the surface was barren.
+        val visited = HashSet<String>()
+        var barren = 0
         while (System.currentTimeMillis() - started < harvestBudgetMs) {
             // Stop exactly where Python stops: the cap is a hard ceiling.
             if (store.count("alive") >= cap) break
-            var batch = store.pop(64)
+            var batch = store.pop(64).filter { visited.add(it) }
             if (batch.isEmpty()) {
                 refillSeeds()
-                batch = store.pop(32)
+                batch = store.pop(32).filter { visited.add(it) }
+                // Every seed was fetched by this call and led nowhere: stop.
+                // Resetting `visited` here would reintroduce the spin.
                 if (batch.isEmpty()) break
             }
             seen += batch.size
+            val before = store.count("alive") + store.frontierSize()
             coroutineScope { batch.map { u -> async { discover(u) } }.awaitAll() }
+            val after = store.count("alive") + store.frontierSize()
+            barren = if (after > before) 0 else barren + 1
+            if (barren >= BARREN_ROUNDS) break
             // Python sleeps 0.2 s between rounds; keep the same courtesy pause
             // so a hostile host is not hammered by a tight loop.
             delay(200)
@@ -715,6 +729,11 @@ class ServerFinderHarvester(
 
     /** How long one [harvest] call may crawl before returning what it has. */
     private var harvestBudgetMs: Long = 45_000L
+
+    private companion object {
+        /** Consecutive rounds that add nothing before a harvest gives up. */
+        const val BARREN_ROUNDS = 2
+    }
 
     private fun unescape(s: String): String = s
         .replace("&amp;", "&").replace("&quot;", "\"").replace("&#39;", "'")

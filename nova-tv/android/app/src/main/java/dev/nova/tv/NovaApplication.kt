@@ -66,10 +66,12 @@ class NovaApplication : Application(), ImageLoaderFactory {
      * Translated Python finders (servers.py / addons.py), in Kotlin.
      *
      * Both live in `src/main`, so the `tv` and `mobile` flavours share them.
-     * Playwright has no Android equivalent, so FinderBrowser always takes
-     * the plain-HTTP branch the Python scripts take when it is missing.
+     * Playwright has no Android equivalent, but Android's own Chromium does the
+     * same job: FinderBrowser renders through `WebView`. Without a context it
+     * cannot render at all and every seed page falls back to plain HTTP, which
+     * is what left the website pool at 0 on device.
      */
-    val finderBrowser: FinderBrowser by lazy { FinderBrowser() }
+    val finderBrowser: FinderBrowser by lazy { FinderBrowser(this) }
     val serverFinderHttp by lazy { ServerFinder.http(http.okHttp, finderBrowser) }
     val addonFinderHttp by lazy { AddonFinder.http(http.okHttp, finderBrowser) }
 

@@ -154,6 +154,61 @@ class ServerFinderTest {
         assertEquals("https://vidcloud.example", rec.toSiteUrl())
     }
 
+    // -- the frontier must drain, not spin ----------------------------------
+    // `push()` only rejects a URL currently *in* the frontier and `pop()`
+    // removes it, so `refillSeeds()` re-queues what it just consumed. With a
+    // barren surface the harvest used to re-fetch the same seeds until its
+    // budget expired, which is what kept the pool near empty on device.
+    @Test
+    fun `a consumed url can be pushed again -- the store does not remember it`() {
+        val store = ServerFinderStore(MemoryStore())
+        assertTrue(store.push("https://a.example"))
+        assertEquals(listOf("https://a.example"), store.pop(10))
+        // This is the trap: after pop the store has forgotten all about it.
+        assertTrue("pop must clear the frontier entry", store.push("https://a.example"))
+    }
+
+    @Test
+    fun `visited filter drops a url the frontier offers twice`() {
+        val store = ServerFinderStore(MemoryStore())
+        store.push("https://a.example")
+        store.push("https://b.example")
+        val visited = HashSet<String>()
+        val first = store.pop(64).filter { visited.add(it) }
+        assertEquals(2, first.size)
+        // refillSeeds() would re-queue both; the filter is what stops the spin.
+        store.push("https://a.example")
+        store.push("https://b.example")
+        val second = store.pop(32).filter { visited.add(it) }
+        assertEquals("a re-queued seed must not be fetched twice", 0, second.size)
+    }
+
+    @Test
+    fun `a refilling frontier terminates and never repeats a url`() {
+        // The real loop: pop, and when the frontier drains, refill from the
+        // seeds. Mirrors mean a refill legitimately yields *new* variants (bare,
+        // www., m., api.), so "empty immediately" is not the invariant. The
+        // invariant is that the visited set makes the sequence finite and that
+        // no URL is ever handed out twice.
+        val store = ServerFinderStore(MemoryStore())
+        val harvester = ServerFinderHarvester(store, ServerFinder.http(okhttp3.OkHttpClient()))
+        val visited = HashSet<String>()
+        val seenOrder = mutableListOf<String>()
+        var rounds = 0
+        while (rounds < 50) {
+            rounds += 1
+            var batch = store.pop(64).filter { visited.add(it) }
+            if (batch.isEmpty()) {
+                harvester.refillSeeds()
+                batch = store.pop(32).filter { visited.add(it) }
+                if (batch.isEmpty()) break
+            }
+            seenOrder += batch
+        }
+        assertTrue("loop must stop instead of spinning", rounds < 50)
+        assertEquals("no url may be fetched twice", seenOrder.size, seenOrder.toSet().size)
+    }
+
     private fun finderRecord(baseUrl: String, referer: String) = ServerRecord(
         id = "x",
         name = "p",
