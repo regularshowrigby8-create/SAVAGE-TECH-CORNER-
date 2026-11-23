@@ -103,14 +103,14 @@ import dev.nova.tv.player.SubtitleStyle
 import dev.nova.tv.player.applySubtitleStyle
 import dev.nova.tv.player.engine.ResizeMode
 import dev.nova.tv.player.imported.AspectSteps
-import dev.nova.tv.player.imported.QualityLadder
 import dev.nova.tv.player.imported.SpeedStep
 import dev.nova.tv.player.imported.SubtitleFiles
 import dev.nova.tv.player.imported.SubtitleOffsetController
 import dev.nova.tv.player.imported.attachSubtitleOffset
 import dev.nova.tv.player.preload.PreloadMode
 import dev.nova.tv.ui.player.BufferingOverlay
-import dev.nova.tv.ui.player.PanelOption
+import dev.nova.tv.ui.player.panelOptions
+import dev.nova.tv.ui.player.subtitleOffsetLabel
 import dev.nova.tv.ui.screens.NovaViewModel
 import dev.nova.tv.ui.screens.PlayerPanel
 import dev.nova.tv.ui.screens.UpNext
@@ -670,12 +670,6 @@ private fun SeekBar(
     }
 }
 
-private fun subtitleOffsetLabel(ms: Long): String = when {
-    ms == 0L -> "Off"
-    ms > 0 -> "+${"%.1f".format(ms / 1000f)}s"
-    else -> "${"%.1f".format(ms / 1000f)}s"
-}
-
 @Composable
 private fun Panel(
     panel: PlayerPanel,
@@ -689,105 +683,19 @@ private fun Panel(
 ) {
     val engine by player.engineState.collectAsStateWithLifecycle()
     val session by player.session.collectAsStateWithLifecycle()
-    val options: List<PanelOption> = when (panel) {
-        PlayerPanel.SOURCES -> session.sources.mapIndexed { i, stream ->
-            val tried = i in session.tried && i != session.index
-            PanelOption(stream.label, if (i == session.index) "Playing" else if (tried) "Failed" else null, i == session.index) {
-                player.selectSource(i)
-                viewModel.closePlayerPanel()
-            }
-        }
-        PlayerPanel.AUDIO -> engine.audioTracks.map { track ->
-            val detail = listOfNotNull(
-                track.language?.uppercase(),
-                track.channelCount.takeIf { it > 0 }?.let { "${it}ch" }
-            ).joinToString("  ·  ").ifBlank { null }
-            PanelOption(track.displayLabel(), detail, track.index == engine.selectedAudioIndex) {
-                player.engine.selectAudioTrack(track.index)
-                viewModel.closePlayerPanel()
-            }
-        }
-        PlayerPanel.QUALITY -> buildList {
-            add(
-                PanelOption("Auto", if (player.qualityCapHeight() == 0) "Adaptive" else "Cap off", player.qualityCapHeight() == 0) {
-                    player.setQualityCap(0)
-                    viewModel.closePlayerPanel()
-                }
-            )
-            QualityLadder.rungs(session.sources, session.index).forEach { rung ->
-                val height = rung.label.removeSuffix("p").toIntOrNull() ?: 0
-                add(
-                    PanelOption(rung.label, rung.detail, rung.streamIndex == session.index && height == player.qualityCapHeight()) {
-                        if (rung.streamIndex != session.index) player.selectSource(rung.streamIndex)
-                        player.setQualityCap(height)
-                        viewModel.closePlayerPanel()
-                    }
-                )
-            }
-        }
-        PlayerPanel.SPEED -> SpeedStep.entries.map { step ->
-            val on = kotlin.math.abs(engine.playbackSpeed - step.value) < 0.01f
-            PanelOption(step.label, if (on) "Playing" else null, on) {
-                player.setRate(step.value)
-                viewModel.setPlaybackRate(step.value)
-                viewModel.closePlayerPanel()
-            }
-        }
-        PlayerPanel.SUBTITLES -> listOf(
-            PanelOption("Off", null, engine.selectedSubtitleTrack == null) {
-                player.engine.selectSubtitleTrack(null)
-                viewModel.closePlayerPanel()
-            },
-            PanelOption("Add subtitle file…", "From this device", false, onAddSubtitleFile),
-            PanelOption(
-                "Refresh subtitles",
-                if (session.subtitles.isEmpty()) "Searching…" else "${session.subtitles.size} found",
-                false
-            ) { viewModel.reloadSubtitles() },
-            PanelOption("Delay later", subtitleOffsetLabel(offsetMs), false) {
-                subtitleOffset.step(SubtitleOffsetController.STEP_MS)
-                onOffsetChange(subtitleOffset.offsetMs)
-            },
-            PanelOption("Delay earlier", subtitleOffsetLabel(offsetMs), false) {
-                subtitleOffset.step(-SubtitleOffsetController.STEP_MS)
-                onOffsetChange(subtitleOffset.offsetMs)
-            }
-        ) + (if (offsetMs != 0L) listOf(
-            PanelOption("Reset delay", subtitleOffsetLabel(offsetMs), false) {
-                subtitleOffset.offsetMs = 0L
-                subtitleOffset.reset()
-                onOffsetChange(0L)
-            }
-        ) else emptyList()) + listOf(
-            // Style rows stay open so the change is visible over the picture.
-            PanelOption("Caption style", subtitleStyle.tone.label, false) {
-                viewModel.setSubtitleStyle(subtitleStyle.nextTone())
-            },
-            PanelOption("Caption size", subtitleStyle.sizeLabel, false) {
-                viewModel.setSubtitleStyle(subtitleStyle.nextSize())
-            },
-            PanelOption("Caption box", subtitleStyle.backgroundLabel, false) {
-                viewModel.setSubtitleStyle(subtitleStyle.nextBackground())
-            },
-            PanelOption("Caption height", subtitleStyle.bottomLabel, false) {
-                viewModel.setSubtitleStyle(subtitleStyle.nextBottom())
-            }
-        ) + engine.subtitleTracks.map { track ->
-            PanelOption(
-                track.displayLabel(),
-                if (track.isExternal) "Sidecar" else null,
-                track.id == engine.selectedSubtitleTrack?.id
-            ) {
-                player.engine.selectSubtitleTrack(track)
-                viewModel.closePlayerPanel()
-            }
-        } + session.subtitles.map { ref ->
-            PanelOption("Remove ${ref.label}", ref.detail, false) {
-                player.removeSubtitle(ref.url)
-                viewModel.closePlayerPanel()
-            }
-        }
-    }
+    val options = panelOptions(
+        panel = panel,
+        player = player,
+        viewModel = viewModel,
+        engine = engine,
+        session = session,
+        subtitleStyle = subtitleStyle,
+        subtitleOffset = subtitleOffset,
+        offsetMs = offsetMs,
+        onOffsetChange = onOffsetChange,
+        onAddSubtitleFile = onAddSubtitleFile
+    )
+
     Column(
         Modifier
             .width(340.dp)

@@ -76,7 +76,6 @@ import dev.nova.tv.player.SubtitleStyle
 import dev.nova.tv.player.applySubtitleStyle
 import dev.nova.tv.player.engine.ResizeMode
 import dev.nova.tv.player.imported.AspectSteps
-import dev.nova.tv.player.imported.QualityLadder
 import dev.nova.tv.player.imported.ScrubState
 import dev.nova.tv.player.imported.SpeedStep
 import dev.nova.tv.player.imported.SubtitleFiles
@@ -582,166 +581,18 @@ private fun Panel(
     val engine by player.engineState.collectAsStateWithLifecycle()
     val session by player.session.collectAsStateWithLifecycle()
 
-    val options: List<PanelOption> = when (panel) {
-        PlayerPanel.SOURCES -> session.sources.mapIndexed { i, stream ->
-            val tried = i in session.tried && i != session.index
-            PanelOption(
-                label = stream.label,
-                detail = when {
-                    i == session.index -> "Playing"
-                    tried -> "Failed"
-                    else -> null
-                },
-                selected = i == session.index
-            ) {
-                player.selectSource(i)
-                viewModel.closePlayerPanel()
-            }
-        }
-
-        PlayerPanel.QUALITY -> buildList {
-            add(
-                PanelOption(
-                    label = "Auto",
-                    detail = if (player.qualityCapHeight() == 0) "Adaptive" else "Cap off",
-                    selected = player.qualityCapHeight() == 0
-                ) {
-                    player.setQualityCap(0)
-                    viewModel.closePlayerPanel()
-                }
-            )
-            QualityLadder.rungs(session.sources, session.index).forEach { rung ->
-                val height = rung.label.removeSuffix("p").toIntOrNull() ?: 0
-                add(
-                    PanelOption(
-                        label = rung.label,
-                        detail = rung.detail,
-                        selected = rung.streamIndex == session.index && height == player.qualityCapHeight()
-                    ) {
-                        if (rung.streamIndex != session.index) player.selectSource(rung.streamIndex)
-                        player.setQualityCap(height)
-                        viewModel.closePlayerPanel()
-                    }
-                )
-            }
-        }
-
-        PlayerPanel.SPEED -> SpeedStep.entries.map { step ->
-            PanelOption(
-                label = step.label,
-                detail = if (kotlin.math.abs(engine.playbackSpeed - step.value) < 0.01f) "Playing" else null,
-                selected = kotlin.math.abs(engine.playbackSpeed - step.value) < 0.01f
-            ) {
-                player.setRate(step.value)
-                viewModel.setPlaybackRate(step.value)
-                viewModel.closePlayerPanel()
-            }
-        }
-
-        PlayerPanel.AUDIO -> engine.audioTracks.map { track ->
-            val detail = listOfNotNull(
-                track.language?.uppercase(),
-                track.channelCount.takeIf { it > 0 }?.let { "${it}ch" },
-                track.mimeType?.substringAfter('/')
-            ).joinToString("  ·  ").ifBlank { null }
-            PanelOption(track.displayLabel(), detail, track.index == engine.selectedAudioIndex) {
-                player.engine.selectAudioTrack(track.index)
-                viewModel.closePlayerPanel()
-            }
-        }
-
-        PlayerPanel.SUBTITLES -> buildList {
-            add(
-                PanelOption("Off", null, engine.selectedSubtitleTrack == null) {
-                    player.engine.selectSubtitleTrack(null)
-                    viewModel.closePlayerPanel()
-                }
-            )
-            add(PanelOption("Add subtitle file…", "From this device", false, onAddSubtitleFile))
-            // The engines are asked again on demand: a title that had no
-            // captions at Play time often gains them a minute later.
-            add(
-                PanelOption(
-                    "Refresh subtitles",
-                    if (session.subtitles.isEmpty()) "Searching…" else "${session.subtitles.size} found",
-                    false
-                ) { viewModel.reloadSubtitles() }
-            )
-            // Delay: positive shows captions later. Two rows keep it one click
-            // per direction instead of a hidden submenu.
-            add(
-                PanelOption(
-                    label = "Delay later",
-                    detail = subtitleOffset.label(),
-                    selected = false
-                ) {
-                    subtitleOffset.step(SubtitleOffsetController.STEP_MS)
-                    onOffsetChange(subtitleOffset.offsetMs)
-                }
-            )
-            add(
-                PanelOption(
-                    label = "Delay earlier",
-                    detail = subtitleOffset.label(),
-                    selected = false
-                ) {
-                    subtitleOffset.step(-SubtitleOffsetController.STEP_MS)
-                    onOffsetChange(subtitleOffset.offsetMs)
-                }
-            )
-            if (offsetMs != 0L) {
-                add(
-                    PanelOption("Reset delay", subtitleOffset.label(), false) {
-                        subtitleOffset.offsetMs = 0L
-                        subtitleOffset.reset()
-                        onOffsetChange(0L)
-                    }
-                )
-            }
-            // Style stays on screen while it is adjusted, unlike a track pick.
-            add(
-                PanelOption("Caption style", subtitleStyle.tone.label, false) {
-                    viewModel.setSubtitleStyle(subtitleStyle.nextTone())
-                }
-            )
-            add(
-                PanelOption("Caption size", subtitleStyle.sizeLabel, false) {
-                    viewModel.setSubtitleStyle(subtitleStyle.nextSize())
-                }
-            )
-            add(
-                PanelOption("Caption box", subtitleStyle.backgroundLabel, false) {
-                    viewModel.setSubtitleStyle(subtitleStyle.nextBackground())
-                }
-            )
-            add(
-                PanelOption("Caption height", subtitleStyle.bottomLabel, false) {
-                    viewModel.setSubtitleStyle(subtitleStyle.nextBottom())
-                }
-            )
-            engine.subtitleTracks.forEach { track ->
-                add(
-                    PanelOption(
-                        track.displayLabel(),
-                        if (track.isExternal) "Sidecar" else null,
-                        track.id == engine.selectedSubtitleTrack?.id
-                    ) {
-                        player.engine.selectSubtitleTrack(track)
-                        viewModel.closePlayerPanel()
-                    }
-                )
-            }
-            // Sidecar tracks can be taken back out; embedded ones cannot.
-            session.subtitles.forEach { ref ->
-                add(
-                    PanelOption("Remove ${ref.label}", ref.detail, false) {
-                        player.removeSubtitle(ref.url)
-                        viewModel.closePlayerPanel()
-                    }
-                )
-            }
-        }
-    }
+    val options = panelOptions(
+        panel = panel,
+        player = player,
+        viewModel = viewModel,
+        engine = engine,
+        session = session,
+        subtitleStyle = subtitleStyle,
+        subtitleOffset = subtitleOffset,
+        offsetMs = offsetMs,
+        onOffsetChange = onOffsetChange,
+        onAddSubtitleFile = onAddSubtitleFile
+    )
 
     val first = remember(panel) { FocusRequester() }
     LaunchedEffect(panel, options.isNotEmpty()) {

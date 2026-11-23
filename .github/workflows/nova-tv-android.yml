@@ -17,10 +17,12 @@ on:
       - arena/*
     paths:
       - 'nova-tv/android/**'
+      - 'nova-tv/ops/**'
       - '.github/workflows/nova-tv-android.yml'
   pull_request:
     paths:
       - 'nova-tv/android/**'
+      - 'nova-tv/ops/**'
       - '.github/workflows/nova-tv-android.yml'
   workflow_dispatch:
 
@@ -68,6 +70,14 @@ jobs:
                   raise SystemExit(f"version catalog missing [{section}]")
           print("catalog ok:", len(data["versions"]), "versions,", len(data["libraries"]), "libraries")
           PY
+
+      # Structural checks on the Kotlin sources: package/directory match,
+      # duplicated class names, unbalanced braces and unused imports. Runs in
+      # seconds with no Gradle or SDK, and it is a gate -- it fails the build
+      # instead of printing a report, so a careless edit cannot reach the APKs
+      # (or sit unnoticed until the next Android Studio import).
+      - name: Kotlin structural lint
+        run: python3 nova-tv/ops/kotlin_lint.py
 
       - name: Assemble debug APK
         working-directory: nova-tv/android
