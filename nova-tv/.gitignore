@@ -1,0 +1,14 @@
+nova.toml
+.env
+.nova-cache/
+.nova-snapshots/
+reports/
+__pycache__/
+*.pyc
+.venv/
+*.iml
+.gradle/
+build/
+local.properties
+*.apk
+*.keystore

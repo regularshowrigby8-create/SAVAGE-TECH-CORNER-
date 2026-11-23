@@ -1,0 +1,30 @@
+{
+  "_comment": "Model aliases. Point each alias at any OpenAI-compatible endpoint. Nothing here ships a key.",
+  "models": {
+    "default": {
+      "model": "gpt-4o-mini",
+      "base_url": "https://api.openai.com/v1",
+      "description": "Cheap general model for reviews and test proposals."
+    },
+    "reasoning": {
+      "model": "o4-mini",
+      "base_url": "https://api.openai.com/v1",
+      "description": "For multi-step planning in the self-improvement loop."
+    },
+    "local": {
+      "model": "llama3.1:8b",
+      "base_url": "http://localhost:11434/v1",
+      "description": "Ollama on your machine. Runs with no key and no network egress."
+    },
+    "darkgpt": {
+      "model": "darkgpt",
+      "base_url": "http://localhost:8000/v1",
+      "description": "Alias only. Serves whatever model your own gateway exposes under this name."
+    },
+    "worm-gpt": {
+      "model": "worm-gpt",
+      "base_url": "http://localhost:8000/v1",
+      "description": "Alias only. Serves whatever model your own gateway exposes under this name."
+    }
+  }
+}

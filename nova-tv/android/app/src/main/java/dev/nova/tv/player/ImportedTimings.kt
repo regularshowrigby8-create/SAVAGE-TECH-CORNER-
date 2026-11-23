@@ -1,0 +1,35 @@
+package dev.nova.tv.player
+
+/**
+ * GENERATED — do not edit by hand.
+ *
+ * Imported from regularshowrigby8-create/SAVAGE-TECH-CORNER-:tv/zeroplay-debrid/lib/player-core.js by `nova/importers.py`.
+ * Re-run: `python3 scripts/import_player_core.py`
+ *
+ * Taking the numbers from the already-proven implementation rather than
+ * re-inventing them keeps the Android player and the web player in step.
+ */
+object ImportedTimings {
+    const val IDLE_MS = 2000L
+    const val IDLE_TOUCH_MS = 3000L
+    const val TAP_THRESHOLD_MS = 250L
+    const val TOUCH_SETTLE_MS = 500L
+    const val CAPTURE_RELEASE_MS = 100L
+    const val DOUBLE_TAP_MS = 280L
+    const val LONG_PRESS_MS = 1500L
+    const val SEEK_SETTLE_MS = 400L}
+
+object ImportedSkipSeconds {
+    const val TAP = 10000L
+    const val KEY = 10000L
+    const val HOLD = 30000L}
+
+enum class ImportedHoldReason {
+    LOCK,
+    PAUSED,
+    INTERACTING,
+    MENU,
+    ERROR,
+    ENDED,
+    CASTING
+}
