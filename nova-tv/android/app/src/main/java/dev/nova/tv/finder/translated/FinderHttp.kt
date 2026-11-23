@@ -28,7 +28,7 @@ class Resp(
     val headers: Map<String, String>,
     val body: ByteArray
 ) {
-    val text: String get() = body.decodeToString(Charsets.UTF_8, ignoreMalformed = true)
+    val text: String get() = String(body, Charsets.UTF_8)
 
     /** Parsed body or null; never throws. Python: `Resp.json()`. */
     fun json(): JsonElement? = runCatching { Json.parseToJsonElement(text) }.getOrNull()
@@ -103,13 +103,16 @@ class FinderHttp(
             }
         }
         fingerprint.rotate()
-        delay(((2.0.pow(attempt)) * 0.8 + Random.nextDouble()) * 1000L)
+        // delay() takes Long; `* 1000L` on a Double is still a Double.
+        delay((((2.0.pow(attempt)) * 0.8 + Random.nextDouble()) * 1000.0).toLong())
     }
 
     /** Mint cookies for a wall through a real browser. No-op on Android. */
     private suspend fun solve(url: String, referer: String?) {
-        if (browser == null) return
-        runCatching { browser.mint(url, referer) }
+        // Bound to a local: a `if (browser == null) return` guard does not
+        // smart-cast a nullable *property* inside a lambda.
+        val page = browser ?: return
+        runCatching { page.mint(url, referer) }
     }
 
     /** Rotate GitHub tokens across calls; anonymous when none is configured. */
@@ -159,7 +162,7 @@ class FinderHttp(
                         return resp
                     } catch (e: IOException) {
                         last = Resp(0, url, emptyMap(), ByteArray(0))
-                        delay(((2.0.pow(attempt)) + Random.nextDouble()) * 1000L)
+                        delay((((2.0.pow(attempt)) + Random.nextDouble()) * 1000.0).toLong())
                     }
                 }
                 trip(host)

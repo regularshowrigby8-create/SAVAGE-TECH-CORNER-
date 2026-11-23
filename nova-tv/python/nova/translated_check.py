@@ -670,6 +670,38 @@ def run_all(root: Path) -> List[Check]:
     checks += check_hallucination(root)
     checks += check_tests_are_real(root)
     checks += check_sources_doc(root)
+    checks += check_compile_shapes(root)
+    return checks
+
+
+def check_compile_shapes(root: Path) -> List[Check]:
+    """The translated Kotlin must not contain shapes Kotlin rejects.
+
+    Every one of these was a real compile failure in CI run 45238681629 while
+    `kotlin_lint.py` reported no problems. The lint now checks them too; this
+    keeps the audit able to state the fact on its own, in the same report as
+    the wiring and logic checks.
+    """
+    import importlib.util
+
+    checks: List[Check] = []
+    lint_path = root / "ops" / "kotlin_lint.py"
+    if not lint_path.exists():
+        return [Check("kotlin_lint.py available", "contradicted", "missing", str(lint_path))]
+    spec = importlib.util.spec_from_file_location("nova_kotlin_lint", lint_path)
+    lint = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(lint)
+    except Exception as error:  # noqa: BLE001 - report, never crash the audit
+        return [Check("kotlin_lint.py loads", "contradicted", str(error), str(lint_path))]
+
+    src = root / "android" / "app" / "src"
+    offenders: List[str] = []
+    for path in sorted(src.rglob("*.kt")):
+        code = lint.strip_comments_and_strings(path.read_text("utf-8"))
+        offenders.extend(lint.check_compile_shapes(path, "", code))
+    checks.append(Check("no Kotlin shapes that fail to compile", "proven" if not offenders else "contradicted",
+                        f"{len(offenders)} offender(s)" + (": " + "; ".join(offenders[:5]) if offenders else "")))
     return checks
 
 

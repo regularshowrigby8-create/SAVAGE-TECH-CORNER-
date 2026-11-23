@@ -193,6 +193,95 @@ def stray_escaped_quote_lines(text: str) -> list[int]:
     return bad
 
 
+# -- compile-shape checks -----------------------------------------------------
+#
+# Each of these is a Kotlin type error that this lint previously waved through,
+# and each one cost a CI round because "no structural problems found" was read
+# as "it compiles". They are pattern checks, not a type checker: they catch the
+# same *shapes* that CI reported, with the exact error text recorded so the
+# next person recognises it.
+
+"""Double-valued delay() arguments.
+
+delay(Long) has no Double overload, and `doubleExpr * 1000L` is still Double.
+A regex could not do this: the real call nests twice
+(`delay(((2.0.pow(n)) + r) * 1000L)`), so the argument is extracted with
+balanced-paren scanning and then tested for a Double-producing token. Only a
+`* 1000L` that is *not* followed by `.toLong()` counts.
+"""
+
+DOUBLE_SIGNALS = ("nextDouble", "toDouble", ".pow(", "pow(attempt)", "Math.random")
+
+
+def double_delay_arguments(code: str) -> list[tuple[int, str]]:
+    """(line, argument) for every delay(...) whose argument is a Double."""
+    found: list[tuple[int, str]] = []
+    for match in re.finditer(r"\bdelay\(", code):
+        start = match.end()
+        depth = 1
+        i = start
+        while i < len(code) and depth:
+            if code[i] == "(":
+                depth += 1
+            elif code[i] == ")":
+                depth -= 1
+            i += 1
+        argument = code[start : i - 1]
+        if "\n" in argument:
+            continue
+        if not re.search(r"\*\s*1000L\s*$", argument.strip()):
+            continue
+        if ".toLong()" in argument:
+            continue
+        if any(signal in argument for signal in DOUBLE_SIGNALS) or re.search(r"\d\.\d", argument):
+            found.append((code.count("\n", 0, match.start()) + 1, argument.strip()))
+    return found
+
+# String.count(String) does not exist; it resolves to count((Char) -> Boolean).
+# Narrow on purpose: a *project* type may legitimately declare
+# `fun count(status: String? = null)` (both pool stores do), so only receivers
+# that are certainly String are flagged -- `.text`, `.body`, `.html` and a bare
+# String literal. Flagging every `.count("...")` reported 7 false positives on
+# the store API the finders actually use.
+STRING_COUNT_ARG = re.compile(r'(?:\.text|\.body|\.html|\btext|\bbody)\s*\.count\(\s*"[^"\n]*"\s*\)')
+
+# decodeToString(..., ignoreMalformed = ...) is JVM-only without an opt-in.
+DECODE_OPTS = re.compile(r"\.decodeToString\([^)\n]*ignoreMalformed")
+
+# A nullable *property* is not smart-cast inside a lambda after a guard.
+NULLABLE_LAMBDA_USE = re.compile(
+    r"if\s*\(\s*(\w+)\s*==\s*null\s*\)\s*return\b[\s\S]{0,80}?runCatching\s*\{\s*\1\."
+)
+
+
+def check_compile_shapes(path: Path, raw: str, code: str) -> list[str]:
+    """Shapes Kotlin rejects, reported per file.
+
+    [code] has comments and string literals stripped, so a URL containing
+    `//` or an error message containing quotes cannot trigger these.
+    """
+    problems: list[str] = []
+    for number, argument in double_delay_arguments(code):
+        problems.append(
+            f"{path.name}:{number}: delay() takes Long but this argument is Double: "
+            f"{argument} (Kotlin: 'None of the following candidates is applicable')")
+    for number, line in enumerate(code.splitlines(), 1):
+        if STRING_COUNT_ARG.search(line):
+            problems.append(
+                f"{path.name}:{number}: String.count(\"...\") does not exist; use an "
+                f"occurrence count (Kotlin: 'Argument type mismatch ... Function1<Char, Boolean>')")
+        if DECODE_OPTS.search(line):
+            problems.append(
+                f"{path.name}:{number}: decodeToString(ignoreMalformed=...) needs an opt-in; "
+                f"use String(bytes, Charsets.UTF_8)")
+    for match in NULLABLE_LAMBDA_USE.finditer(code):
+        line = code.count("\n", 0, match.start()) + 1
+        problems.append(
+            f"{path.name}:{line}: '{match.group(1)}' is nullable and a guard does not "
+            f"smart-cast it inside a lambda; bind `val local = {match.group(1)} ?: return`")
+    return problems
+
+
 def check_build_files(root: Path) -> list[str]:
     """Cross-check the Gradle build files against the sources they must build.
 
@@ -351,6 +440,8 @@ def main(argv: list[str] | None = None) -> int:
 
         if code.count("{") != code.count("}"):
             problems.append(f"{path.name}: unbalanced braces ({code.count('{')} open, {code.count('}')} close)")
+
+        problems.extend(check_compile_shapes(path, raw, code))
 
         for name in CLASS_RE.findall(code):
             declared.setdefault(name, []).append(path.name)

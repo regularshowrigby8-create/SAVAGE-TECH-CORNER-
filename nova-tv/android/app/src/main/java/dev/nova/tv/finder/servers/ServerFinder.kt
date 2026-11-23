@@ -203,7 +203,10 @@ class ServerProber(private val http: FinderHttp) {
         try {
             val t0 = System.nanoTime()
             p.status = handle.status
-            p.url = handle.url
+            // `url` is the constructor parameter and is not reassigned: the
+            // final URL after redirects lives on the handle, and copying it
+            // back onto the probe made this a compile error ("val cannot be
+            // reassigned") that the structural lint never saw.
             p.ttfbMs = ((System.nanoTime() - t0) / 1_000_000).toInt()
             if (handle.status !in listOf(200, 206)) {
                 p.err = "http-${handle.status}"
@@ -293,13 +296,31 @@ class ServerCatalogue(private val http: FinderHttp) {
         return minOf(total, ServerFinder.MAX_CATALOGUE)
     }
 
+    /** How many times [needle] occurs in [text]; 0 for an empty needle. */
+    private fun occurrences(text: String, needle: String): Int {
+        if (needle.isEmpty()) return 0
+        var count = 0
+        var at = text.indexOf(needle)
+        while (at >= 0) {
+            count++
+            at = text.indexOf(needle, at + needle.length)
+        }
+        return count
+    }
+
     suspend fun apiCount(base: String): Int {
         var total = 0
         for (path in listOf("/api/anime/search?keyword=a&page={}", "/api/v2/anime/search?keyword=a&page={}", "/api/v1/anime/search?keyword=a&page={}")) {
             for (page in 1..5) {
-                val r = http.get(base + path.format(page), read = 200_000)
+                // `String.count(String)` does not exist in Kotlin -- it resolves
+                // to `count(predicate: (Char) -> Boolean)`, which is why the CI
+                // build failed with "Argument type mismatch" on all three calls.
+                // Occurrences of a substring are counted explicitly.
+                val r = http.get(base + path.replace("{}", page.toString()), read = 200_000)
                 if (r == null || r.status >= 400) break
-                val hits = r.text.count("\"animeId\"") + r.text.count("\"slug\"") + r.text.count("\"id\":")
+                val hits = occurrences(r.text, "\"animeId\"") +
+                    occurrences(r.text, "\"slug\"") +
+                    occurrences(r.text, "\"id\":")
                 if (hits == 0) break
                 total += hits
                 if (hits < 10) break
@@ -313,7 +334,10 @@ class ServerCatalogue(private val http: FinderHttp) {
         var total = 0
         for (path in listOf("/search?q=a&page={}", "/browse?page={}", "/?s=a&paged={}", "/trending?page={}")) {
             for (page in 1..5) {
-                val r = http.get(base + path.format(page), read = 200_000)
+                // `String.format(page)` in Kotlin is the Java static taking a
+                // format and args; with an Int argument it does not compile as
+                // intended. The placeholder is substituted explicitly.
+                val r = http.get(base + path.replace("{}", page.toString()), read = 200_000)
                 if (r == null || r.status >= 400) break
                 val hits = Regex("href\\s*=\\s*[\"'][^\"']*/(?:watch|anime|series|tv|movie)/").findAll(r.text).count()
                 total += hits
