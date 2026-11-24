@@ -28,6 +28,9 @@ on:
       - '.github/workflows/nova-tv-android.yml'
   workflow_dispatch:
 
+# A push whose commit message contains [build-only] runs just the build job.
+# This is for compile/APK verification without the crawler and emulator jobs.
+
 # write is needed so the failure path can commit its diagnostics; the build
 # itself only reads.
 permissions:
@@ -300,6 +303,7 @@ jobs:
 
   finder-crawl-probe:
     name: Real public-index crawl probe
+    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message || '', '[build-only]') }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -350,6 +354,7 @@ jobs:
 
   finder-emulator-smoke:
     name: Install APK and debug finders on emulator
+    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message || '', '[build-only]') }}
     needs: [build, finder-crawl-probe]
     runs-on: ubuntu-latest
     timeout-minutes: 90
