@@ -17,12 +17,16 @@ class AddonFinderTest {
     }
 
     @Test
-    fun `cap is 6000 and seeds are github npm reddit and directories`() {
+    fun `cap is 6000 and discovery is generated rather than a seed list`() {
         assertEquals(6000, AddonFinder.CAP)
-        assertTrue(AddonFinder.SEEDS.any { "api.github.com" in it })
-        assertTrue(AddonFinder.SEEDS.any { "npms.io" in it })
-        assertTrue(AddonFinder.SEEDS.any { "reddit.com" in it })
-        assertTrue("https://stremio-addons.net" in AddonFinder.SEEDS)
+        // There is no SEEDS list any more; every round is generated.
+        val r0 = AddonFinder.seedsFor(0)
+        assertTrue(r0.any { "api.github.com" in it })
+        assertTrue(r0.any { "registry.npmjs.org" in it })
+        assertTrue(r0.any { "reddit.com" in it })
+        // The brand tier cannot use crt.sh: it refuses a bare brand with 403.
+        assertTrue(r0.any { "rapiddns.io" in it })
+        assertTrue(r0.none { "crt.sh" in it })
     }
 
     @Test
@@ -102,12 +106,83 @@ class AddonFinderTest {
     @Test
     fun `queue rejects blocked and known hosts`() {
         val store = AddonFinderStore(MemoryStore())
-        store.upsert(AddonRecord(id = "k", host = "known.example"), "alive")
+        store.upsert(AddonRecord(id = "k", host = "known.example", baseUrl = "https://known.example"), "alive")
         val http = AddonFinder.http(okhttp3.OkHttpClient())
         val harvester = AddonFinderHarvester(store, http)
         harvester.loadBlocklist(setOf("blocked.example"))
         assertFalse(harvester.queue("https://blocked.example/"))
         assertFalse(harvester.queue("https://known.example/"))
         assertTrue(harvester.queue("https://new.example/"))
+    }
+
+    @Test
+    fun `base_of keeps the addon mount path and drops only the manifest tail`() {
+        assertEquals(
+            "https://addon.example/stremio/abc",
+            AddonFinder.baseOf("https://addon.example/stremio/abc/manifest.json")
+        )
+        assertEquals(
+            "https://addon.example",
+            AddonFinder.baseOf("https://addon.example/manifest.json")
+        )
+        // A trailing document is a file, not a mount point.
+        assertEquals(
+            "https://addon.example/api",
+            AddonFinder.baseOf("https://addon.example/api/stream/movie/tt1.json")
+        )
+    }
+
+    @Test
+    fun `base_of refuses static file hosts because they cannot serve streams`() {
+        assertEquals("", AddonFinder.baseOf("https://raw.githubusercontent.com/o/r/main/manifest.json"))
+        assertEquals("", AddonFinder.baseOf("https://cdn.jsdelivr.net/gh/o/r/manifest.json"))
+        assertTrue(AddonFinder.isStaticHost("raw.githubusercontent.com"))
+        assertTrue(AddonFinder.isStaticHost("objects.githubusercontent.com"))
+        assertFalse(AddonFinder.isStaticHost("addon.example"))
+    }
+
+    @Test
+    fun `seeds rotate so later rounds explore new ground`() {
+        val r0 = AddonFinder.seedsFor(0)
+        val r1 = AddonFinder.seedsFor(1)
+        assertTrue(r0.isNotEmpty())
+        assertEquals(r0.size, r1.size)
+        assertTrue(r0 != r1)
+        // No fixed directory backstop: every surface is generated.
+        assertTrue(r0.none { "stremio-addons.net" in it })
+    }
+
+    @Test
+    fun `known_base allows many addons on one host but rejects the same mount`() {
+        val store = AddonFinderStore(MemoryStore())
+        store.upsert(
+            AddonRecord(id = "a", host = "multi.example", baseUrl = "https://multi.example/one"),
+            "alive"
+        )
+        assertTrue(store.knownBase("https://multi.example/one"))
+        assertTrue(store.knownBase("https://multi.example/one/manifest.json"))
+        assertFalse(store.knownBase("https://multi.example/two"))
+    }
+
+    @Test
+    fun `tried set stops a drained frontier from being refilled with the same urls`() {
+        val store = AddonFinderStore(MemoryStore())
+        assertTrue(store.push("https://a.example/manifest.json"))
+        assertEquals(listOf("https://a.example/manifest.json"), store.pop(10))
+        // Already processed: a later refill must not resurrect it.
+        assertFalse(store.push("https://a.example/manifest.json"))
+        assertTrue(store.push("https://b.example/manifest.json"))
+        assertEquals(1, store.triedSize())
+    }
+
+    @Test
+    fun `tried set survives a reload of the persisted store`() {
+        val disk = MemoryStore()
+        val first = AddonFinderStore(disk)
+        first.push("https://a.example/manifest.json")
+        first.pop(10)
+        val reloaded = AddonFinderStore(disk)
+        assertEquals(1, reloaded.triedSize())
+        assertFalse(reloaded.push("https://a.example/manifest.json"))
     }
 }

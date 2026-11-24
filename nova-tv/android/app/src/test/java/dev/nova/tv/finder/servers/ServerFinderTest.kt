@@ -1,5 +1,6 @@
 package dev.nova.tv.finder.servers
 
+import dev.nova.tv.finder.discovery.Discovery
 import dev.nova.tv.finder.pool.PoolStore
 import dev.nova.tv.finder.translated.FinderHelpers
 import org.junit.Assert.assertEquals
@@ -17,16 +18,20 @@ class ServerFinderTest {
     }
 
     @Test
-    fun `cap is 6000 and seeds are the 9anime mirrors`() {
+    fun `cap is 6000 and discovery starts from generated surfaces not a seed list`() {
         assertEquals(6000, ServerFinder.CAP)
         assertEquals(6000, FinderHelpers.CAP)
-        assertTrue("https://hianime.to" in ServerFinder.SEEDS)
-        assertTrue("https://9anime.pl" in ServerFinder.SEEDS)
-        // The anime mirrors the Python shipped are mostly Cloudflare-walled on
-        // device, so the list now also carries ordinary catalogue sites. Assert
-        // the intent (a workable surface exists) rather than a brittle count.
-        assertTrue(ServerFinder.SEEDS.size >= 12)
-        assertTrue(ServerFinder.SEEDS.any { "primewire" in it })
+        // There is no SEEDS list any more: discovery is generated per round.
+        val round0 = Discovery.webSurfaces(0)
+        assertTrue("a round must offer somewhere to look", round0.isNotEmpty())
+        assertTrue(round0.any { "bing.com" in it })
+        assertTrue(round0.any { "rapiddns.io" in it })
+        // crt.sh/urlscan/Wayback need a real domain, so they are only asked
+        // once discovery has reached one (see Discovery.domainSurfaces).
+        assertTrue(round0.none { "crt.sh" in it })
+        assertTrue(round0.any { Discovery.isSearchHost(FinderHelpers.hostOf(it)) })
+        // Round 1 asks different questions, so it offers different surfaces.
+        assertTrue(Discovery.webSurfaces(1) != round0)
     }
 
     @Test
@@ -211,6 +216,124 @@ class ServerFinderTest {
         }
         assertTrue("loop must stop instead of spinning", rounds < 50)
         assertEquals("no url may be fetched twice", seenOrder.size, seenOrder.toSet().size)
+    }
+
+    @Test
+    fun `junk filter rejects cms admin handlers but keeps media`() {
+        // The exact false positive from the device trace: the only candidate
+        // the extractor produced on 9anime.org.lv, which 400'd on every probe.
+        assertTrue(ServerFinder.isJunk("https://9anime.org.lv/wp-admin/admin-ajax.php"))
+        assertTrue(ServerFinder.isJunk("https://site.example/wp-json/wp/v2/posts"))
+        assertTrue(ServerFinder.isJunk("https://site.example/analytics/collect"))
+        assertFalse(ServerFinder.isJunk("https://cdn.example/hls/master.m3u8"))
+        // wp-content can legitimately host media, so it must not be filtered.
+        assertFalse(ServerFinder.isJunk("https://site.example/wp-content/uploads/ep1.mp4"))
+    }
+
+    @Test
+    fun `extractor drops admin ajax but keeps the real player`() {
+        val html = """
+            <iframe src="https://9anime.org.lv/wp-admin/admin-ajax.php"></iframe>
+            <script>file: "https://cdn.example/hls/master.m3u8"</script>
+        """.trimIndent()
+        val found = ServerExtractor().extract(html, "https://9anime.org.lv/watch/1")
+        assertEquals(1, found.size)
+        assertTrue(found.keys.first().endsWith("master.m3u8"))
+        assertFalse(found.keys.any { "admin-ajax" in it })
+    }
+
+    @Test
+    fun `api hints recognise the servers and sources endpoints`() {
+        assertTrue(ServerFinder.API_HINT.containsMatchIn("https://9anime.org.lv/ajax/v2/episode/servers?episodeId=1"))
+        assertTrue(ServerFinder.API_HINT.containsMatchIn("https://9anime.org.lv/ajax/v2/episode/sources?id=42"))
+        assertTrue(ServerFinder.API_HINT.containsMatchIn("https://site.example/api/stream/1"))
+        assertFalse(ServerFinder.API_HINT.containsMatchIn("https://cdn.example/logo.png"))
+    }
+
+    @Test
+    fun `data id extracts the numeric server id`() {
+        val body = """<div class="server" data-id="12345">HD</div><div data-id='678'>SD</div>"""
+        assertEquals(listOf("12345", "678"), ServerFinder.DATA_ID.findAll(body).map { it.groupValues[1] }.toList())
+    }
+
+    @Test
+    fun `media in json finds escaped stream urls`() {
+        val body = """{"sources":[{"file":"https:\/\/cdn.example\/hls\/master.m3u8?t=1"}]}"""
+        val hit = ServerFinder.MEDIA_IN_JSON.find(body)?.groupValues?.get(1).orEmpty()
+        assertTrue(hit.contains("master.m3u8"))
+    }
+
+    @Test
+    fun `api replay is bounded so one page cannot run away`() {
+        assertEquals(12, ServerFinder.MAX_API_CALLS)
+        assertEquals(24, ServerFinder.MAX_SERVERS)
+    }
+
+    // -- decoys, player shells and assets (on-device trace) ------------------
+
+    /**
+     * A parked page, a stub or a mock has the shape of a site and can never
+     * serve a stream. `aniwaves.org` is the measured example: a real watch
+     * page with a real player iframe, whose own API answers
+     * `{"info":"Server 1 is not wired yet","mode":"mock"}`.
+     */
+    @Test
+    fun `a mock or a parked page is a decoy`() {
+        assertTrue(ServerFinder.isDecoy("""{"info":"Server 1 is not wired yet","mode":"mock"}"""))
+        assertTrue(ServerFinder.isDecoy("<html><body>This domain is for sale.</body></html>"))
+        assertTrue(ServerFinder.isDecoy("<html><body>HugeDomains.com</body></html>"))
+        assertTrue("an empty body is a stub", ServerFinder.isDecoy(""))
+        assertTrue("a 9-byte body is a stub", ServerFinder.isDecoy("short"))
+    }
+
+    @Test
+    fun `a real catalogue page is not a decoy`() {
+        val page = "<html><head><title>Aniwaves</title></head><body>" +
+            "<a href=\"/watch/one-piece-1/\">One Piece</a>".repeat(40) + "</body></html>"
+        assertFalse(ServerFinder.isDecoy(page))
+    }
+
+    /**
+     * Nine real homepages measured (aniwaves, gotaku, 9anime, miruro,
+     * anime.live) contained zero iframes and zero `.m3u8`: the player only
+     * exists after the page's own script runs. Those pages must be rendered.
+     */
+    @Test
+    fun `a page that builds its player in script needs a render`() {
+        val shell = "<html><script>const e=document.createElement(\"iframe\");" +
+            "e.src=O+\"/watch#\"+k+\".\"+s+\".\"+p+\".\"+M</script></html>"
+        assertTrue(ServerFinder.looksLikePlayerShell(shell))
+        assertTrue(ServerFinder.needsRender(shell))
+    }
+
+    @Test
+    fun `a page that already holds a player is read statically`() {
+        assertFalse(
+            "a static iframe is enough",
+            ServerFinder.needsRender("<html>hls.js<iframe src=\"https://play.x/watch#a\"></iframe></html>")
+        )
+        assertFalse(
+            "a static m3u8 is enough",
+            ServerFinder.needsRender("<html>hls.js<script>src:\"https://x/a.m3u8\"</script></html>")
+        )
+        assertFalse(
+            "a plain catalogue page is not a player shell",
+            ServerFinder.needsRender("<html><body><a href=\"/watch/1\">x</a></body></html>")
+        )
+    }
+
+    /** `tag.min.js`, `aclib.js` and a font path were each probed and each
+     *  answered `kind=none`: a subresource can never be a stream. */
+    @Test
+    fun `subresources are not candidates`() {
+        assertTrue(ServerFinder.isAsset("https://llvpn.com/tag.min.js"))
+        assertTrue(ServerFinder.isAsset("https://acscdn.com/script/aclib.js"))
+        assertTrue(ServerFinder.isAsset("https://x/a.css?v=2"))
+        assertTrue(ServerFinder.isAsset("https://x/f.woff2"))
+        assertTrue(ServerFinder.isAsset("https://x/i.png"))
+        assertFalse(ServerFinder.isAsset("https://x/a.m3u8"))
+        assertFalse(ServerFinder.isAsset("https://x/a.mp4?t=1"))
+        assertFalse(ServerFinder.isAsset("https://play.x/watch"))
     }
 
     private fun finderRecord(baseUrl: String, referer: String) = ServerRecord(

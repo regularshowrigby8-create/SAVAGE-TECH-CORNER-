@@ -51,7 +51,14 @@ class FinderFingerprint(
         h["User-Agent"] = ua
         h["Accept"] = "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8"
         h["Accept-Language"] = lang
-        h["Accept-Encoding"] = "gzip, deflate, br"
+        // Deliberately NOT set. OkHttp adds `Accept-Encoding: gzip` itself and
+        // transparently decompresses the response; setting the header by hand
+        // disables that, and OkHttp 4.12 has no brotli decoder. The result was
+        // that every server answering with gzip/br handed the finder compressed
+        // bytes, `String(bytes)` contained no `href=` at all, and every surface
+        // logged zero: `search -> 0 host(s) of 0 link(s)`, `ct -> 0`,
+        // `rapiddns -> 0`, `wayback -> 0`. Measured on Bing: 0 hrefs raw vs 93
+        // decoded. Letting OkHttp negotiate is the whole fix.
         h["Referer"] = referer ?: FinderHelpers.originOf(url) + "/"
         h["Origin"] = FinderHelpers.originOf(url)
         h["DNT"] = "1"
@@ -85,7 +92,14 @@ class FinderFingerprint(
         h["User-Agent"] = ua
         h["Accept"] = "application/json,text/html;q=0.9,*/*;q=0.8"
         h["Accept-Language"] = lang
-        h["Accept-Encoding"] = "gzip, deflate, br"
+        // Deliberately NOT set. OkHttp adds `Accept-Encoding: gzip` itself and
+        // transparently decompresses the response; setting the header by hand
+        // disables that, and OkHttp 4.12 has no brotli decoder. The result was
+        // that every server answering with gzip/br handed the finder compressed
+        // bytes, `String(bytes)` contained no `href=` at all, and every surface
+        // logged zero: `search -> 0 host(s) of 0 link(s)`, `ct -> 0`,
+        // `rapiddns -> 0`, `wayback -> 0`. Measured on Bing: 0 hrefs raw vs 93
+        // decoded. Letting OkHttp negotiate is the whole fix.
         h["Referer"] = referer ?: FinderHelpers.originOf(url) + "/"
         h["Origin"] = FinderHelpers.originOf(url)
         h["X-Forwarded-For"] = xff

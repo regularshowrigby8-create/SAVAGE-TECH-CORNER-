@@ -207,18 +207,38 @@ class SourceEngine(
             val harvest = runCatching {
                 withTimeoutOrNull(WEBSITE_ROUND_BUDGET_MS) { spider?.harvest(webRound) }
             }.getOrNull()
-            webRound++
+
+            // A skip is not a round. Another drainer is mid-crawl, nothing was
+            // crawled, and the round counter must not advance -- advancing it
+            // on every skip is what turned `harvest#` into a six-digit number
+            // inside a single second.
+            if (harvest != null && harvest.busy) {
+                delay(HarvestPacing.pauseMs(HarvestStep.SKIP))
+                continue
+            }
             if (harvest == null) {
                 failures++
                 if (failures >= WEBSITE_MAX_FAILURES) return
-                delay(POOL_RETRY_PAUSE_MS shl (failures - 1).coerceAtMost(4))
+                delay(HarvestPacing.pauseMs(HarvestStep.RETRY, failures))
                 continue
             }
+
             failures = 0
+            webRound++
             sites.add(harvest.sites, from = "Website finder")
             runCatching { sites.pruneDead() }
-            if (!harvest.more && sites.state.value.size == before) return
-            if (sites.state.value.size > before) delay(POOL_FILL_PAUSE_MS)
+
+            // Measured *after* the add, so a round that grew the pool is
+            // classified as progress rather than as barren.
+            val step = HarvestPacing.step(
+                busy = false,
+                harvestNull = false,
+                more = harvest.more,
+                before = before,
+                after = sites.state.value.size
+            )
+            if (step == HarvestStep.DONE) return
+            delay(HarvestPacing.pauseMs(step))
         }
     }
 
@@ -232,9 +252,22 @@ class SourceEngine(
             FinderTrace.log("web", "fillWebsitePoolOnce: NO SPIDER wired")
             return 0
         }
+        // Checked before the call, not after: a busy drainer would only return a
+        // skip, and asking it produced a pointless log pair on every poll.
+        if (crawl.busy) {
+            FinderTrace.log("web", "fillWebsitePoolOnce: round $webRound SKIPPED, drainer busy")
+            return 0
+        }
         FinderTrace.log("web", "fillWebsitePoolOnce: round $webRound BEGIN")
         val harvest = runCatching { crawl.harvest(webRound) }.getOrNull() ?: run {
             FinderTrace.log("web", "fillWebsitePoolOnce: harvest THREW")
+            return 0
+        }
+        // A skip means another drainer took the drain between the check above
+        // and the call; this call crawled nothing, so it must not consume a
+        // round.
+        if (harvest.busy) {
+            FinderTrace.log("web", "fillWebsitePoolOnce: round $webRound SKIPPED, drainer busy")
             return 0
         }
         webRound++
@@ -258,6 +291,9 @@ class SourceEngine(
         val harvester = harvester ?: return 0
         return harvestLock.withLock {
             if (pool.state.value.size >= ServerPool.CAPACITY) return@withLock 0
+            // Another caller already holds the drainer: this call would only
+            // get the current pool back, so it must not consume a cursor.
+            if (harvester.busy) return@withLock 0
             val round = pool.cursor
             val found = runCatching { harvester.harvest(round) }.getOrDefault(emptyList())
             pool.cursor = round + 1
