@@ -311,13 +311,13 @@
         "-v"
       ],
       "cwd": ".",
-      "duration_seconds": 0.722,
+      "duration_seconds": 0.662,
       "id": "strict-gate-self-tests",
       "profile": "local",
       "returncode": 0,
       "status": "PASS",
-      "stderr_sha256": "36989317f8717c8b3016d30fbe657082e9e364ca589bde760f897b18418c2350",
-      "stderr_tail": "test_artifact_checker_json_stdout_is_parseable (tests.test_strict_verify.StrictVerifyTest.test_artifact_checker_json_stdout_is_parseable) ... ok\ntest_artifact_checker_refuses_to_infer_sdk (tests.test_strict_verify.StrictVerifyTest.test_artifact_checker_refuses_to_infer_sdk) ... ok\ntest_explicit_evidence_passes (tests.test_strict_verify.StrictVerifyTest.test_explicit_evidence_passes) ... ok\ntest_failed_exit_code_is_rejected (tests.test_strict_verify.StrictVerifyTest.test_failed_exit_code_is_rejected) ... ok\ntest_missing_executable_fails_closed (tests.test_strict_verify.StrictVerifyTest.test_missing_executable_fails_closed) ... ok\ntest_stub_marker_is_rejected (tests.test_strict_verify.StrictVerifyTest.test_stub_marker_is_rejected) ... ok\ntest_top_level_green_cannot_mask_failed_nested_result (tests.test_strict_verify.StrictVerifyTest.test_top_level_green_cannot_mask_failed_nested_result) ... ok\ntest_uncovered_changed_file_is_rejected (tests.test_strict_verify.StrictVerifyTest.test_uncovered_changed_file_is_rejected) ... ok\n\n----------------------------------------------------------------------\nRan 8 tests in 0.658s\n\nOK\n",
+      "stderr_sha256": "bd1f14ce6ebb91cb3d040cd5b50e23dadca1ab7a771feb819a2730893a43266a",
+      "stderr_tail": "test_artifact_checker_json_stdout_is_parseable (tests.test_strict_verify.StrictVerifyTest.test_artifact_checker_json_stdout_is_parseable) ... ok\ntest_artifact_checker_refuses_to_infer_sdk (tests.test_strict_verify.StrictVerifyTest.test_artifact_checker_refuses_to_infer_sdk) ... ok\ntest_explicit_evidence_passes (tests.test_strict_verify.StrictVerifyTest.test_explicit_evidence_passes) ... ok\ntest_failed_exit_code_is_rejected (tests.test_strict_verify.StrictVerifyTest.test_failed_exit_code_is_rejected) ... ok\ntest_missing_executable_fails_closed (tests.test_strict_verify.StrictVerifyTest.test_missing_executable_fails_closed) ... ok\ntest_stub_marker_is_rejected (tests.test_strict_verify.StrictVerifyTest.test_stub_marker_is_rejected) ... ok\ntest_top_level_green_cannot_mask_failed_nested_result (tests.test_strict_verify.StrictVerifyTest.test_top_level_green_cannot_mask_failed_nested_result) ... ok\ntest_uncovered_changed_file_is_rejected (tests.test_strict_verify.StrictVerifyTest.test_uncovered_changed_file_is_rejected) ... ok\n\n----------------------------------------------------------------------\nRan 8 tests in 0.619s\n\nOK\n",
       "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "stdout_tail": ""
     },
@@ -334,13 +334,13 @@
         "-v"
       ],
       "cwd": ".",
-      "duration_seconds": 36.228,
+      "duration_seconds": 33.798,
       "id": "python-unittests",
       "profile": "local",
       "returncode": 0,
       "status": "PASS",
-      "stderr_sha256": "f36d6438fab2fdd132390d0c5b783d200cdcaa90a37d07a04afb5bec003f59ea",
-      "stderr_tail": "erify.ClaimExtractionTest.test_upstream_path_is_not_a_local_claim) ... ok\ntest_clean_screen_reports_nothing (tests.test_verify.DeadButtonTest.test_clean_screen_reports_nothing) ... ok\ntest_does_not_flag_a_card_with_a_handler (tests.test_verify.DeadButtonTest.test_does_not_flag_a_card_with_a_handler) ... ok\ntest_flags_a_card_with_no_handler (tests.test_verify.DeadButtonTest.test_flags_a_card_with_no_handler) ... ok\ntest_flags_an_empty_handler (tests.test_verify.DeadButtonTest.test_flags_an_empty_handler) ... ok\ntest_flags_an_enum_with_no_branch (tests.test_verify.DeadButtonTest.test_flags_an_enum_with_no_branch) ... ok\ntest_contradicts_a_missing_file (tests.test_verify.FileClaimTest.test_contradicts_a_missing_file) ... ok\ntest_proves_an_existing_file (tests.test_verify.FileClaimTest.test_proves_an_existing_file) ... ok\ntest_disagreement_is_reported_not_averaged (tests.test_verify.FourModelTest.test_disagreement_is_reported_not_averaged) ... ok\n/usr/lib/python3.11/unittest/suite.py:107: ResourceWarning: unclosed <socket.socket fd=3, family=2, type=1, proto=0, laddr=('127.0.0.1', 41503)>\n  for index, test in enumerate(self):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\ntest_finds_all_four_providers (tests.test_verify.FourModelTest.test_finds_all_four_providers) ... ok\n/usr/lib/python3.11/unittest/suite.py:107: ResourceWarning: unclosed <socket.socket fd=3, family=2, type=1, proto=0, laddr=('127.0.0.1', 38315)>\n  for index, test in enumerate(self):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\ntest_unanimous_agreement (tests.test_verify.FourModelTest.test_unanimous_agreement) ... ok\n/usr/lib/python3.11/unittest/suite.py:107: ResourceWarning: unclosed <socket.socket fd=3, family=2, type=1, proto=0, laddr=('127.0.0.1', 42437)>\n  for index, test in enumerate(self):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\ntest_unreachable_is_reported_not_faked (tests.test_verify.FourModelTest.test_unreachable_is_reported_not_faked) ... ok\n/usr/lib/python3.11/unittest/suite.py:84: ResourceWarning: unclosed <socket.socket fd=3, family=2, type=1, proto=0, laddr=('127.0.0.1', 40875)>\n  return self.run(*args, **kwds)\nResourceWarning: Enable tracemalloc to get the object allocation traceback\ntest_non_json_is_uncertain (tests.test_verify.ParseVerdictTest.test_non_json_is_uncertain) ... ok\ntest_reads_json_wrapped_in_prose (tests.test_verify.ParseVerdictTest.test_reads_json_wrapped_in_prose) ... ok\ntest_unknown_verdict_is_uncertain (tests.test_verify.ParseVerdictTest.test_unknown_verdict_is_uncertain) ... ok\ntest_contradicts_a_404 (tests.test_verify.RepoClaimTest.test_contradicts_a_404) ... ok\ntest_no_client_means_unverified_not_proven (tests.test_verify.RepoClaimTest.test_no_client_means_unverified_not_proven) ... ok\ntest_proves_an_existing_repo (tests.test_verify.RepoClaimTest.test_proves_an_existing_repo) ... ok\ntest_reachable_collects_all_four (tests.test_verify.ReviewUiTest.test_reachable_collects_all_four) ... /usr/lib/python3.11/unittest/case.py:579: ResourceWarning: unclosed <socket.socket fd=3, family=2, type=1, proto=0, laddr=('127.0.0.1', 43257)>\n  if method() is not None:\nResourceWarning: Enable tracemalloc to get the object allocation traceback\nok\ntest_unreachable_returns_no_reviews (tests.test_verify.ReviewUiTest.test_unreachable_returns_no_reviews) ... ok\ntest_accepts_an_explicit_empty_success (tests.test_verify.StrictResultTest.test_accepts_an_explicit_empty_success) ... ok\ntest_rejects_a_tool_without_a_result (tests.test_verify.StrictResultTest.test_rejects_a_tool_without_a_result) ... ok\ntest_rejects_contradicted_summary_and_unsupported_claims (tests.test_verify.StrictResultTest.test_rejects_contradicted_summary_and_unsupported_claims) ... ok\ntest_rejects_false_green_wrapper (tests.test_verify.StrictResultTest.test_rejects_false_green_wrapper) ... ok\n\n----------------------------------------------------------------------\nRan 195 tests in 36.103s\n\nOK\n",
+      "stderr_sha256": "58e18471852f4532be7a5ffb8896737c9c11213ff2302eefab86c1b0184f6e8b",
+      "stderr_tail": "erify.ClaimExtractionTest.test_upstream_path_is_not_a_local_claim) ... ok\ntest_clean_screen_reports_nothing (tests.test_verify.DeadButtonTest.test_clean_screen_reports_nothing) ... ok\ntest_does_not_flag_a_card_with_a_handler (tests.test_verify.DeadButtonTest.test_does_not_flag_a_card_with_a_handler) ... ok\ntest_flags_a_card_with_no_handler (tests.test_verify.DeadButtonTest.test_flags_a_card_with_no_handler) ... ok\ntest_flags_an_empty_handler (tests.test_verify.DeadButtonTest.test_flags_an_empty_handler) ... ok\ntest_flags_an_enum_with_no_branch (tests.test_verify.DeadButtonTest.test_flags_an_enum_with_no_branch) ... ok\ntest_contradicts_a_missing_file (tests.test_verify.FileClaimTest.test_contradicts_a_missing_file) ... ok\ntest_proves_an_existing_file (tests.test_verify.FileClaimTest.test_proves_an_existing_file) ... ok\ntest_disagreement_is_reported_not_averaged (tests.test_verify.FourModelTest.test_disagreement_is_reported_not_averaged) ... ok\n/usr/lib/python3.11/unittest/suite.py:107: ResourceWarning: unclosed <socket.socket fd=3, family=2, type=1, proto=0, laddr=('127.0.0.1', 40273)>\n  for index, test in enumerate(self):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\ntest_finds_all_four_providers (tests.test_verify.FourModelTest.test_finds_all_four_providers) ... ok\n/usr/lib/python3.11/unittest/suite.py:107: ResourceWarning: unclosed <socket.socket fd=3, family=2, type=1, proto=0, laddr=('127.0.0.1', 38803)>\n  for index, test in enumerate(self):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\ntest_unanimous_agreement (tests.test_verify.FourModelTest.test_unanimous_agreement) ... ok\n/usr/lib/python3.11/unittest/suite.py:107: ResourceWarning: unclosed <socket.socket fd=3, family=2, type=1, proto=0, laddr=('127.0.0.1', 36885)>\n  for index, test in enumerate(self):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\ntest_unreachable_is_reported_not_faked (tests.test_verify.FourModelTest.test_unreachable_is_reported_not_faked) ... ok\n/usr/lib/python3.11/unittest/suite.py:84: ResourceWarning: unclosed <socket.socket fd=3, family=2, type=1, proto=0, laddr=('127.0.0.1', 40409)>\n  return self.run(*args, **kwds)\nResourceWarning: Enable tracemalloc to get the object allocation traceback\ntest_non_json_is_uncertain (tests.test_verify.ParseVerdictTest.test_non_json_is_uncertain) ... ok\ntest_reads_json_wrapped_in_prose (tests.test_verify.ParseVerdictTest.test_reads_json_wrapped_in_prose) ... ok\ntest_unknown_verdict_is_uncertain (tests.test_verify.ParseVerdictTest.test_unknown_verdict_is_uncertain) ... ok\ntest_contradicts_a_404 (tests.test_verify.RepoClaimTest.test_contradicts_a_404) ... ok\ntest_no_client_means_unverified_not_proven (tests.test_verify.RepoClaimTest.test_no_client_means_unverified_not_proven) ... ok\ntest_proves_an_existing_repo (tests.test_verify.RepoClaimTest.test_proves_an_existing_repo) ... ok\ntest_reachable_collects_all_four (tests.test_verify.ReviewUiTest.test_reachable_collects_all_four) ... /usr/lib/python3.11/unittest/case.py:579: ResourceWarning: unclosed <socket.socket fd=3, family=2, type=1, proto=0, laddr=('127.0.0.1', 42995)>\n  if method() is not None:\nResourceWarning: Enable tracemalloc to get the object allocation traceback\nok\ntest_unreachable_returns_no_reviews (tests.test_verify.ReviewUiTest.test_unreachable_returns_no_reviews) ... ok\ntest_accepts_an_explicit_empty_success (tests.test_verify.StrictResultTest.test_accepts_an_explicit_empty_success) ... ok\ntest_rejects_a_tool_without_a_result (tests.test_verify.StrictResultTest.test_rejects_a_tool_without_a_result) ... ok\ntest_rejects_contradicted_summary_and_unsupported_claims (tests.test_verify.StrictResultTest.test_rejects_contradicted_summary_and_unsupported_claims) ... ok\ntest_rejects_false_green_wrapper (tests.test_verify.StrictResultTest.test_rejects_false_green_wrapper) ... ok\n\n----------------------------------------------------------------------\nRan 195 tests in 33.669s\n\nOK\n",
       "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "stdout_tail": ""
     },
@@ -353,7 +353,7 @@
         "nova-tv"
       ],
       "cwd": ".",
-      "duration_seconds": 0.545,
+      "duration_seconds": 0.487,
       "id": "translated-finder-audit",
       "profile": "local",
       "returncode": 0,
@@ -369,7 +369,7 @@
         "nova-tv/python/ops/qa_offline_gates.py"
       ],
       "cwd": ".",
-      "duration_seconds": 47.376,
+      "duration_seconds": 44.853,
       "id": "offline-gate-nested-results",
       "profile": "local",
       "returncode": 0,
@@ -386,7 +386,7 @@
         "--json"
       ],
       "cwd": "nova-tv/python",
-      "duration_seconds": 12.016,
+      "duration_seconds": 10.961,
       "id": "documentation-claim-verification",
       "profile": "local",
       "returncode": 0,
@@ -402,7 +402,7 @@
         "nova-tv/ops/kotlin_lint.py"
       ],
       "cwd": ".",
-      "duration_seconds": 1.031,
+      "duration_seconds": 0.876,
       "id": "kotlin-structural-lint",
       "profile": "local",
       "returncode": 0,
@@ -423,15 +423,15 @@
         "--json"
       ],
       "cwd": ".",
-      "duration_seconds": 0.05,
+      "duration_seconds": 0.044,
       "id": "artifact-checker-fails-closed",
       "profile": "local",
       "returncode": 1,
       "status": "PASS",
       "stderr_sha256": "adff9b58f8e95c9f65c7c60a0ac6e9477ac7222cec8eec686fc6185aea712212",
       "stderr_tail": "Traceback (most recent call last):\n  File \"/home/user/SAVAGE-TECH-CORNER-/tools/nova/check_artifacts.py\", line 197, in main\n    raise RuntimeError(\"NOVA_BUILD_TOOLS is required; refusing to infer an SDK path\")\nRuntimeError: NOVA_BUILD_TOOLS is required; refusing to infer an SDK path\n[check-artifacts] FAIL: RuntimeError: NOVA_BUILD_TOOLS is required; refusing to infer an SDK path\n",
-      "stdout_sha256": "1d245050f6ff60ecae7f9b8d81c222dcce6977cf25e43b195d2de8ceed2824f4",
-      "stdout_tail": "{\n  \"artifact_count\": 0,\n  \"artifacts\": [],\n  \"build_tools\": {},\n  \"errors\": [\n    \"RuntimeError: NOVA_BUILD_TOOLS is required; refusing to infer an SDK path\"\n  ],\n  \"generated_at_utc\": \"2026-11-24T16:30:09.842543+00:00\",\n  \"ok\": false,\n  \"repository_root\": \"/home/user/SAVAGE-TECH-CORNER-\",\n  \"source_markers\": []\n}\n"
+      "stdout_sha256": "96df3c431055daa16127724c304f27ce7d8d0180e39d3b285b38e89fe4e47490",
+      "stdout_tail": "{\n  \"artifact_count\": 0,\n  \"artifacts\": [],\n  \"build_tools\": {},\n  \"errors\": [\n    \"RuntimeError: NOVA_BUILD_TOOLS is required; refusing to infer an SDK path\"\n  ],\n  \"generated_at_utc\": \"2026-11-24T17:10:44.565692+00:00\",\n  \"ok\": false,\n  \"repository_root\": \"/home/user/SAVAGE-TECH-CORNER-\",\n  \"source_markers\": []\n}\n"
     }
   ],
   "contract": "/home/user/SAVAGE-TECH-CORNER-/tools/nova/contracts/pipeline-v3.json",
@@ -461,7 +461,7 @@
     }
   ],
   "executed_command_count": 7,
-  "generated_at_utc": "2026-11-24T16:30:09.850953+00:00",
+  "generated_at_utc": "2026-11-24T17:10:44.573724+00:00",
   "head": "WORKTREE",
   "minimum_command_count": 7,
   "output_log": "/home/user/SAVAGE-TECH-CORNER-/tools/nova/evidence/pipeline-v3.strict.log",
@@ -1335,7 +1335,7 @@
   "worktree_fingerprint": {
     "file_sha256": {
       ".github/workflows/nova-tv-android.yml": "2c7efb44973ec609bff51dd138c89a923e3c53850c20a66a411dabab727b0290",
-      ".github/workflows/nova-tv-python.yml": "a70bb0fb76475da989f1855ef0c2de97c9021b70d5831b01017e3e83def78adf",
+      ".github/workflows/nova-tv-python.yml": "4619e914c3999e56d31d0a94d9e38a3983053536e85f8261818495fd90806a9e",
       "nova-tv/.gitignore": "7908c06a387a4375d0f64759210f6b420f03c5b2b7820cd60cc7a6cf23e75410",
       "nova-tv/Makefile": "6af04243cfca8280ed0bc7477cbd97000db802952521f993791542b9b383ad0c",
       "nova-tv/README.md": "ef3543ec8ceb1de321eb7198c533e5b6b96c7cbad478cb22f39827a4900fb643",
@@ -1345,7 +1345,7 @@
       "nova-tv/android/app/lint.xml": "03479d9d2a7420ce3fded5d516c951e94817d5eb216479f616eda1d3c438ea33",
       "nova-tv/android/app/proguard-rules.pro": "944716d2dd3e75a255078228a202d6f82932f64086fa9cb01930c0277f6c5f4f",
       "nova-tv/android/app/src/debug/AndroidManifest.xml": "4bfcfd5ae840a129d8eb0e73a875b4d7bb75efbc9823f22d236a0c4ac88eed02",
-      "nova-tv/android/app/src/debug/java/dev/nova/tv/finder/diag/FinderProbeActivity.kt": "d378f9faf1f44556fe5df0837adb562cd184c012c459f3ae76c1d9e92e5cc30b",
+      "nova-tv/android/app/src/debug/java/dev/nova/tv/finder/diag/FinderProbeActivity.kt": "5f3e8f435c7315d885a8c38931df5ed2df1649599edefb7b2a42c1c5e82a0349",
       "nova-tv/android/app/src/main/AndroidManifest.xml": "8c6e1e48f8221918aa8360703a57af3babb42ce0520d3f293fcb4c556137be80",
       "nova-tv/android/app/src/main/java/dev/nova/tv/NovaApplication.kt": "dcddd24230c4ee9bda26442f1f5b89a36632d27f5a4403f771554ba2bb03d812",
       "nova-tv/android/app/src/main/java/dev/nova/tv/data/model/Models.kt": "b953d025b7ec972cc5940901bc012582b343fb24e397305d1f40cd1e1b8e8e42",
@@ -1372,10 +1372,10 @@
       "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineAdapters.kt": "4605bb6a0f748b7efdfbba079b0fab3e827c6ef6e8e606d95bcd563af9407262",
       "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineExtractor.kt": "335a2f2588415ac23a9cd3d96a4aec6ac6a2efb9672b930504d2429950b940ae",
       "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineLooker.kt": "37e5dc79c888df7aafa92f9311c26ece89bae6518fb54b32d2f523a17acd0f3a",
-      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt": "aefca6a77ec4e64ff5677cfcb307b0d39032d287b47140be0f3ddc361ba92953",
-      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineRunner.kt": "c01af6de17a4218f02f4dc90eb94d65f438c6d478ff098bad769ecebe0494719",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt": "95791ebc8de93350c3a0d046617032f104d91d93f113cf4c21db994243caccd8",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineRunner.kt": "b877c9f01fa7ef264bae1a441b63d534eb6ad861b1cf975894b0b764209505a0",
       "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineSorter.kt": "742fc1f4b4c61e16d02f6dae6403532e31456d5edb9a0105c66cbf5adf3ac69c",
-      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineTransport.kt": "33a3ce571be37ca8269759954aeb1fb70e528e2031fe7f3470a2dc3b54e70d72",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineTransport.kt": "8b963dc1d4005f5119dabf95964c3188efea78806fbe5eafac402de051819476",
       "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineVerifier.kt": "72d52f722c12bbd35059a2258a9c03465786bbe67020a974eea370c68698b0ee",
       "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pool/ServerPool.kt": "bc084175453cf3dfab728dddc0e69709ad633a6e7adb5886be071d60aee42515",
       "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pool/WebsitePool.kt": "cfcd61747f866926e66a08a308ad3af834023505371ad089b3c3e1757df5b102",
@@ -1383,7 +1383,7 @@
       "nova-tv/android/app/src/main/java/dev/nova/tv/finder/translated/FinderBrowser.kt": "85e04db16c838ded5d2af8d852e7185208502aba6387f3a797ed071ed6c35944",
       "nova-tv/android/app/src/main/java/dev/nova/tv/finder/translated/FinderFingerprint.kt": "e99bce69bf4a9704a3f5164e06be5520cdfeab88915842cd10769b57e8846f36",
       "nova-tv/android/app/src/main/java/dev/nova/tv/finder/translated/FinderHelpers.kt": "ea9548fb3945d6f15b0a47bae0213289551129ad829de4f61189def7a8706092",
-      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/translated/FinderHttp.kt": "50d448711e0ae71d1316d5426b7a5465f3c46cf0c7c2805773f5b9be0d17f84b",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/translated/FinderHttp.kt": "00963810a7586bd913cd3a28d850b595c7abaf974e94e7c82730fc28d7feb7c3",
       "nova-tv/android/app/src/main/java/dev/nova/tv/finder/website/WebsiteFinder.kt": "680348ea9cbd85a7810e3a2a06c702aaa09c853e38121c72a08dbee91c1d7680",
       "nova-tv/android/app/src/main/java/dev/nova/tv/finder/website/WebsiteRules.kt": "7043571230a6af327e1abeb511e14eb16b7b03729312fad89e00eb2e9747e3fb",
       "nova-tv/android/app/src/main/java/dev/nova/tv/player/BufferingMeter.kt": "dd8b15bbc9c128dbb8010bd1b715104faafb22db977b4f4ebe73623f4226627b",
@@ -1620,15 +1620,15 @@
       "tools/nova/contracts/bootstrap.json": "8e8ad1407901caff0f5ef0fb6a8d100620023a599b72745a4bee1f63b7d31396",
       "tools/nova/contracts/pipeline-v3.json": "53a9b8e1d9dffbd1bdede1ba681a94a4c3867497c55f362aaa20d0f42671e8a3",
       "tools/nova/crawl_probe.py": "2736f808962cf9c75d353e0b747160683f43a89a1dd9ec4d78b9f17a23d2f4ed",
-      "tools/nova/emulator_finder_smoke.sh": "24d42d8c04860c96d3078eacbe8a22158bce7beb3394992d3b21e0d45a29d900",
+      "tools/nova/emulator_finder_smoke.sh": "1a85d711c13365538c1cd3ed5aee4274be1036f8380fb229989c4e41858b692a",
       "tools/nova/evidence/bootstrap.strict.json": "ed27419e98dccd90a5c44b922a1454bc3efb2bab46dae2c5af0ec38d01895a52",
-      "tools/nova/render_finder_debug_report.py": "0c14a168d085da2ceeeae91507a662b363281b5b92b986c26a835bf4ffdf4002",
+      "tools/nova/render_finder_debug_report.py": "6fb440e2ef46ee07a48d83de3d34cf5df55925031f8ce41e23a337090962ef0b",
       "tools/nova/run_ci_artifact_check.sh": "0d635c17f07a99b1e83f1a89c38f985ac0592fb5eba1d070ecb8492ce0e921b3",
       "tools/nova/strict_verify.py": "e782d1641892bda1502b6a5231a590e67eeb09049b76865d7550255293478a09",
       "tools/nova/tests/__init__.py": "6121b1c0ed1989f0df7326d617ea8d6b2bd35678c293a17978f8d4e23b5e88fd",
       "tools/nova/tests/test_strict_verify.py": "29bb82e218e0aa79c5e986bfeb2f58e6938124aad1cc6be35af9b9ab34e69ae5",
       "tools/nova/uiautomator_tap.py": "a5b93b3c02515169c7befa19d114912027160f8f250246b1b79278019ce8b03c"
     },
-    "sha256": "e1936356b3ff497daddb8efb4c5e4db1bc280c5fef09a7d326031709e141ee16"
+    "sha256": "3c632dac3f60b5d9ef24b679343a1f59934670234660eb2987ec2d173d9b96a0"
   }
 }

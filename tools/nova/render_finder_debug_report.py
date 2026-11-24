@@ -65,6 +65,19 @@ def main() -> int:
         ][:20]
         logcat_excerpt = "\n".join(f"    {line}" for line in lines)
 
+    failure_lines = []
+    failure_terms = (
+        "NovaFinderDebug", "AndroidRuntime", "FATAL EXCEPTION", "ActivityManager",
+        "finder probe", "BUDGET_STOPPED", "DEGRADED", "timeout", "threw", "Exception",
+        "network-error", "renderer", "pipeline.done",
+    )
+    diagnostic_paths = sorted(CI.glob("*.logcat*.txt")) + sorted(CI.glob("*.heartbeat.txt")) + sorted(CI.glob("*.finder-debug-ls.txt"))
+    for path in diagnostic_paths:
+        for number, line in enumerate(path.read_text(errors="ignore").splitlines(), 1):
+            if path.name.endswith(".heartbeat.txt") or path.name.endswith(".finder-debug-ls.txt") or any(term in line for term in failure_terms):
+                failure_lines.append(f"{path.name}:{number}:{line}")
+    failure_excerpt = "\n".join(f"    {line}" for line in failure_lines[-120:])
+
     overall = "PASS" if all(status_of(item) == "PASS" for item in (crawl, pipeline, ui)) and logcat_excerpt else "INCOMPLETE"
     lines = [
         "# APK finder debug session",
@@ -139,6 +152,12 @@ def main() -> int:
         "",
         "```text",
         logcat_excerpt or "(missing)",
+        "```",
+        "",
+        "## Failure diagnostics",
+        "",
+        "```text",
+        failure_excerpt or "(none captured)",
         "```",
         "",
         "## Evidence files committed",

@@ -6,6 +6,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
+import kotlinx.coroutines.withTimeoutOrNull
 
 data class PipelineSurfaceResult(
     val added: Int,
@@ -40,7 +41,6 @@ class PipelineRunner(
         maxCandidates: Int = MAX_CANDIDATES_PER_RUN
     ): PipelineReport {
         val audit = PipelineAudit()
-        val deadline = System.currentTimeMillis() + RUN_BUDGET_MS
         val engines = EngineRegistry.forKind(kind)
         val engineCount = EngineRegistry.ALL.size
         val stageCount = PipelineStage.values().size
@@ -57,6 +57,10 @@ class PipelineRunner(
         }
         val boundedPages = pages.coerceAtLeast(1)
         val boundedCandidates = maxCandidates.coerceIn(1, MAX_CANDIDATES_PER_RUN)
+        // The APK debug probe asks for a small batch. Stop that batch after a few
+        // real verifications instead of spending the full 10,000-site capacity
+        // budget on one emulator run. Full-capacity unit tests stay unbounded.
+        val boundedRun = maxCandidates < MAX_CANDIDATES_PER_RUN
 
         val surfaces = EngineRegistry.surfaceUrls(kind, round, boundedPages)
         audit.count(PipelineStage.ENGINES, surfaces.size)
@@ -112,7 +116,11 @@ class PipelineRunner(
         }
         audit.count(PipelineStage.DEDUPE, unique.size)
 
+        // Stage 07 must actually order the accepted frontier by observed
+        // quality signals; mapping alone left discovery response order in
+        // control of which twenty hosts a bounded debug run could inspect.
         val sorted = unique.map { PipelineSorter.sort(it) }
+            .sortedWith(compareByDescending<SortedSite> { it.score }.thenBy { it.site.host })
         audit.count(PipelineStage.SORT, sorted.size)
         for (item in sorted) {
             if (!item.accepted) audit.reject(PipelineStage.SORT, item.site.url, item.reason)
@@ -131,16 +139,46 @@ class PipelineRunner(
             }
         }
 
-        val lookBudgetExpired = System.currentTimeMillis() >= deadline
+        // Fetching all public indexes is deliberately slower than looking at
+        // the best survivors. Give the look stage its own budget so a slow
+        // index response cannot mark every candidate "run-budget-expired"
+        // before the first user-like visit happens.
+        val lookDeadline = if (boundedRun) {
+            System.currentTimeMillis() + PIPELINE_BOUNDED_LOOK_BUDGET_MS
+        } else {
+            Long.MAX_VALUE / 4
+        }
+        val lookTarget = if (boundedRun) {
+            minOf(PIPELINE_BOUNDED_VERIFICATION_TARGET, boundedCandidates)
+        } else {
+            Int.MAX_VALUE
+        }
         val gate = Semaphore(LOOK_CONCURRENCY)
         coroutineScope {
             selected.map { item ->
                 async {
                     gate.withPermit {
-                        if (lookBudgetExpired || System.currentTimeMillis() >= deadline) {
-                            audit.reject(PipelineStage.LOOK, item.site.url, "run-budget-expired")
-                        } else {
-                            inspectOne(item.site, item.score, audit, deadline)
+                        when {
+                            System.currentTimeMillis() >= lookDeadline -> {
+                                audit.reject(PipelineStage.LOOK, item.site.url, "look-budget-expired")
+                                Inspection(null, "look-budget-expired")
+                            }
+                            store.size() >= lookTarget -> {
+                                audit.reject(PipelineStage.LOOK, item.site.url, "verification-target-reached")
+                                Inspection(null, "verification-target-reached")
+                            }
+                            boundedRun -> {
+                                val inspection = withTimeoutOrNull(PIPELINE_BOUNDED_LOOK_TIMEOUT_MS) {
+                                    inspectOne(item.site, item.score, audit, lookDeadline)
+                                }
+                                if (inspection == null) {
+                                    audit.reject(PipelineStage.LOOK, item.site.url, "look-coroutine-timeout")
+                                    Inspection(null, "look-coroutine-timeout")
+                                } else {
+                                    inspection
+                                }
+                            }
+                            else -> inspectOne(item.site, item.score, audit, lookDeadline)
                         }
                     }
                 }
@@ -148,7 +186,7 @@ class PipelineRunner(
         }
 
         val verifiedCount = store.size()
-        if (System.currentTimeMillis() >= deadline && verifiedCount < MIN_SITE_TARGET) {
+        if (boundedRun && System.currentTimeMillis() >= lookDeadline && verifiedCount < MIN_SITE_TARGET) {
             audit.budgetStopped = true
         }
         audit.count(PipelineStage.AUDIT)
@@ -358,7 +396,15 @@ class PipelineRunner(
     }
 
     private suspend fun safeFetch(url: String, read: Int, audit: PipelineAudit): TransportResult = try {
-        transport.fetch(url, read = read)
+        val result = withTimeoutOrNull(PIPELINE_FETCH_COROUTINE_TIMEOUT_MS) {
+            transport.fetch(url, read = read)
+        }
+        if (result == null) {
+            audit.reject(PipelineStage.FETCH, url, "fetch-coroutine-timeout")
+            TransportResult(url, 0, "", "", "fetch-coroutine-timeout")
+        } else {
+            result
+        }
     } catch (error: Exception) {
         val reason = "${error.javaClass.simpleName}: ${error.message.orEmpty()}"
         audit.error(PipelineStage.FETCH.label, reason)

@@ -27,8 +27,13 @@ class FinderPipelineTransport(
         if (host.isEmpty()) {
             return TransportResult(url, 0, "", "", "not-an-absolute-http-url")
         }
-        val response = http.get(url, referer = referer, read = read)
-            ?: return TransportResult(url, 0, "", "", "no-response-or-host-tripped")
+        val response = http.get(
+            url,
+            referer = referer,
+            tries = 1,
+            timeoutMs = PIPELINE_FETCH_TIMEOUT_MS,
+            read = read
+        ) ?: return TransportResult(url, 0, "", "", "no-response-or-host-tripped")
         val contentType = header(response.headers, "content-type")
         val body = response.text
         val error = when {
@@ -67,7 +72,7 @@ class FinderPipelineTransport(
         if (host.isEmpty()) {
             return PipelineProbe(url, 0, "unknown", "", "", false, "not-an-absolute-http-url")
         }
-        val handle = http.openStream(url, referer)
+        val handle = http.openStream(url, referer, timeoutMs = PIPELINE_PROBE_TIMEOUT_MS)
             ?: return PipelineProbe(url, 0, "unknown", "", "", false, "stream-unavailable-or-host-tripped")
         var buffer = Buffer()
         var sample = ""

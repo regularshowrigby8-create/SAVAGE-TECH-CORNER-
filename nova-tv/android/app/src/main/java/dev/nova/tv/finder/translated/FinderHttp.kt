@@ -180,14 +180,18 @@ class FinderHttp(
                         synchronized(lock) { stats[resp.status.toString()] = (stats[resp.status.toString()] ?: 0) + 1 }
                         if (resp.status in listOf(403, 429, 503)) {
                             last = resp
-                            if (resp.status == 403 && attempt == 1) solve(url, referer)
-                            backoff(attempt, resp.status, resp.headers)
+                            if (attempt + 1 < tries) {
+                                if (resp.status == 403 && attempt == 1) solve(url, referer)
+                                backoff(attempt, resp.status, resp.headers)
+                            }
                             continue
                         }
                         return resp
                     } catch (e: IOException) {
                         last = Resp(0, url, emptyMap(), ByteArray(0))
-                        delay((((2.0.pow(attempt)) + Random.nextDouble()) * 1000.0).toLong())
+                        if (attempt + 1 < tries) {
+                            delay((((2.0.pow(attempt)) + Random.nextDouble()) * 1000.0).toLong())
+                        }
                     }
                 }
                 trip(host)

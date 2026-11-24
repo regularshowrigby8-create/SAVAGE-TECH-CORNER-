@@ -26,14 +26,46 @@ adb install -r -t "$APK"
 wait_for_done() {
     mode="$1"
     marker="files/finder-debug/$mode.done"
-    for _ in $(seq 1 180); do
+    heartbeat="files/finder-debug/$mode.heartbeat.txt"
+    for i in $(seq 1 300); do
         if adb shell "run-as $PKG test -f $marker" >/dev/null 2>&1; then
             return 0
+        fi
+        if (( i % 15 == 0 )); then
+            echo "finder probe still running: mode=$mode poll=$i/300"
+            if adb shell "run-as $PKG test -f $heartbeat" >/dev/null 2>&1; then
+                adb exec-out run-as "$PKG" cat "$heartbeat" > "$OUT/$mode.heartbeat.txt"
+                echo "heartbeat: $(cat "$OUT/$mode.heartbeat.txt")"
+            fi
+            adb logcat -d -s NovaFinderDebug:V > "$OUT/$mode.logcat.progress.txt"
+            tail -n 6 "$OUT/$mode.logcat.progress.txt"
         fi
         sleep 2
     done
     echo "::error title=finder probe timeout::mode=$mode marker=$marker" >&2
     return 1
+}
+
+capture_failure() {
+    mode="$1"
+    echo "::error title=finder probe stall diagnostics::mode=$mode; capturing logcat and app-private heartbeats" >&2
+    adb logcat -d > "$OUT/$mode.logcat-all.txt"
+    adb logcat -d -s NovaFinderDebug:V AndroidRuntime:E ActivityManager:I > "$OUT/$mode.logcat.txt"
+    echo "===== $mode NovaFinderDebug / crash tail ====="
+    tail -n 200 "$OUT/$mode.logcat.txt"
+    echo "===== $mode all-logcat tail ====="
+    tail -n 120 "$OUT/$mode.logcat-all.txt"
+    if adb shell "run-as $PKG test -f files/finder-debug/$mode.heartbeat.txt" >/dev/null 2>&1; then
+        adb exec-out run-as "$PKG" cat "files/finder-debug/$mode.heartbeat.txt" > "$OUT/$mode.heartbeat.txt"
+        echo "===== $mode heartbeat ====="
+        cat "$OUT/$mode.heartbeat.txt"
+    fi
+    if adb shell "run-as $PKG test -d files/finder-debug" >/dev/null 2>&1; then
+        adb shell "run-as $PKG ls -la files/finder-debug" > "$OUT/$mode.finder-debug-ls.txt"
+        echo "===== $mode finder-debug directory ====="
+        cat "$OUT/$mode.finder-debug-ls.txt"
+    fi
+    return 0
 }
 
 assert_debug_json() {
@@ -89,7 +121,13 @@ run_debug_mode() {
     adb logcat -c
     adb shell "run-as $PKG rm -f files/finder-debug/$mode.done files/finder-debug/$mode.json files/finder-debug/$mode.trace.txt"
     adb shell am start -W -n "$PKG/$DEBUG_ACTIVITY" --es mode "$mode" --ez clear true > "$OUT/$mode.start.txt"
-    wait_for_done "$mode"
+    if ! wait_for_done "$mode"; then
+        capture_failure "$mode"
+        return 1
+    fi
+    if adb shell "run-as $PKG test -f files/finder-debug/$mode.heartbeat.txt" >/dev/null 2>&1; then
+        adb exec-out run-as "$PKG" cat "files/finder-debug/$mode.heartbeat.txt" > "$OUT/$mode.heartbeat.txt"
+    fi
     adb exec-out run-as "$PKG" cat "files/finder-debug/$mode.json" > "$OUT/$mode.json"
     adb exec-out run-as "$PKG" cat "files/finder-debug/$mode.trace.txt" > "$OUT/$mode.trace.txt"
     adb logcat -d -s NovaFinderDebug:V > "$OUT/$mode.logcat.txt"

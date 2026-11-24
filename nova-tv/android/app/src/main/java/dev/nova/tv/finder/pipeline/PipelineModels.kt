@@ -20,6 +20,14 @@ const val MIN_CATALOGUE_ITEMS = 40
 const val MIN_SORTER_SCORE = 20
 const val RUN_BUDGET_MS = 45_000L
 const val MAX_CANDIDATES_PER_RUN = 5_000
+/** One discovery index call and one byte probe get short, explicit ceilings. */
+const val PIPELINE_FETCH_TIMEOUT_MS = 8_000L
+const val PIPELINE_PROBE_TIMEOUT_MS = 8_000L
+/** Coroutine ceilings for a bounded APK-debug run; full capacity tests are unbounded. */
+const val PIPELINE_FETCH_COROUTINE_TIMEOUT_MS = 12_000L
+const val PIPELINE_BOUNDED_LOOK_BUDGET_MS = 180_000L
+const val PIPELINE_BOUNDED_LOOK_TIMEOUT_MS = 25_000L
+const val PIPELINE_BOUNDED_VERIFICATION_TARGET = 3
 const val MAX_INDEX_BYTES = 3_000_000
 const val MAX_DOCUMENT_BYTES = 400_000
 const val LOOK_CONCURRENCY = 24
