@@ -703,6 +703,7 @@ def main() -> int:
         ],
         "look_samples": looked[:25],
         "ci_verification_required": ci_verification_required,
+        "verified_for_ci": assertions["verified_for_ci"],
         "assertions": assertions,
         "errors": [] if ok else [name for name, passed in applicable_assertions.items() if not passed],
     }

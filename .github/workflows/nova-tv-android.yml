@@ -332,6 +332,7 @@ jobs:
           assert result["ci_verification_required"] is True, "CI must require verification"
           assert result["verified"] >= 1, "no candidate site was verified"
           assert result["verified_for_ci"] is True, "CI verification assertion was bypassed"
+          assert result["assertions"]["verified_for_ci"] is True, "nested CI verification assertion was bypassed"
           assert result["responses_ok"] >= 25, "too few discovery engines responded"
           assert result["engines_selected"] == result["engines_total"], "CI skipped one or more discovery engines"
           assert result["engines_selected"] >= 65, "engine registry fell below the 65-engine floor"
