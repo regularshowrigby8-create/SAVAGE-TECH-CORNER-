@@ -965,7 +965,7 @@ class ServerFinderHarvester(
         val json = Discovery.isJsonSurface(url)
         // A shell page is rendered only while this round's budget lasts.
         val shell = !json && ServerFinder.needsRender(html)
-        val overBudget = shell && shellRenders.getAndIncrement() >= MAX_SHELL_RENDERS
+        val overBudget = shell && shellRenders.getAndIncrement() >= ServerFinder.MAX_SHELL_RENDERS
         if (json) {
             if (html.isEmpty()) {
                 note("json-empty")
