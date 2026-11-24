@@ -252,13 +252,20 @@ class SourceEngine(
             FinderTrace.log("web", "fillWebsitePoolOnce: NO SPIDER wired")
             return 0
         }
+        // Checked before the call, not after: a busy drainer would only return a
+        // skip, and asking it produced a pointless log pair on every poll.
+        if (crawl.busy) {
+            FinderTrace.log("web", "fillWebsitePoolOnce: round $webRound SKIPPED, drainer busy")
+            return 0
+        }
         FinderTrace.log("web", "fillWebsitePoolOnce: round $webRound BEGIN")
         val harvest = runCatching { crawl.harvest(webRound) }.getOrNull() ?: run {
             FinderTrace.log("web", "fillWebsitePoolOnce: harvest THREW")
             return 0
         }
-        // A skip means another drainer is mid-crawl; this call crawled nothing,
-        // so it must not consume a round.
+        // A skip means another drainer took the drain between the check above
+        // and the call; this call crawled nothing, so it must not consume a
+        // round.
         if (harvest.busy) {
             FinderTrace.log("web", "fillWebsitePoolOnce: round $webRound SKIPPED, drainer busy")
             return 0

@@ -68,6 +68,9 @@ object ServerFinder {
     const val MAX_API_CALLS = 12
     const val MAX_SERVERS = 24
 
+    /** Shell renders per round; the WebView serialises, so this is a hard cap. */
+    const val MAX_SHELL_RENDERS = 16
+
     /** Watch pages queued from one sitemap, and hosts from one page's links. */
     const val MAX_SITEMAP_URLS = 40
     const val MAX_GRAPH_HOSTS = 12
@@ -181,6 +184,90 @@ object ServerFinder {
         val head = html.take(20_000).lowercase()
         return CHALLENGE_MARKERS.any { it in head }
     }
+
+    /**
+     * A domain that exists but is not a streaming site.
+     *
+     * Measured on device: a brand sweep of the word `anime` produced 95 hosts,
+     * and a sample of 14 was 3 parked domains, 1 empty, 1 a 114-byte stub and
+     * the rest apparel shops and news portals. Separately `aniwaves.org` -- a
+     * real-looking anime site with a watch page and a player iframe -- answered
+     * its own player API with `{"info":"Server 1 is not wired yet","mode":"mock"}`.
+     * That is a decoy: it renders, it has the shape of a streaming site, and it
+     * can never produce a stream.
+     *
+     * These hosts must be recognised *before* they cost a render slot or a
+     * probe, and remembered, because the same parked page will be rediscovered
+     * every round. The markers are deliberately precise: `parked` alone would
+     * match a sentence in a blog post, so only registrar and marketplace
+     * strings are used.
+     */
+    private val DECOY_MARKERS = listOf(
+        "\"mode\":\"mock\"", "\"mode\": \"mock\"", "mode:\"mock\"", "mode: \"mock\"",
+        "domain is for sale", "buy this domain", "this domain may be for sale",
+        "this domain has expired", "domain has expired", "hugedomains.com",
+        "afternic.com", "sedoparking.com", "dan.com/buy-domain", "parkingcrew",
+        "future home of something quite cool", "default web page",
+        "welcome to nginx", "apache2 debian default page", "it works!"
+    )
+
+    fun isDecoy(html: String): Boolean {
+        if (html.length < 40) return true
+        val head = html.take(60_000).lowercase()
+        return DECOY_MARKERS.any { it in head }
+    }
+
+    /**
+     * A document that builds its player in JavaScript.
+     *
+     * The homepage of every real target measured (aniwaves, gotaku, 9anime,
+     * miruro, anime.live) contained *zero* iframes, zero `.m3u8` and zero
+     * `src:` player assignments -- nine pages, zero raw regex matches. The
+     * player appears only after the page's own script runs: aniwaves does
+     * `document.createElement("iframe")` with `src` built from
+     * `O+"/watch#"+k+"."+server+"."+episode+"."+lang`. A static extractor
+     * cannot see that, so a page carrying this shape must be rendered even when
+     * its document is large enough to look "fine".
+     */
+    private val PLAYER_SHELL_MARKERS = listOf(
+        "createelement(\"iframe\")", "createelement('iframe')",
+        "/watch#", "data-sv=", "data-lang=",
+        "new player(", "jwplayer(", "videojs(", "hls.js", "hls.min.js",
+        "plyr(", "shaka", "dplayer"
+    )
+
+    fun looksLikePlayerShell(html: String): Boolean {
+        val head = html.take(200_000).lowercase()
+        return PLAYER_SHELL_MARKERS.any { it in head }
+    }
+
+    /**
+     * Whether this document has to be rendered to have any chance of yielding.
+     *
+     * Rendering is the scarcest resource in the finder -- one WebView, four
+     * slots -- so it is spent only where a static read provably cannot work: a
+     * document that builds its player in script and has no static player in it
+     * yet. A page that already contains an iframe or an `.m3u8` is read
+     * statically and never rendered.
+     */
+    fun needsRender(html: String): Boolean =
+        looksLikePlayerShell(html) && !IFRAME.containsMatchIn(html) && !HLS.containsMatchIn(html)
+
+    /**
+     * A subresource, not a player.
+     *
+     * The trace spent probes on `llvpn.com/tag.min.js`, `acscdn.com/script/
+     * aclib.js`, `res.public.onecdn.static.microsoft/assets/mail/fonts/v1` and
+     * two ad iframes. Every one answered `kind=none buf=100 alive=false`: a
+     * script or a font can never be a stream, so probing it is a wasted
+     * request. Filtering by extension at extraction time is exact and free.
+     */
+    private val ASSET_EXT = Regex(
+        "\\.(?:js|mjs|css|map|woff2?|ttf|otf|eot|png|jpe?g|gif|webp|svg|ico|bmp|avif)(?:$|[?#])",
+        RegexOption.IGNORE_CASE
+    )
+
+    fun isAsset(url: String): Boolean = ASSET_EXT.containsMatchIn(url)
     val LOC = Regex("<loc>\\s*([^<\\s]+)\\s*</loc>", RegexOption.IGNORE_CASE)
     val BASE64 = Regex("[A-Za-z0-9+/]{40,}={0,2}")
     val SIG = Regex("sig=([a-f0-9]{32,})|token=([A-Za-z0-9_\\-\\.]{32,})", RegexOption.IGNORE_CASE)
@@ -254,6 +341,13 @@ class ServerExtractor {
         // candidate found on 9anime.org.lv and it 400'd on every probe.
         if (ServerFinder.isJunk(url)) {
             FinderTrace.count("extractor.junk-skipped")
+            return
+        }
+        // A script, stylesheet, font or image is never a stream. The trace
+        // probed `tag.min.js`, `aclib.js` and a font path and got `kind=none`
+        // on all three; each was a wasted request.
+        if (ServerFinder.isAsset(url)) {
+            FinderTrace.count("extractor.asset-skipped")
             return
         }
         seen += host
@@ -713,6 +807,17 @@ class ServerFinderHarvester(
     val prober = ServerProber(http)
     private val catalogue = ServerCatalogue(http)
     private var blocked: Set<String> = emptySet()
+
+    /**
+     * Hosts proven to be parked pages, stubs or mocks.
+     *
+     * A decoy is rediscovered every round -- the brand sweep and the TLD sweep
+     * both hand back the same parked domains -- so recognising it once and
+     * remembering it is the only way the budget stops being spent on it. This
+     * is per-harvester and in memory: it is a cheap cache, not a claim about
+     * the future, and a process restart is allowed to try again.
+     */
+    private val decoys: MutableSet<String> = java.util.Collections.synchronizedSet(HashSet())
     var written: Int = 0
         private set
 
@@ -744,6 +849,27 @@ class ServerFinderHarvester(
 
     /** When the current drain took the flag; 0 when nobody holds it. */
     private val harvestStartedAt = java.util.concurrent.atomic.AtomicLong(0L)
+
+    /**
+     * Whether a drain is in progress.
+     *
+     * Exposed so a caller can avoid asking for a round it knows will be
+     * skipped. The skip itself is still correct without this -- [harvest]
+     * re-checks -- but polling a busy drainer produced a pointless log pair on
+     * every tick.
+     */
+    val busy: Boolean get() = harvesting.get()
+
+    /**
+     * Shell renders spent this round.
+     *
+     * A page whose player is built in script has to be rendered, but the
+     * WebView serialises: rendering every watch page in a frontier of 110 would
+     * put every other request behind the browser and the harvest would stall
+     * exactly as it did before. The budget bounds that without disabling the
+     * path, and it resets each round so a later round can try different pages.
+     */
+    private val shellRenders = java.util.concurrent.atomic.AtomicInteger(0)
 
     /** Per-harvest drop tallies; read by [rejectionReport]. */
     private val rejects = java.util.concurrent.ConcurrentHashMap<String, Int>()
@@ -837,6 +963,9 @@ class ServerFinderHarvester(
         // WebView cost ~2 s each and, because one WebView serialises, put every
         // other request behind it. The document is already the answer.
         val json = Discovery.isJsonSurface(url)
+        // A shell page is rendered only while this round's budget lasts.
+        val shell = !json && ServerFinder.needsRender(html)
+        val overBudget = shell && shellRenders.getAndIncrement() >= MAX_SHELL_RENDERS
         if (json) {
             if (html.isEmpty()) {
                 note("json-empty")
@@ -844,10 +973,26 @@ class ServerFinderHarvester(
             }
             FinderTrace.log("web", "json ok $url (${html.length}B)")
             FinderTrace.count("json.ok")
-        } else if (html.length >= 2000 && !ServerFinder.looksChallenged(html)) {
+        } else if (html.length >= 2000 && !ServerFinder.looksChallenged(html) &&
+            (!shell || overBudget)
+        ) {
+            if (shell) {
+                FinderTrace.log("web", "  shell budget spent, reading $url statically")
+                FinderTrace.count("render.budget")
+            }
             FinderTrace.log("web", "http ok $url (${html.length}B)")
             FinderTrace.count("http.ok")
         } else {
+            // Rendered either because the cheap GET produced no document, or
+            // because the document builds its player in script and therefore
+            // cannot be read statically. The second case is why every real
+            // target used to yield nothing: nine homepages measured, zero raw
+            // extractor matches, because the player only exists after the
+            // page's own JavaScript runs.
+            if (shell) {
+                FinderTrace.log("web", "player shell $url (${html.length}B) - rendering")
+                FinderTrace.count("render.shell")
+            }
             val rendered = if (browser != null) {
                 val (h, n) = browser.render(url)
                 net = n
@@ -872,6 +1017,20 @@ class ServerFinderHarvester(
         if (ServerFinder.looksChallenged(html)) {
             note("challenge")
             FinderTrace.log("web", "CHALLENGED $url (${html.length}B) - bot wall, not a catalogue")
+            return
+        }
+        // A parked page, a stub or a mock has the shape of a site and can never
+        // serve a stream. `aniwaves.org` is the measured example: a real watch
+        // page, a real player iframe, and an API that answers
+        // `{"info":"Server 1 is not wired yet","mode":"mock"}`. Remembering the
+        // host is what stops the same decoy being rediscovered and re-probed
+        // every round.
+        if (ServerFinder.isDecoy(html) && !Discovery.isJsonSurface(url)) {
+            val h = FinderHelpers.hostOf(url)
+            if (h.isNotEmpty()) decoys += h
+            note("decoy")
+            FinderTrace.count("decoy")
+            FinderTrace.log("web", "DECOY $url (${html.length}B) - parked, stub or mock; host remembered")
             return
         }
         // A live domain is worth more than the page it served. crt.sh, urlscan,
@@ -952,6 +1111,12 @@ class ServerFinderHarvester(
     private suspend fun cheapAlive(url: String): Boolean {
         val host = FinderHelpers.hostOf(url)
         if (host.isEmpty()) return false
+        // Already proven to be a decoy in this process: do not even spend a DNS
+        // lookup on it again.
+        if (host in decoys) {
+            note("decoy-known")
+            return false
+        }
         if (!dnsOk(host)) {
             note("dns-dead")
             FinderTrace.count("cheap.dns")
@@ -1429,6 +1594,7 @@ class ServerFinderHarvester(
 
     private suspend fun harvestLocked(round: Int, started: Long): ServerHarvest {
         resetRejections()
+        shellRenders.set(0)
         FinderTrace.log(
             "web",
             "harvest#$round START frontier=${store.frontierSize()} alive=${store.count("alive")} cap=$cap"

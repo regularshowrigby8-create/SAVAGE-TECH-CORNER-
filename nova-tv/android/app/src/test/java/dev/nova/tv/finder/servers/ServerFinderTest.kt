@@ -269,6 +269,73 @@ class ServerFinderTest {
         assertEquals(24, ServerFinder.MAX_SERVERS)
     }
 
+    // -- decoys, player shells and assets (on-device trace) ------------------
+
+    /**
+     * A parked page, a stub or a mock has the shape of a site and can never
+     * serve a stream. `aniwaves.org` is the measured example: a real watch
+     * page with a real player iframe, whose own API answers
+     * `{"info":"Server 1 is not wired yet","mode":"mock"}`.
+     */
+    @Test
+    fun `a mock or a parked page is a decoy`() {
+        assertTrue(ServerFinder.isDecoy("""{"info":"Server 1 is not wired yet","mode":"mock"}"""))
+        assertTrue(ServerFinder.isDecoy("<html><body>This domain is for sale.</body></html>"))
+        assertTrue(ServerFinder.isDecoy("<html><body>HugeDomains.com</body></html>"))
+        assertTrue("an empty body is a stub", ServerFinder.isDecoy(""))
+        assertTrue("a 9-byte body is a stub", ServerFinder.isDecoy("short"))
+    }
+
+    @Test
+    fun `a real catalogue page is not a decoy`() {
+        val page = "<html><head><title>Aniwaves</title></head><body>" +
+            "<a href=\"/watch/one-piece-1/\">One Piece</a>".repeat(40) + "</body></html>"
+        assertFalse(ServerFinder.isDecoy(page))
+    }
+
+    /**
+     * Nine real homepages measured (aniwaves, gotaku, 9anime, miruro,
+     * anime.live) contained zero iframes and zero `.m3u8`: the player only
+     * exists after the page's own script runs. Those pages must be rendered.
+     */
+    @Test
+    fun `a page that builds its player in script needs a render`() {
+        val shell = "<html><script>const e=document.createElement(\"iframe\");" +
+            "e.src=O+\"/watch#\"+k+\".\"+s+\".\"+p+\".\"+M</script></html>"
+        assertTrue(ServerFinder.looksLikePlayerShell(shell))
+        assertTrue(ServerFinder.needsRender(shell))
+    }
+
+    @Test
+    fun `a page that already holds a player is read statically`() {
+        assertFalse(
+            "a static iframe is enough",
+            ServerFinder.needsRender("<html>hls.js<iframe src=\"https://play.x/watch#a\"></iframe></html>")
+        )
+        assertFalse(
+            "a static m3u8 is enough",
+            ServerFinder.needsRender("<html>hls.js<script>src:\"https://x/a.m3u8\"</script></html>")
+        )
+        assertFalse(
+            "a plain catalogue page is not a player shell",
+            ServerFinder.needsRender("<html><body><a href=\"/watch/1\">x</a></body></html>")
+        )
+    }
+
+    /** `tag.min.js`, `aclib.js` and a font path were each probed and each
+     *  answered `kind=none`: a subresource can never be a stream. */
+    @Test
+    fun `subresources are not candidates`() {
+        assertTrue(ServerFinder.isAsset("https://llvpn.com/tag.min.js"))
+        assertTrue(ServerFinder.isAsset("https://acscdn.com/script/aclib.js"))
+        assertTrue(ServerFinder.isAsset("https://x/a.css?v=2"))
+        assertTrue(ServerFinder.isAsset("https://x/f.woff2"))
+        assertTrue(ServerFinder.isAsset("https://x/i.png"))
+        assertFalse(ServerFinder.isAsset("https://x/a.m3u8"))
+        assertFalse(ServerFinder.isAsset("https://x/a.mp4?t=1"))
+        assertFalse(ServerFinder.isAsset("https://play.x/watch"))
+    }
+
     private fun finderRecord(baseUrl: String, referer: String) = ServerRecord(
         id = "x",
         name = "p",

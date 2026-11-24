@@ -294,6 +294,36 @@ object Discovery {
         "cn", "li", "nu", "lt", "com", "net", "org", "io", "co", "me", "ru", "su", "pl"
     )
 
+    /**
+     * Words that describe the *category*, not a brand.
+     *
+     * `brandOf("anime.live")` used to return `"anime"`, and the sweep then asked
+     * RapidDNS for the literal keyword `anime`. RapidDNS answers that with every
+     * `anime.*` domain that exists -- 95 hosts in one on-device round -- and a
+     * measured sample of 14 of them was: 3 parked, 1 empty, 1 a 114-byte stub,
+     * and the rest apparel shops and news portals. Not one was a streaming
+     * site. The same word also went to Bing and the TLD sweep, so a single
+     * generic host name poisoned three engines at once.
+     *
+     * A brand is a *distinctive* label (`aniwaves`, `gotaku`, `hianime`). A
+     * category word is not, and sweeping it is pure budget burn, so it must
+     * return null and expand nothing.
+     */
+    private val GENERIC_BRANDS = setOf(
+        "anime", "animes", "manga", "cartoon", "cartoons", "donghua", "dub", "sub",
+        "movie", "movies", "film", "films", "cinema", "series", "serie", "show",
+        "shows", "episode", "episodes", "season", "tv", "television", "video",
+        "videos", "stream", "streams", "streaming", "watch", "watching", "play",
+        "player", "free", "online", "live", "hd", "full", "best", "top", "new",
+        "site", "sites", "web", "app", "apps", "link", "links", "download",
+        "media", "tube", "zone", "world", "land", "hub", "base", "spot", "point",
+        "home", "house", "city", "life", "love", "art", "pro", "box", "cast",
+        "cloud", "host", "server", "servers", "source", "sources", "mirror",
+        "the", "my", "get", "one", "two", "all", "any", "now", "here", "go",
+        "plus", "club", "cam", "cams", "xxx", "porn", "adult", "hentai",
+        "sport", "sports", "news", "blog", "shop", "store", "games", "game"
+    )
+
     /** Registrable label of a host, without digits, TLD or `www.`. */
     fun brandOf(host: String): String? {
         val labels = host.lowercase().split('.').filter { it.isNotBlank() }
@@ -301,10 +331,62 @@ object Discovery {
         var i = labels.size - 2
         while (i > 0 && labels[i].length <= 3 && labels[i] in SUFFIX_PART) i--
         val stem = labels[i].removePrefix("www").trimEnd(*"0123456789".toCharArray())
-        return stem.takeIf { it.length in 3..24 && it.all(Char::isLetter) }
+        if (stem.isEmpty()) return null
+        // A category word is not a brand: sweeping it returns the whole category.
+        if (stem in GENERIC_BRANDS) return null
+        // Nor is a hyphenated pile of category words: `free-tv`, `watch-online`.
+        val parts = stem.split('-', '_').filter { it.isNotEmpty() }
+        if (parts.isNotEmpty() && parts.all { it in GENERIC_BRANDS }) return null
+        // Nor a run-together pile of them: `watchseries`, `freemovies`,
+        // `animeonline`. These are as un-sweepable as the words they are made
+        // of, and they are common enough to be worth segmenting.
+        if (segmentsIntoGeneric(stem)) return null
+        // Digits *inside* a label are the norm in this space -- 9anime, 2embed,
+        // 4anime, 1movies -- so requiring every character to be a letter threw
+        // away the most sweepable brands there are. Only the trailing digits
+        // are stripped (they are mirror counters), and a stem with no letter at
+        // all is still rejected.
+        return stem.takeIf {
+            it.length in 3..24 && it.any(Char::isLetter) && it.all { c -> c.isLetterOrDigit() || c == '-' || c == '_' }
+        }
     }
 
     private val SUFFIX_PART = setOf("co", "com", "net", "org", "ac", "gov", "edu", "or", "ne", "go")
+
+    /**
+     * True when [s] can be cut entirely into [GENERIC_BRANDS] words.
+     *
+     * `watchseries` -> watch + series, `freemovies` -> free + movies. A real
+     * brand leaves a remainder that is not a category word (`moviestar` ->
+     * movies + tar, and `tar` is not generic), so this does not swallow brands.
+     * Memoised because the stem is at most 24 characters and the recursion is
+     * otherwise exponential.
+     */
+    private fun segmentsIntoGeneric(s: String): Boolean {
+        if (s.length < 6) return false
+        val memo = HashMap<Int, Boolean>()
+        fun go(at: Int): Boolean {
+            if (at == s.length) return true
+            memo[at]?.let { return it }
+            var end = at + 3
+            while (end <= s.length && end - at <= 12) {
+                if (s.substring(at, end) in GENERIC_BRANDS && go(end)) {
+                    memo[at] = true
+                    return true
+                }
+                end++
+            }
+            memo[at] = false
+            return false
+        }
+        // Require at least two words: a single word is already covered above.
+        var first = 3
+        while (first < s.length) {
+            if (s.substring(0, first) in GENERIC_BRANDS && go(first)) return true
+            first++
+        }
+        return false
+    }
 
     /** Host guesses for one brand stem, rotated by round so a sweep is finite. */
     fun tldSweep(brand: String, round: Int, count: Int = 12): List<String> =

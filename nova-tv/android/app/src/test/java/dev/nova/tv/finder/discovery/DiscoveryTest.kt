@@ -324,9 +324,37 @@ class DiscoveryTest {
 
     @Test
     fun `brand_of strips the tld and a numeric suffix`() {
-        assertEquals("anime", Discovery.brandOf("www.anime.example"))
+        assertEquals("aniwaves", Discovery.brandOf("www.aniwaves.example"))
         assertEquals("hianime", Discovery.brandOf("hianime2.to"))
         assertEquals(null, Discovery.brandOf("localhost"))
+    }
+
+    /**
+     * A category word is not a brand.
+     *
+     * Measured: `brandOf("anime.live")` returned "anime", so the sweep asked
+     * RapidDNS for the literal keyword `anime` and got 95 hosts back -- 3
+     * parked, 1 empty, 1 a 114-byte stub, the rest apparel shops and news
+     * portals. Sweeping a category word burns three engines at once for zero
+     * streaming sites, so it must expand nothing.
+     */
+    @Test
+    fun `brand_of refuses a category word`() {
+        for (host in listOf(
+            "anime.live", "anime.com", "anime.us", "anime.club", "anime.plus",
+            "movies.to", "watchseries.io", "streaming.hd", "free-tv.example",
+            "manga.com", "cartoons.net", "player.one", "video.two",
+            "freemovies.example", "watchanimeonline.example"
+        )) {
+            assertEquals("$host must not be swept", null, Discovery.brandOf(host))
+        }
+        // A distinctive label is still a brand, including a digit-prefixed one:
+        // 9anime, 2embed, 4anime and 1movies are the norm in this space.
+        assertEquals("aniwaves", Discovery.brandOf("aniwaves.org"))
+        assertEquals("gotaku", Discovery.brandOf("gotaku.to"))
+        assertEquals("miruro", Discovery.brandOf("www.miruro.tv"))
+        assertEquals("9anime", Discovery.brandOf("9anime.cam"))
+        assertEquals("2embed", Discovery.brandOf("2embed.to"))
     }
 
     @Test
