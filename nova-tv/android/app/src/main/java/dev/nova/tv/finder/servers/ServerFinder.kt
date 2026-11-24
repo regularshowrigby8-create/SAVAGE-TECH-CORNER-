@@ -712,6 +712,13 @@ class ServerFinderHarvester(
     private val brands = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
 
     /**
+     * Discovery round currently in flight. [Discovery.domainSurfaces] rotates
+     * which index it asks (crt.sh, urlscan, Wayback, Cert Spotter) by round,
+     * so [discover] needs the round outside [refillSeeds].
+     */
+    @Volatile private var round = 0
+
+    /**
      * Only one harvest may drain the frontier at a time.
      *
      * The UI and the background checker both call [harvest]; without this guard

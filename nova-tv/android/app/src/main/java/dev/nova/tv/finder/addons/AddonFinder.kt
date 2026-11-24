@@ -632,6 +632,12 @@ class AddonFinderHarvester(
     /** Only one harvest may drain the frontier at a time. */
     private val harvesting = java.util.concurrent.atomic.AtomicBoolean(false)
 
+    /**
+     * Discovery round currently in flight. [Discovery.domainSurfaces] rotates
+     * its index by round, so [fromWww] needs the round outside [refillSeeds].
+     */
+    @Volatile private var round = 0
+
     fun loadBlocklist(hosts: Set<String>) {
         blocked = hosts
     }
@@ -767,6 +773,14 @@ class AddonFinderHarvester(
             html = browser.renderText(url).ifBlank { html }
         }
         if (html.isEmpty()) return
+        // A real domain unlocks the domain tier (crt.sh, urlscan, Wayback,
+        // Cert Spotter), all of which refuse a bare brand with 403. Ask them
+        // for this host's siblings and history so one working site becomes its
+        // mirrors instead of a single dead end.
+        val liveHost = FinderHelpers.hostOf(url)
+        if (liveHost.isNotEmpty()) {
+            for (s in Discovery.domainSurfaces(liveHost, round)) store.push(s)
+        }
         // The page may be the addon itself.
         if (Discovery.looksLikeAddonPage(html)) queue(url)
         // Explicit manifest links are the strongest signal on a directory page.
