@@ -221,4 +221,99 @@ class DiscoveryTest {
         // Sanity: the helpers are still reachable from the finders.
         assertEquals("example", FinderHelpers.providerOf("https://cdn.example.com/x"))
     }
+
+    // -- redirect unwrapping (bug 1) ----------------------------------------
+
+    @Test
+    fun `unwrap decodes a duckduckgo uddg redirect`() {
+        val href = "//duckduckgo.com/l/?uddg=https%3A%2F%2Fanime.example%2Fwatch%2F1&rut=abc"
+        assertEquals("https://anime.example/watch/1", Discovery.Unwrap.of(href))
+    }
+
+    @Test
+    fun `unwrap decodes a bing a1 base64 redirect`() {
+        val target = "https://hianime.example/watch/9"
+        val encoded = java.util.Base64.getUrlEncoder().withoutPadding()
+            .encodeToString(target.toByteArray())
+        val href = "https://www.bing.com/ck/a?!&&p=abc&u=a1$encoded&ntb=1"
+        assertEquals(target, Discovery.Unwrap.of(href))
+    }
+
+    @Test
+    fun `unwrap drops the engine's own host but keeps a plain result`() {
+        assertEquals(null, Discovery.Unwrap.of("https://www.bing.com/search?q=anime"))
+        assertEquals("https://anime.example/", Discovery.Unwrap.of("https://anime.example/"))
+    }
+
+    @Test
+    fun `links_from_html unwraps every redirect hop`() {
+        val ddg = """<a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fone.example%2F">1</a>"""
+        val bing = """<a href="https://www.bing.com/ck/a?u=a1${java.util.Base64.getUrlEncoder().withoutPadding().encodeToString("https://two.example/".toByteArray())}">2</a>"""
+        val links = Discovery.linksFromHtml(ddg + bing, "https://www.bing.com/search?q=x")
+        assertTrue(links.any { it.startsWith("https://one.example") })
+        assertTrue(links.any { it.startsWith("https://two.example") })
+        assertTrue(links.none { "duckduckgo.com" in it || "bing.com" in it })
+    }
+
+    // -- passive index parsers (bug 2) --------------------------------------
+
+    @Test
+    fun `hosts_from_certspotter reads dns_names`() {
+        val text = """[{"dns_names":["*.anime.example","cdn.anime.example"]}]"""
+        val hosts = Discovery.hostsFromCertSpotter(text)
+        assertTrue("anime.example" in hosts)
+        assertTrue("cdn.anime.example" in hosts)
+    }
+
+    @Test
+    fun `hosts_from_wayback reads the original column`() {
+        val text = """[["urlkey","timestamp","original"],
+            ["x","2020","https://old.example/watch/1"],
+            ["y","2021","https://web.archive.org/web/1/https://nested.example/"]]"""
+        val hosts = Discovery.hostsFromWayback(text)
+        assertTrue("old.example" in hosts)
+        assertTrue("nested.example" in hosts)
+        assertTrue("web.archive.org" !in hosts)
+    }
+
+    @Test
+    fun `hosts_from_rapiddns reads table cells`() {
+        val text = """<table><tr><td>sub.anime.example</td><td>A</td></tr></table>"""
+        assertTrue("sub.anime.example" in Discovery.hostsFromRapidDns(text))
+    }
+
+    @Test
+    fun `hosts_from_otx reads passive dns rows`() {
+        val text = """{"passive_dns":[{"hostname":"a.anime.example"},{"hostname":"b.anime.example"}]}"""
+        val hosts = Discovery.hostsFromOtx(text)
+        assertEquals(2, hosts.size)
+        assertTrue("a.anime.example" in hosts)
+    }
+
+    // -- brand sweep and the JSON fast path (bugs 3 and 4) ------------------
+
+    @Test
+    fun `brand_of strips the tld and a numeric suffix`() {
+        assertEquals("anime", Discovery.brandOf("www.anime.example"))
+        assertEquals("hianime", Discovery.brandOf("hianime2.to"))
+        assertEquals(null, Discovery.brandOf("localhost"))
+    }
+
+    @Test
+    fun `tld_sweep rotates so a brand is asked for new tlds each round`() {
+        val r0 = Discovery.tldSweep("anime", 0)
+        val r1 = Discovery.tldSweep("anime", 1)
+        assertEquals(12, r0.size)
+        assertTrue(r0.all { it.startsWith("anime.") })
+        assertTrue(r0.any { it !in r1 })
+    }
+
+    @Test
+    fun `is_json_surface marks the apis that must never be rendered`() {
+        assertTrue(Discovery.isJsonSurface("https://www.reddit.com/search.json?q=x"))
+        assertTrue(Discovery.isJsonSurface("https://urlscan.io/api/v1/search/?q=x"))
+        assertTrue(Discovery.isJsonSurface("https://api.certspotter.com/v1/issuances?domain=x"))
+        assertTrue(Discovery.isJsonSurface("https://web.archive.org/cdx/search/cdx?url=x"))
+        assertFalse(Discovery.isJsonSurface("https://anime.example/watch/1"))
+    }
 }

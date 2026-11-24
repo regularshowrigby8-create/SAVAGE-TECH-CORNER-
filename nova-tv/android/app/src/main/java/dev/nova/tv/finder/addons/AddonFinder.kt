@@ -624,6 +624,8 @@ class AddonFinderHarvester(
 ) {
     val validator = AddonValidator(http)
     private var blocked: Set<String> = emptySet()
+    /** Only one harvest may drain the frontier at a time. */
+    private val harvesting = java.util.concurrent.atomic.AtomicBoolean(false)
 
     fun loadBlocklist(hosts: Set<String>) {
         blocked = hosts
@@ -889,6 +891,10 @@ class AddonFinderHarvester(
             "npms.io" in host || "npmjs.org" in host || host == "registry.npmjs.org" -> "npm"
             "reddit.com" in host -> "reddit"
             host == "crt.sh" || host.endsWith(".crt.sh") -> "ct"
+            host == "api.certspotter.com" -> "certspotter"
+            host == "web.archive.org" -> "wayback"
+            host == "rapiddns.io" || host.endsWith(".rapiddns.io") -> "rapiddns"
+            host == "otx.alienvault.com" -> "otx"
             host == "urlscan.io" || host.endsWith(".urlscan.io") -> "urlscan"
             Discovery.isSearchHost(host) -> "search"
             else -> "www"
@@ -901,40 +907,80 @@ class AddonFinderHarvester(
             "npm" -> fromNpm(url)
             "reddit" -> fromReddit(url)
             "ct" -> fromCt(url)
+            "certspotter" -> fromCertSpotter(url)
+            "wayback" -> fromWayback(url)
+            "rapiddns" -> fromRapidDns(url)
+            "otx" -> fromOtx(url)
             "urlscan" -> fromUrlscan(url)
             "search" -> fromSearch(url)
             else -> fromWww(url)
         }
     }
 
+    /** Queue a manifest probe for every host a passive index returned. */
+    private fun queueHosts(hosts: Collection<String>, tag: String): Int {
+        var added = 0
+        for (host in hosts) {
+            if (full()) break
+            if (!Discovery.usableHost(host)) continue
+            // A bare host has no path; ask it for the manifest directly.
+            queue("https://$host/manifest.json")
+            added++
+        }
+        FinderTrace.log("addon", "  $tag -> $added host(s)")
+        FinderTrace.count("addon.discovery.$tag", added)
+        return added
+    }
+
     /** Certificate transparency: every certificate ever issued for a keyword. */
     suspend fun fromCt(url: String) {
         val r = http.get(url)
         if (r == null || r.status >= 400) return
-        for (host in Discovery.hostsFromCt(r.text)) {
-            if (full()) return
-            if (!Discovery.usableHost(host)) continue
-            // A bare host has no path; ask it for the manifest directly.
-            queue("https://$host/manifest.json")
-        }
+        queueHosts(Discovery.hostsFromCt(r.text), "ct")
+    }
+
+    /** Cert Spotter: the second certificate log, for very recent rotations. */
+    suspend fun fromCertSpotter(url: String) {
+        val r = http.get(url)
+        if (r == null || r.status >= 400) return
+        queueHosts(Discovery.hostsFromCertSpotter(r.text), "certspotter")
+    }
+
+    /** Wayback CDX: domains the archive remembers, alive or not. */
+    suspend fun fromWayback(url: String) {
+        val r = http.get(url)
+        if (r == null || r.status >= 400) return
+        queueHosts(Discovery.hostsFromWayback(r.text), "wayback")
+    }
+
+    /** RapidDNS: hosts that actually resolved at some point. */
+    suspend fun fromRapidDns(url: String) {
+        val r = http.get(url)
+        if (r == null || r.status >= 400) return
+        queueHosts(Discovery.hostsFromRapidDns(r.text), "rapiddns")
+    }
+
+    /** AlienVault OTX passive DNS. */
+    suspend fun fromOtx(url: String) {
+        val r = http.get(url)
+        if (r == null || r.status >= 400) return
+        queueHosts(Discovery.hostsFromOtx(r.text), "otx")
     }
 
     /** urlscan.io: domains seen serving pages matching a keyword. */
     suspend fun fromUrlscan(url: String) {
         val r = http.get(url)
         if (r == null || r.status >= 400) return
-        for (host in Discovery.hostsFromUrlscan(r.text)) {
-            if (full()) return
-            if (!Discovery.usableHost(host)) continue
-            queue("https://$host/manifest.json")
-        }
+        queueHosts(Discovery.hostsFromUrlscan(r.text), "urlscan")
     }
 
     /** A web-search result page: every result is somewhere else to look. */
     suspend fun fromSearch(url: String) {
         val r = http.get(url)
         var html = r?.text.orEmpty()
-        if (browser != null && html.length < 2000) {
+        // A JSON surface is already the answer; rendering it in a WebView cost
+        // ~2 s and blocked every other request behind the single instance.
+        if (!Discovery.isJsonSurface(url) && browser != null && html.length < 2000) {
             html = browser.renderText(url).ifBlank { html }
         }
         if (html.isEmpty()) return
@@ -1005,6 +1051,20 @@ class AddonFinderHarvester(
      * froze the pool at ~198 of 6000 on device.
      */
     suspend fun harvest(round: Int): List<FinderCandidate> {
+        // One drainer at a time: two workers on one frontier split every batch
+        // and log the same START twice.
+        if (!harvesting.compareAndSet(false, true)) {
+            FinderTrace.log("addon", "harvest#$round SKIP (already running)")
+            return store.alive().take(cap).map { it.toFinderCandidate() }
+        }
+        try {
+            return harvestLocked(round)
+        } finally {
+            harvesting.set(false)
+        }
+    }
+
+    private suspend fun harvestLocked(round: Int): List<FinderCandidate> {
         val started = System.currentTimeMillis()
         var refills = 0
         var barren = 0
@@ -1035,7 +1095,11 @@ class AddonFinderHarvester(
                 "  batch=${batch.size} alive=${store.count("alive")} " +
                     "frontier=${store.frontierSize()} barren=$barren"
             )
-            if (barren >= BARREN_ROUNDS) break
+            // Only give up when there is genuinely nothing left to try.
+            // A barren round with a non-empty frontier means the next
+            // batch still has ground to cover -- breaking here is what
+            // left the frontier at 0 after 18 of 211 urls.
+            if (barren >= BARREN_ROUNDS && store.frontierSize() == 0) break
             delay(200)
         }
         FinderTrace.log(

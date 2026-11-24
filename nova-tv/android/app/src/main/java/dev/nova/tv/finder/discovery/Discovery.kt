@@ -6,6 +6,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
+import java.net.URI
 import java.net.URLDecoder
 import java.net.URLEncoder
 
@@ -220,6 +221,72 @@ object Discovery {
     fun githubUrls(query: String): List<String> =
         listOf("https://api.github.com/search/repositories?q=${enc(query)}+in:name,description,readme&sort=updated&per_page=100")
 
+    // -- passive engines -----------------------------------------------------
+    //
+    // Search engines are index-limited and pirate brands actively hide their
+    // current domain from them, so `search -> 0 host(s)` is the *expected*
+    // result, not a bug. These engines observe infrastructure instead of
+    // ranking pages, which is why they still list the domain a brand is using
+    // this week.
+
+    /** Cert Spotter: certificate issuance, one page of JSON, no key. */
+    fun certSpotterUrls(keyword: String): List<String> =
+        listOf("https://api.certspotter.com/v1/issuances?domain=${enc(keyword)}&include_subdomains=true&expand=dns_names")
+
+    /** Wayback CDX: every URL the archive ever captured for a host pattern. */
+    fun waybackUrls(keyword: String, limit: Int = 400): List<String> =
+        listOf(
+            "https://web.archive.org/cdx/search/cdx?url=*.${enc(keyword)}.*&output=json" +
+                "&fl=original&collapse=urlkey&limit=$limit&filter=statuscode:200"
+        )
+
+    /** RapidDNS: passive DNS subdomain index, plain HTML table. */
+    fun rapidDnsUrls(keyword: String): List<String> =
+        listOf("https://rapiddns.io/subdomain/${enc(keyword)}?full=1")
+
+    /** AlienVault OTX: passive DNS records for a domain, JSON. */
+    fun otxUrls(keyword: String): List<String> =
+        listOf("https://otx.alienvault.com/api/v1/indicators/domain/${enc(keyword)}/passive_dns")
+
+    /**
+     * TLD sweep: the same brand stem under every cheap TLD.
+     *
+     * A pirate brand does not disappear when its domain is seized; it moves to
+     * the same label under a different TLD. `9anime.to` -> `9anime.rs`,
+     * `9anime.is`, `9anime.bz`... This is the cheapest way to find the *current*
+     * domain of a brand already seen, and it costs one DNS lookup per guess.
+     */
+    val TLD_SWEEP = listOf(
+        "to", "rs", "is", "se", "bz", "st", "pe", "cc", "gs", "am", "mx", "tv", "nz",
+        "fit", "ink", "pw", "lc", "vc", "si", "sx", "hn", "ki", "sh", "ac", "wf", "yt",
+        "cn", "li", "nu", "lt", "com", "net", "org", "io", "co", "me", "ru", "su", "pl"
+    )
+
+    /** Registrable label of a host, without digits, TLD or `www.`. */
+    fun brandOf(host: String): String? {
+        val labels = host.lowercase().split('.').filter { it.isNotBlank() }
+        if (labels.size < 2) return null
+        var i = labels.size - 2
+        while (i > 0 && labels[i].length <= 3 && labels[i] in SUFFIX_PART) i--
+        val stem = labels[i].removePrefix("www").trimEnd(*"0123456789".toCharArray())
+        return stem.takeIf { it.length in 3..24 && it.all(Char::isLetter) }
+    }
+
+    private val SUFFIX_PART = setOf("co", "com", "net", "org", "ac", "gov", "edu", "or", "ne", "go")
+
+    /** Host guesses for one brand stem, rotated by round so a sweep is finite. */
+    fun tldSweep(brand: String, round: Int, count: Int = 12): List<String> =
+        rotate(TLD_SWEEP, round, count).map { "$brand.$it" }
+
+    /** True for the surfaces that answer with JSON and must never be rendered. */
+    fun isJsonSurface(url: String): Boolean {
+        val u = url.lowercase()
+        return "output=json" in u || "certspotter.com/v1/" in u ||
+            "urlscan.io/api/" in u || "/api/v1/" in u || "search.json" in u ||
+            "registry.npmjs.org/-/v1/" in u || "api.github.com/" in u ||
+            "collinfo.json" in u || "output=json" in u || "cdx/search/cdx" in u
+    }
+
     /** npm registry search. */
     fun npmUrls(query: String): List<String> =
         listOf("https://registry.npmjs.org/-/v1/search?text=${enc(query)}&size=250")
@@ -259,7 +326,11 @@ object Discovery {
         for (q in webQueries(round)) out += searchUrls(q)
         for (kw in webKeywords(round)) {
             out += ctUrls(kw)
+            out += certSpotterUrls(kw)
             out += urlscanUrls(kw)
+            out += rapidDnsUrls(kw)
+            out += waybackUrls(kw)
+            out += otxUrls(kw)
         }
         out += commonCrawlIndexList()
         return out.toList()
@@ -275,7 +346,10 @@ object Discovery {
         }
         for (kw in addonKeywords(round)) {
             out += ctUrls(kw)
+            out += certSpotterUrls(kw)
             out += urlscanUrls(kw)
+            out += rapidDnsUrls(kw)
+            out += waybackUrls(kw)
         }
         out += searchUrls("stremio addon list manifest.json")
         return out.toList()
@@ -284,22 +358,85 @@ object Discovery {
     // -- parsers -------------------------------------------------------------
 
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
-    private val HREF = Regex("""href\s*=\s*["']([^"'#]+)["']""", RegexOption.IGNORE_CASE)
-    private val UDDG = Regex("""[?&]uddg=([^&"']+)""")
+    private val HREF = Regex("""href\s*=\s*["']([^"'#]{4,400})["']""", RegexOption.IGNORE_CASE)
+    private val PLAIN_URL = Regex("""(?:https?:)?//[a-z0-9.-]+\.[a-z]{2,12}(?:/[^\s"'<>)\]]*)?""", RegexOption.IGNORE_CASE)
+    /** A hostname sitting alone in a table cell (RapidDNS). */
+    private val HOST_CELL = Regex("""<td[^>]*>\s*([a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+)\s*</td>""", RegexOption.IGNORE_CASE)
 
-    /** Absolute links in an HTML page, including DuckDuckGo's `uddg=` wrapper. */
+    /**
+     * Unwrap the redirect hop every search engine puts in front of a result.
+     *
+     * This is the bug that made every `search -> 0 host(s)` line: the crawler
+     * read the raw `href`, saw `duckduckgo.com` or `bing.com`, filtered it as
+     * the engine's own host, and reported nothing. The real destination was
+     * sitting in a query parameter the whole time.
+     *
+     *  - DuckDuckGo: `/l/?uddg=<urlencoded>` (also `//duckduckgo.com/l/?uddg=`)
+     *  - Bing:       `/ck/a?...&u=a1<base64url>`
+     *  - Mojeek / others: `?url=`, `?to=`, `?r=`, `?target=`, `?q=`
+     */
+    object Unwrap {
+        private val KEYS = listOf("uddg", "url", "u", "to", "r", "target", "q")
+
+        fun of(href: String): String? {
+            var h = href.trim()
+            if (h.isEmpty()) return null
+            if (h.startsWith("//")) h = "https:$h"
+            if (!h.startsWith("http", ignoreCase = true)) return null
+            val uri = runCatching { URI(h) }.getOrNull() ?: return null
+            val query = uri.rawQuery
+            if (query != null) {
+                for (pair in query.split('&')) {
+                    val i = pair.indexOf('=')
+                    if (i <= 0) continue
+                    val key = pair.substring(0, i)
+                    if (key !in KEYS) continue
+                    val raw = pair.substring(i + 1)
+                    val decoded = runCatching { URLDecoder.decode(raw, "UTF-8") }.getOrDefault(raw)
+                    val candidate = if (key == "u" && decoded.startsWith("a1")) bingBase64(decoded) else decoded
+                    if (candidate != null && candidate.startsWith("http", ignoreCase = true)) {
+                        // A wrapper can point at another wrapper; one hop is enough.
+                        return candidate
+                    }
+                }
+            }
+            // Still on an engine host with no usable parameter: not a result.
+            val host = uri.host?.lowercase().orEmpty()
+            if (isSearchHost(host)) return null
+            return h
+        }
+
+        /** Bing's `u=a1<base64url>` payload, with the `a1` version prefix. */
+        private fun bingBase64(value: String): String? = runCatching {
+            val body = value.removePrefix("a1")
+                .replace('-', '+')
+                .replace('_', '/')
+                .let { if (it.length % 4 != 0) it + "=".repeat(4 - it.length % 4) else it }
+            String(java.util.Base64.getDecoder().decode(body), Charsets.UTF_8)
+        }.getOrNull()
+    }
+
+    /**
+     * Absolute links in a page, with engine redirects unwrapped.
+     *
+     * Both `href` attributes and bare URLs in the markup are read, because a
+     * JSON-ish result page and a script-rendered one carry the destination in
+     * different places.
+     */
     fun linksFromHtml(html: String, base: String): List<String> {
         val out = LinkedHashSet<String>()
         for (m in HREF.findAll(html)) {
-            var raw = m.groupValues[1].trim()
-            if (raw.isEmpty()) continue
+            val raw = m.groupValues[1].trim()
             if (raw.startsWith("javascript:") || raw.startsWith("#") ||
                 raw.startsWith("mailto:") || raw.startsWith("tel:")
             ) continue
-            UDDG.find(raw)?.groupValues?.get(1)?.let { wrapped ->
-                raw = runCatching { URLDecoder.decode(wrapped, "UTF-8") }.getOrDefault(wrapped)
-            }
-            val abs = FinderHelpers.norm(FinderHelpers.urljoin(base, raw))
+            val unwrapped = Unwrap.of(raw) ?: continue
+            val abs = FinderHelpers.norm(FinderHelpers.urljoin(base, unwrapped))
+            if (abs.startsWith("http")) out += abs
+        }
+        for (m in PLAIN_URL.findAll(html)) {
+            val unwrapped = Unwrap.of(m.value) ?: continue
+            val abs = FinderHelpers.norm(unwrapped)
             if (abs.startsWith("http")) out += abs
         }
         return out.toList()
@@ -328,6 +465,68 @@ object Discovery {
             val page = (el as? JsonObject)?.get("page") as? JsonObject ?: continue
             val d = (page["domain"] as? JsonPrimitive)?.contentOrNull?.lowercase()?.trim().orEmpty()
             if (d.isNotEmpty()) out += d
+        }
+        return out.toList()
+    }
+
+    /**
+     * Cert Spotter: `[{ "dns_names": ["a.example", "b.example"] }, ...]`.
+     *
+     * Same data as crt.sh from a second certificate log, which matters because
+     * a brand that has rotated its domain very recently is often only in one of
+     * the two logs.
+     */
+    fun hostsFromCertSpotter(text: String): List<String> {
+        val doc = runCatching { json.parseToJsonElement(text) }.getOrNull() as? JsonArray ?: return emptyList()
+        val out = LinkedHashSet<String>()
+        for (el in doc) {
+            val names = (el as? JsonObject)?.get("dns_names") as? JsonArray ?: continue
+            for (n in names) {
+                val h = (n as? JsonPrimitive)?.contentOrNull.orEmpty()
+                    .lowercase().removePrefix("*.").trim().trimEnd('.')
+                if (h.isNotEmpty()) out += h
+            }
+        }
+        return out.toList()
+    }
+
+    /**
+     * Wayback CDX: `[["urlkey","timestamp","original"], ...]` with the header
+     * row first. Only the `original` cell is a URL, and the host is what we
+     * want -- the archive remembers domains that no longer resolve, which is
+     * exactly the shape of a rotated pirate brand.
+     */
+    fun hostsFromWayback(text: String): List<String> {
+        val doc = runCatching { json.parseToJsonElement(text) }.getOrNull() as? JsonArray ?: return emptyList()
+        val out = LinkedHashSet<String>()
+        for (row in doc) {
+            val cells = row as? JsonArray ?: continue
+            val original = (cells.lastOrNull() as? JsonPrimitive)?.contentOrNull.orEmpty()
+            val host = runCatching { java.net.URI(original).host }.getOrNull()?.lowercase().orEmpty()
+            if (host.isNotEmpty() && host != "web.archive.org") out += host
+        }
+        return out.toList()
+    }
+
+    /** RapidDNS: an HTML table whose first column is the resolved hostname. */
+    fun hostsFromRapidDns(text: String): List<String> {
+        val out = LinkedHashSet<String>()
+        for (m in HOST_CELL.findAll(text)) {
+            val h = m.groupValues[1].lowercase().trim().trimEnd('.')
+            if (h.isNotEmpty()) out += h
+        }
+        return out.toList()
+    }
+
+    /** AlienVault OTX: `{"passive_dns":[{"hostname":"a.example"}, ...]}`. */
+    fun hostsFromOtx(text: String): List<String> {
+        val doc = runCatching { json.parseToJsonElement(text) }.getOrNull() as? JsonObject ?: return emptyList()
+        val rows = doc["passive_dns"] as? JsonArray ?: return emptyList()
+        val out = LinkedHashSet<String>()
+        for (el in rows) {
+            val h = ((el as? JsonObject)?.get("hostname") as? JsonPrimitive)?.contentOrNull.orEmpty()
+                .lowercase().trim().trimEnd('.')
+            if (h.isNotEmpty()) out += h
         }
         return out.toList()
     }

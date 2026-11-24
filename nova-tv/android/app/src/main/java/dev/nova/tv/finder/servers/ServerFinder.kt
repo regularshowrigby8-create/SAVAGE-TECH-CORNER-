@@ -695,6 +695,25 @@ class ServerFinderHarvester(
     var written: Int = 0
         private set
 
+    /**
+     * Brand stems learned from every host discovery has produced (`9anime`,
+     * `aniwave`, `hianime`). A pirate brand rotates its TLD constantly -- the
+     * old domain dies, the same brand reappears on `.rs`, `.to`, `.is` -- so a
+     * brand is the most productive seed there is: it lets [tldSweep] ask for
+     * domains that no index has published yet.
+     */
+    private val brands = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
+
+    /**
+     * Only one harvest may drain the frontier at a time.
+     *
+     * The UI and the background checker both call [harvest]; without this guard
+     * two workers pop from the same queue, halve each other's batches and log
+     * `harvest#0 START` twice, which is what the device trace showed. The
+     * second caller now returns the current pool instead of racing.
+     */
+    private val harvesting = java.util.concurrent.atomic.AtomicBoolean(false)
+
     /** Per-harvest drop tallies; read by [rejectionReport]. */
     private val rejects = java.util.concurrent.ConcurrentHashMap<String, Int>()
     private fun note(reason: String) {
@@ -768,29 +787,49 @@ class ServerFinderHarvester(
     }
 
     suspend fun discover(url: String) {
+        // Cheap first: a CRL dump is mostly dead hostnames, and a dead hostname
+        // must cost a DNS lookup, not a WebView. This cascade is the whole
+        // reason 211 discovered domains can be tried without the harvest
+        // stalling: DNS -> TCP -> one small GET -> shape, and only a host that
+        // survives all four is allowed to reach the renderer.
+        if (!cheapAlive(url)) return
         http.prime(url)
         var html = ""
         var net: List<Pair<String, String>> = emptyList()
-        val rendered = if (browser != null) {
-            val (h, n) = browser.render(url)
-            html = h
-            net = n
-            // The single most important distinction on a phone: did the
-            // WebView do anything at all?
-            h.isNotEmpty()
-        } else false
-        if (rendered) {
-            FinderTrace.log("web", "render OK $url (${html.length}B, net=${net.size})")
-            FinderTrace.count("render.ok")
+        // Render only when the cheap GET could not produce a document. A page
+        // that already answered with real HTML needs no WebView at all, which
+        // is what stops one instance serialising the whole fleet.
+        val r0 = http.get(url, read = 400_000)
+        html = r0?.text.orEmpty()
+        // A JSON API is never rendered. reddit's `search.json`, urlscan's API
+        // and Common Crawl all answer with machine text; handing them to a
+        // WebView cost ~2 s each and, because one WebView serialises, put every
+        // other request behind it. The document is already the answer.
+        val json = Discovery.isJsonSurface(url)
+        if (json) {
+            if (html.isEmpty()) {
+                note("json-empty")
+                return
+            }
+            FinderTrace.log("web", "json ok $url (${html.length}B)")
+            FinderTrace.count("json.ok")
+        } else if (html.length >= 2000 && !ServerFinder.looksChallenged(html)) {
+            FinderTrace.log("web", "http ok $url (${html.length}B)")
+            FinderTrace.count("http.ok")
         } else {
-            FinderTrace.log("web", "render EMPTY $url")
-            FinderTrace.count("render.empty")
-        }
-        if (html.isEmpty()) {
-            val r = http.get(url, read = 400_000)
-            html = r?.text.orEmpty()
-            FinderTrace.log("web", "http fallback $url -> status=${r?.status ?: -1} ${html.length}B")
-            FinderTrace.count(if (html.isEmpty()) "http.empty" else "http.ok")
+            val rendered = if (browser != null) {
+                val (h, n) = browser.render(url)
+                net = n
+                if (h.isNotEmpty()) html = h
+                h.isNotEmpty()
+            } else false
+            if (rendered) {
+                FinderTrace.log("web", "render OK $url (${html.length}B, net=${net.size})")
+                FinderTrace.count("render.ok")
+            } else {
+                FinderTrace.log("web", "render EMPTY $url")
+                FinderTrace.count("render.empty")
+            }
         }
         // A page that never came back cannot yield anything, and that is the
         // single most useful thing to know when the pool is empty.
@@ -819,6 +858,8 @@ class ServerFinderHarvester(
         // frontier grows without a seed list.
         expandSitemap(url)
         expandHosts(html, url)
+        // Remember the brand so the next refill can sweep its other TLDs.
+        Discovery.brandOf(FinderHelpers.hostOf(url))?.let { brands += it }
         val extracted = extractor.extract(html, url)
         if (extracted.isEmpty()) note("no-embeds")
         FinderTrace.log("web", "extract $url -> ${extracted.size} candidate(s)")
@@ -849,6 +890,73 @@ class ServerFinderHarvester(
             if (store.count("alive") >= cap) return
             validate(cand)
         }
+    }
+
+    /**
+     * The cheap-first gate: DNS, then TCP, then a small GET, then shape.
+     *
+     * Certificate transparency is a list of *names*, and most names in it are
+     * dead: expired, parked, or never had a web server. Feeding those straight
+     * into the probe is why `discovery.ct=211` produced `alive=0` -- 211
+     * expensive probes, all dead. Each stage here is orders of magnitude
+     * cheaper than the next, so a dead host dies at the cheapest one that can
+     * prove it.
+     */
+    private suspend fun cheapAlive(url: String): Boolean {
+        val host = FinderHelpers.hostOf(url)
+        if (host.isEmpty()) return false
+        if (!dnsOk(host)) {
+            note("dns-dead")
+            FinderTrace.count("cheap.dns")
+            return false
+        }
+        FinderTrace.count("cheap.dns.ok")
+        if (!tcpOk(host)) {
+            note("tcp-dead")
+            FinderTrace.count("cheap.tcp")
+            return false
+        }
+        FinderTrace.count("cheap.tcp.ok")
+        // One small GET, no renderer: if the host answers with a document or a
+        // JSON body it is worth the rest of the cascade.
+        val r = http.get(url, read = 24_000, tries = 1, timeoutMs = 8_000L)
+        if (r == null || r.status == 0) {
+            note("http-dead")
+            FinderTrace.count("cheap.http")
+            return false
+        }
+        if (r.status >= 400) {
+            note("http-${r.status}")
+            FinderTrace.count("cheap.http")
+            return false
+        }
+        FinderTrace.count("cheap.http.ok")
+        return true
+    }
+
+    /** DNS with a hard timeout, so one black-holed resolver cannot stall a batch. */
+    private suspend fun dnsOk(host: String): Boolean = withContext(Dispatchers.IO) {
+        runCatching {
+            val job = java.util.concurrent.FutureTask {
+                java.net.InetAddress.getAllByName(host).isNotEmpty()
+            }
+            Thread(job).apply { isDaemon = true }.start()
+            job.get(3_500, java.util.concurrent.TimeUnit.MILLISECONDS)
+        }.getOrDefault(false)
+    }
+
+    /** TCP 443 (then 80) with a short timeout. */
+    private suspend fun tcpOk(host: String): Boolean = withContext(Dispatchers.IO) {
+        for (port in listOf(443, 80)) {
+            val ok = runCatching {
+                java.net.Socket().use { s ->
+                    s.connect(java.net.InetSocketAddress(host, port), 3_500)
+                }
+                true
+            }.getOrDefault(false)
+            if (ok) return@withContext true
+        }
+        false
     }
 
     suspend fun validate(cand: ServerCandidate) {
@@ -945,6 +1053,10 @@ class ServerFinderHarvester(
     fun refillSeeds(round: Int = 0) {
         var added = 0
         for (u in Discovery.webSurfaces(round)) if (store.push(u)) added++
+        // The corpus feeds the next round: every brand discovered so far is
+        // asked for its other TLDs. Without this the frontier only ever holds
+        // what the *first* query set produced and starves after one hop.
+        added += sweepBrands(round)
         FinderTrace.log("web", "  discovery round $round -> $added surface url(s)")
         FinderTrace.count("discovery.surface", added)
     }
@@ -968,6 +1080,10 @@ class ServerFinderHarvester(
         val host = FinderHelpers.hostOf(url)
         when {
             host == "crt.sh" || host.endsWith(".crt.sh") -> fromCt(url)
+            host == "api.certspotter.com" -> fromCertSpotter(url)
+            host == "web.archive.org" -> fromWayback(url)
+            host == "rapiddns.io" || host.endsWith(".rapiddns.io") -> fromRapidDns(url)
+            host == "otx.alienvault.com" -> fromOtx(url)
             host == "urlscan.io" || host.endsWith(".urlscan.io") -> fromUrlscan(url)
             host == "commoncrawl.org" || host.endsWith(".commoncrawl.org") -> fromCommonCrawl(url)
             Discovery.isSearchHost(host) -> fromSearch(url)
@@ -977,47 +1093,94 @@ class ServerFinderHarvester(
 
     // -- discovery surfaces -------------------------------------------------
 
+    /**
+     * Queue the origins named by a passive index.
+     *
+     * These engines (certificate transparency, Wayback, RapidDNS, OTX) return
+     * hostnames with no evidence of being alive: crt.sh alone hands back
+     * decade-old parking domains. They are queued anyway, because the cheap
+     * cascade in [cheapAlive] kills a dead hostname for the price of one DNS
+     * lookup -- far cheaper than the media probe that used to swallow them.
+     * Filtering here on the host *name* was what made `alive=0`: a brand that
+     * hides its domain from search engines still has a certificate.
+     */
+    private fun queueHosts(hosts: Collection<String>, tag: String): Int {
+        var added = 0
+        for (host in hosts) {
+            if (!Discovery.usableHost(host)) continue
+            if (store.push("https://$host/")) added++
+            Discovery.brandOf(host)?.let { brands += it }
+        }
+        FinderTrace.log("web", "  $tag -> $added domain(s)")
+        FinderTrace.count("discovery.$tag", added)
+        return added
+    }
+
     /** Read a search-results page and queue the streaming hosts it names. */
     private suspend fun fromSearch(url: String) {
         val r = http.get(url, read = 500_000) ?: return
         if (r.status >= 400) return
         var added = 0
+        var seen = 0
+        // Search results are already relevant to the query, so the host does
+        // not have to spell "anime" in its name to be worth a look. Requiring
+        // that (the old behaviour) discarded most real results even after the
+        // redirect was unwrapped.
         for (link in Discovery.linksFromHtml(r.text, url)) {
-            if (added >= ServerFinder.MAX_GRAPH_HOSTS * 4) break
+            seen++
+            if (added >= ServerFinder.MAX_GRAPH_HOSTS * 8) break
             val host = FinderHelpers.hostOf(link)
             if (!Discovery.usableHost(host)) continue
-            if (!Discovery.looksLikeStreaming(host, link)) continue
-            if (store.push(FinderHelpers.originOf(link) + "/")) added++
+            val origin = FinderHelpers.originOf(link) + "/"
+            if (store.push(origin)) {
+                added++
+                Discovery.brandOf(host)?.let { brands += it }
+            }
         }
-        FinderTrace.log("web", "  search -> $added host(s) $url")
+        FinderTrace.log("web", "  search -> $added host(s) of $seen link(s) $url")
         FinderTrace.count("discovery.host", added)
+        FinderTrace.count("discovery.search.links", seen)
     }
 
     /** Certificate transparency: every domain issued a cert for a keyword. */
     private suspend fun fromCt(url: String) {
         val r = http.get(url, read = 2_000_000) ?: return
         if (r.status >= 400) return
-        var added = 0
-        for (host in Discovery.hostsFromCt(r.text)) {
-            if (!Discovery.usableHost(host)) continue
-            if (!Discovery.looksLikeStreaming(host)) continue
-            if (store.push("https://$host/")) added++
-        }
-        FinderTrace.log("web", "  crt.sh -> $added domain(s)")
-        FinderTrace.count("discovery.ct", added)
+        queueHosts(Discovery.hostsFromCt(r.text), "ct")
+    }
+
+    /** Cert Spotter: the same idea as crt.sh, a different certificate log. */
+    private suspend fun fromCertSpotter(url: String) {
+        val r = http.get(url, read = 2_000_000) ?: return
+        if (r.status >= 400) return
+        queueHosts(Discovery.hostsFromCertSpotter(r.text), "certspotter")
+    }
+
+    /** Wayback CDX: every URL ever archived under a keyword's domains. */
+    private suspend fun fromWayback(url: String) {
+        val r = http.get(url, read = 3_000_000) ?: return
+        if (r.status >= 400) return
+        queueHosts(Discovery.hostsFromWayback(r.text), "wayback")
+    }
+
+    /** RapidDNS: passive DNS records, i.e. domains that actually resolved. */
+    private suspend fun fromRapidDns(url: String) {
+        val r = http.get(url, read = 1_500_000) ?: return
+        if (r.status >= 400) return
+        queueHosts(Discovery.hostsFromRapidDns(r.text), "rapiddns")
+    }
+
+    /** AlienVault OTX passive DNS: the same, from a second vantage point. */
+    private suspend fun fromOtx(url: String) {
+        val r = http.get(url, read = 1_500_000) ?: return
+        if (r.status >= 400) return
+        queueHosts(Discovery.hostsFromOtx(r.text), "otx")
     }
 
     private suspend fun fromUrlscan(url: String) {
         val r = http.get(url, read = 2_000_000) ?: return
         if (r.status >= 400) return
-        var added = 0
-        for (host in Discovery.hostsFromUrlscan(r.text)) {
-            if (!Discovery.usableHost(host)) continue
-            if (!Discovery.looksLikeStreaming(host)) continue
-            if (store.push("https://$host/")) added++
-        }
-        FinderTrace.log("web", "  urlscan -> $added domain(s)")
-        FinderTrace.count("discovery.urlscan", added)
+        queueHosts(Discovery.hostsFromUrlscan(r.text), "urlscan")
     }
 
     /**
@@ -1041,11 +1204,34 @@ class ServerFinderHarvester(
         for (u in Discovery.urlsFromCommonCrawl(r.text)) {
             val host = FinderHelpers.hostOf(u)
             if (!Discovery.usableHost(host)) continue
-            if (!Discovery.looksLikeStreaming(host, u)) continue
             if (store.push(FinderHelpers.originOf(u) + "/")) added++
+            Discovery.brandOf(host)?.let { brands += it }
         }
         FinderTrace.log("web", "  common crawl -> $added domain(s)")
         FinderTrace.count("discovery.cc", added)
+    }
+
+    /**
+     * TLD sweep: the brand's domain on every cheap TLD.
+     *
+     * This is the step that keeps the graph growing instead of starving. A
+     * brand found on `.to` almost always also owns `.rs`, `.is` and `.se`; the
+     * sweep asks for all of them, so the frontier is fed by what discovery has
+     * *already learned* rather than only by what an index happens to publish.
+     */
+    private fun sweepBrands(round: Int): Int {
+        if (brands.isEmpty()) return 0
+        var added = 0
+        for (brand in brands.toList().take(64)) {
+            for (host in Discovery.tldSweep(brand, round)) {
+                if (store.push("https://$host/")) added++
+            }
+        }
+        if (added > 0) {
+            FinderTrace.log("web", "  tld sweep round $round brands=${brands.size} -> $added url(s)")
+            FinderTrace.count("discovery.tldsweep", added)
+        }
+        return added
     }
 
     /**
@@ -1093,8 +1279,14 @@ class ServerFinderHarvester(
             val host = FinderHelpers.hostOf(link)
             if (host.isEmpty() || host == self) continue
             if (!Discovery.usableHost(host)) continue
-            if (!Discovery.looksLikeStreaming(host, link)) continue
-            if (store.push(FinderHelpers.originOf(link) + "/")) added++
+            // No name filter here: a mirror of a working site does not have to
+            // repeat the word "anime" in its hostname, and the cheap cascade
+            // will discard it for free if it is dead. This is the link-graph
+            // engine, and it is what makes the graph deeper than one hop.
+            if (store.push(FinderHelpers.originOf(link) + "/")) {
+                added++
+                Discovery.brandOf(host)?.let { brands += it }
+            }
         }
         if (added > 0) FinderTrace.count("discovery.graph", added)
     }
@@ -1129,6 +1321,37 @@ class ServerFinderHarvester(
      */
     suspend fun harvest(round: Int): ServerHarvest {
         val started = System.currentTimeMillis()
+        // One drainer at a time. The UI and the checker both call this; two
+        // workers on one frontier split every batch in half and log the same
+        // `harvest#0 START` twice (the device trace showed exactly that).
+        if (!harvesting.compareAndSet(false, true)) {
+            FinderTrace.log("web", "harvest#$round SKIP (already running)")
+            return snapshot(0, System.currentTimeMillis() - started)
+        }
+        try {
+            return harvestLocked(round, started)
+        } finally {
+            harvesting.set(false)
+        }
+    }
+
+    private fun snapshot(seen: Int, elapsed: Long): ServerHarvest =
+        ServerHarvest(
+            sites = store.alive().take(cap).map { it.toSavedWebsite() }.distinctBy { FinderHelpers.hostOf(it.url) },
+            more = store.count("alive") < cap || store.frontierSize() > 0,
+            sources = listOf(
+                FinderSourceReport(
+                    id = "server-finder",
+                    status = FinderSourceReport.Status.COMPLETE,
+                    seen = seen,
+                    checked = seen,
+                    candidates = 0,
+                    elapsedMs = elapsed
+                )
+            )
+        )
+
+    private suspend fun harvestLocked(round: Int, started: Long): ServerHarvest {
         resetRejections()
         FinderTrace.log(
             "web",
@@ -1164,7 +1387,11 @@ class ServerFinderHarvester(
                 "  batch=${batch.size} seen=$seen alive=${store.count("alive")} " +
                     "frontier=${store.frontierSize()} barren=$barren"
             )
-            if (barren >= BARREN_ROUNDS) break
+            // Only give up when there is genuinely nothing left to try.
+            // A barren round with a non-empty frontier means the next
+            // batch still has ground to cover -- breaking here is what
+            // left the frontier at 0 after 18 of 211 urls.
+            if (barren >= BARREN_ROUNDS && store.frontierSize() == 0) break
             // Python sleeps 0.2 s between rounds; keep the same courtesy pause
             // so a hostile host is not hammered by a tight loop.
             delay(200)
