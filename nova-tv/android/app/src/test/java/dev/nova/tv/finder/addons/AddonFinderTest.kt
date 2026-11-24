@@ -24,7 +24,9 @@ class AddonFinderTest {
         assertTrue(r0.any { "api.github.com" in it })
         assertTrue(r0.any { "registry.npmjs.org" in it })
         assertTrue(r0.any { "reddit.com" in it })
-        assertTrue(r0.any { "crt.sh" in it })
+        // The brand tier cannot use crt.sh: it refuses a bare brand with 403.
+        assertTrue(r0.any { "rapiddns.io" in it })
+        assertTrue(r0.none { "crt.sh" in it })
     }
 
     @Test

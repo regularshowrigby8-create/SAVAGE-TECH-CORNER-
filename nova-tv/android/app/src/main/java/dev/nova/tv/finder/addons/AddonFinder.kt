@@ -343,7 +343,12 @@ class AddonFinderStore(private val store: PoolStore) {
 
     fun push(url: String): Boolean = synchronized(lock) {
         val n = FinderHelpers.norm(url)
-        if (n in frontier || n in tried) return false
+        if (n in frontier) return false
+        // An index query stays retryable, exactly as in ServerFinderStore: a
+        // surface that answered 0 once (engine down, 403, bad query shape) must
+        // be asked again next round, or the first pass disables discovery for
+        // the life of the install.
+        if (n in tried && !Discovery.isSurface(url)) return false
         frontier += n
         save()
         true
@@ -367,7 +372,7 @@ class AddonFinderStore(private val store: PoolStore) {
     fun pop(n: Int): List<String> = synchronized(lock) {
         val out = frontier.take(n)
         frontier = frontier.drop(out.size).toMutableList()
-        out.forEach { tried += it }
+        out.forEach { if (!Discovery.isSurface(it)) tried += it }
         save()
         out
     }
@@ -1000,6 +1005,7 @@ class AddonFinderHarvester(
 
     /** Queue this round's discovery surface: same APIs, different queries. */
     fun refillSeeds(round: Int = 0) {
+        this.round = round
         for (s in AddonFinder.seedsFor(round)) store.push(s)
     }
 

@@ -24,7 +24,11 @@ class ServerFinderTest {
         // There is no SEEDS list any more: discovery is generated per round.
         val round0 = Discovery.webSurfaces(0)
         assertTrue("a round must offer somewhere to look", round0.isNotEmpty())
-        assertTrue(round0.any { "crt.sh" in it })
+        assertTrue(round0.any { "bing.com" in it })
+        assertTrue(round0.any { "rapiddns.io" in it })
+        // crt.sh/urlscan/Wayback need a real domain, so they are only asked
+        // once discovery has reached one (see Discovery.domainSurfaces).
+        assertTrue(round0.none { "crt.sh" in it })
         assertTrue(round0.any { Discovery.isSearchHost(FinderHelpers.hostOf(it)) })
         // Round 1 asks different questions, so it offers different surfaces.
         assertTrue(Discovery.webSurfaces(1) != round0)

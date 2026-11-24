@@ -196,26 +196,41 @@ object Discovery {
      */
     fun searchUrls(query: String): List<String> {
         val q = enc(query)
-        return listOf(
-            "https://html.duckduckgo.com/html/?q=$q",
-            "https://www.mojeek.com/search?q=$q",
-            "https://www.bing.com/search?q=$q&count=50"
-        )
+        // Measured, not assumed: Bing answers 200 with ~90 hrefs and 7 usable
+        // hosts per query. Mojeek answers 403 "your network appears to be
+        // sending automated queries" and DuckDuckGo answers 202 with an
+        // anomaly page, both of which yield zero links no matter how they are
+        // parsed. Only the engine that actually answers is asked.
+        return listOf("https://www.bing.com/search?q=$q&count=50")
     }
 
-    /** Certificate transparency: every certificate issued for a keyword. */
-    fun ctUrls(keyword: String): List<String> =
-        listOf("https://crt.sh/?q=%25${enc(keyword)}%25&output=json")
+    /**
+     * Certificate transparency for one *domain*.
+     *
+     * crt.sh rejects a `%keyword%` substring query with 502 and answers a real
+     * domain with 300 KB of JSON, so this engine is an expander (given a domain
+     * we already have, list everything ever certified under it), not a
+     * brand-discovery engine.
+     */
+    fun ctUrls(domain: String): List<String> =
+        listOf("https://crt.sh/?q=${enc(domain)}&output=json")
 
-    /** urlscan.io: pages whose domain matches a keyword. */
-    fun urlscanUrls(keyword: String): List<String> =
-        listOf("https://urlscan.io/api/v1/search/?q=page.domain%3A*${enc(keyword)}*&size=100")
+    /**
+     * urlscan.io for one *domain*.
+     *
+     * `page.domain:*brand*` is refused for anonymous callers ("Regular
+     * Expressions and leading wildcard searches are not supported"), while
+     * `domain:9anime.to` answers 200 with results. Same engine, only the
+     * supported query shape.
+     */
+    fun urlscanUrls(domain: String): List<String> =
+        listOf("https://urlscan.io/api/v1/search/?q=domain%3A${enc(domain)}&size=100")
 
     /** Common Crawl's index list; the newest collection is read from it. */
     fun commonCrawlIndexList(): String = "https://index.commoncrawl.org/collinfo.json"
 
-    fun commonCrawlUrls(index: String, keyword: String): List<String> =
-        listOf("https://index.commoncrawl.org/$index-index?url=*.${enc(keyword)}.*&output=json&limit=200")
+    fun commonCrawlUrls(index: String, domain: String): List<String> =
+        listOf("https://index.commoncrawl.org/$index-index?url=${enc(domain)}%2F*&output=json&limit=200")
 
     /** GitHub repository search (no token needed for the search API). */
     fun githubUrls(query: String): List<String> =
@@ -229,22 +244,39 @@ object Discovery {
     // ranking pages, which is why they still list the domain a brand is using
     // this week.
 
-    /** Cert Spotter: certificate issuance, one page of JSON, no key. */
-    fun certSpotterUrls(keyword: String): List<String> =
-        listOf("https://api.certspotter.com/v1/issuances?domain=${enc(keyword)}&include_subdomains=true&expand=dns_names")
+    /**
+     * Cert Spotter for one *domain*.
+     *
+     * A bare brand is refused (`not_allowed_by_plan`: "Cannot search 9anime
+     * because it is not beneath an eTLD available for public registration"),
+     * so like crt.sh this is an expander over a domain we already know.
+     */
+    fun certSpotterUrls(domain: String): List<String> =
+        listOf("https://api.certspotter.com/v1/issuances?domain=${enc(domain)}&include_subdomains=true&expand=dns_names")
 
-    /** Wayback CDX: every URL the archive ever captured for a host pattern. */
-    fun waybackUrls(keyword: String, limit: Int = 400): List<String> =
+    /**
+     * Wayback CDX for one domain.
+     *
+     * `url=*.brand.*` is not a CDX pattern and returns `[]`; `matchType=domain`
+     * is, and returns the archive's whole capture list for the host. The
+     * archive remembers domains that no longer resolve, which is exactly the
+     * shape of a rotated pirate brand.
+     */
+    fun waybackUrls(domain: String, limit: Int = 400): List<String> =
         listOf(
-            "https://web.archive.org/cdx/search/cdx?url=*.${enc(keyword)}.*&output=json" +
-                "&fl=original&collapse=urlkey&limit=$limit&filter=statuscode:200"
+            "https://web.archive.org/cdx/search/cdx?url=${enc(domain)}&matchType=domain" +
+                "&output=json&fl=original&collapse=urlkey&limit=$limit&filter=statuscode:200"
         )
 
     /** RapidDNS: passive DNS subdomain index, plain HTML table. */
     fun rapidDnsUrls(keyword: String): List<String> =
         listOf("https://rapiddns.io/subdomain/${enc(keyword)}?full=1")
 
-    /** AlienVault OTX: passive DNS records for a domain, JSON. */
+    /**
+     * AlienVault OTX passive DNS. Kept for the parser's sake, but anonymous
+     * callers get `429 {"detail": "Anonymous access to this endpoint is
+     * limited"}` on every request, so it is not part of a round.
+     */
     fun otxUrls(keyword: String): List<String> =
         listOf("https://otx.alienvault.com/api/v1/indicators/domain/${enc(keyword)}/passive_dns")
 
@@ -320,18 +352,22 @@ object Discovery {
         "lite.duckduckgo.com"
     )
 
-    /** Every discovery surface for one round of site discovery. */
+    /**
+     * Every discovery surface for one round of site discovery.
+     *
+     * Two tiers, because the engines do not accept the same input. RapidDNS and
+     * Bing take a bare *brand* and answer with hosts; crt.sh, Cert Spotter,
+     * urlscan and Wayback take a *domain* and answer with everything under it.
+     * Asking the second tier for a brand is what produced `ct -> 0` and
+     * `urlscan -> 403` on device, so a round only asks the brand tier and
+     * [domainSurfaces] expands whatever it finds.
+     */
     fun webSurfaces(round: Int): List<String> {
         val out = LinkedHashSet<String>()
         for (q in webQueries(round)) out += searchUrls(q)
-        for (kw in webKeywords(round)) {
-            out += ctUrls(kw)
-            out += certSpotterUrls(kw)
-            out += urlscanUrls(kw)
-            out += rapidDnsUrls(kw)
-            out += waybackUrls(kw)
-            out += otxUrls(kw)
-        }
+        // RapidDNS is the one passive engine that accepts a bare brand, and it
+        // answers: 39 hosts for "anime", 41 for "9anime", 14 for "hianime".
+        for (kw in webKeywords(round)) out += rapidDnsUrls(kw)
         out += commonCrawlIndexList()
         return out.toList()
     }
@@ -344,16 +380,53 @@ object Discovery {
             out += npmUrls(q)
             out += redditUrls(q)
         }
-        for (kw in addonKeywords(round)) {
-            out += ctUrls(kw)
-            out += certSpotterUrls(kw)
-            out += urlscanUrls(kw)
-            out += rapidDnsUrls(kw)
-            out += waybackUrls(kw)
-        }
+        for (kw in addonKeywords(round)) out += rapidDnsUrls(kw)
         out += searchUrls("stremio addon list manifest.json")
         return out.toList()
     }
+
+    /**
+     * Expansion surfaces for a domain that is already known.
+     *
+     * This is the step that turns one discovered host into a corpus: crt.sh
+     * lists every name ever certified under it, urlscan every page served from
+     * it, Wayback every URL ever archived, Cert Spotter the same from a second
+     * log. Each is a JSON document, so none of them needs a renderer.
+     */
+    fun domainSurfaces(domain: String, round: Int): List<String> {
+        val d = domain.lowercase().trim()
+        if (d.isEmpty() || '.' !in d) return emptyList()
+        val out = LinkedHashSet<String>()
+        // Rotate which expanders are asked so a round stays bounded; crt.sh in
+        // particular is slow and occasionally 502s, and it is not worth four
+        // requests per domain in one pass.
+        when (round % 4) {
+            0 -> { out += ctUrls(d); out += urlscanUrls(d) }
+            1 -> { out += waybackUrls(d); out += certSpotterUrls(d) }
+            2 -> { out += ctUrls(d); out += waybackUrls(d) }
+            else -> { out += urlscanUrls(d); out += certSpotterUrls(d) }
+        }
+        return out.toList()
+    }
+
+    /**
+     * True for a URL that *queries an index* rather than being a page on the
+     * web. Such a URL must stay retryable: a round that got 0 because the
+     * engine was momentarily down must not poison it forever. Real pages are
+     * one-shot, because re-crawling them is what made the frontier loop.
+     */
+    fun isSurface(url: String): Boolean {
+        val h = dev.nova.tv.finder.translated.FinderHelpers.hostOf(url)
+        if (h.isEmpty()) return false
+        return SURFACE_HOSTS.any { h == it || h.endsWith(".$it") }
+    }
+
+    private val SURFACE_HOSTS = listOf(
+        "bing.com", "duckduckgo.com", "mojeek.com", "marginalia.nu", "searx.be",
+        "rapiddns.io", "crt.sh", "urlscan.io", "web.archive.org",
+        "api.certspotter.com", "index.commoncrawl.org", "otx.alienvault.com",
+        "api.github.com", "registry.npmjs.org", "npms.io", "reddit.com"
+    )
 
     // -- parsers -------------------------------------------------------------
 
@@ -430,7 +503,16 @@ object Discovery {
             if (raw.startsWith("javascript:") || raw.startsWith("#") ||
                 raw.startsWith("mailto:") || raw.startsWith("tel:")
             ) continue
-            val unwrapped = Unwrap.of(raw) ?: continue
+            // Resolve BEFORE unwrapping. `Unwrap.of` only accepts an absolute
+            // URL, so handing it `/watch/1` returned null and every relative
+            // link on every page was silently dropped -- the crawler could
+            // never follow a site's own navigation, only its off-site links.
+            val absolute = if (raw.startsWith("//") || raw.startsWith("http", ignoreCase = true)) {
+                raw
+            } else {
+                FinderHelpers.urljoin(base, raw)
+            }
+            val unwrapped = Unwrap.of(absolute) ?: continue
             val abs = FinderHelpers.norm(FinderHelpers.urljoin(base, unwrapped))
             if (abs.startsWith("http")) out += abs
         }
@@ -502,10 +584,28 @@ object Discovery {
         for (row in doc) {
             val cells = row as? JsonArray ?: continue
             val original = (cells.lastOrNull() as? JsonPrimitive)?.contentOrNull.orEmpty()
-            val host = runCatching { java.net.URI(original).host }.getOrNull()?.lowercase().orEmpty()
+            val host = hostOfOriginal(original)
             if (host.isNotEmpty() && host != "web.archive.org") out += host
         }
         return out.toList()
+    }
+
+    /**
+     * The host of a Wayback `original` cell, unwrapping a replay URL.
+     *
+     * A capture is often stored as
+     * `https://web.archive.org/web/20200101000000/https://real.example/`,
+     * whose URI host is `web.archive.org`. Reading that directly threw away
+     * the very host the row was about, so every wrapped row looked like the
+     * archive itself and `wayback -> 0 domain(s)` even on a 200 with rows.
+     */
+    private fun hostOfOriginal(original: String): String {
+        var s = original.trim()
+        val replay = Regex("^https?://web\\.archive\\.org/web/[0-9]+(?:[a-z]{2}_)?/(.+)$", RegexOption.IGNORE_CASE)
+        replay.find(s)?.let { s = it.groupValues[1] }
+        if (s.startsWith("//")) s = "https:$s"
+        val host = runCatching { java.net.URI(s).host }.getOrNull()?.lowercase().orEmpty()
+        return host.trimEnd('.')
     }
 
     /** RapidDNS: an HTML table whose first column is the resolved hostname. */

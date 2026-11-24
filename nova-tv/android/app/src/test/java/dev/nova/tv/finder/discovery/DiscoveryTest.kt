@@ -92,21 +92,51 @@ class DiscoveryTest {
     }
 
     @Test
-    fun `web surfaces mix search certificate transparency and common crawl`() {
+    fun `web surfaces use only the engines that accept a bare brand`() {
         val s = Discovery.webSurfaces(0)
-        assertTrue(s.any { "html.duckduckgo.com" in it })
-        assertTrue(s.any { "crt.sh" in it })
-        assertTrue(s.any { "urlscan.io" in it })
+        // Bing and RapidDNS are the only passive engines measured to answer a
+        // brand query with real hosts. Mojeek 403s automated queries, DuckDuckGo
+        // html returns a 202 anomaly page, and crt.sh/urlscan/Wayback/Cert
+        // Spotter reject a bare brand, so none of them belong in this tier.
+        assertTrue(s.any { "bing.com" in it })
+        assertTrue(s.any { "rapiddns.io" in it })
         assertTrue(s.any { "collinfo.json" in it })
+        assertTrue(s.none { "crt.sh" in it })
+        assertTrue(s.none { "urlscan.io" in it })
+        assertTrue(s.none { "duckduckgo" in it })
+        assertTrue(s.none { "mojeek" in it })
     }
 
     @Test
-    fun `addon surfaces mix github npm reddit and transparency`() {
+    fun `addon surfaces mix github npm reddit and rapiddns`() {
         val s = Discovery.addonSurfaces(0)
         assertTrue(s.any { "api.github.com" in it })
         assertTrue(s.any { "registry.npmjs.org" in it })
         assertTrue(s.any { "reddit.com" in it })
-        assertTrue(s.any { "crt.sh" in it })
+        assertTrue(s.any { "rapiddns.io" in it })
+        assertTrue(s.none { "crt.sh" in it })
+    }
+
+    @Test
+    fun `domain surfaces need a real domain and rotate the index by round`() {
+        // A bare brand is refused by every domain-tier engine.
+        assertTrue(Discovery.domainSurfaces("anime", 0).isEmpty())
+        assertTrue(Discovery.domainSurfaces("", 0).isEmpty())
+        val d0 = Discovery.domainSurfaces("aniwave.to", 0)
+        val d1 = Discovery.domainSurfaces("aniwave.to", 1)
+        assertTrue(d0.any { "crt.sh" in it })
+        assertTrue(d0.any { "urlscan.io" in it })
+        assertTrue(d1.any { "web.archive.org" in it })
+        assertTrue(d1.any { "certspotter" in it })
+        assertTrue(d0 != d1)
+    }
+
+    @Test
+    fun `is_surface recognises an index host and nothing else`() {
+        assertTrue(Discovery.isSurface("https://www.bing.com/search?q=x"))
+        assertTrue(Discovery.isSurface("https://rapiddns.io/subdomain/anime?full=1"))
+        assertTrue(Discovery.isSurface("https://crt.sh/?q=x&output=json"))
+        assertFalse(Discovery.isSurface("https://aniwave.to/watch/1"))
     }
 
     // -- parsers -------------------------------------------------------------

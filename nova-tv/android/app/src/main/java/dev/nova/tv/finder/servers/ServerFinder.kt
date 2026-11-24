@@ -611,7 +611,13 @@ class ServerFinderStore(private val store: PoolStore) {
 
     fun push(url: String): Boolean = synchronized(lock) {
         val n = FinderHelpers.norm(url)
-        if (n.isEmpty() || n in frontier || n in tried) return false
+        if (n.isEmpty() || n in frontier) return false
+        // An index query stays retryable. `tried` is permanent, and a surface
+        // that returned 0 once (engine down, 403, bad query shape) must be
+        // asked again next round -- otherwise the very first pass disables
+        // discovery for the life of the install, which is what
+        // `discovery round 0 -> 0 surface url(s)` was.
+        if (n in tried && !Discovery.isSurface(url)) return false
         frontier += n
         save()
         true
@@ -633,9 +639,10 @@ class ServerFinderStore(private val store: PoolStore) {
         val out = frontier.take(n)
         frontier = frontier.drop(out.size).toMutableList()
         // Whatever is handed out counts as tried, so a later refill cannot
-        // resurrect it. The set is bounded so a long crawl cannot grow the
-        // store file without limit.
-        out.forEach { tried += it }
+        // resurrect it. Index queries are the exception: they are re-askable
+        // by design (see `push`). The set is bounded so a long crawl cannot
+        // grow the store file without limit.
+        out.forEach { if (!Discovery.isSurface(it)) tried += it }
         if (tried.size > MAX_TRIED) {
             tried.removeAll(tried.take(tried.size - MAX_TRIED).toSet())
         }
@@ -842,6 +849,22 @@ class ServerFinderHarvester(
             note("challenge")
             FinderTrace.log("web", "CHALLENGED $url (${html.length}B) - bot wall, not a catalogue")
             return
+        }
+        // A live domain is worth more than the page it served. crt.sh, urlscan,
+        // Wayback and Cert Spotter all require a *real domain* and refuse a
+        // bare brand (`not_allowed_by_plan`, 403), which is why the brand tier
+        // above can only use Bing and RapidDNS. Once discovery has actually
+        // reached a host, ask the domain tier for its siblings and its history:
+        // that is how one working site turns into its mirrors and its
+        // certificate neighbours without a seed list.
+        val liveHost = FinderHelpers.hostOf(url)
+        if (liveHost.isNotEmpty()) {
+            var extra = 0
+            for (s in Discovery.domainSurfaces(liveHost, round)) if (store.push(s)) extra++
+            if (extra > 0) {
+                FinderTrace.log("web", "  domain tier $liveHost -> $extra surface url(s)")
+                FinderTrace.count("discovery.domain", extra)
+            }
         }
         // The player lives behind the page's JSON calls, not in its DOM.
         val api = followApis(url, net)
@@ -1051,6 +1074,7 @@ class ServerFinderHarvester(
      * this device has not covered.
      */
     fun refillSeeds(round: Int = 0) {
+        this.round = round
         var added = 0
         for (u in Discovery.webSurfaces(round)) if (store.push(u)) added++
         // The corpus feeds the next round: every brand discovered so far is
