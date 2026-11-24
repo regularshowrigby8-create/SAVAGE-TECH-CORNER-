@@ -1,0 +1,435 @@
+name: nova-tv Android
+
+# Why this file is at the repository root and not under nova-tv/.github:
+# GitHub Actions only reads .github/workflows at the repository root. The
+# workflow that previously sat at nova-tv/.github/workflows/ci.yml was therefore
+# never registered -- it is absent from /actions/workflows and has never run.
+# This one is where Actions actually looks.
+#
+# This workflow exists to answer one question: does nova-tv's Kotlin compile?
+# It has never been compiled anywhere, so nothing about it is known to be valid.
+# The first successful run is the milestone; signing and release come after.
+
+on:
+  push:
+    branches:
+      - main
+      - arena/*
+    paths:
+      - 'nova-tv/android/**'
+      - 'nova-tv/ops/**'
+      - 'tools/nova/**'
+      - '.github/workflows/nova-tv-android.yml'
+  pull_request:
+    paths:
+      - 'nova-tv/android/**'
+      - 'nova-tv/ops/**'
+      - 'tools/nova/**'
+      - '.github/workflows/nova-tv-android.yml'
+  workflow_dispatch:
+
+# write is needed so the failure path can commit its diagnostics; the build
+# itself only reads.
+permissions:
+  contents: write
+
+concurrency:
+  group: nova-tv-android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build, lint and verify nova-tv APKs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # Matches gradle/wrapper (Gradle 8.13 for AGP 8.13.0). AGP moved off 8.7.3
+      # because the lint jars in Compose 1.10 / lifecycle 2.8 need a newer Kotlin
+      # Analysis API than AGP 8.7's lint ships; on 8.7.3 those detectors crashed.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: '8.13'
+
+      - name: Validate version catalog
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import tomllib
+          from pathlib import Path
+          p = Path("nova-tv/android/gradle/libs.versions.toml")
+          data = tomllib.loads(p.read_text())
+          for section in ("versions", "libraries", "plugins"):
+              if not data.get(section):
+                  raise SystemExit(f"version catalog missing [{section}]")
+          print("catalog ok:", len(data["versions"]), "versions,", len(data["libraries"]), "libraries")
+          PY
+
+      # Structural checks on the Kotlin sources: package/directory match,
+      # duplicated class names, unbalanced braces and unused imports. Runs in
+      # seconds with no Gradle or SDK, and it is a gate -- it fails the build
+      # instead of printing a report, so a careless edit cannot reach the APKs
+      # (or sit unnoticed until the next Android Studio import).
+      - name: Kotlin structural lint
+        run: python3 nova-tv/ops/kotlin_lint.py
+
+      - name: Assemble debug APK
+        working-directory: nova-tv/android
+        run: |
+          # GitHub's default shell is `bash -e`, so errexit is ON unless turned
+          # off explicitly. It is off here so a failing build cannot skip the
+          # diagnostics below.
+          set +e
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug --stacktrace --no-daemon --console=plain > build.log 2>&1
+          STATUS=$?
+          echo "gradle exit status: $STATUS"
+          echo "----- errors -----"
+          grep -nE "^e: |error:|FAILURE:|What went wrong" build.log | head -40
+          echo "----- tail -----"
+          tail -45 build.log
+          exit $STATUS
+
+      - name: Run unit tests
+        working-directory: nova-tv/android
+        run: ./gradlew :app:testTvDebugUnitTest :app:testMobileDebugUnitTest --no-daemon --console=plain 2>&1 | tee "${{ runner.temp }}/nova-test.log"
+
+      # Lint is a gate, not a report. A UI with accessibility or API-level
+      # problems should fail the build rather than ship and be discovered by a
+      # viewer with a remote.
+      - name: Android lint
+        working-directory: nova-tv/android
+        run: |
+          set +e
+          ./gradlew :app:lintTvDebug :app:lintMobileDebug --no-daemon --console=plain > lint.log 2>&1
+          STATUS=$?
+          echo "lint exit: $STATUS"
+          grep -nE "Error:|Warning:|errors?, [0-9]+ warnings?" lint.log | head -30
+          # Warnings are recorded, but a tool failure is never a green lint.
+          if grep -qE "^.*Error: " lint.log; then
+            echo "lint reported errors"
+            exit 1
+          fi
+          if [ "$STATUS" -ne 0 ]; then
+            echo "lint command failed with exit $STATUS"
+            exit "$STATUS"
+          fi
+          echo "lint has no errors and exited 0"
+
+      # The release build is the one that has never existed. R8 shrinking is
+      # where a serialization-based app fails at runtime rather than at compile
+      # time, so building it in CI is the only cheap way to find out.
+      - name: Assemble release APK (R8)
+        working-directory: nova-tv/android
+        run: |
+          set +e
+          ./gradlew :app:assembleRelease --stacktrace --no-daemon --console=plain > release.log 2>&1
+          STATUS=$?
+          echo "release exit: $STATUS"
+          echo "----- errors -----"
+          grep -nE "^e: |error:|FAILURE:|What went wrong|R8|Missing class" release.log | head -40
+          echo "----- R8 missing classes -----"
+          grep -nE "Missing class|R8: " release.log | head -30
+          echo "----- tail -----"
+          tail -50 release.log
+          exit $STATUS
+
+      # Exactly one APK per declared flavour/build cell, real package ids,
+      # signatures, alignment, dex entries and source markers. The checker
+      # fails closed when an APK or build tool is missing.
+      - name: Verify four APK cells and source markers
+        if: always()
+        run: |
+          set -euo pipefail
+          bash tools/nova/run_ci_artifact_check.sh \
+            "$RUNNER_TEMP/nova-artifacts.json" \
+            | tee "$RUNNER_TEMP/nova-artifacts.stdout.json"
+
+      - name: Summarise artefacts
+        run: |
+          {
+            echo "## nova-tv build"
+            echo
+            echo "| APK | bytes |"
+            echo "|---|---|"
+            for f in nova-tv/android/app/build/outputs/apk/*/*/*.apk; do
+              echo "| $(basename "$f") | $(stat -c%s "$f") |"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # The four-cell checker above proves both source markers exist in source
+      # and in each dex. This step makes the explicit PASS assertion on the
+      # evidence JSON, so a changed checker cannot be replaced by a green echo.
+      - name: Assert APK evidence is explicitly green
+        if: always()
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, sys
+
+          path = os.path.join(os.environ["RUNNER_TEMP"], "nova-artifacts.stdout.json")
+          try:
+              payload = json.load(open(path))
+          except Exception as error:
+              print(f"::error title=artifact evidence unreadable::{error}")
+              sys.exit(1)
+          required = ("documentElement.outerHTML", "nova-finder-pipeline-v3")
+          errors = []
+          if payload.get("ok") is not True:
+              errors.append("top-level ok is not true")
+          if payload.get("artifact_count") != 4:
+              errors.append(f"artifact_count={payload.get('artifact_count')}, expected 4")
+          if payload.get("errors"):
+              errors.append(f"errors={payload['errors']}")
+          for record in payload.get("artifacts", []):
+              if record.get("ok") is not True:
+                  errors.append(f"{record.get('id')}: not ok")
+              for marker in required:
+                  if not record.get("dex_markers", {}).get(marker):
+                      errors.append(f"{record.get('id')}: missing dex marker {marker}")
+          if errors:
+              for error in errors:
+                  print(f"::error title=APK verification::{error}")
+              sys.exit(1)
+          print("OK: four APK cells contain both source markers and passed every tool check")
+          PY
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nova-build-log
+          path: |
+            ${{ runner.temp }}/nova-build.log
+            ${{ runner.temp }}/nova-test.log
+          if-no-files-found: error
+          retention-days: 7
+
+      # Artefacts are uploaded even when a later step fails: a debug APK that
+      # built is still installable, and losing it because the release step
+      # tripped R8 is how "both artifacts" turned into none. Each flavour gets
+      # its own named artefact so the download link says which is which.
+      - name: Upload release APK
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nova-tv-release-apk
+          path: nova-tv/android/app/build/outputs/apk/tv/release/*.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload mobile release APK
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nova-mobile-release-apk
+          path: nova-tv/android/app/build/outputs/apk/mobile/release/*.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload debug APKs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nova-tv-debug-apk
+          path: nova-tv/android/app/build/outputs/apk/*/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      # Runs after a failed build. Writes the excerpt into the repository itself,
+      # because step summaries and log blobs have both proven unreachable through
+      # the API from here, and a committed file always is.
+      - name: Publish build diagnostics
+        if: failure() || cancelled()
+        working-directory: nova-tv/android
+        run: |
+          set +e
+          OUT="$GITHUB_WORKSPACE/nova-tv/docs/build-diagnostics.md"
+          # Any of the three build steps can fail, and each writes its own log.
+          # The first version only read build.log, so a release-only failure
+          # published nothing and the committed file was stale.
+          LOG=""
+          for candidate in release.log lint.log build.log; do
+            if [ -s "$candidate" ] && grep -qE "FAILURE:|What went wrong" "$candidate"; then
+              LOG="$candidate"
+              break
+            fi
+          done
+          [ -z "$LOG" ] && LOG="build.log"
+          echo "diagnostics source: $LOG"
+          {
+            echo "# nova-tv build diagnostics"
+            echo
+            echo "Written automatically by the \"nova-tv Android\" workflow."
+            echo "Run: $GITHUB_RUN_ID  Commit: $GITHUB_SHA"
+            echo "Log: $LOG"
+            echo
+            echo "## errors"
+            echo '```'
+            grep -nE "^e: |error:|FAILURE:|What went wrong|Caused by|Execution failed for task|Missing class|^> Task .* FAILED" "$LOG" 2>/dev/null | head -60
+            echo '```'
+            echo
+            echo "## last 80 lines"
+            echo '```'
+            tail -80 "$LOG" 2>/dev/null
+            echo '```'
+          } > "$OUT"
+          wc -l "$OUT"
+
+      - name: Commit diagnostics
+        if: failure() || cancelled()
+        run: |
+          set +e
+          git config user.name "nova-ci"
+          git config user.email "nova-ci@users.noreply.github.com"
+          git add nova-tv/docs/build-diagnostics.md
+          git commit -m "ci(nova): record build diagnostics for run $GITHUB_RUN_ID"
+          COMMIT=$?
+          git push
+          PUSH=$?
+          echo "diagnostics commit exit: $COMMIT push exit: $PUSH"
+          [ "$COMMIT" -eq 0 ] && [ "$PUSH" -eq 0 ]
+
+  finder-crawl-probe:
+    name: Real public-index crawl probe
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Run bounded crawl and verify live candidates
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p tools/nova/evidence/ci
+          python3 tools/nova/crawl_probe.py \
+            --profile ci \
+            --round 0 \
+            --max-look 120 \
+            --timeout 8 \
+            --workers 16 \
+            --output tools/nova/evidence/ci/crawl-probe.json
+          python3 - <<'PY'
+          import json
+          payload = json.load(open("tools/nova/evidence/ci/crawl-probe.json"))
+          result = payload["result"]
+          assert payload["ok"] is True, payload
+          assert result["ci_verification_required"] is True, "CI must require verification"
+          assert result["verified"] >= 1, "no candidate site was verified"
+          assert result["verified_for_ci"] is True, "CI verification assertion was bypassed"
+          assert result["responses_ok"] >= 25, "too few discovery engines responded"
+          assert result["engines_selected"] == result["engines_total"], "CI skipped one or more discovery engines"
+          assert result["engines_selected"] >= 65, "engine registry fell below the 65-engine floor"
+          print("OK: live crawl probe verified", result["verified"], "site(s) from", result["candidates"], "candidates")
+          PY
+
+      - name: Upload crawl evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nova-finder-crawl-probe
+          path: tools/nova/evidence/ci/crawl-probe.json
+          if-no-files-found: error
+          retention-days: 14
+
+  finder-emulator-smoke:
+    name: Install APK and debug finders on emulator
+    needs: [build, finder-crawl-probe]
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm" GROUP="kvm" MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Download current mobile debug APK
+        uses: actions/download-artifact@v7
+        with:
+          name: nova-tv-debug-apk
+          path: nova-tv/android/app/build/outputs/apk/
+
+      - name: Flatten downloaded APK paths
+        run: |
+          set -euo pipefail
+          mkdir -p nova-tv/android/app/build/outputs/apk/mobile/debug
+          find nova-tv/android/app/build/outputs/apk -name '*mobile*debug*.apk' \
+            -exec cp {} nova-tv/android/app/build/outputs/apk/mobile/debug/app-mobile-debug.apk \;
+          test -f nova-tv/android/app/build/outputs/apk/mobile/debug/app-mobile-debug.apk
+
+      - name: Download crawl evidence
+        uses: actions/download-artifact@v7
+        with:
+          name: nova-finder-crawl-probe
+          path: tools/nova/evidence/ci/
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Start Android emulator and run finder smoke
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          cores: 4
+          ram-size: 4096M
+          script: bash tools/nova/emulator_finder_smoke.sh
+
+      - name: Render debug report
+        if: always()
+        run: |
+          set -euo pipefail
+          python3 tools/nova/render_finder_debug_report.py
+          cat nova-tv/docs/finder-debug-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload APK debug session evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nova-finder-debug-session
+          path: |
+            tools/nova/evidence/ci/
+            nova-tv/docs/finder-debug-report.md
+            nova-tv/docs/finder-debug-*.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Commit debug report on successful push run
+        if: success() && github.event_name == 'push'
+        run: |
+          set -euo pipefail
+          git config user.name "nova-ci"
+          git config user.email "nova-ci@users.noreply.github.com"
+          git add nova-tv/docs/finder-debug-report.md nova-tv/docs/finder-debug-*.json
+          if ! git diff --cached --quiet; then
+            git commit -m "ci(nova): record APK finder debug session for run $GITHUB_RUN_ID"
+            git push origin HEAD:"$GITHUB_REF_NAME"
+          else
+            echo "no report changes to commit"
+          fi

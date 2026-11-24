@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+      Debug-only probe. It is merged into src/tvDebug and src/mobileDebug, but
+      never into release APKs. The fully-qualified class name is intentional:
+      the mobile applicationId differs from the Kotlin namespace.
+    -->
+    <application>
+        <activity
+            android:name="dev.nova.tv.finder.diag.FinderProbeActivity"
+            android:exported="true"
+            android:label="Nova finder debug"
+            android:noHistory="true"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.Nova" />
+    </application>
+</manifest>

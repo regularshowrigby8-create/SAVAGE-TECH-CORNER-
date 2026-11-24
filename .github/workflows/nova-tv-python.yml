@@ -1,0 +1,149 @@
+# Moved from nova-tv/.github/workflows/ci.yml, where it never ran.
+#
+# GitHub Actions only reads .github/workflows at the repository ROOT. A workflow
+# nested under a subproject is not registered at all -- this file was absent from
+# the repo's /actions/workflows list, so the unit tests, the 6-hourly collection
+# pass and the secrets scan it defines had never executed once.
+#
+# Only the working directories change on the way here: the Python project lives
+# at nova-tv/python, not at the root.
+
+on:
+  push:
+    # arena/* is where the work actually happens here. Without it the gate
+    # below only ran after a merge, which is the one moment it cannot stop a
+    # bad change from landing.
+    branches:
+      - main
+      - arena/*
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Continuous collection: the self-updating part, running on GitHub's clock.
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Unit tests
+        working-directory: nova-tv/python
+        run: python -m unittest discover -s tests -t . -v
+      - name: Offline gates assert every nested result
+        working-directory: nova-tv/python
+        run: |
+          set -euo pipefail
+          python ops/qa_offline_gates.py > "$RUNNER_TEMP/nova-offline-gates.json"
+          python ops/assert_script_result.py qa_offline_gates < "$RUNNER_TEMP/nova-offline-gates.json"
+      - name: No committed secrets
+        working-directory: nova-tv/python
+        run: python scripts/qa_secrets.py --json
+
+      # The gate for the translated finders, the ten added catalogue sources
+      # and the subtitle engines. It exits 1 when any check is contradicted, so
+      # a missing file, a stub, a constant that drifted from the Python
+      # original, a source listed without evidence, or a doc that describes a
+      # source the app does not have all fail the build instead of printing a
+      # green report. Full text: nova-tv/docs/SOURCES.md.
+      - name: Translated finder and source audit
+        working-directory: nova-tv/python
+        run: |
+          set +e
+          # exported: the heredoc Python below reads it from the environment
+          export OUT="${RUNNER_TEMP:-/tmp}/translated.json"
+          python scripts/qa_translated.py --json > "$OUT" 2>&1
+          STATUS=$?
+          # The report is printed and also written to the step summary, so the
+          # result is readable from the run page even when the log blob is not
+          # reachable through the API.
+          python - <<'PY'
+          import json, os, sys
+
+          try:
+              payload = json.load(open(os.environ["OUT"]))
+              data = payload["result"]
+          except Exception as error:                       # noqa: BLE001
+              print(f"::error title=audit did not run::could not read the report: {error}")
+              sys.exit(1)
+
+          total = data["total"]
+          counts = data["counts"]
+          print(f"checks: {total}  proven: {counts['proven']}  "
+                f"contradicted: {counts['contradicted']}")
+          for bad in data["contradicted"]:
+              print(f"::error title=contradicted::{bad['name']} -- {bad['why']}")
+
+          # A gate that passes having checked nothing is a false green. This is
+          # the minimum this audit has ever produced; if a refactor stops the
+          # checks being collected, the count collapses and this fails.
+          # Raised 198 -> 203 from what the recorder actually reported on a
+          # device: every candidate was an ad frame, every anime mirror was a
+          # Cloudflare interstitial, and pages were being discarded as if dead.
+          # Raised 193 -> 198 when the finder flight recorder was added: the
+          # trace, its call sites in both crawlers and the browser, and the
+          # diagnostics screen that can copy it off the phone.
+          # Raised 190 -> 193 when the website finder's silence was made
+          # diagnosable: an empty round now reports *why* (unreachable seed,
+          # shell with no embeds, page-not-media, catalogue<40) through the
+          # engine and onto the Sources screen, instead of a flat "0 sites"
+          # that three fixes in a row were guessed at.
+          # Raised 185 -> 190 when the website finder's real cause was found:
+          # FinderBrowser was a stub that always returned empty HTML, so every
+          # seed page went down the plain-HTTP branch and the pool stayed at 0
+          # on device while the addon finder filled up. The browser, the context
+          # that enables it, the render mutex and both frontier anti-spin guards
+          # are now asserted, and each is mutation-tested in test_audit_coverage.
+          # Raised 150 -> 185 when the player, seek-gesture and cookie-jar
+          # checks were added. The floor exists so a future edit cannot quietly
+          # delete coverage and still report a pass.
+          if data["ok"] is not True or counts["contradicted"] != 0:
+              print("::error title=audit result is not proven::nested ok/contradicted check failed")
+              sys.exit(1)
+          if payload.get("ok") is not True:
+              print("::error title=CLI wrapper is not green::top-level ok check failed")
+              sys.exit(1)
+          if total < 238:
+              print(f"::error title=audit too small::only {total} checks ran, expected >= 238")
+              sys.exit(1)
+
+          summary = os.environ.get("GITHUB_STEP_SUMMARY")
+          if summary:
+              with open(summary, "a") as out:
+                  out.write("## Translated finder and source audit\n\n")
+                  out.write(f"| checks | proven | contradicted |\n|---|---|---|\n")
+                  out.write(f"| {total} | {counts['proven']} | {counts['contradicted']} |\n")
+          PY
+          PARSE=$?
+          [ "$PARSE" -ne 0 ] && exit "$PARSE"
+          exit $STATUS
+
+  collect:
+    name: Collect
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: One collection pass
+        working-directory: nova-tv/python
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          python scripts/github_collect.py --json --budget 3
+          python scripts/kb_stats.py
+      - uses: actions/upload-artifact@v7
+        with:
+          name: knowledge
+          path: nova-tv/knowledge.json
+          if-no-files-found: error

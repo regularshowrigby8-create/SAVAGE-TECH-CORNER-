@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "name": "Nova imported-a1c5e3d baseline honesty contract",
+  "scope_globs": ["**"],
+  "inspection_globs": ["**"],
+  "allowed_binary_paths": [],
+  "allowed_binary_hashes": {},
+  "required_files": [
+    "tools/nova/strict_verify.py",
+    "tools/nova/check_artifacts.py",
+    "tools/nova/tests/test_strict_verify.py",
+    "nova-tv/python/nova/cli.py",
+    "nova-tv/python/scripts/qa_translated.py",
+    "nova-tv/python/scripts/verify_claims.py"
+  ],
+  "required_patterns": [
+    {
+      "id": "gate-fails-closed",
+      "globs": ["tools/nova/strict_verify.py", "tools/nova/tests/test_strict_verify.py"],
+      "patterns": ["class GateFailure", "test_top_level_green_cannot_mask_failed_nested_result"]
+    }
+  ],
+  "forbidden_patterns": [
+    {
+      "id": "no-false-green-wrapper",
+      "globs": ["nova-tv/python/nova/cli.py"],
+      "patterns": ["\"ok\": True, \"tool\": name, \"result\": result"],
+      "strip_comments": true
+    },
+    {
+      "id": "no-hardcoded-claim-green",
+      "globs": ["nova-tv/python/scripts/verify_claims.py"],
+      "patterns": ["\"ok\":\\s*True"],
+      "strip_comments": true
+    },
+    {
+      "id": "no-workflow-warn-uploads",
+      "globs": [".github/workflows/*.yml"],
+      "patterns": ["if-no-files-found:\\s*warn"],
+      "strip_comments": true
+    },
+    {
+      "id": "no-top-level-green-smoke",
+      "globs": [".github/workflows/*.yml"],
+      "patterns": ["grep.*\"ok\": true"],
+      "strip_comments": true
+    }
+  ],
+  "source_claims": [
+    {
+      "id": "gate-schema-version-is-explicit",
+      "kind": "literal_count",
+      "path": "tools/nova/strict_verify.py",
+      "literal": "SCHEMA_VERSION = 1",
+      "min": 1,
+      "max": 1
+    }
+  ],
+  "commands": [
+    {
+      "id": "strict-gate-self-tests",
+      "argv": ["python3", "-m", "unittest", "discover", "-s", "tools/nova/tests", "-t", "tools/nova", "-v"],
+      "cwd": ".",
+      "profiles": ["local", "ci"],
+      "timeout": 60,
+      "expect_exit": 0,
+      "required_stdout": ["(?m)^OK$"],
+      "forbidden_stdout": ["FAILED", "Traceback"]
+    },
+    {
+      "id": "baseline-python-tests",
+      "argv": ["python3", "-m", "unittest", "discover", "-s", "nova-tv/python/tests", "-t", "nova-tv/python", "-v"],
+      "cwd": ".",
+      "profiles": ["local", "ci"],
+      "timeout": 120,
+      "expect_exit": 0,
+      "required_stdout": ["(?m)^OK$"],
+      "forbidden_stdout": ["FAILED", "skipped="]
+    },
+    {
+      "id": "baseline-translated-audit",
+      "argv": ["python3", "nova-tv/python/scripts/qa_translated.py", "--json", "--root", "nova-tv"],
+      "cwd": ".",
+      "profiles": ["local", "ci"],
+      "timeout": 60,
+      "expect_exit": 0,
+      "required_stdout": ["(?s)\"result\":\\s*\\{.*\"ok\": true"],
+      "json_path": "result",
+      "json_assertions": [
+        {"path": "ok", "equals": true},
+        {"path": "counts.contradicted", "equals": 0},
+        {"path": "total", "min": 203}
+      ]
+    }
+  ],
+  "minimum_commands_by_profile": {
+    "local": 3,
+    "ci": 3
+  }
+}

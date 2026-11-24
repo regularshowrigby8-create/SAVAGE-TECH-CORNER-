@@ -1,0 +1,30 @@
+{
+  "note": "built by .github/workflows/android-build.yml",
+  "paths": [
+    "shell/android_project/app/build.gradle.kts",
+    "shell/android_project/app/proguard-rules.pro",
+    "shell/android_project/app/src/main/AndroidManifest.xml",
+    "shell/android_project/app/src/main/java/com/savage/soulbrowser/MainActivity.java",
+    "shell/android_project/app/src/main/java/com/savage/soulbrowser/activities/BrowserActivity.java",
+    "shell/android_project/app/src/main/res/drawable-hdpi/ic_launcher.png",
+    "shell/android_project/app/src/main/res/drawable-mdpi/ic_launcher.png",
+    "shell/android_project/app/src/main/res/drawable-xhdpi/ic_launcher.png",
+    "shell/android_project/app/src/main/res/drawable-xxhdpi/ic_launcher.png",
+    "shell/android_project/app/src/main/res/drawable-xxxhdpi/ic_launcher.png",
+    "shell/android_project/app/src/main/res/layout/activity_main.xml",
+    "shell/android_project/app/src/main/res/mipmap-hdpi/ic_launcher.png",
+    "shell/android_project/app/src/main/res/mipmap-mdpi/ic_launcher.png",
+    "shell/android_project/app/src/main/res/mipmap-xhdpi/ic_launcher.png",
+    "shell/android_project/app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
+    "shell/android_project/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+    "shell/android_project/app/src/main/res/values/strings.xml",
+    "shell/android_project/app/src/main/res/values/themes.xml",
+    "shell/android_project/app/src/main/res/xml/network_security_config.xml",
+    "shell/android_project/app/src/test/java/com/savage/soulbrowser/MainActivityTest.java",
+    "shell/android_project/build.gradle.kts",
+    "shell/android_project/gradle.properties",
+    "shell/android_project/gradle/wrapper/gradle-wrapper.properties",
+    "shell/android_project/gradlew",
+    "shell/android_project/settings.gradle.kts"
+  ]
+}

@@ -1,0 +1,21 @@
+# Copy to nova.toml and fill in. Never commit nova.toml — it is git-ignored.
+# Every value here can also come from the environment (shown in brackets).
+
+[cache]
+dir = ".nova-cache"            # [NOVA_CACHE_DIR]
+
+[github]
+owner = "regularshowrigby8-create"   # [NOVA_GITHUB_OWNER]
+repo  = "SAVAGE-TECH-CORNER-"        # [NOVA_GITHUB_REPO]
+# token = "ghp_..."            # [GITHUB_TOKEN]  — repo scope is enough
+
+[ai]
+# Any OpenAI-compatible endpoint: OpenAI, OpenRouter, Groq, Together,
+# Ollama (http://localhost:11434/v1), LM Studio, or your own gateway.
+base_url = "https://api.openai.com/v1"   # [AI_BASE_URL]
+model    = "gpt-4o-mini"                 # [AI_MODEL]
+# api_key = "sk-..."           # [AI_API_KEY]
+
+[network]
+timeout = 20.0                 # [NOVA_TIMEOUT]
+max_retries = 3                # [NOVA_MAX_RETRIES]

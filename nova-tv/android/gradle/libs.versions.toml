@@ -1,0 +1,111 @@
+# Toolchain versions.
+#
+# Every version below was read out of a real, maintained repository and is
+# recorded with its source. None was guessed; where a value could not be
+# attested, that is noted rather than filled in.
+#
+# THE SET IS DELIBERATELY ERA-MATCHED, NOT BLEEDING EDGE.
+#
+# This repository already contains a CI-proven Android TV Gradle project at
+# `tv/android-tv` (workflow "ZeroPlay Android TV APK", runs green). Its toolchain
+# is Gradle 8.7 + AGP 8.5.0. Kotlin 2.0.21 supports AGP 8.5.2 and pairs with
+# Compose BOM 2024.12.01 in shipped projects. Taking that combination means the
+# only untested thing here is nova-tv's own code, not the build stack.
+#
+# Sources, each verified by API on 2026-11-17:
+#   agp 8.5.2 / kotlin 2.0.21 / composeBom 2024.12.01 / lifecycle 2.8.7
+#     gonzaroman/acornix, MIT  -> gradle/libs.versions.toml
+#   media3 1.5.1
+#     horsemail/yourtv, Gurupreet/ComposeCookBook -> libs.versions.toml
+#   tv-material 1.0.0
+#     android/compose-samples (Google's own) -> libs.versions.toml
+#   agp 8.5.0 / gradle 8.7
+#     this repository, tv/android-tv -> proven green in CI
+#
+# 2026-11-19: AGP raised 8.7.3 -> 8.13.0 (Gradle 8.13). tv-material 1.1.0 pulls
+# Compose 1.10.x, whose lint jars are compiled against a newer Kotlin Analysis
+# API than AGP 8.7's lint; RememberInComposition, FrequentlyChangingValue,
+# AutoboxingStateCreation and NullSafeMutableLiveData all crashed lint there.
+# On 8.13.0 every detector runs and app/lint.xml no longer exempts any.
+#
+# Rejected for licensing, not quality: damontecres/Wholphin is GPL-2.0 latest,
+# NuvioMedia/NuvioMobile could not be licence-checked, and the highest-starred
+# "vibe coded android app" repo (DeadWaveWave/demo2apk) ships no licence at all.
+
+[versions]
+agp = "8.13.0"
+kotlin = "2.0.21"
+compileSdk = "35"
+minSdk = "26"
+targetSdk = "35"
+
+# Compose
+composeBom = "2024.12.01"
+activityCompose = "1.9.3"
+lifecycle = "2.8.7"
+
+# AndroidX TV — nova-tv's target form factor
+tvMaterial = "1.1.0"
+tvFoundation = "1.0.0-alpha11"
+
+# Media3 / ExoPlayer
+# 1.9.0 + Jellyfin's FFmpeg decoder build are the exact pair ARVIO ships
+# (ProdigyV21/ARVIO app/build.gradle.kts), which is where the imported player
+# engine under player/engine was tuned. Both need compileSdk >= 35 (checked in
+# their aar-metadata), which this project already uses.
+media3 = "1.9.0"
+media3Ffmpeg = "1.9.0+1"
+
+# Artwork. Coil 2.x is the OkHttp 4 line, so it shares Nova's client.
+coil = "2.7.0"
+
+# Network + serialization
+okhttp = "4.12.0"
+kotlinxSerialization = "1.7.3"
+coroutines = "1.9.0"
+
+# Test
+junit = "4.13.2"
+
+[libraries]
+compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+compose-ui = { group = "androidx.compose.ui", name = "ui" }
+compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
+compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+compose-material-icons = { group = "androidx.compose.material", name = "material-icons-core" }
+compose-animation = { group = "androidx.compose.animation", name = "animation" }
+compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
+
+tv-material = { group = "androidx.tv", name = "tv-material", version.ref = "tvMaterial" }
+tv-foundation = { group = "androidx.tv", name = "tv-foundation", version.ref = "tvFoundation" }
+
+activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle" }
+lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+
+media3-common = { group = "androidx.media3", name = "media3-common", version.ref = "media3" }
+media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }
+media3-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "media3" }
+media3-hls = { group = "androidx.media3", name = "media3-exoplayer-hls", version.ref = "media3" }
+media3-dash = { group = "androidx.media3", name = "media3-exoplayer-dash", version.ref = "media3" }
+media3-okhttp = { group = "androidx.media3", name = "media3-datasource-okhttp", version.ref = "media3" }
+media3-ffmpeg = { group = "org.jellyfin.media3", name = "media3-ffmpeg-decoder", version.ref = "media3Ffmpeg" }
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+okhttp-doh = { group = "com.squareup.okhttp3", name = "okhttp-dnsoverhttps", version.ref = "okhttp" }
+media3-datasource = { group = "androidx.media3", name = "media3-datasource", version.ref = "media3" }
+media3-database = { group = "androidx.media3", name = "media3-database", version.ref = "media3" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

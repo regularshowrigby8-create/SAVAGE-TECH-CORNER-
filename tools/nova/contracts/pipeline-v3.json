@@ -1,0 +1,763 @@
+{
+  "schema_version": 1,
+  "name": "Nova pipeline-v3 local/ci strict honesty contract",
+  "scope_globs": [
+    "**"
+  ],
+  "inspection_globs": [
+    "**"
+  ],
+  "allowed_binary_paths": [
+    "nova-tv/android/app/src/main/res/drawable-xhdpi/app_banner.png",
+    "nova-tv/android/app/src/main/res/mipmap-hdpi/ic_launcher.png",
+    "nova-tv/android/app/src/main/res/mipmap-mdpi/ic_launcher.png",
+    "nova-tv/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png",
+    "nova-tv/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
+    "nova-tv/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+    "nova-tv/android/gradle/wrapper/gradle-wrapper.jar"
+  ],
+  "allowed_binary_hashes": {
+    "nova-tv/android/app/src/main/res/drawable-xhdpi/app_banner.png": "2c5eef51b4e805c288f7696a6f8fc7a52a1d47dc80be2a2b81975807f00ca95e",
+    "nova-tv/android/app/src/main/res/mipmap-hdpi/ic_launcher.png": "475db8be92e0712c9c889ca671ad9ab9eb106c40d4ea9d7f738cbd90dc8b927e",
+    "nova-tv/android/app/src/main/res/mipmap-mdpi/ic_launcher.png": "764e7af720a533db23069a70aa2f52215a49fc9e71b991ca89f3cc4ba603e5d5",
+    "nova-tv/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png": "bf93f2def121c96867452ef31acda491b2a43d7d741b6af8c94639ced6a0467b",
+    "nova-tv/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png": "307bf89888aee825201f438408ba85670729a6a4490be66055fb30e43222f601",
+    "nova-tv/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png": "6cebbea9435a5b9b6119579272d944ee644e4bbfa3f5cd2b37437d425d1fb507",
+    "nova-tv/android/gradle/wrapper/gradle-wrapper.jar": "3b8a25775a69158b5ad2b1d17a80a88dc7b40a352a73eb27d06c612a7ce68e98"
+  },
+  "required_files": [
+    "tools/nova/strict_verify.py",
+    "tools/nova/check_artifacts.py",
+    "tools/nova/run_ci_artifact_check.sh",
+    "tools/nova/README.md",
+    "tools/nova/tests/test_strict_verify.py",
+    "nova-tv/python/nova/result.py",
+    "nova-tv/python/nova/cli.py",
+    "nova-tv/python/ops/qa_offline_gates.py",
+    "nova-tv/python/ops/assert_script_result.py",
+    "nova-tv/python/scripts/qa_translated.py",
+    "nova-tv/python/scripts/verify_claims.py",
+    "nova-tv/python/tests/test_verify.py",
+    "nova-tv/python/tests/test_audit_coverage.py",
+    "nova-tv/python/tests/test_importers.py",
+    ".github/workflows/nova-tv-android.yml",
+    ".github/workflows/nova-tv-python.yml",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/NovaApplication.kt",
+    "nova-tv/docs/FINDER.md",
+    "nova-tv/docs/BUILD-STATUS.md",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/finder/pipeline/PipelineRunnerTest.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/DiscoveryEngines.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineTransport.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineSorter.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineLooker.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineExtractor.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineVerifier.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineAdapters.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineRunner.kt"
+  ],
+  "required_patterns": [
+    {
+      "id": "gate-fails-closed",
+      "globs": [
+        "tools/nova/strict_verify.py",
+        "tools/nova/tests/test_strict_verify.py"
+      ],
+      "patterns": [
+        "class GateFailure",
+        "def worktree_fingerprint",
+        "test_top_level_green_cannot_mask_failed_nested_result",
+        "test_artifact_checker_refuses_to_infer_sdk",
+        "verification_outputs_excluded_from_fingerprint"
+      ]
+    },
+    {
+      "id": "pipeline-v3-model",
+      "globs": [
+        "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt"
+      ],
+      "patterns": [
+        "PIPELINE_BUILD_MARKER = \"nova-finder-pipeline-v3\"",
+        "MIN_SITE_TARGET = 10_000",
+        "MIN_ENGINE_COUNT = 50",
+        "14-audit"
+      ]
+    },
+    {
+      "id": "pipeline-kind-aware-and-network-aware",
+      "globs": [
+        "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/DiscoveryEngines.kt",
+        "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineRunner.kt"
+      ],
+      "patterns": [
+        "fun find\\(url: String, kind: PipelineKind\\? = null\\)",
+        "EngineRegistry\\.parse\\(result\\.url, result\\.body, kind\\)",
+        "network = evidence.network"
+      ]
+    },
+    {
+      "id": "pipeline-bounded-addon-probes",
+      "globs": [
+        "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineLooker.kt",
+        "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt"
+      ],
+      "patterns": [
+        "probeIds\\.take\\(1\\)",
+        "val network: List<String> = emptyList\\(\\)"
+      ]
+    },
+    {
+      "id": "pipeline-capacity-unit-test",
+      "globs": [
+        "nova-tv/android/app/src/test/java/dev/nova/tv/finder/pipeline/PipelineRunnerTest.kt"
+      ],
+      "patterns": [
+        "class PipelineRunnerTest",
+        "assertEquals\\(MIN_SITE_TARGET, second\\.verifiedCount\\)",
+        "assertEquals\\(\"TARGET_MET\", second\\.status\\)",
+        "corporate MP4 must not be suitable"
+      ]
+    },
+    {
+      "id": "strict-nested-result-semantics",
+      "globs": [
+        "nova-tv/python/nova/result.py",
+        "nova-tv/python/nova/cli.py",
+        "nova-tv/python/ops/assert_script_result.py"
+      ],
+      "patterns": [
+        "def result_failures\\(",
+        "def payload_is_ok\\(",
+        "STRICT RESULT FAIL"
+      ]
+    },
+    {
+      "id": "ci-honesty-checks",
+      "globs": [
+        ".github/workflows/nova-tv-android.yml",
+        ".github/workflows/nova-tv-python.yml",
+        "tools/nova/check_artifacts.py",
+        "tools/nova/run_ci_artifact_check.sh"
+      ],
+      "patterns": [
+        "testTvDebugUnitTest",
+        "testMobileDebugUnitTest",
+        "check_artifacts.py",
+        "qa_offline_gates.py",
+        "assert_script_result.py",
+        "if-no-files-found: error",
+        "NOVA_BUILD_TOOLS"
+      ]
+    },
+    {
+      "id": "docs-state-limitations",
+      "globs": [
+        "nova-tv/docs/FINDER.md",
+        "nova-tv/docs/BUILD-STATUS.md"
+      ],
+      "patterns": [
+        "The 10,000 number is a target",
+        "sandbox has no Java/JDK",
+        "A strict\\s+result is evidence only"
+      ]
+    }
+  ],
+  "forbidden_patterns": [
+    {
+      "id": "no-false-green-wrapper",
+      "globs": [
+        "nova-tv/python/nova/cli.py"
+      ],
+      "patterns": [
+        "\"ok\": True, \"tool\": name, \"result\": result"
+      ],
+      "strip_comments": true
+    },
+    {
+      "id": "no-hardcoded-claim-green",
+      "globs": [
+        "nova-tv/python/scripts/verify_claims.py"
+      ],
+      "patterns": [
+        "\"ok\":\\s*True"
+      ],
+      "strip_comments": true
+    },
+    {
+      "id": "no-workflow-warn-or-ignore-uploads",
+      "globs": [
+        ".github/workflows/*.yml"
+      ],
+      "patterns": [
+        "if-no-files-found:\\s*(warn|ignore)"
+      ],
+      "strip_comments": true
+    },
+    {
+      "id": "no-top-level-green-smoke",
+      "globs": [
+        ".github/workflows/*.yml"
+      ],
+      "patterns": [
+        "grep.*\"ok\"\\s*:\\s*true"
+      ],
+      "strip_comments": true
+    },
+    {
+      "id": "no-workflow-swallowed-failure",
+      "globs": [
+        ".github/workflows/*.yml"
+      ],
+      "patterns": [
+        "\\|\\|\\s*true",
+        "(?m)^\\s*exit\\s+0\\s*$"
+      ],
+      "strip_comments": true
+    },
+    {
+      "id": "no-skipped-python-tests",
+      "globs": [
+        "nova-tv/python/tests/*.py"
+      ],
+      "patterns": [
+        "@unittest\\.skip",
+        "@skip"
+      ],
+      "strip_comments": true
+    },
+    {
+      "id": "no-pipeline-stub-or-swallow-markers",
+      "globs": [
+        "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/*.kt"
+      ],
+      "patterns": [
+        "TODO",
+        "FIXME",
+        "NotImplemented",
+        "runCatching",
+        "getOrDefault"
+      ],
+      "strip_comments": true
+    }
+  ],
+  "source_claims": [
+    {
+      "id": "gate-schema-version-is-explicit",
+      "kind": "literal_count",
+      "path": "tools/nova/strict_verify.py",
+      "literal": "SCHEMA_VERSION = 1",
+      "min": 1,
+      "max": 1
+    },
+    {
+      "id": "engine-configurations-are-65",
+      "kind": "regex_count",
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/DiscoveryEngines.kt",
+      "regex": "(?m)^\\s+id = \"",
+      "min": 65,
+      "max": 65
+    },
+    {
+      "id": "engine-families-are-65",
+      "kind": "regex_count",
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/DiscoveryEngines.kt",
+      "regex": "(?m)^\\s+family = \"",
+      "min": 65,
+      "max": 65
+    },
+    {
+      "id": "fourteen-explicit-stages",
+      "kind": "regex_count",
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt",
+      "regex": "(?m)^\\s+[A-Z_]+\\(\"\\d{2}-[a-z]+\"\\)",
+      "min": 14,
+      "max": 14
+    },
+    {
+      "id": "site-target-is-10000",
+      "kind": "literal_count",
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt",
+      "literal": "MIN_SITE_TARGET = 10_000",
+      "min": 1,
+      "max": 1
+    },
+    {
+      "id": "pool-cap-is-10000",
+      "kind": "literal_count",
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt",
+      "literal": "POOL_CAP = 10_000",
+      "min": 1,
+      "max": 1
+    },
+    {
+      "id": "engine-floor-is-50",
+      "kind": "literal_count",
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt",
+      "literal": "MIN_ENGINE_COUNT = 50",
+      "min": 1,
+      "max": 1
+    },
+    {
+      "id": "build-marker-is-exact",
+      "kind": "literal_count",
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt",
+      "literal": "PIPELINE_BUILD_MARKER = \"nova-finder-pipeline-v3\"",
+      "min": 1,
+      "max": 1
+    },
+    {
+      "id": "pipeline-tests-assert-two-10000-targets",
+      "kind": "literal_count",
+      "path": "nova-tv/android/app/src/test/java/dev/nova/tv/finder/pipeline/PipelineRunnerTest.kt",
+      "literal": "assertEquals(MIN_SITE_TARGET, second.verifiedCount)",
+      "min": 2,
+      "max": 2
+    },
+    {
+      "id": "application-wires-website-runner",
+      "kind": "literal_count",
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/NovaApplication.kt",
+      "literal": "pipeline = serverPipelineRunner",
+      "min": 1,
+      "max": 1
+    },
+    {
+      "id": "application-wires-addon-runner",
+      "kind": "literal_count",
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/NovaApplication.kt",
+      "literal": "pipeline = addonPipelineRunner",
+      "min": 1,
+      "max": 1
+    },
+    {
+      "id": "ci-runs-tv-flavour-tests",
+      "kind": "literal_count",
+      "path": ".github/workflows/nova-tv-android.yml",
+      "literal": "testTvDebugUnitTest",
+      "min": 1,
+      "max": 10
+    },
+    {
+      "id": "ci-runs-mobile-flavour-tests",
+      "kind": "literal_count",
+      "path": ".github/workflows/nova-tv-android.yml",
+      "literal": "testMobileDebugUnitTest",
+      "min": 1,
+      "max": 10
+    },
+    {
+      "id": "seven-offline-gates-are-explicit",
+      "kind": "regex_count",
+      "path": "nova-tv/python/ops/qa_offline_gates.py",
+      "regex": "(?m)^    \\(\"",
+      "min": 7,
+      "max": 7
+    },
+    {
+      "id": "strict-result-module-is-explicit",
+      "kind": "literal_count",
+      "path": "nova-tv/python/nova/result.py",
+      "literal": "def result_failures(result: Any, path: str = \"result\")",
+      "min": 1,
+      "max": 1
+    }
+  ],
+  "commands": [
+    {
+      "id": "strict-gate-self-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools/nova/tests",
+        "-t",
+        "tools/nova",
+        "-v"
+      ],
+      "cwd": ".",
+      "profiles": [
+        "local",
+        "ci"
+      ],
+      "timeout": 60,
+      "expect_exit": 0,
+      "required_stdout": [
+        "(?m)^OK$",
+        "Ran 8 tests"
+      ],
+      "forbidden_stdout": [
+        "FAILED",
+        "Traceback"
+      ]
+    },
+    {
+      "id": "python-unittests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "nova-tv/python/tests",
+        "-t",
+        "nova-tv/python",
+        "-v"
+      ],
+      "cwd": ".",
+      "profiles": [
+        "local",
+        "ci"
+      ],
+      "timeout": 180,
+      "expect_exit": 0,
+      "required_stdout": [
+        "(?m)^OK$",
+        "Ran 195 tests"
+      ],
+      "forbidden_stdout": [
+        "FAILED",
+        "skipped[ =]",
+        "Traceback",
+        "FAIL:"
+      ]
+    },
+    {
+      "id": "translated-finder-audit",
+      "argv": [
+        "python3",
+        "nova-tv/python/scripts/qa_translated.py",
+        "--json",
+        "--root",
+        "nova-tv"
+      ],
+      "cwd": ".",
+      "profiles": [
+        "local",
+        "ci"
+      ],
+      "timeout": 90,
+      "expect_exit": 0,
+      "required_stdout": [
+        "(?s)\"result\":\\s*\\{.*\"ok\": true"
+      ],
+      "forbidden_stdout": [
+        "contradicted\": [1-9]",
+        "STRICT RESULT FAIL"
+      ],
+      "json_path": "result",
+      "json_assertions": [
+        {
+          "path": "ok",
+          "equals": true
+        },
+        {
+          "path": "counts.contradicted",
+          "equals": 0
+        },
+        {
+          "path": "counts.unverified",
+          "equals": 0
+        },
+        {
+          "path": "total",
+          "min": 238
+        }
+      ]
+    },
+    {
+      "id": "offline-gate-nested-results",
+      "argv": [
+        "python3",
+        "nova-tv/python/ops/qa_offline_gates.py"
+      ],
+      "cwd": ".",
+      "profiles": [
+        "local",
+        "ci"
+      ],
+      "timeout": 300,
+      "expect_exit": 0,
+      "required_stdout": [
+        "(?m)^STRICT OFFLINE GATES PASS$"
+      ],
+      "forbidden_stdout": [
+        "STRICT OFFLINE GATE FAIL",
+        "Traceback"
+      ],
+      "json_path": "result",
+      "json_assertions": [
+        {
+          "path": "ok",
+          "equals": true
+        },
+        {
+          "path": "total",
+          "min": 7
+        },
+        {
+          "path": "passed",
+          "min": 7
+        },
+        {
+          "path": "failed",
+          "equals": 0
+        },
+        {
+          "path": "errors",
+          "empty": true
+        }
+      ]
+    },
+    {
+      "id": "documentation-claim-verification",
+      "argv": [
+        "python3",
+        "scripts/verify_claims.py",
+        "--json"
+      ],
+      "cwd": "nova-tv/python",
+      "profiles": [
+        "local",
+        "ci"
+      ],
+      "timeout": 120,
+      "expect_exit": 0,
+      "json_path": "result",
+      "json_assertions": [
+        {
+          "path": "ok",
+          "equals": true
+        },
+        {
+          "path": "summary.ok",
+          "equals": true
+        },
+        {
+          "path": "summary.unsupported",
+          "equals": 0
+        },
+        {
+          "path": "summary.counts.contradicted",
+          "equals": 0
+        },
+        {
+          "path": "unsupported",
+          "empty": true
+        }
+      ]
+    },
+    {
+      "id": "kotlin-structural-lint",
+      "argv": [
+        "python3",
+        "nova-tv/ops/kotlin_lint.py"
+      ],
+      "cwd": ".",
+      "profiles": [
+        "local",
+        "ci"
+      ],
+      "timeout": 60,
+      "expect_exit": 0,
+      "required_stdout": [
+        "checked \\d+ Kotlin files",
+        "no structural problems found",
+        "build files: no structural problems found"
+      ],
+      "forbidden_stdout": [
+        "Traceback",
+        "structural problem(s) detected"
+      ]
+    },
+    {
+      "id": "artifact-checker-fails-closed",
+      "argv": [
+        "python3",
+        "tools/nova/check_artifacts.py",
+        "--repo",
+        ".",
+        "--evidence",
+        "/tmp/nova-artifact-fail-closed.json",
+        "--json"
+      ],
+      "cwd": ".",
+      "profiles": [
+        "local",
+        "ci"
+      ],
+      "timeout": 60,
+      "expect_exit": 1,
+      "env": {
+        "NOVA_BUILD_TOOLS": ""
+      },
+      "required_stdout": [
+        "NOVA_BUILD_TOOLS is required"
+      ],
+      "forbidden_stdout": [
+        "PASS: four APKs verified"
+      ],
+      "json_path": "",
+      "json_assertions": [
+        {
+          "path": "ok",
+          "equals": false
+        },
+        {
+          "path": "artifact_count",
+          "equals": 0
+        },
+        {
+          "path": "errors.0",
+          "contains": "NOVA_BUILD_TOOLS is required"
+        }
+      ]
+    },
+    {
+      "id": "android-flavour-unit-tests",
+      "argv": [
+        "./gradlew",
+        ":app:testTvDebugUnitTest",
+        ":app:testMobileDebugUnitTest",
+        "--no-daemon",
+        "--console=plain"
+      ],
+      "cwd": "nova-tv/android",
+      "profiles": [
+        "ci"
+      ],
+      "timeout": 1800,
+      "expect_exit": 0,
+      "required_stdout": [
+        "BUILD SUCCESSFUL"
+      ],
+      "forbidden_stdout": [
+        "FAILURE:",
+        "FAILED"
+      ]
+    },
+    {
+      "id": "android-flavour-lint",
+      "argv": [
+        "./gradlew",
+        ":app:lintTvDebug",
+        ":app:lintMobileDebug",
+        "--no-daemon",
+        "--console=plain"
+      ],
+      "cwd": "nova-tv/android",
+      "profiles": [
+        "ci"
+      ],
+      "timeout": 1800,
+      "expect_exit": 0,
+      "required_stdout": [
+        "BUILD SUCCESSFUL"
+      ],
+      "forbidden_stdout": [
+        "FAILURE:",
+        "FAILED"
+      ]
+    },
+    {
+      "id": "android-debug-and-release-assembly",
+      "argv": [
+        "./gradlew",
+        ":app:assembleDebug",
+        ":app:assembleRelease",
+        "--stacktrace",
+        "--no-daemon",
+        "--console=plain"
+      ],
+      "cwd": "nova-tv/android",
+      "profiles": [
+        "ci"
+      ],
+      "timeout": 1800,
+      "expect_exit": 0,
+      "required_stdout": [
+        "BUILD SUCCESSFUL"
+      ],
+      "forbidden_stdout": [
+        "FAILURE:",
+        "FAILED"
+      ]
+    },
+    {
+      "id": "artifact-four-cell-verification",
+      "argv": [
+        "bash",
+        "tools/nova/run_ci_artifact_check.sh",
+        "/tmp/nova-ci-artifacts.json"
+      ],
+      "cwd": ".",
+      "profiles": [
+        "ci"
+      ],
+      "timeout": 300,
+      "expect_exit": 0,
+      "required_stdout": [
+        "PASS: four APKs verified for both flavours"
+      ],
+      "forbidden_stdout": [
+        "FAIL:",
+        "Traceback",
+        "FAILED"
+      ],
+      "json_path": "",
+      "json_assertions": [
+        {
+          "path": "ok",
+          "equals": true
+        },
+        {
+          "path": "artifact_count",
+          "equals": 4
+        },
+        {
+          "path": "errors",
+          "empty": true
+        },
+        {
+          "path": "source_markers.0.ok",
+          "equals": true
+        },
+        {
+          "path": "source_markers.1.ok",
+          "equals": true
+        },
+        {
+          "path": "artifacts.0.ok",
+          "equals": true
+        },
+        {
+          "path": "artifacts.1.ok",
+          "equals": true
+        },
+        {
+          "path": "artifacts.2.ok",
+          "equals": true
+        },
+        {
+          "path": "artifacts.3.ok",
+          "equals": true
+        }
+      ]
+    }
+  ],
+  "minimum_commands_by_profile": {
+    "local": 7,
+    "ci": 11
+  },
+  "profile_limitations": {
+    "local": [
+      "No JVM, Gradle, Android SDK, aapt2, zipalign, apksigner, APK binaries or emulator are available in this sandbox. Local PASS does not claim Kotlin compilation, Android flavour unit tests, Android lint, APK contents, signing, alignment, installation or runtime playback.",
+      "The four CI-only Android/artifact commands are explicitly excluded from this profile and listed in excluded_commands.",
+      "The 10,000-site Kotlin test is a deterministic fixture-based capacity proof in source and CI, not a claim about live internet reachability or an on-device run."
+    ],
+    "ci": [
+      "A CI PASS proves the selected Gradle tasks, the four APK cells and the source/dex markers. It does not prove installation, catalogue loading, playback or any other on-device runtime behaviour."
+    ]
+  }
+}

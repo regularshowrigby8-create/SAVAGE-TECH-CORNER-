@@ -1,0 +1,4 @@
+# Nova's Python tooling is standard-library only on purpose: it must run in a
+# bare CI image with no install step and no supply chain.
+#
+# Python 3.11+ is required for tomllib.

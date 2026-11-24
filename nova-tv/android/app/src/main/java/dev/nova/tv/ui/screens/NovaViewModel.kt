@@ -1,0 +1,1285 @@
+package dev.nova.tv.ui.screens
+
+import android.util.Log
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import dev.nova.tv.NovaApplication
+import dev.nova.tv.data.model.MetaPreview
+import dev.nova.tv.data.model.NovaAddon
+import dev.nova.tv.data.model.Stream
+import dev.nova.tv.data.model.SubtitleRef
+import dev.nova.tv.data.model.Video
+import dev.nova.tv.data.repo.WatchProgress
+import dev.nova.tv.download.DownloadJob
+import dev.nova.tv.data.remote.DnsProvider
+import dev.nova.tv.data.remote.NovaDns
+import dev.nova.tv.finder.DualAudio
+import dev.nova.tv.finder.FinderKind
+import dev.nova.tv.finder.diag.FinderTrace
+import dev.nova.tv.finder.pool.PoolState
+import dev.nova.tv.finder.pool.WebsitePoolState
+import dev.nova.tv.data.remote.SubtitleProvider
+import dev.nova.tv.player.preload.PreloadMode
+import dev.nova.tv.finder.FinderReport
+import dev.nova.tv.finder.FinderRules
+import dev.nova.tv.finder.SourceSnapshot
+import dev.nova.tv.finder.TitleRequest
+import dev.nova.tv.finder.website.SavedWebsite
+import dev.nova.tv.player.ChromeController
+import dev.nova.tv.player.HoldReason
+import dev.nova.tv.player.PlayerUiState
+import dev.nova.tv.player.SubtitleStyle
+import dev.nova.tv.ui.nav.BackAction
+import dev.nova.tv.ui.nav.NavSnapshot
+import dev.nova.tv.ui.nav.resolveBack
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import java.util.Calendar
+
+/** Rail destinations, in rail order. */
+enum class Route(val label: String) {
+    HOME("Home"),
+    MOVIES("Movies"),
+    SERIES("Series"),
+    DUAL_AUDIO("Dual Audio"),
+    SEARCH("Search"),
+    MY_LIST("My List"),
+    SOURCES("Sources"),
+    SETTINGS("Settings"),
+
+    /** The finder flight recorder. Reachable from Sources; see finder/diag. */
+    DIAGNOSTICS("Diagnostics")
+}
+
+enum class ShelfStyle { POSTER, LANDSCAPE }
+
+/** One endless row. [skip] is how many the catalogue has already given. */
+data class Shelf(
+    val key: String,
+    val title: String,
+    val type: String = "movie",
+    val catalog: String = "top",
+    val genre: String? = null,
+    val items: List<MetaPreview> = emptyList(),
+    val style: ShelfStyle = ShelfStyle.POSTER,
+    val loading: Boolean = false,
+    val exhausted: Boolean = false,
+    /** Progress for landscape cards, by title id. */
+    val progress: Map<String, Float> = emptyMap(),
+    /** Dual Audio rows keep only international titles, so they page by [cursor], not item count. */
+    val international: Boolean = false,
+    val cursor: Int = 0
+)
+
+/** Movies / Series screens: one genre at a time, endless grid. */
+data class BrowseState(
+    val genre: String? = null,
+    val items: List<MetaPreview> = emptyList(),
+    val loading: Boolean = false,
+    val exhausted: Boolean = false
+)
+
+/** The opened title. Sources stream in while the viewer looks at it. */
+data class DetailState(
+    val meta: MetaPreview,
+    val full: MetaPreview? = null,
+    val season: Int = 1,
+    val episode: Int = 1,
+    val sources: SourceSnapshot = SourceSnapshot(),
+    val resolving: Boolean = true,
+    val inList: Boolean = false,
+    val resume: WatchProgress? = null,
+    val showSources: Boolean = false,
+    /** Download tap opens a picker instead of silently grabbing the top source. */
+    val showDownload: Boolean = false
+) {
+    val title: MetaPreview get() = full ?: meta
+    val isSeries: Boolean get() = meta.isSeries
+    val streamId: String get() = FinderRules.catalogueId(meta.id, isSeries, season, episode)
+    val currentVideo: Video? get() = title.videos.firstOrNull { it.season == season && it.episode == episode }
+}
+
+/** Which panel is open over the player. */
+enum class PlayerPanel(val label: String) {
+    SOURCES("Sources"),
+    AUDIO("Audio"),
+    SUBTITLES("Subtitles"),
+    QUALITY("Quality"),
+    SPEED("Playback speed")
+}
+
+/** Everything one playback needs: the whole ranked list, not one stream. */
+data class PlaybackRequest(
+    val title: String,
+    val meta: MetaPreview,
+    val season: Int,
+    val episode: Int,
+    val streams: List<Stream>,
+    val startIndex: Int,
+    val startPositionMs: Long = 0L,
+    val bandwidthEstimate: Long = 0L,
+    val subtitles: List<SubtitleRef> = emptyList(),
+    /** Bumped on every Play press so the same list can be restarted. */
+    val token: Long = System.nanoTime()
+)
+
+/** The up-next card at the end of an episode. */
+data class UpNext(val season: Int, val episode: Int, val label: String, val thumbnail: String?)
+
+data class NovaState(
+    val route: Route = Route.HOME,
+    val homeLoading: Boolean = true,
+    val shelves: List<Shelf> = emptyList(),
+    val hero: List<MetaPreview> = emptyList(),
+    val homeError: String? = null,
+    val browse: Map<Route, BrowseState> = emptyMap(),
+    val genres: Map<String, List<String>> = emptyMap(),
+    val query: String = "",
+    val results: List<MetaPreview> = emptyList(),
+    val searching: Boolean = false,
+    /** Set when search itself failed, so the screen can say why instead of "no results". */
+    val searchError: String? = null,
+    val myList: List<MetaPreview> = emptyList(),
+    val detail: DetailState? = null,
+    val playback: PlaybackRequest? = null,
+    val playerPanel: PlayerPanel? = null,
+    val upNext: UpNext? = null,
+    val restoreFocusId: String? = null,
+    val addons: List<NovaAddon> = emptyList(),
+    val websites: List<SavedWebsite> = emptyList(),
+    val finders: Set<FinderKind> = FinderKind.entries.toSet(),
+    val finderReports: Map<FinderKind, FinderReport> = emptyMap(),
+    val finderRunning: Set<FinderKind> = emptySet(),
+    val toast: String? = null,
+    val addingWebsite: Boolean = false,
+    val websiteDraft: String = "",
+    /** The same URL sheet, in addon mode: a Stremio-style server address. */
+    val addingAddon: Boolean = false,
+    val addonDraft: String = "",
+    val reduceMotion: Boolean = false,
+    val autoplayNext: Boolean = true,
+    val preload: PreloadMode = PreloadMode.ON,
+    val dns: DnsProvider = DnsProvider.AUTO,
+    val preferEnglishAudio: Boolean = true,
+    /** Remembered playback speed, re-applied to every new player. */
+    val playbackRate: Float = 1f,
+    /** Caption size, box and tone; applied live by both player surfaces. */
+    val subtitleStyle: SubtitleStyle = SubtitleStyle(),
+    /** Standard play target; 720p unless changed in Settings. */
+    val preferredQuality: String = "720p",
+    /** Offline downloads, newest last. */
+    val downloads: List<DownloadJob> = emptyList(),
+    /** Addon-pool servers that have answered for a title; the only ones listed. */
+    val workingServers: List<String> = emptyList(),
+    /** The website pool: ordinary sites found by the website finder. */
+    val sitePool: WebsitePoolState = WebsitePoolState(),
+    val workingSites: List<String> = emptyList(),
+    /** Why the last website round produced nothing, in the finder's own words. */
+    val siteRejections: String = "",
+    /** Subtitle engines the viewer has left on. */
+    val subtitleProviders: Set<SubtitleProvider> = SubtitleProvider.entries.toSet(),
+    val dualShelves: List<Shelf> = emptyList(),
+    val dualLoading: Boolean = false,
+    val pool: PoolState = PoolState(),
+    val poolBusy: Boolean = false
+) {
+    val opened: MetaPreview? get() = detail?.meta
+}
+
+class NovaViewModel : ViewModel() {
+
+    private val app: NovaApplication = NovaApplication.instance
+    private val settings = app.settings
+    private val repository = app.repository
+    private val library = app.library
+    private val engine = app.engine
+
+    private val _state = MutableStateFlow(NovaState())
+    val state: StateFlow<NovaState> = _state.asStateFlow()
+
+    /** video.js `computeVisible`, owned here so BACK can ask whether the controls show. */
+    val chrome = ChromeController(viewModelScope)
+    val chromeState: StateFlow<PlayerUiState> get() = chrome.state
+    private var menuHold: (() -> Unit)? = null
+
+    private var resolveJob: Job? = null
+    private var autoPlayJob: Job? = null
+    private var searchJob: Job? = null
+    private var toastJob: Job? = null
+    private val shelfJobs = HashMap<String, Job>()
+    private var shelfPlan: List<Shelf> = emptyList()
+    private var dualPlan: List<Shelf> = emptyList()
+    private val dualEmpty = HashSet<String>()
+
+    init {
+        val saved = settings.settings.value
+        _state.value = _state.value.copy(
+            reduceMotion = saved.reduceMotion,
+            autoplayNext = saved.autoplayNext,
+            finders = saved.finders,
+            preload = saved.preload,
+            dns = saved.dns,
+            preferEnglishAudio = saved.preferEnglishAudio,
+            playbackRate = saved.playbackRate,
+            subtitleStyle = saved.subtitleStyle,
+            preferredQuality = saved.preferredQuality,
+            pool = engine.pool?.state?.value ?: PoolState(),
+            workingServers = engine.pool?.working()?.map { it.name.ifBlank { it.baseUrl } }.orEmpty(),
+            sitePool = engine.websitePool?.state?.value ?: WebsitePoolState(),
+            workingSites = engine.websitePool?.working()?.map { it.name.ifBlank { it.url } }.orEmpty(),
+            subtitleProviders = saved.subtitleProviders,
+            websites = library.websites.value,
+            myList = library.myList.value.map { it.toMeta() }
+        )
+        refresh()
+        engine.pool?.let { pool ->
+            viewModelScope.launch {
+                pool.state.collect { p ->
+                    _state.update {
+                        it.copy(pool = p, workingServers = pool.working().map { entry -> entry.name.ifBlank { entry.baseUrl } })
+                    }
+                }
+            }
+        }
+        engine.websitePool?.let { sites ->
+            viewModelScope.launch {
+                sites.state.collect { p ->
+                    _state.update {
+                        it.copy(sitePool = p, workingSites = sites.working().map { entry -> entry.name.ifBlank { entry.url } })
+                    }
+                }
+            }
+        }
+        viewModelScope.launch {
+            app.downloads.jobs.collect { jobs -> _state.update { it.copy(downloads = jobs) } }
+        }
+    }
+
+    // -- navigation -----------------------------------------------------------
+
+    fun navigate(route: Route) {
+        val s = _state.value
+        if (s.route == route && s.detail == null) return
+        closeTitle()
+        _state.update { it.copy(route = route, addingWebsite = false, addingAddon = false) }
+        when (route) {
+            Route.MOVIES, Route.SERIES -> if (_state.value.browse[route]?.items.isNullOrEmpty()) loadBrowse(route, reset = true)
+            Route.DUAL_AUDIO -> if (_state.value.dualShelves.isEmpty()) loadDualAudio()
+            Route.MY_LIST -> _state.update { it.copy(myList = library.myList.value.map { t -> t.toMeta() }) }
+            Route.SOURCES -> _state.update { it.copy(addons = repository.addons.value, websites = library.websites.value) }
+            else -> Unit
+        }
+    }
+
+    private fun snapshot(): NavSnapshot {
+        val s = _state.value
+        return NavSnapshot(
+            atHome = s.route == Route.HOME,
+            detailOpen = s.detail != null,
+            playing = s.playback != null,
+            panelOpen = s.playerPanel != null,
+            chromeVisible = chrome.state.value.chromeVisible,
+            queryNotEmpty = s.route == Route.SEARCH && s.query.isNotEmpty(),
+            sheetOpen = s.detail?.showSources == true || s.addingWebsite || s.addingAddon
+        )
+    }
+
+    /** BACK: peel exactly one layer. Returns false only when the app should exit. */
+    fun back(): Boolean {
+        when (resolveBack(snapshot())) {
+            BackAction.CLOSE_PLAYER_PANEL -> closePlayerPanel()
+            BackAction.SHOW_PLAYER_CHROME -> chrome.onUserActive()
+            BackAction.STOP_PLAYBACK -> stopPlayback()
+            BackAction.CLOSE_SHEET -> closeSheet()
+            BackAction.CLOSE_DETAIL -> closeTitle()
+            BackAction.CLEAR_QUERY -> setQuery("")
+            BackAction.GO_HOME -> navigate(Route.HOME)
+            BackAction.EXIT -> return false
+        }
+        return true
+    }
+
+    private fun closeSheet() {
+        _state.update { s ->
+            s.copy(
+                detail = s.detail?.copy(showSources = false, showDownload = false),
+                addingWebsite = false,
+                addingAddon = false
+            )
+        }
+    }
+
+    // -- home -------------------------------------------------------------------
+
+    fun refresh() {
+        _state.update { it.copy(homeLoading = true, homeError = null) }
+        viewModelScope.launch {
+            // The whole body is guarded, and homeLoading is cleared in
+            // `finally`. Before this, anything that threw between the two
+            // (a finder warm-up, a shelf plan, a cancelled page) left
+            // homeLoading true for the life of the process: the home screen
+            // showed its shimmer and then nothing at all -- a blank catalogue
+            // with no error and no way back.
+            var shelves: List<Shelf> = emptyList()
+            var failure: String? = null
+            try {
+                runCatching { repository.installDefaults() }
+                runCatching { engine.warmUp(_state.value.finders) }
+                runCatching { engine.syncPoolFill(_state.value.finders) }
+                shelfPlan = planShelves()
+                val first = shelfPlan.take(INITIAL_SHELVES)
+                val loaded = first.map { shelf ->
+                    async { shelf.copy(items = repository.loadPage(shelf.type, shelf.catalog, shelf.genre)) }
+                }.awaitAll().filter { it.items.isNotEmpty() }
+                shelves = libraryShelves() + loaded
+                if (loaded.isEmpty()) failure = "Couldn't reach the catalogue."
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                failure = error.message ?: "Couldn't reach the catalogue."
+            } finally {
+                val hero = shelves.firstOrNull { it.items.isNotEmpty() }
+                    ?.items.orEmpty()
+                    .filter { !it.background.isNullOrBlank() }
+                    .take(HERO_COUNT)
+                val result = shelves
+                val reason = failure
+                _state.update {
+                    it.copy(
+                        homeLoading = false,
+                        // Keep whatever is already on screen rather than
+                        // replacing a good catalogue with an empty one.
+                        shelves = result.ifEmpty { it.shelves },
+                        hero = hero.ifEmpty { it.hero },
+                        homeError = if (result.isEmpty()) reason ?: "Couldn't reach the catalogue." else null,
+                        addons = repository.addons.value,
+                        genres = mapOf("movie" to repository.genres("movie"), "series" to repository.genres("series"))
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * The endless home: Popular / Featured / New for both types, then every
+     * genre for both, interleaved. Only the first few load; the rest load as
+     * the viewer scrolls down ([loadMoreShelves]).
+     */
+    private fun planShelves(): List<Shelf> {
+        val year = Calendar.getInstance().get(Calendar.YEAR).toString()
+        val base = listOf(
+            Shelf("movie:top", "Popular Movies", "movie", "top"),
+            Shelf("series:top", "Popular Series", "series", "top"),
+            Shelf("movie:imdbRating", "Top Rated Movies", "movie", "imdbRating"),
+            Shelf("series:imdbRating", "Top Rated Series", "series", "imdbRating"),
+            Shelf("movie:year", "New Movies", "movie", "year", genre = year),
+            Shelf("series:year", "New Series", "series", "year", genre = year)
+        )
+        val movieGenres = repository.genres("movie")
+        val seriesGenres = repository.genres("series")
+        val genreShelves = (0 until maxOf(movieGenres.size, seriesGenres.size)).flatMap { i ->
+            listOfNotNull(
+                movieGenres.getOrNull(i)?.let { Shelf("movie:top:$it", "$it Movies", "movie", "top", it) },
+                seriesGenres.getOrNull(i)?.let { Shelf("series:top:$it", "$it Series", "series", "top", it) }
+            )
+        }
+        return base + genreShelves
+    }
+
+    private fun libraryShelves(): List<Shelf> = buildList {
+        val cw = library.continueWatching()
+        if (cw.isNotEmpty()) add(
+            Shelf(
+                key = KEY_CONTINUE, title = "Continue Watching", items = cw.map { it.toMeta() },
+                style = ShelfStyle.LANDSCAPE, exhausted = true, progress = cw.associate { it.id to it.fraction }
+            )
+        )
+        val list = library.myList.value
+        if (list.isNotEmpty()) add(Shelf(key = KEY_MY_LIST, title = "My List", items = list.map { it.toMeta() }, exhausted = true))
+    }
+
+    private fun refreshLibraryShelves() {
+        _state.update { s ->
+            s.copy(
+                shelves = libraryShelves() + s.shelves.filterNot { it.key == KEY_CONTINUE || it.key == KEY_MY_LIST },
+                myList = library.myList.value.map { it.toMeta() }
+            )
+        }
+    }
+
+    /** Focus reached the last loaded rows: add the next few. */
+    fun loadMoreShelves() {
+        val s = _state.value
+        if (s.homeLoading || shelfJobs.containsKey(KEY_MORE)) return
+        val loadedKeys = s.shelves.map { it.key }.toSet()
+        val next = shelfPlan.filter { it.key !in loadedKeys }.take(MORE_SHELVES)
+        if (next.isEmpty()) return
+        shelfJobs[KEY_MORE] = viewModelScope.launch {
+            val loaded = next.map { shelf -> async { shelf.copy(items = repository.loadPage(shelf.type, shelf.catalog, shelf.genre)) } }
+                .awaitAll()
+            // Empty genre rows are dropped from the plan, not shown.
+            shelfPlan = shelfPlan.filterNot { p -> loaded.any { it.key == p.key && it.items.isEmpty() } }
+            _state.update { st -> st.copy(shelves = st.shelves + loaded.filter { it.items.isNotEmpty() }) }
+            shelfJobs.remove(KEY_MORE)
+        }
+    }
+
+    /** Focus reached the end of a row: fetch its next page. */
+    fun loadMoreInShelf(key: String) {
+        val shelf = (_state.value.shelves + _state.value.dualShelves).firstOrNull { it.key == key } ?: return
+        if (shelf.exhausted || shelf.loading || shelfJobs.containsKey(key)) return
+        updateShelf(key) { it.copy(loading = true) }
+        if (shelf.international) {
+            shelfJobs[key] = viewModelScope.launch {
+                val (found, cursor, end) = loadInternational(shelf, shelf.cursor, DUAL_MORE)
+                updateShelf(key) { current ->
+                    val fresh = found.filter { p -> current.items.none { it.id == p.id } }
+                    current.copy(items = current.items + fresh, loading = false, exhausted = end || fresh.isEmpty(), cursor = cursor)
+                }
+                shelfJobs.remove(key)
+            }
+            return
+        }
+        shelfJobs[key] = viewModelScope.launch {
+            val page = repository.loadPage(shelf.type, shelf.catalog, shelf.genre, skip = shelf.items.size)
+            updateShelf(key) { current ->
+                val fresh = page.filter { p -> current.items.none { it.id == p.id } }
+                current.copy(items = current.items + fresh, loading = false, exhausted = fresh.isEmpty())
+            }
+            shelfJobs.remove(key)
+        }
+    }
+
+    private fun updateShelf(key: String, change: (Shelf) -> Shelf) {
+        _state.update { s ->
+            s.copy(
+                shelves = s.shelves.map { if (it.key == key) change(it) else it },
+                dualShelves = s.dualShelves.map { if (it.key == key) change(it) else it }
+            )
+        }
+    }
+
+    // -- dual audio ---------------------------------------------------------------
+
+    /**
+     * Dual Audio: titles made outside the English-speaking world, where
+     * releases often carry the original track plus an English dub. Rows are the
+     * normal catalogues filtered by [DualAudio.isInternational]; the source
+     * engine then ranks streams that carry English plus another language first.
+     */
+    fun loadDualAudio() {
+        if (_state.value.dualLoading) return
+        _state.update { it.copy(dualLoading = true) }
+        viewModelScope.launch {
+            if (repository.addons.value.isEmpty()) runCatching { repository.installDefaults() }
+            dualPlan = buildList {
+                add(Shelf("dual:movie:top", "World Cinema", "movie", "top", international = true))
+                add(Shelf("dual:series:top", "International Series", "series", "top", international = true))
+                add(Shelf("dual:movie:imdbRating", "Acclaimed Abroad", "movie", "imdbRating", international = true))
+                add(Shelf("dual:series:imdbRating", "Top Rated International Series", "series", "imdbRating", international = true))
+                DUAL_GENRES.forEach { g ->
+                    add(Shelf("dual:series:top:$g", "$g · International", "series", "top", g, international = true))
+                    add(Shelf("dual:movie:top:$g", "$g · World Cinema", "movie", "top", g, international = true))
+                }
+            }
+            val loaded = loadDualShelves(dualPlan.take(INITIAL_SHELVES))
+            _state.update { it.copy(dualShelves = loaded, dualLoading = false) }
+        }
+    }
+
+    /** Focus reached the last Dual Audio rows: add the next few. */
+    fun loadMoreDualShelves() {
+        val s = _state.value
+        if (s.dualLoading || shelfJobs.containsKey(KEY_MORE_DUAL)) return
+        val shown = s.dualShelves.map { it.key }.toSet()
+        val next = dualPlan.filter { it.key !in shown && it.key !in dualEmpty }.take(MORE_SHELVES)
+        if (next.isEmpty()) return
+        shelfJobs[KEY_MORE_DUAL] = viewModelScope.launch {
+            val loaded = loadDualShelves(next)
+            dualEmpty += next.map { it.key } - loaded.map { it.key }.toSet()
+            _state.update { st -> st.copy(dualShelves = st.dualShelves + loaded) }
+            shelfJobs.remove(KEY_MORE_DUAL)
+        }
+    }
+
+    private suspend fun loadDualShelves(plan: List<Shelf>): List<Shelf> = coroutineScope {
+        plan.map { shelf ->
+            async {
+                val (items, cursor, end) = loadInternational(shelf, 0, DUAL_FIRST)
+                shelf.copy(items = items, cursor = cursor, exhausted = end)
+            }
+        }.awaitAll().filter { it.items.isNotEmpty() }
+    }
+
+    /** Page a catalogue from [start] until [want] international titles or [DUAL_PAGES] pages. */
+    private suspend fun loadInternational(shelf: Shelf, start: Int, want: Int): Triple<List<MetaPreview>, Int, Boolean> {
+        val out = LinkedHashMap<String, MetaPreview>()
+        var cursor = start
+        repeat(DUAL_PAGES) {
+            val page = runCatching { repository.loadPage(shelf.type, shelf.catalog, shelf.genre, skip = cursor) }.getOrDefault(emptyList())
+            if (page.isEmpty()) return Triple(out.values.toList(), cursor, true)
+            cursor += page.size
+            page.filter { DualAudio.isInternational(it) }.forEach { out.putIfAbsent(it.id, it) }
+            if (out.size >= want) return Triple(out.values.toList(), cursor, false)
+        }
+        return Triple(out.values.toList(), cursor, false)
+    }
+
+    // -- movies / series --------------------------------------------------------
+
+    fun selectGenre(route: Route, genre: String?) {
+        val current = _state.value.browse[route]
+        if (current != null && current.genre == genre && current.items.isNotEmpty()) return
+        _state.update { it.copy(browse = it.browse + (route to BrowseState(genre = genre))) }
+        loadBrowse(route, reset = true)
+    }
+
+    fun loadBrowse(route: Route, reset: Boolean = false) {
+        val type = if (route == Route.SERIES) "series" else "movie"
+        val current = _state.value.browse[route] ?: BrowseState()
+        if (current.loading || (current.exhausted && !reset)) return
+        val key = "browse:$route"
+        if (shelfJobs.containsKey(key)) return
+        val skip = if (reset) 0 else current.items.size
+        _state.update { it.copy(browse = it.browse + (route to current.copy(loading = true, items = if (reset) emptyList() else current.items))) }
+        shelfJobs[key] = viewModelScope.launch {
+            if (repository.addons.value.isEmpty()) runCatching { repository.installDefaults() }
+            val page = repository.loadPage(type, "top", current.genre, skip)
+            _state.update { st ->
+                val b = st.browse[route] ?: BrowseState()
+                val fresh = page.filter { p -> b.items.none { it.id == p.id } }
+                st.copy(
+                    browse = st.browse + (route to b.copy(items = b.items + fresh, loading = false, exhausted = fresh.isEmpty())),
+                    genres = st.genres + (type to repository.genres(type))
+                )
+            }
+            shelfJobs.remove(key)
+        }
+    }
+
+    // -- detail -------------------------------------------------------------------
+
+    fun openTitle(title: MetaPreview) {
+        val resume = library.progress.value.firstOrNull { it.id == title.id }
+        val season = if (title.isSeries) resume?.season?.takeIf { it > 0 } ?: 1 else 0
+        val episode = if (title.isSeries) resume?.episode?.takeIf { it > 0 } ?: 1 else 0
+        _state.update {
+            it.copy(
+                detail = DetailState(
+                    meta = title, season = season, episode = episode,
+                    inList = library.inList(title.id),
+                    resume = resume?.takeIf { r -> !r.finished && r.season == season && r.episode == episode }
+                ),
+                restoreFocusId = title.id
+            )
+        }
+        viewModelScope.launch {
+            val full = repository.loadMeta(title.type, title.id) ?: return@launch
+            _state.update { s ->
+                val d = s.detail ?: return@update s
+                if (d.meta.id != title.id) return@update s
+                // A series with a known list starts on its first real episode.
+                val firstSeason = full.seasons.firstOrNull { it > 0 } ?: d.season
+                val keep = full.videos.any { it.season == d.season && it.episode == d.episode }
+                s.copy(detail = d.copy(full = full, season = if (keep) d.season else firstSeason, episode = if (keep) d.episode else (full.episodes(firstSeason).firstOrNull()?.episode ?: 1)))
+            }
+            if (title.isSeries) resolve()
+        }
+        resolve()
+    }
+
+    /**
+     * Play straight from a card: open the title, then start the best source
+     * the moment one is ranked. Leaving the page cancels the wait.
+     */
+    fun openAndPlay(title: MetaPreview) {
+        openTitle(title)
+        autoPlayJob?.cancel()
+        autoPlayJob = viewModelScope.launch {
+            val ready = withTimeoutOrNull(NEXT_WAIT_MS) {
+                state.first { s ->
+                    val d = s.detail
+                    d == null || d.meta.id != title.id || s.playback != null ||
+                        (d.sources.streams.isNotEmpty() && (d.sources.probes.isNotEmpty() || d.sources.done)) || d.sources.done
+                }
+            }
+            val s = _state.value
+            val d = s.detail
+            if (d == null || d.meta.id != title.id || s.playback != null) return@launch
+            when {
+                d.sources.streams.isNotEmpty() -> play(0)
+                ready != null -> toast("No source found yet")
+                else -> Unit // still searching: the page's Play button takes over
+            }
+        }
+    }
+
+    fun selectEpisode(season: Int, episode: Int) {
+        val d = _state.value.detail ?: return
+        if (!d.isSeries || (d.season == season && d.episode == episode)) return
+        val resume = library.progressFor(d.meta.id, season, episode)?.takeIf { !it.finished }
+        _state.update { it.copy(detail = d.copy(season = season, episode = episode, resume = resume, sources = SourceSnapshot(), resolving = true)) }
+        resolve()
+    }
+
+    fun selectSeason(season: Int) {
+        val d = _state.value.detail ?: return
+        val first = d.title.episodes(season).firstOrNull()?.episode ?: 1
+        selectEpisode(season, first)
+    }
+
+    /** Start (or restart) the source engine for whatever the detail shows. */
+    private fun resolve() {
+        val d = _state.value.detail ?: return
+        resolveJob?.cancel()
+        val st = _state.value
+        // Dual sources exist only inside the Dual Language mode from the side
+        // menu. They used to leak into every international title, which is how
+        // "dual audio" streams showed up in the normal catalogue.
+        val dual = st.preferEnglishAudio && st.route == Route.DUAL_AUDIO
+        val request = TitleRequest(
+            d.title, d.season, d.episode, st.finders,
+            preferDualAudio = dual, preferredQuality = st.preferredQuality
+        )
+        val id = d.streamId
+        _state.update { s -> s.copy(detail = s.detail?.copy(sources = SourceSnapshot(), resolving = true)) }
+        resolveJob = viewModelScope.launch {
+            engine.resolve(request).collect { snap ->
+                _state.update { s ->
+                    val cur = s.detail ?: return@update s
+                    if (cur.streamId != id) return@update s
+                    s.copy(detail = cur.copy(sources = snap, resolving = !snap.done))
+                }
+                if (snap.installed.isNotEmpty()) _state.update { it.copy(addons = repository.addons.value) }
+            }
+        }
+    }
+
+    fun toggleSourcesSheet() {
+        _state.update { s -> s.copy(detail = s.detail?.let { it.copy(showSources = !it.showSources) }) }
+    }
+
+    fun toggleDownloadSheet() {
+        _state.update { s -> s.copy(detail = s.detail?.let { it.copy(showDownload = !it.showDownload) }) }
+    }
+
+    fun closeDownloadSheet() {
+        _state.update { s -> s.copy(detail = s.detail?.copy(showDownload = false)) }
+    }
+
+    fun toggleMyList() {
+        val d = _state.value.detail ?: return
+        val now = library.toggleList(d.title)
+        _state.update { it.copy(detail = d.copy(inList = now)) }
+        refreshLibraryShelves()
+        toast(if (now) "Added to My List" else "Removed from My List")
+    }
+
+    fun closeTitle() {
+        resolveJob?.cancel()
+        autoPlayJob?.cancel()
+        _state.update { it.copy(detail = null) }
+    }
+
+    // -- playback -------------------------------------------------------------------
+
+    /** Play the best source (or [index]); the player keeps the rest as failover. */
+    fun play(index: Int = 0, fromStart: Boolean = false) {
+        val s = _state.value
+        val d = s.detail ?: return
+        val streams = d.sources.streams
+        if (streams.isEmpty()) return
+        val label = if (d.isSeries) "${d.title.name}  ·  S${d.season} E${d.episode}" else d.title.name
+        val resumeAt = if (fromStart) 0L else d.resume?.positionMs ?: 0L
+        _state.update {
+            it.copy(
+                playback = PlaybackRequest(
+                    title = label, meta = d.title, season = d.season, episode = d.episode,
+                    streams = streams, startIndex = index.coerceIn(0, streams.lastIndex),
+                    startPositionMs = resumeAt, bandwidthEstimate = d.sources.bandwidthEstimate
+                ),
+                playerPanel = null, upNext = null,
+                detail = d.copy(showSources = false)
+            )
+        }
+        chrome.clear()
+        chrome.onUserActive()
+        val type = if (d.isSeries) "series" else "movie"
+        // Subtitles after playback starts (WuPlay SDK rule): they never delay Play.
+        reloadSubtitlesAfterStart(type, d.streamId)
+    }
+
+    /** Load captions for a just-started playback without blocking it. */
+    private fun reloadSubtitlesAfterStart(type: String, id: String) {
+        val token = _state.value.playback?.token ?: return
+        viewModelScope.launch {
+            val subs = runCatching { repository.loadSubtitles(type, id) }.getOrDefault(emptyList())
+            _state.update { st ->
+                val pb = st.playback
+                if (pb == null || pb.token != token) st else st.copy(playback = pb.copy(subtitles = subs))
+            }
+        }
+    }
+
+    /** The player reports where it is; saved for Continue Watching and resume. */
+    fun saveProgress(pb: PlaybackRequest, positionMs: Long, durationMs: Long, stream: Stream?) {
+        if (durationMs <= 0) return
+        library.saveProgress(
+            WatchProgress(
+                id = pb.meta.id, type = pb.meta.type, name = pb.meta.name,
+                poster = pb.meta.poster, background = pb.meta.background,
+                season = pb.season, episode = pb.episode,
+                positionMs = positionMs, durationMs = durationMs
+            )
+        )
+        if (stream != null) library.saveLastSource(pb.meta.id, stream.behaviorHints?.bingeGroup, stream.sourceBase)
+        // The final save arrives after the player closed: refresh what shows it.
+        if (_state.value.playback?.token != pb.token) afterPlayback()
+    }
+
+    private fun afterPlayback() {
+        refreshLibraryShelves()
+        val d = _state.value.detail ?: return
+        val resume = library.progressFor(d.meta.id, d.season, d.episode)?.takeIf { !it.finished }
+        _state.update { it.copy(detail = d.copy(resume = resume)) }
+    }
+
+    fun retrySources() = resolve()
+
+    /** The next episode after the one playing, from the meta episode list. */
+    fun nextEpisode(): UpNext? {
+        val pb = _state.value.playback ?: return null
+        if (!pb.meta.isSeries) return null
+        val ordered = pb.meta.videos.filter { it.season > 0 }.sortedWith(compareBy({ it.season }, { it.episode }))
+        val i = ordered.indexOfFirst { it.season == pb.season && it.episode == pb.episode }
+        val next = ordered.getOrNull(i + 1) ?: return null
+        return UpNext(next.season, next.episode, "S${next.season} E${next.episode}  ·  ${next.label}", next.thumbnail)
+    }
+
+    /** The episode before the one playing, or null at the start of the series. */
+    fun previousEpisode(): UpNext? {
+        val pb = _state.value.playback ?: return null
+        if (!pb.meta.isSeries) return null
+        val ordered = pb.meta.videos.filter { it.season > 0 }.sortedWith(compareBy({ it.season }, { it.episode }))
+        val i = ordered.indexOfFirst { it.season == pb.season && it.episode == pb.episode }
+        if (i <= 0) return null
+        val prev = ordered[i - 1]
+        return UpNext(prev.season, prev.episode, "S${prev.season} E${prev.episode}  ·  ${prev.label}", prev.thumbnail)
+    }
+
+    /** Skip backwards one episode without leaving the player. */
+    fun playPrevious() {
+        val target = previousEpisode() ?: return
+        jumpTo(target)
+    }
+
+    fun onPlaybackEnded() {
+        if (!_state.value.autoplayNext) return
+        _state.update { it.copy(upNext = nextEpisode()) }
+    }
+
+    fun cancelUpNext() = _state.update { it.copy(upNext = null) }
+
+    /**
+     * Autoplay next (ARVIO NextEpisodeOverlay / WuPlay bingeGroup): resolve
+     * the next episode with the last source preferred, then play as soon as
+     * anything is ready.
+     */
+    fun playNext() {
+        val next = _state.value.upNext ?: nextEpisode() ?: return
+        jumpTo(next)
+    }
+
+    /** Shared by playNext/playPrevious: swap the episode and start it. */
+    private fun jumpTo(next: UpNext) {
+        val pb = _state.value.playback ?: return
+        _state.update { it.copy(upNext = null, playback = null, playerPanel = null) }
+        if (_state.value.detail?.meta?.id != pb.meta.id) {
+            _state.update { it.copy(detail = DetailState(meta = pb.meta, full = pb.meta, inList = library.inList(pb.meta.id))) }
+        }
+        selectEpisode(next.season, next.episode)
+        viewModelScope.launch {
+            val ready = withTimeoutOrNull(NEXT_WAIT_MS) {
+                state.first { s -> s.detail?.let { it.sources.streams.isNotEmpty() && (it.sources.probes.isNotEmpty() || it.sources.done) } == true }
+            }
+            if (ready != null) play(0, fromStart = true) else toast("No source for the next episode yet")
+        }
+    }
+
+    fun stopPlayback() {
+        menuHold?.invoke()
+        menuHold = null
+        chrome.clear()
+        _state.update { it.copy(playback = null, playerPanel = null, upNext = null) }
+        afterPlayback()
+    }
+
+    fun openPlayerPanel(panel: PlayerPanel) {
+        menuHold?.invoke()
+        menuHold = chrome.hold(HoldReason.MENU)
+        _state.update { it.copy(playerPanel = panel) }
+    }
+
+    fun closePlayerPanel() {
+        menuHold?.invoke()
+        menuHold = null
+        _state.update { it.copy(playerPanel = null) }
+    }
+
+    // -- search ---------------------------------------------------------------------
+
+    fun setQuery(query: String) {
+        _state.update {
+            it.copy(query = query, results = if (query.isBlank()) emptyList() else it.results, searchError = null)
+        }
+        searchJob?.cancel()
+        if (query.trim().length < 2) {
+            _state.update { it.copy(searching = false, searchError = null) }
+            return
+        }
+        searchJob = viewModelScope.launch {
+            delay(SEARCH_DEBOUNCE_MS)
+            _state.update { it.copy(searching = true, searchError = null) }
+            val trimmed = query.trim()
+            val outcome = runCatching { repository.search(query) }
+            var found = outcome.getOrDefault(emptyList())
+            var failure = outcome.exceptionOrNull()?.message
+            // Server search only covers addons that declare a `search` extra.
+            // With none configured (or all of them down) that used to look like
+            // "no results" forever, so fall back to matching what is already in
+            // memory: every shelf page the app has loaded.
+            if (found.isEmpty()) {
+                val local = _state.value.shelves.asSequence()
+                    .flatMap { it.items.asSequence() }
+                    .filter { it.name.contains(trimmed, ignoreCase = true) }
+                    .toList()
+                if (local.isNotEmpty()) {
+                    found = local
+                    failure = null
+                }
+            }
+            val cleaned = found
+                .filter { it.name.isNotBlank() }
+                // Blank ids from sloppy addons used to collide as LazyGrid keys
+                // and take the whole screen down with "Key was already used".
+                .distinctBy { it.id.ifBlank { "${it.name}|${it.type}" } }
+                .sortedByDescending { if (it.name.equals(trimmed, true)) 100.0 else it.rating }
+            if (_state.value.query == query) {
+                _state.update {
+                    it.copy(
+                        results = cleaned,
+                        searching = false,
+                        searchError = if (cleaned.isEmpty()) failure else null
+                    )
+                }
+            }
+        }
+    }
+
+    fun appendQuery(character: Char) = setQuery(_state.value.query + character)
+    fun backspaceQuery() = setQuery(_state.value.query.dropLast(1))
+
+    // -- sources: finders, websites, addons ----------------------------------------
+
+    fun toggleFinder(kind: FinderKind) {
+        val set = _state.value.finders
+        val next = if (kind in set) set - kind else set + kind
+        settings.setFinders(next)
+        _state.update { it.copy(finders = next) }
+        // Each finder owns a pool: the website finder fills the website pool,
+        // the addon finder fills the addon pool. Switching one off stops only
+        // that pool -- the other keeps serving playback on its own.
+        engine.syncPoolFill(next)
+    }
+
+    /** Run one finder now and install whatever plays the top title. */
+    fun runFinder(kind: FinderKind) {
+        if (kind in _state.value.finderRunning) return
+        _state.update { it.copy(finderRunning = it.finderRunning + kind) }
+        viewModelScope.launch {
+            val report = if (kind == FinderKind.TITLE) null else runCatching { engine.discover(kind, force = true) }.getOrNull()
+            val probe = _state.value.shelves.firstOrNull { it.type == "movie" && it.style == ShelfStyle.POSTER }?.items?.firstOrNull()
+            var installed = 0
+            var found = 0
+            var noServers = false
+            if (probe != null) {
+                val candidates = report?.candidates ?: engine.cachedCandidates()
+                val snap = engine.resolve(TitleRequest(probe, finders = setOf(kind))).let { flow ->
+                    var last = SourceSnapshot()
+                    flow.collect { last = it }
+                    last
+                }
+                installed = snap.installed.size
+                found = snap.streams.size
+                if (candidates.isEmpty() && (engine.pool?.state?.value?.size ?: 0) == 0 && kind == FinderKind.TITLE) noServers = true
+            }
+            _state.update {
+                it.copy(
+                    finderRunning = it.finderRunning - kind,
+                    finderReports = if (report != null) it.finderReports + (kind to report) else it.finderReports,
+                    addons = repository.addons.value
+                )
+            }
+            toast(
+                when {
+                    installed > 0 -> "Added $installed new source${if (installed == 1) "" else "s"}"
+                    noServers -> "No servers yet: run the ZeroPlay or Stremio finder"
+                    probe == null -> "Catalogue not loaded yet"
+                    found > 0 -> "${kind.label}: sources ready"
+                    else -> "${kind.label}: nothing new found"
+                }
+            )
+        }
+    }
+
+    fun removeAddon(baseUrl: String) {
+        repository.remove(baseUrl)
+        _state.update { it.copy(addons = repository.addons.value) }
+    }
+
+    fun startAddWebsite() = _state.update { it.copy(addingWebsite = true, websiteDraft = "") }
+    fun cancelAddWebsite() = _state.update { it.copy(addingWebsite = false) }
+    fun typeWebsite(c: Char) = _state.update { it.copy(websiteDraft = (it.websiteDraft + c).take(120)) }
+    fun backspaceWebsite() = _state.update { it.copy(websiteDraft = it.websiteDraft.dropLast(1)) }
+    /** Phones type with the system keyboard, so the whole field arrives at once. */
+    fun setWebsiteDraft(text: String) = _state.update { it.copy(websiteDraft = text.trim().take(120)) }
+
+    fun saveWebsite() {
+        val draft = _state.value.websiteDraft.trim()
+        // Saving used to return silently for a short draft, so a mistyped
+        // address looked like a dead button.
+        if (draft.length < 4 || !draft.contains('.')) {
+            toast("Type a website address, like example.com")
+            return
+        }
+        _state.update { it.copy(addingWebsite = false) }
+        viewModelScope.launch {
+            // Bounded: the sheet is already closed, so an unbounded profile
+            // meant the button did nothing visible for as long as the host
+            // took to time out.
+            val site = withTimeoutOrNull(WEBSITE_ADD_TIMEOUT_MS) {
+                runCatching { app.websiteFinder.profile(draft) }.getOrNull()
+            }
+            if (site == null) {
+                toast("Couldn't add ${draft.take(40)}")
+                return@launch
+            }
+            library.addWebsite(site)
+            _state.update { it.copy(websites = library.websites.value) }
+            toast("Added ${site.name}")
+        }
+    }
+
+    fun removeWebsite(url: String) {
+        library.removeWebsite(url)
+        _state.update { it.copy(websites = library.websites.value) }
+    }
+
+    // -- addons ---------------------------------------------------------------
+    //
+    // CatalogRepository.add() existed but nothing in the UI ever called it, so
+    // the Installed list could only ever show the built-ins and there was no
+    // way to point Nova at another Stremio-compatible server.
+
+    fun startAddAddon() = _state.update { it.copy(addingAddon = true, addonDraft = "") }
+    fun cancelAddAddon() = _state.update { it.copy(addingAddon = false) }
+    fun typeAddon(c: Char) = _state.update { it.copy(addonDraft = (it.addonDraft + c).take(160)) }
+    fun backspaceAddon() = _state.update { it.copy(addonDraft = it.addonDraft.dropLast(1)) }
+    fun setAddonDraft(text: String) = _state.update { it.copy(addonDraft = text.trim().take(160)) }
+
+    fun saveAddon() {
+        val draft = _state.value.addonDraft.trim()
+        if (draft.length < 4 || !draft.contains('.')) {
+            toast("Type a server address, like example.com")
+            return
+        }
+        _state.update { it.copy(addingAddon = false) }
+        viewModelScope.launch {
+            val result = withTimeoutOrNull(ADDON_ADD_TIMEOUT_MS) { repository.add(draft) }
+            val addon = result?.getOrNull()
+            if (addon == null) {
+                toast(result?.exceptionOrNull()?.message ?: "Couldn't add that server")
+                return@launch
+            }
+            _state.update { it.copy(addons = repository.addons.value) }
+            toast("Added ${addon.name}")
+            // The new server may carry catalogues, so rebuild the shelves.
+            refresh()
+        }
+    }
+
+
+
+    // -- settings ---------------------------------------------------------------------
+
+    /** Speed chosen in the player panel; persisted so the next title keeps it. */
+    fun setPlaybackRate(rate: Float) {
+        settings.setPlaybackRate(rate)
+        _state.update { it.copy(playbackRate = rate.coerceIn(0.25f, 3f)) }
+    }
+
+    fun setReduceMotion(enabled: Boolean) {
+        settings.setReduceMotion(enabled)
+        _state.update { it.copy(reduceMotion = enabled) }
+    }
+
+    // -- downloads ------------------------------------------------------------
+
+    /**
+     * Download tap. It used to start the top-ranked source immediately, with no
+     * say over which one or what quality. Now it opens the picker; if there is
+     * only one usable source there is nothing to choose, so it starts it.
+     */
+    fun downloadBest() {
+        val detail = _state.value.detail ?: return
+        val usable = detail.sources.streams.filter { !it.url.isNullOrBlank() }
+        if (usable.isEmpty()) {
+            toast(if (detail.resolving) "Still finding sources" else "No source to download")
+            return
+        }
+        if (usable.size == 1) {
+            downloadStream(0)
+            return
+        }
+        _state.update { s -> s.copy(detail = s.detail?.copy(showDownload = true)) }
+    }
+
+    /** Start a download for the chosen source index in the open title's list. */
+    fun downloadStream(index: Int) {
+        val detail = _state.value.detail ?: return
+        val stream = detail.sources.streams.getOrNull(index)
+        val url = stream?.url
+        if (stream == null || url.isNullOrBlank()) {
+            toast("That source has no file to download")
+            return
+        }
+        val label = if (detail.isSeries) "${detail.title.name}  S${detail.season} E${detail.episode}" else detail.title.name
+        val id = app.downloads.start(detail.title.name, label, url, stream.requestHeaders)
+        _state.update { s -> s.copy(detail = s.detail?.copy(showDownload = false)) }
+        toast(if (id == null) "Already downloading" else "Download started")
+    }
+
+    fun pauseDownload(id: String) = app.downloads.pause(id)
+
+    fun resumeDownload(id: String) = app.downloads.resume(id)
+
+    fun removeDownload(id: String) = app.downloads.remove(id)
+
+    /**
+     * 720p is the standard; 1080p is the absolute limit. 4K is deliberately
+     * not an option: it is four times the bandwidth for no visible gain on a
+     * phone or a TV stick, and it is the first thing to stall on a weak link.
+     */
+    fun cycleQuality() {
+        val options = listOf("720p", "1080p", "auto")
+        val next = options[(options.indexOf(_state.value.preferredQuality).coerceAtLeast(0) + 1) % options.size]
+        setQuality(next)
+    }
+
+    /**
+     * The viewer's quality choice, from Settings or from the source/download
+     * sheets where a source is picked. Stored, then the open title is re-ranked
+     * with it immediately (discovery and probes are cached, so this is not a
+     * second search).
+     */
+    fun setQuality(quality: String) {
+        val next = quality.ifBlank { "720p" }
+        if (next == _state.value.preferredQuality) return
+        settings.setPreferredQuality(next)
+        _state.update { it.copy(preferredQuality = next) }
+        toast(if (next == "auto") "Best available" else next)
+        if (_state.value.detail != null) resolve()
+    }
+
+    fun toggleAutoplay() {
+        val next = !_state.value.autoplayNext
+        settings.setAutoplayNext(next)
+        _state.update { it.copy(autoplayNext = next) }
+    }
+
+    /** The player's Preload button and the Settings row both land here. */
+    fun setPreload(mode: PreloadMode) {
+        settings.setPreload(mode)
+        _state.update { it.copy(preload = mode) }
+    }
+
+    fun cyclePreload() {
+        val next = _state.value.preload.next()
+        setPreload(next)
+        toast(next.label)
+    }
+
+    /** The Subtitles panel's style rows land here, from either surface. */
+    fun setSubtitleStyle(style: SubtitleStyle) {
+        settings.setSubtitleStyle(style)
+        _state.update { it.copy(subtitleStyle = style) }
+    }
+
+    /**
+     * Turn one subtitle engine on or off. The Sources screen owns the list;
+     * the subtitles panel then only shows what the enabled engines return.
+     */
+    fun toggleSubtitleProvider(provider: SubtitleProvider) {
+        val current = _state.value.subtitleProviders
+        val next = if (provider in current) current - provider else current + provider
+        settings.setSubtitleProviders(next)
+        _state.update { it.copy(subtitleProviders = next) }
+        toast(
+            when {
+                next.isEmpty() -> "All subtitle sources off"
+                provider in next -> "${provider.label} subtitles on"
+                else -> "${provider.label} subtitles off"
+            }
+        )
+        reloadSubtitles()
+    }
+
+    /** Ask the enabled subtitle engines for this title again (Subtitles panel). */
+    fun reloadSubtitles() {
+        val pb = _state.value.playback ?: return
+        val type = if (pb.meta.isSeries) "series" else "movie"
+        val id = FinderRules.catalogueId(pb.meta.id, pb.meta.isSeries, pb.season, pb.episode)
+        viewModelScope.launch {
+            val subs = runCatching { repository.loadSubtitles(type, id) }.getOrDefault(emptyList())
+            _state.update { st ->
+                val current = st.playback
+                if (current == null || current.token != pb.token) st
+                else st.copy(playback = current.copy(subtitles = subs))
+            }
+            toast(if (subs.isEmpty()) "No subtitles found" else "${subs.size} subtitles")
+        }
+    }
+
+    /** One website-discovery round from the Sources screen. */
+    fun findWebsites() {
+        if (_state.value.poolBusy) return
+        _state.update { it.copy(poolBusy = true) }
+        viewModelScope.launch {
+            FinderTrace.log("ui", "Find sites tapped")
+            Log.i("NovaFinderUi", "Find sites tapped")
+            val added = runCatching { engine.fillWebsitePoolOnce() }
+                .onFailure {
+                    FinderTrace.log("ui", "fillWebsitePoolOnce FAILED: ${it.javaClass.simpleName}: ${it.message}")
+                }
+                .getOrDefault(0)
+            _state.update { it.copy(poolBusy = false) }
+            // "No new websites right now" hid the reason, the same way the
+            // addon toast did before AddonRejections existed. Report the tally
+            // so a flat zero on a phone is diagnosable without a debugger.
+            val why = engine.lastServerRejections.takeIf { it.total > 0 }?.summary.orEmpty()
+            _state.update { it.copy(siteRejections = why) }
+            Log.i("NovaFinderUi", "Find sites result=$added why=$why")
+            if (added > 0) {
+                toast("$added new websites")
+            } else {
+                toast(if (why.isEmpty()) "No new websites right now" else "No sites: $why")
+            }
+        }
+    }
+
+    fun cycleDns() {
+        val all = DnsProvider.entries
+        val next = all[(_state.value.dns.ordinal + 1) % all.size]
+        NovaDns.provider = next
+        NovaDns.clearCache()
+        settings.setDns(next)
+        _state.update { it.copy(dns = next) }
+    }
+
+    fun togglePreferEnglishAudio() {
+        val next = !_state.value.preferEnglishAudio
+        settings.setPreferEnglishAudio(next)
+        _state.update { it.copy(preferEnglishAudio = next) }
+    }
+
+    // -- server pool ------------------------------------------------------------------
+
+    fun scrambleServers() {
+        if (_state.value.poolBusy) return
+        _state.update { it.copy(poolBusy = true) }
+        viewModelScope.launch {
+            val added = runCatching { engine.scramblePool() }.getOrDefault(0)
+            _state.update { it.copy(poolBusy = false) }
+            toast(if (added > 0) "$added new servers" else "No new servers right now")
+        }
+    }
+
+    fun fillServers() {
+        if (_state.value.poolBusy) return
+        _state.update { it.copy(poolBusy = true) }
+        viewModelScope.launch {
+            FinderTrace.log("ui", "Fill addons tapped")
+            Log.i("NovaFinderUi", "Fill addons tapped")
+            val added = runCatching { engine.fillPool() }
+                .onFailure {
+                    FinderTrace.log("ui", "fillPool FAILED: ${it.javaClass.simpleName}: ${it.message}")
+                }
+                .getOrDefault(0)
+            _state.update { it.copy(poolBusy = false) }
+            // "Nothing new" on its own hid the real reason: most of what the
+            // directories list is dead hosts or torrent-only addons. Say which.
+            Log.i("NovaFinderUi", "Fill addons result=$added")
+            if (added > 0) {
+                toast("$added servers added")
+            } else {
+                val why = engine.lastAddonRejections.takeIf { it.total > 0 }?.summary
+                toast(if (why.isNullOrEmpty()) "Pool is up to date" else "No new servers: $why")
+            }
+        }
+    }
+
+    fun revertServers() {
+        toast(if (engine.revertPool()) "Previous servers restored" else "Nothing to restore")
+    }
+
+    fun clearHistory() {
+        library.progress.value.forEach { library.removeProgress(it.id) }
+        refreshLibraryShelves()
+        toast("Watch history cleared")
+    }
+
+    fun consumeFocusRestore() = _state.update { it.copy(restoreFocusId = null) }
+
+    /** Public so the player surface can confirm an action (e.g. subtitle added). */
+    fun notify(message: String) = toast(message)
+
+    private fun toast(message: String) {
+        toastJob?.cancel()
+        _state.update { it.copy(toast = message) }
+        toastJob = viewModelScope.launch {
+            delay(TOAST_MS)
+            _state.update { it.copy(toast = null) }
+        }
+    }
+
+    private companion object {
+        const val SEARCH_DEBOUNCE_MS = 400L
+        const val TOAST_MS = 2_600L
+        const val INITIAL_SHELVES = 6
+        const val MORE_SHELVES = 4
+        const val HERO_COUNT = 6
+        const val NEXT_WAIT_MS = 20_000L
+        /** Adding a website must resolve in this long, or it reports failure. */
+        const val WEBSITE_ADD_TIMEOUT_MS = 14_000L
+        /** A manifest fetch plus its retry must fit inside this. */
+        const val ADDON_ADD_TIMEOUT_MS = 16_000L
+        const val KEY_CONTINUE = "continue"
+        const val KEY_MY_LIST = "mylist"
+        const val KEY_MORE = "more-shelves"
+        const val KEY_MORE_DUAL = "more-dual"
+        const val DUAL_FIRST = 12
+        const val DUAL_MORE = 10
+        const val DUAL_PAGES = 6
+        val DUAL_GENRES = listOf("Drama", "Action", "Crime", "Thriller", "Romance", "Comedy", "Animation", "Horror", "Mystery", "Fantasy")
+    }
+}

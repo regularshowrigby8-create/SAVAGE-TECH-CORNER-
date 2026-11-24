@@ -1,0 +1,1634 @@
+{
+  "base": "bdf87d1d4c307e791135596883b8f2d493f29b94",
+  "changed_file_count": 294,
+  "changed_files": [
+    ".github/workflows/nova-tv-android.yml",
+    ".github/workflows/nova-tv-python.yml",
+    "nova-tv/.gitignore",
+    "nova-tv/Makefile",
+    "nova-tv/README.md",
+    "nova-tv/android/PLAYER_AUDIT.md",
+    "nova-tv/android/THIRD_PARTY_NOTICES.md",
+    "nova-tv/android/app/build.gradle.kts",
+    "nova-tv/android/app/lint.xml",
+    "nova-tv/android/app/proguard-rules.pro",
+    "nova-tv/android/app/src/debug/AndroidManifest.xml",
+    "nova-tv/android/app/src/debug/java/dev/nova/tv/finder/diag/FinderProbeActivity.kt",
+    "nova-tv/android/app/src/main/AndroidManifest.xml",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/NovaApplication.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/data/model/Models.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/data/model/NovaAddon.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/data/remote/AddonClient.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/data/remote/HttpClient.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/data/remote/NovaDns.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/data/remote/SubtitleFinder.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/data/repo/CatalogRepository.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/data/repo/LibraryStore.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/data/repo/SettingsStore.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/download/DownloadManager.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/DualAudio.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/FinderRules.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/HarvestPacing.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/SourceEngine.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/SourceFinder.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/StremioFinder.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/WebCrawler.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/addons/AddonFinder.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/diag/FinderTrace.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/discovery/Discovery.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/DiscoveryEngines.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineAdapters.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineExtractor.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineLooker.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineRunner.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineSorter.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineTransport.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineVerifier.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pool/ServerPool.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pool/WebsitePool.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/servers/ServerFinder.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/translated/FinderBrowser.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/translated/FinderFingerprint.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/translated/FinderHelpers.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/translated/FinderHttp.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/website/WebsiteFinder.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/finder/website/WebsiteRules.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/BufferingMeter.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/ChromeController.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/ImportedTimings.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/IntroSkip.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/NovaPlayer.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/PlayerState.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/StreamProbe.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/StreamRanker.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/SubtitleStyle.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/PlayerEngine.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/PlayerEngineFactory.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/PlayerEngineModels.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/PlayerEngineType.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/SourceFailoverPolicy.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/exoplayer/AudioDecoderFallback.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/exoplayer/ExoPlayerEngine.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/exoplayer/NovaExoPlayerFactory.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/exoplayer/NovaRenderersFactory.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/exoplayer/PlaybackBufferProfile.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/exoplayer/SurroundAudioRecovery.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/exoplayer/VodLoadErrorHandlingPolicy.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/imported/GestureRouter.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/imported/QualityLadder.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/imported/ScrubState.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/imported/SpeedStep.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/imported/SubtitleFiles.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/imported/SubtitleOffset.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/imported/TrackOptions.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/preload/FragmentPlan.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/player/preload/FragmentPreloader.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/ui/components/NovaComponents.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/ui/components/Shimmer.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/ui/focus/ArvioDpadFocus.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/ui/focus/NovaDpad.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/ui/focus/PivotScroll.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/ui/nav/NovaNav.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/BufferingOverlay.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PanelOption.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PlayerSurface.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/ui/screens/NovaApp.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/ui/screens/NovaBrowse.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/ui/screens/NovaDetail.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/ui/screens/NovaHome.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/ui/screens/NovaKeyboard.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/ui/screens/NovaPlayerHost.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/ui/screens/NovaSources.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/ui/screens/NovaViewModel.kt",
+    "nova-tv/android/app/src/main/java/dev/nova/tv/ui/theme/NovaTheme.kt",
+    "nova-tv/android/app/src/main/res/drawable-xhdpi/app_banner.png",
+    "nova-tv/android/app/src/main/res/mipmap-hdpi/ic_launcher.png",
+    "nova-tv/android/app/src/main/res/mipmap-mdpi/ic_launcher.png",
+    "nova-tv/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png",
+    "nova-tv/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
+    "nova-tv/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+    "nova-tv/android/app/src/main/res/values-v27/themes.xml",
+    "nova-tv/android/app/src/main/res/values/colors.xml",
+    "nova-tv/android/app/src/main/res/values/strings.xml",
+    "nova-tv/android/app/src/main/res/values/themes.xml",
+    "nova-tv/android/app/src/main/res/xml/network_security_config.xml",
+    "nova-tv/android/app/src/mobile/AndroidManifest.xml",
+    "nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobileActivity.kt",
+    "nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobileApp.kt",
+    "nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobileBrowse.kt",
+    "nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobileCards.kt",
+    "nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobileDetail.kt",
+    "nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobileDiagnostics.kt",
+    "nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobileDownloads.kt",
+    "nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobileHome.kt",
+    "nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobilePlayer.kt",
+    "nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobileSources.kt",
+    "nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobileTheme.kt",
+    "nova-tv/android/app/src/mobile/res/values/strings.xml",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/data/NovaDnsTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/data/SubtitleFinderTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/data/UrlGuardTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/download/DownloadResumeTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/finder/DualAudioTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/finder/FinderRulesTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/finder/HarvestPacingTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/finder/SizeRulesTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/finder/StremioFinderTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/finder/addons/AddonFinderTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/finder/addons/AddonRejectionsTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/finder/discovery/DiscoveryTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/finder/pipeline/PipelineRunnerTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/finder/pool/ServerPoolTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/finder/pool/WebsitePoolTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/finder/servers/ServerFinderTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/finder/translated/CookieJarTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/finder/translated/FinderFingerprintTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/finder/website/WebsiteRulesTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/player/BufferingMeterTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/player/IntroSkipTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/player/PlayerStateTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/player/SourceFailoverTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/player/StallTrackerTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/player/StreamRankerTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/player/SubtitleStyleTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/player/preload/ContentRangeTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/player/preload/FragmentPlanTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/ui/nav/NovaNavTest.kt",
+    "nova-tv/android/app/src/test/java/dev/nova/tv/ui/player/PanelOptionTest.kt",
+    "nova-tv/android/app/src/tv/AndroidManifest.xml",
+    "nova-tv/android/app/src/tv/java/dev/nova/tv/ui/NovaActivity.kt",
+    "nova-tv/android/build.gradle.kts",
+    "nova-tv/android/gradle.properties",
+    "nova-tv/android/gradle/libs.versions.toml",
+    "nova-tv/android/gradle/wrapper/gradle-wrapper.jar",
+    "nova-tv/android/gradle/wrapper/gradle-wrapper.properties",
+    "nova-tv/android/gradlew",
+    "nova-tv/android/gradlew.bat",
+    "nova-tv/android/licenses/ARVIO-LICENSE-Apache-2.0.txt",
+    "nova-tv/android/settings.gradle.kts",
+    "nova-tv/docs/APK-FINDER-DEBUG.md",
+    "nova-tv/docs/APP-COMPONENT-PLAN.md",
+    "nova-tv/docs/BUILD-FACTORY-SDK-PLAN.md",
+    "nova-tv/docs/BUILD-STATUS.md",
+    "nova-tv/docs/FINDER.md",
+    "nova-tv/docs/REVIEW-v2.md",
+    "nova-tv/docs/SOURCES.md",
+    "nova-tv/docs/UI-PLAN.md",
+    "nova-tv/docs/UI-REFERENCE.md",
+    "nova-tv/docs/VS-ZEROPLAY.md",
+    "nova-tv/docs/build-diagnostics.md",
+    "nova-tv/nova.toml.example",
+    "nova-tv/ops/kotlin_lint.py",
+    "nova-tv/python/README.md",
+    "nova-tv/python/models.json",
+    "nova-tv/python/nova/__init__.py",
+    "nova-tv/python/nova/ai.py",
+    "nova-tv/python/nova/appaudit.py",
+    "nova-tv/python/nova/buttons.py",
+    "nova-tv/python/nova/catalog.py",
+    "nova-tv/python/nova/cli.py",
+    "nova-tv/python/nova/collector.py",
+    "nova-tv/python/nova/config.py",
+    "nova-tv/python/nova/github.py",
+    "nova-tv/python/nova/hallucination.py",
+    "nova-tv/python/nova/http.py",
+    "nova-tv/python/nova/imported/.gitkeep",
+    "nova-tv/python/nova/imported/android_shell.json",
+    "nova-tv/python/nova/imported/player_core.js",
+    "nova-tv/python/nova/imported/player_core.json",
+    "nova-tv/python/nova/importers.py",
+    "nova-tv/python/nova/registry.py",
+    "nova-tv/python/nova/report.py",
+    "nova-tv/python/nova/result.py",
+    "nova-tv/python/nova/selfimprove.py",
+    "nova-tv/python/nova/translated_check.py",
+    "nova-tv/python/nova/zerokey.py",
+    "nova-tv/python/ops/assert_script_result.py",
+    "nova-tv/python/ops/qa_offline_gates.py",
+    "nova-tv/python/requirements.txt",
+    "nova-tv/python/scripts/ai_ask.py",
+    "nova-tv/python/scripts/ai_models.py",
+    "nova-tv/python/scripts/ai_models_check.py",
+    "nova-tv/python/scripts/ai_review_diff.py",
+    "nova-tv/python/scripts/ai_status.py",
+    "nova-tv/python/scripts/ai_suggest_test.py",
+    "nova-tv/python/scripts/ai_verify.py",
+    "nova-tv/python/scripts/app_improve.py",
+    "nova-tv/python/scripts/catalogue_categories.py",
+    "nova-tv/python/scripts/catalogue_duplicates.py",
+    "nova-tv/python/scripts/catalogue_export.py",
+    "nova-tv/python/scripts/catalogue_health.py",
+    "nova-tv/python/scripts/catalogue_missing_art.py",
+    "nova-tv/python/scripts/catalogue_search.py",
+    "nova-tv/python/scripts/catalogue_timeline.py",
+    "nova-tv/python/scripts/catalogue_trending.py",
+    "nova-tv/python/scripts/check_buttons.py",
+    "nova-tv/python/scripts/github_collect.py",
+    "nova-tv/python/scripts/github_compare.py",
+    "nova-tv/python/scripts/github_contributors.py",
+    "nova-tv/python/scripts/github_head.py",
+    "nova-tv/python/scripts/github_issues.py",
+    "nova-tv/python/scripts/github_languages.py",
+    "nova-tv/python/scripts/github_rate.py",
+    "nova-tv/python/scripts/github_releases.py",
+    "nova-tv/python/scripts/github_repo_info.py",
+    "nova-tv/python/scripts/github_search.py",
+    "nova-tv/python/scripts/github_snapshot.py",
+    "nova-tv/python/scripts/github_tree.py",
+    "nova-tv/python/scripts/github_watch.py",
+    "nova-tv/python/scripts/import_player_core.py",
+    "nova-tv/python/scripts/improve_apply.py",
+    "nova-tv/python/scripts/improve_plan.py",
+    "nova-tv/python/scripts/improve_rollback.py",
+    "nova-tv/python/scripts/improve_status.py",
+    "nova-tv/python/scripts/kb_export.py",
+    "nova-tv/python/scripts/kb_languages.py",
+    "nova-tv/python/scripts/kb_prune.py",
+    "nova-tv/python/scripts/kb_queries.py",
+    "nova-tv/python/scripts/kb_search.py",
+    "nova-tv/python/scripts/kb_stale.py",
+    "nova-tv/python/scripts/kb_stats.py",
+    "nova-tv/python/scripts/kb_top.py",
+    "nova-tv/python/scripts/ops_bench.py",
+    "nova-tv/python/scripts/ops_check_links.py",
+    "nova-tv/python/scripts/ops_clean.py",
+    "nova-tv/python/scripts/ops_count.py",
+    "nova-tv/python/scripts/ops_doctor.py",
+    "nova-tv/python/scripts/ops_env.py",
+    "nova-tv/python/scripts/ops_inventory.py",
+    "nova-tv/python/scripts/ops_report.py",
+    "nova-tv/python/scripts/ops_version.py",
+    "nova-tv/python/scripts/qa_compile.py",
+    "nova-tv/python/scripts/qa_complexity.py",
+    "nova-tv/python/scripts/qa_deps.py",
+    "nova-tv/python/scripts/qa_import_check.py",
+    "nova-tv/python/scripts/qa_lint.py",
+    "nova-tv/python/scripts/qa_secrets.py",
+    "nova-tv/python/scripts/qa_tests.py",
+    "nova-tv/python/scripts/qa_todos.py",
+    "nova-tv/python/scripts/qa_translated.py",
+    "nova-tv/python/scripts/review_ui.py",
+    "nova-tv/python/scripts/verify_claims.py",
+    "nova-tv/python/tests/__init__.py",
+    "nova-tv/python/tests/test_appaudit.py",
+    "nova-tv/python/tests/test_audit_coverage.py",
+    "nova-tv/python/tests/test_buildfiles.py",
+    "nova-tv/python/tests/test_cli_flags.py",
+    "nova-tv/python/tests/test_collector.py",
+    "nova-tv/python/tests/test_compile_shapes.py",
+    "nova-tv/python/tests/test_github_ref.py",
+    "nova-tv/python/tests/test_importers.py",
+    "nova-tv/python/tests/test_kotlin_scanner.py",
+    "nova-tv/python/tests/test_selfimprove.py",
+    "nova-tv/python/tests/test_translated_check.py",
+    "nova-tv/python/tests/test_verify.py",
+    "tools/nova/README.md",
+    "tools/nova/check_artifacts.py",
+    "tools/nova/contracts/bootstrap.json",
+    "tools/nova/contracts/pipeline-v3.json",
+    "tools/nova/crawl_probe.py",
+    "tools/nova/emulator_finder_smoke.sh",
+    "tools/nova/evidence/bootstrap.strict.json",
+    "tools/nova/render_finder_debug_report.py",
+    "tools/nova/run_ci_artifact_check.sh",
+    "tools/nova/strict_verify.py",
+    "tools/nova/tests/__init__.py",
+    "tools/nova/tests/test_strict_verify.py",
+    "tools/nova/uiautomator_tap.py"
+  ],
+  "commands": [
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools/nova/tests",
+        "-t",
+        "tools/nova",
+        "-v"
+      ],
+      "cwd": ".",
+      "duration_seconds": 0.678,
+      "id": "strict-gate-self-tests",
+      "profile": "local",
+      "returncode": 0,
+      "status": "PASS",
+      "stderr_sha256": "3551bba2a349c35bb514fa9aef8b2cc3ac8023b1e97ff723ad878d9e88615ae2",
+      "stderr_tail": "test_artifact_checker_json_stdout_is_parseable (tests.test_strict_verify.StrictVerifyTest.test_artifact_checker_json_stdout_is_parseable) ... ok\ntest_artifact_checker_refuses_to_infer_sdk (tests.test_strict_verify.StrictVerifyTest.test_artifact_checker_refuses_to_infer_sdk) ... ok\ntest_explicit_evidence_passes (tests.test_strict_verify.StrictVerifyTest.test_explicit_evidence_passes) ... ok\ntest_failed_exit_code_is_rejected (tests.test_strict_verify.StrictVerifyTest.test_failed_exit_code_is_rejected) ... ok\ntest_missing_executable_fails_closed (tests.test_strict_verify.StrictVerifyTest.test_missing_executable_fails_closed) ... ok\ntest_stub_marker_is_rejected (tests.test_strict_verify.StrictVerifyTest.test_stub_marker_is_rejected) ... ok\ntest_top_level_green_cannot_mask_failed_nested_result (tests.test_strict_verify.StrictVerifyTest.test_top_level_green_cannot_mask_failed_nested_result) ... ok\ntest_uncovered_changed_file_is_rejected (tests.test_strict_verify.StrictVerifyTest.test_uncovered_changed_file_is_rejected) ... ok\n\n----------------------------------------------------------------------\nRan 8 tests in 0.610s\n\nOK\n",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_tail": ""
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "nova-tv/python/tests",
+        "-t",
+        "nova-tv/python",
+        "-v"
+      ],
+      "cwd": ".",
+      "duration_seconds": 36.066,
+      "id": "python-unittests",
+      "profile": "local",
+      "returncode": 0,
+      "status": "PASS",
+      "stderr_sha256": "0c1aaf335d99c31587a6c6fc34066c8c7bc2e04d4adcb8d249c2903b44cce3cb",
+      "stderr_tail": "erify.ClaimExtractionTest.test_upstream_path_is_not_a_local_claim) ... ok\ntest_clean_screen_reports_nothing (tests.test_verify.DeadButtonTest.test_clean_screen_reports_nothing) ... ok\ntest_does_not_flag_a_card_with_a_handler (tests.test_verify.DeadButtonTest.test_does_not_flag_a_card_with_a_handler) ... ok\ntest_flags_a_card_with_no_handler (tests.test_verify.DeadButtonTest.test_flags_a_card_with_no_handler) ... ok\ntest_flags_an_empty_handler (tests.test_verify.DeadButtonTest.test_flags_an_empty_handler) ... ok\ntest_flags_an_enum_with_no_branch (tests.test_verify.DeadButtonTest.test_flags_an_enum_with_no_branch) ... ok\ntest_contradicts_a_missing_file (tests.test_verify.FileClaimTest.test_contradicts_a_missing_file) ... ok\ntest_proves_an_existing_file (tests.test_verify.FileClaimTest.test_proves_an_existing_file) ... ok\ntest_disagreement_is_reported_not_averaged (tests.test_verify.FourModelTest.test_disagreement_is_reported_not_averaged) ... ok\n/usr/lib/python3.11/unittest/suite.py:107: ResourceWarning: unclosed <socket.socket fd=3, family=2, type=1, proto=0, laddr=('127.0.0.1', 37271)>\n  for index, test in enumerate(self):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\ntest_finds_all_four_providers (tests.test_verify.FourModelTest.test_finds_all_four_providers) ... ok\n/usr/lib/python3.11/unittest/suite.py:107: ResourceWarning: unclosed <socket.socket fd=3, family=2, type=1, proto=0, laddr=('127.0.0.1', 37373)>\n  for index, test in enumerate(self):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\ntest_unanimous_agreement (tests.test_verify.FourModelTest.test_unanimous_agreement) ... ok\n/usr/lib/python3.11/unittest/suite.py:107: ResourceWarning: unclosed <socket.socket fd=3, family=2, type=1, proto=0, laddr=('127.0.0.1', 44095)>\n  for index, test in enumerate(self):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\ntest_unreachable_is_reported_not_faked (tests.test_verify.FourModelTest.test_unreachable_is_reported_not_faked) ... ok\n/usr/lib/python3.11/unittest/suite.py:84: ResourceWarning: unclosed <socket.socket fd=3, family=2, type=1, proto=0, laddr=('127.0.0.1', 40885)>\n  return self.run(*args, **kwds)\nResourceWarning: Enable tracemalloc to get the object allocation traceback\ntest_non_json_is_uncertain (tests.test_verify.ParseVerdictTest.test_non_json_is_uncertain) ... ok\ntest_reads_json_wrapped_in_prose (tests.test_verify.ParseVerdictTest.test_reads_json_wrapped_in_prose) ... ok\ntest_unknown_verdict_is_uncertain (tests.test_verify.ParseVerdictTest.test_unknown_verdict_is_uncertain) ... ok\ntest_contradicts_a_404 (tests.test_verify.RepoClaimTest.test_contradicts_a_404) ... ok\ntest_no_client_means_unverified_not_proven (tests.test_verify.RepoClaimTest.test_no_client_means_unverified_not_proven) ... ok\ntest_proves_an_existing_repo (tests.test_verify.RepoClaimTest.test_proves_an_existing_repo) ... ok\ntest_reachable_collects_all_four (tests.test_verify.ReviewUiTest.test_reachable_collects_all_four) ... /usr/lib/python3.11/unittest/case.py:579: ResourceWarning: unclosed <socket.socket fd=3, family=2, type=1, proto=0, laddr=('127.0.0.1', 46617)>\n  if method() is not None:\nResourceWarning: Enable tracemalloc to get the object allocation traceback\nok\ntest_unreachable_returns_no_reviews (tests.test_verify.ReviewUiTest.test_unreachable_returns_no_reviews) ... ok\ntest_accepts_an_explicit_empty_success (tests.test_verify.StrictResultTest.test_accepts_an_explicit_empty_success) ... ok\ntest_rejects_a_tool_without_a_result (tests.test_verify.StrictResultTest.test_rejects_a_tool_without_a_result) ... ok\ntest_rejects_contradicted_summary_and_unsupported_claims (tests.test_verify.StrictResultTest.test_rejects_contradicted_summary_and_unsupported_claims) ... ok\ntest_rejects_false_green_wrapper (tests.test_verify.StrictResultTest.test_rejects_false_green_wrapper) ... ok\n\n----------------------------------------------------------------------\nRan 195 tests in 35.948s\n\nOK\n",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_tail": ""
+    },
+    {
+      "argv": [
+        "python3",
+        "nova-tv/python/scripts/qa_translated.py",
+        "--json",
+        "--root",
+        "nova-tv"
+      ],
+      "cwd": ".",
+      "duration_seconds": 0.649,
+      "id": "translated-finder-audit",
+      "profile": "local",
+      "returncode": 0,
+      "status": "PASS",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_tail": "",
+      "stdout_sha256": "568c2637b9a63c7d220e0b2911d2b25d469b44e0adb70cc16504dcabe3f338ae",
+      "stdout_tail": " report\",\n        \"evidence\": \"finder/pipeline/PipelineModels.kt\"\n      },\n      {\n        \"name\": \"sorter removes ads stubs and irrelevant hosts\",\n        \"verdict\": \"proven\",\n        \"why\": \"explicit rejection reasons\",\n        \"evidence\": \"finder/pipeline/PipelineSorter.kt\"\n      },\n      {\n        \"name\": \"looker performs user-like catalogue and server checks\",\n        \"verdict\": \"proven\",\n        \"why\": \"title, catalogue and server evidence are required\",\n        \"evidence\": \"finder/pipeline/PipelineLooker.kt\"\n      },\n      {\n        \"name\": \"extractor only extracts observed URLs\",\n        \"verdict\": \"proven\",\n        \"why\": \"DOM and network evidence, no URL guessing\",\n        \"evidence\": \"finder/pipeline/PipelineExtractor.kt\"\n      },\n      {\n        \"name\": \"verifier rejects fake unsuitable and corporate servers\",\n        \"verdict\": \"proven\",\n        \"why\": \"explicit garbage verdicts\",\n        \"evidence\": \"finder/pipeline/PipelineVerifier.kt\"\n      },\n      {\n        \"name\": \"runner executes all fourteen stage counters\",\n        \"verdict\": \"proven\",\n        \"why\": \"stage counters are in code\",\n        \"evidence\": \"finder/pipeline/PipelineRunner.kt\"\n      },\n      {\n        \"name\": \"runner has no top-level green wrapper\",\n        \"verdict\": \"proven\",\n        \"why\": \"report derived from measured store and audit\",\n        \"evidence\": \"finder/pipeline/PipelineRunner.kt\"\n      },\n      {\n        \"name\": \"engine parser is kind aware\",\n        \"verdict\": \"proven\",\n        \"why\": \"shared endpoint hosts cannot turn addon responses into website candidates\",\n        \"evidence\": \"finder/pipeline/DiscoveryEngines.kt\"\n      },\n      {\n        \"name\": \"runner passes observed network evidence to the extractor\",\n        \"verdict\": \"proven\",\n        \"why\": \"browser and endpoint network observations are not discarded\",\n        \"evidence\": \"finder/pipeline/PipelineRunner.kt\"\n      },\n      {\n        \"name\": \"addon looker uses bounded probe endpoints\",\n        \"verdict\": \"proven\",\n        \"why\": \"one explicit movie id, not six requests per add-on\",\n        \"evidence\": \"finder/pipeline/PipelineLooker.kt\"\n      },\n      {\n        \"name\": \"processSurface returns an explicit report\",\n        \"verdict\": \"proven\",\n        \"why\": \"frontier adapter cannot silently succeed\",\n        \"evidence\": \"finder/pipeline/PipelineRunner.kt\"\n      },\n      {\n        \"name\": \"adapters write both existing UI pools\",\n        \"verdict\": \"proven\",\n        \"why\": \"verified sites reach both flavour pools\",\n        \"evidence\": \"finder/pipeline/PipelineAdapters.kt\"\n      },\n      {\n        \"name\": \"pipeline has no swallowed exceptions\",\n        \"verdict\": \"proven\",\n        \"why\": \"all catches record an explicit reason\",\n        \"evidence\": \"finder/pipeline/*.kt\"\n      },\n      {\n        \"name\": \"pipeline has no stub markers\",\n        \"verdict\": \"proven\",\n        \"why\": \"no TODO/FIXME/NotImplemented\",\n        \"evidence\": \"finder/pipeline/*.kt\"\n      },\n      {\n        \"name\": \"application wires both pipeline runners\",\n        \"verdict\": \"proven\",\n        \"why\": \"both flavours share the wired pipeline\",\n        \"evidence\": \"NovaApplication.kt\"\n      },\n      {\n        \"name\": \"Kotlin pipeline unit tests exist\",\n        \"verdict\": \"proven\",\n        \"why\": \"shared src/test pipeline test present\",\n        \"evidence\": \"android/app/src/test/java/dev/nova/tv/finder/pipeline/PipelineRunnerTest.kt\"\n      },\n      {\n        \"name\": \"CI runs both flavour unit test suites\",\n        \"verdict\": \"proven\",\n        \"why\": \"tv and mobile test tasks are explicit\",\n        \"evidence\": \".github/workflows/nova-tv-android.yml\"\n      },\n      {\n        \"name\": \"no pipeline copy in src/tv\",\n        \"verdict\": \"proven\",\n        \"why\": \"shared src/main only\",\n        \"evidence\": \"android/app/src/tv\"\n      },\n      {\n        \"name\": \"no pipeline copy in src/mobile\",\n        \"verdict\": \"proven\",\n        \"why\": \"shared src/main only\",\n        \"evidence\": \"android/app/src/mobile\"\n      }\n    ]\n  }\n}\n"
+    },
+    {
+      "argv": [
+        "python3",
+        "nova-tv/python/ops/qa_offline_gates.py"
+      ],
+      "cwd": ".",
+      "duration_seconds": 51.438,
+      "id": "offline-gate-nested-results",
+      "profile": "local",
+      "returncode": 0,
+      "status": "PASS",
+      "stderr_sha256": "c7af4dfd53e5c58dbeb93c616eeea5c6a153864936f9825bc70c10e63997983f",
+      "stderr_tail": "STRICT OFFLINE GATES PASS\n",
+      "stdout_sha256": "3d6338d5878a9aaec683799112819c9065adf40329f8957aa13cb7edde3324fd",
+      "stdout_tail": "{\n  \"ok\": true,\n  \"tool\": \"qa_offline_gates\",\n  \"result\": {\n    \"ok\": true,\n    \"total\": 7,\n    \"passed\": 7,\n    \"failed\": 0,\n    \"errors\": [],\n    \"records\": [\n      {\n        \"gate\": \"qa_compile\",\n        \"argv\": [\n          \"scripts/qa_compile.py\",\n          \"--json\"\n        ],\n        \"ok\": true,\n        \"exit\": 0\n      },\n      {\n        \"gate\": \"qa_import_check\",\n        \"argv\": [\n          \"scripts/qa_import_check.py\",\n          \"--json\"\n        ],\n        \"ok\": true,\n        \"exit\": 0\n      },\n      {\n        \"gate\": \"qa_secrets\",\n        \"argv\": [\n          \"scripts/qa_secrets.py\",\n          \"--json\"\n        ],\n        \"ok\": true,\n        \"exit\": 0\n      },\n      {\n        \"gate\": \"qa_todos\",\n        \"argv\": [\n          \"scripts/qa_todos.py\",\n          \"--json\"\n        ],\n        \"ok\": true,\n        \"exit\": 0\n      },\n      {\n        \"gate\": \"qa_tests\",\n        \"argv\": [\n          \"scripts/qa_tests.py\",\n          \"--json\"\n        ],\n        \"ok\": true,\n        \"exit\": 0\n      },\n      {\n        \"gate\": \"qa_translated\",\n        \"argv\": [\n          \"scripts/qa_translated.py\",\n          \"--json\",\n          \"--root\",\n          \"..\"\n        ],\n        \"ok\": true,\n        \"exit\": 0\n      },\n      {\n        \"gate\": \"verify_claims\",\n        \"argv\": [\n          \"scripts/verify_claims.py\",\n          \"--json\"\n        ],\n        \"ok\": true,\n        \"exit\": 0\n      }\n    ]\n  }\n}\n"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/verify_claims.py",
+        "--json"
+      ],
+      "cwd": "nova-tv/python",
+      "duration_seconds": 11.579,
+      "id": "documentation-claim-verification",
+      "profile": "local",
+      "returncode": 0,
+      "status": "PASS",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_tail": "",
+      "stdout_sha256": "8187b31840e592a8814525e0773aff58d3adc4e5ad49e107a4ccba68a672a9d2",
+      "stdout_tail": "{\n  \"ok\": true,\n  \"tool\": \"verify\",\n  \"result\": {\n    \"documents\": 11,\n    \"summary\": {\n      \"total\": 51,\n      \"counts\": {\n        \"proven\": 51,\n        \"contradicted\": 0,\n        \"unverified\": 0\n      },\n      \"unsupported\": 0,\n      \"ok\": true\n    },\n    \"unsupported\": [],\n    \"ok\": true\n  }\n}\n"
+    },
+    {
+      "argv": [
+        "python3",
+        "nova-tv/ops/kotlin_lint.py"
+      ],
+      "cwd": ".",
+      "duration_seconds": 1.095,
+      "id": "kotlin-structural-lint",
+      "profile": "local",
+      "returncode": 0,
+      "status": "PASS",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_tail": "",
+      "stdout_sha256": "ad7854f1a40f93947ce756cd40b33320381bfd117fb4910c975b83c860cf17ad",
+      "stdout_tail": "checked 130 Kotlin files\nno structural problems found\nbuild files: no structural problems found\n\nNote: this is a structural check, not a compile. Type errors, Compose API mismatches and missing Android resources can only be caught by a real Gradle build.\n"
+    },
+    {
+      "argv": [
+        "python3",
+        "tools/nova/check_artifacts.py",
+        "--repo",
+        ".",
+        "--evidence",
+        "/tmp/nova-artifact-fail-closed.json",
+        "--json"
+      ],
+      "cwd": ".",
+      "duration_seconds": 0.047,
+      "id": "artifact-checker-fails-closed",
+      "profile": "local",
+      "returncode": 1,
+      "status": "PASS",
+      "stderr_sha256": "adff9b58f8e95c9f65c7c60a0ac6e9477ac7222cec8eec686fc6185aea712212",
+      "stderr_tail": "Traceback (most recent call last):\n  File \"/home/user/SAVAGE-TECH-CORNER-/tools/nova/check_artifacts.py\", line 197, in main\n    raise RuntimeError(\"NOVA_BUILD_TOOLS is required; refusing to infer an SDK path\")\nRuntimeError: NOVA_BUILD_TOOLS is required; refusing to infer an SDK path\n[check-artifacts] FAIL: RuntimeError: NOVA_BUILD_TOOLS is required; refusing to infer an SDK path\n",
+      "stdout_sha256": "9958f511fccd0350933e98de838cc8be16cc53cd68b463badcffb5fae00b6d48",
+      "stdout_tail": "{\n  \"artifact_count\": 0,\n  \"artifacts\": [],\n  \"build_tools\": {},\n  \"errors\": [\n    \"RuntimeError: NOVA_BUILD_TOOLS is required; refusing to infer an SDK path\"\n  ],\n  \"generated_at_utc\": \"2026-11-24T16:18:55.772090+00:00\",\n  \"ok\": false,\n  \"repository_root\": \"/home/user/SAVAGE-TECH-CORNER-\",\n  \"source_markers\": []\n}\n"
+    }
+  ],
+  "contract": "/home/user/SAVAGE-TECH-CORNER-/tools/nova/contracts/pipeline-v3.json",
+  "contract_name": "Nova pipeline-v3 local/ci strict honesty contract",
+  "contract_sha256": "53a9b8e1d9dffbd1bdede1ba681a94a4c3867497c55f362aaa20d0f42671e8a3",
+  "errors": [],
+  "excluded_commands": [
+    {
+      "id": "android-flavour-unit-tests",
+      "profiles": "ci",
+      "reason": "explicitly not in profile local"
+    },
+    {
+      "id": "android-flavour-lint",
+      "profiles": "ci",
+      "reason": "explicitly not in profile local"
+    },
+    {
+      "id": "android-debug-and-release-assembly",
+      "profiles": "ci",
+      "reason": "explicitly not in profile local"
+    },
+    {
+      "id": "artifact-four-cell-verification",
+      "profiles": "ci",
+      "reason": "explicitly not in profile local"
+    }
+  ],
+  "executed_command_count": 7,
+  "generated_at_utc": "2026-11-24T16:18:55.780870+00:00",
+  "head": "WORKTREE",
+  "minimum_command_count": 7,
+  "output_log": "/home/user/SAVAGE-TECH-CORNER-/tools/nova/evidence/pipeline-v3.strict.log",
+  "profile": "local",
+  "profile_limitations": [
+    "No JVM, Gradle, Android SDK, aapt2, zipalign, apksigner, APK binaries or emulator are available in this sandbox. Local PASS does not claim Kotlin compilation, Android flavour unit tests, Android lint, APK contents, signing, alignment, installation or runtime playback.",
+    "The four CI-only Android/artifact commands are explicitly excluded from this profile and listed in excluded_commands.",
+    "The 10,000-site Kotlin test is a deterministic fixture-based capacity proof in source and CI, not a claim about live internet reachability or an on-device run."
+  ],
+  "repository_root": "/home/user/SAVAGE-TECH-CORNER-",
+  "schema_version": 1,
+  "selected_command_count": 7,
+  "static_checks": [
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "tools/nova/strict_verify.py"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "tools/nova/check_artifacts.py"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "tools/nova/run_ci_artifact_check.sh"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "tools/nova/README.md"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "tools/nova/tests/test_strict_verify.py"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "nova-tv/python/nova/result.py"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "nova-tv/python/nova/cli.py"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "nova-tv/python/ops/qa_offline_gates.py"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "nova-tv/python/ops/assert_script_result.py"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "nova-tv/python/scripts/qa_translated.py"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "nova-tv/python/scripts/verify_claims.py"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "nova-tv/python/tests/test_verify.py"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "nova-tv/python/tests/test_audit_coverage.py"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "nova-tv/python/tests/test_importers.py"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": ".github/workflows/nova-tv-android.yml"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": ".github/workflows/nova-tv-python.yml"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/NovaApplication.kt"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "nova-tv/docs/FINDER.md"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "nova-tv/docs/BUILD-STATUS.md"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "nova-tv/android/app/src/test/java/dev/nova/tv/finder/pipeline/PipelineRunnerTest.kt"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/DiscoveryEngines.kt"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineTransport.kt"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineSorter.kt"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineLooker.kt"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineExtractor.kt"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineVerifier.kt"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineAdapters.kt"
+    },
+    {
+      "kind": "required_file",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineRunner.kt"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": ".github/workflows/nova-tv-android.yml",
+      "rule": "no-workflow-warn-or-ignore-uploads"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": ".github/workflows/nova-tv-android.yml",
+      "rule": "no-top-level-green-smoke"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": ".github/workflows/nova-tv-android.yml",
+      "rule": "no-workflow-swallowed-failure"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": ".github/workflows/nova-tv-python.yml",
+      "rule": "no-workflow-warn-or-ignore-uploads"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": ".github/workflows/nova-tv-python.yml",
+      "rule": "no-top-level-green-smoke"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": ".github/workflows/nova-tv-python.yml",
+      "rule": "no-workflow-swallowed-failure"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/DiscoveryEngines.kt",
+      "rule": "no-pipeline-stub-or-swallow-markers"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineAdapters.kt",
+      "rule": "no-pipeline-stub-or-swallow-markers"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineExtractor.kt",
+      "rule": "no-pipeline-stub-or-swallow-markers"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineLooker.kt",
+      "rule": "no-pipeline-stub-or-swallow-markers"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt",
+      "rule": "no-pipeline-stub-or-swallow-markers"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineRunner.kt",
+      "rule": "no-pipeline-stub-or-swallow-markers"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineSorter.kt",
+      "rule": "no-pipeline-stub-or-swallow-markers"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineTransport.kt",
+      "rule": "no-pipeline-stub-or-swallow-markers"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineVerifier.kt",
+      "rule": "no-pipeline-stub-or-swallow-markers"
+    },
+    {
+      "kind": "binary_hash",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/res/drawable-xhdpi/app_banner.png",
+      "sha256": "2c5eef51b4e805c288f7696a6f8fc7a52a1d47dc80be2a2b81975807f00ca95e"
+    },
+    {
+      "kind": "binary_hash",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/res/mipmap-hdpi/ic_launcher.png",
+      "sha256": "475db8be92e0712c9c889ca671ad9ab9eb106c40d4ea9d7f738cbd90dc8b927e"
+    },
+    {
+      "kind": "binary_hash",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/res/mipmap-mdpi/ic_launcher.png",
+      "sha256": "764e7af720a533db23069a70aa2f52215a49fc9e71b991ca89f3cc4ba603e5d5"
+    },
+    {
+      "kind": "binary_hash",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png",
+      "sha256": "bf93f2def121c96867452ef31acda491b2a43d7d741b6af8c94639ced6a0467b"
+    },
+    {
+      "kind": "binary_hash",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
+      "sha256": "307bf89888aee825201f438408ba85670729a6a4490be66055fb30e43222f601"
+    },
+    {
+      "kind": "binary_hash",
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+      "sha256": "6cebbea9435a5b9b6119579272d944ee644e4bbfa3f5cd2b37437d425d1fb507"
+    },
+    {
+      "kind": "binary_hash",
+      "ok": true,
+      "path": "nova-tv/android/gradle/wrapper/gradle-wrapper.jar",
+      "sha256": "3b8a25775a69158b5ad2b1d17a80a88dc7b40a352a73eb27d06c612a7ce68e98"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/python/nova/cli.py",
+      "rule": "no-false-green-wrapper"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/python/scripts/verify_claims.py",
+      "rule": "no-hardcoded-claim-green"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/python/tests/__init__.py",
+      "rule": "no-skipped-python-tests"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/python/tests/test_appaudit.py",
+      "rule": "no-skipped-python-tests"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/python/tests/test_audit_coverage.py",
+      "rule": "no-skipped-python-tests"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/python/tests/test_buildfiles.py",
+      "rule": "no-skipped-python-tests"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/python/tests/test_cli_flags.py",
+      "rule": "no-skipped-python-tests"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/python/tests/test_collector.py",
+      "rule": "no-skipped-python-tests"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/python/tests/test_compile_shapes.py",
+      "rule": "no-skipped-python-tests"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/python/tests/test_github_ref.py",
+      "rule": "no-skipped-python-tests"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/python/tests/test_importers.py",
+      "rule": "no-skipped-python-tests"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/python/tests/test_kotlin_scanner.py",
+      "rule": "no-skipped-python-tests"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/python/tests/test_selfimprove.py",
+      "rule": "no-skipped-python-tests"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/python/tests/test_translated_check.py",
+      "rule": "no-skipped-python-tests"
+    },
+    {
+      "hits": [],
+      "kind": "forbidden_pattern",
+      "ok": true,
+      "path": "nova-tv/python/tests/test_verify.py",
+      "rule": "no-skipped-python-tests"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "tools/nova/strict_verify.py",
+        "tools/nova/tests/test_strict_verify.py"
+      ],
+      "pattern": "class GateFailure",
+      "rule": "gate-fails-closed"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "tools/nova/strict_verify.py",
+        "tools/nova/tests/test_strict_verify.py"
+      ],
+      "pattern": "def worktree_fingerprint",
+      "rule": "gate-fails-closed"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "tools/nova/strict_verify.py",
+        "tools/nova/tests/test_strict_verify.py"
+      ],
+      "pattern": "test_top_level_green_cannot_mask_failed_nested_result",
+      "rule": "gate-fails-closed"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "tools/nova/strict_verify.py",
+        "tools/nova/tests/test_strict_verify.py"
+      ],
+      "pattern": "test_artifact_checker_refuses_to_infer_sdk",
+      "rule": "gate-fails-closed"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "tools/nova/strict_verify.py",
+        "tools/nova/tests/test_strict_verify.py"
+      ],
+      "pattern": "verification_outputs_excluded_from_fingerprint",
+      "rule": "gate-fails-closed"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt"
+      ],
+      "pattern": "PIPELINE_BUILD_MARKER = \"nova-finder-pipeline-v3\"",
+      "rule": "pipeline-v3-model"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt"
+      ],
+      "pattern": "MIN_SITE_TARGET = 10_000",
+      "rule": "pipeline-v3-model"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt"
+      ],
+      "pattern": "MIN_ENGINE_COUNT = 50",
+      "rule": "pipeline-v3-model"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt"
+      ],
+      "pattern": "14-audit",
+      "rule": "pipeline-v3-model"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/DiscoveryEngines.kt",
+        "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineRunner.kt"
+      ],
+      "pattern": "fun find\\(url: String, kind: PipelineKind\\? = null\\)",
+      "rule": "pipeline-kind-aware-and-network-aware"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/DiscoveryEngines.kt",
+        "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineRunner.kt"
+      ],
+      "pattern": "EngineRegistry\\.parse\\(result\\.url, result\\.body, kind\\)",
+      "rule": "pipeline-kind-aware-and-network-aware"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/DiscoveryEngines.kt",
+        "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineRunner.kt"
+      ],
+      "pattern": "network = evidence.network",
+      "rule": "pipeline-kind-aware-and-network-aware"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineLooker.kt",
+        "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt"
+      ],
+      "pattern": "probeIds\\.take\\(1\\)",
+      "rule": "pipeline-bounded-addon-probes"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineLooker.kt",
+        "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt"
+      ],
+      "pattern": "val network: List<String> = emptyList\\(\\)",
+      "rule": "pipeline-bounded-addon-probes"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "nova-tv/android/app/src/test/java/dev/nova/tv/finder/pipeline/PipelineRunnerTest.kt"
+      ],
+      "pattern": "class PipelineRunnerTest",
+      "rule": "pipeline-capacity-unit-test"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "nova-tv/android/app/src/test/java/dev/nova/tv/finder/pipeline/PipelineRunnerTest.kt"
+      ],
+      "pattern": "assertEquals\\(MIN_SITE_TARGET, second\\.verifiedCount\\)",
+      "rule": "pipeline-capacity-unit-test"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "nova-tv/android/app/src/test/java/dev/nova/tv/finder/pipeline/PipelineRunnerTest.kt"
+      ],
+      "pattern": "assertEquals\\(\"TARGET_MET\", second\\.status\\)",
+      "rule": "pipeline-capacity-unit-test"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "nova-tv/android/app/src/test/java/dev/nova/tv/finder/pipeline/PipelineRunnerTest.kt"
+      ],
+      "pattern": "corporate MP4 must not be suitable",
+      "rule": "pipeline-capacity-unit-test"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "nova-tv/python/nova/cli.py",
+        "nova-tv/python/nova/result.py",
+        "nova-tv/python/ops/assert_script_result.py"
+      ],
+      "pattern": "def result_failures\\(",
+      "rule": "strict-nested-result-semantics"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "nova-tv/python/nova/cli.py",
+        "nova-tv/python/nova/result.py",
+        "nova-tv/python/ops/assert_script_result.py"
+      ],
+      "pattern": "def payload_is_ok\\(",
+      "rule": "strict-nested-result-semantics"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "nova-tv/python/nova/cli.py",
+        "nova-tv/python/nova/result.py",
+        "nova-tv/python/ops/assert_script_result.py"
+      ],
+      "pattern": "STRICT RESULT FAIL",
+      "rule": "strict-nested-result-semantics"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        ".github/workflows/nova-tv-android.yml",
+        ".github/workflows/nova-tv-python.yml",
+        "tools/nova/check_artifacts.py",
+        "tools/nova/run_ci_artifact_check.sh"
+      ],
+      "pattern": "testTvDebugUnitTest",
+      "rule": "ci-honesty-checks"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        ".github/workflows/nova-tv-android.yml",
+        ".github/workflows/nova-tv-python.yml",
+        "tools/nova/check_artifacts.py",
+        "tools/nova/run_ci_artifact_check.sh"
+      ],
+      "pattern": "testMobileDebugUnitTest",
+      "rule": "ci-honesty-checks"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        ".github/workflows/nova-tv-android.yml",
+        ".github/workflows/nova-tv-python.yml",
+        "tools/nova/check_artifacts.py",
+        "tools/nova/run_ci_artifact_check.sh"
+      ],
+      "pattern": "check_artifacts.py",
+      "rule": "ci-honesty-checks"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        ".github/workflows/nova-tv-android.yml",
+        ".github/workflows/nova-tv-python.yml",
+        "tools/nova/check_artifacts.py",
+        "tools/nova/run_ci_artifact_check.sh"
+      ],
+      "pattern": "qa_offline_gates.py",
+      "rule": "ci-honesty-checks"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        ".github/workflows/nova-tv-android.yml",
+        ".github/workflows/nova-tv-python.yml",
+        "tools/nova/check_artifacts.py",
+        "tools/nova/run_ci_artifact_check.sh"
+      ],
+      "pattern": "assert_script_result.py",
+      "rule": "ci-honesty-checks"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        ".github/workflows/nova-tv-android.yml",
+        ".github/workflows/nova-tv-python.yml",
+        "tools/nova/check_artifacts.py",
+        "tools/nova/run_ci_artifact_check.sh"
+      ],
+      "pattern": "if-no-files-found: error",
+      "rule": "ci-honesty-checks"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        ".github/workflows/nova-tv-android.yml",
+        ".github/workflows/nova-tv-python.yml",
+        "tools/nova/check_artifacts.py",
+        "tools/nova/run_ci_artifact_check.sh"
+      ],
+      "pattern": "NOVA_BUILD_TOOLS",
+      "rule": "ci-honesty-checks"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "nova-tv/docs/BUILD-STATUS.md",
+        "nova-tv/docs/FINDER.md"
+      ],
+      "pattern": "The 10,000 number is a target",
+      "rule": "docs-state-limitations"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "nova-tv/docs/BUILD-STATUS.md",
+        "nova-tv/docs/FINDER.md"
+      ],
+      "pattern": "sandbox has no Java/JDK",
+      "rule": "docs-state-limitations"
+    },
+    {
+      "kind": "required_pattern",
+      "ok": true,
+      "paths": [
+        "nova-tv/docs/BUILD-STATUS.md",
+        "nova-tv/docs/FINDER.md"
+      ],
+      "pattern": "A strict\\s+result is evidence only",
+      "rule": "docs-state-limitations"
+    },
+    {
+      "count": 1,
+      "id": "gate-schema-version-is-explicit",
+      "kind": "source_claim",
+      "max": 1,
+      "min": 1,
+      "ok": true,
+      "path": "tools/nova/strict_verify.py"
+    },
+    {
+      "count": 65,
+      "id": "engine-configurations-are-65",
+      "kind": "source_claim",
+      "max": 65,
+      "min": 65,
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/DiscoveryEngines.kt"
+    },
+    {
+      "count": 65,
+      "id": "engine-families-are-65",
+      "kind": "source_claim",
+      "max": 65,
+      "min": 65,
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/DiscoveryEngines.kt"
+    },
+    {
+      "count": 14,
+      "id": "fourteen-explicit-stages",
+      "kind": "source_claim",
+      "max": 14,
+      "min": 14,
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt"
+    },
+    {
+      "count": 1,
+      "id": "site-target-is-10000",
+      "kind": "source_claim",
+      "max": 1,
+      "min": 1,
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt"
+    },
+    {
+      "count": 1,
+      "id": "pool-cap-is-10000",
+      "kind": "source_claim",
+      "max": 1,
+      "min": 1,
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt"
+    },
+    {
+      "count": 1,
+      "id": "engine-floor-is-50",
+      "kind": "source_claim",
+      "max": 1,
+      "min": 1,
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt"
+    },
+    {
+      "count": 1,
+      "id": "build-marker-is-exact",
+      "kind": "source_claim",
+      "max": 1,
+      "min": 1,
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt"
+    },
+    {
+      "count": 2,
+      "id": "pipeline-tests-assert-two-10000-targets",
+      "kind": "source_claim",
+      "max": 2,
+      "min": 2,
+      "ok": true,
+      "path": "nova-tv/android/app/src/test/java/dev/nova/tv/finder/pipeline/PipelineRunnerTest.kt"
+    },
+    {
+      "count": 1,
+      "id": "application-wires-website-runner",
+      "kind": "source_claim",
+      "max": 1,
+      "min": 1,
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/NovaApplication.kt"
+    },
+    {
+      "count": 1,
+      "id": "application-wires-addon-runner",
+      "kind": "source_claim",
+      "max": 1,
+      "min": 1,
+      "ok": true,
+      "path": "nova-tv/android/app/src/main/java/dev/nova/tv/NovaApplication.kt"
+    },
+    {
+      "count": 1,
+      "id": "ci-runs-tv-flavour-tests",
+      "kind": "source_claim",
+      "max": 10,
+      "min": 1,
+      "ok": true,
+      "path": ".github/workflows/nova-tv-android.yml"
+    },
+    {
+      "count": 1,
+      "id": "ci-runs-mobile-flavour-tests",
+      "kind": "source_claim",
+      "max": 10,
+      "min": 1,
+      "ok": true,
+      "path": ".github/workflows/nova-tv-android.yml"
+    },
+    {
+      "count": 7,
+      "id": "seven-offline-gates-are-explicit",
+      "kind": "source_claim",
+      "max": 7,
+      "min": 7,
+      "ok": true,
+      "path": "nova-tv/python/ops/qa_offline_gates.py"
+    },
+    {
+      "count": 1,
+      "id": "strict-result-module-is-explicit",
+      "kind": "source_claim",
+      "max": 1,
+      "min": 1,
+      "ok": true,
+      "path": "nova-tv/python/nova/result.py"
+    }
+  ],
+  "status": "PASS",
+  "verification_outputs_excluded_from_fingerprint": [
+    "tools/nova/evidence/pipeline-v3.strict.json",
+    "tools/nova/evidence/pipeline-v3.strict.log"
+  ],
+  "worktree_fingerprint": {
+    "file_sha256": {
+      ".github/workflows/nova-tv-android.yml": "e26daa977c19d5239434f7d6576631bcc3d870335eb6c72782d714c74a44d75e",
+      ".github/workflows/nova-tv-python.yml": "a70bb0fb76475da989f1855ef0c2de97c9021b70d5831b01017e3e83def78adf",
+      "nova-tv/.gitignore": "7908c06a387a4375d0f64759210f6b420f03c5b2b7820cd60cc7a6cf23e75410",
+      "nova-tv/Makefile": "6af04243cfca8280ed0bc7477cbd97000db802952521f993791542b9b383ad0c",
+      "nova-tv/README.md": "ef3543ec8ceb1de321eb7198c533e5b6b96c7cbad478cb22f39827a4900fb643",
+      "nova-tv/android/PLAYER_AUDIT.md": "d8573294858002a840f315551dd356af5a81622e34d21c47ece0bd54bb15f7f9",
+      "nova-tv/android/THIRD_PARTY_NOTICES.md": "61ba8737de0a45f858eb232f46bd30079ad066f7b7dea3d0bd4e59fd33751d9f",
+      "nova-tv/android/app/build.gradle.kts": "8115a01fe575851452b528b0b9a3c163440c3caac57a014428cfbc858b49b6cb",
+      "nova-tv/android/app/lint.xml": "03479d9d2a7420ce3fded5d516c951e94817d5eb216479f616eda1d3c438ea33",
+      "nova-tv/android/app/proguard-rules.pro": "944716d2dd3e75a255078228a202d6f82932f64086fa9cb01930c0277f6c5f4f",
+      "nova-tv/android/app/src/debug/AndroidManifest.xml": "4bfcfd5ae840a129d8eb0e73a875b4d7bb75efbc9823f22d236a0c4ac88eed02",
+      "nova-tv/android/app/src/debug/java/dev/nova/tv/finder/diag/FinderProbeActivity.kt": "d378f9faf1f44556fe5df0837adb562cd184c012c459f3ae76c1d9e92e5cc30b",
+      "nova-tv/android/app/src/main/AndroidManifest.xml": "8c6e1e48f8221918aa8360703a57af3babb42ce0520d3f293fcb4c556137be80",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/NovaApplication.kt": "dcddd24230c4ee9bda26442f1f5b89a36632d27f5a4403f771554ba2bb03d812",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/data/model/Models.kt": "b953d025b7ec972cc5940901bc012582b343fb24e397305d1f40cd1e1b8e8e42",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/data/model/NovaAddon.kt": "c5193b91e7ec5dda741c15ef9abbf98419be2ad0f76fe2d9702babe6bccbacc2",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/data/remote/AddonClient.kt": "0e68eae7be57a019f431aaecf5d9ab6f358ee7f42c8a2087fee2a9e65aff58d9",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/data/remote/HttpClient.kt": "b26ccfc80373923f50c19c1086cb9978978f37400e39c2c430868918550ad1ef",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/data/remote/NovaDns.kt": "3ff54115fdb45766e1f6031520848a4e95004a4abe84332d31abd6d3764fa7a7",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/data/remote/SubtitleFinder.kt": "0a04edce1730e5259adaf0b6c6ca9d676d38085fb17342ab18756a8604e05788",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/data/repo/CatalogRepository.kt": "582202274e176c3e47929c68aef2e48d45455d8544f1c6237c508dba6ad01bc7",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/data/repo/LibraryStore.kt": "38075fd6895241aa67b25d6ba88b0c80429110f3bf07fce25ee3ad9eeab9393d",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/data/repo/SettingsStore.kt": "f4f65a83e4188647f0c8c354df96e6bfdefa9e8b35fa9f530bdc63553fcf4fe5",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/download/DownloadManager.kt": "b898250dc8af8179aa55b718fb4afb802ae4fd26d2185b21225b1a480eaaf250",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/DualAudio.kt": "11d450eb2e05511d89b2017ead224f3580b4715c36eeee6ee95b741af945897d",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/FinderRules.kt": "fe246aeeea3f58c29aa85cc321987c9b718013bc75eb40642ccc222ac4e1e9a6",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/HarvestPacing.kt": "dda06abdcd8158d5c26e7507174b4cea0d3c1416d1816d47569c7954f47dcf60",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/SourceEngine.kt": "1fe49fa0c63a8ff4f14ba2e4d0c5c4e6c7197516669cfdef0cc05e2c5285aac9",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/SourceFinder.kt": "d8e6f7bc493a57c7a24f3553720500bc4ab7530fc8d329d207d6a8646662bb98",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/StremioFinder.kt": "bfde87b8f7b8bbc74dd904a58c36605972cb6491abeb59d589794b568d11dea2",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/WebCrawler.kt": "99aa6b255937c9f5e3c41543e15d27c4d313eb54d4a8750715b4702ea893ad0a",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/addons/AddonFinder.kt": "5ea9ba934b22f722eebce416c7a64532c53155ad3269cfb23a5a6a72dbb94ed5",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/diag/FinderTrace.kt": "687efed0750895afc64a81811250190a1374c3894cf96772110dcb2cbf3167ec",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/discovery/Discovery.kt": "7f04b431be7db603abf0b8639b4b344942259dd4a8021351f4a462a8e4e068df",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/DiscoveryEngines.kt": "08707816ef506f6cec0b2c049c16b70ad298452edc75674343068ac05adc0a5c",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineAdapters.kt": "4605bb6a0f748b7efdfbba079b0fab3e827c6ef6e8e606d95bcd563af9407262",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineExtractor.kt": "335a2f2588415ac23a9cd3d96a4aec6ac6a2efb9672b930504d2429950b940ae",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineLooker.kt": "37e5dc79c888df7aafa92f9311c26ece89bae6518fb54b32d2f523a17acd0f3a",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineModels.kt": "aefca6a77ec4e64ff5677cfcb307b0d39032d287b47140be0f3ddc361ba92953",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineRunner.kt": "c01af6de17a4218f02f4dc90eb94d65f438c6d478ff098bad769ecebe0494719",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineSorter.kt": "742fc1f4b4c61e16d02f6dae6403532e31456d5edb9a0105c66cbf5adf3ac69c",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineTransport.kt": "33a3ce571be37ca8269759954aeb1fb70e528e2031fe7f3470a2dc3b54e70d72",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pipeline/PipelineVerifier.kt": "72d52f722c12bbd35059a2258a9c03465786bbe67020a974eea370c68698b0ee",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pool/ServerPool.kt": "bc084175453cf3dfab728dddc0e69709ad633a6e7adb5886be071d60aee42515",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/pool/WebsitePool.kt": "cfcd61747f866926e66a08a308ad3af834023505371ad089b3c3e1757df5b102",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/servers/ServerFinder.kt": "5020b0e0cecd400d123b0361053f535daefe01aa0828d168356017a7c440137b",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/translated/FinderBrowser.kt": "85e04db16c838ded5d2af8d852e7185208502aba6387f3a797ed071ed6c35944",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/translated/FinderFingerprint.kt": "e99bce69bf4a9704a3f5164e06be5520cdfeab88915842cd10769b57e8846f36",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/translated/FinderHelpers.kt": "ea9548fb3945d6f15b0a47bae0213289551129ad829de4f61189def7a8706092",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/translated/FinderHttp.kt": "50d448711e0ae71d1316d5426b7a5465f3c46cf0c7c2805773f5b9be0d17f84b",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/website/WebsiteFinder.kt": "680348ea9cbd85a7810e3a2a06c702aaa09c853e38121c72a08dbee91c1d7680",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/finder/website/WebsiteRules.kt": "7043571230a6af327e1abeb511e14eb16b7b03729312fad89e00eb2e9747e3fb",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/BufferingMeter.kt": "dd8b15bbc9c128dbb8010bd1b715104faafb22db977b4f4ebe73623f4226627b",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/ChromeController.kt": "4c58657cc39943a8951b49e895ca2d5d799a075e5ce16768ccb7ef50e2530f25",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/ImportedTimings.kt": "a2c6f570254d7dcf7822f5071e7705a6e600efd1e2a1b56e6ccc4fafd4faec85",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/IntroSkip.kt": "540611bb512d4484ba90418915759c8a4b2628caf89b295f9bc930a409c2c2a6",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/NovaPlayer.kt": "19d99373ed69497f4f2c263f264d2b45d4bcc665b36c50f23e08b2f46a1bacf8",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/PlayerState.kt": "2e0126ef65b199fe485701a4a10f84319c64fe9e90f2a3c0dd8c8616facfe02c",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/StreamProbe.kt": "f76820db15afa858a977e7a77bdff7d0bad26be7d70736e7a14a95db0f3275bf",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/StreamRanker.kt": "b39a0fbf45f7c40e8d077f0b45a0e3f5f2e157b226712d3ca64d311706a84868",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/SubtitleStyle.kt": "0a566738744cb520ee1dc677d3be4ce9291270b798c6e6a535ceb82b90c2936e",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/PlayerEngine.kt": "8074cd552ad3a392e2568084da3dcfc3884c7cad2a402fd0a1855095d9f97ce6",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/PlayerEngineFactory.kt": "4120a1ee78f75b5d7d572ba2b57e90d8740a24d1d2da0cefb6f8cc716b3c474d",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/PlayerEngineModels.kt": "6f0474f0f32fc5d0d6bfdc41db67777b96ed6be634f8ea14a2f34912b6b42ddc",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/PlayerEngineType.kt": "115bc68dedd17eb4085225e9c537e5731dd1038ac1259b112a7812e20bc671d6",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/SourceFailoverPolicy.kt": "ed5b6d36e0e3bcc6474bca6097d4b36b0b8699b26bdf34d4855395bb97ed1bad",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/exoplayer/AudioDecoderFallback.kt": "e7ad7e1c8fa0422d74a6b00a76da708d609b5253a118751aabf69715842be210",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/exoplayer/ExoPlayerEngine.kt": "2d42c7e51b75195549a5740ecae207d710318c754839dc65f28907e23a7bdfa9",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/exoplayer/NovaExoPlayerFactory.kt": "504d47b51922922fc3e241bac2d7d59a2eb60c61e2011fd62f44921024f5fda4",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/exoplayer/NovaRenderersFactory.kt": "6d96bdfc4576e44b034622da7b4c37c9843aeb9e712747c902ad14e4051c91c2",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/exoplayer/PlaybackBufferProfile.kt": "86f7bcbd2c4797c23276ab5fd27fbd3266565715e7f900669e5c09e5d86ae7c5",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/exoplayer/SurroundAudioRecovery.kt": "ff1a47ffd264982be6c31c5faa29de996cd387823c935489675dbc33c119e062",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/engine/exoplayer/VodLoadErrorHandlingPolicy.kt": "fcc94abf23c71ac8eeed9a658fa9bd0f2e15721151b8ed01e80734d88ec057c9",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/imported/GestureRouter.kt": "5e14276ebbe63370e920b90381fd3193acf24f00df9660cc08ebfcd60a30718d",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/imported/QualityLadder.kt": "13a14a42f245969d70435e0d4d5de1e5ade260b194ac838d5786ed7a25cece7a",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/imported/ScrubState.kt": "7a51d1c1e05f4b6869f04ad05c8c00cbaf27f8ea051305a3f5c8bdb80e5096af",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/imported/SpeedStep.kt": "00d3e0ae1a46b7950103c258c34a47b541e288d00037bdef803f31d0a107eaff",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/imported/SubtitleFiles.kt": "599ddf0206937ec8dc85ca2863cc81b11354e850864e977b8bb472c6594c6012",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/imported/SubtitleOffset.kt": "c4c5922c9ab8672fbbf1e926c221942f8078af482084f8c1f83663749bc85dbd",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/imported/TrackOptions.kt": "17f9ff76e764bf2df9525062d10c5d06e98c21836cfdfbf11db8ea41573a37fe",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/preload/FragmentPlan.kt": "cc6dd7efa26199d1657a18e38b29d6ae09af4cf9e7b3b86d3f116f80e6fe1264",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/player/preload/FragmentPreloader.kt": "a8738841131bd75046a1c5e9a65b0d20c3fa13972f9619c91957b2b18832360c",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/ui/components/NovaComponents.kt": "efca8683785c7cd416fd043d60eb44893b601ffa546e4ac2122c0a01ac0ae190",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/ui/components/Shimmer.kt": "bb451ee4f4be8f66f8049cda6816d7cce9bef71fab972765808b012e2294f93a",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/ui/focus/ArvioDpadFocus.kt": "e3e9eaa526cea60f75f9d318d37c5f4c2aa6c8643068c11247b167b70706ae64",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/ui/focus/NovaDpad.kt": "c2e2d3a4901cf47969d770145acc9a8d112b188425098ece5c62d33c8fe3a50a",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/ui/focus/PivotScroll.kt": "5c656c9b6c17e4ee0b4bd1ba7d476cad637a971126d6d15d01b61249c5d8df05",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/ui/nav/NovaNav.kt": "d1ff168ba06750a1ae26ae86b6753605b51303154c8520755c78e32351c514c9",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/BufferingOverlay.kt": "8f39415ab1623fdec21315a9423e80a2d43b474dd8112da2fa5cf5381f36d509",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PanelOption.kt": "e712d195437356c0e949f2062ab6e9bddf789b2070e1c49bfe87f9678911bc82",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/ui/player/PlayerSurface.kt": "eaab78e81d71e0a0ffd48a78736779ec5b7654331a3ca002fec57c6517aa42d8",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/ui/screens/NovaApp.kt": "78168f5a745736f46ee6dd10faea0e35bc6eed753e8a96d42d4310a1b6ce7ee9",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/ui/screens/NovaBrowse.kt": "06957ced70a31292aeeb70fafffce0ea78459e9a04436d16839693e7ca9fa1b2",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/ui/screens/NovaDetail.kt": "e37425223f24d3994e49c31611d23d687adf3d4356c5afed28cd7fc4c6f1217f",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/ui/screens/NovaHome.kt": "0fcfc8b3c569a666e683337141021fc4807d708a341990eba0ced2e8c67c370c",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/ui/screens/NovaKeyboard.kt": "e8996b32bb8b62f25c524562c32df473a87e823aa3d9e6c8356608e427b76f49",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/ui/screens/NovaPlayerHost.kt": "466c8efe243a191227c5c6c31c63166ec8f6cfc8c9376bb09aefbb6ee005b4db",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/ui/screens/NovaSources.kt": "e1fa7850e00805abc2ff5ab6dd5d8f1b23a081bb4b67b46867f3b47ec3d12a0d",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/ui/screens/NovaViewModel.kt": "c7ad34301bc9307f590746fce2ca18bd470a7d8c748d3aa8fd85c4ab6b62b9fe",
+      "nova-tv/android/app/src/main/java/dev/nova/tv/ui/theme/NovaTheme.kt": "4d7c0376ca67bacb8232edd60dac3a5a5c7c969ea643db13cc5c8caeac2154d2",
+      "nova-tv/android/app/src/main/res/drawable-xhdpi/app_banner.png": "2c5eef51b4e805c288f7696a6f8fc7a52a1d47dc80be2a2b81975807f00ca95e",
+      "nova-tv/android/app/src/main/res/mipmap-hdpi/ic_launcher.png": "475db8be92e0712c9c889ca671ad9ab9eb106c40d4ea9d7f738cbd90dc8b927e",
+      "nova-tv/android/app/src/main/res/mipmap-mdpi/ic_launcher.png": "764e7af720a533db23069a70aa2f52215a49fc9e71b991ca89f3cc4ba603e5d5",
+      "nova-tv/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png": "bf93f2def121c96867452ef31acda491b2a43d7d741b6af8c94639ced6a0467b",
+      "nova-tv/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png": "307bf89888aee825201f438408ba85670729a6a4490be66055fb30e43222f601",
+      "nova-tv/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png": "6cebbea9435a5b9b6119579272d944ee644e4bbfa3f5cd2b37437d425d1fb507",
+      "nova-tv/android/app/src/main/res/values-v27/themes.xml": "0e3afc08eb9c518497a1335617444b034fa43c3461cce6ca5a5bbf231045408d",
+      "nova-tv/android/app/src/main/res/values/colors.xml": "725ee7c3258f2cfee8a64cf14ca57e7d9855776b58dab69ce5676362c2c25e15",
+      "nova-tv/android/app/src/main/res/values/strings.xml": "1d29119768ee50413c8b7a968c4e00aa5aed743c54b4b4a49d1b02844ac763a8",
+      "nova-tv/android/app/src/main/res/values/themes.xml": "b5916618c521806bd3beba761c0aba6996c6a35b927faa5a58e28d34161d6c28",
+      "nova-tv/android/app/src/main/res/xml/network_security_config.xml": "6c51cc53a63ffe271574438f118c991ff6082e56759fa9b408a4672b5003d146",
+      "nova-tv/android/app/src/mobile/AndroidManifest.xml": "14883a5381952ac270954f0dfb531da6a399a901a5cb27f801cceed6eaeeb7e0",
+      "nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobileActivity.kt": "37e575d4c694ffe8b12568c573035562a890f4808627a37b60ff1b249fef26e4",
+      "nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobileApp.kt": "99fc59ba97df0ffc6b7187f2fbcea2fd7870dc823de6141ffe37c76aee27ce50",
+      "nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobileBrowse.kt": "496cafa3e2ca10ed60dd66b06114a6b9d0223bad578315c9c7b1acf16be12258",
+      "nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobileCards.kt": "55949b90389bb1c992fea44c50002309b0156ee6e5d539fbf618bc9471f4dda1",
+      "nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobileDetail.kt": "99f2b9280cc1335f321ee01057818a21b2068f98ddc228108a74785c5093f853",
+      "nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobileDiagnostics.kt": "f4235258882cc4be58ebc4caaeda8ef87e5e26cb420104b4508ccd34ee79d433",
+      "nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobileDownloads.kt": "db83e6658890c38458e5c87fd755f2c6ac1ad131b779c407a34b50dfa6858eae",
+      "nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobileHome.kt": "63ae68fa4568250465e87e8d012afbe6953236522806834713c9ec28fae61247",
+      "nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobilePlayer.kt": "246f336c031965f54ccbf9a4b399b62eee26c5f1661154a57f6f528b1bf59f44",
+      "nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobileSources.kt": "9d395680e2debf8e8eaac9470f569399707e039dc5539eb67ceb26e0550dbde9",
+      "nova-tv/android/app/src/mobile/java/dev/nova/tv/mobile/MobileTheme.kt": "41178bfc2bc2f613c9df150279d5f21cf6fcd7d1184291b2e9782a8eab6e9365",
+      "nova-tv/android/app/src/mobile/res/values/strings.xml": "a37d1734eb8d91be20ff8c3e9f630e5b185c3760366c25353cf1edc5ef8eeba1",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/data/NovaDnsTest.kt": "02a8013576ff318ead6d67a3aa62e6f6898f913eb127a024befa65802636694e",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/data/SubtitleFinderTest.kt": "c0165d57028d18cccf113b85b0e932b96c9be7125504715a8a1c2956eb110621",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/data/UrlGuardTest.kt": "17467ffcac44158f53ff5afd64c86ecf7d629abbf2305eea162779cfe25d6da1",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/download/DownloadResumeTest.kt": "1a0932d58c69e557d9f5ed7a7cf0bb6f0e80ffba54308b79b58849c7b7ffc145",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/finder/DualAudioTest.kt": "e8dfaa00f96d0df13d1b60010a883b769c1e1e91da06563b4cb13e7cd7a8c313",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/finder/FinderRulesTest.kt": "2018bee709bec80b978d29ba04a3a9670979cc34fb9faffd8ec8d3683d2096fb",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/finder/HarvestPacingTest.kt": "8b57128241319f89c7e63445aaf7f336441aa6c9b507ed8674575cb11573cdd5",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/finder/SizeRulesTest.kt": "29d479c34bd08b49ed78ba3023f3a9590f7dc629e49accf7f9eb1c789b53e4d1",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/finder/StremioFinderTest.kt": "e6b9e8e348a7bc72c0fc9e28182d94d98d5c1fd3b910de201330b62c0b886438",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/finder/addons/AddonFinderTest.kt": "b3e4e6b905f731559b686a0ce12341615ec8224be4d87d1cf2c29fffa9b7aeb8",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/finder/addons/AddonRejectionsTest.kt": "ff17ab70ce328f92647fc0c2eb8d062925b47362df2bdc1e330021a68eece550",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/finder/discovery/DiscoveryTest.kt": "f7016c9126a6083fb8d0963d2f002d50230115b3d3400c13225e9746d48ac7cc",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/finder/pipeline/PipelineRunnerTest.kt": "fd7b570c1c716e035b268095e4724e4a695377ae2f68b410d0168177c137ee44",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/finder/pool/ServerPoolTest.kt": "6417314e734e3fbfb74c6c458ce0405410b0776fd764d9e201c71a73bf4c4dc7",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/finder/pool/WebsitePoolTest.kt": "f626ce8061246e27f80f42f389c206f6b5ac940763f2c34192895abae6ed2404",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/finder/servers/ServerFinderTest.kt": "929e27a2b3a5c38ba604ff6181eab7ca33f11d4c60a7c44b9ed8472dc6b5ac85",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/finder/translated/CookieJarTest.kt": "5feb20348d13c93475606450efe43e97394565e389fef5c6b9ad67f4a7c95790",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/finder/translated/FinderFingerprintTest.kt": "d46cdbb9c1e40df86783d37a2fcf6718b501beb6fd3b2234273bfb37af4e6daa",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/finder/website/WebsiteRulesTest.kt": "4bf777ea8152e460b2389458b8c3ab57e2069eb0fc43d6ccf131570e666e73e3",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/player/BufferingMeterTest.kt": "e902a5ddbb94401eff153afce725b53344f3c8863e5c924a705ecb3e866d5700",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/player/IntroSkipTest.kt": "5d802c9dde269eea2dc0e4f99b253fef1181e8e8c98fc1e200d4d24ecf5f212d",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/player/PlayerStateTest.kt": "7f1593ce3cf9b7c80e0f3983c73a7aaeb800a8d655425f8b256939158772121c",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/player/SourceFailoverTest.kt": "601434c8a337fcde257b24dae918d159a191510fa6a6aacae2422d48415a3ee9",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/player/StallTrackerTest.kt": "9ad38f97bc39ebd541e18a5e59b6ac5306c7531af313af9900851d110afeff50",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/player/StreamRankerTest.kt": "338284312de3658c983427419252817672d46498239bd8fbd28ba1ba6f6ab617",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/player/SubtitleStyleTest.kt": "4fb58cbe60ea38b21a184322e87132ce504cd16eeb216b01091eaf49a6d2c57e",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/player/preload/ContentRangeTest.kt": "408eb4541f020ddd541b0450348adcc7ea6b5cb0f2210e33a2c560a0ff439551",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/player/preload/FragmentPlanTest.kt": "ff4e2971be560c35a21eaaaf793cd0371db4ad1acd9ae2953c5162f4a3e4d767",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/ui/nav/NovaNavTest.kt": "51c1e6429c30ae59d4a401e219790bf325cbe548e4028a2278ad292de0cd1896",
+      "nova-tv/android/app/src/test/java/dev/nova/tv/ui/player/PanelOptionTest.kt": "f8fa868459571962ba941675afe682a2d1997067113cacf521e0c2c27af95b19",
+      "nova-tv/android/app/src/tv/AndroidManifest.xml": "eb48420e80a9287b4f4f634e8be2d138f63c479052cfafc54be0897b40a08548",
+      "nova-tv/android/app/src/tv/java/dev/nova/tv/ui/NovaActivity.kt": "93082d7d0a5f8b9a5537cc41063eefa1fb0f9dc7ca4d7bb4f3a2b5a5aa9645f3",
+      "nova-tv/android/build.gradle.kts": "4ae7e81d58aa6f3ea940dcf33b28d20482b8d0f30c79a531eea9abb1d4d20f79",
+      "nova-tv/android/gradle.properties": "9ef360d43b28b9f1d3f3288700231f09397c39c130aec1d24ce8bdd8d6892d54",
+      "nova-tv/android/gradle/libs.versions.toml": "e4f377daedc1b5d1024e309030de18cbe623ce50c1d2eeaf709e0e11462e5eca",
+      "nova-tv/android/gradle/wrapper/gradle-wrapper.jar": "3b8a25775a69158b5ad2b1d17a80a88dc7b40a352a73eb27d06c612a7ce68e98",
+      "nova-tv/android/gradle/wrapper/gradle-wrapper.properties": "cdab1ffb439219b1db125e3c99a86cf2424f8762b9b3faa404ed061e3635ecde",
+      "nova-tv/android/gradlew": "0864d896576db1451bd41fe17e050763e5077df294a44c6d342c02c6caeddbe4",
+      "nova-tv/android/gradlew.bat": "95e8ae8e8a256a2f066cdd745d56f7a3fc87aa058a2e4beb483300db7171bd1f",
+      "nova-tv/android/licenses/ARVIO-LICENSE-Apache-2.0.txt": "ad62dcef3165f93c6995b54162fb38c162399054b84b1fae88aac1bf99705548",
+      "nova-tv/android/settings.gradle.kts": "c0af856b156ddc1fa2bb3294e2136fe9191b4aedc67ca584706f88b17ef755ba",
+      "nova-tv/docs/APK-FINDER-DEBUG.md": "fc7073b77887b35554cfb72d81f0a3fb411d881c56aacd0b8da872f929d669a7",
+      "nova-tv/docs/APP-COMPONENT-PLAN.md": "5ba9ccbada4b7d1c0c4b380458c5c2ec32333564a04b20fa8a67dc926130f684",
+      "nova-tv/docs/BUILD-FACTORY-SDK-PLAN.md": "7ab52f5be424f7f991829545838547e6fe709d383be1afbc4db93454262d0984",
+      "nova-tv/docs/BUILD-STATUS.md": "c83535bcf57ef1424e39e13b4beca0b1bc0ec4b7a4c7934561b9e67adef1692c",
+      "nova-tv/docs/FINDER.md": "0810438867b86f3e4ba88ff19a4234f9173b3e7e20b2b27af0bbcc31b993c723",
+      "nova-tv/docs/REVIEW-v2.md": "cd9b243376cd9881455cf106dc7a6e1d9af8edd0fcb9f78d414d50fe77e8203c",
+      "nova-tv/docs/SOURCES.md": "f393d5471a171f02fc67ebc83d3b39b68bb993c81f93c1b84dbf2a3c803d6e62",
+      "nova-tv/docs/UI-PLAN.md": "9a97ed9b16c24928f3c86ea138accc314ba647c920283b4c7f4e018173854aef",
+      "nova-tv/docs/UI-REFERENCE.md": "b0656e21e5d7509019fd7caf572a7219c26b80baed6270bd5f1458bce9692d5a",
+      "nova-tv/docs/VS-ZEROPLAY.md": "c2c1dd1ba4152178046819f389aee5e7a6fd5cea217e508eb3e69187e2802891",
+      "nova-tv/docs/build-diagnostics.md": "16d8861f045582afadec91a6a447c7b796d471586b52667403560a314726ff61",
+      "nova-tv/nova.toml.example": "3aeaa73cadf17f586c5145d88b4160dc57837bfe71d44cca3825a2fdc034a6bd",
+      "nova-tv/ops/kotlin_lint.py": "3f60aad0e74ac60c2e2b765d98e07563f10aede76a80148e262f810da85ea134",
+      "nova-tv/python/README.md": "761fdc867c5c219fd6005d79474b34ae924c71edf9ee189511da65c5d3f68707",
+      "nova-tv/python/models.json": "cd3ccbf091d52c6d956b29345065da826a747a08654444b5a6770334a4b2e683",
+      "nova-tv/python/nova/__init__.py": "341ae495a5f750f64afbc7a5070e30edf630cd4f803ae7ceb31e65e7d6fe4d4d",
+      "nova-tv/python/nova/ai.py": "4d99e8befcacfca2293f6d8dd17e0f5b82d34dcdc579f052300530f9de50d28c",
+      "nova-tv/python/nova/appaudit.py": "8fbc7a8c10cb5265e3f1e7351ac1852883985b91457968b08d7699110c5bd3ad",
+      "nova-tv/python/nova/buttons.py": "ab19e02c14dfc4f61e78e4dd5f300893e97e4b9f8c03e2dda4a90473b8e8b970",
+      "nova-tv/python/nova/catalog.py": "23f4209ccb6521a0089e21361f7d2c43b75905893f0654aa0464b3811b102a3f",
+      "nova-tv/python/nova/cli.py": "a989ba2ac12b53cf7bfe9d8ef6c6d401f9f11c03e522b8accb2ae34710bbc2b4",
+      "nova-tv/python/nova/collector.py": "1a329c39732ca1aa019f429aa81df9dbb7ba9180f67be5096d867da2ff4aaae3",
+      "nova-tv/python/nova/config.py": "af717d3c75370c055132a8645cb14996e5e2b6839a1c40d5b2cebd72220271e3",
+      "nova-tv/python/nova/github.py": "24dbfdbbd62237097a939432bb2c499ffa1229b2625badcb71703b2f712638b3",
+      "nova-tv/python/nova/hallucination.py": "9469f4ad0e3edb0349ba1dab0397e6f73334ef067c8d0824ceda777ca7fb9ea4",
+      "nova-tv/python/nova/http.py": "f2235007680635f7737ad5d4fbf3188ea1cf798fbfaae898d57ba809ef83442a",
+      "nova-tv/python/nova/imported/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "nova-tv/python/nova/imported/android_shell.json": "5ea2d7c673f4930054122a90914565970aacc7f6dbca1da247350cd497b5ca66",
+      "nova-tv/python/nova/imported/player_core.js": "5cc15fff313d04204cc03c1aadbfd1ddbc6741376526bc65315284052b1c47a2",
+      "nova-tv/python/nova/imported/player_core.json": "b1646c1a73d337a4abd6a46b8423fee763b744bbe073b4bc54e617c06dbd93a9",
+      "nova-tv/python/nova/importers.py": "c9a7f77cffc18a99d18e0dc4777cd1f6d6846fb2a0e34a88a54894de9522d9bf",
+      "nova-tv/python/nova/registry.py": "d2b24539a86d891a116b382c0f3ffd06a3943c5cf66b9046e20404d5d3f9c29f",
+      "nova-tv/python/nova/report.py": "5705c416e1ffab9955f4e46bd986a97de661e659d94726c4a96a135be6188bf2",
+      "nova-tv/python/nova/result.py": "87ed7c3ccc16da3361ff63339a51f4f734edc9a91f898373c0b126646e336e79",
+      "nova-tv/python/nova/selfimprove.py": "483c869e6b73e9b9957795c0ca90691f363ef8b59fac65b87cbd08c9b4747b71",
+      "nova-tv/python/nova/translated_check.py": "f032e6dc5440b4fc166fa94b20b5538321b0d1177c2729fca99f2654acb2d9e9",
+      "nova-tv/python/nova/zerokey.py": "668c1a3f3923e0a16229bacb4c152ee45adbd69568da27890b37c867ae6051bf",
+      "nova-tv/python/ops/assert_script_result.py": "aef2b3883e5a33ac627165b2ee605fdfeebdf8c9fc5acfcdb284a1b68446ce1f",
+      "nova-tv/python/ops/qa_offline_gates.py": "9b1be8fb75d0784d9a1c7a0e076c8dcbe77c204e05fd20b08b67aac8312e44a2",
+      "nova-tv/python/requirements.txt": "cf46af3598edfe8dc3713f5f4d9d15a0783e9c0bc2210d5abca698312d22121e",
+      "nova-tv/python/scripts/ai_ask.py": "ba7738e32b205f9a3aac164ac50f5cfa94148ec130a902d7f75e5df8e1b4ec30",
+      "nova-tv/python/scripts/ai_models.py": "ace8e50f115085cf7ea2a67e645d3c97878ed5f5decc52c8c2287024e5c190d6",
+      "nova-tv/python/scripts/ai_models_check.py": "9fb583abe7b6c96426cd7c2ae6944480fc4415b0724567304932098fba325652",
+      "nova-tv/python/scripts/ai_review_diff.py": "bc0311029734b1923a7e3b3dce787e8f34f4295603afeeac9c1f2bb1c98ac756",
+      "nova-tv/python/scripts/ai_status.py": "8ec8fe0c9c5ec89c719629bc298bfdbe253c1d4031b42d3dde0bbf18cd78e18c",
+      "nova-tv/python/scripts/ai_suggest_test.py": "72d26d491772817ad01468621cadf8add10b178afc9c8de6f01992136bb0295d",
+      "nova-tv/python/scripts/ai_verify.py": "238a15fdeee1e98aebec2c53cbbef128caa4611a6848081b51d0047de69be803",
+      "nova-tv/python/scripts/app_improve.py": "1a01d6bb38b38e91bbb619033cfb3dc55c73f96eb77f625d4f960dcd02b879b9",
+      "nova-tv/python/scripts/catalogue_categories.py": "7a6369125aaea84b5280b6d3e10496ce66a9279d19160f9b0faa285e508c5f36",
+      "nova-tv/python/scripts/catalogue_duplicates.py": "901092b902cdd66ff13079901a85453aa741c8d032aabfcee8904add1a7280d1",
+      "nova-tv/python/scripts/catalogue_export.py": "93751e0a960d1eb5c6d8cf534dc321c0c61a774f2fb30f9bf1deba8d4999bf75",
+      "nova-tv/python/scripts/catalogue_health.py": "0fbe45301610aae67330b225a436b26e4430b4f891c0069a8a5a750b4689eca5",
+      "nova-tv/python/scripts/catalogue_missing_art.py": "9fd57f4fa067de9d520c4926b5d77573c0d26c39b2c68a3c671b18dc72c3dadf",
+      "nova-tv/python/scripts/catalogue_search.py": "c577e0cb41f807d3df6de8d986415d44475a9103237d4a3f79426878e874ce9a",
+      "nova-tv/python/scripts/catalogue_timeline.py": "7bf9551631bc43b5de21fc75689696531c1dc5ad5e97ea7e4a537471b3331a2e",
+      "nova-tv/python/scripts/catalogue_trending.py": "d3ec11499c03032ba343f9c7577633c5e0c7e5a234cc98d01f9dc0ab6a7b7531",
+      "nova-tv/python/scripts/check_buttons.py": "14e821752713826e2c068cc94968033e25796cd77a15563118f112c4707d205d",
+      "nova-tv/python/scripts/github_collect.py": "1d59d1b279001ea92709386a743d895c0d09d1175058a0ac54ddb5c4030080ed",
+      "nova-tv/python/scripts/github_compare.py": "a86ae9f076455acf19c1645b92014ba57cd0310f5dca4f4074336c51dee4cb03",
+      "nova-tv/python/scripts/github_contributors.py": "91b97160204bdc1631f207b1f3ebdaaf8649cea534ea769bb5e719bb80c6737c",
+      "nova-tv/python/scripts/github_head.py": "bff0470fcfd6cde291cfad6b5e8a886a609133b32710e8a2284e92bf74c1f726",
+      "nova-tv/python/scripts/github_issues.py": "1a4ef50e12b15e502e85c5416dfc0696526cf849a8d35e06e0b7dfecfce156bc",
+      "nova-tv/python/scripts/github_languages.py": "4e2231983d16c09cbb9d94c4f61724550f431f4f84d050414cefd067585f42b3",
+      "nova-tv/python/scripts/github_rate.py": "e823c48939a5e0c92a2750a83e9931384228bda0d27029a3e3dd49cec68f073b",
+      "nova-tv/python/scripts/github_releases.py": "5ac70de18f7c722c9c3ea9445d736a3de45fc68feede0fec92a03ee394b06a50",
+      "nova-tv/python/scripts/github_repo_info.py": "3ebdcca1501f8d55c9db85288341e463d7d52fc4065e4adc934845c54e212637",
+      "nova-tv/python/scripts/github_search.py": "75099fd26ceb817efdf2bf55e1c7f85b5ea9e39a0def6268ef5a6fde71319fc2",
+      "nova-tv/python/scripts/github_snapshot.py": "e33d39d962b8c618cda0baab09b6c5706f301ab22e6eed304f0de03fbf5ad236",
+      "nova-tv/python/scripts/github_tree.py": "f78656953b9f6fb297faffcfef89ec6e1474459bcac1bf48dc987f756f8faefb",
+      "nova-tv/python/scripts/github_watch.py": "36ab267cfcbbaecd259a3b118d93084e5f0f01b10505bec5916c783b3f647e6b",
+      "nova-tv/python/scripts/import_player_core.py": "2eff5ec6d3a45b5dfa7494dc3f2eddb43b9f14797000cabbeddb0fd950ddccef",
+      "nova-tv/python/scripts/improve_apply.py": "4af2d0847cddb52e8e316a7b8eeb39d2a9672534d2d71b7611492d9f0aea8e82",
+      "nova-tv/python/scripts/improve_plan.py": "3e2b8f952e31dbc21048a9395769d2415d7182e67dd6e1407660113f35632d3d",
+      "nova-tv/python/scripts/improve_rollback.py": "894f86bb5ce4e023fb54c3c9e9f1eaa4272df31c993f82edec170828a36d6c3e",
+      "nova-tv/python/scripts/improve_status.py": "06cf4a628a7a94d2f17b949caca27164d9139fa880a268d3d7b5cf36b4c89b02",
+      "nova-tv/python/scripts/kb_export.py": "e12f8b6fc83f827abeca5ce177d28cc9cdcbf8be80b253d88cce47715ee26016",
+      "nova-tv/python/scripts/kb_languages.py": "25c03195f3529f2bc4af48a1b85f427187d35787edfb2e4a32c61c62a141254b",
+      "nova-tv/python/scripts/kb_prune.py": "c0b1a32006f5d0bc4925d8f4eea6a9eb7e5f072b93703ac8227cdcef773937ba",
+      "nova-tv/python/scripts/kb_queries.py": "8d6ea8ff9fc56d971cdf071e6a26a6814555f089f51047c17df7b886bbdd94b7",
+      "nova-tv/python/scripts/kb_search.py": "bd08c30395521006cc9106cc1bc03633ed49a66826d384c2e05376c1b56d29ef",
+      "nova-tv/python/scripts/kb_stale.py": "eba82442a5d12a2f8e7505ef17a1f27eb694fe639e290fbaa12eb04ea97843ac",
+      "nova-tv/python/scripts/kb_stats.py": "5ac513f52e54302a0eb9acb1f81aff18881072b1271dabbb9159b886f642b162",
+      "nova-tv/python/scripts/kb_top.py": "cb0acaf7cb6fc2029f28b7f39f1fef0c1590d4a264468748878399957b99c39a",
+      "nova-tv/python/scripts/ops_bench.py": "a4997feaf4d0b113a333e186182ede2ddb4650ae5fd52b6c4c20c65f1ad262d0",
+      "nova-tv/python/scripts/ops_check_links.py": "4a60472195b024cb9e4d9d0fbafa1d614e6c0674b488d2c964278900f3a397b8",
+      "nova-tv/python/scripts/ops_clean.py": "77c83355e5ab8b951143c17272ba3c41b0a57d2985adc61545017ff46b2b79c2",
+      "nova-tv/python/scripts/ops_count.py": "9e8851b78f307f4d40aaae9023d89e4dd2938deaac18654183757148beab7f3c",
+      "nova-tv/python/scripts/ops_doctor.py": "d41a97f1974fb3da6dabc1f6fc3368f711ef4185e594da71c6a5c33d6945b94c",
+      "nova-tv/python/scripts/ops_env.py": "417782f65a0ea77fd0e78f3512505d27a4cec696c3b2c4834ac2c1706335a9aa",
+      "nova-tv/python/scripts/ops_inventory.py": "b48a28232ebd4d870544d9575d620c515a85a80bf2e413c171b260ea654969d4",
+      "nova-tv/python/scripts/ops_report.py": "f44b9cea48687b17059c2df963b08a37deb58f61c72386fc2801bd489cdf38c0",
+      "nova-tv/python/scripts/ops_version.py": "9be428e7d66a2cd89de345bff7f8028b9d4573a46e15783e267685ad33c10b38",
+      "nova-tv/python/scripts/qa_compile.py": "da1b1cb00a0f5eb87532d7614cdb35e201238212fcce2b2dfaf4f7fc61e8c7af",
+      "nova-tv/python/scripts/qa_complexity.py": "e416bebbc6a5378544d1077dcbd50c6498ca96946b6e901504a6bb5f7f8c50c8",
+      "nova-tv/python/scripts/qa_deps.py": "75aab69e7f542d44be6db3fbb7cc2dd4af4aeb2863b0bfaad4ce8120d3b2ee8e",
+      "nova-tv/python/scripts/qa_import_check.py": "e8f2315680ff4bb7386118429bc43cd9b34d276413db1d538d80132f3c4d9b89",
+      "nova-tv/python/scripts/qa_lint.py": "7f10b1cb88374de1571567159729424a356c60ae55a3f77fbd238dfa400fff94",
+      "nova-tv/python/scripts/qa_secrets.py": "f2954f492cf66ad69b2ab43d8b5ab9547a28e3d26ceaea95a44e53d835eaa429",
+      "nova-tv/python/scripts/qa_tests.py": "7e24733bb65368b4cb7122b135b6b2433fbc4145c9227ce5357731f627facde9",
+      "nova-tv/python/scripts/qa_todos.py": "2ccba2cbbc1e8e99553e9149cb23dde56f32b01fd51620a25aed34dd5b5eb815",
+      "nova-tv/python/scripts/qa_translated.py": "9d1a459df8ff0161780d5f0e000384092e8102600edd546e71b1da45d6290e9b",
+      "nova-tv/python/scripts/review_ui.py": "bc98710458f1327d28c567b43ffa3ad6d466b1037d7404a12d181a253a629429",
+      "nova-tv/python/scripts/verify_claims.py": "5077e2e956f81d731ca618154eb580d1d987efc4938821a301ec076b26383359",
+      "nova-tv/python/tests/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "nova-tv/python/tests/test_appaudit.py": "d1f19afd383fd2ba35731fdf51740df0582f0884191ed32993f6559c21f2fdce",
+      "nova-tv/python/tests/test_audit_coverage.py": "f3c21952c36686bf549368dd56c529b82549c1d5c669c3c0823b0ac9a73c822d",
+      "nova-tv/python/tests/test_buildfiles.py": "e43eae36e78f9ca62b4a6cec6e29951cb8ca3dafa88ec6ef48fb85c7b238d1d1",
+      "nova-tv/python/tests/test_cli_flags.py": "f539269c9edc06edfec5792ee1fa8b9ed40c8fffc574fe01be0f5e4d329209e5",
+      "nova-tv/python/tests/test_collector.py": "7653382e66ee4b6b1f404e258c5262c0e0fef0dff3408fa07332fc7a5e91920f",
+      "nova-tv/python/tests/test_compile_shapes.py": "43f1b427d13f42de3891da1f39357fd8f811ce6a38215ebf3fe2ddeb1fe6b797",
+      "nova-tv/python/tests/test_github_ref.py": "4d66836269293ddcf5a81447cda24d2f32a7af98446b5b98587b585d15a1a9ad",
+      "nova-tv/python/tests/test_importers.py": "f73c743ea7c43d8c05435fb8cffe7ed35d15ea8ca30dee3a5c54ea30224ba3c0",
+      "nova-tv/python/tests/test_kotlin_scanner.py": "bc53c1f98907affc8d2af684556f4ed46f251e95f9589efa09030c24bce499ed",
+      "nova-tv/python/tests/test_selfimprove.py": "9560262738cd7199ae12c59d70412c1b41c27b73d4712d7c7f5647f7f4a3c325",
+      "nova-tv/python/tests/test_translated_check.py": "f8cc62f6959a34b52849571f267b901d99fb48fd864e238f8522f728f3a2537e",
+      "nova-tv/python/tests/test_verify.py": "b96d580fefa4baea5f52edca9900a27a527fcdb815a1a03bb785d57eb3f17d59",
+      "tools/nova/README.md": "908cc334089d085affd8bd62faf9e6dd8b554b4984534b9cb069e2181bb08dce",
+      "tools/nova/check_artifacts.py": "1bbc230559a00eb3aed0b34fbdce60412bd5f6aa272f953b5e0bf5efbd9b7bd3",
+      "tools/nova/contracts/bootstrap.json": "8e8ad1407901caff0f5ef0fb6a8d100620023a599b72745a4bee1f63b7d31396",
+      "tools/nova/contracts/pipeline-v3.json": "53a9b8e1d9dffbd1bdede1ba681a94a4c3867497c55f362aaa20d0f42671e8a3",
+      "tools/nova/crawl_probe.py": "20839cee7a01898acbce4b31ebf3fdb90d220d95d55170d3d37e3b3b912a437a",
+      "tools/nova/emulator_finder_smoke.sh": "24d42d8c04860c96d3078eacbe8a22158bce7beb3394992d3b21e0d45a29d900",
+      "tools/nova/evidence/bootstrap.strict.json": "ed27419e98dccd90a5c44b922a1454bc3efb2bab46dae2c5af0ec38d01895a52",
+      "tools/nova/render_finder_debug_report.py": "0c14a168d085da2ceeeae91507a662b363281b5b92b986c26a835bf4ffdf4002",
+      "tools/nova/run_ci_artifact_check.sh": "0d635c17f07a99b1e83f1a89c38f985ac0592fb5eba1d070ecb8492ce0e921b3",
+      "tools/nova/strict_verify.py": "e782d1641892bda1502b6a5231a590e67eeb09049b76865d7550255293478a09",
+      "tools/nova/tests/__init__.py": "6121b1c0ed1989f0df7326d617ea8d6b2bd35678c293a17978f8d4e23b5e88fd",
+      "tools/nova/tests/test_strict_verify.py": "29bb82e218e0aa79c5e986bfeb2f58e6938124aad1cc6be35af9b9ab34e69ae5",
+      "tools/nova/uiautomator_tap.py": "a5b93b3c02515169c7befa19d114912027160f8f250246b1b79278019ce8b03c"
+    },
+    "sha256": "60078ae71d95c35eeb767d31dee21bf85d62f7c33aac4acafcd1887b758d3e24"
+  }
+}
