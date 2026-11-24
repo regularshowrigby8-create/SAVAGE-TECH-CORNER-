@@ -632,6 +632,12 @@ class AddonFinderHarvester(
     /** Only one harvest may drain the frontier at a time. */
     private val harvesting = java.util.concurrent.atomic.AtomicBoolean(false)
 
+    /** When the current drain took the flag; 0 when nobody holds it. */
+    private val harvestStartedAt = java.util.concurrent.atomic.AtomicLong(0L)
+
+    /** True while another caller holds the drainer, so a caller can skip a round. */
+    val busy: Boolean get() = harvesting.get()
+
     /**
      * Discovery round currently in flight. [Discovery.domainSurfaces] rotates
      * its index by round, so [fromWww] needs the round outside [refillSeeds].
@@ -1074,13 +1080,36 @@ class AddonFinderHarvester(
         // One drainer at a time: two workers on one frontier split every batch
         // and log the same START twice.
         if (!harvesting.compareAndSet(false, true)) {
+            // Same watchdog as the server finder: a drain that died without
+            // running its `finally` would hold this flag for the life of the
+            // process and every later call would skip forever.
+            val held = harvestStartedAt.get()
+            val heldFor = if (held == 0L) 0L else System.currentTimeMillis() - held
+            if (held != 0L && heldFor > HARVEST_STALL_MS) {
+                FinderTrace.log("addon", "harvest#$round STALL held ${heldFor}ms, taking the drainer back")
+                FinderTrace.count("harvest.stall")
+                harvesting.set(false)
+                harvestStartedAt.set(0)
+                if (harvesting.compareAndSet(false, true)) {
+                    harvestStartedAt.set(System.currentTimeMillis())
+                    try {
+                        return harvestLocked(round)
+                    } finally {
+                        harvesting.set(false)
+                        harvestStartedAt.set(0)
+                    }
+                }
+            }
             FinderTrace.log("addon", "harvest#$round SKIP (already running)")
+            FinderTrace.count("harvest.skip")
             return store.alive().take(cap).map { it.toFinderCandidate() }
         }
+        harvestStartedAt.set(System.currentTimeMillis())
         try {
             return harvestLocked(round)
         } finally {
             harvesting.set(false)
+            harvestStartedAt.set(0)
         }
     }
 
@@ -1152,6 +1181,9 @@ class AddonFinderHarvester(
     private companion object {
         /** Consecutive rounds that add nothing before a harvest gives up. */
         const val BARREN_ROUNDS = 2
+
+        /** How long a drain may hold the flag before it is presumed hung. */
+        const val HARVEST_STALL_MS = 180_000L
     }
 
     private fun unescape(s: String): String = s

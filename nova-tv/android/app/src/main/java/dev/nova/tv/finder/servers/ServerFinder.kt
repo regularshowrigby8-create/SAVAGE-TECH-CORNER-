@@ -675,7 +675,21 @@ class ServerFinderStore(private val store: PoolStore) {
 data class ServerHarvest(
     val sites: List<SavedWebsite>,
     val more: Boolean,
-    val sources: List<FinderSourceReport>
+    val sources: List<FinderSourceReport>,
+    /**
+     * True when this result is a *skip*: another harvest held the drainer, so
+     * nothing was crawled and [sites] is just the current pool.
+     *
+     * Without this flag a skip was indistinguishable from a productive round
+     * that happened to add nothing. `fillWebsitePool` only pauses when the
+     * pool grew and only returns when `!more`, so a skip -- which reports
+     * `more = true` because the pool is under cap -- matched neither branch
+     * and looped with no delay at all. That is the `harvest#3945996 SKIP
+     * (already running)` flood: millions of iterations inside one second, each
+     * one bumping the round counter, which is why the round numbers looked
+     * like days of uptime.
+     */
+    val busy: Boolean = false
 )
 
 /**
@@ -727,6 +741,9 @@ class ServerFinderHarvester(
      * second caller now returns the current pool instead of racing.
      */
     private val harvesting = java.util.concurrent.atomic.AtomicBoolean(false)
+
+    /** When the current drain took the flag; 0 when nobody holds it. */
+    private val harvestStartedAt = java.util.concurrent.atomic.AtomicLong(0L)
 
     /** Per-harvest drop tallies; read by [rejectionReport]. */
     private val rejects = java.util.concurrent.ConcurrentHashMap<String, Int>()
@@ -1356,13 +1373,41 @@ class ServerFinderHarvester(
         // workers on one frontier split every batch in half and log the same
         // `harvest#0 START` twice (the device trace showed exactly that).
         if (!harvesting.compareAndSet(false, true)) {
+            // A harvest that never returns would hold this flag for the life of
+            // the process, so every later caller would skip forever and the
+            // finder would look permanently stuck. A drain is bounded by
+            // [harvestBudgetMs], so anything older than the stall window is a
+            // hung coroutine, not a working one: take the flag back and say so.
+            val held = harvestStartedAt.get()
+            val heldFor = if (held == 0L) 0L else System.currentTimeMillis() - held
+            if (held != 0L && heldFor > HARVEST_STALL_MS) {
+                FinderTrace.log(
+                    "web",
+                    "harvest#$round STALL held ${heldFor}ms > ${HARVEST_STALL_MS}ms, taking the drainer back"
+                )
+                FinderTrace.count("harvest.stall")
+                harvesting.set(false)
+                harvestStartedAt.set(0)
+                if (harvesting.compareAndSet(false, true)) {
+                    harvestStartedAt.set(System.currentTimeMillis())
+                    try {
+                        return harvestLocked(round, started)
+                    } finally {
+                        harvesting.set(false)
+                        harvestStartedAt.set(0)
+                    }
+                }
+            }
             FinderTrace.log("web", "harvest#$round SKIP (already running)")
-            return snapshot(0, System.currentTimeMillis() - started)
+            FinderTrace.count("harvest.skip")
+            return snapshot(0, System.currentTimeMillis() - started).copy(busy = true)
         }
+        harvestStartedAt.set(started)
         try {
             return harvestLocked(round, started)
         } finally {
             harvesting.set(false)
+            harvestStartedAt.set(0)
         }
     }
 
@@ -1487,6 +1532,16 @@ class ServerFinderHarvester(
     private companion object {
         /** Consecutive rounds that add nothing before a harvest gives up. */
         const val BARREN_ROUNDS = 2
+
+        /**
+         * How long a drain may hold the flag before it is presumed hung.
+         *
+         * A normal drain is bounded by [harvestBudgetMs] (45 s), so a hold well
+         * past that means the coroutine died without running its `finally`
+         * (a cancelled scope, a native hang inside the WebView). Without this
+         * the flag stayed `true` forever and every later call skipped.
+         */
+        const val HARVEST_STALL_MS = 180_000L
     }
 
     private fun unescape(s: String): String = s
