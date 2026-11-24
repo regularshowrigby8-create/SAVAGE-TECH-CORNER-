@@ -50,6 +50,11 @@ jobs:
         run: python -m unittest discover -s tests -t . -v
       - name: Offline gates assert every nested result
         working-directory: nova-tv/python
+        env:
+          # verify_claims.py checks GitHub URL claims against the current branch.
+          # Without the token it returns "unverified" for real repos, which is
+          # correctly treated as a failed offline gate.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           python ops/qa_offline_gates.py > "$RUNNER_TEMP/nova-offline-gates.json"
