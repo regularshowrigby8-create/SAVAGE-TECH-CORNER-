@@ -38,7 +38,7 @@ permissions:
 jobs:
   test:
     name: Test
-    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.inspect_artifact != 'true' }}
+    if: ${{ !((github.event_name == 'workflow_dispatch' && github.event.inputs.inspect_artifact == 'true') || (github.event_name == 'push' && contains(github.event.head_commit.message, '[inspect-artifact]'))) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -161,7 +161,7 @@ jobs:
 
   inspect-artifact:
     name: Inspect failed APK finder artifact
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.inspect_artifact == 'true' }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.inspect_artifact == 'true') || (github.event_name == 'push' && contains(github.event.head_commit.message, '[inspect-artifact]')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
