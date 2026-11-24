@@ -1,21 +1,19 @@
 # nova-tv build diagnostics
 
 Written automatically by the "nova-tv Android" workflow.
-Run: 45333370013  Commit: d31dfdcad848ae95d5583efc7c5516dae1fe7e4b
+Run: 45397635895  Commit: 994dec1163c378b943ca351a50b1604077d96443
 Log: build.log
 
 ## errors
 ```
-48:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/finder/addons/AddonFinder.kt:1008:14 Unresolved reference 'round'.
-49:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/finder/servers/ServerFinder.kt:863:58 Unresolved reference 'round'.
-50:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/finder/servers/ServerFinder.kt:1077:14 Unresolved reference 'round'.
-52:> Task :app:compileMobileDebugKotlin FAILED
-55:FAILURE: Build failed with an exception.
-57:* What went wrong:
-58:Execution failed for task ':app:compileMobileDebugKotlin'.
-68:org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compileMobileDebugKotlin'.
-130:Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
-289:Caused by: org.jetbrains.kotlin.gradle.tasks.CompilationErrorException: Compilation error. See log for more details
+48:e: file:///home/runner/work/SAVAGE-TECH-CORNER-/SAVAGE-TECH-CORNER-/nova-tv/android/app/src/main/java/dev/nova/tv/finder/servers/ServerFinder.kt:968:69 Unresolved reference 'MAX_SHELL_RENDERS'.
+50:> Task :app:compileMobileDebugKotlin FAILED
+53:FAILURE: Build failed with an exception.
+55:* What went wrong:
+56:Execution failed for task ':app:compileMobileDebugKotlin'.
+66:org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compileMobileDebugKotlin'.
+128:Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+287:Caused by: org.jetbrains.kotlin.gradle.tasks.CompilationErrorException: Compilation error. See log for more details
 ```
 
 ## last 80 lines
@@ -98,6 +96,6 @@ Caused by: org.jetbrains.kotlin.gradle.tasks.CompilationErrorException: Compilat
 	... 2 more
 
 
-BUILD FAILED in 2m 53s
+BUILD FAILED in 2m 58s
 24 actionable tasks: 24 executed
 ```
