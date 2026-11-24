@@ -18,16 +18,27 @@ on:
       - arena/*
   pull_request:
   workflow_dispatch:
+    inputs:
+      inspect_artifact:
+        description: 'Print the failed APK finder debug artifact instead of running tests/collect'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
   schedule:
     # Continuous collection: the self-updating part, running on GitHub's clock.
     - cron: "17 */6 * * *"
 
 permissions:
+  actions: read
   contents: read
 
 jobs:
   test:
     name: Test
+    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.inspect_artifact != 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -127,7 +138,7 @@ jobs:
 
   collect:
     name: Collect
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.inspect_artifact != 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -147,3 +158,62 @@ jobs:
           name: knowledge
           path: nova-tv/knowledge.json
           if-no-files-found: error
+
+  inspect-artifact:
+    name: Inspect failed APK finder artifact
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.inspect_artifact == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SOURCE_RUN_ID: '45437869620'
+      ARTIFACT_NAME: nova-finder-debug-session
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Download source run artifact
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/nova-inspect
+          gh run download "$SOURCE_RUN_ID" --repo "${{ github.repository }}" \
+            --name "$ARTIFACT_NAME" --dir /tmp/nova-inspect
+          find /tmp/nova-inspect -type f -printf '%p %s bytes\n' | sort
+
+      - name: Print failure signals
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          needle = (
+              "FATAL EXCEPTION", "AndroidRuntime", "NovaFinderDebug",
+              "FinderProbeActivity", "pipeline.done", "ActivityManager",
+              "ANR", "Permission denied", "ClassNotFound", "NoSuchMethod",
+              "Exception", "crash", "network",
+          )
+          matches = []
+          for path in sorted(Path("/tmp/nova-inspect").rglob("*")):
+              if path.is_file() and path.suffix in {".txt", ".log"}:
+                  lines = path.read_text(errors="ignore").splitlines()
+                  for number, line in enumerate(lines, 1):
+                      if any(term in line for term in needle):
+                          matches.append(f"{path}:{number}:{line}")
+          print("\n".join(matches[-300:]))
+          PY
+
+      - name: Print text evidence
+        run: |
+          set -euo pipefail
+          cd /tmp/nova-inspect
+          find . -type f \( -name '*.txt' -o -name '*.json' -o -name '*.md' -o -name '*.log' -o -name '*.xml' \) -print0 |
+            sort -z |
+            while IFS= read -r -d '' file; do
+              echo "===== BEGIN ${file#./} ====="
+              if [ "$(wc -c < "$file")" -gt 120000 ]; then
+                echo "[first 40KB]"
+                head -c 40000 "$file"
+                echo
+                echo "[last 80KB]"
+                tail -c 80000 "$file"
+              else
+                cat "$file"
+              fi
+              echo "===== END ${file#./} ====="
+            done
