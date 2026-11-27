@@ -229,7 +229,7 @@ def check_files_exist(root: Path) -> List[Check]:
         "finder/translated/FinderFingerprint.kt": "FinderFingerprint",
         "finder/translated/FinderHttp.kt": "FinderHttp",
         "finder/translated/FinderBrowser.kt": "FinderBrowser",
-        "finder/servers/ServerFinder.kt": "ServerFinderHarvester",
+        "finder/servers/Servers.kt": "ServerFinderHarvester",
         "finder/addons/AddonFinder.kt": "AddonFinderHarvester",
     }
     checks: List[Check] = []
@@ -262,7 +262,7 @@ def check_no_stubs(root: Path) -> List[Check]:
         root / "android/app/src/main/java/dev/nova/tv/finder/translated/FinderHelpers.kt",
         root / "android/app/src/main/java/dev/nova/tv/finder/translated/FinderFingerprint.kt",
         root / "android/app/src/main/java/dev/nova/tv/finder/translated/FinderHttp.kt",
-        root / "android/app/src/main/java/dev/nova/tv/finder/servers/ServerFinder.kt",
+        root / "android/app/src/main/java/dev/nova/tv/finder/servers/Servers.kt",
         root / "android/app/src/main/java/dev/nova/tv/finder/addons/AddonFinder.kt",
     ]
     markers = ["TODO", "FIXME", "NotImplemented", "TODO()", "error(\"not implemented"]
@@ -296,7 +296,7 @@ def check_no_stubs(root: Path) -> List[Check]:
 
 def check_logic_constants(root: Path) -> List[Check]:
     checks: List[Check] = []
-    server = _read(root / "android/app/src/main/java/dev/nova/tv/finder/servers/ServerFinder.kt")
+    server = _read(root / "android/app/src/main/java/dev/nova/tv/finder/servers/Servers.kt")
     addon = _read(root / "android/app/src/main/java/dev/nova/tv/finder/addons/AddonFinder.kt")
     helpers = _read(root / "android/app/src/main/java/dev/nova/tv/finder/translated/FinderHelpers.kt")
 
@@ -550,7 +550,7 @@ def check_hallucination(root: Path) -> List[Check]:
     checks: List[Check] = []
     finder_md = root / "docs" / "FINDER.md"
     text = _read(finder_md)
-    # File references like `finder/servers/ServerFinder.kt`. A path that is a
+    # File references like `finder/servers/Servers.kt`. A path that is a
     # URL fragment (`api.strem.io/addonscollection.json`) or a URL template
     # (`base/manifest.json`) is prose, not a claim about a file on disk, so it
     # is excluded by requiring a code directory prefix.
@@ -576,7 +576,7 @@ def check_hallucination(root: Path) -> List[Check]:
     declared = set(re.findall(r"(?:class|object|interface|enum class)\s+(\w+)", all_kotlin))
     removed = {"ServerHarvester", "WebsiteSpider"}
     for rel in [
-        "android/app/src/main/java/dev/nova/tv/finder/servers/ServerFinder.kt",
+        "android/app/src/main/java/dev/nova/tv/finder/servers/Servers.kt",
         "android/app/src/main/java/dev/nova/tv/finder/addons/AddonFinder.kt",
         "android/app/src/main/java/dev/nova/tv/finder/translated/FinderHelpers.kt",
     ]:
@@ -889,7 +889,7 @@ def check_finder_correctness(root: Path) -> List[Check]:
         "finder/translated/FinderHttp.kt",
     ))
     for label, rel, name in [
-        ("server", "finder/servers/ServerFinder.kt", "ServerFinderHarvester"),
+        ("server", "finder/servers/Servers.kt", "ServerFinderHarvester"),
         ("addon", "finder/addons/AddonFinder.kt", "AddonFinderHarvester"),
     ]:
         src = _strip_comments(_read(root / "android/app/src/main/java/dev/nova/tv" / Path(rel)))
@@ -903,7 +903,7 @@ def check_finder_correctness(root: Path) -> List[Check]:
             rel,
         ))
     # The website pool must receive searchable sites, not media origins.
-    sf = _strip_comments(_read(root / "android/app/src/main/java/dev/nova/tv/finder/servers/ServerFinder.kt"))
+    sf = _strip_comments(_read(root / "android/app/src/main/java/dev/nova/tv/finder/servers/Servers.kt"))
     # Behaviour, not shape: the function must derive from the referer and fall
     # back to baseUrl only when there is no referer. Returning baseUrl outright
     # keeps the function and loses the fix.
@@ -915,7 +915,7 @@ def check_finder_correctness(root: Path) -> List[Check]:
         "proven" if projects else "contradicted",
         "projects from the referer, falls back only when absent" if projects
         else "returns the media origin",
-        "finder/servers/ServerFinder.kt",
+        "finder/servers/Servers.kt",
     ))
 
     # --- the browser that actually renders -----------------------------------
@@ -971,7 +971,7 @@ def check_finder_correctness(root: Path) -> List[Check]:
     # so refillSeeds() re-queues what it just consumed. With a barren surface the
     # loop re-fetched the same seeds until its budget ran out. Both harvesters
     # must remember what they already fetched and stop after two barren rounds.
-    for label, rel in [("server", "finder/servers/ServerFinder.kt"),
+    for label, rel in [("server", "finder/servers/Servers.kt"),
                        ("addon", "finder/addons/AddonFinder.kt")]:
         src = _strip_comments(_read(root / "android/app/src/main/java/dev/nova/tv" / rel))
         # *Both* pops must be filtered. Checking only that `visited.add` appears
@@ -992,7 +992,7 @@ def check_finder_correctness(root: Path) -> List[Check]:
     # the same string for an unreachable seed, a JS shell with no embeds, and a
     # probe that found only pages. The addon path has had AddonRejections since
     # the 1% audit; the website path now has the same, wired to the screen.
-    srv = _strip_comments(_read(root / "android/app/src/main/java/dev/nova/tv/finder/servers/ServerFinder.kt"))
+    srv = _strip_comments(_read(root / "android/app/src/main/java/dev/nova/tv/finder/servers/Servers.kt"))
     # `note("x")` is not the only shape: one call passes two literals through
     # an `if` expression (`note(if (ok) "page-not-media" else "probe-failed")`).
     # Collect every quoted literal inside each note(...) call instead of
@@ -1011,7 +1011,7 @@ def check_finder_correctness(root: Path) -> List[Check]:
         "proven" if want.issubset(set(notes)) else "contradicted",
         f"reasons: {sorted(set(notes))}" if want.issubset(set(notes))
         else f"missing: {sorted(want - set(notes))}",
-        "finder/servers/ServerFinder.kt",
+        "finder/servers/Servers.kt",
     ))
     eng = _strip_comments(_read(root / "android/app/src/main/java/dev/nova/tv/finder/SourceEngine.kt"))
     # Require the assignment, not just the two names: a property declaration

@@ -125,7 +125,7 @@ class AuditCatchesBrokenFixes(unittest.TestCase):
 
     def test_single_batch_harvest_is_caught_for_both_finders(self) -> None:
         self._mutate(
-            TV / "finder/servers/ServerFinder.kt",
+            TV / "finder/servers/Servers.kt",
             "while (System.currentTimeMillis() - started < harvestBudgetMs) {",
             "if (true) {",
         )
@@ -140,7 +140,7 @@ class AuditCatchesBrokenFixes(unittest.TestCase):
 
     def test_feeding_media_origins_to_the_website_pool_is_caught(self) -> None:
         self._mutate(
-            TV / "finder/servers/ServerFinder.kt",
+            TV / "finder/servers/Servers.kt",
             "return fromRef.ifEmpty { baseUrl }",
             "return baseUrl",
         )
@@ -253,7 +253,7 @@ class AuditCatchesBrokenFixes(unittest.TestCase):
 
     def test_audit_catches_a_spinning_server_frontier(self) -> None:
         self._mutate(
-            TV / "finder/servers/ServerFinder.kt",
+            TV / "finder/servers/Servers.kt",
             "store.pop(64).filter { visited.add(it) }",
             "store.pop(64)",
         )
@@ -274,7 +274,7 @@ class AuditCatchesBrokenFixes(unittest.TestCase):
         # The whole reason three fixes were guesses: an empty round that says
         # nothing. Removing one reason must be noticed.
         self._mutate(
-            TV / "finder/servers/ServerFinder.kt",
+            TV / "finder/servers/Servers.kt",
             'note("unreachable")',
             '/* removed */',
         )

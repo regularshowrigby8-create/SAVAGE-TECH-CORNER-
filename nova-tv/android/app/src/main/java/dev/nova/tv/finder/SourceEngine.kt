@@ -4,6 +4,11 @@ import dev.nova.tv.data.model.MetaPreview
 import dev.nova.tv.data.model.Stream
 import dev.nova.tv.data.repo.CatalogRepository
 import dev.nova.tv.data.repo.LibraryStore
+import dev.nova.tv.finder.servers.ServerFinder
+import dev.nova.tv.finder.servers.ServerSeeds
+import dev.nova.tv.finder.servers.Source
+import dev.nova.tv.finder.servers.rejections
+import dev.nova.tv.finder.website.SavedWebsite
 import dev.nova.tv.finder.website.WebsiteFinder
 import dev.nova.tv.finder.website.WebsiteRules
 import dev.nova.tv.finder.addons.AddonFinderHarvester
@@ -113,6 +118,12 @@ class SourceEngine(
     /** The 6000-slot website pool: real sites, not addon manifests. */
     val websitePool: WebsitePool? = null,
     private val spider: ServerFinderHarvester? = null,
+    /**
+     * The precision-governed lane. When present the engine seeds *its*
+     * frontier and a website round is one precise pass; null keeps the
+     * seed-driven harvest as the fallback.
+     */
+    private val discovery: ServerFinder? = null,
     /** DNS latency per host, injectable so the engine stays testable. */
     private val ping: suspend (String) -> Long = { host -> dev.nova.tv.data.remote.NovaDns.pingMs(host) }
 ) {
@@ -200,6 +211,38 @@ class SourceEngine(
      * streaming sites, so re-probing the same hosts forever would be waste.
      */
     private suspend fun fillWebsitePool(sites: WebsitePool) {
+        val precision = discovery
+        if (precision != null) {
+            // The engine owns the seed list; Discovery owns the frontier from
+            // here on. Offering the seeds once is what removes the re-read of
+            // the same pages every round.
+            ServerSeeds.SEEDS.forEach { precision.discovery.offer(it, Source.SITELINKS) }
+            var failures = 0
+            while (currentCoroutineContext().isActive && sites.state.value.size < WebsitePool.CAPACITY) {
+                val before = sites.state.value.size
+                val report = runCatching {
+                    withTimeoutOrNull(WEBSITE_ROUND_BUDGET_MS) {
+                        precision.runRound(WEBSITE_ROUND_BUDGET_MS, WEBSITE_ROUND_CAP)
+                    }
+                }.getOrNull()
+                if (report == null) {
+                    failures++
+                    if (failures >= WEBSITE_MAX_FAILURES) return
+                    delay(POOL_RETRY_PAUSE_MS shl (failures - 1).coerceAtMost(4))
+                    continue
+                }
+                failures = 0
+                lastServerRejections = report.rejections()
+                sites.add(
+                    report.sites.map { SavedWebsite("https://${it.host}/", it.host) },
+                    from = "Website finder"
+                )
+                runCatching { sites.pruneDead() }
+                if (report.sites.isEmpty() && sites.state.value.size == before) return
+                if (sites.state.value.size > before) delay(POOL_FILL_PAUSE_MS)
+            }
+            return
+        }
         var failures = 0
         while (currentCoroutineContext().isActive && sites.state.value.size < WebsitePool.CAPACITY) {
             val before = sites.state.value.size
@@ -224,6 +267,19 @@ class SourceEngine(
     /** One website-discovery round, for the Sources screen's "Find sites" button. */
     suspend fun fillWebsitePoolOnce(): Int {
         val sites = websitePool ?: return 0
+        val precision = discovery
+        if (precision != null) {
+            ServerSeeds.SEEDS.forEach { precision.discovery.offer(it, Source.SITELINKS) }
+            val report = runCatching {
+                precision.runRound(WEBSITE_ROUND_BUDGET_MS, WEBSITE_ROUND_CAP)
+            }.getOrNull()
+            lastServerRejections = report?.rejections() ?: lastServerRejections
+            if (report == null) return 0
+            return sites.add(
+                report.sites.map { SavedWebsite("https://${it.host}/", it.host) },
+                from = "Website finder"
+            )
+        }
         val crawl = spider ?: return 0
         val harvest = runCatching { crawl.harvest(webRound) }.getOrNull() ?: return 0
         webRound++
@@ -620,6 +676,8 @@ class SourceEngine(
         private const val WEBSITE_SITE_TIMEOUT_MS = 12_000L
         private const val WEBSITE_COLD_START_MS = 60_000L
         private const val WEBSITE_ROUND_BUDGET_MS = 120_000L
+        /** Candidates one precise round may admit; the pool is the real cap. */
+        private const val WEBSITE_ROUND_CAP = 400
         private const val WEBSITE_MAX_FAILURES = 3
         const val SCRAMBLE_LABEL = "New servers"
         private const val MAX_VERIFY = 120

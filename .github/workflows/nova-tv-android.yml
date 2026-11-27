@@ -15,6 +15,7 @@ on:
     branches:
       - main
       - arena/*
+      - finder/two-lane-discovery
     paths:
       - 'nova-tv/android/**'
       - 'nova-tv/ops/**'

@@ -15,6 +15,7 @@ import dev.nova.tv.finder.pool.PoolStore
 import dev.nova.tv.finder.pool.ServerPool
 import dev.nova.tv.finder.pool.WebsitePool
 import dev.nova.tv.finder.servers.ServerFinder
+import dev.nova.tv.finder.servers.ServerSeeds
 import dev.nova.tv.finder.servers.ServerFinderChecker
 import dev.nova.tv.finder.servers.ServerFinderHarvester
 import dev.nova.tv.finder.servers.ServerFinderStore
@@ -72,7 +73,9 @@ class NovaApplication : Application(), ImageLoaderFactory {
      * is what left the website pool at 0 on device.
      */
     val finderBrowser: FinderBrowser by lazy { FinderBrowser(this) }
-    val serverFinderHttp by lazy { ServerFinder.http(http.okHttp, finderBrowser) }
+    val serverFinderHttp by lazy { ServerSeeds.http(http.okHttp, finderBrowser) }
+    /** Precision-governed discovery: no seed list, one Outcome per candidate. */
+    val serverDiscovery: ServerFinder by lazy { ServerFinder(this) }
     val addonFinderHttp by lazy { AddonFinder.http(http.okHttp, finderBrowser) }
 
     private fun fileStore(name: String): PoolStore {
@@ -176,7 +179,8 @@ class NovaApplication : Application(), ImageLoaderFactory {
         SourceEngine(
             repository, stremioFinder, websiteFinder, zeroPlayFinder, library, probe,
             pool = serverPool, harvester = addonFinderHarvester,
-            websitePool = websitePool, spider = serverFinderHarvester
+            websitePool = websitePool, spider = serverFinderHarvester,
+            discovery = serverDiscovery
         )
     }
 

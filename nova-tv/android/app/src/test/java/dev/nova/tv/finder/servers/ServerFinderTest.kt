@@ -191,7 +191,7 @@ class ServerFinderTest {
         // invariant is that the visited set makes the sequence finite and that
         // no URL is ever handed out twice.
         val store = ServerFinderStore(MemoryStore())
-        val harvester = ServerFinderHarvester(store, ServerFinder.http(okhttp3.OkHttpClient()))
+        val harvester = ServerFinderHarvester(store, ServerSeeds.http(okhttp3.OkHttpClient()))
         val visited = HashSet<String>()
         val seenOrder = mutableListOf<String>()
         var rounds = 0
