@@ -18,11 +18,11 @@ class ServerFinderTest {
 
     @Test
     fun `cap is 6000 and seeds are the 9anime mirrors`() {
-        assertEquals(6000, ServerFinder.CAP)
+        assertEquals(6000, ServerSeeds.CAP)
         assertEquals(6000, FinderHelpers.CAP)
-        assertTrue("https://hianime.to" in ServerFinder.SEEDS)
-        assertTrue("https://9anime.pl" in ServerFinder.SEEDS)
-        assertEquals(12, ServerFinder.SEEDS.size)
+        assertTrue("https://hianime.to" in ServerSeeds.SEEDS)
+        assertTrue("https://9anime.pl" in ServerSeeds.SEEDS)
+        assertEquals(12, ServerSeeds.SEEDS.size)
     }
 
     @Test
@@ -41,12 +41,12 @@ class ServerFinderTest {
 
     @Test
     fun `score_of ranks catalogue first then quality then buffer minus latency`() {
-        val big = ServerFinder.scoreOf(100_000, 400, 90, 100)
-        val small = ServerFinder.scoreOf(100, 100, 90, 100)
+        val big = ServerSeeds.scoreOf(100_000, 400, 90, 100)
+        val small = ServerSeeds.scoreOf(100, 100, 90, 100)
         assertTrue(big > small)
         // Exact Python formula: 0.55*cat*100 + 0.30*min(tier,400)/4 + 0.15*buffer - ttfb/120
         val expected = FinderHelpers.scoreOfServer(1000, 300, 80, 120)
-        assertEquals(expected, ServerFinder.scoreOf(1000, 300, 80, 120), 0.001)
+        assertEquals(expected, ServerSeeds.scoreOf(1000, 300, 80, 120), 0.001)
     }
 
     @Test
@@ -76,7 +76,8 @@ class ServerFinderTest {
         )
         assertEquals("hls", prober.kind("application/vnd.apple.mpegurl", "#EXTM3U\n#EXTINF:10,".toByteArray()))
         assertEquals("dash", prober.kind("application/dash+xml", "<MPD></MPD>".toByteArray()))
-        assertEquals("mp4", prober.kind("video/mp4", ByteArray(64).apply { write(byteArrayOf(0, 0, 0, 24, 0x66, 0x74, 0x79, 0x70)) }))
+        val ftyp = byteArrayOf(0, 0, 0, 24, 0x66, 0x74, 0x79, 0x70)
+        assertEquals("mp4", prober.kind("video/mp4", ByteArray(64).apply { ftyp.copyInto(this) }))
         assertEquals("page", prober.kind("text/html", "<html></html>".toByteArray()))
         assertEquals("none", prober.kind("application/octet-stream", byteArrayOf(1, 2, 3)))
     }
